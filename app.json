@@ -8,13 +8,8 @@
     },
     "icon": "./src/assets/puntos-icon.png",
     "plugins": [
-      "expo-router",
-      [
-        "expo-assets",
-        {
-          
-        }
-      ]
+      "expo-router"
+
 
     ],
     "name": "puntos",
