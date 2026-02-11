@@ -1,51 +1,47 @@
-import React from "react";
-import { FadeInDown, FadeInUp } from "react-native-reanimated";
-
-import { AnimatedView, Link, Text, View } from "@/tw";
+import { View, Image, Text, TouchableOpacity, SafeAreaView } from "@/tw";
+import { useRouter } from "expo-router";
 
 export default function Welcome() {
+  const router = useRouter();
+
   return (
-    <View className="flex-1 justify-between bg-amber-50 px-6">
-      <AnimatedView
-        entering={FadeInDown.duration(500)}
-        className="mt-24 items-center"
-      >
-        <View className="h-20 w-20 items-center justify-center rounded-3xl bg-neutral-900">
-          <Text className="text-3xl font-poppins-bold text-white">P</Text>
-        </View>
+    <SafeAreaView className="flex-1 bg-background p-4">
+      <View className="flex-1 justify-center items-center">
+        <Image
+          source={require("../assets/images/puntos-icon.png")}
+          className="w-28 h-28"
+        />
 
-        <Text className="mt-4 text-2xl font-poppins-bold text-neutral-900">
-          Puntos
-        </Text>
-
-        <Text className="mt-1 text-sm font-poppins text-neutral-500">
-          Rewards that move with you
-        </Text>
-      </AnimatedView>
-
-      <AnimatedView
-        entering={FadeInUp.delay(100).duration(600)}
-        className="items-center px-4"
-      >
-        <Text className="text-center text-3xl font-poppins-bold text-neutral-900">
-          Welcome
+        <Text className="mt-6 text-3xl font-poppins-bold text-neutral-900">
+          Welcome to Puntos
         </Text>
 
         <Text className="mt-3 text-center text-base font-poppins text-neutral-600">
-          Track your rewards, stay on top of points, and redeem with ease.
+          Earn rewards effortlessly.  
+          Track your points, discover offers,
+          and redeem anytime.
         </Text>
-      </AnimatedView>
+      </View>
 
-      <AnimatedView
-        entering={FadeInUp.delay(200).duration(600)}
-        className="mb-12"
-      >
-        <Link href="/(tabs)/home" className="rounded-full bg-primary px-6 py-4">
-          <Text className="text-center text-base font-poppins-semibold text-white">
-            Continue
+      <View className="">
+        <TouchableOpacity
+          onPress={() => router.push("/login")}
+          className="bg-primary py-4 rounded-xl items-center"
+        >
+          <Text className="text-white text-base font-poppins-semibold" onPress={() => router.push("/(auth)/login")}>
+            Get Started
           </Text>
-        </Link>
-      </AnimatedView>
-    </View>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          onPress={() => router.push("/login")}
+          className="mt-4 items-center"
+        >
+          <Text className="text-neutral-500 font-poppins">
+            I already have an account
+          </Text>
+        </TouchableOpacity>
+      </View>
+    </SafeAreaView>
   );
 }
