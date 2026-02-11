@@ -6,8 +6,16 @@
     "web": {
       "output": "static"
     },
+    "icon": "./src/assets/puntos-icon.png",
     "plugins": [
-      "expo-router"
+      "expo-router",
+      [
+        "expo-assets",
+        {
+          
+        }
+      ]
+
     ],
     "name": "puntos",
     "slug": "puntos"
