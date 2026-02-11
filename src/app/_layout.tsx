@@ -4,12 +4,44 @@ import { useFonts } from "expo-font";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect, useState } from "react";
-import { StatusBar } from "react-native";
+import { Animated, Easing, StatusBar, StyleSheet, View } from "react-native";
 import { supabase } from "@/supabase/supabase";
 import React from "react";
 import { useAuthListener } from "@/hooks/auth-listener";
+import { useAnimatedStyle, useSharedValue, withRepeat, withSequence, withTiming } from "react-native-reanimated";
+import { Image } from "@/tw";
 
 SplashScreen.preventAutoHideAsync();
+
+function SplashPulse() {
+  const scale = useSharedValue(1);
+
+  useEffect(() => {
+    scale.value = withRepeat(
+      withSequence(
+        withTiming(1.12, { duration: 800, easing: Easing.inOut(Easing.ease) }),
+        withTiming(1, { duration: 800, easing: Easing.inOut(Easing.ease) })
+      ),
+      -1,
+      true
+    );
+  }, []);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
+  return (
+    <View className="flex-1 bg-background justify-center items-center">
+      <Animated.View style={animatedStyle}>
+        <Image
+          source={require("../assets/images/puntos-icon.png")}
+          className="w-10 h-10"
+        />
+      </Animated.View>
+    </View>
+  );
+}
 
 export default function Layout() {
   useAuthListener();

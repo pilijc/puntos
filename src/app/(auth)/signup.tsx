@@ -9,12 +9,11 @@ import {
 import React, { useState } from "react";
 import { KeyboardAvoidingView, Platform, Alert } from "react-native";
 import { router } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
 import { useAuthStore } from "../../store/auth-store";
 import signUpService from "../../services/auth-service";
 import { signInWithGoogleService } from "@/services/auth-service";
 import { Stepper, NameStep, EmailStep, PasswordStep, TermsStep, StepHeader } from "../../components/stepper";
-
+import { Ionicons } from "@expo/vector-icons";
 
 export default function SignUp() {
   const [currentStep, setCurrentStep] = useState(1);
@@ -138,6 +137,8 @@ export default function SignUp() {
   const handleSignupWithGoogle = async () => {
     try {
       await signInWithGoogleService();
+      Alert.alert("Success", "Account created!");
+      router.replace("/(tabs)");
     } catch (error: any) {
       reset();
       Alert.alert("Google Sign-Up Failed", error?.message);

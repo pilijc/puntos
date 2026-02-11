@@ -5,6 +5,8 @@ import { router, useLocalSearchParams } from "expo-router";
 import SortPill from "@/components/rewards/SortPill";
 import RewardCard from "@/components/rewards/RewardCard";
 import { rewards, stores } from "@/data/rewards";
+import { useLocation } from "@/hooks/use-location";
+import { enrichStoresWithLocation } from "@/utils/store-location";
 
 const rewardSortOptions = [
   { id: "popular", label: "Popular" },
@@ -20,7 +22,14 @@ export default function StoreRewards() {
   const storeId = Array.isArray(params.storeId)
     ? params.storeId[0]
     : params.storeId;
-  const store = stores.find((item) => item.id === storeId);
+  const { location } = useLocation();
+  
+  // Enrich stores with location data
+  const storesWithLocation = useMemo(() => {
+    return enrichStoresWithLocation(stores, location, 2.0);
+  }, [stores, location]);
+  
+  const store = storesWithLocation.find((item) => item.id === storeId);
   const [rewardSort, setRewardSort] = useState<RewardSort>("popular");
   const [pointsOrder, setPointsOrder] = useState<PointsOrder>("desc");
 
@@ -45,7 +54,7 @@ export default function StoreRewards() {
     <SafeAreaView className="flex-1 bg-background">
       <ScrollView
         className="flex-1"
-        contentContainerClassName="px-4 pt-4 pb-8 gap-y-4"
+        contentContainerClassName="px-6 pt-6 pb-8 gap-y-4"
       >
         <View className="flex-row items-center gap-x-3">
           <TouchableOpacity

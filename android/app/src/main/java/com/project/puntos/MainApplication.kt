@@ -1,4 +1,4 @@
-package com.anonymous.puntos
+package com.project.puntos
 
 import android.app.Application
 import android.content.res.Configuration

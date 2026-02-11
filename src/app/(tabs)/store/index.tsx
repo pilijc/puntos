@@ -1,4 +1,4 @@
-﻿import {
+import {
   View,
   Text,
   SafeAreaView,
@@ -9,13 +9,15 @@
   Image,
 } from "@/tw";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { FadeIn, FadeOut, Layout, Easing } from "react-native-reanimated";
 import { router } from "expo-router";
 import RewardCard from "@/components/rewards/RewardCard";
 import SortPill from "@/components/rewards/SortPill";
 import { rewards, stores, storeLogos } from "@/data/rewards";
 import { useRewardsUiStore } from "@/store/rewards-ui-store";
+import { useLocation } from "@/hooks/use-location";
+import { enrichStoresWithLocation } from "@/utils/store-location";
 
 const streakDays = [
   { label: "MON", completed: true },
@@ -41,8 +43,15 @@ export default function Rewards() {
     setRewardPointsOrder,
   } = useRewardsUiStore();
   const [isNearbyOpen, setIsNearbyOpen] = useState(false);
-  const nearbyStores = stores.filter((store) => store.isNearby);
-  const featuredStore = nearbyStores[0] ?? stores[0];
+  const { location, permissionStatus } = useLocation();
+
+  // Enrich stores with location-based distance and nearby status
+  const storesWithLocation = useMemo(() => {
+    return enrichStoresWithLocation(stores, location, 2.0);
+  }, [stores, location]);
+
+  const nearbyStores = storesWithLocation.filter((store) => store.isNearby);
+  const featuredStore = nearbyStores[0] ?? storesWithLocation[0];
 
   const sortedRewards = useMemo(() => {
     const list = [...rewards];
@@ -61,11 +70,19 @@ export default function Rewards() {
     return list.slice(0, 3);
   }, [rewardSort, rewardPointsOrder]);
 
+  // Request location permission on mount if not granted
+  useEffect(() => {
+    if (!permissionStatus.granted && permissionStatus.canAskAgain) {
+      // Optionally auto-request, or let user enable in settings
+      // requestLocationPermission();
+    }
+  }, [permissionStatus]);
+
   return (
     <SafeAreaView className="flex-1 bg-backgroundMuted">
       <ScrollView
         className="flex-1"
-        contentContainerClassName="px-4 pt-4 pb-8 gap-y-6"
+        contentContainerClassName="px-6 pt-6 pb-8 gap-y-6"
       >
         <View className="flex-row items-center justify-between">
           <Text className="text-2xl font-poppins-bold text-neutral-900">
@@ -82,7 +99,7 @@ export default function Rewards() {
         </View>
 
         <View className="gap-y-0">
-          <View className="-mx-4 overflow-hidden bg-neutral-300 h-64 relative">
+          <View className="-mx-6 overflow-hidden bg-neutral-300 h-64 relative">
             <Image
               source={require("../../../assets/images/rewards/coffee-shop.png")}
               className="absolute inset-0 w-full h-full"
@@ -91,7 +108,7 @@ export default function Rewards() {
             />
             <View className="absolute inset-0 bg-neutral-900/35" />
 
-            <View className="absolute top-4 left-4 right-4 flex-row items-center justify-between">
+            <View className="absolute top-4 left-6 right-6 flex-row items-center justify-between">
               <TouchableOpacity
                 className="w-9 h-9 rounded-full bg-black/40 items-center justify-center"
                 onPress={() => router.back()}
@@ -103,7 +120,7 @@ export default function Rewards() {
               </TouchableOpacity>
             </View>
 
-            <View className="absolute bottom-8 left-4 right-4">
+            <View className="absolute bottom-8 left-6 right-6">
               <Text className="text-2xl font-poppins-bold text-white">
                 {featuredStore?.name ?? "Featured Store"}
               </Text>
@@ -330,9 +347,9 @@ export default function Rewards() {
           })}
         </View>
 
-        <View className="gap-y-4">
+          <View className="gap-y-4">
           {sortedRewards.map((item) => {
-            const store = stores.find((entry) => entry.id === item.storeId);
+            const store = storesWithLocation.find((entry) => entry.id === item.storeId);
             return (
               <RewardCard
                 key={item.id}
