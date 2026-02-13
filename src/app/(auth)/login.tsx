@@ -1,3 +1,4 @@
+import { supabase } from "@/supabase/supabase";
 import {
   View,
   Text,
@@ -9,18 +10,32 @@ import {
 } from "@/tw";
 import { router } from "expo-router";
 import React from "react";
-import { KeyboardAvoidingView, Platform } from "react-native";
-import { auth } from "@/supabase/supabase";
+import { Alert, KeyboardAvoidingView, Platform, Pressable } from "react-native";
+import { useAuthStore } from "../../store/auth-store";
+import { Ionicons } from "@expo/vector-icons";
 
 export default function Login() {
-  // const handleLogin = async (email, password) => {
-  //   try {
-  //     await auth.signInWithEmailAndPassword(email, password);
-  //     console.log('User logged in!');
-  //   } catch (error) {
-  //     console.error('Login Error:', error.code);
-  //   }
-  // };
+  const { username, email, password, setEmail, setPassword, showPassword, setShowPassword } = useAuthStore();
+
+  const handleLogin = async () => {
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: email,
+        password: password,
+      });
+
+      if (error) {
+        Alert.alert("Login error", error.message);
+        return;
+      }
+
+      if (data.session) {
+        router.replace("/(tabs)");
+      }
+    } catch (error) {
+      Alert.alert("Login error", error.message);
+    }
+  };
 
   return (
     <SafeAreaView className="flex-1 bg-background p-4">
@@ -51,22 +66,40 @@ export default function Login() {
             placeholder="you@email.com"
             keyboardType="email-address"
             className="border border-neutral-300 rounded-xl px-4 py-4 font-poppins"
+            onChangeText={setEmail}
+            value={email}
           />
         </View>
 
         {/* Password Input */}
-        <View className="mb-6">
+        <View className="mb-4">
           <Text className="mb-2 text-sm font-poppins-medium text-neutral-700">
             Password
           </Text>
-          <TextInput
-            secureTextEntry
-            className="border border-neutral-300 rounded-xl px-4 py-4 font-poppins"
-          />
+          <View className="relative">
+            <TextInput
+              value={password}
+              onChangeText={setPassword}
+              placeholder="Enter your password"
+              secureTextEntry={!showPassword}
+              autoCapitalize="none"
+              className="border border-neutral-300 rounded-xl px-4 py-4 pr-12 font-poppins"
+            />
+            <Pressable
+              onPress={() => setShowPassword(!showPassword)}
+              className="absolute right-4 top-4"
+            >
+              <Ionicons
+                name={showPassword ? "eye-off" : "eye"}
+                size={22}
+                color="#737373"
+              />
+            </Pressable>
+          </View>
         </View>
 
         {/* Login Button */}
-        <TouchableOpacity className="bg-primary py-4 rounded-xl items-center">
+        <TouchableOpacity className="bg-primary py-4 rounded-xl items-center" onPress={handleLogin}>
           <Text className="text-white text-base font-poppins-semibold">
             Login
           </Text>

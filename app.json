@@ -6,7 +6,6 @@
     "web": {
       "output": "static"
     },
-    "icon": "./src/assets/puntos-icon.png",
     "plugins": [
       "expo-router",
       "expo-sqlite"

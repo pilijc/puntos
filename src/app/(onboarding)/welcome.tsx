@@ -20,7 +20,7 @@ export default function Welcome() {
     <SafeAreaView className="flex-1 bg-background p-4">
       <View className="flex-1 justify-center items-center">
         <Image
-          source={require("../assets/images/puntos-icon.png")}
+          source={require("../../assets/images/puntos-icon.png")}
           className="w-28 h-28"
         />
 

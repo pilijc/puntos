@@ -11,9 +11,8 @@ import React, { useState } from "react";
 import { KeyboardAvoidingView, Platform, Alert } from "react-native";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { useAuthStore } from "../store/auth-store";
-import { signUp } from "../services/auth-service";
-import { supabase } from "@/supabase/supabase";
+import { useAuthStore } from "../../store/auth-store";
+import signUpService from "../../services/auth-service";
 
 export default function SignUp() {
   const {
@@ -25,19 +24,21 @@ export default function SignUp() {
     setPassword,
     showPassword,
     setShowPassword,
-    reset
+    reset,
   } = useAuthStore();
   
-
   const handleSignup = async () => {
     try {
-      await supabase.auth.signUp({email, password});
-      Alert.alert("hahahaha")
-
-    } catch {
-      Alert.alert("huhuhuhuhu")
+      await signUpService(email, password, username);
+      Alert.alert("Sign up Successful", "You have successfully signed up.");
+      router.replace("/(tabs)");
+    } catch (error) {
+      Alert.alert("Signup failed", error.message);
+    } finally {
+      reset();
+      router.replace("/(tabs)");
     }
-  }
+  };
 
   return (
     <SafeAreaView className="flex-1 bg-background p-4">
@@ -89,7 +90,6 @@ export default function SignUp() {
               <Text className="mb-2 text-sm font-poppins-medium text-neutral-700">
                 Password
               </Text>
-
               <View className="relative">
                 <TextInput
                   value={password}

@@ -7,5 +7,7 @@ export interface Auth {
   setPassword: (password: string) => void;
 	showPassword: boolean;
 	setShowPassword: (showPassword: boolean) => void;
+  // sessionChecked: boolean;
+  // setSessionChecked: (sessionChecked: boolean) => void;
   reset: () => void;
 }

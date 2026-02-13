@@ -1,4 +1,5 @@
-import { View, Text, ScrollView } from "@/tw";
+import { Text, ScrollView } from "@/tw";
+import React from "react";
 
 export default function History() {
   return (
@@ -6,7 +7,6 @@ export default function History() {
       <Text className="text-2xl font-poppins-bold text-neutral-900 mb-6">
         History
       </Text>
-
     </ScrollView>
   );
 }

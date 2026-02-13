@@ -1,29 +1,42 @@
 import "../global.css";
-import { router, Slot, Stack } from "expo-router";
+import { Slot, useRouter } from "expo-router";
 import { useFonts } from "expo-font";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as SplashScreen from "expo-splash-screen";
-import { Text, View, Image, Link } from "@/tw";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { StatusBar } from "react-native";
+import { supabase } from "@/supabase/supabase";
+import React from "react";
 
 SplashScreen.preventAutoHideAsync();
 
 export default function Layout() {
+  const [sessionChecked, setSessionChecked] = useState(false);
+  const router = useRouter();
   const [fontsLoaded] = useFonts({
-    "Poppins-Regular": require("../app/assets/fonts/Poppins-Regular.ttf"),
-    "Poppins-Medium": require("../app/assets/fonts/Poppins-Medium.ttf"),
-    "Poppins-SemiBold": require("../app/assets/fonts/Poppins-SemiBold.ttf"),
-    "Poppins-Bold": require("../app/assets/fonts/Poppins-Bold.ttf"),
+    "Poppins-Regular": require("../assets/fonts/Poppins-Regular.ttf"),
+    "Poppins-Medium": require("../assets/fonts/Poppins-Medium.ttf"),
+    "Poppins-SemiBold": require("../assets/fonts/Poppins-SemiBold.ttf"),
+    "Poppins-Bold": require("../assets/fonts/Poppins-Bold.ttf"),
   });
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      router.replace("/(onboarding)/welcome");
-    }, 1500);
+    const checkSession = async () => {
+      const { data: { session }, error } = await supabase.auth.getSession();
 
-    return () => clearTimeout(timer);
-  }, []);
+      if (error || !session) {
+        router.replace("/(onboarding)/welcome");
+      } else {
+        router.replace("/(tabs)");
+      }
+      setSessionChecked(true);
+    };
+
+    if (fontsLoaded) {
+      checkSession();
+    }
+  }, [fontsLoaded]);
+
 
   useEffect(() => {
     if (fontsLoaded) {
@@ -32,7 +45,7 @@ export default function Layout() {
   }, [fontsLoaded]);
 
   if (!fontsLoaded) {
-    return null; 
+    return null;
   }
 
   return (

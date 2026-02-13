@@ -11,6 +11,8 @@ export const useAuthStore = create<Auth>((set) => ({
   setEmail: (email) => set({ email }),
   setPassword: (password) => set({ password }),
 	setShowPassword: (showPassword) => set({ showPassword}),
+  // sessionChecked: false,
+  // setSessionChecked: (sessionChecked) => set({ sessionChecked }),
 
   reset: () =>
     set({
