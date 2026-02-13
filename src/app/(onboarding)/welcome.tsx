@@ -1,5 +1,6 @@
 import { View, Image, Text, TouchableOpacity, SafeAreaView } from "@/tw";
 import { useRouter } from "expo-router";
+import React from "react";
 
 export default function Welcome() {
   const router = useRouter();

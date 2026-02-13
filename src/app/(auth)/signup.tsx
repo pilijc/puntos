@@ -9,11 +9,9 @@ import {
 } from "@/tw";
 import React, { useState } from "react";
 import { KeyboardAvoidingView, Platform, Alert } from "react-native";
-import { addDoc, collection, setDoc } from "firebase/firestore";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuthStore } from "../store/auth-store";
-import { createUserWithEmailAndPassword } from "firebase/auth";
 import { signUp } from "../services/auth-service";
 import { supabase } from "@/supabase/supabase";
 
