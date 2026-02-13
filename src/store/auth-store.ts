@@ -2,23 +2,27 @@ import { create } from "zustand";
 import { Auth } from "../type/auth";
 
 export const useAuthStore = create<Auth>((set) => ({
-  username: "",
+  name: "",
   email: "",
   password: "",
 	showPassword: false,
+  confirmPassword: "",
+  showConfirmPassword: false,
 
-	setUsername: (username) => set({ username}),
+	setName: (name) => set({ name}),
   setEmail: (email) => set({ email }),
   setPassword: (password) => set({ password }),
 	setShowPassword: (showPassword) => set({ showPassword}),
-  // sessionChecked: false,
-  // setSessionChecked: (sessionChecked) => set({ sessionChecked }),
+  setConfirmPassword: (confirmPassword) => set({ confirmPassword }),
+  setShowConfirmPassword: (showConfirmPassword) => set({ showConfirmPassword }),
 
   reset: () =>
     set({
-			username: "",
+			name: "",
       email: "",
       password: "",
 			showPassword: false,
+      confirmPassword: "",
+      showConfirmPassword: false,
     }),
 }));

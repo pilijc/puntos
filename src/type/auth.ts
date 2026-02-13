@@ -1,13 +1,15 @@
 export interface Auth {
-  username: string;
-	setUsername: (username: string) => void;
+  name: string;
+	setName: (name: string) => void;
   email: string;
 	setEmail: (email: string) => void;
   password: string;
   setPassword: (password: string) => void;
 	showPassword: boolean;
 	setShowPassword: (showPassword: boolean) => void;
-  // sessionChecked: boolean;
-  // setSessionChecked: (sessionChecked: boolean) => void;
+  confirmPassword: string;
+  setConfirmPassword: (confirmPassword: string) => void;
+  showConfirmPassword: boolean;
+  setShowConfirmPassword: (showConfirmPassword: boolean) => void;
   reset: () => void;
 }

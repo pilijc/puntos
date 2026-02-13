@@ -15,7 +15,7 @@ import { useAuthStore } from "../../store/auth-store";
 import { Ionicons } from "@expo/vector-icons";
 
 export default function Login() {
-  const { username, email, password, setEmail, setPassword, showPassword, setShowPassword } = useAuthStore();
+  const { name, email, password, setEmail, setPassword, showPassword, setShowPassword } = useAuthStore();
 
   const handleLogin = async () => {
     try {

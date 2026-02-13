@@ -14,7 +14,6 @@ export default async function signUpService ( email: string, password: string, u
       if (insertError) throw insertError;
     }
   } catch (error) {
-    console.error("❌ Signup failed:", error);
     throw error;
   } finally {
     reset();
