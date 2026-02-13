@@ -2,8 +2,9 @@ import React, { useEffect } from "react";
 import { FadeInDown, FadeInUp } from "react-native-reanimated";
 import { collection, addDoc } from "firebase/firestore";
 import { AnimatedView, Link, SafeAreaView, Text, View, Image } from "@/tw";
-import { db } from "@/app/lib/firebase";
+import { auth, db } from "@/supabase/supabase";
 import { router } from "expo-router";
+
 
 export default function Splash() {
 

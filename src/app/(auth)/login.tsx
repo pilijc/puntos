@@ -10,8 +10,18 @@ import {
 import { router } from "expo-router";
 import React from "react";
 import { KeyboardAvoidingView, Platform } from "react-native";
+import { auth } from "@/supabase/supabase";
 
 export default function Login() {
+  // const handleLogin = async (email, password) => {
+  //   try {
+  //     await auth.signInWithEmailAndPassword(email, password);
+  //     console.log('User logged in!');
+  //   } catch (error) {
+  //     console.error('Login Error:', error.code);
+  //   }
+  // };
+
   return (
     <SafeAreaView className="flex-1 bg-background p-4">
       <KeyboardAvoidingView
@@ -81,7 +91,7 @@ export default function Login() {
           <Text className="font-poppins text-neutral-600">
             Don’t have an account?
           </Text>
-          <Text className="ml-1 font-poppins-semibold text-primary">
+          <Text className="ml-1 font-poppins-semibold text-primary" onPress={() => router.replace("/signup")}>
             Sign up
           </Text>
         </View>

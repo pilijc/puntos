@@ -8,7 +8,8 @@
     },
     "icon": "./src/assets/puntos-icon.png",
     "plugins": [
-      "expo-router"
+      "expo-router",
+      "expo-sqlite"
     ],
     "name": "puntos",
     "slug": "puntos"
