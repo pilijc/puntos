@@ -5,12 +5,15 @@
   "scripts": {
     "start": "expo start",
     "web": "expo start --web",
-    "deploy": "npx expo export -p web && npx eas-cli@latest deploy"
+    "deploy": "npx expo export -p web && npx eas-cli@latest deploy",
+    "android": "expo run:android",
+    "ios": "expo run:ios"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.95.3",
     "@tailwindcss/postcss": "^4.1.18",
-    "expo": "^54.0.1",
+    "expo": "^54.0.33",
+    "expo-auth-session": "~7.0.10",
     "expo-constants": "~18.0.8",
     "expo-image": "^3.0.10",
     "expo-linking": "~8.0.7",
@@ -18,6 +21,7 @@
     "expo-splash-screen": "~31.0.8",
     "expo-sqlite": "~16.0.10",
     "expo-status-bar": "~3.0.7",
+    "expo-web-browser": "~15.0.10",
     "nativewind": "^5.0.0-preview",
     "react": "19.1.0",
     "react-dom": "19.1.0",

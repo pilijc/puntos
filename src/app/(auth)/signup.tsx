@@ -14,6 +14,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useAuthStore } from "../../store/auth-store";
 import signUpService from "../../services/auth-service";
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
+import { useGoogleAuthStore } from "../../store/auth-store";
 
 export default function SignUp() {
   const {
@@ -31,7 +32,8 @@ export default function SignUp() {
     setShowConfirmPassword,
     reset,
   } = useAuthStore();
-  
+  const { signInWithGoogle } = useGoogleAuthStore();
+
   const handleSignup = async () => {
     try {
       if (password !== confirmPassword) {
@@ -45,7 +47,14 @@ export default function SignUp() {
       Alert.alert("Signup failed", error.message);
     } finally {
       reset();
-      router.replace("/(tabs)");
+    }
+  };
+
+  const handleSignupWithGoogle = async () => {
+    try {
+      await signInWithGoogle();
+    } catch (error) {
+      Alert.alert("Signup with Google failed", error.message);
     }
   };
 
@@ -167,12 +176,12 @@ export default function SignUp() {
             </View>
 
             <View className="flex-row items-center justify-center gap-x-4">
-              <View className="bg-white rounded-lg p-2 border border-neutral-200">
+              <TouchableOpacity className="bg-white rounded-lg p-2 border border-neutral-200" onPress={handleSignupWithGoogle}>
                 <Image source={require("../../assets/images/google-icon.png")} className="w-8 h-8" />
-              </View>
-              <View className="bg-white rounded-lg p-2 border border-neutral-200">
+              </TouchableOpacity>
+              <TouchableOpacity className="bg-white rounded-lg p-2 border border-neutral-200">
                 <Image source={require("../../assets/images/apple-icon.png")} className="w-8 h-8" />
-              </View>
+              </TouchableOpacity>
             </View>
 
             <View className="flex-row justify-center">

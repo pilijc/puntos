@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { StatusBar } from "react-native";
 import { supabase } from "@/supabase/supabase";
 import React from "react";
+import { useAuthStore } from "@/store/auth-store";
 
 SplashScreen.preventAutoHideAsync();
 

@@ -1,5 +1,5 @@
 import { supabase } from "@/supabase/supabase";
-import { useAuthStore } from "../store/auth-store";
+import { useAuthStore, useGoogleAuthStore } from "../store/auth-store";
 
 export default async function signUpService ( email: string, password: string, username: string) {
   const { reset } = useAuthStore();
@@ -17,5 +17,21 @@ export default async function signUpService ( email: string, password: string, u
     throw error;
   } finally {
     reset();
+  }
+}
+
+export async function signInWithGoogleService() {
+  const { init, user } = useGoogleAuthStore();
+  try {
+    await init();
+    if (user) {
+      const { error: insertError } = await supabase.from("profiles").insert({
+        id: user.id,
+        username: user.username,
+      });
+      if (insertError) throw insertError;
+    }
+  } catch (error) {
+    throw error;
   }
 }

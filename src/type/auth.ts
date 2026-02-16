@@ -13,3 +13,12 @@ export interface Auth {
   setShowConfirmPassword: (showConfirmPassword: boolean) => void;
   reset: () => void;
 }
+
+export interface GoogleAuth {
+  session: any
+  user: any
+  loading: boolean
+  init: () => Promise<void>
+  signInWithGoogle: () => Promise<void>
+  signOut: () => Promise<void>
+}
