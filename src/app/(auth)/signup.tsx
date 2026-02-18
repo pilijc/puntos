@@ -3,9 +3,8 @@ import {
   Text,
   SafeAreaView,
   TouchableOpacity,
-  TextInput,
   ScrollView,
-  Pressable, Image
+  Image
 } from "@/tw";
 import React, { useState } from "react";
 import { KeyboardAvoidingView, Platform, Alert } from "react-native";
@@ -13,16 +12,20 @@ import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuthStore } from "../../store/auth-store";
 import signUpService from "../../services/auth-service";
-import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
-import { useGoogleAuthStore } from "../../store/auth-store";
+import { signInWithGoogleService } from "@/services/auth-service";
+import { Stepper, NameStep, EmailStep, PasswordStep, TermsStep, StepHeader } from "../components/stepper";
+
 
 export default function SignUp() {
+  const [currentStep, setCurrentStep] = useState(1);
+  const totalSteps = 4;
+  
   const {
     name,
     setName,
     email,
-    password,
     setEmail,
+    password,
     setPassword,
     showPassword,
     setShowPassword,
@@ -32,165 +35,227 @@ export default function SignUp() {
     setShowConfirmPassword,
     reset,
   } = useAuthStore();
-  const { signInWithGoogle } = useGoogleAuthStore();
+  
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
+  
+  const [errors, setErrors] = useState({
+    name: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+    terms: '',
+  });
+
+  const validateStep = (): boolean => {
+    const newErrors = { ...errors };
+    
+    if (currentStep === 1) {
+      if (!name.trim()) {
+        newErrors.name = 'Name is required';
+        setErrors(newErrors);
+        return false;
+      }
+      newErrors.name = '';
+    }
+    
+    if (currentStep === 2) {
+      if (!email.trim()) {
+        newErrors.email = 'Email is required';
+        setErrors(newErrors);
+        return false;
+      }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        newErrors.email = 'Please enter a valid email';
+        setErrors(newErrors);
+        return false;
+      }
+      newErrors.email = '';
+    }
+    
+    if (currentStep === 3) {
+      if (!password) {
+        newErrors.password = 'Password is required';
+        setErrors(newErrors);
+        return false;
+      }
+      if (password.length < 8) {
+        newErrors.password = 'Password must be at least 8 characters';
+        setErrors(newErrors);
+        return false;
+      }
+      if (password !== confirmPassword) {
+        newErrors.confirmPassword = 'Passwords do not match';
+        setErrors(newErrors);
+        return false;
+      }
+      newErrors.password = '';
+      newErrors.confirmPassword = '';
+    }
+    
+    if (currentStep === 4) {
+      if (!acceptedTerms) {
+        newErrors.terms = 'You must accept the terms';
+        setErrors(newErrors);
+        return false;
+      }
+      newErrors.terms = '';
+    }
+    
+    setErrors(newErrors);
+    return true;
+  };
+
+  const handleNext = () => {
+    if (validateStep()) {
+      if (currentStep < totalSteps) {
+        setCurrentStep(currentStep + 1);
+      } else {
+        handleSignup();
+      }
+    }
+  };
+
+  const handleBack = () => {
+    if (currentStep > 1) {
+      setCurrentStep(currentStep - 1);
+    }
+  };
 
   const handleSignup = async () => {
     try {
-      if (password !== confirmPassword) {
-        Alert.alert("Passwords do not match");
-        return;
-      }
       await signUpService(email, password, name);
-      Alert.alert("Sign up Successful", "You have successfully signed up.");
+      Alert.alert("Success", "Account created!");
       router.replace("/(tabs)");
-    } catch (error) {
-      Alert.alert("Signup failed", error.message);
+    } catch (error: any) {
+      Alert.alert("Signup failed", error?.message);
     } finally {
       reset();
+      setAcceptedTerms(false);
+      setCurrentStep(1);
     }
   };
 
   const handleSignupWithGoogle = async () => {
     try {
-      await signInWithGoogle();
-    } catch (error) {
-      Alert.alert("Signup with Google failed", error.message);
+      await signInWithGoogleService();
+    } catch (error: any) {
+      reset();
+      Alert.alert("Google Sign-Up Failed", error?.message);
     }
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-background p-4">
+    <SafeAreaView className="flex-1 bg-background">
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         className="flex-1"
       >
+        <View className="px-6 py-4 flex-row items-center">
+          {currentStep > 1 ? (
+            <TouchableOpacity onPress={handleBack}>
+              <Ionicons name="arrow-back" size={24} color="#000" />
+            </TouchableOpacity>
+          ) : (
+            <View className="w-6" />
+          )}
+          <Text className="flex-1 text-center font-poppins-semibold text-lg">
+            Create Account
+          </Text>
+          <View className="w-6" />
+        </View>
+              
+        <Stepper currentStep={currentStep} totalSteps={totalSteps} />
+        
         <ScrollView
           contentContainerStyle={{ flexGrow: 1 }}
           keyboardShouldPersistTaps="handled"
         >
-          <View className="p-6 flex-1 justify-center gap-y-6">
-
-            <View className="flex justify-center items-center">
-              <Text className="text-3xl font-poppins-bold text-neutral-900">
-                Create an account
-              </Text>
-              <Text className="text-neutral-600 font-poppins">
-                Enter your details to get started.
-              </Text>
-            </View>
-
-            <View className="gap-y-4">
-              <View>
-                <Text className="mb-2 text-sm font-poppins-medium text-neutral-700">
-                  Name
-                </Text>
-                <TextInput
+          <View className="p-6 flex-1 justify-between">
+            <View className="flex-1 justify-center">
+            
+              <StepHeader currentStep={currentStep} />
+          
+              {currentStep === 1 && (
+                <NameStep
                   value={name}
-                  onChangeText={setName}
-                  placeholder="John"
-                  className="border border-neutral-200 rounded-xl px-4 py-4 font-poppins"
+                  onChange={setName}
+                  error={errors.name}
                 />
-              </View>
-
-              <View>
-                <Text className="mb-2 text-sm font-poppins-medium text-neutral-700">
-                  Email Address
-                </Text>
-                <TextInput
+              )}
+              {currentStep === 2 && (
+                <EmailStep
                   value={email}
-                  onChangeText={setEmail}
-                  placeholder="John"
-                  className="border border-neutral-200 rounded-xl px-4 py-4 font-poppins"
+                  onChange={setEmail}
+                  error={errors.email}
                 />
-              </View>
-
-              <View>
-                <Text className="mb-2 text-sm font-poppins-medium text-neutral-700">
-                  Password
+              )}
+              {currentStep === 3 && (
+                <PasswordStep
+                  password={password}
+                  confirmPassword={confirmPassword}
+                  showPassword={showPassword}
+                  showConfirmPassword={showConfirmPassword}
+                  onPasswordChange={setPassword}
+                  onConfirmPasswordChange={setConfirmPassword}
+                  onTogglePassword={() => setShowPassword(!showPassword)}
+                  onToggleConfirmPassword={() => setShowConfirmPassword(!showConfirmPassword)}
+                  errors={errors}
+                />
+              )}
+              {currentStep === 4 && (
+                <TermsStep
+                  accepted={acceptedTerms}
+                  onToggle={() => setAcceptedTerms(!acceptedTerms)}
+                  error={errors.terms}
+                />
+              )}
+            </View>
+            
+            <View className="gap-y-4 mt-6">
+              <TouchableOpacity
+                onPress={handleNext}
+                className="bg-primary py-4 rounded-xl items-center"
+              >
+                <Text className="text-white text-base font-poppins-semibold">
+                  {currentStep === totalSteps ? 'Create Account' : 'Continue'}
                 </Text>
-                <View className="relative">
-                  <TextInput
-                    value={password}
-                    onChangeText={setPassword}
-                    placeholder="Enter your password"
-                    secureTextEntry={!showPassword}
-                    autoCapitalize="none"
-                    className="border border-neutral-200 rounded-xl px-4 py-4 pr-12 font-poppins"
-                  />
-
-                  <Pressable
-                    onPress={() => setShowPassword(!showPassword)}
-                    className="absolute right-4 top-4"
-                  >
-                    <Ionicons
-                      name={showPassword ? "eye-off" : "eye"}
-                      size={22}
-                      color="#737373"
-                    />
-                  </Pressable>
-                </View>
-              </View>
-
-              <View>
-                <Text className="mb-2 text-sm font-poppins-medium text-neutral-700">
-                  Confirm Password
-                </Text>
-                <View className="relative">
-                  <TextInput
-                    value={confirmPassword}
-                    onChangeText={setConfirmPassword}
-                    placeholder="Confirm your password"
-                    secureTextEntry={!showConfirmPassword}
-                    autoCapitalize="none"
-                    className="border border-neutral-200 rounded-xl px-4 py-4 pr-12 font-poppins"
-                  />
-
-                  <Pressable
-                    onPress={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-4 top-4"
-                  >
-                    <Ionicons
-                      name={showConfirmPassword ? "eye-off" : "eye"}
-                      size={22}
-                      color="#737373"
-                    />
-                  </Pressable>
-                </View>
-              </View>
+              </TouchableOpacity>
               
-            </View>
-
-            <TouchableOpacity
-              onPress={handleSignup}
-              className="bg-primary py-4 rounded-xl items-center"
-            >
-              <Text className="text-white text-base font-poppins-semibold">
-                Sign Up
-              </Text>
-            </TouchableOpacity>
-
-            <View className="flex items-center justify-center">
-              <Text className="font-poppins text-center text-neutral-600">
-                By continuing, you agree to our <Text className="font-poppins-semibold text-primary">Terms of Service</Text> and <Text className="font-poppins-semibold text-primary">Privacy Policy</Text>.
-              </Text>
-            </View>
-
-            <View className="flex-row items-center justify-center gap-x-4">
-              <TouchableOpacity className="bg-white rounded-lg p-2 border border-neutral-200" onPress={handleSignupWithGoogle}>
-                <Image source={require("../../assets/images/google-icon.png")} className="w-8 h-8" />
-              </TouchableOpacity>
-              <TouchableOpacity className="bg-white rounded-lg p-2 border border-neutral-200">
-                <Image source={require("../../assets/images/apple-icon.png")} className="w-8 h-8" />
-              </TouchableOpacity>
-            </View>
-
-            <View className="flex-row justify-center">
-              <Text className="font-poppins text-neutral-600">
-                Already have an account?
-              </Text>
-              <Text className="ml-1 font-poppins-semibold text-primary" onPress={() => router.replace("/login")}>
-                Login
-              </Text>
+              {currentStep === 1 && (
+                <>
+                  <View className="flex-row items-center gap-x-4">
+                    <View className="flex-1 h-px bg-neutral-200" />
+                    <Text className="text-neutral-500 font-poppins text-sm">
+                      OR CONTINUE WITH
+                    </Text>
+                    <View className="flex-1 h-px bg-neutral-200" />
+                  </View>
+                  
+                  <TouchableOpacity
+                    onPress={handleSignupWithGoogle}
+                    className="bg-white rounded-xl p-4 border border-neutral-200 flex-row items-center justify-center gap-x-3"
+                  >
+                    <Image
+                      source={require("../../assets/images/google-icon.png")}
+                      className="w-5 h-5"
+                    />
+                    <Text className="font-poppins-medium text-neutral-700">
+                      Continue with Google
+                    </Text>
+                  </TouchableOpacity>
+                </>
+              )}
+              
+              <View className="flex-row justify-center">
+                <Text className="font-poppins text-neutral-600">
+                  Already have an account?
+                </Text>
+                <TouchableOpacity onPress={() => router.replace("/login")}>
+                  <Text className="ml-1 font-poppins-semibold text-primary">
+                    Login
+                  </Text>
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
         </ScrollView>

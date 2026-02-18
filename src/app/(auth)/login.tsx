@@ -47,17 +47,16 @@ export default function Login() {
           contentContainerStyle={{ flexGrow: 1 }}
           keyboardShouldPersistTaps="handled"
         >
-      <View className="p-6 flex-1 justify-center">
+      <View className="p-2 flex-1 justify-center">
         <View className="mb-10">
-          <Text className="text-3xl font-poppins-bold text-neutral-900">
-            Welcome Back 👋
+          <Text className="text-2xl font-poppins-bold text-neutral-900">
+            Welcome Back
           </Text>
           <Text className="mt-2 text-neutral-600 font-poppins">
             Sign in to continue earning rewards.
           </Text>
         </View>
 
-        {/* Email Input */}
         <View className="mb-4">
           <Text className="mb-2 text-sm font-poppins-medium text-neutral-700">
             Email
@@ -71,7 +70,6 @@ export default function Login() {
           />
         </View>
 
-        {/* Password Input */}
         <View className="mb-4">
           <Text className="mb-2 text-sm font-poppins-medium text-neutral-700">
             Password
@@ -83,43 +81,40 @@ export default function Login() {
               placeholder="Enter your password"
               secureTextEntry={!showPassword}
               autoCapitalize="none"
-              className="border border-neutral-300 rounded-xl px-4 py-4 pr-12 font-poppins"
+              className="border border-neutral-200 rounded-xl px-4 py-4 pr-12 font-poppins"
+              autoFocus
             />
             <Pressable
               onPress={() => setShowPassword(!showPassword)}
-              className="absolute right-4 top-4"
-            >
-              <Ionicons
-                name={showPassword ? "eye-off" : "eye"}
-                size={22}
-                color="#737373"
-              />
+                className="absolute right-4 top-4"
+              >
+                <Ionicons
+                  name={showPassword ? "eye-off" : "eye"}
+                  size={22}
+                  color="#737373"
+                />
             </Pressable>
           </View>
         </View>
 
-        {/* Login Button */}
         <TouchableOpacity className="bg-primary py-4 rounded-xl items-center" onPress={handleLogin}>
           <Text className="text-white text-base font-poppins-semibold">
             Login
           </Text>
         </TouchableOpacity>
 
-        {/* Forgot Password */}
         <TouchableOpacity className="mt-4 items-center">
           <Text className="text-primary font-poppins-medium">
             Forgot password?
           </Text>
         </TouchableOpacity>
 
-        {/* Divider */}
         <View className="my-8 flex-row items-center">
           <View className="flex-1 h-px bg-neutral-200" />
           <Text className="mx-3 text-neutral-500 font-poppins">OR</Text>
           <View className="flex-1 h-px bg-neutral-200" />
         </View>
 
-        {/* Sign Up */}
         <View className="flex-row justify-center">
           <Text className="font-poppins text-neutral-600">
             Don’t have an account?

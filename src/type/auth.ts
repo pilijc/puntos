@@ -22,3 +22,39 @@ export interface GoogleAuth {
   signInWithGoogle: () => Promise<void>
   signOut: () => Promise<void>
 }
+
+export interface StepProps {
+  value: string;
+  onChange: (value: string) => void;
+  error?: string;
+}
+
+export interface PasswordStepProps {
+  password: string;
+  confirmPassword: string;
+  showPassword: boolean;
+  showConfirmPassword: boolean;
+  onPasswordChange: (value: string) => void;
+  onConfirmPasswordChange: (value: string) => void;
+  onTogglePassword: () => void;
+  onToggleConfirmPassword: () => void;
+  errors: {
+    password?: string;
+    confirmPassword?: string;
+  };
+}
+
+export interface TermsStepProps {
+  accepted: boolean;
+  onToggle: () => void;
+  error?: string;
+}
+
+export interface StepperProps {
+  currentStep: number;
+  totalSteps: number;
+}
+
+export interface StepHeaderProps {
+  currentStep: number;
+}

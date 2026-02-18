@@ -5,17 +5,6 @@ import React from "react";
 export default function Welcome() {
   const router = useRouter();
 
-  const testWrite = async () => {
-
-    try {
-      console.log("✅ Document written successfully!");
-    } catch (error) {
-      console.error("❌ Firestore write failed:");
-      console.error(error);
-    }
-  };
-
-
   return (
     <SafeAreaView className="flex-1 bg-background p-4">
       <View className="flex-1 justify-center items-center">
@@ -40,7 +29,7 @@ export default function Welcome() {
           onPress={() => router.push("/(auth)/signup")}
           className="bg-primary py-4 rounded-xl items-center"
         >
-          <Text className="text-white text-base font-poppins-semibold" onPress={testWrite}>
+          <Text className="text-white text-base font-poppins-semibold">
             Get Started
           </Text>
         </TouchableOpacity>

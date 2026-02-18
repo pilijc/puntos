@@ -8,10 +8,12 @@ import { StatusBar } from "react-native";
 import { supabase } from "@/supabase/supabase";
 import React from "react";
 import { useAuthStore } from "@/store/auth-store";
+import { useAuthListener } from "@/hooks/auth-listener";
 
 SplashScreen.preventAutoHideAsync();
 
 export default function Layout() {
+  useAuthListener();
   const [sessionChecked, setSessionChecked] = useState(false);
   const router = useRouter();
   const [fontsLoaded] = useFonts({

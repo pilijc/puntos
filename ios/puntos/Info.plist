@@ -27,7 +27,7 @@
       <dict>
         <key>CFBundleURLSchemes</key>
         <array>
-          <string>acme</string>
+          <string>puntos</string>
           <string>com.anonymous.puntos</string>
         </array>
       </dict>
