@@ -3,12 +3,21 @@
     "scheme": "puntos",
     "userInterfaceStyle": "automatic",
     "orientation": "default",
+    "icon": "./src/assets/images/puntos-icon.png",
     "web": {
       "output": "static"
     },
     "plugins": [
       "expo-router",
-      "expo-sqlite"
+      "expo-sqlite",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#ffffff",
+          "image": "./src/assets/images/puntos-icon.png",
+          "imageWidth": 200
+        }
+      ]
     ],
     "name": "puntos",
     "slug": "puntos",

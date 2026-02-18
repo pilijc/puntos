@@ -30,7 +30,7 @@ export function StepHeader({ currentStep }: StepHeaderProps) {
       <View className="items-center justify-center">
         <View className="w-16 h-16 bg-primary/10 rounded-full items-center justify-center">
           <Image
-            source={require("../../assets/images/puntos-icon.png")}
+            source={require("../assets/images/puntos-icon.png")}
             className="w-16 h-16"
           />
         </View>
