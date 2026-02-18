@@ -1,5 +1,9 @@
 import { create } from "zustand";
-import { Auth } from "../type/auth";
+import { Auth, GoogleAuth } from "../type/auth";
+import { supabase } from "@/supabase/supabase";
+import * as WebBrowser from 'expo-web-browser'
+import * as Linking from 'expo-linking'
+import { Alert } from "react-native";
 
 export const useAuthStore = create<Auth>((set) => ({
   name: "",

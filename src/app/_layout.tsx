@@ -7,10 +7,12 @@ import { useEffect, useState } from "react";
 import { StatusBar } from "react-native";
 import { supabase } from "@/supabase/supabase";
 import React from "react";
+import { useAuthListener } from "@/hooks/auth-listener";
 
 SplashScreen.preventAutoHideAsync();
 
 export default function Layout() {
+  useAuthListener();
   const [sessionChecked, setSessionChecked] = useState(false);
   const router = useRouter();
   const [fontsLoaded] = useFonts({
@@ -37,6 +39,10 @@ export default function Layout() {
     }
   }, [fontsLoaded]);
 
+  SplashScreen.setOptions({
+    duration: 1000,
+    fade: true,
+  });
 
   useEffect(() => {
     if (fontsLoaded) {
