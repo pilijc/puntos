@@ -31,28 +31,20 @@ export default async function signUpService ( email: string, password: string, n
 }
 
 export async function signInWithGoogleService() {
-  try {
-    console.log('Starting Google Sign-In...');
-    
+  try {    
     await GoogleSignin.hasPlayServices();
     await GoogleSignin.signOut();
     
     const response = await GoogleSignin.signIn();
-    console.log('Google Sign-In response:', response);
     
     if (response.type === 'success') {
       const { idToken } = response.data;
       
       if (!idToken) {
-        console.error('No ID token received from Google');
-        console.error('Response data:', response.data);
         throw new Error(
-          'Google Sign-In did not return an ID token. ' +
-          'Please check your Google Cloud Console configuration.'
+          'Google Sign-In did not return an ID token'
         );
       }
-      
-      console.log('Got ID token, signing in to Supabase...');
       
       const { data, error } = await supabase.auth.signInWithIdToken({
         provider: 'google',
@@ -60,11 +52,8 @@ export async function signInWithGoogleService() {
       });
       
       if (error) {
-        console.error('Supabase sign-in error:', error);
         throw error;
       }
-      
-      console.log('Supabase session created:', data.user);
       
       if (data.user) {
         const name = data.user.user_metadata.full_name
@@ -76,7 +65,6 @@ export async function signInWithGoogleService() {
           .single();
         
         if (!existingProfile) {
-          console.log('Creating profile...');
           const { error: insertError } = await supabase
             .from("profiles")
             .insert({
@@ -85,13 +73,10 @@ export async function signInWithGoogleService() {
             });
           
           if (insertError) {
-            console.error('Profile creation error:', insertError);
-          } else {
-            console.log('Profile created successfully');
+            throw insertError;
           }
         }
       }
-      
       return data;
     }
   } catch (error: any) {
