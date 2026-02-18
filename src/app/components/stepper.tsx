@@ -27,7 +27,7 @@ export function StepHeader({ currentStep }: StepHeaderProps) {
   
   return (
     <View className="gap-y-4 mb-6">
-      <View className="items-start justify-start">
+      <View className="items-center justify-center">
         <View className="w-16 h-16 bg-primary/10 rounded-full items-center justify-center">
           <Image
             source={require("../../assets/images/puntos-icon.png")}
@@ -36,13 +36,15 @@ export function StepHeader({ currentStep }: StepHeaderProps) {
         </View>
       </View>
       
-      <Text className="text-2xl font-poppins-bold text-neutral-900 text-start">
-        {stepInfo.title}
-      </Text>
-      
-      <Text className="text-neutral-600 font-poppins text-start">
-        {stepInfo.description}
-      </Text>
+      <View className="gap-y-1">
+				<Text className="text-2xl font-poppins-bold text-neutral-900 text-center">
+					{stepInfo.title}
+				</Text>
+				
+				<Text className="text-neutral-600 font-poppins text-center">
+					{stepInfo.description}
+				</Text>
+			</View>
     </View>
   );
 }
@@ -69,7 +71,7 @@ export function Stepper({ currentStep, totalSteps }: StepperProps) {
   }
 export function NameStep({ value, onChange, error }: StepProps) {
   return (
-    <View className="gap-y-4">
+    <View>
       <Text className="mb-2 text-sm font-poppins-medium text-neutral-700">
         Full Name
       </Text>
@@ -91,7 +93,7 @@ export function NameStep({ value, onChange, error }: StepProps) {
 
 export function EmailStep({ value, onChange, error }: StepProps) {
   return (
-    <View className="gap-y-4">
+    <View>
       <Text className="mb-2 text-sm font-poppins-medium text-neutral-700">
         Email Address
       </Text>
@@ -125,7 +127,7 @@ export function PasswordStep({
   errors,
 }: PasswordStepProps) {
   return (
-    <View className="gap-y-4">
+    <View>
       <View>
         <Text className="mb-2 text-sm font-poppins-medium text-neutral-700">
           Password
@@ -190,7 +192,7 @@ export function PasswordStep({
 
 export function TermsStep({ accepted, onToggle, error }: TermsStepProps) {
   return (
-    <View className="gap-y-4">
+    <View>
       <View className="bg-background rounded-xl p-4 border border-neutral-200 max-h-64">
         <Text className="font-poppins-semibold text-neutral-900 mb-2">
           Terms of Service & Privacy Policy

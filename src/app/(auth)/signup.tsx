@@ -172,7 +172,6 @@ export default function SignUp() {
         >
           <View className="p-6 flex-1 justify-between">
             <View className="flex-1 justify-center">
-            
               <StepHeader currentStep={currentStep} />
           
               {currentStep === 1 && (

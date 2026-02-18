@@ -47,55 +47,79 @@ export default function Login() {
           contentContainerStyle={{ flexGrow: 1 }}
           keyboardShouldPersistTaps="handled"
         >
-      <View className="p-2 flex-1 justify-center">
-        <View className="mb-10">
-          <Text className="text-2xl font-poppins-bold text-neutral-900">
-            Welcome Back
-          </Text>
-          <Text className="mt-2 text-neutral-600 font-poppins">
-            Sign in to continue earning rewards.
-          </Text>
-        </View>
+      <View className="p-2 flex-1 justify-center gap-y-6">
+        <View className="gap-y-4">
+          <View className="items-center justify-center">
+            <View className="w-16 h-16 bg-primary/10 rounded-full items-center justify-center">
+              <Image
+                source={require("../../assets/images/puntos-icon.png")}
+                className="w-16 h-16"
+              />
+            </View>
+          </View>
 
-        <View className="mb-4">
-          <Text className="mb-2 text-sm font-poppins-medium text-neutral-700">
-            Email
-          </Text>
-          <TextInput
-            placeholder="you@email.com"
-            keyboardType="email-address"
-            className="border border-neutral-300 rounded-xl px-4 py-4 font-poppins"
-            onChangeText={setEmail}
-            value={email}
-          />
-        </View>
-
-        <View className="mb-4">
-          <Text className="mb-2 text-sm font-poppins-medium text-neutral-700">
-            Password
-          </Text>
-          <View className="relative">
-            <TextInput
-              value={password}
-              onChangeText={setPassword}
-              placeholder="Enter your password"
-              secureTextEntry={!showPassword}
-              autoCapitalize="none"
-              className="border border-neutral-200 rounded-xl px-4 py-4 pr-12 font-poppins"
-              autoFocus
-            />
-            <Pressable
-              onPress={() => setShowPassword(!showPassword)}
-                className="absolute right-4 top-4"
-              >
-                <Ionicons
-                  name={showPassword ? "eye-off" : "eye"}
-                  size={22}
-                  color="#737373"
-                />
-            </Pressable>
+          <View className="flex-col items-center justify-center gap-y-1">
+            <Text className="text-2xl font-poppins-bold text-neutral-900">
+              Log In
+            </Text>
+            <Text className=" text-neutral-600 font-poppins">
+              Sign in to continue earning rewards.
+            </Text>
           </View>
         </View>
+
+        <View className="gap-y-4">
+          <View>
+            <Text className="mb-2 text-sm font-poppins-medium text-neutral-700">
+              Email
+            </Text>
+            <TextInput
+              placeholder="john@example.com"
+              keyboardType="email-address"
+              className="border border-neutral-300 rounded-xl px-4 py-4 font-poppins"
+              onChangeText={setEmail}
+              value={email}
+            />
+          </View>
+
+          <View>
+            <View className="flex-row items-center justify-between">
+              <Text className="mb-2 text-sm font-poppins-medium text-textSecondary">
+                Password
+              </Text>
+              <TouchableOpacity className="items-center">
+                <Text className="text-primary text-sm font-poppins">
+                  Forgot password?
+                </Text>
+              </TouchableOpacity>
+            </View>
+            <View>
+              <View className="flex-row items-center">
+                <TextInput
+                  value={password}
+                  onChangeText={setPassword}
+                  placeholder="Enter your password"
+                  secureTextEntry={!showPassword}
+                  autoCapitalize="none"
+                  className="flex-1 border border-neutral-200 rounded-xl px-4 py-4 font-poppins"
+                  autoFocus
+                />
+                <TouchableOpacity
+                  onPress={() => setShowPassword(!showPassword)}
+                  className="ml-[-40px] p-2"
+                  activeOpacity={0.7}
+                >
+                  <Ionicons
+                    name={showPassword ? "eye-off" : "eye"}
+                    size={22}
+                    color="#737373"
+                  />
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </View>
+        
 
         <TouchableOpacity className="bg-primary py-4 rounded-xl items-center" onPress={handleLogin}>
           <Text className="text-white text-base font-poppins-semibold">
@@ -103,17 +127,26 @@ export default function Login() {
           </Text>
         </TouchableOpacity>
 
-        <TouchableOpacity className="mt-4 items-center">
-          <Text className="text-primary font-poppins-medium">
-            Forgot password?
-          </Text>
-        </TouchableOpacity>
-
-        <View className="my-8 flex-row items-center">
+        <View className="flex-row items-center gap-x-4">
           <View className="flex-1 h-px bg-neutral-200" />
-          <Text className="mx-3 text-neutral-500 font-poppins">OR</Text>
+          <Text className="text-neutral-500 font-poppins text-sm">
+            OR CONTINUE WITH
+          </Text>
           <View className="flex-1 h-px bg-neutral-200" />
         </View>
+        
+        <TouchableOpacity
+          // onPress={handleSignupWithGoogle}
+          className="bg-white rounded-xl p-4 border border-neutral-200 flex-row items-center justify-center gap-x-3"
+        >
+          <Image
+            source={require("../../assets/images/google-icon.png")}
+            className="w-5 h-5"
+          />
+          <Text className="font-poppins-medium text-neutral-700">
+            Continue with Google
+          </Text>
+        </TouchableOpacity>
 
         <View className="flex-row justify-center">
           <Text className="font-poppins text-neutral-600">
