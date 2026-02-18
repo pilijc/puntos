@@ -8,23 +8,25 @@ export default function Welcome() {
   return (
     <SafeAreaView className="flex-1 bg-background p-4">
       <View className="flex-1 justify-center items-center">
+        <View className="w-full h-96 gradient-to-b from-primary to-primary/50 object-contain bg-primary absolute top-20 left-0 rounded-3xl opacity-10"/>
         <Image
-          source={require("../../assets/images/puntos-icon.png")}
-          className="w-28 h-28"
+          source={require("../../assets/images/welcome-icon.png")}
+          className="w-full h-88 object-contain"
         />
 
-        <Text className="mt-6 text-3xl font-poppins-bold text-neutral-900">
-          Welcome to Puntos
-        </Text>
+        <View className="gap-y-2">
+          <Text className="text-center text-2xl font-poppins-bold text-textPrimary mt-4">
+            Earn rewards effortlessly.  
+          </Text>
 
-        <Text className="mt-3 text-center text-base font-poppins text-neutral-600">
-          Earn rewards effortlessly.  
-          Track your points, discover offers,
-          and redeem anytime.
-        </Text>
+          <Text className="text-center text-base font-poppins text-sm text-neutral-600">
+            Track your points, discover offers,
+            and redeem anytime.
+          </Text>
+        </View>
       </View>
 
-      <View className="">
+      <View>
         <TouchableOpacity
           onPress={() => router.push("/(auth)/signup")}
           className="bg-primary py-4 rounded-xl items-center"
