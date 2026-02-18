@@ -11,6 +11,12 @@
       "expo-sqlite"
     ],
     "name": "puntos",
-    "slug": "puntos"
+    "slug": "puntos",
+    "android": {
+      "package": "com.anonymous.puntos"
+    },
+    "ios": {
+      "bundleIdentifier": "com.anonymous.puntos"
+    }
   }
 }
