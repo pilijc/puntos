@@ -33,6 +33,8 @@ export async function signInWithGoogleService() {
     await GoogleSignin.signOut();
     
     const response = await GoogleSignin.signIn();
+
+    console.log(response);
     
     if (response.type === 'success') {
       const { idToken } = response.data;

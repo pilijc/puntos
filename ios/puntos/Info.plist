@@ -28,7 +28,7 @@
         <key>CFBundleURLSchemes</key>
         <array>
           <string>puntos</string>
-          <string>com.anonymous.puntos</string>
+          <string>com.mobile.puntos</string>
         </array>
       </dict>
     </array>

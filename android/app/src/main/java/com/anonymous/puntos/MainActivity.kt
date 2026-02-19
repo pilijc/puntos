@@ -1,4 +1,4 @@
-package com.anonymous.puntos
+package com.mobile.puntos
 import expo.modules.splashscreen.SplashScreenManager
 
 import android.os.Build

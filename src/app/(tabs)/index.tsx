@@ -18,10 +18,10 @@ export default function Discover() {
           Welcome to Puntos! Here you can:
         </Text>
         <View>
-          <Mapbox.MapView style={styles.map}>
+          <Mapbox.MapView style={{ width: "100%", height: 300 }}>
             <Mapbox.Camera
               zoomLevel={14}
-              centerCoordinate={[123.8854, 10.3157]} // Cebu
+              centerCoordinate={[123.8854, 10.3157]}
             />
           </Mapbox.MapView>
         </View>
