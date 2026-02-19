@@ -17,6 +17,15 @@
           "image": "./src/assets/images/puntos-icon.png",
           "imageWidth": 200
         }
+      ],
+      "@react-native-google-signin/google-signin",
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Puntos needs your location to show nearby stores and enable check-ins.",
+          "locationAlwaysPermission": "Puntos needs your location to show nearby stores and enable check-ins.",
+          "locationWhenInUsePermission": "Puntos needs your location to show nearby stores and enable check-ins."
+        }
       ]
     ],
     "name": "puntos",

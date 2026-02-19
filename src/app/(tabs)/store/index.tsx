@@ -1,4 +1,4 @@
-﻿import {
+import {
   View,
   Text,
   SafeAreaView,
@@ -9,13 +9,15 @@
   Image,
 } from "@/tw";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { FadeIn, FadeOut, Layout, Easing } from "react-native-reanimated";
 import { router } from "expo-router";
 import RewardCard from "@/components/rewards/RewardCard";
 import SortPill from "@/components/rewards/SortPill";
 import { rewards, stores, storeLogos } from "@/data/rewards";
 import { useRewardsUiStore } from "@/store/rewards-ui-store";
+import { useLocation } from "@/hooks/use-location";
+import { enrichStoresWithLocation } from "@/utils/store-location";
 
 const streakDays = [
   { label: "MON", completed: true },
@@ -41,8 +43,15 @@ export default function Rewards() {
     setRewardPointsOrder,
   } = useRewardsUiStore();
   const [isNearbyOpen, setIsNearbyOpen] = useState(false);
-  const nearbyStores = stores.filter((store) => store.isNearby);
-  const featuredStore = nearbyStores[0] ?? stores[0];
+  const { location, permissionStatus } = useLocation();
+
+  // Enrich stores with location-based distance and nearby status
+  const storesWithLocation = useMemo(() => {
+    return enrichStoresWithLocation(stores, location, 2.0);
+  }, [stores, location]);
+
+  const nearbyStores = storesWithLocation.filter((store) => store.isNearby);
+  const featuredStore = nearbyStores[0] ?? storesWithLocation[0];
 
   const sortedRewards = useMemo(() => {
     const list = [...rewards];
@@ -60,6 +69,14 @@ export default function Rewards() {
     }
     return list.slice(0, 3);
   }, [rewardSort, rewardPointsOrder]);
+
+  // Request location permission on mount if not granted
+  useEffect(() => {
+    if (!permissionStatus.granted && permissionStatus.canAskAgain) {
+      // Optionally auto-request, or let user enable in settings
+      // requestLocationPermission();
+    }
+  }, [permissionStatus]);
 
   return (
     <SafeAreaView className="flex-1 bg-backgroundMuted">
@@ -330,9 +347,9 @@ export default function Rewards() {
           })}
         </View>
 
-        <View className="gap-y-4">
+          <View className="gap-y-4">
           {sortedRewards.map((item) => {
-            const store = stores.find((entry) => entry.id === item.storeId);
+            const store = storesWithLocation.find((entry) => entry.id === item.storeId);
             return (
               <RewardCard
                 key={item.id}

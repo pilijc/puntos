@@ -72,5 +72,9 @@
     <string>Automatic</string>
     <key>UIViewControllerBasedStatusBarAppearance</key>
     <false/>
+    <key>NSLocationWhenInUseUsageDescription</key>
+    <string>Puntos needs your location to show nearby stores and enable check-ins.</string>
+    <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+    <string>Puntos needs your location to show nearby stores and enable check-ins.</string>
   </dict>
 </plist>
