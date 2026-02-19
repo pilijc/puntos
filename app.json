@@ -17,6 +17,12 @@
           "image": "./src/assets/images/puntos-icon.png",
           "imageWidth": 200
         }
+      ],
+      [
+        "@rnmapbox/maps",
+        {
+          "RNMapboxMapsDownloadToken": "{process.env.EXPO_PUBLIC_MAPBOX_DOWNLOADS_TOKEN}"
+        }
       ]
     ],
     "name": "puntos",

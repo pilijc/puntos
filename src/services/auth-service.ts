@@ -3,9 +3,6 @@ import * as Linking from 'expo-linking'
 import * as WebBrowser from 'expo-web-browser'
 import {
   GoogleSignin,
-  GoogleSigninButton,
-  isSuccessResponse,
-  statusCodes,
 } from '@react-native-google-signin/google-signin'
 
 GoogleSignin.configure({
