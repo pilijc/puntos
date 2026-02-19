@@ -29,9 +29,7 @@ export default async function signUpService ( email: string, password: string, n
 
 export async function signInWithGoogleService() {
   try {    
-    await GoogleSignin.hasPlayServices();
-    await GoogleSignin.signOut();
-    
+    await GoogleSignin.hasPlayServices();    
     const response = await GoogleSignin.signIn();
 
     console.log(response);

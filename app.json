@@ -21,17 +21,19 @@
       [
         "@rnmapbox/maps",
         {
-          "RNMapboxMapsDownloadToken": "{process.env.EXPO_PUBLIC_MAPBOX_DOWNLOADS_TOKEN}"
+          "RNMapboxMapsDownloadToken": "{process.env.RNMAPBOX_MAPS_DOWNLOAD_TOKEN}"
         }
-      ]
+      ],
+      "@react-native-google-signin/google-signin"
     ],
     "name": "puntos",
     "slug": "puntos",
     "android": {
-      "package": "com.mobile.puntos"
+      "package": "com.project.puntos",
+      "newArchEnabled": true
     },
     "ios": {
-      "bundleIdentifier": "com.mobile.puntos"
+      "bundleIdentifier": "com.project.puntos"
     }
   }
 }

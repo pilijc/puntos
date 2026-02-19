@@ -36,8 +36,7 @@ function SplashPulse() {
       <Animated.View style={animatedStyle}>
         <Image
           source={require("../assets/images/puntos-icon.png")}
-          className="w-40 h-40"
-          resizeMode="contain"
+          className="w-10 h-10"
         />
       </Animated.View>
     </View>
