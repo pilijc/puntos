@@ -25,7 +25,7 @@ export default function StoreStreaks() {
     <SafeAreaView className="flex-1 bg-background">
       <ScrollView
         className="flex-1"
-        contentContainerClassName="px-4 pt-4 pb-10 gap-y-5"
+        contentContainerClassName="px-6 pt-6 pb-10 gap-y-5"
       >
         <View className="flex-row items-center gap-x-3">
           <TouchableOpacity

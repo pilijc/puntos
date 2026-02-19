@@ -65,7 +65,7 @@ export default function Rewards() {
     <SafeAreaView className="flex-1 bg-backgroundMuted">
       <ScrollView
         className="flex-1"
-        contentContainerClassName="px-4 pt-4 pb-8 gap-y-6"
+        contentContainerClassName="px-6 pt-6 pb-8 gap-y-6"
       >
         <View className="flex-row items-center justify-between">
           <Text className="text-2xl font-poppins-bold text-neutral-900">
@@ -82,7 +82,7 @@ export default function Rewards() {
         </View>
 
         <View className="gap-y-0">
-          <View className="-mx-4 overflow-hidden bg-neutral-300 h-64 relative">
+          <View className="-mx-6 overflow-hidden bg-neutral-300 h-64 relative">
             <Image
               source={require("../../../assets/images/rewards/coffee-shop.png")}
               className="absolute inset-0 w-full h-full"
@@ -91,7 +91,7 @@ export default function Rewards() {
             />
             <View className="absolute inset-0 bg-neutral-900/35" />
 
-            <View className="absolute top-4 left-4 right-4 flex-row items-center justify-between">
+            <View className="absolute top-4 left-6 right-6 flex-row items-center justify-between">
               <TouchableOpacity
                 className="w-9 h-9 rounded-full bg-black/40 items-center justify-center"
                 onPress={() => router.back()}
@@ -103,7 +103,7 @@ export default function Rewards() {
               </TouchableOpacity>
             </View>
 
-            <View className="absolute bottom-8 left-4 right-4">
+            <View className="absolute bottom-8 left-6 right-6">
               <Text className="text-2xl font-poppins-bold text-white">
                 {featuredStore?.name ?? "Featured Store"}
               </Text>
