@@ -8,6 +8,7 @@ import SecurityModal from "@/components/settings/SecurityModal";
 import StoreOwnerModal from "@/components/settings/StoreOwnerModal";
 import { Ionicons } from '@expo/vector-icons';
 import { useLocation } from "@/hooks/use-location";
+import { getCurrentLocation } from "@/services/location-service";
 
 {/* LOGIC FOR GETTING USER PROFILE */}
 export default function Settings() {
@@ -34,6 +35,7 @@ export default function Settings() {
     permissionStatus,
     loading: locationLoading,
     requestPermission: requestLocationPermission,
+    refreshLocation,
   } = useLocation();
 
   // (no static default profile) — real data will be loaded from Supabase
@@ -236,7 +238,7 @@ const togglePreference = async (key: string) => {
             <Ionicons name="help-outline" size={15} color="#10b981" />
           </View>
           <Text className="text-base flex-1 ml-3 font-poppins-semibold text-neutral-900">
-            Notifications
+            Role
           </Text>
           <Ionicons name="chevron-forward-outline" size={15} color="#d4d4d4"/>
         </TouchableOpacity>
@@ -330,12 +332,37 @@ const togglePreference = async (key: string) => {
         </View>
 
       </View>
+
+      {/* 
+      ------------------------------------------
+      ------------------------------------------TEST LOCATION BUTTON------------------------------------------
+      ------------------------------------------
+      */}
+
+      <TouchableOpacity
+        onPress={async () => {
+          try {
+            const loc = await getCurrentLocation();
+            if (loc) {
+              Alert.alert('Location Test', `Lat: ${loc.latitude.toFixed(5)}, Lon: ${loc.longitude.toFixed(5)}`);
+              refreshLocation();
+            } else {
+              Alert.alert('Location Error', 'Could not get location. On emulator: set a location in Extended Controls (⋯) → Location first.');
+            }
+          } catch (e: any) {
+            Alert.alert('Location Error', e?.message || 'Current location unavailable. On emulator: set location in Extended Controls → Location, then try again.');
+          }
+        }}
+        className="mx-4 my-2 bg-blue-400 py-3 rounded-xl"
+      >
+        <Text className="text-white text-center font-poppins-semibold">Test Location</Text>
+      </TouchableOpacity>
+
       {/* 
       ------------------------------------------
       ------------------------------------------LOGOUT BUTTON------------------------------------------
       ------------------------------------------
       */}
-
 
       <TouchableOpacity
         onPress={handleLogout}

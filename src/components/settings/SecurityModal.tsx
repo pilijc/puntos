@@ -21,7 +21,7 @@ export default function SecurityModal({ visible, onClose }: Props) {
               <Ionicons name="close-outline" size={25} color="#EF4444" />
             </TouchableOpacity>
           </View>
-          
+
           <TouchableOpacity className="mx-4 mb-6 p-4 bg-primary rounded-2xl items-center border border-neutral-200">
             <Text className="text-white text-base font-poppins-semibold">Change Password</Text>
           </TouchableOpacity>

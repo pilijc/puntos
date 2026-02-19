@@ -38,7 +38,7 @@ export default function EditProfileModal({
           <View className="mb-4">
             <Text className="text-sm font-poppins-semibold text-neutral-700 mb-2">Username</Text>
             <TextInput
-              className="border-4 border-b rounded-lg p-3 font-poppins-regular text-neutral-900"
+              className="border rounded-lg p-3 font-poppins-regular text-neutral-900"
               placeholder="Enter username"
               value={username}
               onChangeText={setUsername}
@@ -49,7 +49,7 @@ export default function EditProfileModal({
           <View className="mb-6">
             <Text className="text-sm font-poppins-semibold text-neutral-700 mb-2">Email</Text>
             <TextInput
-              className="border-4 border-black rounded-lg p-3 font-poppins-regular text-neutral-900"
+              className="border rounded-lg p-3 font-poppins-regular text-neutral-900"
               placeholder="Enter email"
               value={email}
               onChangeText={setEmail}

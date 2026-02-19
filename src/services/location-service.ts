@@ -1,5 +1,5 @@
 import * as Location from 'expo-location';
-import { Alert } from 'react-native';
+import { Platform } from 'react-native';
 
 /** Re-export so hooks can type the subscription from watchPositionAsync */
 export type LocationSubscription = Location.LocationSubscription;
@@ -85,28 +85,86 @@ export async function checkLocationPermission(): Promise<LocationPermissionStatu
   }
 }
 
+const toUserLocation = (loc: { coords: { latitude: number; longitude: number; accuracy?: number } }): UserLocation => ({
+  latitude: loc.coords.latitude,
+  longitude: loc.coords.longitude,
+  accuracy: loc.coords.accuracy || undefined,
+});
+
 /**
- * Get current user location
+ * Get current user location.
+ * On Android (including emulator): use last-known first with no accuracy filter (emulator mock
+ * can have large accuracy value and was being rejected). Then try "current" with a long
+ * max age so the Fused API can return the same cached mock. Never throws; returns null if unavailable.
  */
 export async function getCurrentLocation(): Promise<UserLocation | null> {
   try {
     const permissionStatus = await checkLocationPermission();
     if (!permissionStatus.granted) {
-      console.log('[LocationService] Location permission not granted');
+      const reqStatus = await requestLocationPermission();
+      if (!reqStatus.granted) return null;
+    }
+
+    if (Platform.OS === 'android') {
+      // 1) No options: accept any age/accuracy so emulator mock isn't filtered out
+      const lastKnown = await Location.getLastKnownPositionAsync({});
+      if (lastKnown) return toUserLocation(lastKnown);
+
+      // 2) getCurrentPositionAsync often returns null on emulator; try with long max age for cached
+      try {
+        const location = await Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.Lowest,
+          timeInterval: 300000,
+          mayShowUserSettingsDialog: false,
+        });
+        return toUserLocation(location);
+      } catch {
+        /* continue to 3 */
+      }
+
+      // 3) Emulator may only deliver via watch (like Maps); request one update then unsubscribe
+      try {
+        let subscription: Location.LocationSubscription | null = null;
+        const loc = await new Promise<UserLocation | null>((resolve) => {
+          const timeout = setTimeout(() => {
+            if (subscription) subscription.remove();
+            resolve(null);
+          }, 6000);
+          Location.watchPositionAsync(
+            { accuracy: Location.Accuracy.Lowest, timeInterval: 1000, distanceInterval: 0 },
+            (position) => {
+              clearTimeout(timeout);
+              if (subscription) subscription.remove();
+              resolve(toUserLocation(position));
+            },
+            () => {
+              clearTimeout(timeout);
+              if (subscription) subscription.remove();
+              resolve(null);
+            }
+          ).then((sub) => {
+            subscription = sub;
+          }).catch(() => resolve(null));
+        });
+        if (loc) return loc;
+      } catch {
+        /* ignore */
+      }
+
       return null;
     }
 
     const location = await Location.getCurrentPositionAsync({
       accuracy: Location.Accuracy.Balanced,
     });
-
-    return {
-      latitude: location.coords.latitude,
-      longitude: location.coords.longitude,
-      accuracy: location.coords.accuracy || undefined,
-    };
-  } catch (error) {
-    console.error('[LocationService] Error getting location:', error);
+    return toUserLocation(location);
+  } catch {
+    try {
+      const lastKnown = await Location.getLastKnownPositionAsync({});
+      if (lastKnown) return toUserLocation(lastKnown);
+    } catch {
+      /* ignore */
+    }
     return null;
   }
 }
