@@ -1,15 +1,11 @@
 import { supabase } from "@/supabase/supabase";
 import * as Linking from 'expo-linking'
 import * as WebBrowser from 'expo-web-browser'
-import {
-  GoogleSignin,
-} from '@react-native-google-signin/google-signin'
+import { GoogleSignin } from "@react-native-google-signin/google-signin";
 
 GoogleSignin.configure({
   webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
 });
-
-
 
 export default async function signUpService ( email: string, password: string, name: string) {
   try {

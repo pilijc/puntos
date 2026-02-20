@@ -5,6 +5,8 @@ import { router, useLocalSearchParams } from "expo-router";
 import SortPill from "@/components/rewards/SortPill";
 import RewardCard from "@/components/rewards/RewardCard";
 import { rewards, stores } from "@/data/rewards";
+import { useLocation } from "@/hooks/use-location";
+import { enrichStoresWithLocation } from "@/utils/store-location";
 
 const rewardSortOptions = [
   { id: "popular", label: "Popular" },
@@ -20,7 +22,14 @@ export default function StoreRewards() {
   const storeId = Array.isArray(params.storeId)
     ? params.storeId[0]
     : params.storeId;
-  const store = stores.find((item) => item.id === storeId);
+  const { location } = useLocation();
+  
+  // Enrich stores with location data
+  const storesWithLocation = useMemo(() => {
+    return enrichStoresWithLocation(stores, location, 2.0);
+  }, [stores, location]);
+  
+  const store = storesWithLocation.find((item) => item.id === storeId);
   const [rewardSort, setRewardSort] = useState<RewardSort>("popular");
   const [pointsOrder, setPointsOrder] = useState<PointsOrder>("desc");
 
