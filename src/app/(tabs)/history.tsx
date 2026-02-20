@@ -133,7 +133,6 @@ export default function History() {
       </ScrollView>
     </SafeAreaView>
   );
-<<<<<<< HEAD
 }
 
 /* Reusable Item */
@@ -170,6 +169,4 @@ function HistoryItem({ title, subtitle, points, positive, image, icon }) {
       </Text>
     </View>
   );
-=======
->>>>>>> 11ab3671b29199787bfa37376886e9bf1c3894f7
 }
