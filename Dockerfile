@@ -1,0 +1,50 @@
+FROM node:20-bullseye AS development
+
+USER root
+
+# ---- Android + Java ----
+RUN apt-get update && apt-get install -y \
+    openjdk-17-jdk \
+    wget \
+    unzip \
+    git \
+    curl \
+    usbutils \
+    && rm -rf /var/lib/apt/lists/*
+
+# ---- Android SDK ----
+ENV ANDROID_SDK_ROOT=/opt/android-sdk
+ENV ANDROID_HOME=/opt/android-sdk
+ENV PATH=$PATH:$ANDROID_HOME/platform-tools:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/emulator
+
+RUN mkdir -p $ANDROID_HOME/cmdline-tools
+
+RUN wget https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O sdk.zip \
+    && unzip sdk.zip -d $ANDROID_HOME/cmdline-tools \
+    && mv $ANDROID_HOME/cmdline-tools/cmdline-tools $ANDROID_HOME/cmdline-tools/latest \
+    && rm sdk.zip
+
+RUN yes | sdkmanager --licenses
+
+RUN sdkmanager \
+    "platform-tools" \
+    "platforms;android-34" \
+    "build-tools;34.0.0"
+
+# ---- Expo ----
+RUN npm install -g expo
+
+WORKDIR /app
+
+# copy only package files
+COPY package.json package-lock.json ./
+
+# install deps inside container (Linux)
+RUN npm install
+
+# copy rest of app (without node_modules due to dockerignore)
+COPY . .
+
+EXPOSE 19000 19001 19002 19006 8081
+
+CMD ["npx","expo","run:android"]
