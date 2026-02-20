@@ -37,7 +37,7 @@ export default function Stores() {
     <SafeAreaView className="flex-1 bg-background">
       <ScrollView
         className="flex-1"
-        contentContainerClassName="px-4 pt-4 pb-8 gap-y-4"
+        contentContainerClassName="px-6 pt-6 pb-8 gap-y-4"
       >
         <View className="flex-row items-center gap-x-3">
           <TouchableOpacity

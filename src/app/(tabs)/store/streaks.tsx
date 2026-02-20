@@ -1,6 +1,7 @@
 import { View, Text, SafeAreaView, ScrollView, TouchableOpacity } from "@/tw";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import React from "react";
+import { View as RNView } from "react-native";
 import { router } from "expo-router";
 import { stores } from "@/data/rewards";
 
@@ -24,7 +25,7 @@ export default function StoreStreaks() {
     <SafeAreaView className="flex-1 bg-background">
       <ScrollView
         className="flex-1"
-        contentContainerClassName="px-4 pt-4 pb-10 gap-y-5"
+        contentContainerClassName="px-6 pt-6 pb-10 gap-y-5"
       >
         <View className="flex-row items-center gap-x-3">
           <TouchableOpacity
@@ -89,6 +90,7 @@ export default function StoreStreaks() {
           {streaks.map((streak) => {
             const store = stores.find((item) => item.id === streak.storeId);
             const progress = Math.round((streak.completed / streak.total) * 100);
+            const safeProgress = Math.min(Math.max(progress, 0), 100);
             const tier = getTier(streak.completed);
             return (
               <TouchableOpacity
@@ -131,10 +133,15 @@ export default function StoreStreaks() {
                   </Text>
                 </View>
 
-                <View className="h-2 bg-neutral-100 rounded-full mt-3 overflow-hidden">
-                  <View
-                    className="h-2 bg-primary rounded-full"
-                    style={{ width: `${progress}%` }}
+                <View className="h-2 bg-neutral-100 rounded-full mt-3 overflow-hidden w-full">
+                  <RNView
+                    style={{
+                      height: 8,
+                      width: `${safeProgress}%`,
+                      minWidth: 6,
+                      backgroundColor: "#FF6600",
+                      borderRadius: 999,
+                    }}
                   />
                 </View>
 
