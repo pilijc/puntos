@@ -7,7 +7,10 @@
     "web": "expo start --web",
     "deploy": "npx expo export -p web && npx eas-cli@latest deploy",
     "android": "expo run:android",
-    "ios": "expo run:ios"
+    "ios": "expo run:ios",
+    "docker:metro:localhost": "expo start --dev-client --host localhost --port 8081 --clear",
+    "docker:metro:lan": "expo start --dev-client --host lan --port 8081 --clear",
+    "docker:apk": "cd android && ./gradlew --no-daemon --project-cache-dir /tmp/gradle-project-cache assembleDebug"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",
