@@ -1,98 +1,152 @@
-  # Expo Router and Tailwind CSS
+# Puntos
 
-  Use [Expo Router](https://docs.expo.dev/router/introduction/) with [Nativewind](https://www.nativewind.dev/v4/overview/) styling.
+Expo Router + NativeWind app with a Docker-based local dev workflow.
 
-  ## Launch your own
+## Why We Changed the Setup
 
-  [![Launch with Expo](https://github.com/expo/examples/blob/master/.gh-assets/launch.svg?raw=true)](https://launch.expo.dev/?github=https://github.com/expo/examples/tree/master/with-tailwindcss)
+We support teammates using:
+- Android emulator (no physical phone)
+- Android physical phone (USB/Wi-Fi)
+- iOS physical device (Wi-Fi)
 
-  ## 🚀 How to use
+`expo run:android` inside Docker is unreliable in this environment because Expo/ADB tries to control emulator/device connections from inside the container. That caused issues like `emulator-5554` connection failures.
 
-  ```sh
-  npx create-expo-app -e with-tailwindcss
-  ```
+So we split responsibilities:
+- Docker: Metro + Android APK build
+- Host machine: ADB install/reverse/launch
 
-  ## Deploy
+## Current Standard
 
-  Deploy on all platforms with Expo Application Services (EAS).
+- Do not run `expo run:android` inside Docker.
+- Use Docker commands below for Metro/APK.
+- Keep this override in `package.json` (already added):
 
-  - Deploy the website: `npx eas-cli deploy` — [Learn more](https://docs.expo.dev/eas/hosting/get-started/)
-  - Deploy on iOS and Android using: `npx eas-cli build` — [Learn more](https://expo.dev/eas)
+```json
+"overrides": {
+  "lightningcss": "1.30.1"
+}
+```
 
-  ## Docker + Android Emulator (No Physical Device)
+## One-Time Setup
 
-  ### Why this setup
+### 1) Build Docker image
 
-  We use this flow when we do not have a physical Android phone and still need to test Docker in this project.
+```powershell
+docker build -t puntos .
+```
 
-  `expo run:android` inside Docker fails for host emulators because Expo/ADB tries emulator console commands (`emulator-5554`), which are not reachable from the container in this setup.
+### 2) Install dependencies into Linux volume
 
-  So we split the workflow:
-  - Build APK in Docker
-  - Install/run APK on host emulator via host `adb`
-  - Run Metro in Docker
+Do this so container uses Linux-native modules (not host Windows `node_modules`).
 
-  ### One-time dependency fix (NativeWind v5 preview + LightningCSS)
+```powershell
+docker run --rm -it -v ${PWD}:/app -v puntos_node_modules:/app/node_modules puntos npm install
+docker run --rm -it -v ${PWD}:/app -v puntos_node_modules:/app/node_modules puntos npm ls lightningcss
+```
 
-  Keep this in `package.json`:
+Expected: `lightningcss@1.30.1`.
 
-  ```json
-  "overrides": {
-    "lightningcss": "1.30.1"
-  }
-  ```
+## Team Workflows
 
-  Install Linux deps in a Docker volume (do not use host `node_modules` inside container):
+`package.json` has helper scripts:
+- `docker:metro:localhost`
+- `docker:metro:lan`
+- `docker:apk`
 
-  ```powershell
-  docker run --rm -it -v ${PWD}:/app -v puntos_node_modules:/app/node_modules puntos npm install
-  docker run --rm -it -v ${PWD}:/app -v puntos_node_modules:/app/node_modules puntos npm ls lightningcss
-  ```
+Important: these scripts run **inside container** using `docker run ... puntos npm run ...`.
 
-  ### Build APK in Docker
+### A) Android Emulator or Android USB Phone
 
-  If you hit `/bin/sh^M: bad interpreter`, normalize `gradlew` once:
+### Start Metro (localhost mode)
 
-  ```powershell
-  docker run --rm -v ${PWD}:/app puntos bash -lc "cd /app/android && sed -i 's/\r$//' gradlew && chmod +x gradlew"
-  ```
+```powershell
+docker run --rm -it `
+  -p 8081:8081 -p 19000:19000 -p 19001:19001 -p 19002:19002 `
+  -v ${PWD}:/app `
+  -v puntos_node_modules:/app/node_modules `
+  puntos npm run docker:metro:localhost
+```
 
-  Build debug APK:
+### Reverse port from device/emulator (host terminal)
 
-  ```powershell
-  docker run --rm -it `
-    -v ${PWD}:/app `
-    -v gradle-cache:/root/.gradle `
-    -v puntos_node_modules:/app/node_modules `
-    puntos bash -lc "cd /app/android && ./gradlew --no-daemon --project-cache-dir /tmp/gradle-project-cache assembleDebug"
-  ```
+Emulator:
 
-  ### Install and run on emulator (host terminal)
+```powershell
+adb -s emulator-5554 reverse tcp:8081 tcp:8081
+```
 
-  ```powershell
-  adb -s emulator-5554 uninstall com.anonymous.puntos
-  adb -s emulator-5554 install -r android/app/build/outputs/apk/debug/app-debug.apk
-  adb -s emulator-5554 reverse tcp:8081 tcp:8081
-  adb -s emulator-5554 shell monkey -p com.project.puntos -c android.intent.category.LAUNCHER 1
-  ```
+USB physical device:
 
-  ### Start Metro in Docker
+```powershell
+adb devices
+adb -s <device_serial> reverse tcp:8081 tcp:8081
+```
 
-  ```powershell
-  docker run --rm -it `
-    -p 8081:8081 -p 19000:19000 -p 19001:19001 -p 19002:19002 `
-    -v ${PWD}:/app `
-    -v puntos_node_modules:/app/node_modules `
-    puntos npx expo start --dev-client --host localhost --port 8081 --clear
-  ```
+### Build APK (when native dependencies/config changed)
 
-  ### Notes
+```powershell
+docker run --rm -it `
+  -v ${PWD}:/app `
+  -v gradle-cache:/root/.gradle `
+  -v puntos_node_modules:/app/node_modules `
+  puntos npm run docker:apk
+```
 
-  - Open the installed dev build app (`com.project.puntos`), not Expo Go.
-  - Do not use tunnel mode for this flow (`ngrok` failures were observed).
-  - If a Docker volume cannot be removed because it is in use, remove the leftover container first:
+Install and launch:
 
-  ```powershell
-  docker ps -a --filter volume=puntos_node_modules
-  docker rm <container_id>
-  ```
+```powershell
+adb -s emulator-5554 install -r android/app/build/outputs/apk/debug/app-debug.apk
+adb -s emulator-5554 shell monkey -p com.project.puntos -c android.intent.category.LAUNCHER 1
+```
+
+For USB phone, replace `emulator-5554` with `<device_serial>`.
+
+### B) Android/iOS Phone on Wi-Fi
+
+### Start Metro (LAN mode)
+
+```powershell
+docker run --rm -it `
+  -p 8081:8081 -p 19000:19000 -p 19001:19001 -p 19002:19002 `
+  -v ${PWD}:/app `
+  -v puntos_node_modules:/app/node_modules `
+  puntos npm run docker:metro:lan
+```
+
+No `adb reverse` needed for Wi-Fi mode.
+
+## Optional Host-Only Flow (Physical Android)
+
+If someone prefers host-native workflow and has Android tooling set up:
+
+```powershell
+npx expo run:android
+```
+
+This is host-only. Do not run it inside Docker.
+
+## Troubleshooting
+
+### Volume is in use
+
+```powershell
+docker ps -a --filter volume=puntos_node_modules
+docker rm <container_id>
+```
+
+### `gradlew` line ending issue (`/bin/sh^M`)
+
+`android/gradlew` is normalized via `.gitattributes`:
+
+```gitattributes
+android/gradlew text eol=lf
+```
+
+### Wrong app installed on emulator
+
+If package mismatch happens, reinstall:
+
+```powershell
+adb -s emulator-5554 uninstall com.anonymous.puntos
+adb -s emulator-5554 install -r android/app/build/outputs/apk/debug/app-debug.apk
+```
