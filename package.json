@@ -49,5 +49,9 @@
     "firebase-tools": "^15.5.1",
     "typescript": "~5.9.2"
   },
-  "private": true
+  "private": true,
+  "overrides": {
+    "lightningcss": "1.30.1"
+  }
+
 }

@@ -47,4 +47,19 @@ COPY . .
 
 EXPOSE 19000 19001 19002 19006 8081
 
-CMD ["npx","expo","run:android"]
+## old setup
+# CMD ["npx","expo","run:android"]
+
+## new setup -> set to neutral
+CMD ["npx","expo","start","--dev-client","--port","8081","--clear"]
+
+## Android Emulator (no phone)
+# docker run --rm -it -p 8081:8081 -p 19000:19000 -p 19001:19001 -p 19002:19002 -v ${PWD}:/app -v puntos_node_modules:/app/node_modules puntos npx expo start --dev-client --host localhost --port 8081 --clear
+# adb -s emulator-5554 reverse tcp:8081 tcp:8081 (other terminal)
+# ---------------------------------------------
+## Android Physical Phone (USB)
+# docker run --rm -it -p 8081:8081 -p 19000:19000 -p 19001:19001 -p 19002:19002 -v ${PWD}:/app -v puntos_node_modules:/app/node_modules puntos npx expo start --dev-client --host localhost --port 8081 --clear
+# adb -s <device_serial> reverse tcp:8081 tcp:8081 (other terminal)
+# ---------------------------------------------
+## Android Physical Phone (WiFi)
+# docker run --rm -it -p 8081:8081 -p 19000:19000 -p 19001:19001 -p 19002:19002 -v ${PWD}:/app -v puntos_node_modules:/app/node_modules puntos npx expo start --dev-client --host lan --port 8081 --clear
