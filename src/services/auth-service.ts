@@ -12,7 +12,7 @@ export default async function signUpService ( email: string, password: string, n
     const { data, error } = await supabase.auth.signUp({ email, password });
     if (error) throw error;
     if (data.user) {
-      const { error: insertError } = await supabase.from("profiles").insert({
+      const { error: insertError } = await supabase.from("users").insert({
         id: data.user.id,
         name,
       });
@@ -52,14 +52,14 @@ export async function signInWithGoogleService() {
         const name = data.user.user_metadata.full_name
         
         const { data: existingProfile } = await supabase
-          .from("profiles")
+          .from("users")
           .select("id")
           .eq("id", data.user.id)
           .single();
         
         if (!existingProfile) {
           const { error: insertError } = await supabase
-            .from("profiles")
+            .from("users")
             .insert({
               id: data.user.id,
               name: name,
