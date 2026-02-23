@@ -13,6 +13,7 @@ import React from "react";
 import { Alert, KeyboardAvoidingView, Platform, Pressable } from "react-native";
 import { useAuthStore } from "../../store/auth-store";
 import { Ionicons } from "@expo/vector-icons";
+import { getHomeRouteForUserId } from "@/services/access-service";
 
 export default function Login() {
   const { name, email, password, setEmail, setPassword, showPassword, setShowPassword } = useAuthStore();
@@ -30,7 +31,8 @@ export default function Login() {
       }
 
       if (data.session) {
-        router.replace("/(user)");
+        const nextRoute = await getHomeRouteForUserId(data.session.user.id);
+        router.replace(nextRoute);
       }
     } catch (error) {
       Alert.alert("Login error", error.message);

@@ -10,6 +10,7 @@ import React from "react";
 import { useAuthListener } from "@/hooks/auth-listener";
 import { useAnimatedStyle, useSharedValue, withRepeat, withSequence, withTiming } from "react-native-reanimated";
 import { Image } from "@/tw";
+import { getHomeRouteForUserId } from "@/services/access-service";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -61,7 +62,8 @@ export default function Layout() {
       if (error || !session) {
         router.replace("/(onboarding)/welcome");
       } else {
-        router.replace("/(user)");
+        const nextRoute = await getHomeRouteForUserId(session.user.id);
+        router.replace(nextRoute);
       }
       setSessionChecked(true);
     };

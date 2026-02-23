@@ -1,22 +1,24 @@
-import React, { useEffect } from "react";
-import { FadeInDown, FadeInUp } from "react-native-reanimated";
-import { AnimatedView, Link, SafeAreaView, Text, View, Image } from "@/tw";
+﻿import React, { useEffect } from "react";
+import { SafeAreaView, View, Image } from "@/tw";
 import { router } from "expo-router";
-import { useAuthStore } from "../../store/auth-store";
-
+import { supabase } from "@/supabase/supabase";
+import { getHomeRouteForUserId } from "@/services/access-service";
 
 export default function Splash() {
+  useEffect(() => {
+    const timer = setTimeout(async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
 
-  const { sessionChecked } = useAuthStore();
+      if (!session) {
+        router.replace("/(onboarding)/welcome");
+        return;
+      }
 
-    useEffect(() => {
-        const timer = setTimeout(() => {
-        if (sessionChecked) {
-          router.replace("/(user)");
-        } else {
-          router.replace("/(onboarding)/welcome");
-        }
-    }, 2000); 
+      const nextRoute = await getHomeRouteForUserId(session.user.id);
+      router.replace(nextRoute);
+    }, 1200);
 
     return () => clearTimeout(timer);
   }, []);
