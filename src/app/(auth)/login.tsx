@@ -13,27 +13,32 @@ import React from "react";
 import { Alert, KeyboardAvoidingView, Platform, Pressable } from "react-native";
 import { useAuthStore } from "../../store/auth-store";
 import { Ionicons } from "@expo/vector-icons";
+import { loginService, signInWithGoogleLoginService } from "@/services/auth-service";
 
 export default function Login() {
   const { name, email, password, setEmail, setPassword, showPassword, setShowPassword } = useAuthStore();
-
+ 
   const handleLogin = async () => {
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: email,
-        password: password,
-      });
+      const user = await loginService(email, password);
+      router.replace("/(tabs)");
+    } catch (error: any) {
+      const message =
+        error?.msg ??
+        (typeof error?.message === "string" ? error.message : "Something went wrong");
+      Alert.alert("Login Failed", message);
+    }
+  };
 
-      if (error) {
-        Alert.alert("Login error", error.message);
-        return;
-      }
-
-      if (data.session) {
-        router.replace("/(tabs)");
-      }
-    } catch (error) {
-      Alert.alert("Login error", error.message);
+  const handleSignInWithGoogle = async () => {
+    try {
+      const user = await signInWithGoogleLoginService();
+      router.replace("/(tabs)");
+    } catch (error: any) {
+      const message =
+        error?.msg ??
+        (typeof error?.message === "string" ? error.message : "Something went wrong");
+      Alert.alert("Sign In with Google Failed", message);
     }
   };
 
@@ -136,7 +141,7 @@ export default function Login() {
         </View>
         
         <TouchableOpacity
-          // onPress={handleSignupWithGoogle}
+          onPress={handleSignInWithGoogle}
           className="bg-white rounded-xl p-4 border border-neutral-200 flex-row items-center justify-center gap-x-3"
         >
           <Image

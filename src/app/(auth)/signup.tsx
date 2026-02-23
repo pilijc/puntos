@@ -11,7 +11,7 @@ import { KeyboardAvoidingView, Platform, Alert } from "react-native";
 import { router } from "expo-router";
 import { useAuthStore } from "../../store/auth-store";
 import signUpService from "../../services/auth-service";
-import { signInWithGoogleService } from "@/services/auth-service";
+import { signUpWithGoogleService } from "@/services/auth-service";
 import { Stepper, NameStep, EmailStep, PasswordStep, TermsStep, StepHeader } from "../../components/stepper";
 import { Ionicons } from "@expo/vector-icons";
 
@@ -136,12 +136,15 @@ export default function SignUp() {
 
   const handleSignupWithGoogle = async () => {
     try {
-      await signInWithGoogleService();
+      await signUpWithGoogleService();
       Alert.alert("Success", "Account created!");
       router.replace("/(tabs)");
     } catch (error: any) {
       reset();
-      Alert.alert("Google Sign-Up Failed", error?.message);
+      const message =
+        error?.msg ??
+        (typeof error?.message === "string" ? error.message : "Something went wrong");
+      Alert.alert("Google Sign-Up Failed", message);
     }
   };
 
