@@ -124,7 +124,7 @@ export default function SignUp() {
     try {
       await signUpService(email, password, name);
       Alert.alert("Success", "Account created!");
-      router.replace("/(tabs)");
+      router.replace("/(user)");
     } catch (error: any) {
       Alert.alert("Signup failed", error?.message);
     } finally {
@@ -138,7 +138,7 @@ export default function SignUp() {
     try {
       await signInWithGoogleService();
       Alert.alert("Success", "Account created!");
-      router.replace("/(tabs)");
+      router.replace("/(user)");
     } catch (error: any) {
       reset();
       Alert.alert("Google Sign-Up Failed", error?.message);

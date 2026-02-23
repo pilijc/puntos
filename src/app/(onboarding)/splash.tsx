@@ -12,7 +12,7 @@ export default function Splash() {
     useEffect(() => {
         const timer = setTimeout(() => {
         if (sessionChecked) {
-          router.replace("/(tabs)");
+          router.replace("/(user)");
         } else {
           router.replace("/(onboarding)/welcome");
         }

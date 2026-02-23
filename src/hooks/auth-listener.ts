@@ -10,7 +10,7 @@ export function useAuthListener() {
       (event, session) => {        
         if (event === 'SIGNED_IN' && session) {
           console.log("User logged in:", session.user.email);
-          router.replace("/(tabs)");
+          router.replace("/(user)");
         } else if (event === 'SIGNED_OUT') {
           console.log("User logged out");
           router.replace("/(onboarding)/welcome");

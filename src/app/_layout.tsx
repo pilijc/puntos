@@ -61,7 +61,7 @@ export default function Layout() {
       if (error || !session) {
         router.replace("/(onboarding)/welcome");
       } else {
-        router.replace("/(tabs)");
+        router.replace("/(user)");
       }
       setSessionChecked(true);
     };

@@ -30,7 +30,7 @@ export default function Login() {
       }
 
       if (data.session) {
-        router.replace("/(tabs)");
+        router.replace("/(user)");
       }
     } catch (error) {
       Alert.alert("Login error", error.message);
