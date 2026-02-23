@@ -1,4 +1,105 @@
-# Puntos
+# Puntos Mobile — Docker + Android Setup (Summary)
+
+## Architecture
+
+Docker handles:
+- Node / Expo / Metro
+- JS dependencies
+- Android SDK + Gradle cache
+
+Host handles:
+- ADB
+- Android emulator / USB device
+- APK install
+
+Reason: Docker on Windows/macOS cannot access USB devices.
+
+---
+
+## First-Time Setup
+
+Reset Docker (optional):
+
+```
+docker rm -f $(docker ps -aq) 2>/dev/null || true
+docker volume rm puntos_node_modules gradle-cache 2>/dev/null || true
+docker rmi puntos 2>/dev/null || true
+```
+
+Build Docker image:
+
+```
+docker build -t puntos .
+```
+
+Install Android app (run on host):
+
+```
+npm run android
+```
+
+If asked for another port → type `n`.
+
+---
+
+## Start Dev Server (Docker)
+
+```
+docker run --rm -it \
+  -p 8081:8081 -p 19000:19000 -p 19001:19001 -p 19002:19002 \
+  -v ${PWD}:/app \
+  -v puntos_node_modules:/app/node_modules \
+  -v gradle-cache:/root/.gradle \
+  puntos
+```
+
+---
+
+## Connect App to Docker Metro
+
+```
+adb reverse tcp:8081 tcp:8081
+```
+
+---
+
+## Daily Development
+
+```
+docker run ...
+```
+
+Open app on device/emulator.
+
+---
+
+## Important
+
+- Do NOT press `a` in Docker Metro
+- Android install runs on host
+- Reinstall only if native changes
+
+---
+
+## Workflow Summary
+
+First time:
+
+```
+docker build -t puntos .
+npm run android
+docker run ...
+adb reverse tcp:8081 tcp:8081
+```
+
+Daily:
+
+```
+docker run ...
+```
+
+
+<!-- # Puntos
 
 Expo Router + NativeWind app with a Docker-based local dev workflow.
 
@@ -149,4 +250,4 @@ If package mismatch happens, reinstall:
 ```powershell
 adb -s emulator-5554 uninstall com.anonymous.puntos
 adb -s emulator-5554 install -r android/app/build/outputs/apk/debug/app-debug.apk
-```
+``` -->
