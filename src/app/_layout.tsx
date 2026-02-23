@@ -11,6 +11,7 @@ import { useAuthListener } from "@/hooks/auth-listener";
 import { useAnimatedStyle, useSharedValue, withRepeat, withSequence, withTiming } from "react-native-reanimated";
 import { Image } from "@/tw";
 import { getHomeRouteForUserId } from "@/services/access-service";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -89,9 +90,9 @@ export default function Layout() {
   }
 
   return (
-    <>
+    <GestureHandlerRootView className="flex-1">
       <StatusBar barStyle="light-content" backgroundColor="#121212" />
       <Slot />
-    </>
+    </GestureHandlerRootView>
   );
 }

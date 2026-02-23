@@ -32,17 +32,7 @@ Build Docker image:
 docker build -t puntos .
 ```
 
-Install Android app (run on host):
-
-```
-npm run android
-```
-
-If asked for another port → type `n`.
-
----
-
-## Start Dev Server (Docker)
+Start Docker Metro (keep running) on (terminal 1):
 
 ```
 docker run --rm -it \
@@ -52,6 +42,21 @@ docker run --rm -it \
   -v gradle-cache:/root/.gradle 
   puntos
 ```
+
+Install Android app from running container (terminal 2):
+
+```
+docker ps
+docker exec -it <container-id> npm run android
+```
+
+If Docker install cannot detect device, run on host instead:
+
+```
+npm run android
+```
+
+If asked for another port → type `n`.
 
 ---
 
@@ -76,7 +81,7 @@ Open app on device/emulator.
 ## Important
 
 - Do NOT press `a` in Docker Metro
-- Android install runs on host
+- Android install may run from host if Docker cannot see device
 - Reinstall only if native changes
 
 ---
@@ -87,9 +92,15 @@ First time:
 
 ```
 docker build -t puntos .
-npm run android
 docker run ...
+docker exec -it <container-id> npm run android
 adb reverse tcp:8081 tcp:8081
+```
+
+Fallback (host install):
+
+```
+npm run android
 ```
 
 Daily:
@@ -97,7 +108,6 @@ Daily:
 ```
 docker run ...
 ```
-
 
 <!-- # Puntos
 
