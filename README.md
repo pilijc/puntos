@@ -45,11 +45,11 @@ If asked for another port → type `n`.
 ## Start Dev Server (Docker)
 
 ```
-docker run --rm -it \
-  -p 8081:8081 -p 19000:19000 -p 19001:19001 -p 19002:19002 \
-  -v ${PWD}:/app \
-  -v puntos_node_modules:/app/node_modules \
-  -v gradle-cache:/root/.gradle \
+docker run --rm -it
+  -p 8081:8081 -p 19000:19000 -p 19001:19001 -p 19002:19002
+  -v ${PWD}:/app
+  -v puntos_node_modules:/app/node_modules
+  -v gradle-cache:/root/.gradle
   puntos
 ```
 
