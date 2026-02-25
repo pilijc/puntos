@@ -3,11 +3,13 @@
 ## Architecture
 
 Docker handles:
+
 - Node / Expo / Metro
 - JS dependencies
 - Android SDK + Gradle cache
 
 Host handles:
+
 - ADB
 - Android emulator / USB device
 - APK install
@@ -36,10 +38,10 @@ Start Docker Metro (keep running) on (terminal 1):
 
 ```
 docker run --rm -it \
-  -p 8081:8081 -p 19000:19000 -p 19001:19001 -p 19002:19002 
-  -v ${PWD}:/app 
-  -v puntos_node_modules:/app/node_modules 
-  -v gradle-cache:/root/.gradle 
+  -p 8081:8081 -p 19000:19000 -p 19001:19001 -p 19002:19002
+  -v ${PWD}:/app
+  -v puntos_node_modules:/app/node_modules
+  -v gradle-cache:/root/.gradle
   puntos
 ```
 
@@ -51,6 +53,7 @@ docker exec -it <container-id> npm run android
 ```
 
 If Docker install cannot detect device, run on host instead:
+Install Android app (run on host):
 
 ```
 npm run android
