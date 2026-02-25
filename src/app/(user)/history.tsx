@@ -148,7 +148,6 @@ export default function History() {
 
   return (
     <SafeAreaView className="flex-1 bg-background">
-      {/* Header (No Gradient) */}
       <AnimatedView entering={FadeInDown.duration(500)}>
         <View className="px-6 pt-6 pb-6 bg-primary">
           <View className="flex-row justify-between items-center">
@@ -166,7 +165,6 @@ export default function History() {
             </Text>
           </View>
 
-          {/* Tabs */}
           <View className="flex-row bg-white/20 mt-5 p-1 rounded-xl">
             {TABS.map((tab, i) => {
               const isActive = activeTab === i;
@@ -193,7 +191,6 @@ export default function History() {
         </View>
       </AnimatedView>
 
-      {/* Content */}
       <ScrollView
         className="flex-1"
         contentContainerStyle={{
@@ -217,7 +214,6 @@ export default function History() {
           </AnimatedView>
         ))}
 
-        {/* Footer */}
         <AnimatedView entering={FadeInUp.delay(200).duration(600)}>
           <View className="items-center pt-6 pb-4">
             <Text className="text-[10px] tracking-[2px] text-neutral-300 font-poppins-medium">
@@ -230,7 +226,6 @@ export default function History() {
   );
 }
 
-/* Section Label */
 function SectionLabel({ label }) {
   return (
     <View className="mt-6 mb-3">
@@ -241,7 +236,6 @@ function SectionLabel({ label }) {
   );
 }
 
-/* History Item */
 function HistoryItem({ title, subtitle, time, points, positive, image, icon }) {
   const isPositive = positive ?? points?.startsWith("+");
   const scaleAnim = useRef(new Animated.Value(1)).current;

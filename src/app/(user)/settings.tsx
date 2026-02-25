@@ -10,26 +10,21 @@ import { Ionicons } from '@expo/vector-icons';
 import { useLocation } from "@/hooks/use-location";
 import { getCurrentLocation } from "@/services/location-service";
 
-{/* LOGIC FOR GETTING USER PROFILE */ }
 export default function Settings() {
 
-  /* Loading User Data */
   const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
-  /* Modals */
   const [modalVisible, setModalVisible] = useState(false);
   const [editUsername, setEditUsername] = useState("");
   const [editEmail, setEditEmail] = useState("");
   const [securityModalVisible, setSecurityModalVisible] = useState(false);
   const [storeModalVisible, setStoreModalVisible] = useState(false);
 
-  /* Switch Toggle */
   const [isEnabled, setIsEnabled] = useState(false);
   const toggleSwitch = () => setIsEnabled(previousState => !previousState);
 
-  /* Location permission and state */
   const {
     location,
     permissionStatus,
@@ -37,8 +32,6 @@ export default function Settings() {
     requestPermission: requestLocationPermission,
     refreshLocation,
   } = useLocation();
-
-  // (no static default profile) — real data will be loaded from Supabase
 
   useFocusEffect(
     useCallback(() => {
@@ -80,11 +73,9 @@ export default function Settings() {
       }
 
       if (profileErr) {
-        // don't throw for empty results; maybeSingle() will return null data when no row exists
       }
 
       if (profileData) {
-        // Ensure we only use profile that belongs to the current auth user
         if (profileData.id === currentUser.id) {
           setProfile(profileData);
         } else {
@@ -94,7 +85,6 @@ export default function Settings() {
         setProfile(null);
       }
 
-      // Fetch user settings
       try {
         const settingsRes = await supabase
           .from("user_settings")
@@ -114,7 +104,6 @@ export default function Settings() {
       }
 
     } catch (error) {
-      // keep existing state minimal on error
     } finally {
       setLoading(false);
     }
@@ -135,17 +124,12 @@ export default function Settings() {
     setModalVisible(true);
   };
 
-  {/* LOGIC TO HANDLE PRESSING THE PROFILE BUTTON */ }
   const [preferences, setPreferences] = useState({
     near_store_notifications: false,
     location_enabled: false,
     promo_emails: false,
   });
 
-  /**
- * A generic toggle function. 
- * 'key' will match the column names you'll eventually have in Supabase.
- */
   const togglePreference = async (key: string) => {
     const newValue = !(preferences as any)[key];
     setPreferences(prev => ({ ...prev, [key]: newValue }));
@@ -169,17 +153,14 @@ export default function Settings() {
     }
   };
 
-  {/* LOGIC FOR 1-MINUTE LOCATION SYNC */ }
   React.useEffect(() => {
     let intervalId: NodeJS.Timeout;
 
-    // Function to fetch and update the user's location in the DB
     const syncLocationToDB = async () => {
       if (!user?.id) return;
       try {
         const loc = await getCurrentLocation();
         if (loc) {
-          // Update the user_settings row for the specific user with the new coordinates
           await supabase
             .from("user_settings")
             .update({
@@ -193,16 +174,14 @@ export default function Settings() {
       }
     };
 
-    // If the user has enabled location, do an initial sync immediately then trigger exactly every 1 minute
     if (preferences.location_enabled) {
       syncLocationToDB();
 
       intervalId = setInterval(() => {
         syncLocationToDB();
-      }, 60000); // 60,000 ms = 1 minute
+      }, 60000);
     }
 
-    // Cleanup function: clears the interval if the user disables location or the component unmounts
     return () => {
       if (intervalId) {
         clearInterval(intervalId);
@@ -244,7 +223,6 @@ export default function Settings() {
         </Text>
       </View>
 
-      {/* PROFILE BUTTON — only show when profile belongs to current auth user */}
       {user && (!profile || profile?.id === user.id) && (
         <TouchableOpacity
           onPress={handleProfilePress}
@@ -279,11 +257,6 @@ export default function Settings() {
         </TouchableOpacity>
       )}
 
-      {/* 
-      ------------------------------------------
-      ------------------------------------------ACCOUNT SETTINGS------------------------------------------ 
-      ------------------------------------------
-      */}
       <View>
         <Text className="text-sm font-poppins-semibold text-neutral-600 mb-2">
           ACCOUNT SETTINGS
@@ -291,7 +264,6 @@ export default function Settings() {
       </View>
 
       <View className="mx-4 mb-6 overflow-hidden bg-background rounded-2xl border border-neutral-200">
-        {/* Top Button */}
         <TouchableOpacity
           onPress={() => setSecurityModalVisible(true)}
           className="flex-row items-center p-4 bg-white active:bg-neutral-50 will-change-pressable">
@@ -304,7 +276,6 @@ export default function Settings() {
           <Ionicons name="chevron-forward-outline" size={15} color="#d4d4d4" />
         </TouchableOpacity>
 
-        {/* Bottom Button */}
         <TouchableOpacity
           onPress={() => setStoreModalVisible(true)}
           className="flex-row items-center p-4 bg-white active:bg-neutral-50 will-change-pressable"
@@ -319,11 +290,6 @@ export default function Settings() {
         </TouchableOpacity>
       </View>
 
-      {/* 
-      ------------------------------------------
-      ------------------------------------------NOTIFICATIONS AND PRIVACY------------------------------------------ 
-      ------------------------------------------
-      */}
       <View>
         <Text className="text-sm font-poppins-semibold text-neutral-600 mb-2">
           NOTIFICATIONS & PRIVACY
@@ -331,7 +297,6 @@ export default function Settings() {
       </View>
 
       <View className="mx-4 mb-6 overflow-hidden bg-background rounded-2xl border border-neutral-200 ">
-        {/* Ari ang toggles */}
         <View className="flex-row p-4 bg-background active:bg-neutral-50">
           <View className="h-8 w-8 items-center justify-center rounded-lg bg-orange-50">
             <Ionicons name="notifications-outline" size={18} color="#FF6600" />
@@ -403,12 +368,6 @@ export default function Settings() {
 
       </View>
 
-      {/* 
-      ------------------------------------------
-      ------------------------------------------LOGOUT BUTTON------------------------------------------
-      ------------------------------------------
-      */}
-
       <TouchableOpacity
         onPress={handleLogout}
         className="mx-4 bg-primary py-4 rounded-xl items-center flex-row will-change-pressable justify-center"
@@ -427,7 +386,6 @@ export default function Settings() {
         </Text>
       </View>
 
-      {/* Externalized modals */}
       <EditProfileModal
         visible={modalVisible}
         onClose={handleCancelEdit}
@@ -439,8 +397,6 @@ export default function Settings() {
       />
 
       <SecurityModal visible={securityModalVisible} onClose={() => setSecurityModalVisible(false)} />
-
-      {/* NotificationsModal removed (unused) */}
 
       <StoreOwnerModal
         visible={storeModalVisible}
