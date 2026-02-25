@@ -109,6 +109,14 @@ Daily:
 docker run ...
 ```
 
+---
+
+## Fixing Fast Refresh
+
+If Fast Refresh stops working:
+1. **Remove floating JSX comments** outside `return (...)` blocks (e.g., `{/* comment */}` in standard JS). Use standard `// comment` instead.
+2. **Fix TypeScript errors**. Run `npx tsc --noEmit` and resolve any type errors blocking compilation.
+3. **Clear Metro Cache**. Restart your packager with `npm run start -- -c` or `expo start -c`.
 <!-- # Puntos
 
 Expo Router + NativeWind app with a Docker-based local dev workflow.

@@ -2,7 +2,7 @@ import { supabase } from "@/supabase/supabase";
 import { View, Text, SafeAreaView, TouchableOpacity, Image } from "@/tw";
 import { router, useFocusEffect } from "expo-router";
 import React, { useState, useCallback } from "react";
-import { Alert, Switch } from "react-native";
+import { Alert, Switch, Linking } from "react-native";
 import EditProfileModal from "@/components/settings/EditProfileModal";
 import SecurityModal from "@/components/settings/SecurityModal";
 import StoreOwnerModal from "@/components/settings/StoreOwnerModal";
@@ -10,7 +10,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useLocation } from "@/hooks/use-location";
 import { getCurrentLocation } from "@/services/location-service";
 
-{/* LOGIC FOR GETTING USER PROFILE */ }
+// LOGIC FOR GETTING USER PROFILE
 export default function Settings() {
 
   /* Loading User Data */
@@ -24,6 +24,7 @@ export default function Settings() {
   const [editEmail, setEditEmail] = useState("");
   const [securityModalVisible, setSecurityModalVisible] = useState(false);
   const [storeModalVisible, setStoreModalVisible] = useState(false);
+
 
   /* Switch Toggle */
   const [isEnabled, setIsEnabled] = useState(false);
@@ -135,7 +136,7 @@ export default function Settings() {
     setModalVisible(true);
   };
 
-  {/* LOGIC TO HANDLE PRESSING THE PROFILE BUTTON */ }
+  // LOGIC TO HANDLE PRESSING THE PROFILE BUTTON
   const [preferences, setPreferences] = useState({
     near_store_notifications: false,
     location_enabled: false,
@@ -169,7 +170,7 @@ export default function Settings() {
     }
   };
 
-  {/* LOGIC FOR 1-MINUTE LOCATION SYNC */ }
+  // LOGIC FOR 1-MINUTE LOCATION SYNC
   React.useEffect(() => {
     let intervalId: NodeJS.Timeout;
 
@@ -240,7 +241,7 @@ export default function Settings() {
     <SafeAreaView className="flex-1 bg-background p-4">
       <View>
         <Text className="text-2xl font-poppins-bold text-neutral-900 mb-6">
-          {user ? `Hi, ${displayName}` : "Settings"}
+          Settings
         </Text>
       </View>
 
@@ -352,7 +353,35 @@ export default function Settings() {
           />
         </View>
 
-        <View className="flex-row p-4 bg-white active:bg-neutral-50 items-center">
+        <TouchableOpacity
+          onPress={async () => {
+            if (preferences.location_enabled) {
+              Alert.alert(
+                "Disable Location Access",
+                "To completely revoke location permissions, you must disable the setting in your device's settings menu. Would you like to open it now?",
+                [
+                  {
+                    text: "Cancel",
+                    style: "cancel",
+                  },
+                  {
+                    text: "Open Settings",
+                    onPress: () => {
+                      togglePreference('location_enabled');
+                      Linking.openSettings();
+                    }
+                  }
+                ]
+              );
+            } else {
+              if (!permissionStatus.granted) {
+                await requestLocationPermission();
+              }
+              togglePreference('location_enabled');
+            }
+          }}
+          className="flex-row p-4 bg-white active:bg-neutral-50 items-center will-change-pressable"
+        >
           <View className="h-8 w-8 items-center justify-center rounded-lg bg-yellow-50">
             <Ionicons name="location-outline" size={18} color="#d8d336" />
           </View>
@@ -364,24 +393,17 @@ export default function Settings() {
               {locationLoading
                 ? "Checking..."
                 : permissionStatus.granted
-                  ? location
-                    ? `Device Access Granted • ${location.latitude.toFixed(4)}, ${location.longitude.toFixed(4)}`
-                    : "Device Access Granted"
+                  ? "Device Access Granted"
                   : "Device Access Not Allowed"}
             </Text>
           </View>
-          <Switch
-            trackColor={{ false: '#d4d4d4', true: '#FF6600' }}
-            thumbColor="#FFFFFF"
-            value={preferences.location_enabled}
-            onValueChange={async () => {
-              if (!permissionStatus.granted) {
-                await requestLocationPermission();
-              }
-              togglePreference('location_enabled');
-            }}
-          />
-        </View>
+          <View className="flex-row items-center justify-center">
+            <Text className="text-sm font-poppins-semibold text-primary mr-2">
+              {preferences.location_enabled ? 'Enabled' : 'Disabled'}
+            </Text>
+            <Ionicons name="chevron-forward-outline" size={15} color="#d4d4d4" />
+          </View>
+        </TouchableOpacity>
 
         <View className="flex-row p-4 bg-background active:bg-neutral-50">
           <View className="h-8 w-8 items-center justify-center rounded-lg bg-pink-50">
@@ -402,6 +424,7 @@ export default function Settings() {
         </View>
 
       </View>
+
 
       {/* 
       ------------------------------------------
@@ -463,6 +486,7 @@ export default function Settings() {
           }
         }}
       />
+
 
     </SafeAreaView>
   );

@@ -69,58 +69,58 @@ const HISTORY_DATA = [
     icon: "🎟️",
   },
   {
-      id: 6,
-  section: "October 14",
-  type: "earned",
-  title: "Iron Gym",
-  subtitle: "Location Check-in",
-  time: "6:00 AM",
-  points: "+10",
-  positive: true,
-  image: "https://lh3.googleusercontent.com/aida-public/AB6AXuCkbOOvlwTwDNwhkROLzoIwvBgyEScWV8Flwxtl3QlyNWfSuOfeWFjRwsXD-G0_G2HRxeyOg7oK9dfzvtzqfRzDahy1xdLfHj5vqDkbwHfvasndc16rHw3wXCywrQoNY5unEh4cHmFofmUrPv0XH2Pglbt-QLgU-UBRRB6BxxatssPU2fqevQub5yoetDMEoHOJpCuyT9jy0AT7qfAI5GIKkk0ttASL1eL5y9p8msRE6sOrEKMU-G_1E8X-pcms3LLSa4a3wLICQw",
-},
-{
-  id: 7,
-  section: "October 14",
-  type: "claimed",
-  title: "Zen Studio",
-  subtitle: "Reward Claimed",
-  time: "8:20 PM",
-  points: "-300",
-  image: "https://lh3.googleusercontent.com/aida-public/AB6AXuCWjyL0GY6w2llQQhUrAZYxiS9wzf9Zkww8zwknp6802tWHgFiGobSBFCYQgC7SSJsNkbeZ_NBfE7a8NTlYfUVy_28_afCiqDppV1HJBEKJ03NtqamvYGXLia5m3Yy_7dkIOa4MuDo3Am49S5HSFj4a1N4QphPqVHiQ99eY-kbwtNyTCmrMRAQr11NN6FtrQq7oRt9lAjtgbcPxOCGLZx4jm8-tndrGLx9MHn6yPsn8w4XvoPae2wYDals8hmRBNtE7ZPKqaNZXeQ",
-},
-{ 
-  id: 8,
-  section: "October 14",
-  type: "earned",
-  title: "Bella Bakery",
-  subtitle: "Morning Coffee Purchase",
-  time: "9:10 AM",
-  points: "+18",
-  positive: true,
-  icon: "☕",
-},
-{
-  id: 9,
-  section: "February 21",
-  type: "earned",
-  title: "Burger Hub",
-  subtitle: "Combo Meal Purchase",
-  time: "12:45 PM",
-  points: "+64",
-  positive: true,
-  icon: "🍔", 
-},
-{
-  id: 10,
-  section: "February 20",
-  type: "claimed",
-  title: "Bella Bakery",
-  subtitle: "Free Pastry Reward",
-  time: "3:15 PM",
-  points: "-120",
-  icon: "🎁", 
-},
+    id: 6,
+    section: "October 14",
+    type: "earned",
+    title: "Iron Gym",
+    subtitle: "Location Check-in",
+    time: "6:00 AM",
+    points: "+10",
+    positive: true,
+    image: "https://lh3.googleusercontent.com/aida-public/AB6AXuCkbOOvlwTwDNwhkROLzoIwvBgyEScWV8Flwxtl3QlyNWfSuOfeWFjRwsXD-G0_G2HRxeyOg7oK9dfzvtzqfRzDahy1xdLfHj5vqDkbwHfvasndc16rHw3wXCywrQoNY5unEh4cHmFofmUrPv0XH2Pglbt-QLgU-UBRRB6BxxatssPU2fqevQub5yoetDMEoHOJpCuyT9jy0AT7qfAI5GIKkk0ttASL1eL5y9p8msRE6sOrEKMU-G_1E8X-pcms3LLSa4a3wLICQw",
+  },
+  {
+    id: 7,
+    section: "October 14",
+    type: "claimed",
+    title: "Zen Studio",
+    subtitle: "Reward Claimed",
+    time: "8:20 PM",
+    points: "-300",
+    image: "https://lh3.googleusercontent.com/aida-public/AB6AXuCWjyL0GY6w2llQQhUrAZYxiS9wzf9Zkww8zwknp6802tWHgFiGobSBFCYQgC7SSJsNkbeZ_NBfE7a8NTlYfUVy_28_afCiqDppV1HJBEKJ03NtqamvYGXLia5m3Yy_7dkIOa4MuDo3Am49S5HSFj4a1N4QphPqVHiQ99eY-kbwtNyTCmrMRAQr11NN6FtrQq7oRt9lAjtgbcPxOCGLZx4jm8-tndrGLx9MHn6yPsn8w4XvoPae2wYDals8hmRBNtE7ZPKqaNZXeQ",
+  },
+  {
+    id: 8,
+    section: "October 14",
+    type: "earned",
+    title: "Bella Bakery",
+    subtitle: "Morning Coffee Purchase",
+    time: "9:10 AM",
+    points: "+18",
+    positive: true,
+    icon: "☕",
+  },
+  {
+    id: 9,
+    section: "February 21",
+    type: "earned",
+    title: "Burger Hub",
+    subtitle: "Combo Meal Purchase",
+    time: "12:45 PM",
+    points: "+64",
+    positive: true,
+    icon: "🍔",
+  },
+  {
+    id: 10,
+    section: "February 20",
+    type: "claimed",
+    title: "Bella Bakery",
+    subtitle: "Free Pastry Reward",
+    time: "3:15 PM",
+    points: "-120",
+    icon: "🎁",
+  },
 ];
 
 export default function History() {
@@ -130,8 +130,8 @@ export default function History() {
     activeTab === 0
       ? HISTORY_DATA
       : HISTORY_DATA.filter((item) =>
-          activeTab === 1 ? item.type === "earned" : item.type === "claimed"
-        );
+        activeTab === 1 ? item.type === "earned" : item.type === "claimed"
+      );
 
   const sections = [...new Set(filteredData.map((item) => item.section))];
 
@@ -157,7 +157,7 @@ export default function History() {
                 Activity
               </Text>
               <Text className="text-white/70 text-sm font-poppins-regular">
-                 Unclaimed Points
+                Unclaimed Points
               </Text>
             </View>
 
@@ -175,14 +175,12 @@ export default function History() {
                 <TouchableOpacity
                   key={tab}
                   onPress={() => setActiveTab(i)}
-                  className={`flex-1 py-2 rounded-lg items-center ${
-                    isActive ? "bg-white" : ""
-                  }`}
+                  className={`flex-1 py-2 rounded-lg items-center ${isActive ? "bg-white" : ""
+                    }`}
                 >
                   <Text
-                    className={`text-sm font-poppins-semibold ${
-                      isActive ? "text-primary" : "text-white"
-                    }`}
+                    className={`text-sm font-poppins-semibold ${isActive ? "text-primary" : "text-white"
+                      }`}
                   >
                     {tab}
                   </Text>
@@ -295,14 +293,12 @@ function HistoryItem({ title, subtitle, time, points, positive, image, icon }) {
           </View>
 
           <View
-            className={`px-3 py-1 rounded-full ${
-              isPositive ? "bg-emerald-50" : "bg-red-50"
-            }`}
+            className={`px-3 py-1 rounded-full ${isPositive ? "bg-emerald-50" : "bg-red-50"
+              }`}
           >
             <Text
-              className={`text-sm font-poppins-bold ${
-                isPositive ? "text-emerald-500" : "text-red-500"
-              }`}
+              className={`text-sm font-poppins-bold ${isPositive ? "text-emerald-500" : "text-red-500"
+                }`}
             >
               {points}
             </Text>
