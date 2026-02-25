@@ -1,6 +1,6 @@
-import { Text, SafeAreaView, View } from "@/tw";
+import { Text, SafeAreaView, View, Image } from "@/tw";
 import React, { useEffect, useRef, useState } from "react";
-import Mapbox, { MapView, UserLocation, Camera, PointAnnotation } from "@rnmapbox/maps";
+import Mapbox, { MapView, UserLocation, Camera, PointAnnotation, UserTrackingMode } from "@rnmapbox/maps";
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
 import { Alert, PermissionsAndroid, Platform, ScrollView, TextInput, TextInputSubmitEditingEvent, TouchableOpacity } from "react-native";
@@ -66,11 +66,11 @@ export default function Discover() {
     return (
       <SafeAreaView className="flex-1">
         <View className="absolute top-15 left-4 right-4 z-20">
-          <View className="bg-white rounded-2xl flex-row justify-between items-center shadow px-4 py-2">
+          <View className="bg-white rounded-2xl flex-row justify-between items-center px-4 py-2">
             <TextInput
               className="flex-1 text-base text-black"
+              placeholderTextColor="gray"
               placeholder="Search a place"
-              style={{ color: "gray" }}
               value={searchQuery}
               onChangeText={setSearchQuery}
               onSubmitEditing={searchPlaces}
@@ -81,18 +81,25 @@ export default function Discover() {
           </View>
   
           {searchResults.length > 0 && (
-            <View className="bg-white mt-2 rounded-xl shadow max-h-56">
-              <ScrollView keyboardShouldPersistTaps="handled">
+            <View className="bg-white mt-2 rounded-2xl p-2 max-h-72 border border-neutral-100">
+              <ScrollView
+                keyboardShouldPersistTaps="handled"
+                contentContainerClassName="divide-y divide-neutral-100"
+              >
                 {searchResults.map((r) => (
                   <TouchableOpacity
                     key={r.id}
                     onPress={() => handleSearchResultPress(r)}
-                    className="px-10 py-2 border-b border-gray-100"
+                    activeOpacity={0.75}
+                    className="flex-row items-center rounded-xl px-3 py-3 gap-x-3 gap-y-2"
+                    style={{ marginHorizontal: 4 }}
                   >
-                    <Text className="font-semibold p-2">{r.text}</Text>
-                    <Text className="text-xs text-gray-500 p-2">
-                      {r.place_name}
-                    </Text>
+                    <View className="flex-1 gap-y-1">
+                      <Text className="font-semibold text-base text-neutral-900">{r.text}</Text>
+                      <Text numberOfLines={1} className="text-xs text-neutral-500">
+                        {r.place_name}
+                      </Text>
+                    </View>
                   </TouchableOpacity>
                 ))}
               </ScrollView>
@@ -104,8 +111,19 @@ export default function Discover() {
           style={{ flex: 1 }}
           styleURL="mapbox://styles/mapbox/streets-v12"
         >
-          <Mapbox.Camera ref={cameraRef} zoomLevel={6} />
-          <Mapbox.UserLocation visible />
+          <Mapbox.Camera
+            ref={cameraRef}
+            followUserLocation={true}
+            followUserMode={Mapbox.UserTrackingMode.FollowWithHeading}
+            followZoomLevel={16}
+            animationMode="easeTo"
+            animationDuration={300}
+          />
+          <Mapbox.UserLocation 
+            visible 
+            androidRenderMode="normal"
+            showsUserHeadingIndicator={true}
+          /> 
   
           {selectedSearchResult && (
             <PointAnnotation
@@ -116,11 +134,54 @@ export default function Discover() {
           )}
         </MapView>
   
-        <BottomSheet ref={bottomSheetRef} snapPoints={["25%", "50%", "90%"]}>
+        <BottomSheet ref={bottomSheetRef} snapPoints={["30%", "60%"]} index={0}>
           <BottomSheetView className="flex-1 bg-white">
-            <Text className="px-4 pt-4 pb-2 text-lg font-bold">
-              Nearby Stores
-            </Text>
+            <ScrollView
+              horizontal
+              pagingEnabled={false}
+              snapToAlignment="start"
+              decelerationRate="fast"
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ paddingHorizontal: 16, gap: 16 }}
+              className="flex-1 pb-4"
+            >
+
+              <View
+                className="bg-white p-2 flex-row items-center gap-x-3"
+              >
+                <Image
+                  source={{
+                    uri: "https://lh3.googleusercontent.com/aida-public/AB6AXuC4UoIc5vV5FsC0GfTTA75QiDrtMiMWtt6tFc38XKl5LuFnQw44le3ELNt73nsTAZjzI-LsorNZ4J6gPThjuNutUG2gc0FRc28x32itJuxsbctOi-CTpqY0IciSSDhEW2D_W1HXd4CD76pkUY8zeFOJaseJmsrJWE9GR41XiIsGFBT1LngvIvhlPFBhCuDi0HyB0wgetKeYbvj19Q6ewuYHYo7Hd8NOQrkxpsSZuYEXDgvA6MysHT_fhPQoKSf657uhwFNqQeM9LQ",
+                  }}
+                  className="w-24 h-24 rounded-2xl bg-slate-100"
+                />
+                <View className="flex-1">
+                  <View className="flex-row justify-between items-start">
+                    <Text className="text-lg text-neutral-900 flex-1 font-poppins-semibold" numberOfLines={1}>
+                      The Artisan Brew
+                    </Text>
+                    <View className="flex-row items-center">
+                      <Ionicons name="star" size={14} color="#FB8500" />
+                      <Text className="text-xs text-orange-500 ml-0.5 font-poppins">4.9</Text>
+                    </View>
+                  </View>
+                  <View className="flex-row items-center gap-2 mt-1">
+                    <Text className="text-xs text-slate-500 font-poppins">0.4 km away</Text>
+                    <View className="w-1 h-1 rounded-full bg-slate-300" />
+                    <Text className="text-xs text-slate-500 font-poppins">Cafe</Text>
+                  </View>
+                  <View className="flex-row items-center justify-between mt-3">
+                    <View className="flex-row items-center gap-1">
+                      <Ionicons name="star" size={18} color="#FB8500" />
+                      <Text className="text-sm text-orange-500 font-poppins">akakaka pts</Text>
+                    </View>
+                    <TouchableOpacity className="bg-orange-500/10 px-3 py-1.5 rounded-xl">
+                      <Text className="text-xs text-orange-500 font-poppins">Details</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </View>
+            </ScrollView>
           </BottomSheetView>
         </BottomSheet>
       </SafeAreaView>
