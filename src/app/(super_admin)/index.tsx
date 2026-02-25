@@ -1,13 +1,10 @@
-﻿import { useRouter } from "expo-router";
-import React, { useState } from "react";
+﻿import React, { useState } from "react";
 import { Alert, TextInput, Image } from "react-native";
 import { SafeAreaView, ScrollView, Text, TouchableOpacity, View } from "@/tw";
 import { supabase } from "@/supabase/supabase";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 
 export default function SuperAdminHome() {
-  const router = useRouter();
-
   const softCardShadow = {
     shadowColor: "#0F172A",
     shadowOffset: { width: 0, height: 2 },
@@ -75,9 +72,7 @@ export default function SuperAdminHome() {
 
           {/* Header Top Bar */}
           <View className="flex-row items-center justify-between mt-2">
-            <TouchableOpacity onPress={() => router.back()} className="w-10 h-10 rounded-full bg-white/15 items-center justify-center">
-              <MaterialIcons name="arrow-back" size={20} color="#FFFFFF" />
-            </TouchableOpacity>
+            <View className="w-10 h-10" />
 
             <Text className="text-white text-xl font-poppins-bold">Super Admin</Text>
 
