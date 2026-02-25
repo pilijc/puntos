@@ -10,7 +10,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useLocation } from "@/hooks/use-location";
 import { getCurrentLocation } from "@/services/location-service";
 
-{/* LOGIC FOR GETTING USER PROFILE */}
+{/* LOGIC FOR GETTING USER PROFILE */ }
 export default function Settings() {
 
   /* Loading User Data */
@@ -68,7 +68,7 @@ export default function Settings() {
 
       try {
         const res = await supabase
-          .from("profiles")
+          .from("users")
           .select("*")
           .eq("id", currentUser.id)
           .maybeSingle();
@@ -84,9 +84,8 @@ export default function Settings() {
       }
 
       if (profileData) {
-        // Ensure we only use profile that belongs to the current auth user (support id or profile_id per schema)
-        const profileUserId = profileData.id ?? profileData.profile_id;
-        if (profileUserId === currentUser.id) {
+        // Ensure we only use profile that belongs to the current auth user
+        if (profileData.id === currentUser.id) {
           setProfile(profileData);
         } else {
           setProfile(null);
@@ -94,6 +93,26 @@ export default function Settings() {
       } else {
         setProfile(null);
       }
+
+      // Fetch user settings
+      try {
+        const settingsRes = await supabase
+          .from("user_settings")
+          .select("*")
+          .eq("user_id", currentUser.id)
+          .maybeSingle();
+
+        if (settingsRes.data) {
+          setPreferences({
+            near_store_notifications: settingsRes.data.near_store_notifications ?? false,
+            location_enabled: settingsRes.data.location_enabled ?? false,
+            promo_emails: preferences.promo_emails, // default
+          });
+        }
+      } catch (settingsErr) {
+        console.error("Error fetching settings:", settingsErr);
+      }
+
     } catch (error) {
       // keep existing state minimal on error
     } finally {
@@ -116,24 +135,80 @@ export default function Settings() {
     setModalVisible(true);
   };
 
-  {/* LOGIC TO HANDLE PRESSING THE PROFILE BUTTON */}
+  {/* LOGIC TO HANDLE PRESSING THE PROFILE BUTTON */ }
   const [preferences, setPreferences] = useState({
-    nearby_alerts: false,
+    near_store_notifications: false,
+    location_enabled: false,
     promo_emails: false,
-    dark_mode: false,
   });
 
   /**
  * A generic toggle function. 
  * 'key' will match the column names you'll eventually have in Supabase.
  */
-const togglePreference = async (key: string) => {
-  const newValue = !preferences[key];
-  setPreferences(prev => ({ ...prev, [key]: newValue }));
+  const togglePreference = async (key: string) => {
+    const newValue = !(preferences as any)[key];
+    setPreferences(prev => ({ ...prev, [key]: newValue }));
 
-  // Preferences do not exist in profiles schema yet
-  // TODO: Add preferences columns to profiles table in future migration
-};
+    if (!user?.id) return;
+
+    try {
+      const { data, error } = await supabase
+        .from("user_settings")
+        .select("id")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (data?.id) {
+        await supabase.from("user_settings").update({ [key]: newValue }).eq("id", data.id);
+      } else {
+        await supabase.from("user_settings").insert({ user_id: user.id, [key]: newValue });
+      }
+    } catch (e) {
+      console.error("Failed to save preference", e);
+    }
+  };
+
+  {/* LOGIC FOR 1-MINUTE LOCATION SYNC */ }
+  React.useEffect(() => {
+    let intervalId: NodeJS.Timeout;
+
+    // Function to fetch and update the user's location in the DB
+    const syncLocationToDB = async () => {
+      if (!user?.id) return;
+      try {
+        const loc = await getCurrentLocation();
+        if (loc) {
+          // Update the user_settings row for the specific user with the new coordinates
+          await supabase
+            .from("user_settings")
+            .update({
+              latitude: loc.latitude,
+              longitude: loc.longitude,
+            })
+            .eq("user_id", user.id);
+        }
+      } catch (e) {
+        console.error("Failed to sync location to DB:", e);
+      }
+    };
+
+    // If the user has enabled location, do an initial sync immediately then trigger exactly every 1 minute
+    if (preferences.location_enabled) {
+      syncLocationToDB();
+
+      intervalId = setInterval(() => {
+        syncLocationToDB();
+      }, 60000); // 60,000 ms = 1 minute
+    }
+
+    // Cleanup function: clears the interval if the user disables location or the component unmounts
+    return () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+    };
+  }, [preferences.location_enabled, user?.id]);
 
   const handleSaveProfile = async () => {
     try {
@@ -142,7 +217,7 @@ const togglePreference = async (key: string) => {
 
       const payload: Record<string, unknown> = { id: currentUser.id, name: editUsername };
 
-      const { error } = await supabase.from("profiles").upsert(payload);
+      const { error } = await supabase.from("users").upsert(payload);
       if (error) throw error;
 
       setProfile(prev => ({ ...(prev || {}), name: editUsername }));
@@ -170,7 +245,7 @@ const togglePreference = async (key: string) => {
       </View>
 
       {/* PROFILE BUTTON — only show when profile belongs to current auth user */}
-      {user && (!profile || (profile?.id ?? profile?.profile_id) === user.id) && (
+      {user && (!profile || profile?.id === user.id) && (
         <TouchableOpacity
           onPress={handleProfilePress}
           className="mx-4 mb-6 bg-white rounded-2xl p-4 border border-neutral-200 active:bg-neutral-50"
@@ -217,20 +292,20 @@ const togglePreference = async (key: string) => {
 
       <View className="mx-4 mb-6 overflow-hidden bg-background rounded-2xl border border-neutral-200">
         {/* Top Button */}
-        <TouchableOpacity 
-        onPress={() => setSecurityModalVisible(true)}
-        className="flex-row items-center p-4 bg-white active:bg-neutral-50 will-change-pressable">
+        <TouchableOpacity
+          onPress={() => setSecurityModalVisible(true)}
+          className="flex-row items-center p-4 bg-white active:bg-neutral-50 will-change-pressable">
           <View className="h-5 w-5 items-center justify-center rounded-lg bg-emerald-50">
-            <Ionicons name="settings-outline" size={15} color="#3b82f6"/>
+            <Ionicons name="settings-outline" size={15} color="#3b82f6" />
           </View>
           <Text className="text-base flex-1 ml-3 font-poppins-semibold text-neutral-900">
             Security
           </Text>
-          <Ionicons name="chevron-forward-outline" size={15} color="#d4d4d4"/>
+          <Ionicons name="chevron-forward-outline" size={15} color="#d4d4d4" />
         </TouchableOpacity>
 
         {/* Bottom Button */}
-        <TouchableOpacity 
+        <TouchableOpacity
           onPress={() => setStoreModalVisible(true)}
           className="flex-row items-center p-4 bg-white active:bg-neutral-50 will-change-pressable"
         >
@@ -240,7 +315,7 @@ const togglePreference = async (key: string) => {
           <Text className="text-base flex-1 ml-3 font-poppins-semibold text-neutral-900">
             Role
           </Text>
-          <Ionicons name="chevron-forward-outline" size={15} color="#d4d4d4"/>
+          <Ionicons name="chevron-forward-outline" size={15} color="#d4d4d4" />
         </TouchableOpacity>
       </View>
 
@@ -261,7 +336,7 @@ const togglePreference = async (key: string) => {
           <View className="h-8 w-8 items-center justify-center rounded-lg bg-orange-50">
             <Ionicons name="notifications-outline" size={18} color="#FF6600" />
           </View>
-          <View className="ml-3 flex-1">  
+          <View className="ml-3 flex-1">
             <Text className="text-base font-poppins-semibold text-neutral-800">
               Nearby Alerts
             </Text>
@@ -272,52 +347,47 @@ const togglePreference = async (key: string) => {
           <Switch
             trackColor={{ false: '#d4d4d4', true: '#FF6600' }}
             thumbColor="#FFFFFF"
-            value={preferences.nearby_alerts}
-            onValueChange={() => togglePreference('nearby_alerts')}
+            value={preferences.near_store_notifications}
+            onValueChange={() => togglePreference('near_store_notifications')}
           />
         </View>
 
-        <TouchableOpacity
-          onPress={async () => {
-            if (!permissionStatus.granted) {
-              await requestLocationPermission();
-            } else {
-              Alert.alert(
-                "Location Access",
-                permissionStatus.granted
-                  ? "Location access is enabled. You can see nearby stores and check in."
-                  : "Location access is disabled. Enable it to see nearby stores.",
-                [{ text: "OK" }]
-              );
-            }
-          }}
-          className="flex-row items-center p-4 bg-white active:bg-neutral-50 will-change-pressable"
-        >
-            <View className="h-8 w-8 items-center justify-center rounded-lg bg-yellow-50">
-              <Ionicons name="location-outline" size={18} color="#d8d336" />
-            </View>
-            <View className="ml-3 flex-1">  
-              <Text className="text-base font-poppins-semibold text-neutral-800">
-                Location Access
-              </Text>
-              <Text className="text-xs font-poppins-regular text-neutral-400">
-                {locationLoading
-                  ? "Checking..."
-                  : permissionStatus.granted
+        <View className="flex-row p-4 bg-white active:bg-neutral-50 items-center">
+          <View className="h-8 w-8 items-center justify-center rounded-lg bg-yellow-50">
+            <Ionicons name="location-outline" size={18} color="#d8d336" />
+          </View>
+          <View className="ml-3 flex-1">
+            <Text className="text-base font-poppins-semibold text-neutral-800">
+              Location Access
+            </Text>
+            <Text className="text-xs font-poppins-regular text-neutral-400">
+              {locationLoading
+                ? "Checking..."
+                : permissionStatus.granted
                   ? location
-                    ? `Enabled • ${location.latitude.toFixed(4)}, ${location.longitude.toFixed(4)}`
-                    : "Enabled"
-                  : "Not allowed"}
-              </Text>
-            </View>
-            <Ionicons name="chevron-forward-outline" size={15} color="#d4d4d4"/>
-        </TouchableOpacity>
+                    ? `Device Access Granted • ${location.latitude.toFixed(4)}, ${location.longitude.toFixed(4)}`
+                    : "Device Access Granted"
+                  : "Device Access Not Allowed"}
+            </Text>
+          </View>
+          <Switch
+            trackColor={{ false: '#d4d4d4', true: '#FF6600' }}
+            thumbColor="#FFFFFF"
+            value={preferences.location_enabled}
+            onValueChange={async () => {
+              if (!permissionStatus.granted) {
+                await requestLocationPermission();
+              }
+              togglePreference('location_enabled');
+            }}
+          />
+        </View>
 
         <View className="flex-row p-4 bg-background active:bg-neutral-50">
           <View className="h-8 w-8 items-center justify-center rounded-lg bg-pink-50">
             <Ionicons name="megaphone-outline" size={18} color="#ad2291" />
           </View>
-          <View className="ml-3 flex-1">  
+          <View className="ml-3 flex-1">
             <Text className="text-base font-poppins-semibold text-neutral-800">
               Promotional Emails
             </Text>
@@ -332,31 +402,6 @@ const togglePreference = async (key: string) => {
         </View>
 
       </View>
-
-      {/* 
-      ------------------------------------------
-      ------------------------------------------TEST LOCATION BUTTON------------------------------------------
-      ------------------------------------------
-      */}
-
-      <TouchableOpacity
-        onPress={async () => {
-          try {
-            const loc = await getCurrentLocation();
-            if (loc) {
-              Alert.alert('Location Test', `Lat: ${loc.latitude.toFixed(5)}, Lon: ${loc.longitude.toFixed(5)}`);
-              refreshLocation();
-            } else {
-              Alert.alert('Location Error', 'Could not get location. On emulator: set a location in Extended Controls (⋯) → Location first.');
-            }
-          } catch (e: any) {
-            Alert.alert('Location Error', e?.message || 'Current location unavailable. On emulator: set location in Extended Controls → Location, then try again.');
-          }
-        }}
-        className="mx-4 my-2 bg-blue-400 py-3 rounded-xl"
-      >
-        <Text className="text-white text-center font-poppins-semibold">Test Location</Text>
-      </TouchableOpacity>
 
       {/* 
       ------------------------------------------
@@ -406,7 +451,7 @@ const togglePreference = async (key: string) => {
             const { data: { user: currentUser } } = await supabase.auth.getUser();
             if (!currentUser?.id) throw new Error("No authenticated user");
             const newRole = profile?.role === "store_owner" ? "user" : "store_owner";
-            const { error } = await supabase.from("profiles").upsert({ id: currentUser.id, role: newRole });
+            const { error } = await supabase.from("users").upsert({ id: currentUser.id, role: newRole });
 
             if (error) throw error;
             setProfile(prev => ({ ...(prev || {}), role: newRole }));

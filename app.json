@@ -11,6 +11,14 @@
       "expo-router",
       "expo-sqlite",
       [
+        "expo-location",
+        {
+          "isAndroidBackgroundLocationEnabled": true,
+          "isAndroidForegroundServiceEnabled": true,
+          "locationWhenInUsePermission": "Allow location to show nearby stores"
+        }
+      ],
+      [
         "expo-splash-screen",
         {
           "backgroundColor": "#ffffff",
@@ -30,7 +38,8 @@
     "slug": "puntos",
     "android": {
       "package": "com.project.puntos",
-      "newArchEnabled": true
+      "newArchEnabled": true,
+      "permissions": ["ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION"]
     },
     "ios": {
       "bundleIdentifier": "com.project.puntos"

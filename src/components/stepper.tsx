@@ -71,7 +71,7 @@ export function Stepper({ currentStep, totalSteps }: StepperProps) {
   }
 export function NameStep({ value, onChange, error }: StepProps) {
   return (
-    <View>
+    <View className="gap-y-4">
       <Text className="mb-2 text-sm font-poppins-medium text-neutral-700">
         Full Name
       </Text>
@@ -79,7 +79,8 @@ export function NameStep({ value, onChange, error }: StepProps) {
         value={value}
         onChangeText={onChange}
         placeholder="John Doe"
-        className="border border-neutral-200 rounded-xl px-4 py-4 font-poppins"
+        placeholderTextColor="#404040"
+        className="border border-neutral-200 rounded-xl px-4 py-4 font-poppins text-neutral-700"
         autoFocus
       />
       {error && (
@@ -192,7 +193,7 @@ export function PasswordStep({
 
 export function TermsStep({ accepted, onToggle, error }: TermsStepProps) {
   return (
-    <View>
+    <View className="gap-y-4">
       <View className="bg-background rounded-xl p-4 border border-neutral-200 max-h-64">
         <Text className="font-poppins-semibold text-neutral-900 mb-2">
           Terms of Service & Privacy Policy
@@ -210,7 +211,7 @@ export function TermsStep({ accepted, onToggle, error }: TermsStepProps) {
       
       <Pressable
         onPress={onToggle}
-        className="flex-row items-start gap-x-3"
+        className="flex-row items-start gap-x-3 mt-4"
       >
         <View
           className={`w-6 h-6 rounded border-2 items-center justify-center mt-0.5 ${
