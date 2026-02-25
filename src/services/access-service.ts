@@ -1,6 +1,6 @@
 import { supabase } from "@/supabase/supabase";
 
-export type AppHomeRoute = "/(user)" | "/(super_admin)";
+export type AppHomeRoute = "/(user)" | "/(super_admin)" | "/(front_desk)";
 
 const ROLE_PRIORITY = [
   "super_admin",
@@ -97,6 +97,9 @@ export async function getRoleTypeForUser(userId: string): Promise<string | null>
 export function mapRoleToHomeRoute(roleType: string | null | undefined): AppHomeRoute {
   if (roleType === "super_admin" || roleType === "superadmin") {
     return "/(super_admin)";
+  }
+  if (roleType === "front_desk" || roleType === "frontdesk") {
+    return "/(front_desk)";
   }
   return "/(user)";
 }
