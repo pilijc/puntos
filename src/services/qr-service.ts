@@ -1,6 +1,7 @@
-
 import { supabase } from "@/supabase/supabase";
 import { QRCodeState } from "@/type/qr";
+
+
 
 export async function generateQRCode(userId: string, expiryHours: number = 1):Promise<QRCodeState | null> {
   
@@ -12,13 +13,13 @@ export async function generateQRCode(userId: string, expiryHours: number = 1):Pr
     .insert([
       {
         user_id: userId,
-        is_used: false,
+        barcode_hash: null,
         store_staff_id: null,
-        scanned_at: null,
+        is_used: false,
+         scanned_at: null,
         transaction_completed_at: null,
         created_at: new Date().toISOString(),
         expires_at: expiresAt.toISOString(),
-       
       },
     ])
     .select('*');  
@@ -36,4 +37,10 @@ export async function generateQRCode(userId: string, expiryHours: number = 1):Pr
   }
 
   return data[0]; // return the inserted QR row
+
+
+
+
+
+  
 }
