@@ -60,6 +60,19 @@ If asked for another port → type `n`.
 
 ---
 
+## Start Dev Server (Docker)
+
+```
+docker run --rm -it 
+  -p 8081:8081 -p 19000:19000 -p 19001:19001 -p 19002:19002 
+  -v ${PWD}:/app 
+  -v puntos_node_modules:/app/node_modules 
+  -v gradle-cache:/root/.gradle 
+  puntos
+```
+
+---
+
 ## Connect App to Docker Metro
 
 ```
@@ -81,7 +94,7 @@ Open app on device/emulator.
 ## Important
 
 - Do NOT press `a` in Docker Metro
-- Android install may run from host if Docker cannot see device
+- Android install runs on host
 - Reinstall only if native changes
 
 ---
@@ -92,15 +105,9 @@ First time:
 
 ```
 docker build -t puntos .
-docker run ...
-docker exec -it <container-id> npm run android
-adb reverse tcp:8081 tcp:8081
-```
-
-Fallback (host install):
-
-```
 npm run android
+docker run ...
+adb reverse tcp:8081 tcp:8081
 ```
 
 Daily:
@@ -108,6 +115,7 @@ Daily:
 ```
 docker run ...
 ```
+
 
 <!-- # Puntos
 

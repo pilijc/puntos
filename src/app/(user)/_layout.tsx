@@ -7,9 +7,9 @@ import { TouchableOpacity } from '@/tw';
 
 export default function TabLayout() {
   return (
-    <Tabs 
-      screenOptions={{ 
-        headerShown: false, 
+    <Tabs
+      screenOptions={{
+        headerShown: false,
         tabBarStyle: { backgroundColor: '#FFFFFF', height: 70, paddingBottom: 8 },
         tabBarActiveTintColor: '#FF6600',
         tabBarInactiveTintColor: '#8B8D98',
@@ -30,9 +30,9 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="redeem"
+        name="qr"
         options={{
-          title: 'Redeem',
+          title: 'Qr',
           tabBarIcon: ({ color }) => <MaterialCommunityIcons size={22} name="qrcode-scan" color={color} />,
           tabBarButton: (props: any) => (
             <CustomTabBarButton onPress={props.onPress} />
