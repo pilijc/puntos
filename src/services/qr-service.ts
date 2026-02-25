@@ -1,22 +1,9 @@
 
 import { supabase } from "@/supabase/supabase";
-import { store } from "expo-router/build/global-state/router-store";
- 
+import { QRCodeState } from "@/type/qr";
 
- 
- 
-export interface QRCodeState {
-  id: string;
-  user_id: string | null;
-  store_staff_id: string | null;
-  is_used: boolean;
-  scanned_at: string | null;
-  transaction_completed_at: string | null;
-  created_at: string;
-  expires_at: string;
-}
-
-export async function generateQRCode(userId: string, expiryHours: number = 1) {
+export async function generateQRCode(userId: string, expiryHours: number = 1):Promise<QRCodeState | null> {
+  
   const expiresAt = new Date();
   expiresAt.setHours(expiresAt.getHours() + expiryHours);
 
@@ -25,6 +12,12 @@ export async function generateQRCode(userId: string, expiryHours: number = 1) {
     .insert([
       {
         user_id: userId,
+        is_used: false,
+        store_staff_id: null,
+        scanned_at: null,
+        transaction_completed_at: null,
+        created_at: new Date().toISOString(),
+        expires_at: expiresAt.toISOString(),
        
       },
     ])

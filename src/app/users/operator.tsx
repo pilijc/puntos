@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, StyleSheet, Button, Alert } from "react-native";
-import { BarCodeScanner } from "expo-barcode-scanner";
-import { scanQRCode } from "@/services/operator-service";
+ import { scanQRCode } from "@/services/operator-service";
 
 export default function OperatorScanScreen() {
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
@@ -9,7 +8,7 @@ export default function OperatorScanScreen() {
 
   useEffect(() => {
     (async () => {
-      const { status } = await BarCodeScanner.requestPermissionsAsync();
+   //   const { status } = await BarCodeScanner.requestPermissionsAsync();
       setHasPermission(status === "granted");
     })();
   }, []);
@@ -42,10 +41,10 @@ export default function OperatorScanScreen() {
 
   return (
     <View style={styles.container}>
-      <BarCodeScanner
+      {/* <BarCodeScanner
         onBarCodeScanned={handleBarCodeScanned}
         style={StyleSheet.absoluteFillObject}
-      />
+      /> */}
       <View style={styles.overlay}>
         <Text style={styles.instructions}>
           Align the QR code to earn points
