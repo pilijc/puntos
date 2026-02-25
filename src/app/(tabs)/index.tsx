@@ -14,7 +14,7 @@ export default function Discover() {
   const stores = [
     {
       id: "1",
-      name: "Punto Coffee",
+      name: "Punto asdas",
       address: "Cebu IT Park",
       distance: "0.4 km",
       rating: 4.6,
