@@ -1,15 +1,6 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 
 buildscript {
-ext {
-        buildToolsVersion = "35.0.0"
-        minSdkVersion = 24
-        compileSdkVersion = 36
-        targetSdkVersion = 34
-        
-        // This is the line your error was looking for!
-        ndkVersion = "27.1.12297006" 
-    }
   repositories {
     google()
     mavenCentral()
@@ -40,7 +31,7 @@ allprojects {
       // Authentication is no longer required as per Mapbox's removal of download token requirement
       // See: https://github.com/mapbox/mapbox-maps-flutter/issues/775
       // Keeping this as optional for backward compatibility
-      def token = project.properties['EXPO_PUBLIC_MAPBOX_DOWNLOADS_TOKEN'] ?: System.getenv('EXPO_PUBLIC_MAPBOX_DOWNLOADS_TOKEN')
+      def token = project.properties['MAPBOX_DOWNLOADS_TOKEN'] ?: System.getenv('RNMAPBOX_MAPS_DOWNLOAD_TOKEN') ?: System.getenv('EXPO_PUBLIC_MAPBOX_DOWNLOADS_TOKEN')
       if (token) {
         authentication { basic(BasicAuthentication) }
         credentials {
