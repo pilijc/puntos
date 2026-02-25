@@ -1,11 +1,9 @@
-import { useRouter } from "expo-router";
-import React from "react";
+import React, { useState } from "react";
 import { SafeAreaView, ScrollView, Text, TouchableOpacity, View } from "@/tw";
+import { TextInput } from "react-native";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 
 export default function FrontDeskScan() {
-    const router = useRouter();
-
     const softCardShadow = {
         shadowColor: "#0F172A",
         shadowOffset: { width: 0, height: 4 },
@@ -28,9 +26,7 @@ export default function FrontDeskScan() {
 
                     {/* Header Top Bar */}
                     <View className="flex-row items-center justify-between mt-2">
-                        <TouchableOpacity onPress={() => router.back()} className="w-10 h-10 items-center justify-center">
-                            <MaterialIcons name="arrow-back" size={24} color="#FFFFFF" />
-                        </TouchableOpacity>
+                        <View className="w-10 h-10" />
 
                         <Text className="text-white text-2xl font-poppins-bold">Award Points</Text>
 
@@ -132,6 +128,83 @@ export default function FrontDeskScan() {
 
                         </View>
                     </View>
+                </View>
+
+                {/* Manual Entry Section */}
+                <View className="px-6 mb-12">
+                    {/* Header */}
+                    <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+                        <View style={{ flexDirection: "row", alignItems: "center" }}>
+                            <MaterialIcons name="edit-note" size={28} color="#FF6600" />
+                            <Text style={{ fontSize: 20, fontFamily: "Poppins-Bold", color: "#0F172A", marginLeft: 8 }}>Manual Entry</Text>
+                        </View>
+
+                        <TouchableOpacity
+                            style={{
+                                flexDirection: "row",
+                                alignItems: "center",
+                                backgroundColor: "#FFF5F0",
+                                paddingHorizontal: 12,
+                                paddingVertical: 6,
+                                borderRadius: 9999,
+                                borderWidth: 1,
+                                borderColor: "#FFDED0"
+                            }}
+                        >
+                            <MaterialIcons name="receipt" size={16} color="#FF6600" />
+                            <Text style={{ fontSize: 13, fontFamily: "Poppins-Bold", color: "#FF6600", marginLeft: 4 }}>Scan Receipt</Text>
+                        </TouchableOpacity>
+                    </View>
+
+                    {/* Inputs Card */}
+                    <View
+                        style={[
+                            softCardShadow,
+                            { backgroundColor: "#FFFFFF", borderRadius: 24, padding: 24, marginBottom: 24 }
+                        ]}
+                    >
+                        {/* Product Name */}
+                        <View style={{ marginBottom: 20 }}>
+                            <Text style={{ fontSize: 13, fontFamily: "Poppins-Bold", color: "#64748B", letterSpacing: 1, marginBottom: 8 }}>PRODUCT NAME</Text>
+                            <View style={{ flexDirection: "row", alignItems: "center", backgroundColor: "#F8FAFC", borderRadius: 12, paddingHorizontal: 16, height: 56 }}>
+                                <MaterialIcons name="shopping-bag" size={20} color="#94A3B8" />
+                                <TextInput
+                                    placeholder="e.g. Iced Caramel Macchiato"
+                                    placeholderTextColor="#94A3B8"
+                                    style={{ flex: 1, marginLeft: 12, fontSize: 15, fontFamily: "Poppins-Medium", color: "#0F172A" }}
+                                />
+                            </View>
+                        </View>
+
+                        {/* Total Purchase Price */}
+                        <View>
+                            <Text style={{ fontSize: 13, fontFamily: "Poppins-Bold", color: "#64748B", letterSpacing: 1, marginBottom: 8 }}>TOTAL PURCHASE PRICE (₱)</Text>
+                            <View style={{ flexDirection: "row", alignItems: "center", backgroundColor: "#F8FAFC", borderRadius: 12, paddingHorizontal: 16, height: 56 }}>
+                                <MaterialIcons name="payments" size={20} color="#94A3B8" />
+                                <TextInput
+                                    placeholder="0.00"
+                                    placeholderTextColor="#94A3B8"
+                                    keyboardType="numeric"
+                                    style={{ flex: 1, marginLeft: 12, fontSize: 15, fontFamily: "Poppins-Medium", color: "#0F172A" }}
+                                />
+                            </View>
+                        </View>
+                    </View>
+
+                    {/* Scan & Confirm Button */}
+                    <TouchableOpacity
+                        style={{
+                            backgroundColor: "#FF6600",
+                            borderRadius: 16,
+                            height: 60,
+                            flexDirection: "row",
+                            alignItems: "center",
+                            justifyContent: "center",
+                        }}
+                    >
+                        <MaterialIcons name="qr-code-scanner" size={24} color="#FFFFFF" />
+                        <Text style={{ color: "#FFFFFF", fontSize: 18, fontFamily: "Poppins-Bold", marginLeft: 12 }}>Scan & Confirm</Text>
+                    </TouchableOpacity>
                 </View>
 
             </ScrollView>
