@@ -160,11 +160,15 @@ export default function Login() {
               </Text>
             </TouchableOpacity>
 
+            {/* ── Sign-up links ─────────────────────────────────────── */}
             <View className="flex-row justify-center">
               <Text className="font-poppins text-neutral-600">
-                Don’t have an account?
+                Don't have an account?
               </Text>
-              <Text className="ml-1 font-poppins-semibold text-primary" onPress={() => router.replace("/signup")}>
+              <Text
+                className="ml-1 font-poppins-semibold text-primary"
+                onPress={() => router.replace("/signup")}
+              >
                 Sign up
               </Text>
             </View>
