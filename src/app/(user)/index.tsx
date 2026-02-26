@@ -25,6 +25,8 @@ export default function Discover() {
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [selectedSearchResult, setSelectedSearchResult] = useState<any>(null);
   const [routeGeoJSON, setRouteGeoJSON] = useState<GeoJSON.LineString | null>(null);
+  const [routeDrawProgress, setRouteDrawProgress] = useState(0);
+  const routeAnimationRef = useRef<ReturnType<typeof requestAnimationFrame> | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -32,6 +34,25 @@ export default function Discover() {
       setStores(data ?? []);
     })();
   }, []);
+
+  // Animate route drawing from start to end
+  useEffect(() => {
+    if (!routeGeoJSON?.coordinates?.length) return;
+    const durationMs = 1800;
+    const startTime = Date.now();
+    const run = () => {
+      const elapsed = Date.now() - startTime;
+      const progress = Math.min(elapsed / durationMs, 1);
+      setRouteDrawProgress(progress);
+      if (progress < 1) {
+        routeAnimationRef.current = requestAnimationFrame(run);
+      }
+    };
+    routeAnimationRef.current = requestAnimationFrame(run);
+    return () => {
+      if (routeAnimationRef.current != null) cancelAnimationFrame(routeAnimationRef.current);
+    };
+  }, [routeGeoJSON]);
 
   const searchPlaces = async () => {
     if (!searchQuery.trim()) return;
@@ -70,6 +91,7 @@ export default function Discover() {
   
     const route = await getRoute(start, end);
     setRouteGeoJSON(route);
+    setRouteDrawProgress(0);
     // if (route && Array.isArray(route.coordinates) && route.coordinates.length >= 2) {
     //   const coords = [...route.coordinates];
     //   // ensure the line starts/ends exactly at the same coordinates as the markers
@@ -203,26 +225,36 @@ export default function Discover() {
           />
         ))}
 
-        {routeGeoJSON && !searchQuery && (
-          <Mapbox.ShapeSource
-            id="routeSource"
-            shape={{
-              type: "Feature",
-              geometry: routeGeoJSON,
-              properties: {},
-            }}
-          >
-            <Mapbox.LineLayer
-              id="routeLine"
-              style={{
-                lineColor: "#f97316",
-                lineWidth: 4,
-                lineCap: "round",
-                lineJoin: "round",
+        {routeGeoJSON && !searchQuery && (() => {
+          const coords = routeGeoJSON.coordinates;
+          const total = coords.length;
+          const visibleCount = Math.max(2, Math.ceil(total * routeDrawProgress));
+          const animatedCoords = coords.slice(0, visibleCount);
+          const animatedLine: GeoJSON.LineString = {
+            type: "LineString",
+            coordinates: animatedCoords,
+          };
+          return (
+            <Mapbox.ShapeSource
+              id="routeSource"
+              shape={{
+                type: "Feature",
+                geometry: animatedLine,
+                properties: {},
               }}
-            />
-          </Mapbox.ShapeSource>
-        )}
+            >
+              <Mapbox.LineLayer
+                id="routeLine"
+                style={{
+                  lineColor: "#f97316",
+                  lineWidth: 4,
+                  lineCap: "round",
+                  lineJoin: "round",
+                }}
+              />
+            </Mapbox.ShapeSource>
+          );
+        })()}
       </MapView>
 
       <BottomSheet ref={bottomSheetRef} snapPoints={["20%", "55%"]} index={0}>

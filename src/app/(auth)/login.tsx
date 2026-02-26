@@ -80,7 +80,8 @@ export default function Login() {
               Email
             </Text>
             <TextInput
-              placeholder="john@example.com"
+              placeholder="email@domain.com"
+              placeholderTextColor="#404040"
               keyboardType="email-address"
               className="border border-neutral-300 rounded-xl px-4 py-4 font-poppins"
               onChangeText={setEmail}
@@ -102,12 +103,13 @@ export default function Login() {
             <View>
               <View className="flex-row items-center">
                 <TextInput
+                  placeholderTextColor="#404040"
                   value={password}
                   onChangeText={setPassword}
                   placeholder="Enter your password"
                   secureTextEntry={!showPassword}
                   autoCapitalize="none"
-                  className="flex-1 border border-neutral-200 rounded-xl px-4 py-4 font-poppins"
+                  className="flex-1 border border-neutral-200 rounded-xl px-4 py-4 font-poppins text-black"
                   autoFocus
                 />
                 <TouchableOpacity
