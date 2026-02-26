@@ -387,6 +387,7 @@ export default function Discover() {
           <MaterialIcons name="filter-center-focus" size={35} color="#FB8500" />
         </TouchableOpacity>
       )}
+      <Text>Testing</Text>
     </SafeAreaView>
   );
 }
