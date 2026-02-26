@@ -1,9 +1,16 @@
 import { supabase } from "@/supabase/supabase";
+import { parseQRCode, createQRTransaction } from "@/services/qr-service";
 
 export interface ScanResult {
   success: boolean;
   message: string;
   pointsEarned?: number;
+}
+
+export interface FrontDeskScanResult {
+  success: boolean;
+  message: string;
+  transactionId?: string;
 }
 
 export async function scanQRCode(
@@ -23,13 +30,10 @@ export async function scanQRCode(
     return { success: false, message: "QR code not found" };
   }
 
-  // VALIDATION: Checked the qr if already used or expired
+  // VALIDATION: Check if QR is already used
   const now = new Date();
   if (qrData.is_used) {
     return { success: false, message: "QR code has already been used" };
-  }
-  if (new Date(qrData.expires_at) < now) {
-    return { success: false, message: "QR code has expired" };
   }
 
   // 3. Update qr_codes as used
@@ -65,4 +69,45 @@ export async function scanQRCode(
   }
 
   return { success: true, message: "QR scanned successfully", pointsEarned };
+}
+
+/**
+ * Process a front desk scan from raw QR code data
+ * Handles QR parsing, staff authentication, and transaction creation
+ */
+export async function processFrontDeskScan(
+  qrData: string,
+  pointsToAward: number = 10
+): Promise<FrontDeskScanResult> {
+  // 1. Parse the QR code
+  const parsed = parseQRCode(qrData);
+
+  if (!parsed) {
+    return { success: false, message: "Invalid QR Code. This QR code is not recognized." };
+  }
+
+  // 2. Get current staff user
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+  if (authError || !user) {
+    return { success: false, message: "Staff not authenticated." };
+  }
+
+  // 3. Create QR transaction
+  try {
+    const transaction = await createQRTransaction(
+      parsed.userId,
+      user.id,
+      pointsToAward
+    );
+
+    return {
+      success: true,
+      message: "Customer QR scanned successfully",
+      transactionId: transaction.id,
+    };
+  } catch (error) {
+    console.error("Failed to create transaction:", error);
+    return { success: false, message: "Failed to process QR code. Please try again." };
+  }
 }

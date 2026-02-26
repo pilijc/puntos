@@ -4,8 +4,7 @@ import { Alert, StyleSheet } from "react-native";
 import { SafeAreaView, ScrollView, Text, TouchableOpacity, View } from "@/tw";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { CameraView, useCameraPermissions } from "expo-camera";
-import { parseQRCode, createQRTransaction } from "@/services/qr-service";
-import { supabase } from "@/supabase/supabase";
+import { processFrontDeskScan } from "@/services/operator-service";
 
 export default function FrontDeskScan() {
     const router = useRouter();
@@ -13,7 +12,7 @@ export default function FrontDeskScan() {
     const [permission, requestPermission] = useCameraPermissions();
     const [isProcessing, setIsProcessing] = useState(false);
 
-    // Request camera permission on mount
+    // Request camera permission to open
     useEffect(() => {
         if (!permission?.granted) {
             requestPermission();
@@ -27,42 +26,25 @@ export default function FrontDeskScan() {
         setScanned(true);
 
         try {
-            // Parse the QR code
-            const parsed = parseQRCode(data);
-            
-            if (!parsed) {
-                Alert.alert('Invalid QR Code', 'This QR code is not recognized.');
-                setScanned(false);
-                setIsProcessing(false);
-                return;
+            const result = await processFrontDeskScan(data, 10);
+
+            if (result.success) {
+                Alert.alert(
+                    'Success!',
+                    `Customer QR scanned successfully. Transaction ID: ${result.transactionId}`,
+                    [{ text: 'Scan Another', onPress: () => {
+                        setScanned(false);
+                        setIsProcessing(false);
+                    }}]
+                );
+            } else {
+                Alert.alert('Error', result.message, [
+                    { text: 'OK', onPress: () => {
+                        setScanned(false);
+                        setIsProcessing(false);
+                    }}
+                ]);
             }
-
-            // Get current staff user
-            const { data: { user } } = await supabase.auth.getUser();
-            
-            if (!user) {
-                Alert.alert('Error', 'Staff not authenticated.');
-                setScanned(false);
-                setIsProcessing(false);
-                return;
-            }
-
-            // Create QR transaction
-            const transaction = await createQRTransaction(
-                parsed.userId,
-                user.id,
-                10 // Default points - adjust as needed
-            );
-
-            Alert.alert(
-                'Success!',
-                `Customer QR scanned successfully. Transaction ID: ${transaction.id}`,
-                [{ text: 'Scan Another', onPress: () => {
-                    setScanned(false);
-                    setIsProcessing(false);
-                }}]
-            );
-
         } catch (error) {
             console.error('Scan error:', error);
             Alert.alert('Error', 'Failed to process QR code. Please try again.');
@@ -113,23 +95,24 @@ export default function FrontDeskScan() {
                         {/* Camera Viewfinder */}
                         <View className="bg-[#111111] rounded-[20px] w-full aspect-square relative overflow-hidden">
                             {permission?.granted ? (
-                                <CameraView
-                                    className="flex-1"
-                                    facing="back"
-                                    barcodeScannerSettings={{
-                                        barcodeTypes: ['qr'],
-                                    }}
-                                    onBarcodeScanned={scanned ? undefined : handleBarCodeScanned}
-                                >
-                                    {/* Corner Markers */}
+                                <>
+                                    <CameraView
+                                        className="flex-1"
+                                        facing="back"
+                                        barcodeScannerSettings={{
+                                            barcodeTypes: ['qr'],
+                                        }}
+                                        onBarcodeScanned={scanned ? undefined : handleBarCodeScanned}
+                                    />
+                                   
                                     <View className="absolute top-6 left-6 w-10 h-10 border-t-4 border-l-4 border-white rounded-tl-xl" />
                                     <View className="absolute top-6 right-6 w-10 h-10 border-t-4 border-r-4 border-white rounded-tr-xl" />
                                     <View className="absolute bottom-6 left-6 w-10 h-10 border-b-4 border-l-4 border-white rounded-bl-xl" />
                                     <View className="absolute bottom-6 right-6 w-10 h-10 border-b-4 border-r-4 border-white rounded-br-xl" />
 
-                                    {/* Red Laser Line */}
+                                    
                                     <View style={styles.laserLine} />
-                                </CameraView>
+                                </>
                             ) : (
                                 <View className="flex-1 justify-center items-center">
                                     <Text className="text-white text-center">
@@ -145,7 +128,7 @@ export default function FrontDeskScan() {
                             )}
 
                             {/* Instructions text */}
-                            <Text className="absolute bottom-10 left-0 right-0 text-white font-poppins-medium text-xs text-center px-5">
+                            <Text className="absolute bottom-10 left-0 right-0 text-white font-poppins-medium text-xs text-center px-5 z-10">
                                 Align customer QR code within the frame
                             </Text>
                         </View>
