@@ -1,7 +1,6 @@
-﻿import React, { useState } from "react";
-import { Alert, TextInput, Image } from "react-native";
+﻿import React from "react";
+import { TextInput, Image } from "react-native";
 import { SafeAreaView, ScrollView, Text, TouchableOpacity, View } from "@/tw";
-import { supabase } from "@/supabase/supabase";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 
 export default function SuperAdminHome() {
@@ -64,13 +63,10 @@ export default function SuperAdminHome() {
   return (
     <SafeAreaView className="flex-1 bg-backgroundMuted">
       <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 100 }} showsVerticalScrollIndicator={false}>
-        {/* Header Section */}
         <View className="bg-primary rounded-b-[35px] px-6 pt-2 pb-20 overflow-hidden">
-          {/* Decorative Circles */}
           <View className="absolute -top-10 -right-10 w-56 h-56 rounded-full bg-white/10" />
           <View className="absolute -bottom-12 -left-10 w-28 h-28 rounded-full bg-white/10" />
 
-          {/* Header Top Bar */}
           <View className="flex-row items-center justify-between mt-2">
             <View className="w-10 h-10" />
 
@@ -82,17 +78,14 @@ export default function SuperAdminHome() {
             </TouchableOpacity>
           </View>
 
-          {/* Welcome Text */}
           <View className="mt-8 mb-2">
             <Text className="text-white text-4xl font-poppins-bold">Dashboard</Text>
             <Text className="mt-1 text-[13px] text-white/90 font-poppins">Welcome back, Administrator</Text>
           </View>
         </View>
 
-        {/* Metrics Section */}
         <View className="px-6 -mt-12 mb-8">
           <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-            {/* Total Users Card */}
             <View
               style={[
                 softCardShadow,
@@ -106,7 +99,6 @@ export default function SuperAdminHome() {
               <Text style={{ marginTop: 6, fontSize: 10, fontFamily: "Poppins-Bold", color: "#94A3B8", letterSpacing: 1 }}>TOTAL USERS</Text>
             </View>
 
-            {/* Active Stores Card */}
             <View
               style={[
                 softCardShadow,
@@ -122,7 +114,6 @@ export default function SuperAdminHome() {
           </View>
         </View>
 
-        {/* Search Bar Section */}
         <View className="px-6 mb-8">
           <View
             style={[
@@ -131,7 +122,7 @@ export default function SuperAdminHome() {
                 flexDirection: "row",
                 alignItems: "center",
                 backgroundColor: "#FFFFFF",
-                borderRadius: 9999, // fully rounded pill
+                borderRadius: 9999,
                 paddingHorizontal: 20,
                 height: 56,
               }
@@ -157,9 +148,7 @@ export default function SuperAdminHome() {
           </View>
         </View>
 
-        {/* Manage Users Section */}
         <View className="px-6 mb-12">
-          {/* Header */}
           <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 4, paddingVertical: 12 }}>
             <View style={{ flexDirection: "row", alignItems: "center" }}>
               <MaterialIcons name="person-outline" size={26} color="#FF6600" />
@@ -171,7 +160,6 @@ export default function SuperAdminHome() {
             </TouchableOpacity>
           </View>
 
-          {/* Users List Container */}
           <View
             style={[
               softCardShadow,
@@ -222,9 +210,7 @@ export default function SuperAdminHome() {
           </View>
         </View>
 
-        {/* Store Management Section */}
         <View className="px-6 mb-12">
-          {/* Header */}
           <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 4, paddingVertical: 12 }}>
             <View style={{ flexDirection: "row", alignItems: "center" }}>
               <MaterialIcons name="storefront" size={26} color="#FF6600" />
@@ -236,10 +222,9 @@ export default function SuperAdminHome() {
             </TouchableOpacity>
           </View>
 
-          {/* Filters */}
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 16 }} contentContainerStyle={{ paddingRight: 20 }}>
             {storeFilters.map((filter, index) => {
-              const active = index === 0; // Hardcoded 'All Stores' as active for visual matching
+              const active = index === 0;
               return (
                 <TouchableOpacity
                   key={filter}
@@ -261,7 +246,6 @@ export default function SuperAdminHome() {
             })}
           </ScrollView>
 
-          {/* Store Cards */}
           <View style={{ gap: 16 }}>
             {mockStores.map((store) => (
               <View
@@ -275,7 +259,6 @@ export default function SuperAdminHome() {
                   }
                 ]}
               >
-                {/* Top Row: Image, Info, Status */}
                 <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
                   <View style={{ flexDirection: "row", flex: 1 }}>
                     <Image
@@ -291,7 +274,6 @@ export default function SuperAdminHome() {
                     </View>
                   </View>
 
-                  {/* Status Pill */}
                   <View
                     style={{
                       backgroundColor: store.status === "ACTIVE" ? "#DCFCE7" : "#FEF3C7",
@@ -312,7 +294,6 @@ export default function SuperAdminHome() {
                   </View>
                 </View>
 
-                {/* Middle Row: Owner & Front Desk */}
                 <View style={{ backgroundColor: "#F8FAFC", borderRadius: 16, padding: 16, flexDirection: "row", marginBottom: 20 }}>
                   <View style={{ flex: 1 }}>
                     <Text style={{ fontSize: 10, fontFamily: "Poppins-Bold", color: "#94A3B8", letterSpacing: 1 }}>OWNER</Text>
@@ -324,7 +305,6 @@ export default function SuperAdminHome() {
                   </View>
                 </View>
 
-                {/* Bottom Row: Actions */}
                 <View style={{ flexDirection: "row", gap: 12 }}>
                   <TouchableOpacity
                     style={{
