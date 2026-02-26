@@ -1,9 +1,21 @@
 import { supabase } from "@/supabase/supabase";
-import { QRCodeState } from "@/type/qr";
+//import { QRCodeState } from "@/type/qr";
 
 
+export interface QRCodeState {
+  id: string;
+  user_id: string | null;
+  barcode_hash: string | null;
+  store_staff_id: string | null;
+  is_used: boolean;
+  scanned_at: string | null;
+  transaction_completed_at: string | null;
+  created_at: string;
+  expires_at: string;
+}
 
-export async function generateQRCode(userId: string, expiryHours: number = 1):Promise<QRCodeState | null> {
+
+export async function generateQRCode(userId: string, expiryHours: number = 1) {
   
   const expiresAt = new Date();
   expiresAt.setHours(expiresAt.getHours() + expiryHours);
