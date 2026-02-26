@@ -1,0 +1,105 @@
+import { View, Text, SafeAreaView, ScrollView, TouchableOpacity } from "@/tw";
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import React, { useMemo } from "react";
+import { router } from "expo-router";
+import SortPill from "@/components/rewards/SortPill";
+import StoreCard from "@/components/rewards/StoreCard";
+import { stores } from "@/data/rewards";
+import { useRewardsUiStore } from "@/store/rewards-ui-store";
+
+const storeSortOptions = [
+  { id: "nearby", label: "Nearby" },
+  { id: "points", label: "Points" },
+  { id: "az", label: "A-Z" },
+] as const;
+
+export default function Stores() {
+  const { storeSort, storePointsOrder, setStoreSort, setStorePointsOrder } =
+    useRewardsUiStore();
+
+  const sortedStores = useMemo(() => {
+    const list = [...stores];
+    if (storeSort === "points") {
+      list.sort((a, b) =>
+        storePointsOrder === "desc" ? b.points - a.points : a.points - b.points
+      );
+    } else if (storeSort === "az") {
+      list.sort((a, b) => a.name.localeCompare(b.name));
+    } else {
+      list.sort((a, b) => a.distanceMiles - b.distanceMiles);
+    }
+    return list;
+  }, [storeSort, storePointsOrder]);
+
+  const totalPoints = stores.reduce((sum, store) => sum + store.points, 0);
+
+  return (
+    <SafeAreaView className="flex-1 bg-background">
+      <ScrollView
+        className="flex-1"
+        contentContainerClassName="px-6 pt-6 pb-8 gap-y-4"
+      >
+        <View className="flex-row items-center gap-x-3">
+          <TouchableOpacity
+            onPress={() => router.back()}
+            className="w-10 h-10 rounded-full bg-white border border-neutral-200 items-center justify-center"
+          >
+            <MaterialIcons name="chevron-left" size={22} color="#0f172a" />
+          </TouchableOpacity>
+          <Text className="text-2xl font-poppins-bold text-neutral-900">
+            My Stores
+          </Text>
+        </View>
+
+        <Text className="text-xs text-neutral-500 font-poppins">
+          {stores.length} stores • {totalPoints.toLocaleString()} pts total
+        </Text>
+
+        <View className="flex-row gap-x-2">
+          {storeSortOptions.map((option) => {
+            const isPoints = option.id === "points";
+            const isActive = storeSort === option.id;
+            const arrowColor = isActive ? "#FF6600" : "#94a3b8";
+            const arrowName =
+              storePointsOrder === "asc" ? "arrow-upward" : "arrow-downward";
+            return (
+              <SortPill
+                key={option.id}
+                label={option.label}
+                active={isActive}
+                rightIcon={
+                  isPoints ? (
+                    <MaterialIcons name={arrowName} size={12} color={arrowColor} />
+                  ) : null
+                }
+                onPress={() => {
+                  if (isPoints) {
+                    if (storeSort === "points") {
+                      setStorePointsOrder(
+                        storePointsOrder === "desc" ? "asc" : "desc"
+                      );
+                    } else {
+                      setStoreSort("points");
+                    }
+                  } else {
+                    setStoreSort(option.id);
+                  }
+                }}
+              />
+            );
+          })}
+        </View>
+
+        <View className="gap-y-3">
+          {sortedStores.map((store) => (
+            <StoreCard
+              key={store.id}
+              store={store}
+              onPress={() => router.push(`/store/${store.id}`)}
+            />
+          ))}
+        </View>
+      </ScrollView>
+    </SafeAreaView>
+  );
+}

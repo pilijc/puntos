@@ -1,18 +1,58 @@
 {
   "expo": {
-    "scheme": "acme",
+    "scheme": "puntos",
     "userInterfaceStyle": "automatic",
     "orientation": "default",
+    "icon": "./src/assets/images/puntos-icon.png",
     "web": {
       "output": "static"
     },
-    "icon": "./src/assets/puntos-icon.png",
     "plugins": [
-      "expo-router"
-
-
+      "expo-router",
+      "expo-sqlite",
+      [
+        "expo-location",
+        {
+          "isAndroidBackgroundLocationEnabled": true,
+          "isAndroidForegroundServiceEnabled": true,
+          "locationWhenInUsePermission": "Allow location to show nearby stores"
+        }
+      ],
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#ffffff",
+          "image": "./src/assets/images/puntos-icon.png",
+          "imageWidth": 200
+        }
+      ],
+      [
+        "@rnmapbox/maps",
+        {
+          "RNMapboxMapsDownloadToken": "${EXPO_PUBLIC_MAPBOX_DOWNLOADS_TOKEN}"
+        }
+      ],
+      "@react-native-google-signin/google-signin",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "gradleProperties": {
+              "MAPBOX_DOWNLOADS_TOKEN": "${EXPO_PUBLIC_MAPBOX_DOWNLOADS_TOKEN}"
+            }
+          }
+        }
+      ]
     ],
     "name": "puntos",
-    "slug": "puntos"
+    "slug": "puntos",
+    "android": {
+      "package": "com.project.puntos",
+      "newArchEnabled": true,
+      "permissions": ["ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION"]
+    },
+    "ios": {
+      "bundleIdentifier": "com.project.puntos"
+    }
   }
 }

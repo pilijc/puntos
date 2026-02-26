@@ -1,20 +1,82 @@
 import "../global.css";
-import { Slot, Stack } from "expo-router";
+import { Slot, useRouter } from "expo-router";
 import { useFonts } from "expo-font";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as SplashScreen from "expo-splash-screen";
-import { Text, View, Image, Link } from "@/tw";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { Animated, Easing, StatusBar, StyleSheet, View } from "react-native";
+import { supabase } from "@/supabase/supabase";
+import React from "react";
+import { useAuthListener } from "@/hooks/auth-listener";
+import { useAnimatedStyle, useSharedValue, withRepeat, withSequence, withTiming } from "react-native-reanimated";
+import { Image } from "@/tw";
+import { getHomeRouteForUserId } from "@/services/access-service";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 SplashScreen.preventAutoHideAsync();
 
-export default function Layout() {
+function SplashPulse() {
+  const scale = useSharedValue(1);
 
+  useEffect(() => {
+    scale.value = withRepeat(
+      withSequence(
+        withTiming(1.12, { duration: 800, easing: Easing.inOut(Easing.ease) }),
+        withTiming(1, { duration: 800, easing: Easing.inOut(Easing.ease) })
+      ),
+      -1,
+      true
+    );
+  }, []);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
+  return (
+    <View className="flex-1 bg-background justify-center items-center">
+      <Animated.View style={animatedStyle}>
+        <Image
+          source={require("../assets/images/puntos-icon.png")}
+          className="w-10 h-10"
+        />
+      </Animated.View>
+    </View>
+  );
+}
+
+export default function Layout() {
+  useAuthListener();
+  const [sessionChecked, setSessionChecked] = useState(false);
+  const router = useRouter();
   const [fontsLoaded] = useFonts({
-    "Poppins-Regular": require("../app/assets/fonts/Poppins-Regular.ttf"),
-    "Poppins-Medium": require("../app/assets/fonts/Poppins-Medium.ttf"),
-    "Poppins-SemiBold": require("../app/assets/fonts/Poppins-SemiBold.ttf"),
-    "Poppins-Bold": require("../app/assets/fonts/Poppins-Bold.ttf"),
+    "Poppins-Regular": require("../assets/fonts/Poppins-Regular.ttf"),
+    "Poppins-Medium": require("../assets/fonts/Poppins-Medium.ttf"),
+    "Poppins-SemiBold": require("../assets/fonts/Poppins-SemiBold.ttf"),
+    "Poppins-Bold": require("../assets/fonts/Poppins-Bold.ttf"),
+  });
+
+  useEffect(() => {
+    const checkSession = async () => {
+      const { data: { session }, error } = await supabase.auth.getSession();
+
+      if (error || !session) {
+        router.replace("/(onboarding)/welcome");
+      } else {
+        const nextRoute = await getHomeRouteForUserId(session.user.id);
+        router.replace(nextRoute);
+      }
+      setSessionChecked(true);
+    };
+
+    if (fontsLoaded) {
+      checkSession();
+    }
+  }, [fontsLoaded]);
+
+  SplashScreen.setOptions({
+    duration: 1000,
+    fade: true,
   });
 
   useEffect(() => {
@@ -24,71 +86,13 @@ export default function Layout() {
   }, [fontsLoaded]);
 
   if (!fontsLoaded) {
-    return null; // prevents flashing default font
+    return null;
   }
 
   return (
-    // <View className="flex flex-1 bg-white">
-    //   <Header />
-    //   <Slot />
-    //   <Footer />
-    // </View>
-
-    <Stack screenOptions={{ headerShown: false }} />
-
-  );
-}
-
-function Header() {
-  const { top } = useSafeAreaInsets();
-  return (
-    <View style={{ paddingTop: top }}>
-      <View className="px-4 lg:px-6 h-14 flex items-center flex-row">
-        <Image
-          source="https://simpleicons.org/icons/expo.svg"
-          className="w-6 h-6 object-contain mr-2"
-        />
-        <Link className="font-bold flex-1 items-center justify-center" href="/">
-          ACME
-        </Link>
-        <View className="flex flex-row gap-4 sm:gap-6">
-          <Link
-            className="text-md font-medium hover:underline web:underline-offset-4"
-            href="/"
-          >
-            About
-          </Link>
-          <Text>HAhAH</Text>
-          <Link
-            className="text-md font-medium hover:underline web:underline-offset-4"
-            href="/"
-          >
-            Product
-          </Link>
-          <Link
-            className="text-md font-medium hover:underline web:underline-offset-4"
-            href="/"
-          >
-            Pricingx``
-          </Link>
-        </View>
-      </View>
-    </View>
-  );
-}
-
-function Footer() {
-  const { bottom } = useSafeAreaInsets();
-  return (
-    <View
-      className="flex shrink-0 bg-gray-100 native:hidden"
-      style={{ paddingBottom: bottom }}
-    >
-      <View className="py-6 flex-1 items-start px-4 md:px-6 ">
-        <Text className={"text-center text-gray-700"}>
-          © {new Date().getFullYear()} Me
-        </Text>
-      </View>
-    </View>
+    <GestureHandlerRootView className="flex-1">
+      <StatusBar barStyle="light-content" backgroundColor="#121212" />
+      <Slot />
+    </GestureHandlerRootView>
   );
 }
