@@ -21,7 +21,7 @@ export default function FrontDeskScan() {
     const pointsEarned = selectedAmount ? Math.round(selectedAmount * POINTS_RATE) : null;
 
     const BottomBar = () => (
-        <View style={{ flexDirection: "row", paddingHorizontal: 24, paddingTop: 24, paddingBottom: 16, gap: 12 }}>
+        <View style={{ flexDirection: "row", paddingHorizontal: 12, paddingTop: 24, paddingBottom: 16, gap: 12 }}>
             <TouchableOpacity
                 onPress={() => setActiveView("scan")}
                 style={{
@@ -50,7 +50,7 @@ export default function FrontDeskScan() {
             >
                 <MaterialIcons name="payments" size={20} color={activeView === "enter_points" ? "#FFFFFF" : "#FF6600"} />
                 <Text style={{ fontSize: 15, fontFamily: "Poppins-Bold", color: activeView === "enter_points" ? "#FFFFFF" : "#FF6600", marginLeft: 8 }}>
-                    Enter Points
+                    Enter Amount
                 </Text>
             </TouchableOpacity>
         </View>
@@ -146,7 +146,7 @@ export default function FrontDeskScan() {
                                 </View>
                                 <View style={{ height: 1, backgroundColor: "#F1F5F9", marginBottom: 10 }} />
                                 {selectedAmount && pointsEarned !== null ? (
-                                    <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+                                    <View style={{ flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between" }}>
                                         {/* Purchase Amount */}
                                         <View style={{ alignItems: "center" }}>
                                             <Text style={{ fontSize: 10, fontFamily: "Poppins-Bold", color: "#94A3B8", letterSpacing: 0.8 }}>PURCHASE</Text>
@@ -164,7 +164,7 @@ export default function FrontDeskScan() {
                                         <MaterialIcons name="arrow-forward" size={16} color="#CBD5E1" />
 
                                         {/* Points Earned */}
-                                        <View style={{ backgroundColor: "#FFF5F0", borderRadius: 10, paddingHorizontal: 12, paddingVertical: 6, alignItems: "center" }}>
+                                        <View style={{ alignItems: "center", backgroundColor: "#FFF5F0", borderRadius: 10, paddingHorizontal: 12, paddingVertical: 6 }}>
                                             <Text style={{ fontSize: 10, fontFamily: "Poppins-Bold", color: "#FF6600", letterSpacing: 0.8 }}>EARN</Text>
                                             <Text style={{ fontSize: 16, fontFamily: "Poppins-Bold", color: "#FF6600", marginTop: 1 }}>+{pointsEarned} PTS</Text>
                                         </View>
