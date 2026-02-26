@@ -13,6 +13,8 @@ import { getSearchResultsService, getStoresService } from "@/services/discover-s
 import { useStoreStore } from "@/store/store-store";
 import { Store } from "@/type/store";
 import type * as GeoJSON from "geojson";
+import * as Notifications from 'expo-notifications';
+
 
 Mapbox.setAccessToken(process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN);
 
@@ -27,6 +29,66 @@ export default function Discover() {
   const [routeGeoJSON, setRouteGeoJSON] = useState<GeoJSON.LineString | null>(null);
   const [routeDrawProgress, setRouteDrawProgress] = useState(0);
   const routeAnimationRef = useRef<ReturnType<typeof requestAnimationFrame> | null>(null);
+
+  const getToken = async () => {
+    try {
+      // 1) Ask for notification permission
+      const { status: existingStatus } = await Notifications.getPermissionsAsync();
+      let finalStatus = existingStatus;
+  
+      if (existingStatus !== "granted") {
+        const { status } = await Notifications.requestPermissionsAsync();
+        finalStatus = status;
+      }
+  
+      if (finalStatus !== "granted") {
+        Alert.alert(
+          "Permission needed",
+          "We need notification permission to send you updates."
+        );
+        return;
+      }
+  
+      // 2) Get Expo push token from the physical device
+      // If you ever see a "must provide projectId" error,
+      // use: await Notifications.getExpoPushTokenAsync({ projectId: "your-expo-project-id" });
+      const expoPushToken = (await Notifications.getExpoPushTokenAsync()).data;
+      console.log("Expo push token:", expoPushToken);
+  
+      // 3) Get current logged-in user from Supabase
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
+  
+      if (userError || !user) {
+        console.log("No logged in user or error:", userError);
+        Alert.alert("Error", "You must be logged in to register this device.");
+        return;
+      }
+  
+      // 4) Save token to your push_tokens table in Supabase
+      // I'm assuming your columns: user_id, expo_push_token, platform
+      const { error: upsertError } = await supabase
+        .from("push_tokens")
+        .insert({
+          user_id: user.id,
+          expo_push_token: expoPushToken,
+          platform: Platform.OS, // "ios" or "android"
+        });
+  
+      if (upsertError) {
+        console.log("Error saving push token:", upsertError);
+        Alert.alert("Error", "Could not save push notification token.");
+        return;
+      }
+  
+      Alert.alert("Done", "This device is registered for push notifications.");
+    } catch (err) {
+      console.log("Unexpected error registering push token:", err);
+      Alert.alert("Error", "Something went wrong setting up notifications.");
+    }
+  };
 
   useEffect(() => {
     (async () => {
@@ -341,7 +403,7 @@ export default function Discover() {
                   <Text className="text-lg text-neutral-900 flex-1 font-poppins-semibold">
                     Rewards
                   </Text>
-                  <TouchableOpacity className="bg-orange-500/10 px-3 py-1.5 rounded-xl">
+                  <TouchableOpacity className="bg-orange-500/10 px-3 py-1.5 rounded-xl" onPress={getToken}>
                     <Text className="text-xs text-orange-500 font-poppins-semibold">View All</Text>
                   </TouchableOpacity>
                 </View>
