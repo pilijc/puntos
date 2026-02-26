@@ -2,6 +2,7 @@ import { useRouter } from "expo-router";
 import React, { useState, useEffect } from "react";
 import { Alert, StyleSheet } from "react-native";
 import { SafeAreaView, ScrollView, Text, TouchableOpacity, View } from "@/tw";
+import { TextInput } from "react-native";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import { parseQRCode, createQRTransaction } from "@/services/qr-service";
@@ -93,8 +94,10 @@ export default function FrontDeskScan() {
                                 <Text className="text-primary font-poppins-bold text-sm">?</Text>
                             </View>
                         </TouchableOpacity>
-                    </View >
+                    </View>
 
+                    {/* Location Box */}
+                    <View className="mt-8 px-4 py-4 rounded-xl border border-white/20 bg-white/10 flex-row items-center">
                     {/* Location Box */}
                     <View className="mt-8 px-4 py-4 rounded-xl border border-white/20 bg-white/10 flex-row items-center">
                         <View className="w-12 h-12 rounded-xl bg-white/20 items-center justify-center">
@@ -104,8 +107,8 @@ export default function FrontDeskScan() {
                             <Text className="text-[10px] tracking-[1px] font-poppins-bold text-white/70 uppercase">CURRENT LOCATION</Text>
                             <Text className="text-white text-sm font-poppins-bold mt-0.5">The Coffee Foundry • Brooklyn</Text>
                         </View>
-                    </View >
-                </View >
+                    </View>
+                </View>
 
                 {/* Scanner Card with Camera */}
                 <View className="px-6 -mt-16 mb-12">

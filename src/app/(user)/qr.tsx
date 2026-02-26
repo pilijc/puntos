@@ -6,7 +6,8 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useRouter } from 'expo-router';
 import QRCode from 'react-native-qrcode-svg';
 import { supabase } from '@/supabase/supabase';
-import { getStaticQRCode } from '@/services/qr-service';
+import { generateQRCode } from '@/services/qr-service';
+import { QRCodeState } from '@/type/qr';
 
 export default function Redeem() {
   const router = useRouter();

@@ -1,4 +1,4 @@
-﻿import { Tabs } from "expo-router";
+import { Tabs } from "expo-router";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import React, { useEffect } from "react";
 import { useRouter } from "expo-router";
