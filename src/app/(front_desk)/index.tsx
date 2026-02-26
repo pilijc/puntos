@@ -1,212 +1,224 @@
 import React, { useState } from "react";
 import { SafeAreaView, ScrollView, Text, TouchableOpacity, View } from "@/tw";
-import { TextInput } from "react-native";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 
-export default function FrontDeskScan() {
-    const softCardShadow = {
-        shadowColor: "#0F172A",
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.1,
-        shadowRadius: 12,
-        elevation: 5,
-    };
+const POINTS_RATE = 0.1;
+const amountGrid = [[100, 200, 300], [400, 500, 600], [700, 800, 900]];
+const barcodeLines = [4, 2, 6, 2, 2, 4, 8, 2, 4, 4, 2, 6, 2, 4, 6, 2, 4, 2, 6, 4];
 
-    // Generate generic varied widths for a barcode simulation
-    const barcodeLines = [4, 2, 6, 2, 2, 4, 8, 2, 4, 4, 2, 6, 2, 4, 6, 2, 4, 2, 6, 4];
+const softCardShadow = {
+    shadowColor: "#0F172A",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 5,
+};
+
+export default function FrontDeskScan() {
+    const [activeView, setActiveView] = useState<"scan" | "enter_points">("scan");
+    const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
+
+    const pointsEarned = selectedAmount ? Math.round(selectedAmount * POINTS_RATE) : null;
+
+    const BottomBar = () => (
+        <View style={{ flexDirection: "row", paddingHorizontal: 12, paddingTop: 24, paddingBottom: 16, gap: 12 }}>
+            <TouchableOpacity
+                onPress={() => setActiveView("scan")}
+                style={{
+                    flex: 1, height: 54, borderRadius: 14,
+                    backgroundColor: activeView === "scan" ? "#FF6600" : "#FFFFFF",
+                    borderWidth: activeView === "scan" ? 0 : 1.5,
+                    borderColor: "#FF6600",
+                    flexDirection: "row", alignItems: "center", justifyContent: "center",
+                }}
+            >
+                <MaterialIcons name="qr-code-scanner" size={20} color={activeView === "scan" ? "#FFFFFF" : "#FF6600"} />
+                <Text style={{ fontSize: 15, fontFamily: "Poppins-Bold", color: activeView === "scan" ? "#FFFFFF" : "#FF6600", marginLeft: 8 }}>
+                    Activate
+                </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+                onPress={() => setActiveView("enter_points")}
+                style={{
+                    flex: 1, height: 54, borderRadius: 14,
+                    backgroundColor: activeView === "enter_points" ? "#FF6600" : "#FFFFFF",
+                    borderWidth: activeView === "enter_points" ? 0 : 1.5,
+                    borderColor: "#FF6600",
+                    flexDirection: "row", alignItems: "center", justifyContent: "center",
+                }}
+            >
+                <MaterialIcons name="payments" size={20} color={activeView === "enter_points" ? "#FFFFFF" : "#FF6600"} />
+                <Text style={{ fontSize: 15, fontFamily: "Poppins-Bold", color: activeView === "enter_points" ? "#FFFFFF" : "#FF6600", marginLeft: 8 }}>
+                    Enter Amount
+                </Text>
+            </TouchableOpacity>
+        </View>
+    );
 
     return (
-        <SafeAreaView className="flex-1 bg-[#F1F5F9]">
-            <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-                {/* Background & Header */}
-                <View className="bg-primary rounded-b-[40px] px-6 pt-2 pb-24 overflow-hidden relative">
-                    {/* Decorative Circles */}
-                    <View className="absolute -top-10 -right-10 w-64 h-64 rounded-full bg-white/10" />
-                    <View className="absolute -bottom-16 -left-12 w-32 h-32 rounded-full bg-white/10" />
+        <SafeAreaView style={{ flex: 1, backgroundColor: "#F1F5F9" }}>
+            <ScrollView
+                style={{ flex: 1 }}
+                contentContainerStyle={{ flexGrow: 1 }}
+                showsVerticalScrollIndicator={false}
+            >
+                {/* Orange Header */}
+                <View
+                    style={{
+                        backgroundColor: "#FF6600",
+                        borderBottomLeftRadius: 36,
+                        borderBottomRightRadius: 36,
+                        paddingHorizontal: 24,
+                        paddingTop: 8,
+                        paddingBottom: 18,
+                        overflow: "hidden",
+                    }}
+                >
+                    <View style={{ position: "absolute", top: -40, right: -40, width: 200, height: 200, borderRadius: 100, backgroundColor: "rgba(255,255,255,0.1)" }} />
+                    <View style={{ position: "absolute", bottom: -36, left: -30, width: 100, height: 100, borderRadius: 50, backgroundColor: "rgba(255,255,255,0.1)" }} />
 
-                    {/* Header Top Bar */}
-                    <View className="flex-row items-center justify-between mt-2">
-                        <View className="w-10 h-10" />
-
-                        <Text className="text-white text-2xl font-poppins-bold">Award Points</Text>
-
-                        <TouchableOpacity className="w-10 h-10 items-center justify-center">
-                            <View className="w-6 h-6 rounded-full bg-white flex items-center justify-center">
-                                <Text className="text-primary font-poppins-bold text-sm">?</Text>
-                            </View>
+                    <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", marginTop: 8, position: "relative" }}>
+                        <Text style={{ color: "#FFFFFF", fontSize: 20, fontFamily: "Poppins-Bold", flex: 1, textAlign: "center" }}>Award Points</Text>
+                        <TouchableOpacity style={{ position: "absolute", right: 0, width: 26, height: 26, borderRadius: 13, backgroundColor: "#FFFFFF", alignItems: "center", justifyContent: "center" }}>
+                            <Text style={{ color: "#FF6600", fontFamily: "Poppins-Bold", fontSize: 12 }}>?</Text>
                         </TouchableOpacity>
                     </View>
 
-                    {/* Location Box */}
-                    <View className="mt-8 px-4 py-4 rounded-xl border border-white/20 bg-white/10 flex-row items-center">
-                        <View className="w-12 h-12 rounded-xl bg-white/20 items-center justify-center">
-                            <MaterialIcons name="storefront" size={24} color="#FFFFFF" />
+                    <View style={{ marginTop: 12, paddingHorizontal: 14, paddingVertical: 12, borderRadius: 14, borderWidth: 1, borderColor: "rgba(255,255,255,0.2)", backgroundColor: "rgba(255,255,255,0.12)", flexDirection: "row", alignItems: "center" }}>
+                        <View style={{ width: 38, height: 38, borderRadius: 10, backgroundColor: "rgba(255,255,255,0.2)", alignItems: "center", justifyContent: "center" }}>
+                            <MaterialIcons name="storefront" size={20} color="#FFFFFF" />
                         </View>
-                        <View className="ml-4 flex-1">
-                            <Text className="text-[10px] tracking-[1px] font-poppins-bold text-white/70 uppercase">CURRENT LOCATION</Text>
-                            <Text className="text-white text-sm font-poppins-bold mt-0.5">The Coffee Foundry • Brooklyn</Text>
+                        <View style={{ marginLeft: 12, flex: 1 }}>
+                            <Text style={{ fontSize: 9, letterSpacing: 1, fontFamily: "Poppins-Bold", color: "rgba(255,255,255,0.7)" }}>CURRENT LOCATION</Text>
+                            <Text style={{ fontSize: 13, fontFamily: "Poppins-Bold", color: "#FFFFFF", marginTop: 1 }}>The Coffee Foundry • Brooklyn</Text>
                         </View>
                     </View>
                 </View>
 
-                {/* Scanner Card */}
-                <View className="px-6 -mt-16 mb-12">
-                    <View
-                        style={[
-                            softCardShadow,
-                            { backgroundColor: "#FFFFFF", borderRadius: 24, padding: 12 }
-                        ]}
-                    >
-                        {/* The Black Scanner Viewport */}
-                        <View
-                            style={{
-                                backgroundColor: "#111111",
-                                borderRadius: 20,
-                                width: "100%",
-                                aspectRatio: 1, // Make it a square
-                                padding: 24,
-                                position: "relative",
-                                alignItems: "center",
-                                justifyContent: "center",
-                            }}
-                        >
-                            {/* Corner Markers */}
-                            {/* Top Left */}
-                            <View style={{ position: "absolute", top: 24, left: 24, width: 40, height: 40, borderColor: "#FFFFFF", borderTopWidth: 4, borderLeftWidth: 4, borderTopLeftRadius: 12 }} />
-                            {/* Top Right */}
-                            <View style={{ position: "absolute", top: 24, right: 24, width: 40, height: 40, borderColor: "#FFFFFF", borderTopWidth: 4, borderRightWidth: 4, borderTopRightRadius: 12 }} />
-                            {/* Bottom Left */}
-                            <View style={{ position: "absolute", bottom: 24, left: 24, width: 40, height: 40, borderColor: "#FFFFFF", borderBottomWidth: 4, borderLeftWidth: 4, borderBottomLeftRadius: 12 }} />
-                            {/* Bottom Right */}
-                            <View style={{ position: "absolute", bottom: 24, right: 24, width: 40, height: 40, borderColor: "#FFFFFF", borderBottomWidth: 4, borderRightWidth: 4, borderBottomRightRadius: 12 }} />
+                {/* ── Shared scrollable content area ── */}
+                <View style={{ flex: 1, paddingHorizontal: 24, paddingTop: 24, justifyContent: "space-between" }}>
 
-                            {/* Mock Barcode Graphic */}
-                            <View style={{ flexDirection: "row", height: 80, alignItems: "center" }}>
-                                {barcodeLines.map((width, index) => (
-                                    <View
-                                        key={index}
-                                        style={{
-                                            width,
-                                            height: "100%",
-                                            backgroundColor: "#9CA3AF",
-                                            marginHorizontal: 1
-                                        }}
-                                    />
-                                ))}
+                    {/* ── SCAN VIEW ── */}
+                    {activeView === "scan" && (
+                        <View>
+                            {/* Scanner Card */}
+                            <View style={[softCardShadow, { backgroundColor: "#FFFFFF", borderRadius: 24, padding: 10, marginBottom: 20 }]}>
+                                <View
+                                    style={{
+                                        backgroundColor: "#111111",
+                                        borderRadius: 18,
+                                        width: "100%",
+                                        height: 280,
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                    }}
+                                >
+                                    {/* Corner Brackets */}
+                                    <View style={{ position: "absolute", top: 20, left: 20, width: 36, height: 36, borderColor: "#FFFFFF", borderTopWidth: 3, borderLeftWidth: 3, borderTopLeftRadius: 10 }} />
+                                    <View style={{ position: "absolute", top: 20, right: 20, width: 36, height: 36, borderColor: "#FFFFFF", borderTopWidth: 3, borderRightWidth: 3, borderTopRightRadius: 10 }} />
+                                    <View style={{ position: "absolute", bottom: 20, left: 20, width: 36, height: 36, borderColor: "#FFFFFF", borderBottomWidth: 3, borderLeftWidth: 3, borderBottomLeftRadius: 10 }} />
+                                    <View style={{ position: "absolute", bottom: 20, right: 20, width: 36, height: 36, borderColor: "#FFFFFF", borderBottomWidth: 3, borderRightWidth: 3, borderBottomRightRadius: 10 }} />
+
+                                    {/* Barcode */}
+                                    <View style={{ flexDirection: "row", height: 70, alignItems: "center" }}>
+                                        {barcodeLines.map((width, index) => (
+                                            <View key={index} style={{ width, height: "100%", backgroundColor: "#9CA3AF", marginHorizontal: 1 }} />
+                                        ))}
+                                    </View>
+
+                                    {/* Laser */}
+                                    <View style={{ position: "absolute", width: "80%", height: 2, backgroundColor: "#EF4444", top: "50%", shadowColor: "#EF4444", shadowOffset: { width: 0, height: 0 }, shadowOpacity: 1, shadowRadius: 8, elevation: 10 }} />
+
+                                    {/* Hint */}
+                                    <Text style={{ position: "absolute", bottom: 16, color: "rgba(255,255,255,0.75)", fontFamily: "Poppins-Medium", fontSize: 11, textAlign: "center" }}>
+                                        Align customer QR code within the frame
+                                    </Text>
+                                </View>
                             </View>
 
-                            {/* Red Lasers Line Overlay */}
-                            <View
-                                style={{
-                                    position: "absolute",
-                                    width: "85%",
-                                    height: 3,
-                                    backgroundColor: "#EF4444",
-                                    top: "50%",
-                                    shadowColor: "#EF4444",
-                                    shadowOffset: { width: 0, height: 0 },
-                                    shadowOpacity: 1,
-                                    shadowRadius: 10,
-                                    elevation: 10,
-                                }}
-                            />
+                            {/* Point Details — compact single row strip */}
+                            <View style={[softCardShadow, { backgroundColor: "#FFFFFF", borderRadius: 16, paddingHorizontal: 16, paddingVertical: 12 }]}>
+                                {/* Label */}
+                                <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 10 }}>
+                                    <MaterialIcons name="info-outline" size={15} color="#FF6600" />
+                                    <Text style={{ fontSize: 13, fontFamily: "Poppins-Bold", color: "#0F172A", marginLeft: 5 }}>Points Detail</Text>
+                                </View>
+                                <View style={{ height: 1, backgroundColor: "#F1F5F9", marginBottom: 10 }} />
+                                {selectedAmount && pointsEarned !== null ? (
+                                    <View style={{ flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between" }}>
+                                        {/* Purchase Amount */}
+                                        <View style={{ alignItems: "center" }}>
+                                            <Text style={{ fontSize: 10, fontFamily: "Poppins-Bold", color: "#94A3B8", letterSpacing: 0.8 }}>PURCHASE</Text>
+                                            <Text style={{ fontSize: 16, fontFamily: "Poppins-Bold", color: "#0F172A", marginTop: 1 }}>₱{selectedAmount}</Text>
+                                        </View>
 
-                            {/* Instructions text */}
-                            <Text
-                                style={{
-                                    position: "absolute",
-                                    bottom: 40,
-                                    color: "#FFFFFF",
-                                    fontFamily: "Poppins-Medium",
-                                    fontSize: 12,
-                                    textAlign: "center",
-                                    paddingHorizontal: 20
-                                }}
-                            >
-                                {`Align customer QR code or Barcode within the\nframe`}
+                                        <MaterialIcons name="arrow-forward" size={16} color="#CBD5E1" />
+
+                                        {/* Rate */}
+                                        <View style={{ alignItems: "center" }}>
+                                            <Text style={{ fontSize: 10, fontFamily: "Poppins-Bold", color: "#94A3B8", letterSpacing: 0.8 }}>RATE</Text>
+                                            <Text style={{ fontSize: 12, fontFamily: "Poppins-Medium", color: "#64748B", marginTop: 1 }}>₱10 = 1 pt</Text>
+                                        </View>
+
+                                        <MaterialIcons name="arrow-forward" size={16} color="#CBD5E1" />
+
+                                        {/* Points Earned */}
+                                        <View style={{ alignItems: "center", backgroundColor: "#FFF5F0", borderRadius: 10, paddingHorizontal: 12, paddingVertical: 6 }}>
+                                            <Text style={{ fontSize: 10, fontFamily: "Poppins-Bold", color: "#FF6600", letterSpacing: 0.8 }}>EARN</Text>
+                                            <Text style={{ fontSize: 16, fontFamily: "Poppins-Bold", color: "#FF6600", marginTop: 1 }}>+{pointsEarned} PTS</Text>
+                                        </View>
+                                    </View>
+                                ) : (
+                                    <View style={{ flexDirection: "row", alignItems: "center" }}>
+                                        <MaterialIcons name="touch-app" size={18} color="#CBD5E1" />
+                                        <Text style={{ fontSize: 12, fontFamily: "Poppins-Medium", color: "#94A3B8", marginLeft: 8 }}>
+                                            Tap "Enter Points" to select an amount.
+                                        </Text>
+                                    </View>
+                                )}
+                            </View>
+                        </View>
+                    )}
+
+                    {/* ── ENTER POINTS VIEW ── */}
+                    {activeView === "enter_points" && (
+                        <View style={[softCardShadow, { backgroundColor: "#FFFFFF", borderRadius: 24, padding: 24 }]}>
+                            <Text style={{ fontSize: 11, fontFamily: "Poppins-Bold", color: "#94A3B8", letterSpacing: 1.5, textAlign: "center", marginBottom: 24 }}>
+                                SELECT PURCHASE AMOUNT
                             </Text>
 
+                            {amountGrid.map((row, rowIndex) => (
+                                <View key={rowIndex} style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: rowIndex < 2 ? 16 : 0 }}>
+                                    {row.map((amount) => {
+                                        const isSelected = selectedAmount === amount;
+                                        return (
+                                            <TouchableOpacity
+                                                key={amount}
+                                                onPress={() => setSelectedAmount(isSelected ? null : amount)}
+                                                style={{
+                                                    width: "30%",
+                                                    aspectRatio: 1,
+                                                    borderRadius: 9999,
+                                                    backgroundColor: isSelected ? "#FF6600" : "#F1F5F9",
+                                                    alignItems: "center",
+                                                    justifyContent: "center",
+                                                }}
+                                            >
+                                                <Text style={{ fontSize: 22, fontFamily: "Poppins-Bold", color: isSelected ? "#FFFFFF" : "#0F172A" }}>
+                                                    {amount}
+                                                </Text>
+                                            </TouchableOpacity>
+                                        );
+                                    })}
+                                </View>
+                            ))}
                         </View>
-                    </View>
+                    )}
+
+                    {/* ── Bottom Buttons — always at the bottom of scroll content ── */}
+                    <BottomBar />
                 </View>
-
-                {/* Manual Entry Section */}
-                <View className="px-6 mb-12">
-                    {/* Header */}
-                    <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-                        <View style={{ flexDirection: "row", alignItems: "center" }}>
-                            <MaterialIcons name="edit-note" size={28} color="#FF6600" />
-                            <Text style={{ fontSize: 20, fontFamily: "Poppins-Bold", color: "#0F172A", marginLeft: 8 }}>Manual Entry</Text>
-                        </View>
-
-                        <TouchableOpacity
-                            style={{
-                                flexDirection: "row",
-                                alignItems: "center",
-                                backgroundColor: "#FFF5F0",
-                                paddingHorizontal: 12,
-                                paddingVertical: 6,
-                                borderRadius: 9999,
-                                borderWidth: 1,
-                                borderColor: "#FFDED0"
-                            }}
-                        >
-                            <MaterialIcons name="receipt" size={16} color="#FF6600" />
-                            <Text style={{ fontSize: 13, fontFamily: "Poppins-Bold", color: "#FF6600", marginLeft: 4 }}>Scan Receipt</Text>
-                        </TouchableOpacity>
-                    </View>
-
-                    {/* Inputs Card */}
-                    <View
-                        style={[
-                            softCardShadow,
-                            { backgroundColor: "#FFFFFF", borderRadius: 24, padding: 24, marginBottom: 24 }
-                        ]}
-                    >
-                        {/* Product Name */}
-                        <View style={{ marginBottom: 20 }}>
-                            <Text style={{ fontSize: 13, fontFamily: "Poppins-Bold", color: "#64748B", letterSpacing: 1, marginBottom: 8 }}>PRODUCT NAME</Text>
-                            <View style={{ flexDirection: "row", alignItems: "center", backgroundColor: "#F8FAFC", borderRadius: 12, paddingHorizontal: 16, height: 56 }}>
-                                <MaterialIcons name="shopping-bag" size={20} color="#94A3B8" />
-                                <TextInput
-                                    placeholder="e.g. Iced Caramel Macchiato"
-                                    placeholderTextColor="#94A3B8"
-                                    style={{ flex: 1, marginLeft: 12, fontSize: 15, fontFamily: "Poppins-Medium", color: "#0F172A" }}
-                                />
-                            </View>
-                        </View>
-
-                        {/* Total Purchase Price */}
-                        <View>
-                            <Text style={{ fontSize: 13, fontFamily: "Poppins-Bold", color: "#64748B", letterSpacing: 1, marginBottom: 8 }}>TOTAL PURCHASE PRICE (₱)</Text>
-                            <View style={{ flexDirection: "row", alignItems: "center", backgroundColor: "#F8FAFC", borderRadius: 12, paddingHorizontal: 16, height: 56 }}>
-                                <MaterialIcons name="payments" size={20} color="#94A3B8" />
-                                <TextInput
-                                    placeholder="0.00"
-                                    placeholderTextColor="#94A3B8"
-                                    keyboardType="numeric"
-                                    style={{ flex: 1, marginLeft: 12, fontSize: 15, fontFamily: "Poppins-Medium", color: "#0F172A" }}
-                                />
-                            </View>
-                        </View>
-                    </View>
-
-                    {/* Scan & Confirm Button */}
-                    <TouchableOpacity
-                        style={{
-                            backgroundColor: "#FF6600",
-                            borderRadius: 16,
-                            height: 60,
-                            flexDirection: "row",
-                            alignItems: "center",
-                            justifyContent: "center",
-                        }}
-                    >
-                        <MaterialIcons name="qr-code-scanner" size={24} color="#FFFFFF" />
-                        <Text style={{ color: "#FFFFFF", fontSize: 18, fontFamily: "Poppins-Bold", marginLeft: 12 }}>Scan & Confirm</Text>
-                    </TouchableOpacity>
-                </View>
-
             </ScrollView>
         </SafeAreaView>
     );
