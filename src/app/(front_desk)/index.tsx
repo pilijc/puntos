@@ -108,6 +108,7 @@ export default function FrontDeskScan() {
                             <Text className="text-white text-sm font-poppins-bold mt-0.5">The Coffee Foundry • Brooklyn</Text>
                         </View>
                     </View>
+                    </View>
                 </View>
 
                 {/* Scanner Card with Camera */}
