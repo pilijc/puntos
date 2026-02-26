@@ -1,20 +1,11 @@
+
+
 import { supabase } from "@/supabase/supabase";
-//import { QRCodeState } from "@/type/qr";
+import { QRCodeState, QRTransaction } from "@/type/qr";
 
 
-export interface QRCodeState {
-  id: string;
-  user_id: string | null;
-  barcode_hash: string | null;
-  store_staff_id: string | null;
-  is_used: boolean;
-  scanned_at: string | null;
-  transaction_completed_at: string | null;
-  created_at: string;
-  expires_at: string;
-}
 
-
+/*
 export async function generateQRCode(userId: string, expiryHours: number = 1) {
   
   const expiresAt = new Date();
@@ -49,10 +40,46 @@ export async function generateQRCode(userId: string, expiryHours: number = 1) {
   }
 
   return data[0]; // return the inserted QR row
+} */
+
+// New Static QR Code Functions
+export function getStaticQRCode(userId: string): string {
+   
+  return `puntos:user:${userId}`;
+}
 
 
+// Parse static QR code
+export function parseQRCode(qrValue: string): { type: string; userId: string } | null {
+  const parts = qrValue.split(':');
+  if (parts.length === 3 && parts[0] === 'puntos' && parts[1] === 'user') {
+    return { type: 'user', userId: parts[2] };
+  }
+  return null;
+}
 
+// Create QR transaction
+export async function createQRTransaction(
+  userId: string,
+  storeStaffId: string,
+  pointsAwarded: number = 0
+): Promise<QRTransaction> {
+  const { data, error } = await supabase
+    .from('qr-transactions')
+    .insert([
+      {
+        user_id: userId,
+        store_staff_id: storeStaffId,
+        scanned_at: new Date().toISOString(),
+        points_awarded: pointsAwarded,
+      },
+    ])
+    .select('*')
+    .single();
 
+  if (error) {
+    throw new Error(`Failed to create QR transaction: ${error.message}`);
+  }
 
-  
+  return data as QRTransaction;
 }

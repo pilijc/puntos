@@ -9,3 +9,12 @@ export interface QRCodeState {
   created_at: string;
   expires_at: string;
 }
+
+export interface QRTransaction {
+  id?: string;
+  user_id: string;
+  store_staff_id: string;
+  scanned_at: string;
+  points_awarded?: number;
+  created_at?: string;
+}
