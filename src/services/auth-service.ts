@@ -3,8 +3,7 @@ import * as Linking from 'expo-linking'
 import * as WebBrowser from 'expo-web-browser'
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
 import { Alert } from "react-native";
-import { getHomeRouteForUserId } from "./access-service";
-import { router } from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 GoogleSignin.configure({
   webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
@@ -13,17 +12,23 @@ GoogleSignin.configure({
 export default async function signUpService(email: string, password: string, name: string) {
   try {
     const { data, error } = await supabase.auth.signUp({ email, password });
-    console.log(data);
-    console.log(error);
-    if (error) throw error;
 
+    if (data?.session?.access_token) {
+      await AsyncStorage.setItem('sessionToken', data.session.access_token);
+    }
     if (data.user) {
-      const { error: insertError } = await supabase.from("users").insert({
-        id: data.user.id,
-        name,
-      });
+      const { data: existingProfile } = await supabase
+        .from("users")
+        .select("id")
+        .eq("id", data.user.id)
+        .single();
 
-      if (insertError) throw insertError;
+      if (!existingProfile) {
+        await supabase.from("users").insert({ id: data.user.id, name });
+      }
+    }
+    if (error) {
+      throw error;
     }
   } catch (error) {
     throw error;
@@ -35,7 +40,7 @@ export async function signUpWithGoogleService() {
     await GoogleSignin.hasPlayServices();
     const response = await GoogleSignin.signIn();
 
-    console.log(response);
+    console.log("sign up with google service", response);
 
     if (response.type === 'success') {
       const { idToken } = response.data;
