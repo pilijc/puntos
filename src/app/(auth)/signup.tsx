@@ -12,7 +12,7 @@ import { router } from "expo-router";
 import { useAuthStore } from "../../store/auth-store";
 import signUpService from "../../services/auth-service";
 import { signUpWithGoogleService } from "@/services/auth-service";
-import { Stepper, NameStep, EmailStep, PasswordStep, TermsStep, StepHeader } from "../../components/stepper";
+import { NameStep, EmailStep, PasswordStep, TermsStep, StepHeader } from "../../components/stepper";
 import { Ionicons } from "@expo/vector-icons";
 
 export default function SignUp() {
@@ -109,7 +109,15 @@ export default function SignUp() {
       if (currentStep < totalSteps) {
         setCurrentStep(currentStep + 1);
       } else {
-        handleSignup();
+        Alert.alert(
+          "Create account?",
+          "This is a sample dialog. Tap OK to continue.",
+          [
+            { text: "Cancel", style: "cancel" },
+            { text: "OK", onPress: handleSignup },
+          ],
+          { cancelable: true }
+        );
       }
     }
   };
@@ -157,19 +165,17 @@ export default function SignUp() {
         <View className="px-6 py-4 flex-row items-center">
           {currentStep > 1 ? (
             <TouchableOpacity onPress={handleBack}>
-              <Ionicons name="arrow-back" size={24} color="#000" />
+              <Ionicons name="chevron-back-outline" size={24} color="#000" />
             </TouchableOpacity>
           ) : (
             <View className="w-6" />
           )}
-          <Text className="flex-1 text-center font-poppins-semibold text-lg">
+          {/* <Text className="flex-1 text-center font-poppins-semibold text-lg">
             Create Account
-          </Text>
+          </Text> */}
           <View className="w-6" />
         </View>
-
-        <Stepper currentStep={currentStep} totalSteps={totalSteps} />
-
+                      
         <ScrollView
           contentContainerStyle={{ flexGrow: 1 }}
           keyboardShouldPersistTaps="handled"
@@ -236,7 +242,7 @@ export default function SignUp() {
 
                   <TouchableOpacity
                     onPress={handleSignupWithGoogle}
-                    className="bg-white rounded-xl p-4 border border-neutral-200 flex-row items-center justify-center gap-x-3"
+                    className="bg-background rounded-xl p-4 border border-neutral-200 flex-row items-center justify-center gap-x-3"
                   >
                     <Image
                       source={require("../../assets/images/google-icon.png")}
@@ -248,11 +254,13 @@ export default function SignUp() {
                   </TouchableOpacity>
                 </>
               )}
-
-              <View className="gap-y-3">
-                <View className="flex-row justify-center">
-                  <Text className="font-poppins text-neutral-600">
-                    Already have an account?
+              <View className="flex-row justify-center">
+                <Text className="font-poppins text-neutral-600">
+                  Already have an account?
+                </Text>
+                <TouchableOpacity onPress={() => router.replace("/login")}>
+                  <Text className="ml-1 font-poppins-semibold text-primary">
+                    Login
                   </Text>
                   <TouchableOpacity onPress={() => router.replace("/login")}>
                     <Text className="ml-1 font-poppins-semibold text-primary">
