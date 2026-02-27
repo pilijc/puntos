@@ -1,4 +1,3 @@
-import { ImageSourcePropType } from "react-native";
 
 export interface Auth {
   name: string;
@@ -64,6 +63,6 @@ export interface StepHeaderProps {
 export interface SlideProps {
   title: string;
   subtitle: string;
-  image: ImageSourcePropType;
   width: number;
+  image: any;
 }

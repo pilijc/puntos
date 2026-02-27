@@ -1,26 +1,32 @@
-import { View, Image, Text, TouchableOpacity, SafeAreaView, ScrollView } from "@/tw";
+import { View, Text, TouchableOpacity, SafeAreaView, ScrollView } from "@/tw";
 import { SlideProps } from "@/type/auth";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import { useWindowDimensions } from "react-native";
+import LottieView from "lottie-react-native";
 
 const slides = [
   {
     title: "Get rewarded for every step.",
     subtitle: "Start walking and let every step bring you closer to exciting rewards and nearby stores.",
-    image: require("../../assets/gif/walking.gif"),
+    image: require("../../assets/gif/walking.json"),
   },
   {
     title: "Redeem points for perks.",
     subtitle: "Exchange your collected points for exclusive offers and treat yourself anytime.",
-    image: require("../../assets/gif/rewards-2.gif"),
+    image: require("../../assets/gif/rewards-1.json"),
   },
 ];
 
-function Slide({ title, subtitle, image, width }: SlideProps) {
+function Slide({ title, subtitle, width, image }: SlideProps) {
   return (
-    <View className="flex-1 justify-center items-center" style={{ width }}>
-      <Image source={image} className="w-full h-96 object-contain" />
+    <View style={{ width }} className="flex-1 justify-center items-center">
+      <LottieView
+        source={image}
+        autoPlay
+        loop
+        style={{ width: "100%", height: 384 }}
+      />
       <View className="gap-y-2 px-4">
         <Text className="text-center text-2xl font-poppins-bold text-textPrimary mt-4">
           {title}
