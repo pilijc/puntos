@@ -2,7 +2,7 @@ import { supabase } from "@/supabase/supabase";
 import { View, Text, SafeAreaView, TouchableOpacity, Image } from "@/tw";
 import { router, useFocusEffect } from "expo-router";
 import React, { useState, useCallback } from "react";
-import { Alert, Switch } from "react-native";
+import { Alert, Switch, Linking, Appearance, useColorScheme } from "react-native";
 import EditProfileModal from "@/components/settings/EditProfileModal";
 import SecurityModal from "@/components/settings/SecurityModal";
 import StoreOwnerModal from "@/components/settings/StoreOwnerModal";
@@ -215,18 +215,29 @@ export default function Settings() {
     ? (profile?.name || user.email?.split("@")[0] || "User")
     : "Settings";
 
+  const colorScheme = useColorScheme();
+  const toggleTheme = () => {
+    Appearance.setColorScheme(colorScheme === "dark" ? "light" : "dark");
+  };
+
   return (
-    <SafeAreaView className="flex-1 bg-background p-4">
-      <View>
-        <Text className="text-2xl font-poppins-bold text-neutral-900 mb-6">
-          {user ? `Hi, ${displayName}` : "Settings"}
+    <SafeAreaView className="flex-1 bg-background dark:bg-neutral-900 p-4">
+      <View className="flex-row justify-between items-center mb-6">
+        <Text className="text-2xl font-poppins-bold text-neutral-900 dark:text-white">
+          Settings
         </Text>
+        <TouchableOpacity
+          onPress={toggleTheme}
+          className="h-10 w-10 bg-white dark:bg-neutral-800 rounded-full items-center justify-center border border-neutral-200 dark:border-neutral-700 active:bg-neutral-50 dark:active:bg-neutral-700"
+        >
+          <Ionicons name={colorScheme === "dark" ? "moon" : "sunny"} size={20} color={colorScheme === "dark" ? "#fcd34d" : "#f59e0b"} />
+        </TouchableOpacity>
       </View>
 
       {user && (!profile || profile?.id === user.id) && (
         <TouchableOpacity
           onPress={handleProfilePress}
-          className="mx-4 mb-6 bg-white rounded-2xl p-4 border border-neutral-200 active:bg-neutral-50"
+          className="mx-4 mb-6 bg-white dark:bg-neutral-800 rounded-2xl p-4 border border-neutral-200 dark:border-neutral-700 active:bg-neutral-50 dark:active:bg-neutral-700"
         >
           <View className="flex-row items-center">
             <View className="w-16 h-16 rounded-full bg-primary items-center justify-center mr-4">
@@ -245,20 +256,20 @@ export default function Settings() {
               )}
             </View>
             <View className="flex-1">
-              <Text className="text-lg font-poppins-semibold text-neutral-900">
+              <Text className="text-lg font-poppins-semibold text-neutral-900 dark:text-white">
                 {profile?.name || user.email?.split("@")[0]}
               </Text>
-              <Text className="text-sm font-poppins-regular text-neutral-500">
+              <Text className="text-sm font-poppins-regular text-neutral-500 dark:text-neutral-400">
                 {user.email}
               </Text>
             </View>
-            <Text className="text-neutral-400">→</Text>
+            <Ionicons name="chevron-forward-outline" size={15} color="#d4d4d4" />
           </View>
         </TouchableOpacity>
       )}
 
       <View>
-        <Text className="text-sm font-poppins-semibold text-neutral-600 mb-2">
+        <Text className="text-sm font-poppins-semibold text-neutral-600 dark:text-neutral-400 mb-2">
           ACCOUNT SETTINGS
         </Text>
       </View>
@@ -266,11 +277,11 @@ export default function Settings() {
       <View className="mx-4 mb-6 overflow-hidden bg-background rounded-2xl border border-neutral-200">
         <TouchableOpacity
           onPress={() => setSecurityModalVisible(true)}
-          className="flex-row items-center p-4 bg-white active:bg-neutral-50 will-change-pressable">
+          className="flex-row items-center p-4 bg-white dark:bg-neutral-800 active:bg-neutral-50 dark:active:bg-neutral-700 will-change-pressable">
           <View className="h-5 w-5 items-center justify-center rounded-lg bg-emerald-50">
             <Ionicons name="settings-outline" size={15} color="#3b82f6" />
           </View>
-          <Text className="text-base flex-1 ml-3 font-poppins-semibold text-neutral-900">
+          <Text className="text-base flex-1 ml-3 font-poppins-semibold text-neutral-900 dark:text-white">
             Security
           </Text>
           <Ionicons name="chevron-forward-outline" size={15} color="#d4d4d4" />
@@ -278,12 +289,12 @@ export default function Settings() {
 
         <TouchableOpacity
           onPress={() => setStoreModalVisible(true)}
-          className="flex-row items-center p-4 bg-white active:bg-neutral-50 will-change-pressable"
+          className="flex-row items-center p-4 bg-white dark:bg-neutral-800 active:bg-neutral-50 dark:active:bg-neutral-700 will-change-pressable"
         >
           <View className="h-5 w-5 items-center justify-center rounded-lg bg-emerald-50">
             <Ionicons name="help-outline" size={15} color="#10b981" />
           </View>
-          <Text className="text-base flex-1 ml-3 font-poppins-semibold text-neutral-900">
+          <Text className="text-base flex-1 ml-3 font-poppins-semibold text-neutral-900 dark:text-white">
             Role
           </Text>
           <Ionicons name="chevron-forward-outline" size={15} color="#d4d4d4" />
@@ -291,7 +302,7 @@ export default function Settings() {
       </View>
 
       <View>
-        <Text className="text-sm font-poppins-semibold text-neutral-600 mb-2">
+        <Text className="text-sm font-poppins-semibold text-neutral-600 dark:text-neutral-400 mb-2">
           NOTIFICATIONS & PRIVACY
         </Text>
       </View>
@@ -302,10 +313,10 @@ export default function Settings() {
             <Ionicons name="notifications-outline" size={18} color="#FF6600" />
           </View>
           <View className="ml-3 flex-1">
-            <Text className="text-base font-poppins-semibold text-neutral-800">
+            <Text className="text-base font-poppins-semibold text-neutral-800 dark:text-white">
               Nearby Alerts
             </Text>
-            <Text className="text-xs font-poppins-regular text-neutral-400">
+            <Text className="text-xs font-poppins-regular text-neutral-400 dark:text-neutral-500">
               Get notified when rewards are close
             </Text>
           </View>
@@ -317,50 +328,70 @@ export default function Settings() {
           />
         </View>
 
-        <View className="flex-row p-4 bg-white active:bg-neutral-50 items-center">
-          <View className="h-8 w-8 items-center justify-center rounded-lg bg-yellow-50">
-            <Ionicons name="location-outline" size={18} color="#d8d336" />
-          </View>
-          <View className="ml-3 flex-1">
-            <Text className="text-base font-poppins-semibold text-neutral-800">
-              Location Access
-            </Text>
-            <Text className="text-xs font-poppins-regular text-neutral-400">
-              {locationLoading
-                ? "Checking..."
-                : permissionStatus.granted
-                  ? location
-                    ? `Device Access Granted • ${location.latitude.toFixed(4)}, ${location.longitude.toFixed(4)}`
-                    : "Device Access Granted"
-                  : "Device Access Not Allowed"}
-            </Text>
-          </View>
-          <Switch
-            trackColor={{ false: '#d4d4d4', true: '#FF6600' }}
-            thumbColor="#FFFFFF"
-            value={preferences.location_enabled}
-            onValueChange={async () => {
+        <TouchableOpacity
+          onPress={async () => {
+            if (preferences.location_enabled) {
+              Alert.alert(
+                "Disable Location Access",
+                "To completely revoke location permissions, you must disable the setting in your device's settings menu. Would you like to open it now?",
+                [
+                  {
+                    text: "Cancel",
+                    style: "cancel",
+                  },
+                  {
+                    text: "Open Settings",
+                    onPress: () => {
+                      togglePreference('location_enabled');
+                      Linking.openSettings();
+                    }
+                  }
+                ]
+              );
+            } else {
               if (!permissionStatus.granted) {
                 await requestLocationPermission();
               }
               togglePreference('location_enabled');
-            }}
-          />
-        </View>
+            }
+          }}
+          className="flex-row p-4 bg-white dark:bg-neutral-800 active:bg-neutral-50 dark:active:bg-neutral-700 items-center will-change-pressable"
+        >
+          <View className="h-8 w-8 items-center justify-center rounded-lg bg-yellow-50">
+            <Ionicons name="location-outline" size={18} color="#d8d336" />
+          </View>
+          <View className="ml-3 flex-1">
+            <Text className="text-base font-poppins-semibold text-neutral-800 dark:text-white">
+              Location Access
+            </Text>
+            <Text className="text-xs font-poppins-regular text-neutral-400 dark:text-neutral-500">
+              {locationLoading
+                ? "Checking..."
+                : permissionStatus.granted
+                  ? "Device Access Granted"
+                  : "Device Access Not Allowed"}
+            </Text>
+          </View>
+          <View className="flex-row items-center justify-center">
+            <Text className="text-sm font-poppins-semibold text-primary mr-2">
+              {preferences.location_enabled ? 'Enabled' : 'Disabled'}
+            </Text>
+            <Ionicons name="chevron-forward-outline" size={15} color="#d4d4d4" />
+          </View>
+        </TouchableOpacity>
 
-        <View className="flex-row p-4 bg-background active:bg-neutral-50">
+        <View className="flex-row p-4 bg-white dark:bg-neutral-800 active:bg-neutral-50 dark:active:bg-neutral-700">
           <View className="h-8 w-8 items-center justify-center rounded-lg bg-pink-50">
             <Ionicons name="megaphone-outline" size={18} color="#ad2291" />
           </View>
           <View className="ml-3 flex-1">
-            <Text className="text-base font-poppins-semibold text-neutral-800">
+            <Text className="text-base font-poppins-semibold text-neutral-800 dark:text-white">
               Promotional Emails
             </Text>
           </View>
           <Switch
             trackColor={{ false: '#d4d4d4', true: '#FF6600' }}
             thumbColor="#FFFFFF"
-            ios_backgroundColor="#d4d4d4"
             value={preferences.promo_emails}
             onValueChange={() => togglePreference('promo_emails')}
           />
@@ -381,7 +412,7 @@ export default function Settings() {
       </TouchableOpacity>
 
       <View className="mx-8 mt-6 items-center">
-        <Text className="text-sm text-center font-poppins-regular text-neutral-500">
+        <Text className="text-sm text-center font-poppins-regular text-neutral-500 dark:text-neutral-400">
           Copyright 2026
         </Text>
       </View>
@@ -419,6 +450,7 @@ export default function Settings() {
           }
         }}
       />
+
 
     </SafeAreaView>
   );
