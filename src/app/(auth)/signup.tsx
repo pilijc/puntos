@@ -18,7 +18,7 @@ import { Ionicons } from "@expo/vector-icons";
 export default function SignUp() {
   const [currentStep, setCurrentStep] = useState(1);
   const totalSteps = 4;
-
+  
   const {
     name,
     setName,
@@ -34,9 +34,9 @@ export default function SignUp() {
     setShowConfirmPassword,
     reset,
   } = useAuthStore();
-
+  
   const [acceptedTerms, setAcceptedTerms] = useState(false);
-
+  
   const [errors, setErrors] = useState({
     name: '',
     email: '',
@@ -47,7 +47,7 @@ export default function SignUp() {
 
   const validateStep = (): boolean => {
     const newErrors = { ...errors };
-
+    
     if (currentStep === 1) {
       if (!name.trim()) {
         newErrors.name = 'Name is required';
@@ -56,7 +56,7 @@ export default function SignUp() {
       }
       newErrors.name = '';
     }
-
+    
     if (currentStep === 2) {
       if (!email.trim()) {
         newErrors.email = 'Email is required';
@@ -70,7 +70,7 @@ export default function SignUp() {
       }
       newErrors.email = '';
     }
-
+    
     if (currentStep === 3) {
       if (!password) {
         newErrors.password = 'Password is required';
@@ -90,7 +90,7 @@ export default function SignUp() {
       newErrors.password = '';
       newErrors.confirmPassword = '';
     }
-
+    
     if (currentStep === 4) {
       if (!acceptedTerms) {
         newErrors.terms = 'You must accept the terms';
@@ -99,7 +99,7 @@ export default function SignUp() {
       }
       newErrors.terms = '';
     }
-
+    
     setErrors(newErrors);
     return true;
   };
@@ -183,7 +183,7 @@ export default function SignUp() {
           <View className="p-6 flex-1 justify-between">
             <View className="flex-1 justify-center">
               <StepHeader currentStep={currentStep} />
-
+          
               {currentStep === 1 && (
                 <NameStep
                   value={name}
@@ -219,7 +219,7 @@ export default function SignUp() {
                 />
               )}
             </View>
-
+            
             <View className="gap-y-4 mt-6">
               <TouchableOpacity
                 onPress={handleNext}
@@ -229,7 +229,7 @@ export default function SignUp() {
                   {currentStep === totalSteps ? 'Create Account' : 'Continue'}
                 </Text>
               </TouchableOpacity>
-
+              
               {currentStep === 1 && (
                 <>
                   <View className="flex-row items-center gap-x-4">
@@ -239,7 +239,7 @@ export default function SignUp() {
                     </Text>
                     <View className="flex-1 h-px bg-neutral-200" />
                   </View>
-
+                  
                   <TouchableOpacity
                     onPress={handleSignupWithGoogle}
                     className="bg-background rounded-xl p-4 border border-neutral-200 flex-row items-center justify-center gap-x-3"
@@ -262,24 +262,7 @@ export default function SignUp() {
                   <Text className="ml-1 font-poppins-semibold text-primary">
                     Login
                   </Text>
-                  <TouchableOpacity onPress={() => router.replace("/login")}>
-                    <Text className="ml-1 font-poppins-semibold text-primary">
-                      Login
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-
-                {currentStep === 1 && (
-                  <TouchableOpacity
-                    onPress={() => router.push("/store-owner-signup" as any)}
-                    className="items-center"
-                  >
-                    <Text className="font-poppins text-sm text-neutral-400 text-center" style={{ fontStyle: "italic" }}>
-                      Are you a store owner/manager 🏪?{" "}
-                      <Text className="font-poppins-semibold text-primary" style={{ fontStyle: "italic" }}>Sign up here</Text>
-                    </Text>
-                  </TouchableOpacity>
-                )}
+                </TouchableOpacity>
               </View>
             </View>
           </View>
