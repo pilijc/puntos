@@ -1,10 +1,10 @@
 import React from "react";
-import { SafeAreaView, View, Text } from "react-native";
+import { View, Text } from "react-native";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 
 export default function StoreManagerFeatures() {
     return (
-        <SafeAreaView style={{ flex: 1, backgroundColor: "#F3F4F6" }}>
+        <View style={{ flex: 1, backgroundColor: "#F3F4F6" }}>
             <View style={{ flex: 1, alignItems: "center", justifyContent: "center", gap: 12 }}>
                 <MaterialIcons name="apps" size={48} color="#FF6600" />
                 <Text style={{ fontSize: 18, fontFamily: "Poppins-Bold", color: "#0F172A" }}>Features</Text>
@@ -12,6 +12,6 @@ export default function StoreManagerFeatures() {
                     Store features and tools will appear here.
                 </Text>
             </View>
-        </SafeAreaView>
+        </View>
     );
 }
