@@ -29,10 +29,20 @@
       [
         "@rnmapbox/maps",
         {
-          "RNMapboxMapsDownloadToken": "{process.env.RNMAPBOX_MAPS_DOWNLOAD_TOKEN}"
+          "RNMapboxMapsDownloadToken": "${EXPO_PUBLIC_MAPBOX_DOWNLOADS_TOKEN}"
         }
       ],
-      "@react-native-google-signin/google-signin"
+      "@react-native-google-signin/google-signin",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "gradleProperties": {
+              "MAPBOX_DOWNLOADS_TOKEN": "${EXPO_PUBLIC_MAPBOX_DOWNLOADS_TOKEN}"
+            }
+          }
+        }
+      ]
     ],
     "name": "puntos",
     "slug": "puntos",
