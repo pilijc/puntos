@@ -1,5 +1,5 @@
 import React from "react";
-import { SafeAreaView, View, Text, TouchableOpacity, Alert } from "react-native";
+import { View, Text, TouchableOpacity, Alert, StyleSheet } from "react-native";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { router } from "expo-router";
 import { supabase } from "@/supabase/supabase";
@@ -20,28 +20,42 @@ export default function StoreManagerSettings() {
     };
 
     return (
-        <SafeAreaView style={{ flex: 1, backgroundColor: "#F3F4F6" }}>
-            <View style={{ flex: 1, paddingHorizontal: 24, paddingTop: 32, gap: 24 }}>
-                <Text style={{ fontSize: 20, fontFamily: "Poppins-Bold", color: "#0F172A" }}>Settings</Text>
+        <View style={styles.container}>
+            <Text style={styles.title}>Settings</Text>
 
-                <TouchableOpacity
-                    onPress={handleLogout}
-                    style={{
-                        paddingVertical: 14,
-                        borderRadius: 14,
-                        backgroundColor: "#FFF5F0",
-                        alignItems: "center",
-                        flexDirection: "row",
-                        justifyContent: "center",
-                        gap: 8,
-                    }}
-                >
-                    <MaterialIcons name="logout" size={20} color="#FF6600" />
-                    <Text style={{ fontSize: 15, fontFamily: "Poppins-Bold", color: "#FF6600" }}>
-                        Log Out
-                    </Text>
-                </TouchableOpacity>
-            </View>
-        </SafeAreaView>
+            <TouchableOpacity onPress={handleLogout} style={styles.logoutBtn}>
+                <MaterialIcons name="logout" size={20} color="#FF6600" />
+                <Text style={styles.logoutText}>Log Out</Text>
+            </TouchableOpacity>
+        </View>
     );
 }
+
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        backgroundColor: "#F3F4F6",
+        paddingHorizontal: 24,
+        paddingTop: 80,
+    },
+    title: {
+        fontSize: 20,
+        fontFamily: "Poppins-Bold",
+        color: "#0F172A",
+        marginBottom: 24,
+    },
+    logoutBtn: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 8,
+        backgroundColor: "#FFF5F0",
+        borderRadius: 14,
+        paddingVertical: 14,
+    },
+    logoutText: {
+        fontSize: 15,
+        fontFamily: "Poppins-Bold",
+        color: "#FF6600",
+    },
+});
