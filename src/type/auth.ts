@@ -1,3 +1,4 @@
+
 export interface Auth {
   name: string;
 	setName: (name: string) => void;
@@ -57,4 +58,11 @@ export interface StepperProps {
 
 export interface StepHeaderProps {
   currentStep: number;
+}
+
+export interface SlideProps {
+  title: string;
+  subtitle: string;
+  width: number;
+  image: any;
 }

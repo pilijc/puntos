@@ -28,7 +28,7 @@ export function StepHeader({ currentStep }: StepHeaderProps) {
   return (
     <View className="gap-y-4 mb-6">
       <View className="items-center justify-center">
-        <View className="w-16 h-16 bg-primary/10 rounded-full items-center justify-center">
+        <View className="w-16 h-16 rounded-full items-center justify-center">
           <Image
             source={require("../assets/images/puntos-icon.png")}
             className="w-16 h-16"
@@ -48,38 +48,18 @@ export function StepHeader({ currentStep }: StepHeaderProps) {
     </View>
   );
 }
-
-export function Stepper({ currentStep, totalSteps }: StepperProps) {
-    return (
-      <View className="flex-row justify-start items-start px-6 py-4 gap-x-2">
-        {Array.from({ length: totalSteps }).map((_, index) => {
-          const stepNumber = index + 1;
-          const isActive = stepNumber === currentStep;
-          const isCompleted = stepNumber < currentStep;
-          
-          return (
-            <View
-              key={stepNumber}
-              className={`h-2 flex-1 rounded-full ${
-                isCompleted || isActive ? 'bg-primary' : 'bg-neutral-200'
-              }`}
-            />
-          );
-        })}
-      </View>
-    );
-  }
+  
 export function NameStep({ value, onChange, error }: StepProps) {
   return (
-    <View className="gap-y-4">
-      <Text className="mb-2 text-sm font-poppins-medium text-neutral-700">
-        Full Name
+    <View className="gap-y-2">
+      <Text className="text-sm font-poppins-medium text-neutral-700">
+        Name
       </Text>
       <TextInput
         value={value}
         onChangeText={onChange}
         placeholder="John Doe"
-        placeholderTextColor="#404040"
+        placeholderTextColor="#9CA3AF"
         className="border border-neutral-200 rounded-xl px-4 py-4 font-poppins text-neutral-700"
         autoFocus
       />
@@ -94,15 +74,15 @@ export function NameStep({ value, onChange, error }: StepProps) {
 
 export function EmailStep({ value, onChange, error }: StepProps) {
   return (
-    <View>
-      <Text className="mb-2 text-sm font-poppins-medium text-neutral-700">
+    <View className="gap-y-2">
+      <Text className="text-sm font-poppins-medium text-neutral-700">
         Email Address
       </Text>
       <TextInput
         value={value}
         onChangeText={onChange}
-        placeholder="john@example.com"
-        placeholderTextColor="#404040"
+        placeholder="email@domain.com"
+        placeholderTextColor="#9CA3AF"
         keyboardType="email-address"
         autoCapitalize="none"
         className="border border-neutral-200 rounded-xl px-4 py-4 font-poppins"
@@ -129,9 +109,9 @@ export function PasswordStep({
   errors,
 }: PasswordStepProps) {
   return (
-    <View>
-      <View>
-        <Text className="mb-2 text-sm font-poppins-medium text-neutral-700">
+    <View className="gap-y-2">
+      <View className="gap-y-2">
+        <Text className="text-sm font-poppins-medium text-neutral-700">
           Password
         </Text>
         <View className="relative">
@@ -143,7 +123,7 @@ export function PasswordStep({
             autoCapitalize="none"
             className="border border-neutral-200 rounded-xl px-4 py-4 pr-12 font-poppins"
             autoFocus
-            placeholderTextColor="#404040"
+            placeholderTextColor="#9CA3AF"
           />
           <Pressable
             onPress={onTogglePassword}
@@ -158,8 +138,8 @@ export function PasswordStep({
         </View>
       </View>
       
-      <View>
-        <Text className="mb-2 text-sm font-poppins-medium text-neutral-700">
+      <View className="mt-1 mb-2 gap-y-2">
+        <Text className="text-sm font-poppins-medium text-neutral-700">
           Confirm Password
         </Text>
         <View className="relative">
@@ -170,7 +150,7 @@ export function PasswordStep({
             secureTextEntry={!showConfirmPassword}
             autoCapitalize="none"
             className="border border-neutral-200 rounded-xl px-4 py-4 pr-12 font-poppins"
-            placeholderTextColor="#404040"
+            placeholderTextColor="#9CA3AF"
           />
           <Pressable
             onPress={onToggleConfirmPassword}
@@ -214,10 +194,10 @@ export function TermsStep({ accepted, onToggle, error }: TermsStepProps) {
       
       <Pressable
         onPress={onToggle}
-        className="flex-row items-start gap-x-3 mt-4"
+        className="flex-row items-start gap-x-3"
       >
         <View
-          className={`w-6 h-6 rounded border-2 items-center justify-center mt-0.5 ${
+          className={`w-4 h-4 rounded border-1 items-center justify-center mt-0.5 ${
             accepted ? 'bg-primary border-primary' : 'border-neutral-300'
           }`}
         >
