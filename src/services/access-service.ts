@@ -1,6 +1,6 @@
 import { supabase } from "@/supabase/supabase";
 
-export type AppHomeRoute = "/(user)" | "/(super_admin)" | "/(front_desk)";
+export type AppHomeRoute = "/(user)" | "/(super_admin)" | "/(front_desk)" | "/(store_manager)";
 
 const ROLE_PRIORITY = [
   "super_admin",
@@ -100,6 +100,9 @@ export function mapRoleToHomeRoute(roleType: string | null | undefined): AppHome
   }
   if (roleType === "front_desk" || roleType === "frontdesk") {
     return "/(front_desk)";
+  }
+  if (roleType === "manager" || roleType === "store_owner") {
+    return "/(store_manager)";
   }
   return "/(user)";
 }
