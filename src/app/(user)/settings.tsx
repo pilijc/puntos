@@ -286,7 +286,7 @@ export default function Settings() {
       </View>
 
       <View className="mx-4 mb-6 overflow-hidden bg-background rounded-2xl border border-neutral-200 ">
-        <View className="flex-row p-4 bg-background active:bg-neutral-50">
+        <View className="flex-row p-4 bg-white dark:bg-neutral-800 active:bg-neutral-50 dark:active:bg-neutral-700">
           <View className="h-8 w-8 items-center justify-center rounded-lg bg-orange-50">
             <Ionicons name="notifications-outline" size={18} color="#FF6600" />
           </View>

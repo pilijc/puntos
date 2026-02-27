@@ -70,9 +70,9 @@ export default function Layout() {
           const nextRoute = await getHomeRouteForUserId(session.user.id);
           router.replace(nextRoute);
         } catch (err: any) {
-          if (err.message === "Account has been deleted.") {
-            Alert.alert("Login Failed", "Account has been deleted.");
-            router.replace("/(onboarding)/welcome");
+          if (err.message === "Invalid login credentials.") {
+            Alert.alert("Login Failed", "Invalid login credentials.");
+            router.replace("/(auth)/login");
           }
         }
       }

@@ -17,7 +17,7 @@ export async function checkIfAccountDeletedService(userId: string): Promise<void
 
   if (userSettings?.deleted_at) {
     await supabase.auth.signOut();
-    throw new Error("Account has been deleted.");
+    throw new Error("Invalid login credentials.");
   }
 }
 
