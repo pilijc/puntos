@@ -110,13 +110,13 @@ export default function SuperAdminHome() {
           <View style={{ flexDirection: "row", gap: 12 }}>
             <View style={[softCardShadow, { flex: 1, backgroundColor: "#FFFFFF", borderRadius: 20, paddingVertical: 18, alignItems: "center" }]}>
               <MaterialIcons name="groups" size={20} color="#3B82F6" />
-              <Text className="text-[22px] font-poppins-bold text-slate-900 mt-2">30</Text>
+              <Text className="text-[22px] font-poppins-bold text-slate-900 mt-2">{mockUsers.length}</Text>
               <Text className="text-[9px] font-poppins-bold text-slate-400">TOTAL USERS</Text>
             </View>
 
             <View style={[softCardShadow, { flex: 1, backgroundColor: "#FFFFFF", borderRadius: 20, paddingVertical: 18, alignItems: "center" }]}>
               <MaterialIcons name="storefront" size={20} color="#22C55E" />
-              <Text className="text-[22px] font-poppins-bold text-slate-900 mt-2">2</Text>
+              <Text className="text-[22px] font-poppins-bold text-slate-900 mt-2">{mockStores.length}</Text>
               <Text className="text-[9px] font-poppins-bold text-slate-400">ACTIVE STORES</Text>
             </View>
           </View>

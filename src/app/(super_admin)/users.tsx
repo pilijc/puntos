@@ -8,6 +8,8 @@ import {
   TouchableOpacity,
   Image,
 } from "@/tw";
+import { MaterialIcons } from "@expo/vector-icons";
+import { router } from "expo-router"; // ✅ Add this import
 
 type UserRole = "All" | "Customer" | "Store Manager" | "Front Desk";
 
@@ -45,7 +47,6 @@ export default function CustomersScreen() {
   const itemsPerPage = 15;
   const [currentPage, setCurrentPage] = useState(1);
 
-  // FIX: Simplified filtering logic to ensure search results are always visible
   const getFilteredData = () => {
     return customers.filter((c) => {
       const matchesRole = activeTab === "All" || c.role === activeTab;
@@ -57,7 +58,6 @@ export default function CustomersScreen() {
 
   const filteredData = getFilteredData();
   
-  // Split data into Recent and All ONLY if search is empty
   const recentCustomers = search === "" ? filteredData.filter(c => c.section === "recent") : [];
   const allCustomersFull = search === "" ? filteredData.filter(c => c.section === "all") : filteredData;
 
@@ -67,7 +67,7 @@ export default function CustomersScreen() {
     currentPage * itemsPerPage
   );
 
-const renderCustomerCard = (c: typeof customers[0]) => (
+  const renderCustomerCard = (c: typeof customers[0]) => (
     <View
       key={c.id}
       className="flex-row items-center justify-between bg-white p-3 rounded-xl shadow-sm border border-slate-50 mb-2"
@@ -80,8 +80,6 @@ const renderCustomerCard = (c: typeof customers[0]) => (
           <Text className="text-[13px] font-poppins-bold text-slate-900">{c.name}</Text>
           <View className="flex-row items-center flex-wrap">
             <Text className="text-[12px] font-poppins text-slate-500">{c.email}</Text>
-            
-            {/* ROLE INDICATOR BADGE */}
             <View 
               className={`ml-2 px-2 py-0.5 rounded-md ${
                 c.role === "Customer" ? "bg-blue-50" : 
@@ -105,18 +103,27 @@ const renderCustomerCard = (c: typeof customers[0]) => (
 
   return (
     <SafeAreaView className="flex-1 bg-[#f8f6f6]" edges={['top', 'left', 'right']}>
-    {/* Header */}
+      {/* Header */}
       <View className="bg-primary px-6 pt-2 pb-12 rounded-b-[2rem] shadow-lg z-10">
-        <View className="flex-row items-center justify-center mb-4 h-10">
-          <Text className="text-white text-lg font-poppins-bold tracking-tight">
+        <View className="flex-row items-center mb-4 h-10">
+          {/* ✅ Back Button Added */}
+          <TouchableOpacity onPress={() => router.back()} className="py-2 pr-2">
+            <MaterialIcons name="chevron-left" size={22} color="#FFFFFF" />
+          </TouchableOpacity>
+
+          <Text className="text-white text-lg font-poppins-bold tracking-tight flex-1 text-center">
             Users
           </Text>
+
+          {/* Placeholder to keep title centered */}
+          <View className="w-8" />
         </View>
-                    <View className="relative bg-slate-50 rounded-lg">
+
+        {/* Search bar */}
+        <View className="relative bg-slate-50 rounded-lg">
           <Text className="absolute left-3 top-2.5 text-[12px] z-30">🔍</Text>
           <TextInput
             className="w-full py-2 pl-9 pr-4 text-[12px] font-poppins text-slate-800"
-            // UPDATED PLACEHOLDER
             placeholder="Search by name or email..."
             placeholderTextColor="#94a3b8"
             value={search}
@@ -128,7 +135,7 @@ const renderCustomerCard = (c: typeof customers[0]) => (
         </View>
       </View>
 
-      {/* Tabs & Search Container */}
+      {/* Tabs */}
       <View className="bg-white rounded-2xl shadow-sm p-3 -mt-6 mx-4 mb-3 z-20 border border-slate-100">
         <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mb-3">
           {(["All", "Customer", "Store Manager", "Front Desk"] as UserRole[]).map((tab) => (
@@ -145,12 +152,12 @@ const renderCustomerCard = (c: typeof customers[0]) => (
         </ScrollView>
       </View>
 
+      {/* Customer List */}
       <ScrollView 
         className="flex-1 px-4" 
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 80 }}
       >
-        {/* Recent Section - Only visible when not searching */}
         {recentCustomers.length > 0 && search === "" && (
           <View className="mb-4">
             <Text className="text-slate-400 text-[10px] font-poppins-bold uppercase tracking-widest mb-2 px-1">Recent</Text>
@@ -158,7 +165,6 @@ const renderCustomerCard = (c: typeof customers[0]) => (
           </View>
         )}
 
-        {/* List Section */}
         {displayedAllCustomers.length > 0 ? (
           <View className="mb-4">
             <Text className="text-slate-400 text-[10px] font-poppins-bold uppercase tracking-widest mb-2 px-1">
