@@ -59,7 +59,7 @@ export function NameStep({ value, onChange, error }: StepProps) {
         value={value}
         onChangeText={onChange}
         placeholder="John Doe"
-        placeholderTextColor="#404040"
+        placeholderTextColor="#9CA3AF"
         className="border border-neutral-200 rounded-xl px-4 py-4 font-poppins text-neutral-700"
         autoFocus
       />
@@ -82,7 +82,7 @@ export function EmailStep({ value, onChange, error }: StepProps) {
         value={value}
         onChangeText={onChange}
         placeholder="email@domain.com"
-        placeholderTextColor="#404040"
+        placeholderTextColor="#9CA3AF"
         keyboardType="email-address"
         autoCapitalize="none"
         className="border border-neutral-200 rounded-xl px-4 py-4 font-poppins"
@@ -123,7 +123,7 @@ export function PasswordStep({
             autoCapitalize="none"
             className="border border-neutral-200 rounded-xl px-4 py-4 pr-12 font-poppins"
             autoFocus
-            placeholderTextColor="#404040"
+            placeholderTextColor="#9CA3AF"
           />
           <Pressable
             onPress={onTogglePassword}
@@ -150,7 +150,7 @@ export function PasswordStep({
             secureTextEntry={!showConfirmPassword}
             autoCapitalize="none"
             className="border border-neutral-200 rounded-xl px-4 py-4 pr-12 font-poppins"
-            placeholderTextColor="#404040"
+            placeholderTextColor="#9CA3AF"
           />
           <Pressable
             onPress={onToggleConfirmPassword}

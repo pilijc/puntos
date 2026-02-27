@@ -14,7 +14,6 @@ import signUpService from "../../services/auth-service";
 import { signUpWithGoogleService } from "@/services/auth-service";
 import { NameStep, EmailStep, PasswordStep, TermsStep, StepHeader } from "../../components/stepper";
 import { Ionicons } from "@expo/vector-icons";
-import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from "../../components/ui/dialog";
 
 export default function SignUp() {
   const [currentStep, setCurrentStep] = useState(1);

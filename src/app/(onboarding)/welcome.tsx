@@ -9,12 +9,12 @@ const slides = [
   {
     title: "Get rewarded for every step.",
     subtitle: "Start walking and let every step bring you closer to exciting rewards and nearby stores.",
-    image: require("../../assets/gif/walking.json"),
+    image: require("../../assets/lottie/walking.json"),
   },
   {
     title: "Redeem points for perks.",
     subtitle: "Exchange your collected points for exclusive offers and treat yourself anytime.",
-    image: require("../../assets/gif/rewards-1.json"),
+    image: require("../../assets/lottie/rewards-1.json"),
   },
 ];
 
