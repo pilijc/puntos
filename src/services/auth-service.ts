@@ -6,11 +6,26 @@ import { Alert } from "react-native";
 import { getHomeRouteForUserId } from "./access-service";
 import { router } from "expo-router";
 
+export async function checkIfAccountDeletedService(userId: string): Promise<void> {
+  const { data: userSettings, error } = await supabase
+    .from("user_settings")
+    .select("deleted_at")
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (error && error.code !== 'PGRST116') throw error;
+
+  if (userSettings?.deleted_at) {
+    await supabase.auth.signOut();
+    throw new Error("Account has been deleted.");
+  }
+}
+
 GoogleSignin.configure({
   webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
 });
 
-export default async function signUpService ( email: string, password: string, name: string) {
+export default async function signUpService(email: string, password: string, name: string) {
   try {
     const { data, error } = await supabase.auth.signUp({ email, password });
     console.log(data);
@@ -27,43 +42,43 @@ export default async function signUpService ( email: string, password: string, n
     }
   } catch (error) {
     throw error;
-  } 
+  }
 }
 
 export async function signUpWithGoogleService() {
-  try {    
-    await GoogleSignin.hasPlayServices();    
+  try {
+    await GoogleSignin.hasPlayServices();
     const response = await GoogleSignin.signIn();
 
     console.log(response);
-    
+
     if (response.type === 'success') {
       const { idToken } = response.data;
-      
+
       if (!idToken) {
         throw new Error(
           'Google Sign-In did not return an ID token'
         );
       }
-      
+
       const { data, error } = await supabase.auth.signInWithIdToken({
         provider: 'google',
         token: idToken,
       });
-      
+
       if (error) {
         throw error;
       }
-      
+
       if (data.user) {
         const name = data.user.user_metadata.full_name
-        
+
         const { data: existingProfile } = await supabase
           .from("users")
           .select("id")
           .eq("id", data.user.id)
           .single();
-        
+
         if (!existingProfile) {
           const { error: insertError } = await supabase
             .from("users")
@@ -71,7 +86,7 @@ export async function signUpWithGoogleService() {
               id: data.user.id,
               name: name,
             });
-          
+
           if (insertError) {
             throw insertError;
           }
@@ -80,7 +95,7 @@ export async function signUpWithGoogleService() {
       return data;
     }
   } catch (error: any) {
-      throw error;
+    throw error;
   }
 }
 
@@ -96,6 +111,8 @@ export async function loginService(email: string, password: string) {
     }
 
     if (data.session) {
+      await checkIfAccountDeletedService(data.session.user.id);
+
       const nextRoute = await getHomeRouteForUserId(data.session.user.id);
       router.replace(nextRoute);
     }
@@ -107,25 +124,25 @@ export async function loginService(email: string, password: string) {
 
 export async function signInWithGoogleLoginService() {
   try {
-    await GoogleSignin.hasPlayServices();    
+    await GoogleSignin.hasPlayServices();
     const response = await GoogleSignin.signIn();
 
     console.log(response);
-    
+
     if (response.type === 'success') {
       const { idToken } = response.data;
-      
+
       if (!idToken) {
         throw new Error(
           'Google Sign-In did not return an ID token'
         );
       }
-      
+
       const { data, error } = await supabase.auth.signInWithIdToken({
         provider: 'google',
         token: idToken,
       });
-      
+
       if (error) {
         throw error;
       }
@@ -151,6 +168,10 @@ export async function signInWithGoogleLoginService() {
             throw insertError;
           }
         }
+      }
+
+      if (data.session) {
+        await checkIfAccountDeletedService(data.session.user.id);
       }
 
       return data;

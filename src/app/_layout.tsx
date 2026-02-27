@@ -4,13 +4,14 @@ import { useFonts } from "expo-font";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect, useState } from "react";
-import { Animated, Easing, StatusBar, StyleSheet, View } from "react-native";
+import { Animated, Easing, StatusBar, StyleSheet, View, Alert } from "react-native";
 import { supabase } from "@/supabase/supabase";
 import React from "react";
 import { useAuthListener } from "@/hooks/auth-listener";
 import { useAnimatedStyle, useSharedValue, withRepeat, withSequence, withTiming } from "react-native-reanimated";
 import { Image } from "@/tw";
 import { getHomeRouteForUserId } from "@/services/access-service";
+import { checkIfAccountDeletedService } from "@/services/auth-service";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 SplashScreen.preventAutoHideAsync();
@@ -63,8 +64,17 @@ export default function Layout() {
       if (error || !session) {
         router.replace("/(onboarding)/welcome");
       } else {
-        const nextRoute = await getHomeRouteForUserId(session.user.id);
-        router.replace(nextRoute);
+        try {
+          await checkIfAccountDeletedService(session.user.id);
+
+          const nextRoute = await getHomeRouteForUserId(session.user.id);
+          router.replace(nextRoute);
+        } catch (err: any) {
+          if (err.message === "Account has been deleted.") {
+            Alert.alert("Login Failed", "Account has been deleted.");
+            router.replace("/(onboarding)/welcome");
+          }
+        }
       }
       setSessionChecked(true);
     };
