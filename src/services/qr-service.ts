@@ -2,29 +2,6 @@
 
 import { supabase } from "@/supabase/supabase";
 import { QRCodeState, QRTransaction } from "@/type/qr";
-import { store } from "expo-router/build/global-state/router-store";
-
-
-
-export async function getCurrentUser() {
-
-  const { data: { user }, error } = await supabase.auth.getUser();
-
-  if (error) throw error;
-
-  return user; 
-
-}
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -62,7 +39,7 @@ export async function generateQRCode(userId: string, expiryHours: number = 1) {
     );
   }
 
-  return data[0]; // return the inserted QR row
+  return data[0]; 
 } */
 
 // New Static QR Code Functions
@@ -93,7 +70,6 @@ export async function createQRTransaction(
       {
         user_id: userId,
         store_staff_id: storeStaffId,
-       // store_id: null, // Add store_id if available
         scanned_at: new Date().toISOString(),
         points_awarded: pointsAwarded,
       },
