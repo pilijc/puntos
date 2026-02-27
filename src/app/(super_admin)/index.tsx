@@ -1,37 +1,48 @@
-﻿import React from "react";
-import { TextInput, Image } from "react-native";
-import { SafeAreaView, ScrollView, Text, TouchableOpacity, View } from "@/tw";
+﻿import React, { useState } from "react";
+import { Image, Modal, ScrollView } from "react-native";
+import { SafeAreaView, Text, TouchableOpacity, View } from "@/tw";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { useRouter } from "expo-router";
 
 export default function SuperAdminHome() {
+  const router = useRouter();
+  const [showNotifications, setShowNotifications] = useState(false);
+
   const softCardShadow = {
     shadowColor: "#0F172A",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
-    shadowRadius: 6,
+    shadowRadius: 4,
     elevation: 2,
   };
 
-  const mockUsers = [
-    {
-      id: "u1",
-      name: "Alex Morgan",
-      email: "alex.m@example.com",
-      avatar: "https://api.dicebear.com/7.x/avataaars/png?seed=Alex&backgroundColor=ffdfbf",
-    },
-    {
-      id: "u2",
-      name: "Sarah Jenkins",
-      email: "s.jenkins88@gmail.com",
-      avatar: "https://api.dicebear.com/7.x/avataaars/png?seed=Sarah&backgroundColor=ffecb3",
-    },
-    {
-      id: "u3",
-      name: "Michael Chen",
-      email: "mike.chen@tech.co",
-      avatar: "https://api.dicebear.com/7.x/avataaars/png?seed=Michael&backgroundColor=fbe9e7",
-    },
-  ];
+  // ✅ Generate 30 users
+  const mockUsers = Array.from({ length: 30 }, (_, i) => {
+    const names = [
+      "Alex Morgan","Sarah Jenkins","Michael Chen","Emma Watson",
+      "Daniel Cruz","Sophia Lee","James Carter","Olivia Brown",
+      "Liam Garcia","Isabella Martinez","Noah Anderson",
+      "Mia Thompson","Lucas White","Charlotte Hall",
+      "Ethan Young","Amelia King","Logan Wright",
+      "Harper Scott","Elijah Green","Evelyn Adams",
+      "Mason Baker","Abigail Nelson","Jacob Hill",
+      "Emily Rivera","William Torres","Ella Roberts",
+      "Benjamin Flores","Avery Mitchell","Henry Perez","Scarlett Cox"
+    ];
+    const name = names[i];
+    const email = name.toLowerCase().replace(" ", ".") + "@example.com";
+
+    return {
+      id: `u${i + 1}`,
+      name,
+      email,
+      avatar: `https://api.dicebear.com/7.x/avataaars/png?seed=${name}`,
+      section: i < 20 ? "recent" : "all",
+    };
+  });
+
+  // ✅ Only show recent 20 for dashboard
+  const recentUsers = mockUsers.filter(u => u.section === "recent");
 
   const storeFilters = ["All Stores", "Active", "Deactivated"];
 
@@ -41,10 +52,11 @@ export default function SuperAdminHome() {
       name: "The Coffee Foundry",
       location: "Brooklyn, NY",
       owner: "David Miller",
-      staffCount: "4 Staff Members",
-      image: "https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=300&auto=format&fit=crop&q=60",
+      staffCount: "4 Staff",
+      image:
+        "https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=300&auto=format&fit=crop&q=60",
       status: "ACTIVE",
-      primaryAction: "Edit Details",
+      primaryAction: "Edit",
       dangerAction: "Deactivate",
     },
     {
@@ -52,283 +64,154 @@ export default function SuperAdminHome() {
       name: "Brew & Bean Co.",
       location: "Seattle, WA",
       owner: "Jessica Wong",
-      staffCount: "2 Staff Members",
-      image: "https://images.unsplash.com/photo-1445116572660-236099ec97a0?w=300&auto=format&fit=crop&q=60",
+      staffCount: "2 Staff",
+      image:
+        "https://images.unsplash.com/photo-1445116572660-236099ec97a0?w=300&auto=format&fit=crop&q=60",
       status: "PENDING",
       primaryAction: "Approve",
       dangerAction: "Reject",
     },
   ];
 
+  const notifications = [
+    { id: "n1", title: "New Registration", message: "Alex Morgan registered The Coffee Foundry", time: "2m ago" },
+    { id: "n2", title: "Action Required", message: "Brew & Bean Co. is waiting for your review", time: "1h ago" },
+    { id: "n3", title: "System Alert", message: "New security patches have been applied", time: "5h ago" },
+  ];
+
   return (
-    <SafeAreaView className="flex-1 bg-backgroundMuted">
-      <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 100 }} showsVerticalScrollIndicator={false}>
-        <View className="bg-primary rounded-b-[35px] px-6 pt-2 pb-20 overflow-hidden">
-          <View className="absolute -top-10 -right-10 w-56 h-56 rounded-full bg-white/10" />
-          <View className="absolute -bottom-12 -left-10 w-28 h-28 rounded-full bg-white/10" />
+    <SafeAreaView className="flex-1 bg-[#F8FAFC]" edges={["top", "left", "right"]}>
+      <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
 
+        {/* Header */}
+        <View className="bg-primary rounded-b-[30px] px-6 pt-2 pb-16 overflow-hidden">
+          <View className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-white/10" />
           <View className="flex-row items-center justify-between mt-2">
-            <View className="w-10 h-10" />
-
-            <Text className="text-white text-xl font-poppins-bold">Super Admin</Text>
-
-            <TouchableOpacity className="w-10 h-10 rounded-full bg-white/15 items-center justify-center relative">
-              <MaterialIcons name="notifications-none" size={19} color="#FFFFFF" />
-              <View className="absolute top-2 right-2 w-2 h-2 rounded-full bg-danger" />
-            </TouchableOpacity>
-          </View>
-
-          <View className="mt-8 mb-2">
-            <Text className="text-white text-4xl font-poppins-bold">Dashboard</Text>
-            <Text className="mt-1 text-[13px] text-white/90 font-poppins">Welcome back, Administrator</Text>
-          </View>
-        </View>
-
-        <View className="px-6 -mt-12 mb-8">
-          <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-            <View
-              style={[
-                softCardShadow,
-                { width: "48%", backgroundColor: "#FFFFFF", borderRadius: 24, paddingVertical: 28, alignItems: "center" }
-              ]}
+            <View className="w-8 h-8" />
+            <Text className="text-white text-base font-poppins-bold">Super Admin</Text>
+            <TouchableOpacity 
+              className="w-9 h-9 rounded-full bg-white/15 items-center justify-center relative"
+              onPress={() => setShowNotifications(true)}
             >
-              <View style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: "#DBEAFE", alignItems: "center", justifyContent: "center", marginBottom: 12 }}>
-                <MaterialIcons name="groups" size={24} color="#3B82F6" />
-              </View>
-              <Text style={{ fontSize: 28, fontFamily: "Poppins-Bold", color: "#0F172A", lineHeight: 32 }}>12,451</Text>
-              <Text style={{ marginTop: 6, fontSize: 10, fontFamily: "Poppins-Bold", color: "#94A3B8", letterSpacing: 1 }}>TOTAL USERS</Text>
+              <MaterialIcons name="notifications-none" size={18} color="#FFFFFF" />
+              <View className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full bg-danger border border-primary" />
+            </TouchableOpacity>
+          </View>
+          <View className="mt-6 mb-2">
+            <Text className="text-white text-2xl font-poppins-bold">Dashboard</Text>
+            <Text className="text-[11px] text-white/80 font-poppins uppercase tracking-wider">
+              Welcome back, Admin
+            </Text>
+          </View>
+        </View>
+
+        {/* Stats */}
+        <View className="px-6 -mt-10 mb-6">
+          <View style={{ flexDirection: "row", gap: 12 }}>
+            <View style={[softCardShadow, { flex: 1, backgroundColor: "#FFFFFF", borderRadius: 20, paddingVertical: 18, alignItems: "center" }]}>
+              <MaterialIcons name="groups" size={20} color="#3B82F6" />
+              <Text className="text-[22px] font-poppins-bold text-slate-900 mt-2">{mockUsers.length}</Text>
+              <Text className="text-[9px] font-poppins-bold text-slate-400">TOTAL USERS</Text>
             </View>
 
-            <View
-              style={[
-                softCardShadow,
-                { width: "48%", backgroundColor: "#FFFFFF", borderRadius: 24, paddingVertical: 28, alignItems: "center" }
-              ]}
-            >
-              <View style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: "#DCFCE7", alignItems: "center", justifyContent: "center", marginBottom: 12 }}>
-                <MaterialIcons name="storefront" size={24} color="#22C55E" />
-              </View>
-              <Text style={{ fontSize: 28, fontFamily: "Poppins-Bold", color: "#0F172A", lineHeight: 32 }}>84</Text>
-              <Text style={{ marginTop: 6, fontSize: 10, fontFamily: "Poppins-Bold", color: "#94A3B8", letterSpacing: 1 }}>ACTIVE STORES</Text>
+            <View style={[softCardShadow, { flex: 1, backgroundColor: "#FFFFFF", borderRadius: 20, paddingVertical: 18, alignItems: "center" }]}>
+              <MaterialIcons name="storefront" size={20} color="#22C55E" />
+              <Text className="text-[22px] font-poppins-bold text-slate-900 mt-2">{mockStores.length}</Text>
+              <Text className="text-[9px] font-poppins-bold text-slate-400">ACTIVE STORES</Text>
             </View>
           </View>
         </View>
 
-        <View className="px-6 mb-8">
-          <View
-            style={[
-              softCardShadow,
-              {
-                flexDirection: "row",
-                alignItems: "center",
-                backgroundColor: "#FFFFFF",
-                borderRadius: 9999,
-                paddingHorizontal: 20,
-                height: 56,
-              }
-            ]}
-          >
-            <MaterialIcons name="search" size={24} color="#94A3B8" />
-
-            <TextInput
-              placeholder="Search users, stores, or emails..."
-              placeholderTextColor="#94A3B8"
-              style={{
-                flex: 1,
-                marginLeft: 12,
-                fontSize: 15,
-                fontFamily: "Poppins-Regular",
-                color: "#0F172A",
-              }}
-            />
-
-            <TouchableOpacity style={{ padding: 4 }}>
-              <MaterialIcons name="tune" size={24} color="#94A3B8" />
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        <View className="px-6 mb-12">
-          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 4, paddingVertical: 12 }}>
-            <View style={{ flexDirection: "row", alignItems: "center" }}>
-              <MaterialIcons name="person-outline" size={26} color="#FF6600" />
-              <Text style={{ fontSize: 22, fontFamily: "Poppins-Bold", color: "#0F172A", marginLeft: 8 }}>Manage Users</Text>
-            </View>
-            <TouchableOpacity style={{ flexDirection: "row", alignItems: "center" }}>
-              <Text style={{ fontSize: 13, fontFamily: "Poppins-Bold", color: "#FF6600", marginRight: 2 }}>VIEW ALL</Text>
-              <MaterialIcons name="chevron-right" size={18} color="#FF6600" />
-            </TouchableOpacity>
-          </View>
-
-          <View
-            style={[
-              softCardShadow,
-              {
-                backgroundColor: "#FFFFFF",
-                borderRadius: 24,
-                overflow: "hidden",
-                marginTop: 0,
-              }
-            ]}
-          >
-            {mockUsers.map((user, index) => (
-              <View
-                key={user.id}
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  paddingVertical: 20,
-                  paddingHorizontal: 20,
-                  borderTopWidth: index === 0 ? 0 : 1,
-                  borderTopColor: "#F1F5F9",
-                }}
-              >
-                <View style={{ flexDirection: "row", alignItems: "center", flex: 1 }}>
-                  <Image
-                    source={{ uri: user.avatar }}
-                    style={{ width: 52, height: 52, borderRadius: 26, backgroundColor: "#F8FAFC" }}
-                  />
-                  <View style={{ marginLeft: 16, flex: 1 }}>
-                    <Text style={{ fontSize: 16, fontFamily: "Poppins-Bold", color: "#0F172A", marginTop: 4 }}>{user.name}</Text>
-                    <Text style={{ fontSize: 14, fontFamily: "Poppins-Regular", color: "#64748B", marginTop: -2 }}>{user.email}</Text>
+        {/* Notification Modal */}
+        <Modal visible={showNotifications} animationType="slide" transparent>
+          <View className="flex-1 bg-black/50 justify-end">
+            <View className="bg-white rounded-t-[30px] p-6 h-[70%]">
+              <View className="flex-row justify-between items-center mb-6">
+                <Text className="text-lg font-poppins-bold">Notifications</Text>
+                <TouchableOpacity onPress={() => setShowNotifications(false)}>
+                  <MaterialIcons name="close" size={24} color="#000" />
+                </TouchableOpacity>
+              </View>
+              <ScrollView showsVerticalScrollIndicator={false}>
+                {notifications.map((n) => (
+                  <View key={n.id} className="mb-4 p-4 bg-orange-50 rounded-2xl">
+                    <Text className="font-poppins-bold text-sm text-slate-800">{n.title}</Text>
+                    <Text className="text-slate-600 text-xs mt-1">{n.message}</Text>
+                    <Text className="text-slate-400 text-[10px] mt-2">{n.time}</Text>
                   </View>
-                </View>
-
-                <TouchableOpacity
-                  style={{
-                    backgroundColor: "#FEF2F2",
-                    paddingHorizontal: 16,
-                    paddingVertical: 8,
-                    borderRadius: 8,
-                  }}
-                >
-                  <Text style={{ color: "#EF4444", fontSize: 14, fontFamily: "Poppins-Medium" }}>Block</Text>
-                </TouchableOpacity>
-              </View>
-            ))}
-          </View>
-        </View>
-
-        <View className="px-6 mb-12">
-          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 4, paddingVertical: 12 }}>
-            <View style={{ flexDirection: "row", alignItems: "center" }}>
-              <MaterialIcons name="storefront" size={26} color="#FF6600" />
-              <Text style={{ fontSize: 22, fontFamily: "Poppins-Bold", color: "#0F172A", marginLeft: 8 }}>Store Management</Text>
+                ))}
+              </ScrollView>
             </View>
-            <TouchableOpacity style={{ flexDirection: "row", alignItems: "center" }}>
-              <Text style={{ fontSize: 13, fontFamily: "Poppins-Bold", color: "#FF6600", marginRight: 2 }}>VIEW ALL</Text>
-              <MaterialIcons name="chevron-right" size={18} color="#FF6600" />
+          </View>
+        </Modal>
+
+        {/* Manage Users */}
+        <View className="px-6 mb-8">
+          <View className="flex-row justify-between items-center mb-3">
+            <Text className="text-lg font-poppins-bold text-slate-900">Manage Users</Text>
+            <TouchableOpacity className="flex-row items-center" onPress={() => router.push("/(super_admin)/users")}>
+              <Text className="text-[11px] font-poppins-bold text-primary mr-1">VIEW ALL</Text>
+              <MaterialIcons name="chevron-right" size={14} color="#FF6600" />
             </TouchableOpacity>
           </View>
 
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 16 }} contentContainerStyle={{ paddingRight: 20 }}>
-            {storeFilters.map((filter, index) => {
-              const active = index === 0;
-              return (
-                <TouchableOpacity
-                  key={filter}
-                  style={{
-                    backgroundColor: active ? "#FF6600" : "#FFFFFF",
-                    paddingHorizontal: 16,
-                    paddingVertical: 10,
-                    borderRadius: 9999,
-                    marginRight: 10,
-                    borderWidth: active ? 0 : 1,
-                    borderColor: "#E2E8F0"
-                  }}
-                >
-                  <Text style={{ fontSize: 13, fontFamily: "Poppins-Medium", color: active ? "#FFFFFF" : "#475569" }}>
-                    {filter}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
+          {/* Scrollable Recent Users */}
+          <View style={[softCardShadow, { backgroundColor: "#FFFFFF", borderRadius: 20, overflow: "hidden", maxHeight: 300 }]}>
+            <ScrollView nestedScrollEnabled showsVerticalScrollIndicator={false}>
+              {recentUsers.map((user, index) => (
+                <View key={user.id} style={{ flexDirection: "row", alignItems: "center", padding: 14, borderTopWidth: index === 0 ? 0 : 1, borderTopColor: "#F1F5F9" }}>
+                  <Image source={{ uri: user.avatar }} style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: "#F1F5F9" }} />
+                  <View style={{ marginLeft: 12, flex: 1 }}>
+                    <Text className="text-[14px] font-poppins-bold text-slate-800">{user.name}</Text>
+                    <Text className="text-[12px] font-poppins text-slate-500">{user.email}</Text>
+                  </View>
+                  <TouchableOpacity className="bg-red-50 px-3 py-1.5 rounded-lg">
+                    <Text className="text-red-500 text-[11px] font-poppins-bold">Block</Text>
+                  </TouchableOpacity>
+                </View>
+              ))}
+            </ScrollView>
+          </View>
+        </View>
+
+        {/* Store Management */}
+        <View className="px-6 mb-6">
+          <View className="flex-row justify-between items-center mb-4">
+            <Text className="text-lg font-poppins-bold text-slate-900">Store Management</Text>
+            <TouchableOpacity onPress={() => router.push("/(super_admin)/stores")}>
+              <Text className="text-[11px] font-poppins-bold text-primary">VIEW ALL</Text>
+            </TouchableOpacity>
+          </View>
+
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mb-4">
+            {storeFilters.map((filter, index) => (
+              <TouchableOpacity key={filter} className={`px-4 py-2 rounded-full mr-2 border ${index === 0 ? "bg-primary border-primary" : "bg-white border-slate-200"}`}>
+                <Text className={`text-[12px] font-poppins-medium ${index === 0 ? "text-white" : "text-slate-600"}`}>{filter}</Text>
+              </TouchableOpacity>
+            ))}
           </ScrollView>
 
-          <View style={{ gap: 16 }}>
+          <View style={{ gap: 12 }}>
             {mockStores.map((store) => (
-              <View
-                key={store.id}
-                style={[
-                  softCardShadow,
-                  {
-                    backgroundColor: "#FFFFFF",
-                    borderRadius: 24,
-                    padding: 20,
-                  }
-                ]}
-              >
-                <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
-                  <View style={{ flexDirection: "row", flex: 1 }}>
-                    <Image
-                      source={{ uri: store.image }}
-                      style={{ width: 64, height: 64, borderRadius: 16, backgroundColor: "#F1F5F9" }}
-                    />
-                    <View style={{ marginLeft: 16, flex: 1, justifyContent: "center" }}>
-                      <Text style={{ fontSize: 16, fontFamily: "Poppins-Bold", color: "#0F172A" }}>{store.name}</Text>
-                      <View style={{ flexDirection: "row", alignItems: "center", marginTop: 4 }}>
-                        <MaterialIcons name="place" size={14} color="#64748B" />
-                        <Text style={{ fontSize: 13, fontFamily: "Poppins-Regular", color: "#64748B", marginLeft: 2 }}>{store.location}</Text>
-                      </View>
+              <View key={store.id} style={[softCardShadow, { backgroundColor: "#FFFFFF", borderRadius: 20, padding: 16 }]}>
+                <View className="flex-row justify-between items-start mb-4">
+                  <View className="flex-row flex-1">
+                    <Image source={{ uri: store.image }} style={{ width: 50, height: 50, borderRadius: 12 }} />
+                    <View className="ml-3 flex-1 justify-center">
+                      <Text className="text-[14px] font-poppins-bold text-slate-800">{store.name}</Text>
+                      <Text className="text-[11px] font-poppins text-slate-500">{store.location}</Text>
                     </View>
                   </View>
-
-                  <View
-                    style={{
-                      backgroundColor: store.status === "ACTIVE" ? "#DCFCE7" : "#FEF3C7",
-                      paddingHorizontal: 10,
-                      paddingVertical: 6,
-                      borderRadius: 8
-                    }}
-                  >
-                    <Text
-                      style={{
-                        fontSize: 10,
-                        fontFamily: "Poppins-Bold",
-                        color: store.status === "ACTIVE" ? "#16A34A" : "#B45309"
-                      }}
-                    >
-                      {store.status}
-                    </Text>
+                  <View className={`px-2 py-1 rounded-md ${store.status === "ACTIVE" ? "bg-green-50" : "bg-amber-50"}`}>
+                    <Text className={`text-[9px] font-poppins-bold ${store.status === "ACTIVE" ? "text-green-600" : "text-amber-600"}`}>{store.status}</Text>
                   </View>
                 </View>
-
-                <View style={{ backgroundColor: "#F8FAFC", borderRadius: 16, padding: 16, flexDirection: "row", marginBottom: 20 }}>
-                  <View style={{ flex: 1 }}>
-                    <Text style={{ fontSize: 10, fontFamily: "Poppins-Bold", color: "#94A3B8", letterSpacing: 1 }}>OWNER</Text>
-                    <Text style={{ fontSize: 14, fontFamily: "Poppins-Medium", color: "#334155", marginTop: 4 }}>{store.owner}</Text>
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={{ fontSize: 10, fontFamily: "Poppins-Bold", color: "#94A3B8", letterSpacing: 1 }}>FRONT DESK</Text>
-                    <Text style={{ fontSize: 14, fontFamily: "Poppins-Medium", color: "#334155", marginTop: 4 }}>{store.staffCount}</Text>
-                  </View>
-                </View>
-
-                <View style={{ flexDirection: "row", gap: 12 }}>
-                  <TouchableOpacity
-                    style={{
-                      flex: 1,
-                      backgroundColor: "#F1F5F9",
-                      paddingVertical: 14,
-                      borderRadius: 12,
-                      alignItems: "center"
-                    }}
-                  >
-                    <Text style={{ fontSize: 14, fontFamily: "Poppins-Bold", color: "#475569" }}>{store.primaryAction}</Text>
+                <View className="flex-row gap-2">
+                  <TouchableOpacity className="flex-1 bg-slate-100 py-2.5 rounded-lg items-center">
+                    <Text className="text-[12px] font-poppins-bold text-slate-600">{store.primaryAction}</Text>
                   </TouchableOpacity>
-                  <TouchableOpacity
-                    style={{
-                      flex: 1,
-                      backgroundColor: "#FFFFFF",
-                      borderWidth: 1,
-                      borderColor: store.status === "ACTIVE" ? "#FECACA" : "#FECACA",
-                      paddingVertical: 14,
-                      borderRadius: 12,
-                      alignItems: "center"
-                    }}
-                  >
-                    <Text style={{ fontSize: 14, fontFamily: "Poppins-Bold", color: "#EF4444" }}>{store.dangerAction}</Text>
+                  <TouchableOpacity className="flex-1 border border-red-100 py-2.5 rounded-lg items-center">
+                    <Text className="text-[12px] font-poppins-bold text-red-500">{store.dangerAction}</Text>
                   </TouchableOpacity>
                 </View>
               </View>

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { Modal, TextInput, Alert, ActivityIndicator, KeyboardAvoidingView, ScrollView } from "react-native";
-import { View, Text, SafeAreaView, TouchableOpacity } from "@/tw";
+import { Modal, Alert, ActivityIndicator, KeyboardAvoidingView } from "react-native";
+import { View, Text, SafeAreaView, TouchableOpacity, TextInput, ScrollView } from "@/tw";
 import { Ionicons } from "@expo/vector-icons";
 import { supabase } from "@/supabase/supabase";
 
@@ -113,7 +113,7 @@ export default function ChangePasswordModal({ visible, onClose }: Props) {
                         <View className="mb-4">
                             <Text className="text-sm font-poppins-medium text-neutral-700 mb-2">Current Password</Text>
                             <TextInput
-                                className="bg-neutral-50 border border-neutral-200 rounded-xl p-4 font-poppins-regular text-neutral-900"
+                                className="border-neutral-500 border rounded-lg p-3 font-poppins-regular text-neutral-900"
                                 placeholder="Enter current password"
                                 secureTextEntry
                                 value={currentPassword}

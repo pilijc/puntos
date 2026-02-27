@@ -1,38 +1,41 @@
 import React, { useEffect, useState } from 'react';
-import {  ActivityIndicator } from 'react-native';
+import { ActivityIndicator } from 'react-native';
 import { SafeAreaView, View, Text, TouchableOpacity } from '@/tw';
 
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useRouter } from 'expo-router';
 import QRCode from 'react-native-qrcode-svg';
-import { supabase } from '@/supabase/supabase';
-import { generateQRCode } from '@/services/qr-service';
-import { QRCodeState } from '@/type/qr';
+//import { supabase } from '@/supabase/supabase';
+import { getCurrentUser, getStaticQRCode } from '@/services/qr-service';
 
-export default function Redeem() {
+export default function Qr() {
   const router = useRouter();
-  const [qrData, setQrData] = useState<QRCodeState | null>(null);
+  const [qrValue, setQrValue] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Fetch and generate QR code
+  // Get static QR code based on userID
   const fetchQRCode = async () => {
     setLoading(true);
     try {
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      
+      const user = await getCurrentUser();
 
-      if (userError || !user) {
-        console.error('No logged-in user found', userError?.message);
+      if (!user) {
+        console.error('No logged-in user found');
         setLoading(false);
         return;
       }
 
-      const qr = await generateQRCode(user.id);
-      console.log('Generated QR data:', qr);
-      setQrData(qr);
-    } catch (err) {
-      console.error('Error generating QR code:', err);
-      setQrData(null);
-    } finally {
+      const staticQR = getStaticQRCode(user.id);
+      console.log('Static QR value:', staticQR);
+      setQrValue(staticQR);
+
+    } 
+    catch (err) {
+      console.error('Error getting QR code:', err);
+      setQrValue(null);
+    } 
+    finally {
       setLoading(false);
     }
   };
@@ -60,38 +63,25 @@ export default function Redeem() {
           Let the operator scan your QR code
         </Text>
         <Text className="text-xs mt-1 text-gray-400 text-center">
-          This code is unique and one-time use
+          This is your unique customer QR code
         </Text>
 
         {/* QR Code */}
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
           {loading ? (
             <ActivityIndicator size="large" />
-          ) : qrData ? (
+          ) : qrValue ? (
             <>
               <Text style={{ marginBottom: 20 }}>Your QR Code</Text>
-              <QRCode value={qrData.id} size={200} />
+              <QRCode value={qrValue} size={200} />
               <Text style={{ marginTop: 10, color: 'gray' }}>
-                Expires at: {new Date(qrData.expires_at).toLocaleString()}
+                Show this to the front desk to earn points
               </Text>
             </>
           ) : (
             <Text>Failed to load QR code. Try again.</Text>
           )}
         </View>
-
-        {/* Regenerate Button */}
-        <View className="flex-row items-center justify-center mt-6">
-          <TouchableOpacity
-            className="bg-orange-600 px-7 py-3 rounded-full"
-            onPress={fetchQRCode}
-          >
-            <Text className="text-base font-semibold text-white">Generate New Code</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Footer */}
-        <Text className="text-xs text-gray-400 text-center mt-6">ONE-TIME QR CODE</Text>
       </View>
     </SafeAreaView>
   );
