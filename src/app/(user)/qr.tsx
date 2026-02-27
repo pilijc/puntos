@@ -5,10 +5,10 @@ import { SafeAreaView, View, Text, TouchableOpacity } from '@/tw';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useRouter } from 'expo-router';
 import QRCode from 'react-native-qrcode-svg';
-import { supabase } from '@/supabase/supabase';
-import { getStaticQRCode } from '@/services/qr-service';
+//import { supabase } from '@/supabase/supabase';
+import { getCurrentUser, getStaticQRCode } from '@/services/qr-service';
 
-export default function Redeem() {
+export default function Qr() {
   const router = useRouter();
   const [qrValue, setQrValue] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -17,10 +17,11 @@ export default function Redeem() {
   const fetchQRCode = async () => {
     setLoading(true);
     try {
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      
+      const user = await getCurrentUser();
 
-      if (userError || !user) {
-        console.error('No logged-in user found', userError?.message);
+      if (!user) {
+        console.error('No logged-in user found');
         setLoading(false);
         return;
       }
@@ -28,10 +29,13 @@ export default function Redeem() {
       const staticQR = getStaticQRCode(user.id);
       console.log('Static QR value:', staticQR);
       setQrValue(staticQR);
-    } catch (err) {
+
+    } 
+    catch (err) {
       console.error('Error getting QR code:', err);
       setQrValue(null);
-    } finally {
+    } 
+    finally {
       setLoading(false);
     }
   };

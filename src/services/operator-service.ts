@@ -1,24 +1,15 @@
 import { supabase } from "@/supabase/supabase";
 import { parseQRCode, createQRTransaction } from "@/services/qr-service";
+import { FrontDeskScanResult, ScanResult } from "@/type/qr-transaction";
 
-export interface ScanResult {
-  success: boolean;
-  message: string;
-  pointsEarned?: number;
-}
-
-export interface FrontDeskScanResult {
-  success: boolean;
-  message: string;
-  transactionId?: string;
-}
-
+ 
 export async function scanQRCode(
   qrId: string,
   operatorId: string,
   storeId: string,
   pointsEarned: number
 ): Promise<ScanResult> {
+ 
   // 1. Fetch QR code
   const { data: qrData, error: fetchError } = await supabase
     .from("qr_codes")

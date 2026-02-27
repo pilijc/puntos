@@ -19,10 +19,13 @@ export default function FrontDeskScan() {
         }
     }, [permission]);
 
+    
     const handleBarCodeScanned = async ({ data }: { data: string }) => {
-        if (scanned || isProcessing) return;
+        
+        //if (scanned || isProcessing) return;
         
         setIsProcessing(true);
+        
         setScanned(true);
 
         try {
