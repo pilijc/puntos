@@ -79,20 +79,20 @@ export default function Rewards() {
   }, [permissionStatus]);
 
   return (
-    <SafeAreaView className="flex-1 bg-backgroundMuted">
+    <SafeAreaView className="flex-1 bg-backgroundMuted dark:bg-neutral-900">
       <ScrollView
         className="flex-1"
         contentContainerClassName="px-6 pt-6 pb-8 gap-y-6"
       >
         <View className="flex-row items-center justify-between">
-          <Text className="text-2xl font-poppins-bold text-neutral-900">
+          <Text className="text-2xl font-poppins-bold text-neutral-900 dark:text-white">
             Rewards
           </Text>
           <TouchableOpacity
             onPress={() => router.push("/store/stores")}
-            className="px-3 py-2 rounded-full border border-neutral-200 bg-white"
+            className="px-3 py-2 rounded-full border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800"
           >
-            <Text className="text-xs font-poppins-semibold text-neutral-700">
+            <Text className="text-xs font-poppins-semibold text-neutral-700 dark:text-neutral-300">
               VIEW STORES
             </Text>
           </TouchableOpacity>
@@ -152,9 +152,8 @@ export default function Rewards() {
                   </Text>
                   <Text className="text-white/85 text-xs font-poppins mt-1">
                     {nearbyStores.length > 0
-                      ? `${nearbyStores.length} store${
-                          nearbyStores.length > 1 ? "s" : ""
-                        } nearby for check-in`
+                      ? `${nearbyStores.length} store${nearbyStores.length > 1 ? "s" : ""
+                      } nearby for check-in`
                       : "Check-in now to earn today's points"}
                   </Text>
                 </View>
@@ -226,7 +225,7 @@ export default function Rewards() {
           </AnimatedView>
         </View>
 
-        <View className="bg-white rounded-2xl p-4 border border-neutral-100">
+        <View className="bg-white dark:bg-neutral-800 rounded-2xl p-4 border border-neutral-100 dark:border-neutral-700">
           <View className="flex-row items-center justify-between">
             <View className="flex-row items-center gap-x-2">
               <MaterialIcons
@@ -234,7 +233,7 @@ export default function Rewards() {
                 size={18}
                 color="#FF6600"
               />
-              <Text className="font-poppins-semibold text-neutral-900">
+              <Text className="font-poppins-semibold text-neutral-900 dark:text-white">
                 7-Day Streak
               </Text>
             </View>
@@ -268,8 +267,8 @@ export default function Rewards() {
               const circleClass = isCompleted
                 ? "w-8 h-8 rounded-full bg-primary items-center justify-center"
                 : isTarget
-                ? "w-8 h-8 rounded-full border border-primary items-center justify-center"
-                : "w-8 h-8 rounded-full bg-neutral-100 items-center justify-center";
+                  ? "w-8 h-8 rounded-full border border-primary items-center justify-center"
+                  : "w-8 h-8 rounded-full bg-neutral-100 dark:bg-neutral-700 items-center justify-center";
               const textClass =
                 isCompleted || isTarget
                   ? "text-primary font-poppins-semibold text-xs"
@@ -301,7 +300,7 @@ export default function Rewards() {
         </View>
 
         <View className="flex-row items-center justify-between">
-          <Text className="text-lg font-poppins-semibold text-neutral-900">
+          <Text className="text-lg font-poppins-semibold text-neutral-900 dark:text-white">
             Reward Catalog
           </Text>
           <TouchableOpacity className="flex-row items-center gap-x-1">
@@ -347,7 +346,7 @@ export default function Rewards() {
           })}
         </View>
 
-          <View className="gap-y-4">
+        <View className="gap-y-4">
           {sortedRewards.map((item) => {
             const store = storesWithLocation.find((entry) => entry.id === item.storeId);
             return (

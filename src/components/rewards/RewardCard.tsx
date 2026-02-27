@@ -23,9 +23,9 @@ export default function RewardCard({
   return (
     <Pressable
       onPress={onPress}
-      className="bg-white rounded-2xl p-3 border border-neutral-100 flex-row gap-x-3"
+      className="bg-white dark:bg-neutral-800 rounded-2xl p-3 border border-neutral-100 dark:border-neutral-700 flex-row gap-x-3"
     >
-      <View className="w-16 h-16 rounded-xl bg-neutral-100 items-center justify-center overflow-hidden">
+      <View className="w-16 h-16 rounded-xl bg-neutral-100 dark:bg-neutral-700 items-center justify-center overflow-hidden">
         {reward.imageUrl ? (
           <Image
             source={reward.imageUrl}
@@ -38,10 +38,10 @@ export default function RewardCard({
         )}
       </View>
       <View className="flex-1">
-        <Text className="font-poppins-semibold text-neutral-900">
+        <Text className="font-poppins-semibold text-neutral-900 dark:text-white">
           {reward.title}
         </Text>
-        <Text className="text-xs text-neutral-500 font-poppins mt-1">
+        <Text className="text-xs text-neutral-500 dark:text-neutral-400 font-poppins mt-1">
           {reward.desc}
         </Text>
         {storeName ? (
