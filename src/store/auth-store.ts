@@ -1,32 +1,64 @@
 import { create } from "zustand";
-import { Auth, GoogleAuth } from "../type/auth";
-import { supabase } from "@/supabase/supabase";
-import * as WebBrowser from 'expo-web-browser'
-import * as Linking from 'expo-linking'
-import { Alert } from "react-native";
+import { persist, createJSONStorage } from "zustand/middleware";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
-export const useAuthStore = create<Auth>((set) => ({
-  name: "",
-  email: "",
-  password: "",
-	showPassword: false,
-  confirmPassword: "",
-  showConfirmPassword: false,
+type AuthState = {
+  name: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+  showPassword: boolean;
+  showConfirmPassword: boolean;
+  sessionToken?: string | null;
 
-	setName: (name) => set({ name}),
-  setEmail: (email) => set({ email }),
-  setPassword: (password) => set({ password }),
-	setShowPassword: (showPassword) => set({ showPassword}),
-  setConfirmPassword: (confirmPassword) => set({ confirmPassword }),
-  setShowConfirmPassword: (showConfirmPassword) => set({ showConfirmPassword }),
+  setName: (v: string) => void;
+  setEmail: (v: string) => void;
+  setPassword: (v: string) => void;
+  setConfirmPassword: (v: string) => void;
+  setShowPassword: (v: boolean) => void;
+  setShowConfirmPassword: (v: boolean) => void;
+  setSessionToken: (t: string | null) => void;
+  reset: () => void;
+};
 
-  reset: () =>
-    set({
-			name: "",
+export const useAuthStore = create<AuthState>()(
+  persist(
+    (set) => ({
+      name: "",
       email: "",
       password: "",
-			showPassword: false,
       confirmPassword: "",
+      showPassword: false,
       showConfirmPassword: false,
+      sessionToken: null,
+
+      setName: (name) => set({ name }),
+      setEmail: (email) => set({ email }),
+      setPassword: (password) => set({ password }),
+      setConfirmPassword: (confirmPassword) => set({ confirmPassword }),
+      setShowPassword: (showPassword) => set({ showPassword }),
+      setShowConfirmPassword: (showConfirmPassword) => set({ showConfirmPassword }),
+      setSessionToken: (sessionToken) => set({ sessionToken }),
+
+      reset: () =>
+        set({
+          name: "",
+          email: "",
+          password: "",
+          confirmPassword: "",
+          showPassword: false,
+          showConfirmPassword: false,
+          sessionToken: null,
+        }),
     }),
-}));
+    {
+      name: "sessionToken",
+      storage: createJSONStorage(() => AsyncStorage),
+      partialize: (state) => ({
+        name: state.name,
+        email: state.email,
+        sessionToken: state.sessionToken,
+      }),
+    }
+  )
+);

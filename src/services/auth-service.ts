@@ -1,5 +1,6 @@
 import { supabase } from "@/supabase/supabase";
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
+import { Alert } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 GoogleSignin.configure({
@@ -9,17 +10,23 @@ GoogleSignin.configure({
 export default async function signUpService(email: string, password: string, name: string) {
   try {
     const { data, error } = await supabase.auth.signUp({ email, password });
-    console.log(data);
-    console.log(error);
-    if (error) throw error;
 
+    if (data?.session?.access_token) {
+      await AsyncStorage.setItem('sessionToken', data.session.access_token);
+    }
     if (data.user) {
-      const { error: insertError } = await supabase.from("users").insert({
-        id: data.user.id,
-        name,
-      });
+      const { data: existingProfile } = await supabase
+        .from("users")
+        .select("id")
+        .eq("id", data.user.id)
+        .single();
 
-      if (insertError) throw insertError;
+      if (!existingProfile) {
+        await supabase.from("users").insert({ id: data.user.id, name });
+      }
+    }
+    if (error) {
+      throw error;
     }
   } catch (error) {
     throw error;
