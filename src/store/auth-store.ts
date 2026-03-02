@@ -1,25 +1,7 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-
-type AuthState = {
-  name: string;
-  email: string;
-  password: string;
-  confirmPassword: string;
-  showPassword: boolean;
-  showConfirmPassword: boolean;
-  sessionToken?: string | null;
-
-  setName: (v: string) => void;
-  setEmail: (v: string) => void;
-  setPassword: (v: string) => void;
-  setConfirmPassword: (v: string) => void;
-  setShowPassword: (v: boolean) => void;
-  setShowConfirmPassword: (v: boolean) => void;
-  setSessionToken: (t: string | null) => void;
-  reset: () => void;
-};
+import { AuthState } from "@/type/auth";
 
 export const useAuthStore = create<AuthState>()(
   persist(

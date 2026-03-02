@@ -18,28 +18,55 @@ import { loginService, signInWithGoogleLoginService } from "@/services/auth-serv
 
 export default function Login() {
   const { name, email, password, setEmail, setPassword, showPassword, setShowPassword } = useAuthStore();
+  const [loading, setLoading] = useState(false);
+  const [loadingGoogle, setLoadingGoogle] = useState(false);
+  const [errors, setErrors] = useState({
+    email: "",
+    password: "",
+  });
  
   const handleLogin = async () => {
+    const nextErrors = { ...errors };
+  
+    const trimmedEmail = email.trim();
+    if (!trimmedEmail) {
+      nextErrors.email = "Email is required.";
+    } else if (!/^\S+@\S+\.\S+$/.test(trimmedEmail)) {
+      nextErrors.email = "Please enter a valid email address.";
+    }
+    if (!password) {
+      nextErrors.password = "Password is required.";
+    }
+    if (nextErrors.email || nextErrors.password) {
+      setErrors(nextErrors);
+      return;
+    }
+    setErrors({ email: "", password: "" });
+  
     try {
-      const user = await loginService(email, password);
-      router.replace("/(tabs)");
+      setLoading(true);
+      const data = await loginService(trimmedEmail, password);
+      router.replace(data.homeRoute ?? "/(user)");
+      setLoading(false);
     } catch (error: any) {
-      const message =
-        error?.msg ??
-        (typeof error?.message === "string" ? error.message : "Something went wrong");
-      Alert.alert("Login Failed", message);
+      const message = error?.message ?? "Something went wrong";
+      setErrors({ ...errors, password: message });
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleSignInWithGoogle = async () => {
     try {
-      const user = await signInWithGoogleLoginService();
-      router.replace("/(tabs)");
+      setLoadingGoogle(true);
+      const data = await signInWithGoogleLoginService();
+      router.replace(data.homeRoute ?? "/(user)");
+      setLoadingGoogle(false);
     } catch (error: any) {
-      const message =
-        error?.msg ??
-        (typeof error?.message === "string" ? error.message : "Something went wrong");
-      Alert.alert("Sign In with Google Failed", message);
+      const message = error?.message ?? "Something went wrong";
+      setErrors({ ...errors, password: message });
+    } finally {
+      setLoadingGoogle(false);
     }
   };
 

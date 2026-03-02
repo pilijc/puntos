@@ -131,57 +131,60 @@ export function PasswordStep({
   return (
     <View className="gap-y-2">
       <View className="gap-y-2">
-        <Text className="text-sm font-poppins-medium text-neutral-700">
-          Password
-        </Text>
-        <View className="relative">
-          <TextInput
-            value={password}
-            onChangeText={onPasswordChange}
-            placeholder="Enter your password"
-            secureTextEntry={!showPassword}
-            autoCapitalize="none"
-            className="border border-neutral-200 rounded-xl px-4 py-4 pr-12 font-poppins"
-            autoFocus={false}
-            placeholderTextColor="#9CA3AF"
-          />
-          <Pressable
-            onPress={onTogglePassword}
-            className="absolute right-4 top-4"
-          >
-            <Feather name={showPassword ? "eye-off" : "eye"} size={18} color="gray" />
-          </Pressable>
+        <View className="gap-y-2">
+          <Text className="text-sm font-poppins-medium text-neutral-700">
+            Password
+          </Text>
+          <View className="relative">
+            <TextInput
+              value={password}
+              onChangeText={onPasswordChange}
+              placeholder="Enter your password"
+              secureTextEntry={!showPassword}
+              autoCapitalize="none"
+              className="border border-neutral-200 rounded-xl px-4 py-4 pr-12 font-poppins"
+              autoFocus={false}
+              placeholderTextColor="#9CA3AF"
+            />
+            <Pressable
+              onPress={onTogglePassword}
+              className="absolute right-4 top-4"
+            >
+              <Feather name={showPassword ? "eye" : "eye-off"} size={18} color="gray" />
+            </Pressable>
+          </View>
+        </View>
+
+        <View className="mt-1 mb-2 gap-y-2">
+          <Text className="text-sm font-poppins-medium text-neutral-700">
+            Confirm Password
+          </Text>
+          <View className="relative">
+            <TextInput
+              value={confirmPassword}
+              onChangeText={onConfirmPasswordChange}
+              placeholder="Confirm your password"
+              secureTextEntry={!showConfirmPassword}
+              autoCapitalize="none"
+              className="border border-neutral-200 rounded-xl px-4 py-4 pr-12 font-poppins"
+              placeholderTextColor="#9CA3AF"
+            />
+            <Pressable
+              onPress={onToggleConfirmPassword}
+              className="absolute right-4 top-4"
+            >
+              <Feather name={showConfirmPassword ? "eye" : "eye-off"} size={18} color="gray" />
+            </Pressable>
+          </View>
         </View>
       </View>
-
-      <View className="mt-1 mb-2 gap-y-2">
-        <Text className="text-sm font-poppins-medium text-neutral-700">
-          Confirm Password
-        </Text>
-        <View className="relative">
-          <TextInput
-            value={confirmPassword}
-            onChangeText={onConfirmPasswordChange}
-            placeholder="Confirm your password"
-            secureTextEntry={!showConfirmPassword}
-            autoCapitalize="none"
-            className="border border-neutral-200 rounded-xl px-4 py-4 pr-12 font-poppins"
-            placeholderTextColor="#9CA3AF"
-          />
-          <Pressable
-            onPress={onToggleConfirmPassword}
-            className="absolute right-4 top-4"
-          >
-            <Feather name={showConfirmPassword ? "eye-off" : "eye"} size={18} color="gray" />
-          </Pressable>
-        </View>
+      <View className="justify-center">
+        {(errors.confirmPassword || errors.password) && (
+          <Text className="text-red-500 text-sm font-poppins rounded-xl p-4 text-center bg-red-50">
+            {errors.confirmPassword || errors.password}
+          </Text>
+        )}
       </View>
-
-      {(errors.confirmPassword || errors.password) && (
-        <Text className="text-red-500 text-sm font-poppins rounded-xl p-4 text-center bg-red-50">
-          {errors.confirmPassword || errors.password}
-        </Text>
-      )}
     </View>
   );
 }

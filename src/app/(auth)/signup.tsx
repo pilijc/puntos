@@ -7,18 +7,19 @@ import {
   Image
 } from "@/tw";
 import React, { useState } from "react";
-import { KeyboardAvoidingView, Platform, Alert } from "react-native";
+import { KeyboardAvoidingView, Alert, ActivityIndicator, Platform } from "react-native";
 import { router } from "expo-router";
 import { useAuthStore } from "../../store/auth-store";
 import signUpService from "../../services/auth-service";
 import { signUpWithGoogleService } from "@/services/auth-service";
 import { NameStep, EmailStep, PasswordStep, TermsStep, StepHeader } from "../../components/stepper";
 import { Ionicons } from "@expo/vector-icons";
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function SignUp() {
   const [currentStep, setCurrentStep] = useState(1);
   const totalSteps = 4;
+  const [loading, setLoading] = useState(false);
+  const [loadingGoogle, setLoadingGoogle] = useState(false);
   const {
     name,
     setName,
@@ -77,13 +78,13 @@ export default function SignUp() {
         setErrors(newErrors);
         return false;
       }
-      if (password !== confirmPassword) {
-        newErrors.confirmPassword = 'Passwords do not match';
+      if (password.length < 8) {
+        newErrors.password = 'Password must be at least 8 characters';
         setErrors(newErrors);
         return false;
       }
-      if (password.length < 8) {
-        newErrors.password = 'Password must be at least 8 characters';
+      if (password !== confirmPassword) {
+        newErrors.confirmPassword = 'Passwords do not match';
         setErrors(newErrors);
         return false;
       }
@@ -109,15 +110,7 @@ export default function SignUp() {
       if (currentStep < totalSteps) {
         setCurrentStep(currentStep + 1);
       } else {
-        Alert.alert(
-          "Create account?",
-          "This is a sample dialog. Tap OK to continue.",
-          [
-            { text: "Cancel", style: "cancel" },
-            { text: "OK", onPress: handleSignup },
-          ],
-          { cancelable: true }
-        );
+        handleSignup();
       }
     }
   };
@@ -130,29 +123,39 @@ export default function SignUp() {
 
   const handleSignup = async () => {
     try {
-      await signUpService(email, password, name);
-      Alert.alert("Success", "Account created!");
-      router.replace("/(user)");
-    } catch (error: any) {
-      Alert.alert("Signup failed", error?.message);
-    } finally {
+      setLoading(true);
+      const data = await signUpService(email, password, name);
       reset();
       setAcceptedTerms(false);
       setCurrentStep(1);
+  
+      Alert.alert("Success", "Account created!");
+      router.replace(data.homeRoute ?? "/(user)");
+    } catch (error: any) {
+      setErrors((prev) => ({
+        ...prev,
+        password: error?.message ?? "Signup failed",
+      }));
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleSignupWithGoogle = async () => {
     try {
-      await signUpWithGoogleService();
+      setLoadingGoogle(true);
+      const data = await signUpWithGoogleService();
       Alert.alert("Success", "Account created!");
-      router.replace("/(user)");
+      router.replace(data.homeRoute ?? "/(user)");
     } catch (error: any) {
+      setLoadingGoogle(false);
       reset();
       const message =
         error?.msg ??
         (typeof error?.message === "string" ? error.message : "Something went wrong");
       Alert.alert("Google Sign-Up Failed", message);
+    } finally {
+      setLoadingGoogle(false);
     }
   };
 

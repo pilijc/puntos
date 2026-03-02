@@ -1,19 +1,21 @@
-
-export interface Auth {
+export interface AuthState {
   name: string;
-	setName: (name: string) => void;
   email: string;
-	setEmail: (email: string) => void;
   password: string;
-  setPassword: (password: string) => void;
-	showPassword: boolean;
-	setShowPassword: (showPassword: boolean) => void;
   confirmPassword: string;
-  setConfirmPassword: (confirmPassword: string) => void;
+  showPassword: boolean;
   showConfirmPassword: boolean;
-  setShowConfirmPassword: (showConfirmPassword: boolean) => void;
+  sessionToken?: string | null;
+
+  setName: (v: string) => void;
+  setEmail: (v: string) => void;
+  setPassword: (v: string) => void;
+  setConfirmPassword: (v: string) => void;
+  setShowPassword: (v: boolean) => void;
+  setShowConfirmPassword: (v: boolean) => void;
+  setSessionToken: (t: string | null) => void;
   reset: () => void;
-}
+};
 
 export interface GoogleAuth {
   session: any
