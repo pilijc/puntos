@@ -147,7 +147,7 @@ export default function History() {
       : totalEarnedPoints.toLocaleString();
 
   return (
-    <SafeAreaView className="flex-1 bg-background">
+    <SafeAreaView className="flex-1 bg-background dark:bg-neutral-900">
       <AnimatedView entering={FadeInDown.duration(500)}>
         <View className="px-6 pt-6 pb-6 bg-primary">
           <View className="flex-row justify-between items-center">
@@ -260,11 +260,11 @@ function HistoryItem({ title, subtitle, time, points, positive, image, icon }) {
     >
       <Animated.View
         style={{ transform: [{ scale: scaleAnim }] }}
-        className="bg-white rounded-2xl p-4 mb-3 border border-neutral-100"
+        className="bg-white dark:bg-neutral-800 rounded-2xl p-4 mb-3 border border-neutral-100 dark:border-neutral-700"
       >
         <View className="flex-row items-center justify-between">
           <View className="flex-row items-center flex-1">
-            <View className="w-12 h-12 my-3 rounded-xl bg-background items-center justify-center mr-3 overflow-hidden">
+            <View className="w-12 h-12 my-3 rounded-xl bg-background dark:bg-neutral-700 items-center justify-center mr-3 overflow-hidden">
               {image ? (
                 <Image source={{ uri: image }} className="w-12 h-12" />
               ) : (
@@ -275,7 +275,7 @@ function HistoryItem({ title, subtitle, time, points, positive, image, icon }) {
             <View className="flex-1">
               <Text
                 numberOfLines={1}
-                className="text-base font-poppins-semibold text-neutral-900"
+                className="text-base font-poppins-semibold text-neutral-900 dark:text-white"
               >
                 {title}
               </Text>
