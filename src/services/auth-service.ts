@@ -1,6 +1,4 @@
 import { supabase } from "@/supabase/supabase";
-import * as Linking from 'expo-linking'
-import * as WebBrowser from 'expo-web-browser'
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
 import { Alert } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -43,9 +41,11 @@ export async function signUpWithGoogleService() {
     console.log("sign up with google service", response);
 
     if (response.type === 'success') {
-      const { idToken } = response.data;
+      const idToken = response.data.idToken;
 
-      if (!idToken) {
+      if (idToken) {
+        await AsyncStorage.setItem('sessionToken', idToken);
+      } else {
         throw new Error(
           'Google Sign-In did not return an ID token'
         );
