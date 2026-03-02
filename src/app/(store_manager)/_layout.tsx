@@ -18,7 +18,7 @@ export default function StoreManagerLayout() {
                 } = await supabase.auth.getUser();
 
                 if (!user) {
-                    router.replace("/(onboarding)/welcome");
+                    router.replace("/(onboarding)/index");
                     return;
                 }
 

@@ -1,4 +1,4 @@
-﻿import React, { useEffect } from "react";
+import React, { useEffect } from "react";
 import { SafeAreaView, View, Image } from "@/tw";
 import { router } from "expo-router";
 import { supabase } from "@/supabase/supabase";
@@ -12,7 +12,7 @@ export default function Splash() {
       } = await supabase.auth.getSession();
 
       if (!session) {
-        router.replace("/(onboarding)/welcome");
+        router.replace("/(onboarding)");
         return;
       }
 
