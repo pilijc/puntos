@@ -16,7 +16,7 @@ export default function FrontDeskLayout() {
                 } = await supabase.auth.getUser();
 
                 if (!user) {
-                    router.replace("/(onboarding)/welcome");
+                    router.replace("/(onboarding)/index");
                     return;
                 }
 

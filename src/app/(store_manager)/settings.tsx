@@ -13,7 +13,7 @@ export default function StoreManagerSettings() {
                 style: "destructive",
                 onPress: async () => {
                     await supabase.auth.signOut();
-                    router.replace("/(onboarding)/welcome");
+                    router.replace("/(onboarding)/index");
                 },
             },
         ]);

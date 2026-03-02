@@ -106,6 +106,20 @@ export async function loginService(email: string, password: string) {
   }
 };
 
+export async function resetPasswordService(email: string) {
+  try {
+    const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: 'puntosapp://reset-password',
+    });
+    if (error) {
+      throw error;
+    }
+    return data;
+  } catch (error: any) {
+    throw error;
+  }
+}
+
 export async function signInWithGoogleLoginService() {
   try {
     await GoogleSignin.hasPlayServices();

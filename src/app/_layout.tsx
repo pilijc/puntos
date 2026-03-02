@@ -62,7 +62,12 @@ export default function Layout() {
     const checkSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session && !sessionToken) {
-        router.replace("/(onboarding)/welcome");
+        const hasSeenOnboarding = await AsyncStorage.getItem("hasSeenOnboarding");
+        if (!hasSeenOnboarding) {
+          router.replace("/(onboarding)");
+        } else {
+          router.replace("/(onboarding)/welcome");
+        }
         return;
       }
 

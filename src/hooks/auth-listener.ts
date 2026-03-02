@@ -10,7 +10,10 @@ export function useAuthListener() {
   useEffect(() => {
     const { data: listener } = supabase.auth.onAuthStateChange(
       (event, session) => {        
-        if (event === 'SIGNED_IN' && session) {
+        if (event === 'PASSWORD_RECOVERY' && session) {
+          console.log("Password recovery session started for:", session.user.email);
+          router.replace("/reset-password");
+        } else if (event === 'SIGNED_IN' && session) {
           console.log("User logged in:", session.user.email);
           void (async () => {
             const sessionToken = await AsyncStorage.getItem('sessionToken');
@@ -29,7 +32,7 @@ export function useAuthListener() {
           })();
         } else if (event === 'SIGNED_OUT') {
           console.log("User logged out");
-          router.replace("/(onboarding)/welcome");
+          router.replace("/(onboarding)/index");
         }
       }
     );
