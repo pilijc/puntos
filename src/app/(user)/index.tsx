@@ -21,6 +21,7 @@ Mapbox.setAccessToken(process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN);
 export default function Discover() {
   const bottomSheetRef = useRef<BottomSheet>(null);
   const cameraRef = useRef(null);
+  const [mapReady, setMapReady] = useState(false);
   const [location, setLocation] = useState<Location.LocationObject | null>(null);
   const { stores, setStores } = useStoreStore();
   const [searchQuery, setSearchQuery] = useState("");
@@ -154,20 +155,6 @@ export default function Discover() {
     const route = await getRoute(start, end);
     setRouteGeoJSON(route);
     setRouteDrawProgress(0);
-    // if (route && Array.isArray(route.coordinates) && route.coordinates.length >= 2) {
-    //   const coords = [...route.coordinates];
-    //   // ensure the line starts/ends exactly at the same coordinates as the markers
-    //   coords[0] = start;
-    //   coords[coords.length - 1] = end;
-
-    //   setRouteGeoJSON({
-    //     ...route,
-    //     coordinates: coords,
-    //   });
-    // } else {
-    //   setRouteGeoJSON(null);
-    // }
-  
     cameraRef.current?.fitBounds(start, end, 80, 1000);
   };
 
@@ -187,17 +174,25 @@ export default function Discover() {
     (async () => {
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") return;
-
-      const loc = await Location.getCurrentPositionAsync({});
-      setLocation(loc);
-
-      cameraRef.current?.setCamera({
-        centerCoordinate: [loc.coords.longitude, loc.coords.latitude],
-        zoomLevel: 14,
-        animationDuration: 1000,
+  
+      const loc = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.High,
       });
+  
+      setLocation(loc);
     })();
   }, []);
+
+  useEffect(() => {
+    if (!mapReady || !location) return;
+    const { longitude, latitude } = location.coords;
+  
+    cameraRef.current?.setCamera({
+      centerCoordinate: [longitude, latitude],
+      zoomLevel: 14,
+      animationDuration: 1000,
+    });
+  }, [mapReady, location]);
 
   console.log(location);
 
@@ -254,6 +249,7 @@ export default function Discover() {
       <MapView
         style={{ flex: 1 }}
         styleURL="mapbox://styles/mapbox/streets-v12"
+        onDidFinishLoadingMap={() => setMapReady(true)}
       >
         <Mapbox.Camera
           ref={cameraRef}
