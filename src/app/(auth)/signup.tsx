@@ -14,11 +14,11 @@ import signUpService from "../../services/auth-service";
 import { signUpWithGoogleService } from "@/services/auth-service";
 import { NameStep, EmailStep, PasswordStep, TermsStep, StepHeader } from "../../components/stepper";
 import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function SignUp() {
   const [currentStep, setCurrentStep] = useState(1);
   const totalSteps = 4;
-  
   const {
     name,
     setName,
@@ -77,13 +77,13 @@ export default function SignUp() {
         setErrors(newErrors);
         return false;
       }
-      if (password.length < 8) {
-        newErrors.password = 'Password must be at least 8 characters';
+      if (password !== confirmPassword) {
+        newErrors.confirmPassword = 'Passwords do not match';
         setErrors(newErrors);
         return false;
       }
-      if (password !== confirmPassword) {
-        newErrors.confirmPassword = 'Passwords do not match';
+      if (password.length < 8) {
+        newErrors.password = 'Password must be at least 8 characters';
         setErrors(newErrors);
         return false;
       }
@@ -159,7 +159,7 @@ export default function SignUp() {
   return (
     <SafeAreaView className="flex-1 bg-background">
       <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        behavior={"height"}
         className="flex-1"
       >
         <View className="px-6 py-4 flex-row items-center">
@@ -170,57 +170,52 @@ export default function SignUp() {
           ) : (
             <View className="w-6" />
           )}
-          {/* <Text className="flex-1 text-center font-poppins-semibold text-lg">
-            Create Account
-          </Text> */}
           <View className="w-6" />
         </View>
-                      
+
         <ScrollView
-          contentContainerStyle={{ flexGrow: 1 }}
+          contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 24 }}
           keyboardShouldPersistTaps="handled"
         >
-          <View className="p-6 flex-1 justify-between">
-            <View className="flex-1 justify-center">
-              <StepHeader currentStep={currentStep} />
-          
-              {currentStep === 1 && (
-                <NameStep
-                  value={name}
-                  onChange={setName}
-                  error={errors.name}
-                />
-              )}
-              {currentStep === 2 && (
-                <EmailStep
-                  value={email}
-                  onChange={setEmail}
-                  error={errors.email}
-                />
-              )}
-              {currentStep === 3 && (
-                <PasswordStep
-                  password={password}
-                  confirmPassword={confirmPassword}
-                  showPassword={showPassword}
-                  showConfirmPassword={showConfirmPassword}
-                  onPasswordChange={setPassword}
-                  onConfirmPasswordChange={setConfirmPassword}
-                  onTogglePassword={() => setShowPassword(!showPassword)}
-                  onToggleConfirmPassword={() => setShowConfirmPassword(!showConfirmPassword)}
-                  errors={errors}
-                />
-              )}
-              {currentStep === 4 && (
-                <TermsStep
-                  accepted={acceptedTerms}
-                  onToggle={() => setAcceptedTerms(!acceptedTerms)}
-                  error={errors.terms}
-                />
-              )}
-            </View>
-            
-            <View className="gap-y-4 mt-6">
+          <View className="py-6">
+            <StepHeader currentStep={currentStep} />
+
+            {currentStep === 1 && (
+              <NameStep
+                value={name}
+                onChange={setName}
+                error={errors.name}
+              />
+            )}
+            {currentStep === 2 && (
+              <EmailStep
+                value={email}
+                onChange={setEmail}
+                error={errors.email}
+              />
+            )}
+            {currentStep === 3 && (
+              <PasswordStep
+                password={password}
+                confirmPassword={confirmPassword}
+                showPassword={showPassword}
+                showConfirmPassword={showConfirmPassword}
+                onPasswordChange={setPassword}
+                onConfirmPasswordChange={setConfirmPassword}
+                onTogglePassword={() => setShowPassword(!showPassword)}
+                onToggleConfirmPassword={() => setShowConfirmPassword(!showConfirmPassword)}
+                errors={errors}
+              />
+            )}
+            {currentStep === 4 && (
+              <TermsStep
+                accepted={acceptedTerms}
+                onToggle={() => setAcceptedTerms(!acceptedTerms)}
+                error={errors.terms}
+              />
+            )}
+
+            <View className="mt-4 gap-y-4">
               <TouchableOpacity
                 onPress={handleNext}
                 className="bg-primary py-4 rounded-xl items-center"
@@ -229,7 +224,7 @@ export default function SignUp() {
                   {currentStep === totalSteps ? 'Create Account' : 'Continue'}
                 </Text>
               </TouchableOpacity>
-              
+
               {currentStep === 1 && (
                 <>
                   <View className="flex-row items-center gap-x-4">
@@ -239,7 +234,7 @@ export default function SignUp() {
                     </Text>
                     <View className="flex-1 h-px bg-neutral-200" />
                   </View>
-                  
+
                   <TouchableOpacity
                     onPress={handleSignupWithGoogle}
                     className="bg-background rounded-xl p-4 border border-neutral-200 flex-row items-center justify-center gap-x-3"
@@ -254,6 +249,7 @@ export default function SignUp() {
                   </TouchableOpacity>
                 </>
               )}
+
               <View className="flex-row justify-center">
                 <Text className="font-poppins text-neutral-600">
                   Already have an account?

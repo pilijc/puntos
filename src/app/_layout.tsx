@@ -7,11 +7,13 @@ import { useEffect, useState } from "react";
 import { Animated, Easing, StatusBar, StyleSheet, View } from "react-native";
 import { supabase } from "@/supabase/supabase";
 import React from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useAuthListener } from "@/hooks/auth-listener";
 import { useAnimatedStyle, useSharedValue, withRepeat, withSequence, withTiming } from "react-native-reanimated";
 import { Image } from "@/tw";
 import { getHomeRouteForUserId } from "@/services/access-service";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { useAuthStore } from "@/store/auth-store";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -47,7 +49,6 @@ function SplashPulse() {
 
 export default function Layout() {
   useAuthListener();
-  const [sessionChecked, setSessionChecked] = useState(false);
   const router = useRouter();
   const [fontsLoaded] = useFonts({
     "Poppins-Regular": require("../assets/fonts/Poppins-Regular.ttf"),
@@ -55,24 +56,24 @@ export default function Layout() {
     "Poppins-SemiBold": require("../assets/fonts/Poppins-SemiBold.ttf"),
     "Poppins-Bold": require("../assets/fonts/Poppins-Bold.ttf"),
   });
+  const sessionToken = useAuthStore((s) => s.sessionToken);
 
   useEffect(() => {
     const checkSession = async () => {
-      const { data: { session }, error } = await supabase.auth.getSession();
-
-      if (error || !session) {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session && !sessionToken) {
         router.replace("/(onboarding)/welcome");
-      } else {
-        const nextRoute = await getHomeRouteForUserId(session.user.id);
-        router.replace(nextRoute);
+        return;
       }
-      setSessionChecked(true);
+
+      const nextRoute = await getHomeRouteForUserId(session.user.id);
+      router.replace(nextRoute);
     };
 
     if (fontsLoaded) {
       checkSession();
     }
-  }, [fontsLoaded]);
+  }, [fontsLoaded, sessionToken]);
 
   SplashScreen.setOptions({
     duration: 1000,
