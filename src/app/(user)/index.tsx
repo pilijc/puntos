@@ -3,7 +3,7 @@ import React, { useEffect, useRef, useState } from "react";
 import Mapbox, { MapView, UserLocation, Camera, PointAnnotation, UserTrackingMode } from "@rnmapbox/maps";
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
-import { Alert, PermissionsAndroid, Platform, TextInput, TextInputSubmitEditingEvent, TouchableOpacity } from "react-native";
+import { Alert, PermissionsAndroid, Platform, TextInput, TextInputSubmitEditingEvent, TouchableOpacity, useColorScheme } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 import * as Location from 'expo-location'
 import { supabase } from "@/supabase/supabase";
@@ -22,6 +22,8 @@ export default function Discover() {
   const bottomSheetRef = useRef<BottomSheet>(null);
   const cameraRef = useRef(null);
   const [mapReady, setMapReady] = useState(false);
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
   const [location, setLocation] = useState<Location.LocationObject | null>(null);
   const { stores, setStores } = useStoreStore();
   const [searchQuery, setSearchQuery] = useState("");
@@ -32,63 +34,63 @@ export default function Discover() {
   const routeAnimationRef = useRef<ReturnType<typeof requestAnimationFrame> | null>(null);
 
   const getToken = async () => {
-  //   try {
-  //     // 1) Ask for notification permission
-  //     const { status: existingStatus } = await Notifications.getPermissionsAsync();
-  //     let finalStatus = existingStatus;
-  
-  //     if (existingStatus !== "granted") {
-  //       const { status } = await Notifications.requestPermissionsAsync();
-  //       finalStatus = status;
-  //     }
-  
-  //     if (finalStatus !== "granted") {
-  //       Alert.alert(
-  //         "Permission needed",
-  //         "We need notification permission to send you updates."
-  //       );
-  //       return;
-  //     }
-  
-  //     // 2) Get Expo push token from the physical device
-  //     // If you ever see a "must provide projectId" error,
-  //     // use: await Notifications.getExpoPushTokenAsync({ projectId: "your-expo-project-id" });
-  //     const expoPushToken = (await Notifications.getExpoPushTokenAsync()).data;
-  //     console.log("Expo push token:", expoPushToken);
-  
-  //     // 3) Get current logged-in user from Supabase
-  //     const {
-  //       data: { user },
-  //       error: userError,
-  //     } = await supabase.auth.getUser();
-  
-  //     if (userError || !user) {
-  //       console.log("No logged in user or error:", userError);
-  //       Alert.alert("Error", "You must be logged in to register this device.");
-  //       return;
-  //     }
-  
-  //     // 4) Save token to your push_tokens table in Supabase
-  //     // I'm assuming your columns: user_id, expo_push_token, platform
-  //     const { error: upsertError } = await supabase
-  //       .from("push_tokens")
-  //       .insert({
-  //         user_id: user.id,
-  //         expo_push_token: expoPushToken,
-  //         platform: Platform.OS, // "ios" or "android"
-  //       });
-  
-  //     if (upsertError) {
-  //       console.log("Error saving push token:", upsertError);
-  //       Alert.alert("Error", "Could not save push notification token.");
-  //       return;
-  //     }
-  
-  //     Alert.alert("Done", "This device is registered for push notifications.");
-  //   } catch (err) {
-  //     console.log("Unexpected error registering push token:", err);
-  //     Alert.alert("Error", "Something went wrong setting up notifications.");
-  //   }
+    //   try {
+    //     // 1) Ask for notification permission
+    //     const { status: existingStatus } = await Notifications.getPermissionsAsync();
+    //     let finalStatus = existingStatus;
+
+    //     if (existingStatus !== "granted") {
+    //       const { status } = await Notifications.requestPermissionsAsync();
+    //       finalStatus = status;
+    //     }
+
+    //     if (finalStatus !== "granted") {
+    //       Alert.alert(
+    //         "Permission needed",
+    //         "We need notification permission to send you updates."
+    //       );
+    //       return;
+    //     }
+
+    //     // 2) Get Expo push token from the physical device
+    //     // If you ever see a "must provide projectId" error,
+    //     // use: await Notifications.getExpoPushTokenAsync({ projectId: "your-expo-project-id" });
+    //     const expoPushToken = (await Notifications.getExpoPushTokenAsync()).data;
+    //     console.log("Expo push token:", expoPushToken);
+
+    //     // 3) Get current logged-in user from Supabase
+    //     const {
+    //       data: { user },
+    //       error: userError,
+    //     } = await supabase.auth.getUser();
+
+    //     if (userError || !user) {
+    //       console.log("No logged in user or error:", userError);
+    //       Alert.alert("Error", "You must be logged in to register this device.");
+    //       return;
+    //     }
+
+    //     // 4) Save token to your push_tokens table in Supabase
+    //     // I'm assuming your columns: user_id, expo_push_token, platform
+    //     const { error: upsertError } = await supabase
+    //       .from("push_tokens")
+    //       .insert({
+    //         user_id: user.id,
+    //         expo_push_token: expoPushToken,
+    //         platform: Platform.OS, // "ios" or "android"
+    //       });
+
+    //     if (upsertError) {
+    //       console.log("Error saving push token:", upsertError);
+    //       Alert.alert("Error", "Could not save push notification token.");
+    //       return;
+    //     }
+
+    //     Alert.alert("Done", "This device is registered for push notifications.");
+    //   } catch (err) {
+    //     console.log("Unexpected error registering push token:", err);
+    //     Alert.alert("Error", "Something went wrong setting up notifications.");
+    //   }
   };
 
   useEffect(() => {
@@ -136,25 +138,39 @@ export default function Discover() {
     const res = await fetch(url);
     const json = await res.json();
 
-    return json.routes?.[0]?.geometry ?? null; 
+    return json.routes?.[0]?.geometry ?? null;
   };
 
   const handleStoreSelect = async (store: Store) => {
     if (!location) return;
-  
+
     const start: [number, number] = [
       location.coords.longitude,
       location.coords.latitude,
     ];
-  
+
     const end: [number, number] = [
       store.longitude,
       store.latitude,
     ];
-  
+
     const route = await getRoute(start, end);
     setRouteGeoJSON(route);
     setRouteDrawProgress(0);
+    // if (route && Array.isArray(route.coordinates) && route.coordinates.length >= 2) {
+    //   const coords = [...route.coordinates];
+    //   // ensure the line starts/ends exactly at the same coordinates as the markers
+    //   coords[0] = start;
+    //   coords[coords.length - 1] = end;
+
+    //   setRouteGeoJSON({
+    //     ...route,
+    //     coordinates: coords,
+    //   });
+    // } else {
+    //   setRouteGeoJSON(null);
+    // }
+
     cameraRef.current?.fitBounds(start, end, 80, 1000);
   };
 
@@ -169,7 +185,7 @@ export default function Discover() {
       animationMode: "flyTo",
     });
   };
-  
+
   useEffect(() => {
     (async () => {
       const { status } = await Location.requestForegroundPermissionsAsync();
@@ -199,9 +215,9 @@ export default function Discover() {
   return (
     <SafeAreaView className="flex-1">
       <View className="absolute top-15 left-4 right-4 z-20">
-        <View className="bg-white rounded-xl flex-row justify-between items-center px-4 py-1">
+        <View className="bg-white dark:bg-neutral-800 rounded-xl flex-row justify-between items-center px-4 py-1">
           <TextInput
-            className="flex-1 text-base text-black font-poppins-semibold items-center justify-center"
+            className="flex-1 text-base text-black dark:text-white font-poppins-semibold items-center justify-center"
             style={{ fontFamily: "Poppins-Regular" }}
             placeholderTextColor="gray"
             placeholder="Search a place"
@@ -210,17 +226,17 @@ export default function Discover() {
             onSubmitEditing={searchPlaces}
             returnKeyType="search"
           />
-          { searchQuery.length > 0 ? (
+          {searchQuery.length > 0 ? (
             <TouchableOpacity onPress={() => setSearchQuery("")}>
               <Ionicons name="close-outline" size={24} color="darkorange" />
             </TouchableOpacity>
-          ): (
+          ) : (
             <Ionicons name="search-outline" size={24} color="darkorange" className="font-poppins-bold" />
           )}
         </View>
 
         {searchResults.length > 0 && (
-          <View className="bg-white mt-2 rounded-xl p-2 max-h-72 border border-neutral-100">
+          <View className="bg-white dark:bg-neutral-800 mt-2 rounded-xl p-2 max-h-72 border border-neutral-100 dark:border-neutral-700">
             <ScrollView
               keyboardShouldPersistTaps="handled"
               contentContainerClassName="divide-y divide-neutral-100"
@@ -234,8 +250,8 @@ export default function Discover() {
                   style={{ marginHorizontal: 4 }}
                 >
                   <View className="flex-1 py-2">
-                    <Text className="font-semibold text-base text-neutral-900">{r.text}</Text>
-                    <Text numberOfLines={1} className="text-xs text-neutral-500">
+                    <Text className="font-semibold text-base text-neutral-900 dark:text-white">{r.text}</Text>
+                    <Text numberOfLines={1} className="text-xs text-neutral-500 dark:text-neutral-400">
                       {r.place_name}
                     </Text>
                   </View>
@@ -248,8 +264,8 @@ export default function Discover() {
 
       <MapView
         style={{ flex: 1 }}
-        styleURL="mapbox://styles/mapbox/streets-v12"
         onDidFinishLoadingMap={() => setMapReady(true)}
+        styleURL={isDark ? "mapbox://styles/mapbox/navigation-night-v1" : "mapbox://styles/mapbox/streets-v12"}
       >
         <Mapbox.Camera
           ref={cameraRef}
@@ -259,18 +275,18 @@ export default function Discover() {
           animationMode="easeTo"
           animationDuration={300}
         />
-        <Mapbox.UserLocation 
-          visible 
+        <Mapbox.UserLocation
+          visible
           showsUserHeadingIndicator={true}
           androidRenderMode="compass"
-        /> 
+        />
 
-       {selectedSearchResult && (
+        {selectedSearchResult && (
           <PointAnnotation
             id="search-location"
             coordinate={selectedSearchResult.center}
             children={<View className="w-4 h-4 bg-orange-500 rounded-full" />}
-          /> 
+          />
         )}
 
         {stores.map((s) => (
@@ -315,8 +331,14 @@ export default function Discover() {
         })()}
       </MapView>
 
-      <BottomSheet ref={bottomSheetRef} snapPoints={["20%", "55%"]} index={0}>
-        <BottomSheetView className="flex-1 bg-white">
+      <BottomSheet
+        ref={bottomSheetRef}
+        snapPoints={["20%", "55%"]}
+        index={0}
+        backgroundStyle={{ backgroundColor: isDark ? '#171717' : '#FFFFFF' }}
+        handleIndicatorStyle={{ backgroundColor: isDark ? '#525252' : '#D4D4D4' }}
+      >
+        <BottomSheetView className="flex-1">
           <ScrollView
             horizontal={false}
             pagingEnabled={false}
@@ -329,7 +351,7 @@ export default function Discover() {
           >
 
             <View
-              className="bg-white p-2 flex-row items-center gap-x-3"
+              className="bg-white dark:bg-neutral-800 p-2 flex-row items-center gap-x-3"
             >
               <Image
                 source={{
@@ -339,7 +361,7 @@ export default function Discover() {
               />
               <View className="flex-1">
                 <View className="flex-row justify-between items-start">
-                  <Text className="text-lg text-neutral-900 flex-1 font-poppins-semibold" numberOfLines={1}>
+                  <Text className="text-lg text-neutral-900 dark:text-white flex-1 font-poppins-semibold" numberOfLines={1}>
                     The Artisan Brew
                   </Text>
                 </View>
@@ -365,7 +387,7 @@ export default function Discover() {
                 </View>
               </View>
             </View>
-            
+
             <View className="mt-2">
               <ScrollView
                 horizontal
@@ -393,10 +415,10 @@ export default function Discover() {
               </ScrollView>
             </View>
 
-            <View className="bg-white p-2 flex-row items-center gap-x-3">
+            <View className="bg-white dark:bg-neutral-800 p-2 flex-row items-center gap-x-3">
               <View className="flex-1 justify-between">
                 <View className="flex-row items-center gap-x-2">
-                  <Text className="text-lg text-neutral-900 flex-1 font-poppins-semibold">
+                  <Text className="text-lg text-neutral-900 dark:text-white flex-1 font-poppins-semibold">
                     Rewards
                   </Text>
                   <TouchableOpacity className="bg-orange-500/10 px-3 py-1.5 rounded-xl" onPress={getToken}>
@@ -414,10 +436,10 @@ export default function Discover() {
                     />
                     <View className="flex-1 flex-col justify-between ml-3 py-1">
                       <View className="flex-1 flex-col items-start justify-start">
-                        <Text className="text-base font-poppins-semibold text-neutral-900">
+                        <Text className="text-base font-poppins-semibold text-neutral-900 dark:text-white">
                           Free Coffee
                         </Text>
-                        <Text className="text-xs font-poppins text-neutral-500" numberOfLines={2}>
+                        <Text className="text-xs font-poppins text-neutral-500 dark:text-neutral-400" numberOfLines={2}>
                           Any medium drink of your choice
                         </Text>
                       </View>
@@ -440,14 +462,14 @@ export default function Discover() {
         </BottomSheetView>
       </BottomSheet>
 
-      { routeGeoJSON && (
+      {routeGeoJSON && (
         <TouchableOpacity style={{
           position: "absolute",
           right: 16,
           bottom: 215,
           zIndex: 999,
-          elevation: 20, 
-        }} className="bg-white rounded-full p-2" onPress={() => setRouteGeoJSON(null)}>
+          elevation: 20,
+        }} className="bg-white dark:bg-neutral-800 rounded-full p-2" onPress={() => setRouteGeoJSON(null)}>
           <MaterialIcons name="clear" size={35} color="#FB8500" />
         </TouchableOpacity>
       )}
@@ -459,9 +481,9 @@ export default function Discover() {
             right: 16,
             bottom: 170,
             zIndex: 999,
-            elevation: 20, 
+            elevation: 20,
           }}
-          className="bg-white rounded-full p-2"
+          className="bg-white dark:bg-neutral-800 rounded-full p-2"
           onPress={() => {
             cameraRef.current?.setCamera({
               centerCoordinate: [

@@ -2,13 +2,21 @@ import { supabase } from "@/supabase/supabase";
 import { View, Text, SafeAreaView, TouchableOpacity, Image } from "@/tw";
 import { router, useFocusEffect } from "expo-router";
 import React, { useState, useCallback } from "react";
-import { Alert, Switch, Linking, Appearance, useColorScheme } from "react-native";
+import { Alert, Switch, Linking } from "react-native";
 import EditProfileModal from "@/components/settings/EditProfileModal";
 import SecurityModal from "@/components/settings/SecurityModal";
 import StoreOwnerModal from "@/components/settings/StoreOwnerModal";
 import { Ionicons } from '@expo/vector-icons';
 import { useLocation } from "@/hooks/use-location";
 import { getCurrentLocation } from "@/services/location-service";
+import {
+  getUserProfileService,
+  getUserSettingsService,
+  updateUserSettingsService,
+  syncLocationService,
+  updateUserProfileService
+} from "@/services/settings-service";
+import DarkModeToggle from "@/components/ui/dark-mode-toggle";
 
 export default function Settings() {
 
@@ -60,13 +68,7 @@ export default function Settings() {
       let profileErr = null;
 
       try {
-        const res = await supabase
-          .from("users")
-          .select("*")
-          .eq("id", currentUser.id)
-          .maybeSingle();
-        profileData = res.data;
-        profileErr = res.error;
+        profileData = await getUserProfileService(currentUser.id);
       } catch (e) {
         profileData = null;
         profileErr = e as any;
@@ -86,16 +88,12 @@ export default function Settings() {
       }
 
       try {
-        const settingsRes = await supabase
-          .from("user_settings")
-          .select("*")
-          .eq("user_id", currentUser.id)
-          .maybeSingle();
+        const settingsData = await getUserSettingsService(currentUser.id);
 
-        if (settingsRes.data) {
+        if (settingsData) {
           setPreferences({
-            near_store_notifications: settingsRes.data.near_store_notifications ?? false,
-            location_enabled: settingsRes.data.location_enabled ?? false,
+            near_store_notifications: settingsData.near_store_notifications ?? false,
+            location_enabled: settingsData.location_enabled ?? false,
             promo_emails: preferences.promo_emails, // default
           });
         }
@@ -137,17 +135,7 @@ export default function Settings() {
     if (!user?.id) return;
 
     try {
-      const { data, error } = await supabase
-        .from("user_settings")
-        .select("id")
-        .eq("user_id", user.id)
-        .maybeSingle();
-
-      if (data?.id) {
-        await supabase.from("user_settings").update({ [key]: newValue }).eq("id", data.id);
-      } else {
-        await supabase.from("user_settings").insert({ user_id: user.id, [key]: newValue });
-      }
+      await updateUserSettingsService(user.id, { [key]: newValue });
     } catch (e) {
       console.error("Failed to save preference", e);
     }
@@ -161,13 +149,7 @@ export default function Settings() {
       try {
         const loc = await getCurrentLocation();
         if (loc) {
-          await supabase
-            .from("user_settings")
-            .update({
-              latitude: loc.latitude,
-              longitude: loc.longitude,
-            })
-            .eq("user_id", user.id);
+          await syncLocationService(user.id, loc.latitude, loc.longitude);
         }
       } catch (e) {
         console.error("Failed to sync location to DB:", e);
@@ -194,10 +176,7 @@ export default function Settings() {
       const { data: { user: currentUser } } = await supabase.auth.getUser();
       if (!currentUser?.id) throw new Error("No authenticated user");
 
-      const payload: Record<string, unknown> = { id: currentUser.id, name: editUsername };
-
-      const { error } = await supabase.from("users").upsert(payload);
-      if (error) throw error;
+      await updateUserProfileService(currentUser.id, { name: editUsername });
 
       setProfile(prev => ({ ...(prev || {}), name: editUsername }));
       setModalVisible(false);
@@ -215,10 +194,6 @@ export default function Settings() {
     ? (profile?.name || user.email?.split("@")[0] || "User")
     : "Settings";
 
-  const colorScheme = useColorScheme();
-  const toggleTheme = () => {
-    Appearance.setColorScheme(colorScheme === "dark" ? "light" : "dark");
-  };
 
   return (
     <SafeAreaView className="flex-1 bg-background dark:bg-neutral-900 p-4">
@@ -226,12 +201,7 @@ export default function Settings() {
         <Text className="text-2xl font-poppins-bold text-neutral-900 dark:text-white">
           Settings
         </Text>
-        <TouchableOpacity
-          onPress={toggleTheme}
-          className="h-10 w-10 bg-white dark:bg-neutral-800 rounded-full items-center justify-center border border-neutral-200 dark:border-neutral-700 active:bg-neutral-50 dark:active:bg-neutral-700"
-        >
-          <Ionicons name={colorScheme === "dark" ? "moon" : "sunny"} size={20} color={colorScheme === "dark" ? "#fcd34d" : "#f59e0b"} />
-        </TouchableOpacity>
+        <DarkModeToggle />
       </View>
 
       {user && (!profile || profile?.id === user.id) && (
@@ -268,16 +238,17 @@ export default function Settings() {
         </TouchableOpacity>
       )}
 
+
       <View>
         <Text className="text-sm font-poppins-semibold text-neutral-600 dark:text-neutral-400 mb-2">
           ACCOUNT SETTINGS
         </Text>
       </View>
 
-      <View className="mx-4 mb-6 overflow-hidden bg-background rounded-2xl border border-neutral-200">
+      <View className="mx-4 mb-6 overflow-hidden bg-background rounded-2xl border border-neutral-200 dark:border-neutral-700">
         <TouchableOpacity
           onPress={() => setSecurityModalVisible(true)}
-          className="flex-row items-center p-4 bg-white dark:bg-neutral-800 active:bg-neutral-50 dark:active:bg-neutral-700 will-change-pressable">
+          className="flex-row items-center p-4 bg-white dark:bg-neutral-800 active:bg-neutral-50 dark:active:bg-neutral-700 will-change-pressable border-b border-neutral-100 dark:border-neutral-700">
           <View className="h-5 w-5 items-center justify-center rounded-lg bg-emerald-50">
             <Ionicons name="settings-outline" size={15} color="#3b82f6" />
           </View>
@@ -307,8 +278,8 @@ export default function Settings() {
         </Text>
       </View>
 
-      <View className="mx-4 mb-6 overflow-hidden bg-background rounded-2xl border border-neutral-200 ">
-        <View className="flex-row p-4 bg-background active:bg-neutral-50">
+      <View className="mx-4 mb-6 overflow-hidden bg-background rounded-2xl border border-neutral-200 dark:border-neutral-700">
+        <View className="flex-row p-4 bg-white dark:bg-neutral-800 active:bg-neutral-50 dark:active:bg-neutral-700 items-center will-change-pressable border border-neutral-100 dark:border-neutral-700">
           <View className="h-8 w-8 items-center justify-center rounded-lg bg-orange-50">
             <Ionicons name="notifications-outline" size={18} color="#FF6600" />
           </View>
@@ -355,7 +326,7 @@ export default function Settings() {
               togglePreference('location_enabled');
             }
           }}
-          className="flex-row p-4 bg-white dark:bg-neutral-800 active:bg-neutral-50 dark:active:bg-neutral-700 items-center will-change-pressable"
+          className="flex-row p-4 bg-white dark:bg-neutral-800 active:bg-neutral-50 dark:active:bg-neutral-700 items-center will-change-pressable border border-neutral-100 dark:border-neutral-700"
         >
           <View className="h-8 w-8 items-center justify-center rounded-lg bg-yellow-50">
             <Ionicons name="location-outline" size={18} color="#d8d336" />
@@ -401,7 +372,7 @@ export default function Settings() {
 
       <TouchableOpacity
         onPress={handleLogout}
-        className="mx-4 bg-primary py-4 rounded-xl items-center flex-row will-change-pressable justify-center"
+        className="mx-4 bg-primary py-4 rounded-xl items-center flex-row will-change-pressable justify-center border border-neutral-100 dark:border-neutral-700"
       >
         <View className="h-5 w-5 items-center">
           <Ionicons name="log-out-outline" size={15} color="#FFFFFF" />
@@ -438,9 +409,9 @@ export default function Settings() {
             const { data: { user: currentUser } } = await supabase.auth.getUser();
             if (!currentUser?.id) throw new Error("No authenticated user");
             const newRole = profile?.role === "store_owner" ? "user" : "store_owner";
-            const { error } = await supabase.from("users").upsert({ id: currentUser.id, role: newRole });
 
-            if (error) throw error;
+            await updateUserProfileService(currentUser.id, { role: newRole });
+
             setProfile(prev => ({ ...(prev || {}), role: newRole }));
 
             setStoreModalVisible(false);
