@@ -9,9 +9,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 export function useAuthListener() {
   const router = useRouter();
 
-  useEffect(() => {
+  useEffect( () => {
     const { data: listener } = supabase.auth.onAuthStateChange(
-      (event, session) => {        
+      async (event, session) => {        
         if (event === 'PASSWORD_RECOVERY' && session) {
           console.log("Password recovery session started for:", session.user.email);
           router.replace("/reset-password");
@@ -26,10 +26,10 @@ export function useAuthListener() {
             }
 
             // Verify account is not deleted
-            await checkIfAccountDeletedService(userId);
+            await checkIfAccountDeletedService(session.user.id);
 
             // Determine and navigate to the home route
-            const nextRoute = await getHomeRouteForUserId(userId);
+            const nextRoute = await getHomeRouteForUserId(session.user.id);
             router.replace(nextRoute as any);
           } catch (err: any) {
             if (err instanceof AccountDeletedError) {

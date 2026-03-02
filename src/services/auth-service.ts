@@ -2,8 +2,6 @@ import { supabase } from "@/supabase/supabase";
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
 import { Alert } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { getHomeRouteForUserId } from "./access-service";
-import { router } from "expo-router";
 import { getHomeRouteForUserId } from "@/services/access-service";
 
 /**
@@ -53,7 +51,8 @@ GoogleSignin.configure({
 });
 
 export default async function signUpService(email: string, password: string, name: string) {
-  const { data, error } = await supabase.auth.signUp({ email, password });
+  try {
+    const { data, error } = await supabase.auth.signUp({ email, password });
 
     if (data?.session?.access_token) {
       await AsyncStorage.setItem('sessionToken', data.session.access_token);
@@ -76,8 +75,6 @@ export default async function signUpService(email: string, password: string, nam
   } catch (error) {
     throw error;
   }
-
-  return data;
 }
 
 

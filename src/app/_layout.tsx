@@ -14,6 +14,7 @@ import { getHomeRouteForUserId } from "@/services/access-service";
 import { checkIfAccountDeletedService, AccountDeletedError } from "@/services/auth-service";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { useAuthStore } from "@/store/auth-store";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 SplashScreen.preventAutoHideAsync();
 

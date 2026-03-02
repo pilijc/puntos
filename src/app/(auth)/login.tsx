@@ -9,11 +9,10 @@ import {
   Image,
 } from "@/tw";
 import { router } from "expo-router";
-import React from "react";
+import React, { useState } from "react";
 import { Alert, KeyboardAvoidingView, Platform } from "react-native";
 import { useAuthStore } from "../../store/auth-store";
 import { Feather, Ionicons } from "@expo/vector-icons";
-import { getHomeRouteForUserId } from "@/services/access-service";
 import { loginService, signInWithGoogleLoginService } from "@/services/auth-service";
 
 export default function Login() {
