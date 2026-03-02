@@ -3,6 +3,21 @@ import { GoogleSignin } from "@react-native-google-signin/google-signin";
 import { Alert } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
+export async function checkIfAccountDeletedService(userId: string): Promise<void> {
+  const { data: userSettings, error } = await supabase
+    .from("user_settings")
+    .select("deleted_at")
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (error && error.code !== 'PGRST116') throw error;
+
+  if (userSettings?.deleted_at) {
+    await supabase.auth.signOut();
+    throw new Error("Invalid login credentials.");
+  }
+}
+
 GoogleSignin.configure({
   webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
 });
@@ -100,6 +115,12 @@ export async function loginService(email: string, password: string) {
       throw error;
     }
 
+    if (data.session) {
+      await checkIfAccountDeletedService(data.session.user.id);
+
+      const nextRoute = await getHomeRouteForUserId(data.session.user.id);
+      router.replace(nextRoute);
+    }
     return data;
   } catch (error: any) {
     throw error;
@@ -152,6 +173,10 @@ export async function signInWithGoogleLoginService() {
             throw insertError;
           }
         }
+      }
+
+      if (data.session) {
+        await checkIfAccountDeletedService(data.session.user.id);
       }
 
       return data;
