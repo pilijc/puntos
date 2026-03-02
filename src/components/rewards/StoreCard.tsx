@@ -14,9 +14,9 @@ export default function StoreCard({ store, onPress }: StoreCardProps) {
   return (
     <Pressable
       onPress={onPress}
-      className="bg-white rounded-2xl p-3 border border-neutral-100 flex-row gap-x-3 items-center"
+      className="bg-white dark:bg-neutral-800 rounded-2xl p-3 border border-neutral-100 dark:border-neutral-700 flex-row gap-x-3 items-center"
     >
-      <View className="w-14 h-14 rounded-xl bg-neutral-100 items-center justify-center overflow-hidden">
+      <View className="w-14 h-14 rounded-xl bg-neutral-100 dark:bg-neutral-700 items-center justify-center overflow-hidden">
         {logoSource ? (
           <Image
             source={logoSource}
@@ -29,10 +29,10 @@ export default function StoreCard({ store, onPress }: StoreCardProps) {
         )}
       </View>
       <View className="flex-1">
-        <Text className="font-poppins-semibold text-neutral-900">
+        <Text className="font-poppins-semibold text-neutral-900 dark:text-white">
           {store.name}
         </Text>
-        <Text className="text-xs text-neutral-500 font-poppins mt-1">
+        <Text className="text-xs text-neutral-500 dark:text-neutral-400 font-poppins mt-1">
           {store.location} • {store.distanceMiles.toFixed(1)} miles away
         </Text>
         <Text className="text-primary font-poppins-semibold mt-2">

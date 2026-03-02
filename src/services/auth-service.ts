@@ -3,14 +3,57 @@ import { GoogleSignin } from "@react-native-google-signin/google-signin";
 import { Alert } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { getHomeRouteForUserId } from "./access-service";
+import { router } from "expo-router";
+import { getHomeRouteForUserId } from "@/services/access-service";
+
+/**
+ * Custom error thrown when an account has been marked as deleted.
+ */
+export class AccountDeletedError extends Error {
+  constructor() {
+    super("Invalid login credentials.");
+    this.name = "AccountDeletedError";
+  }
+}
+
+/**
+ * Checks if a user's account has been soft-deleted.
+ * If deleted, it signs the user out and throws an AccountDeletedError.
+ */
+export async function checkIfAccountDeletedService(userId: string): Promise<void> {
+  const { data: userSettings, error } = await supabase
+    .from("user_settings")
+    .select("deleted_at")
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (error) throw error;
+
+  if (userSettings?.deleted_at) {
+    await supabase.auth.signOut();
+    throw new AccountDeletedError();
+  }
+}
+
+/**
+ * Soft-deletes a user account by setting the deleted_at timestamp.
+ */
+export async function softDeleteUserService(userId: string): Promise<void> {
+  const { error } = await supabase
+    .from("user_settings")
+    .update({ deleted_at: new Date().toISOString() })
+    .eq("user_id", userId);
+
+  if (error) throw error;
+  await supabase.auth.signOut();
+}
 
 GoogleSignin.configure({
   webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
 });
 
 export default async function signUpService(email: string, password: string, name: string) {
-  try {
-    const { data, error } = await supabase.auth.signUp({ email, password });
+  const { data, error } = await supabase.auth.signUp({ email, password });
 
     if (data?.session?.access_token) {
       await AsyncStorage.setItem('sessionToken', data.session.access_token);
@@ -33,7 +76,10 @@ export default async function signUpService(email: string, password: string, nam
   } catch (error) {
     throw error;
   }
+
+  return data;
 }
+
 
 export async function signUpWithGoogleService() {
   try {
