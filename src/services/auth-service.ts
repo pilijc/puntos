@@ -2,36 +2,82 @@ import { supabase } from "@/supabase/supabase";
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
 import { Alert } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { router } from "expo-router";
+import { getHomeRouteForUserId } from "@/services/access-service";
+
+/**
+ * Custom error thrown when an account has been marked as deleted.
+ */
+export class AccountDeletedError extends Error {
+  constructor() {
+    super("Invalid login credentials.");
+    this.name = "AccountDeletedError";
+  }
+}
+
+/**
+ * Checks if a user's account has been soft-deleted.
+ * If deleted, it signs the user out and throws an AccountDeletedError.
+ */
+export async function checkIfAccountDeletedService(userId: string): Promise<void> {
+  const { data: userSettings, error } = await supabase
+    .from("user_settings")
+    .select("deleted_at")
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (error) throw error;
+
+  if (userSettings?.deleted_at) {
+    await supabase.auth.signOut();
+    throw new AccountDeletedError();
+  }
+}
+
+/**
+ * Soft-deletes a user account by setting the deleted_at timestamp.
+ */
+export async function softDeleteUserService(userId: string): Promise<void> {
+  const { error } = await supabase
+    .from("user_settings")
+    .update({ deleted_at: new Date().toISOString() })
+    .eq("user_id", userId);
+
+  if (error) throw error;
+  await supabase.auth.signOut();
+}
 
 GoogleSignin.configure({
   webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
 });
 
 export default async function signUpService(email: string, password: string, name: string) {
-  try {
-    const { data, error } = await supabase.auth.signUp({ email, password });
+  const { data, error } = await supabase.auth.signUp({ email, password });
 
-    if (data?.session?.access_token) {
-      await AsyncStorage.setItem('sessionToken', data.session.access_token);
-    }
-    if (data.user) {
-      const { data: existingProfile } = await supabase
-        .from("users")
-        .select("id")
-        .eq("id", data.user.id)
-        .single();
+  if (error) throw error;
 
-      if (!existingProfile) {
-        await supabase.from("users").insert({ id: data.user.id, name });
-      }
-    }
-    if (error) {
-      throw error;
-    }
-  } catch (error) {
-    throw error;
+  if (data?.session?.access_token) {
+    await AsyncStorage.setItem('sessionToken', data.session.access_token);
   }
+
+  if (data.user) {
+    const { data: existingProfile } = await supabase
+      .from("users")
+      .select("id")
+      .eq("id", data.user.id)
+      .maybeSingle();
+
+    if (!existingProfile) {
+      const { error: insertError } = await supabase
+        .from("users")
+        .insert({ id: data.user.id, name });
+      if (insertError) throw insertError;
+    }
+  }
+
+  return data;
 }
+
 
 export async function signUpWithGoogleService() {
   try {
@@ -92,19 +138,24 @@ export async function signUpWithGoogleService() {
 export async function loginService(email: string, password: string) {
   try {
     const { data, error } = await supabase.auth.signInWithPassword({
-      email: email,
-      password: password,
+      email,
+      password,
     });
 
-    if (error) {
-      throw error;
-    }
+    if (error) throw error;
 
+    if (data.session) {
+      const userId = data.session.user.id;
+      await checkIfAccountDeletedService(userId);
+
+      const nextRoute = await getHomeRouteForUserId(userId);
+      router.replace(nextRoute as any);
+    }
     return data;
   } catch (error: any) {
     throw error;
   }
-};
+}
 
 export async function resetPasswordService(email: string) {
   try {
@@ -166,6 +217,14 @@ export async function signInWithGoogleLoginService() {
             throw insertError;
           }
         }
+      }
+
+      if (data.session) {
+        const userId = data.session.user.id;
+        await checkIfAccountDeletedService(userId);
+
+        const nextRoute = await getHomeRouteForUserId(userId);
+        router.replace(nextRoute as any);
       }
 
       return data;
