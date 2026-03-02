@@ -12,7 +12,7 @@ import { useAuthListener } from "@/hooks/auth-listener";
 import { useAnimatedStyle, useSharedValue, withRepeat, withSequence, withTiming } from "react-native-reanimated";
 import { Image } from "@/tw";
 import { getHomeRouteForUserId } from "@/services/access-service";
-import { checkIfAccountDeletedService } from "@/services/auth-service";
+import { checkIfAccountDeletedService, AccountDeletedError } from "@/services/auth-service";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { useAuthStore } from "@/store/auth-store";
 
@@ -62,24 +62,31 @@ export default function Layout() {
   useEffect(() => {
     const checkSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
+
       if (!session && !sessionToken) {
         router.replace("/(onboarding)/welcome");
-      } else {
-        try {
-          await checkIfAccountDeletedService(session.user.id);
+        return;
+      }
 
-          const nextRoute = await getHomeRouteForUserId(session.user.id);
-          router.replace(nextRoute);
+      if (session) {
+        try {
+          const userId = session.user.id;
+
+          // Centralized check for deleted accounts
+          await checkIfAccountDeletedService(userId);
+
+          // Get the appropriate initial route based on user type/data
+          const nextRoute = await getHomeRouteForUserId(userId);
+          router.replace(nextRoute as any);
         } catch (err: any) {
-          if (err.message === "Invalid login credentials.") {
-            Alert.alert("Login Failed", "Invalid login credentials.");
+          if (err instanceof AccountDeletedError) {
+            Alert.alert("Login Failed", err.message);
             router.replace("/(auth)/login");
+          } else {
+            console.error("Session restoration error:", err);
           }
         }
       }
-
-      const nextRoute = await getHomeRouteForUserId(session.user.id);
-      router.replace(nextRoute);
     };
 
     if (fontsLoaded) {
