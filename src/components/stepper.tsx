@@ -24,7 +24,7 @@ export const STEP_DATA = [
 
 export function StepHeader({ currentStep }: StepHeaderProps) {
   const stepInfo = STEP_DATA[currentStep - 1];
-  
+
   return (
     <View className="gap-y-4 mb-6">
       <View className="items-center justify-center">
@@ -35,20 +35,40 @@ export function StepHeader({ currentStep }: StepHeaderProps) {
           />
         </View>
       </View>
-      
+
       <View className="gap-y-1">
-				<Text className="text-2xl font-poppins-bold text-neutral-900 text-center">
-					{stepInfo.title}
-				</Text>
-				
-				<Text className="text-neutral-600 font-poppins text-center">
-					{stepInfo.description}
-				</Text>
-			</View>
+        <Text className="text-2xl font-poppins-bold text-neutral-900 text-center">
+          {stepInfo.title}
+        </Text>
+
+        <Text className="text-neutral-600 font-poppins text-center">
+          {stepInfo.description}
+        </Text>
+      </View>
     </View>
   );
 }
-  
+
+export function Stepper({ currentStep, totalSteps }: StepperProps) {
+  return (
+    <View className="flex-row justify-start items-start px-6 py-4 gap-x-2">
+      {Array.from({ length: totalSteps }).map((_, index) => {
+        const stepNumber = index + 1;
+        const isActive = stepNumber === currentStep;
+        const isCompleted = stepNumber < currentStep;
+
+        return (
+          <View
+            key={stepNumber}
+            className={`h-2 flex-1 rounded-full ${isCompleted || isActive ? 'bg-primary' : 'bg-neutral-200'
+              }`}
+          />
+        );
+      })}
+    </View>
+  );
+}
+
 export function NameStep({ value, onChange, error }: StepProps) {
   return (
     <View className="gap-y-2">
@@ -133,7 +153,7 @@ export function PasswordStep({
           </Pressable>
         </View>
       </View>
-      
+
       <View className="mt-1 mb-2 gap-y-2">
         <Text className="text-sm font-poppins-medium text-neutral-700">
           Confirm Password
@@ -162,7 +182,6 @@ export function PasswordStep({
           {errors.confirmPassword || errors.password}
         </Text>
       )}
-
     </View>
   );
 }
@@ -184,15 +203,14 @@ export function TermsStep({ accepted, onToggle, error }: TermsStepProps) {
           </Text>
         </ScrollView>
       </View>
-      
+
       <Pressable
         onPress={onToggle}
         className="flex-row items-start gap-x-3"
       >
         <View
-          className={`w-4 h-4 rounded border-1 items-center justify-center mt-0.5 ${
-            accepted ? 'bg-primary border-primary' : 'border-neutral-300'
-          }`}
+          className={`w-4 h-4 rounded border-1 items-center justify-center mt-0.5 ${accepted ? 'bg-primary border-primary' : 'border-neutral-300'
+            }`}
         >
           {accepted && (
             <Ionicons name="checkmark" size={12} color="white" />
@@ -209,7 +227,7 @@ export function TermsStep({ accepted, onToggle, error }: TermsStepProps) {
           </Text>
         </Text>
       </Pressable>
-      
+
       {error && (
         <Text className="text-red-500 text-sm font-poppins rounded-xl p-4 text-center bg-red-50">
           {error}
