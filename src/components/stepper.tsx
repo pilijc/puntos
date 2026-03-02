@@ -1,5 +1,5 @@
 import { View, Text, TextInput, Pressable, ScrollView, Image } from "@/tw";
-import { Ionicons } from "@expo/vector-icons";
+import { Feather, Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { StepProps, PasswordStepProps, TermsStepProps, StepperProps, StepHeaderProps } from "@/type/auth";
 
@@ -142,18 +142,14 @@ export function PasswordStep({
             secureTextEntry={!showPassword}
             autoCapitalize="none"
             className="border border-neutral-200 rounded-xl px-4 py-4 pr-12 font-poppins"
-            autoFocus
+            autoFocus={false}
             placeholderTextColor="#9CA3AF"
           />
           <Pressable
             onPress={onTogglePassword}
             className="absolute right-4 top-4"
           >
-            <Ionicons
-              name={showPassword ? "eye-off" : "eye"}
-              size={22}
-              color="#737373"
-            />
+            <Feather name={showPassword ? "eye-off" : "eye"} size={18} color="gray" />
           </Pressable>
         </View>
       </View>
@@ -176,11 +172,7 @@ export function PasswordStep({
             onPress={onToggleConfirmPassword}
             className="absolute right-4 top-4"
           >
-            <Ionicons
-              name={showConfirmPassword ? "eye-off" : "eye"}
-              size={22}
-              color="#737373"
-            />
+            <Feather name={showConfirmPassword ? "eye-off" : "eye"} size={18} color="gray" />
           </Pressable>
         </View>
       </View>
@@ -221,7 +213,7 @@ export function TermsStep({ accepted, onToggle, error }: TermsStepProps) {
             }`}
         >
           {accepted && (
-            <Ionicons name="checkmark" size={16} color="white" />
+            <Ionicons name="checkmark" size={12} color="white" />
           )}
         </View>
         <Text className="flex-1 font-poppins text-neutral-700">
