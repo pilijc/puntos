@@ -46,35 +46,33 @@ export default function Qr() {
   };
 
   useEffect(() => {
-   
-     const setupQR = async () => {
-      const currentUser = await getCurrentUser();
-      if (!currentUser) return;
+  const setupQR = async () => {
+    const currentUser = await getCurrentUser();
+    if (!currentUser) return;
 
-      setUser(currentUser);
-      setQrValue(currentUser.id); 
-      setLoading(false);
+    setUser(currentUser);
+    const qr = `puntos:user:${currentUser.id}`;
+    setQrValue(qr);
+    setLoading(false);
 
-      // Listen for new transactions (INSERT) for this user
-      const channel = listenToQRTransaction(currentUser.id, (transaction) => {
-        Alert.alert('QR Transaction', `You received ${transaction.points_earned} points!`);
-      });
-
-      return channel;
-    };
-
-    let channelRef: any;
-    setupQR().then((channel) => {
-      channelRef = channel;
+    // Listen to transactions
+    const channel = listenToQRTransaction(currentUser.id, (transaction) => {
+      Alert.alert('QR Transaction', `You received ${transaction.points_earned} points!`);
     });
 
-    return () => {
-      if (channelRef) supabase.removeChannel(channelRef);
-    };
-  }, []);
-  if (loading) {
-    return <ActivityIndicator size="large" style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }} />;
-  }
+    return channel;
+  };
+
+  let channelRef: any;
+  setupQR().then((channel) => {
+    channelRef = channel;
+    return fetchQRCode();
+  });
+
+  return () => {
+    if (channelRef) supabase.removeChannel(channelRef);
+  };
+}, []);
  
 
   return (
