@@ -119,3 +119,49 @@ export async function updateStoreLogo(storeId: number, imageUrl: string): Promis
 
     if (error) throw new Error(error.message);
 }
+
+export interface AdminStoreRow extends StoreRow {
+    owner_name: string | null;
+}
+
+/**
+ * Fetches ALL stores across all owners. Used by super-admin.
+ * Joins owner email + full_name from the users table.
+ */
+export async function getAllStores(): Promise<AdminStoreRow[]> {
+    const { data, error } = await supabase
+        .from("stores")
+        .select(`
+            id, name, type, address, latitude, longitude,
+            status, is_active, logo, owner_id,
+            phone, registration_number, created_at,
+            users ( name )
+        `)
+        .order("created_at", { ascending: false });
+
+    if (error) throw new Error(error.message);
+
+    return (data ?? []).map((row: any) => ({
+        ...row,
+        owner_name: row.users?.name ?? null,
+        users: undefined,
+    })) as AdminStoreRow[];
+}
+
+/**
+ * Approves or rejects a store by updating its status and is_active flag.
+ * - Approve: status = 'active',   is_active = true
+ * - Reject:  status = 'inactive', is_active = false
+ */
+export async function updateStoreStatus(
+    storeId: number,
+    status: "active" | "inactive" | "pending_review",
+    isActive: boolean,
+): Promise<void> {
+    const { error } = await supabase
+        .from("stores")
+        .update({ status, is_active: isActive })
+        .eq("id", storeId);
+
+    if (error) throw new Error(error.message);
+}
