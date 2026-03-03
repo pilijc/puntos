@@ -83,97 +83,90 @@ export default function ChangePasswordModal({ visible, onClose }: Props) {
             visible={visible}
             onRequestClose={handleClose}
         >
-            <SafeAreaView className="flex-1 justify-end">
-                {/* 
-                  BACKDROP: 
-                  Since 'transparent' is true, we use an absolute View to dim the screen.
-                */}
+            <KeyboardAvoidingView
+                behavior="padding"
+                style={{ flex: 1 }}
+            >
                 <TouchableOpacity
                     className="absolute inset-0 bg-black/50"
                     activeOpacity={1}
                     onPress={handleClose}
                 />
 
-                {/* 
-                  ANDROID KEYBOARD FIX: 
-                  For Android bottom sheets, 'behavior="height"' works best when the 
-                  parent is 'justify-end'.
-                */}
-                <KeyboardAvoidingView
-                    behavior="height"
-                    className="bg-white dark:bg-neutral-800 rounded-t-3xl"
-                >
-                    <ScrollView className="p-6 pb-8">
-                        <View className="flex-row justify-between items-center mb-6">
-                            <Text className="text-xl font-poppins-bold text-neutral-900 dark:text-white">Change Password</Text>
-                            <TouchableOpacity onPress={handleClose} disabled={loading}>
-                                <Ionicons name="close-outline" size={25} color="#EF4444" />
-                            </TouchableOpacity>
-                        </View>
+                <View style={{ flex: 1, justifyContent: 'flex-end' }}>
+                    <SafeAreaView className="bg-background dark:bg-neutral-800 rounded-t-3xl">
+                        <ScrollView className="p-6 pb-8" keyboardShouldPersistTaps="handled">
+                            <View className="flex-row justify-between items-center mb-6">
+                                <Text className="text-xl font-poppins-bold text-neutral-900 dark:text-white">Change Password</Text>
+                                <TouchableOpacity onPress={handleClose} disabled={loading}>
+                                    <Ionicons name="close-outline" size={25} color="#EF4444" />
+                                </TouchableOpacity>
+                            </View>
 
-                        <View className="mb-4">
-                            <Text className="text-sm font-poppins-medium text-neutral-700 dark:text-neutral-300 mb-2">Current Password</Text>
-                            <TextInput
-                                className="border-neutral-300 dark:border-neutral-600 border rounded-lg p-3 font-poppins-regular text-neutral-900 dark:text-white dark:bg-neutral-700"
-                                placeholder="Enter current password"
-                                secureTextEntry
-                                value={currentPassword}
-                                onChangeText={setCurrentPassword}
-                                editable={!loading}
-                                placeholderTextColor={isDark ? '#6b7280' : '#9CA3AF'}
-                            />
-                        </View>
+                            <View className="mb-4">
+                                <Text className="text-sm font-poppins-medium text-neutral-700 dark:text-neutral-300 mb-2">Current Password</Text>
+                                <TextInput
+                                    className="border-neutral-300 dark:border-neutral-600 border rounded-lg p-3 font-poppins-regular text-neutral-900 dark:text-white dark:bg-neutral-700"
+                                    placeholder="Enter current password"
+                                    secureTextEntry
+                                    value={currentPassword}
+                                    onChangeText={setCurrentPassword}
+                                    editable={!loading}
+                                    placeholderTextColor={isDark ? '#6b7280' : '#9CA3AF'}
+                                />
+                            </View>
 
-                        <View className="mb-4">
-                            <Text className="text-sm font-poppins-medium text-neutral-700 dark:text-neutral-300 mb-2">New Password</Text>
-                            <TextInput
-                                className="border-neutral-300 dark:border-neutral-600 border rounded-lg p-3 font-poppins-regular text-neutral-900 dark:text-white dark:bg-neutral-700"
-                                placeholder="Enter new password"
-                                secureTextEntry
-                                value={newPassword}
-                                onChangeText={setNewPassword}
-                                editable={!loading}
-                                placeholderTextColor={isDark ? '#6b7280' : '#9CA3AF'}
-                            />
-                        </View>
+                            <View className="mb-4">
+                                <Text className="text-sm font-poppins-medium text-neutral-700 dark:text-neutral-300 mb-2">New Password</Text>
+                                <TextInput
+                                    className="border-neutral-300 dark:border-neutral-600 border rounded-lg p-3 font-poppins-regular text-neutral-900 dark:text-white dark:bg-neutral-700"
+                                    placeholder="Enter new password"
+                                    secureTextEntry
+                                    value={newPassword}
+                                    onChangeText={setNewPassword}
+                                    editable={!loading}
+                                    placeholderTextColor={isDark ? '#6b7280' : '#9CA3AF'}
+                                />
+                            </View>
 
-                        <View className="mb-6">
-                            <Text className="text-sm font-poppins-medium text-neutral-700 dark:text-neutral-300 mb-2">Repeat New Password</Text>
-                            <TextInput
-                                className="border-neutral-300 dark:border-neutral-600 border rounded-lg p-3 font-poppins-regular text-neutral-900 dark:text-white dark:bg-neutral-700"
-                                placeholder="Repeat new password"
-                                secureTextEntry
-                                value={repeatNewPassword}
-                                onChangeText={setRepeatNewPassword}
-                                editable={!loading}
-                                placeholderTextColor={isDark ? '#6b7280' : '#9CA3AF'}
-                            />
-                        </View>
+                            <View className="mb-6">
+                                <Text className="text-sm font-poppins-medium text-neutral-700 dark:text-neutral-300 mb-2">Repeat New Password</Text>
+                                <TextInput
+                                    className="border-neutral-300 dark:border-neutral-600 border rounded-lg p-3 font-poppins-regular text-neutral-900 dark:text-white dark:bg-neutral-700"
+                                    placeholder="Repeat new password"
+                                    secureTextEntry
+                                    value={repeatNewPassword}
+                                    onChangeText={setRepeatNewPassword}
+                                    editable={!loading}
+                                    placeholderTextColor={isDark ? '#6b7280' : '#9CA3AF'}
+                                />
+                            </View>
 
-                        <View className="flex-row items-center gap-4">
-                            <TouchableOpacity
-                                onPress={handleClose}
-                                disabled={loading}
-                                className="flex-1 py-4 rounded-xl items-center bg-neutral-100 dark:bg-neutral-700 Will-change-pressable"
-                            >
-                                <Text className="text-neutral-900 dark:text-neutral-200 font-poppins-semibold">Cancel</Text>
-                            </TouchableOpacity>
+                            <View className="flex-row items-center gap-4">
+                                <TouchableOpacity
+                                    onPress={handleClose}
+                                    disabled={loading}
+                                    className="flex-1 py-4 rounded-xl items-center bg-neutral-100 dark:bg-neutral-700"
+                                >
+                                    <Text className="text-neutral-900 dark:text-neutral-200 font-poppins-semibold">Cancel</Text>
+                                </TouchableOpacity>
 
-                            <TouchableOpacity
-                                onPress={handleConfirm}
-                                disabled={loading}
-                                className="flex-1 py-4 rounded-xl items-center bg-primary"
-                            >
-                                {loading ? (
-                                    <ActivityIndicator color="#fff" />
-                                ) : (
-                                    <Text className="text-white font-poppins-semibold">Confirm</Text>
-                                )}
-                            </TouchableOpacity>
-                        </View>
-                    </ScrollView>
-                </KeyboardAvoidingView>
-            </SafeAreaView>
-        </Modal >
+                                <TouchableOpacity
+                                    onPress={handleConfirm}
+                                    disabled={loading}
+                                    className="flex-1 py-4 rounded-xl items-center bg-primary"
+                                >
+                                    {loading ? (
+                                        <ActivityIndicator color="#fff" />
+                                    ) : (
+                                        <Text className="text-white font-poppins-semibold">Confirm</Text>
+                                    )}
+                                </TouchableOpacity>
+                            </View>
+                        </ScrollView>
+                    </SafeAreaView>
+                </View>
+            </KeyboardAvoidingView>
+        </Modal>
     );
 }

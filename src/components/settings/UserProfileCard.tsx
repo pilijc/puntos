@@ -8,11 +8,6 @@ interface UserProfileCardProps {
     onPress: () => void;
 }
 
-/**
- * UserProfileCard
- * Displays the user's basic profile information in a card format.
- * Triggers an edit profile modal or another action when pressed.
- */
 export const UserProfileCard = ({ profile, user, onPress }: UserProfileCardProps) => {
     const displayName = profile?.name || user?.email?.split("@")[0] || "User";
     const email = user?.email || "";

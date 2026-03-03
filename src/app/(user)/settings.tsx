@@ -20,16 +20,10 @@ import { UserProfileCard } from "@/components/settings/UserProfileCard";
 // Services (Used for background tasks like location sync)
 import { syncLocationService } from "@/services/settings-service";
 
-/**
- * User Settings Screen
- * Allows regular users to manage their profile, security, and notification preferences.
- */
 export default function UserSettings() {
-  // Modal State Management
   const [modalVisible, setModalVisible] = useState(false);
   const [securityModalVisible, setSecurityModalVisible] = useState(false);
 
-  // Profile and Preferences Hook
   const {
     user,
     profile,
@@ -40,32 +34,23 @@ export default function UserSettings() {
     refreshProfile
   } = useProfile();
 
-  // Location Hook for permissions and data
   const {
     permissionStatus,
     loading: locationLoading,
     requestPermission: requestLocationPermission,
   } = useLocation();
 
-  // Refresh data when screen comes into focus
   useFocusEffect(
     useCallback(() => {
       refreshProfile();
     }, [])
   );
 
-  /**
-   * Helper to toggle preferences using the consolidated updatePreferences function
-   * @param key The preference key to toggle
-   */
   const togglePreference = async (key: string) => {
     const newValue = !(preferences as any)[key];
     await updatePreferences({ [key]: newValue });
   };
 
-  /**
-   * Background effect to sync location to DB if enabled
-   */
   React.useEffect(() => {
     let intervalId: NodeJS.Timeout;
 
@@ -91,18 +76,12 @@ export default function UserSettings() {
     };
   }, [preferences.location_enabled, user?.id]);
 
-  // --- EDIT PROFILE LOGIC ---
 
-  /**
-   * Triggers the edit profile modal
-   */
   const handleProfilePress = () => {
     setModalVisible(true);
   };
 
-  /**
-   * Handles saving profile updates from the modal
-   */
+
   const handleSaveProfile = async (newName: string, _newEmail: string) => {
     const result = await updateProfile(newName);
     if (result.success) {
@@ -111,9 +90,7 @@ export default function UserSettings() {
       throw new Error("Failed to update profile");
     }
   };
-  // ---------------------------
 
-  // Show loading skeleton until profile is ready
   if (loading && !user) {
     return (
       <SafeAreaView className="flex-1 bg-background dark:bg-neutral-900 justify-center items-center">
@@ -124,7 +101,6 @@ export default function UserSettings() {
 
   return (
     <SafeAreaView className="flex-1 bg-background dark:bg-neutral-900 p-4">
-      {/* Header with Dark Mode Toggle */}
       <View className="flex-row justify-between items-center mb-6">
         <Text className="text-2xl font-poppins-bold text-neutral-900 dark:text-white">
           Settings
@@ -132,7 +108,6 @@ export default function UserSettings() {
         <DarkModeToggle />
       </View>
 
-      {/* User Info Card - Triggers Edit Modal */}
       {user && (
         <UserProfileCard
           user={user}
@@ -170,7 +145,6 @@ export default function UserSettings() {
       </View>
 
       <View className="mx-4 mb-6 overflow-hidden bg-background rounded-2xl border border-neutral-200 dark:border-neutral-700">
-        {/* Nearby Alerts Switch */}
         <View className="flex-row p-4 bg-white dark:bg-neutral-800 border-b border-neutral-100 dark:border-neutral-700 items-center">
           <View className="h-8 w-8 items-center justify-center rounded-lg bg-orange-50">
             <Ionicons name="notifications-outline" size={18} color="#FF6600" />
