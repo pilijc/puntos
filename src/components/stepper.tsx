@@ -121,7 +121,7 @@ export function PasswordStep({
             placeholder="Enter your password"
             secureTextEntry={!showPassword}
             autoCapitalize="none"
-            className="border border-neutral-200 rounded-xl px-4 py-4 pr-12 font-poppins"
+            className="border border-neutral-200 rounded-xl px-4 py-4 pr-12 font-poppins text-textPrimary"
             autoFocus={false}
             placeholderTextColor="#9CA3AF"
           />
@@ -145,7 +145,7 @@ export function PasswordStep({
             placeholder="Confirm your password"
             secureTextEntry={!showConfirmPassword}
             autoCapitalize="none"
-            className="border border-neutral-200 rounded-xl px-4 py-4 pr-12 font-poppins"
+            className="border border-neutral-200 rounded-xl px-4 py-4 pr-12 font-poppins text-textPrimary"
             placeholderTextColor="#9CA3AF"
           />
           <Pressable
