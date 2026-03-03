@@ -10,10 +10,11 @@ import React, { useState } from "react";
 import { KeyboardAvoidingView, Alert, ActivityIndicator, Platform } from "react-native";
 import { router } from "expo-router";
 import { useAuthStore } from "../../store/auth-store";
-import signUpService from "../../services/auth-service";
+import signUpService, { GoogleSignInCancelledError } from "../../services/auth-service";
 import { signUpWithGoogleService } from "@/services/auth-service";
 import { NameStep, EmailStep, PasswordStep, TermsStep, StepHeader } from "../../components/stepper";
 import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function SignUp() {
   const [currentStep, setCurrentStep] = useState(1);
@@ -78,13 +79,13 @@ export default function SignUp() {
         setErrors(newErrors);
         return false;
       }
-      if (password.length < 8) {
-        newErrors.password = 'Password must be at least 8 characters';
+      if (password !== confirmPassword) {
+        newErrors.confirmPassword = 'Passwords do not match';
         setErrors(newErrors);
         return false;
       }
-      if (password !== confirmPassword) {
-        newErrors.confirmPassword = 'Passwords do not match';
+      if (password.length < 8) {
+        newErrors.password = 'Password must be at least 8 characters';
         setErrors(newErrors);
         return false;
       }
@@ -145,6 +146,8 @@ export default function SignUp() {
     try {
       setLoadingGoogle(true);
       const data = await signUpWithGoogleService();
+      if (!data) {  return; }
+
       Alert.alert("Success", "Account created!");
       router.replace(data.homeRoute ?? "/(user)");
     } catch (error: any) {
@@ -161,7 +164,7 @@ export default function SignUp() {
 
   return (
     <SafeAreaView className="flex-1 bg-background">
-      <View className="flex-row items-center justify-center mb-6 shadow-xs p-4">
+      <View className="flex-row items-center justify-centershadow-xs p-4">
         <TouchableOpacity
           onPress={
             currentStep === 1
