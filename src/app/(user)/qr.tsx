@@ -13,7 +13,7 @@ export default function Qr() {
   const router = useRouter();
   const [qrValue, setQrValue] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [user, SetUser] = useState<any>(null);
+  const [user, setUser] = useState<any>(null);
 
   // Get static QR code based on userID
   const fetchQRCode = async () => {
@@ -46,39 +46,36 @@ export default function Qr() {
   };
 
   useEffect(() => {
-    fetchQRCode();
-    
+   
      const setupQR = async () => {
-    
-      //fetch current user
-    const currentUser = await getCurrentUser();
-    if (!currentUser) return;
+      const currentUser = await getCurrentUser();
+      if (!currentUser) return;
 
-    SetUser(currentUser);
+      setUser(currentUser);
+      setQrValue(currentUser.id); 
+      setLoading(false);
 
-    //fetch QR code & add user record
-    await fetchQRCode();
+      // Listen for new transactions (INSERT) for this user
+      const channel = listenToQRTransaction(currentUser.id, (transaction) => {
+        Alert.alert('QR Transaction', `You received ${transaction.points_earned} points!`);
+      });
 
-    //listen to realtime QR transaction updates
-    const channel = listenToQRTransaction(currentUser.id, () => {
-      console.log('QR transaction received:');
-      Alert.alert('QR Transaction', 'A transaction has been processed!');
+      return channel;
+    };
+
+    let channelRef: any;
+    setupQR().then((channel) => {
+      channelRef = channel;
     });
 
-    return channel;
-  };
-
-  let channelRef: any;
-
-  setupQR().then((channel) => {
-    channelRef = channel;
-  });
-
-  return () => {
-    if (channelRef) supabase.removeChannel(channelRef);
-  };
-
+    return () => {
+      if (channelRef) supabase.removeChannel(channelRef);
+    };
   }, []);
+  if (loading) {
+    return <ActivityIndicator size="large" style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }} />;
+  }
+ 
 
   return (
     <SafeAreaView className="flex-1 bg-white">
