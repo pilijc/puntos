@@ -15,12 +15,14 @@ export function useAuthListener() {
         if (event === 'PASSWORD_RECOVERY' && session) {
           console.log("Password recovery session started for:", session.user.email);
           router.replace("/reset-password");
+        } else if (event === 'SIGNED_OUT') {
+          console.log("User logged out");
+          router.replace("/(onboarding)/index");
         } else if (event === 'SIGNED_IN' && session) {
           console.log("User logged in:", session.user.email);
           void (async () => {
 
           try {
-            // Save session token if missing
             const sessionToken = await AsyncStorage.getItem('sessionToken');
             if (!sessionToken && session.access_token) {
               await AsyncStorage.setItem('sessionToken', session.access_token);
@@ -32,10 +34,8 @@ export function useAuthListener() {
               return;
             }
 
-            // Verify account is not deleted
             await checkIfAccountDeletedService(session.user.id);
 
-            // Determine and navigate to the home route
             const nextRoute = await getHomeRouteForUserId(session.user.id);
             router.replace(nextRoute as any);
           } catch (err: any) {
@@ -46,15 +46,11 @@ export function useAuthListener() {
               console.error("Auth listener session error:", err);
             }
           }
-        } else if (event === 'SIGNED_OUT') {
-          console.log("User logged out");
-          router.replace("/(onboarding)/index");
-        }
+          })();
       }
-    );
-
     return () => {
       listener.subscription.unsubscribe();
-    };
-  }, []);
+      };
+    })}
+  );
 }
