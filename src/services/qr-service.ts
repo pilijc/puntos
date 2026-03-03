@@ -95,17 +95,20 @@ export async function createQRTransaction(
 }
 
 export function listenToQRTransaction(userId: string, onScanned: (transaction: QRTransaction) => void) {
-  const channel = supabase.channel(`qr-transaction-${userId}`)
+  const channel = supabase.channel(`qr_transactions-${userId}`)
     .on('postgres_changes', {
       event: 'INSERT',  
       schema: 'public',
       table: 'qr_transactions',
       filter: `user_id=eq.${userId}`
     }, (payload) => {
+      console.log("Realtime triggered:", payload);
       const newRow = payload.new as QRTransaction;
       onScanned(newRow);
     })
-    .subscribe();
+    .subscribe((status) => {
+      console.log(`Customer QR listener status for user ${userId}:`, status);
+    });
 
   return channel;
 }

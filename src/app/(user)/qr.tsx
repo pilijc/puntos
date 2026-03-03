@@ -59,6 +59,7 @@ export default function Qr() {
 
     // Listen to transactions
     const channel = listenToQRTransaction(currentUser.id, (transaction) => {
+      console.log('Customer side: QR transaction received!', transaction);
       Alert.alert('QR Transaction', `You received ${transaction.points_earned} points!`);
     });
 
