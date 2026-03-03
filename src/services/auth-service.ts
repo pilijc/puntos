@@ -78,6 +78,13 @@ export default async function signUpService(email: string, password: string, nam
 }
 
 
+export class GoogleSignInCancelledError extends Error {
+  constructor() {
+    super("Sign in cancelled");
+    this.name = "GoogleSignInCancelled";
+  }
+}
+
 export async function signUpWithGoogleService() {
   try {
     await GoogleSignin.hasPlayServices();
@@ -127,6 +134,8 @@ export async function signUpWithGoogleService() {
         throw error;
       }
       return { ...data, homeRoute };
+    } else {
+      throw new GoogleSignInCancelledError();
     }
   } catch (error: any) {
     throw error;

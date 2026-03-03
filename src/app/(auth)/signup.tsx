@@ -10,7 +10,7 @@ import React, { useState } from "react";
 import { KeyboardAvoidingView, Alert, ActivityIndicator, Platform } from "react-native";
 import { router } from "expo-router";
 import { useAuthStore } from "../../store/auth-store";
-import signUpService from "../../services/auth-service";
+import signUpService, { GoogleSignInCancelledError } from "../../services/auth-service";
 import { signUpWithGoogleService } from "@/services/auth-service";
 import { NameStep, EmailStep, PasswordStep, TermsStep, StepHeader } from "../../components/stepper";
 import { Ionicons } from "@expo/vector-icons";
@@ -145,10 +145,11 @@ export default function SignUp() {
     try {
       setLoadingGoogle(true);
       const data = await signUpWithGoogleService();
+      if (!data) {  return; }
+
       Alert.alert("Success", "Account created!");
       router.replace(data.homeRoute ?? "/(user)");
     } catch (error: any) {
-      setLoadingGoogle(false);
       reset();
       const message =
         error?.msg ??
