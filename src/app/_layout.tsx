@@ -15,6 +15,7 @@ import { checkIfAccountDeletedService, AccountDeletedError } from "@/services/au
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { useAuthStore } from "@/store/auth-store";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import OneSignal from "react-native-onesignal";
 
 SplashScreen.preventAutoHideAsync();
 

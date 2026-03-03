@@ -42,8 +42,17 @@
             }
           }
         }
+      ],
+      [
+        "onesignal-expo-plugin",
+        {
+          "mode": "development"
+        }
       ]
     ],
+    "extra": {
+      "oneSignalAppId": "YOUR-ONESIGNAL-APP-ID"
+    },
     "name": "puntos",
     "slug": "puntos",
     "android": {
