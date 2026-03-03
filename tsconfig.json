@@ -17,5 +17,9 @@
     "**/*.ts",
     "**/*.tsx",
     "nativewind-env.d.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "src/supabase/functions/**/*.ts"
   ]
 }

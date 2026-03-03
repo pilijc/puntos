@@ -13,8 +13,7 @@ import { getSearchResultsService, getStoresService } from "@/services/discover-s
 import { useStoreStore } from "@/store/store-store";
 import { Store } from "@/type/store";
 import type * as GeoJSON from "geojson";
-// import * as Notifications from 'expo-notifications';
-
+import { OneSignal } from "react-native-onesignal";
 
 Mapbox.setAccessToken(process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN);
 
@@ -34,63 +33,34 @@ export default function Discover() {
   const routeAnimationRef = useRef<ReturnType<typeof requestAnimationFrame> | null>(null);
 
   const getToken = async () => {
-    //   try {
-    //     // 1) Ask for notification permission
-    //     const { status: existingStatus } = await Notifications.getPermissionsAsync();
-    //     let finalStatus = existingStatus;
+    try {
+      await OneSignal.Notifications.requestPermission(true);
 
-    //     if (existingStatus !== "granted") {
-    //       const { status } = await Notifications.requestPermissionsAsync();
-    //       finalStatus = status;
-    //     }
+      const { data, error } = await supabase.functions.invoke("notify-nearby-store", {
+        body: { store_id: 1 },
+      });
 
-    //     if (finalStatus !== "granted") {
-    //       Alert.alert(
-    //         "Permission needed",
-    //         "We need notification permission to send you updates."
-    //       );
-    //       return;
-    //     }
+      console.log("notify-nearby-store data:", data);
+      console.log("notify-nearby-store error:", error);
 
-    //     // 2) Get Expo push token from the physical device
-    //     // If you ever see a "must provide projectId" error,
-    //     // use: await Notifications.getExpoPushTokenAsync({ projectId: "your-expo-project-id" });
-    //     const expoPushToken = (await Notifications.getExpoPushTokenAsync()).data;
-    //     console.log("Expo push token:", expoPushToken);
+      if (error) {
+        console.log("notify-nearby-store error:", error);
+        Alert.alert("Error", "Could not send test notification.");
+        return;
+      }
 
-    //     // 3) Get current logged-in user from Supabase
-    //     const {
-    //       data: { user },
-    //       error: userError,
-    //     } = await supabase.auth.getUser();
-
-    //     if (userError || !user) {
-    //       console.log("No logged in user or error:", userError);
-    //       Alert.alert("Error", "You must be logged in to register this device.");
-    //       return;
-    //     }
-
-    //     // 4) Save token to your push_tokens table in Supabase
-    //     // I'm assuming your columns: user_id, expo_push_token, platform
-    //     const { error: upsertError } = await supabase
-    //       .from("push_tokens")
-    //       .insert({
-    //         user_id: user.id,
-    //         expo_push_token: expoPushToken,
-    //         platform: Platform.OS, // "ios" or "android"
-    //       });
-
-    //     if (upsertError) {
-    //       console.log("Error saving push token:", upsertError);
-    //       Alert.alert("Error", "Could not save push notification token.");
-    //       return;
-    //     }
-
-    //     Alert.alert("Done", "This device is registered for push notifications.");
-    //   } catch (err) {
-    //     console.log("Unexpected error registering push token:", err);
-    //     Alert.alert("Error", "Something went wrong setting up notifications.");
-    //   }
+      if (data?.ok) {
+        Alert.alert("Notification sent", "Check the top of your screen for a push alert.");
+      } else {
+        Alert.alert(
+          "No subscription",
+          "We couldn't find a registered push subscription for this user yet."
+        );
+      }
+    } catch (err) {
+      console.log("Error calling notify-nearby-store:", err);
+      Alert.alert("Error", "Something went wrong while sending the notification.");
+    }
   };
 
   useEffect(() => {
@@ -100,7 +70,6 @@ export default function Discover() {
     })();
   }, []);
 
-  // Animate route drawing from start to end
   useEffect(() => {
     if (!routeGeoJSON?.coordinates?.length) return;
     const durationMs = 1800;
@@ -381,7 +350,7 @@ export default function Discover() {
                     <Text className="text-xs text-orange-500 ml-0.5 font-poppins">4.9</Text>
                   </View>
 
-                  <TouchableOpacity className="bg-orange-500/10 px-3 py-1.5 rounded-xl ">
+                  <TouchableOpacity className="bg-orange-500/10 px-3 py-1.5 rounded-xl" onPress={getToken}>
                     <Text className="text-xs text-orange-500 font-poppins-semibold">Details</Text>
                   </TouchableOpacity>
                 </View>
