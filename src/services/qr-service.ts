@@ -100,11 +100,14 @@ export function listenToQRTransaction(userId: string, onScanned: (transaction: Q
       event: 'INSERT',  
       schema: 'public',
       table: 'qr_transactions',
-      filter: `user_id=eq.${userId}`
+      // filter: `user_id=eq.${userId}`  // Temporarily removed for testing
     }, (payload) => {
       console.log("Realtime triggered:", payload);
       const newRow = payload.new as QRTransaction;
-      onScanned(newRow);
+      // Only process if it's for this user
+      if (newRow.user_id === userId) {
+        onScanned(newRow);
+      }
     })
     .subscribe((status) => {
       console.log(`Customer QR listener status for user ${userId}:`, status);
