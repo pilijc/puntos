@@ -72,8 +72,24 @@ Once both finish, continue to the next step.
 
 ### 5. Connect your Android device or emulator
 
-- **USB device:** enable Developer options and USB debugging, then connect.
-- **Emulator:** start an AVD from Android Studio.
+**Option A — USB:** Enable Developer options and USB debugging, then connect the device with a cable.
+
+**Option B — Wireless (Wi‑Fi debugging):** Ensure your laptop and Android device are on the **same Wi‑Fi network**, then:
+
+1. Connect the device once via USB and enable USB debugging.
+2. Run:
+   ```bash
+   adb tcpip 5555
+   adb connect <device-ip>:5555
+   ```
+   Replace `<device-ip>` with the device’s IP (Settings → About phone → Status, or Developer options → Wireless debugging).
+3. Unplug the USB cable. The device stays connected over Wi‑Fi.
+4. For later sessions on the same network, you can run only:
+   ```bash
+   adb connect <device-ip>:5555
+   ```
+
+**Emulator:** Start an AVD from Android Studio.
 
 Verify connection:
 
@@ -117,5 +133,6 @@ If Metro asks to use a different port, choose **No** (`n`) so it keeps using the
 - **Do not press `a`** in the Docker Metro terminal to run Android — that would try to run the build inside the container, which cannot see your device.
 - **Android build/install** is done on the **host** via `npm run android` and ADB.
 - **Reinstall the app** (e.g. `npm run android` or reinstall APK) only when you change native code or add new native dependencies; JS-only changes are served by Metro.
+- **Wireless debugging:** Device and laptop must be on the **same Wi‑Fi network** for Wi‑Fi ADB to work.
 
 ---
