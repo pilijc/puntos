@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { Animated, Easing, StatusBar, StyleSheet, View, Alert } from "react-native";
 import { supabase } from "@/supabase/supabase";
 import React from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useAuthListener } from "@/hooks/auth-listener";
 import { useAnimatedStyle, useSharedValue, withRepeat, withSequence, withTiming } from "react-native-reanimated";
 import { Image } from "@/tw";

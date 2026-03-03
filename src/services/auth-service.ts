@@ -69,7 +69,8 @@ export default async function signUpService(email: string, password: string, nam
       if (!existingProfile) {
         await supabase.from("users").insert({ id: data.user.id, name });
       }
-    }else if (error) {
+    }
+    if (error) {
       throw error;
     }
     return { ...data, homeRoute};

@@ -17,12 +17,19 @@ export function useAuthListener() {
           router.replace("/reset-password");
         } else if (event === 'SIGNED_IN' && session) {
           console.log("User logged in:", session.user.email);
+          void (async () => {
 
           try {
             // Save session token if missing
             const sessionToken = await AsyncStorage.getItem('sessionToken');
             if (!sessionToken && session.access_token) {
               await AsyncStorage.setItem('sessionToken', session.access_token);
+            }
+
+            const tokenToUse = sessionToken ?? session.access_token ?? null;
+            if (!tokenToUse) {
+              console.log('No session token found in AsyncStorage or session; staying on auth screens.');
+              return;
             }
 
             // Verify account is not deleted
