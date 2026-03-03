@@ -152,7 +152,7 @@ export async function loginService(email: string, password: string) {
 export async function resetPasswordService(email: string) {
   try {
     const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: 'puntosapp://reset-password',
+      redirectTo: 'puntos://reset-password',
     });
     if (error) {
       throw error;
