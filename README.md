@@ -21,7 +21,7 @@ Docker cannot access USB devices on Windows, so the Android app is built and ins
 - **Java 17** — [Oracle JDK 17](https://www.oracle.com/java/technologies/javase/jdk17-archive-downloads.html) (required for Android build)
 - **ADB** — Android Debug Bridge (for devices/emulators)
   - Ubuntu: `sudo apt install adb`
-- **Ubuntu** — clone and run the project on Ubuntu (native or WSL2 on Windows).
+- **Ubuntu** — clone and run the project on Ubuntu (native or WSL2 on Windows). [Download Ubuntu](https://ubuntu.com/download)
 
 ---
 
@@ -42,7 +42,7 @@ cd puntos
 docker build -t puntos .
 ```
 
-### 3. Start Metro inside Docker (Terminal 1 — keep running)
+### 3. Start Metro inside Docker (Terminal 1 — keep this running)
 
 ```bash
 docker run --rm -it \
@@ -53,7 +53,7 @@ docker run --rm -it \
   puntos
 ```
 
-### 4. Install dependencies
+### 4. Install dependencies ( Terminal + Docker Container Exec )
 
 **Inside the container** (Docker Desktop → container → Exec, or from a new terminal):
 
@@ -89,15 +89,30 @@ Once both finish, continue to the next step.
    adb connect <device-ip>:5555
    ```
 
-**Emulator:** Start an AVD from Android Studio.
+**Option C – Emulator:** You can use the Android Emulator instead of a physical device.
 
-Verify connection:
+1. **Install Android Studio:**  
+   [Download Android Studio](https://developer.android.com/studio) and install it on your host machine (not inside Docker).
 
-```bash
-adb devices
-```
+2. **Set up an AVD (Android Virtual Device):**  
+   - Open Android Studio.
+   - Go to **Tools > Device Manager** (or **Configure > AVD Manager** on some versions).
+   - Click **Create Device...**.
+   - Choose a device definition (e.g., Pixel 5), and click **Next**.
+   - Select a system image (e.g., "R" or "Tiramisu" for Android 13), then **Download** if necessary, and click **Next**.
+   - Adjust AVD settings if needed, then click **Finish**.
 
-You should see your device or emulator listed (e.g. `10AF9Y0MJE002RT device`).
+3. **Launch your emulator:**  
+   - In the Device Manager/AVD Manager, click the **Play** ▶️ button next to your AVD to start it.
+   - Wait for the emulator to fully boot (home screen appears).
+
+4. **Verify connection:**  
+   In a terminal on your host, run:
+   ```bash
+   adb devices
+   ```
+   You should see your emulator listed (e.g., `emulator-5554 device`).  
+   If not, make sure adb is installed and in your PATH, and that the emulator is running.
 
 ### 6. Install and run the app (Terminal 2 — from host)
 
@@ -108,6 +123,18 @@ npm run android
 ```
 
 If Metro asks to use a different port, choose **No** (`n`) so it keeps using the port exposed by Docker.
+
+---
+
+## Environment Variables
+
+1. **Create your env file from the example:**
+
+   ```bash
+   cp .env.example .env
+   ```
+
+2. **Restart Metro / the app** after changing `.env` so Expo picks up the new values.
 
 ---
 
@@ -136,3 +163,23 @@ If Metro asks to use a different port, choose **No** (`n`) so it keeps using the
 - **Wireless debugging:** Device and laptop must be on the **same Wi‑Fi network** for Wi‑Fi ADB to work.
 
 ---
+
+## Sample Accounts
+
+Use these test accounts to explore different roles in the app:
+
+- **Super Admin**
+  - Email: `kaelzerefp@gmail.com`
+  - Password: `Password123$`
+
+- **Store Manager / Owner**
+  - Email: `joelchandlerpili111@gmail.com`
+  - Password: `Password123$`
+
+- **Front-desk**
+  - Email: `joelchandlerp@gmail.com`
+  - Password: `Password123$`
+
+- **User**
+  - Email: `user@mail.com`
+  - Password: `password`
