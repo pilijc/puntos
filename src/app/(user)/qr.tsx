@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, useColorScheme, Alert } from 'react-native';
+import { ActivityIndicator, useColorScheme, Alert, Vibration } from 'react-native';
 import { SafeAreaView, View, Text, TouchableOpacity } from '@/tw';
 
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
@@ -60,7 +60,11 @@ export default function Qr() {
     // Listen to transactions
     const channel = listenToQRTransaction(currentUser.id, (transaction) => {
       console.log('Customer side: QR transaction received!', transaction);
-      Alert.alert('QR Transaction', `You received ${transaction.points_earned} points!`);
+      // Add vibration for celebration
+      Vibration.vibrate(500);
+      Alert.alert('🎉 Congratulations!', `You just earned ${transaction.points_earned} points!`, [
+        { text: 'Awesome!' }
+      ]);
     });
 
     return channel;

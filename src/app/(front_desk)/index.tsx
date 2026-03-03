@@ -31,8 +31,8 @@ export default function FrontDeskScan() {
 
       if (result.success) {
         Alert.alert(
-          "Success!",
-          `Customer QR scanned successfully. Transaction ID: ${result.transactionId}`,
+          "✅ Success!",
+          `Points awarded to customer!\nTransaction ID: ${result.transactionId}`,
           [
             {
               text: "Scan Another",
