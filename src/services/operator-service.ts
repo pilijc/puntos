@@ -2,7 +2,7 @@ import { supabase } from "@/supabase/supabase";
 import { parseQRCode, createQRTransaction } from "@/services/qr-service";
 import { FrontDeskScanResult, ScanResult } from "@/type/qr-transaction";
 
- 
+ /*
 export async function scanQRCode(
   qrId: string,
   operatorId: string,
@@ -10,7 +10,7 @@ export async function scanQRCode(
   pointsEarned: number
 ): Promise<ScanResult> {
  
-  // 1. Fetch QR code
+  // 1. Fetch QR codes table
   const { data: qrData, error: fetchError } = await supabase
     .from("qr_codes")
     .select("*")
@@ -60,7 +60,7 @@ export async function scanQRCode(
   }
 
   return { success: true, message: "QR scanned successfully", pointsEarned };
-}
+} */
 
 /**
  * Process a front desk scan from raw QR code data
