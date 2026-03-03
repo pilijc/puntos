@@ -2,7 +2,8 @@ import { supabase } from "@/supabase/supabase";
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
 import { Alert } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { getHomeRouteForUserId } from "@/services/access-service";
+import { getHomeRouteForUserId } from "./access-service";
+import { router } from "expo-router";
 
 /**
  * Custom error thrown when an account has been marked as deleted.
@@ -146,7 +147,6 @@ export async function signUpWithGoogleService() {
 export async function loginService(email: string, password: string) {
   try {
     const res = await supabase.auth.signInWithPassword({ email, password });
-    console.log("res", res);
     if (res.data?.session?.access_token) {
       await AsyncStorage.setItem('sessionToken', res.data.session.access_token);
     }
