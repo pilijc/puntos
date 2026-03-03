@@ -150,6 +150,7 @@ export default function SignUp() {
       Alert.alert("Success", "Account created!");
       router.replace(data.homeRoute ?? "/(user)");
     } catch (error: any) {
+      setLoadingGoogle(false);
       reset();
       const message =
         error?.msg ??

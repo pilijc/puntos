@@ -61,11 +61,11 @@ export default function Login() {
     try {
       setLoadingGoogle(true);
       const data = await signInWithGoogleLoginService();
-      console.log("data", data);
       router.replace(data.homeRoute ?? "/(user)");
+      setLoadingGoogle(false);
     } catch (error: any) {
       const message = error?.message ?? "Something went wrong";
-      setErrors({ email: "", password: message });
+      setErrors({ ...errors, password: message });
     } finally {
       setLoadingGoogle(false);
     }
