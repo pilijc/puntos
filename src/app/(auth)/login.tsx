@@ -124,11 +124,6 @@ export default function Login() {
                     onChangeText={setEmail}
                     value={email}
                   />
-                  {errors.email ? (
-                    <Text className="mt-2 text-sm font-poppins text-red-500">
-                      {errors.email}
-                    </Text>
-                  ) : null}
                 </View>
 
                 <View className="w-full">
@@ -170,12 +165,12 @@ export default function Login() {
                       </TouchableOpacity>
                     </View>
                   </View>
-                  {errors.password ? (
-                    <Text className="mt-2 text-sm font-poppins text-red-500 text-center bg-red-50 rounded-xl p-4">
-                      {errors.password}
-                    </Text>
-                  ) : null}
                 </View>
+                {errors.password || errors.email && (
+                    <Text className="mt-2 text-sm font-poppins text-red-500 text-center bg-red-50 rounded-xl p-4 w-full">
+                      {errors.password || errors.email}
+                    </Text>
+                )}
               </View>
 
               <TouchableOpacity className="bg-primary py-4 rounded-xl items-center w-full max-w-md" onPress={handleLogin}>
