@@ -44,7 +44,7 @@ export async function generateQRCode(userId: string, expiryHours: number = 1) {
 
 // New Static QR Code Functions
 export function getStaticQRCode(userId: string): string {
-   
+
   return `puntos:user:${userId}`;
 }
 
@@ -62,16 +62,16 @@ export function parseQRCode(qrValue: string): { type: string; userId: string } |
 export async function createQRTransaction(
   userId: string,
   storeStaffId: string,
-  pointsAwarded: number = 0
+  pointsAwarded: number = 20
 ): Promise<QRTransaction> {
   const { data, error } = await supabase
-    .from('qr-transactions')
+    .from('qr_transactions')
     .insert([
       {
         user_id: userId,
         store_staff_id: storeStaffId,
-        scanned_at: new Date().toISOString(),
-        points_awarded: pointsAwarded,
+        created_at: new Date().toISOString(),
+        points_earned: pointsAwarded,
       },
     ])
     .select('*')

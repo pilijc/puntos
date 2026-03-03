@@ -5,13 +5,14 @@ import { getHomeRouteForUserId } from '@/services/access-service';
 import { checkIfAccountDeletedService, AccountDeletedError } from '@/services/auth-service';
 import { Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useAuthStore } from '@/store/auth-store';
 
 export function useAuthListener() {
   const router = useRouter();
 
-  useEffect( () => {
+  useEffect(() => {
     const { data: listener } = supabase.auth.onAuthStateChange(
-      async (event, session) => {        
+      async (event, session) => {
         if (event === 'PASSWORD_RECOVERY' && session) {
           console.log("Password recovery session started for:", session.user.email);
           router.replace("/reset-password");

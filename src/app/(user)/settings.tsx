@@ -1,146 +1,71 @@
-import { supabase } from "@/supabase/supabase";
-import { View, Text, SafeAreaView, TouchableOpacity, Image } from "@/tw";
-import { router, useFocusEffect } from "expo-router";
+import { View, Text, SafeAreaView, TouchableOpacity } from "@/tw";
+import { useFocusEffect } from "expo-router";
 import React, { useState, useCallback } from "react";
-import { Alert, Switch, Linking } from "react-native";
-import EditProfileModal from "@/components/settings/EditProfileModal";
-import SecurityModal from "@/components/settings/SecurityModal";
-import StoreOwnerModal from "@/components/settings/StoreOwnerModal";
+import { Alert, Switch, Linking, useColorScheme } from "react-native";
 import { Ionicons } from '@expo/vector-icons';
+
+// Hooks
 import { useLocation } from "@/hooks/use-location";
 import { getCurrentLocation } from "@/services/location-service";
-import {
-  getUserProfileService,
-  getUserSettingsService,
-  updateUserSettingsService,
-  syncLocationService,
-  updateUserProfileService
-} from "@/services/settings-service";
+import { useProfile } from "@/hooks/use-profile";
+import { useAuthActions } from "@/hooks/use-authActions";
+
+// Components
 import DarkModeToggle from "@/components/ui/dark-mode-toggle";
+import EditProfileModal from "@/components/settings/EditProfileModal";
+import SecurityModal from "@/components/settings/SecurityModal";
+import { LogoutButton } from "@/components/settings/LogoutButton";
+import { UserProfileCard } from "@/components/settings/UserProfileCard";
 
-export default function Settings() {
+// Services (Used for background tasks like location sync)
+import { syncLocationService } from "@/services/settings-service";
 
-  const [user, setUser] = useState<any>(null);
-  const [profile, setProfile] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-
+/**
+ * User Settings Screen
+ * Allows regular users to manage their profile, security, and notification preferences.
+ */
+export default function UserSettings() {
+  // Modal State Management
   const [modalVisible, setModalVisible] = useState(false);
-  const [editUsername, setEditUsername] = useState("");
-  const [editEmail, setEditEmail] = useState("");
   const [securityModalVisible, setSecurityModalVisible] = useState(false);
-  const [storeModalVisible, setStoreModalVisible] = useState(false);
 
-  const [isEnabled, setIsEnabled] = useState(false);
-  const toggleSwitch = () => setIsEnabled(previousState => !previousState);
-
+  // Profile and Preferences Hook
   const {
-    location,
+    user,
+    profile,
+    loading,
+    preferences,
+    updatePreferences,
+    updateProfile,
+    refreshProfile
+  } = useProfile();
+
+  // Location Hook for permissions and data
+  const {
     permissionStatus,
     loading: locationLoading,
     requestPermission: requestLocationPermission,
-    refreshLocation,
   } = useLocation();
 
+  // Refresh data when screen comes into focus
   useFocusEffect(
     useCallback(() => {
-      loadUserProfile();
+      refreshProfile();
     }, [])
   );
 
-  const loadUserProfile = async () => {
-    setLoading(true);
-    try {
-      const { data: { user: currentUser }, error: userErr } = await supabase.auth.getUser();
-
-      if (userErr) {
-        throw userErr;
-      }
-
-      if (!currentUser) {
-        setUser(null);
-        setProfile(null);
-        return;
-      }
-
-      setUser(currentUser);
-
-      let profileData = null;
-      let profileErr = null;
-
-      try {
-        profileData = await getUserProfileService(currentUser.id);
-      } catch (e) {
-        profileData = null;
-        profileErr = e as any;
-      }
-
-      if (profileErr) {
-      }
-
-      if (profileData) {
-        if (profileData.id === currentUser.id) {
-          setProfile(profileData);
-        } else {
-          setProfile(null);
-        }
-      } else {
-        setProfile(null);
-      }
-
-      try {
-        const settingsData = await getUserSettingsService(currentUser.id);
-
-        if (settingsData) {
-          setPreferences({
-            near_store_notifications: settingsData.near_store_notifications ?? false,
-            location_enabled: settingsData.location_enabled ?? false,
-            promo_emails: preferences.promo_emails, // default
-          });
-        }
-      } catch (settingsErr) {
-        console.error("Error fetching settings:", settingsErr);
-      }
-
-    } catch (error) {
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleLogout = async () => {
-    try {
-      await supabase.auth.signOut();
-      router.replace("/(onboarding)/welcome");
-    } catch (error) {
-      Alert.alert("Logout error", error.message);
-    }
-  };
-
-  const handleProfilePress = () => {
-    setEditUsername(profile?.name || user.email?.split("@")[0] || "");
-    setEditEmail(user?.email || "");
-    setModalVisible(true);
-  };
-
-  const [preferences, setPreferences] = useState({
-    near_store_notifications: false,
-    location_enabled: false,
-    promo_emails: false,
-  });
-
+  /**
+   * Helper to toggle preferences using the consolidated updatePreferences function
+   * @param key The preference key to toggle
+   */
   const togglePreference = async (key: string) => {
     const newValue = !(preferences as any)[key];
-    setPreferences(prev => ({ ...prev, [key]: newValue }));
-
-    if (!user?.id) return;
-
-    try {
-      await updateUserSettingsService(user.id, { [key]: newValue });
-    } catch (e) {
-      console.error("Failed to save preference", e);
-    }
+    await updatePreferences({ [key]: newValue });
   };
 
+  /**
+   * Background effect to sync location to DB if enabled
+   */
   React.useEffect(() => {
     let intervalId: NodeJS.Timeout;
 
@@ -158,45 +83,48 @@ export default function Settings() {
 
     if (preferences.location_enabled) {
       syncLocationToDB();
-
-      intervalId = setInterval(() => {
-        syncLocationToDB();
-      }, 60000);
+      intervalId = setInterval(syncLocationToDB, 60000);
     }
 
     return () => {
-      if (intervalId) {
-        clearInterval(intervalId);
-      }
+      if (intervalId) clearInterval(intervalId);
     };
   }, [preferences.location_enabled, user?.id]);
 
-  const handleSaveProfile = async () => {
-    try {
-      const { data: { user: currentUser } } = await supabase.auth.getUser();
-      if (!currentUser?.id) throw new Error("No authenticated user");
+  // --- EDIT PROFILE LOGIC ---
 
-      await updateUserProfileService(currentUser.id, { name: editUsername });
+  /**
+   * Triggers the edit profile modal
+   */
+  const handleProfilePress = () => {
+    setModalVisible(true);
+  };
 
-      setProfile(prev => ({ ...(prev || {}), name: editUsername }));
-      setModalVisible(false);
+  /**
+   * Handles saving profile updates from the modal
+   */
+  const handleSaveProfile = async (newName: string, _newEmail: string) => {
+    const result = await updateProfile(newName);
+    if (result.success) {
       Alert.alert("Success", "Profile updated successfully");
-    } catch (err: any) {
-      Alert.alert("Error", err.message || "Failed to save profile");
+    } else {
+      throw new Error("Failed to update profile");
     }
   };
+  // ---------------------------
 
-  const handleCancelEdit = () => {
-    setModalVisible(false);
-  };
-
-  const displayName = user
-    ? (profile?.name || user.email?.split("@")[0] || "User")
-    : "Settings";
-
+  // Show loading skeleton until profile is ready
+  if (loading && !user) {
+    return (
+      <SafeAreaView className="flex-1 bg-background dark:bg-neutral-900 justify-center items-center">
+        <Text className="text-neutral-500 font-poppins-regular">Loading profile...</Text>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView className="flex-1 bg-background dark:bg-neutral-900 p-4">
+      {/* Header with Dark Mode Toggle */}
       <View className="flex-row justify-between items-center mb-6">
         <Text className="text-2xl font-poppins-bold text-neutral-900 dark:text-white">
           Settings
@@ -204,41 +132,16 @@ export default function Settings() {
         <DarkModeToggle />
       </View>
 
-      {user && (!profile || profile?.id === user.id) && (
-        <TouchableOpacity
+      {/* User Info Card - Triggers Edit Modal */}
+      {user && (
+        <UserProfileCard
+          user={user}
+          profile={profile}
           onPress={handleProfilePress}
-          className="mx-4 mb-6 bg-white dark:bg-neutral-800 rounded-2xl p-4 border border-neutral-200 dark:border-neutral-700 active:bg-neutral-50 dark:active:bg-neutral-700"
-        >
-          <View className="flex-row items-center">
-            <View className="w-16 h-16 rounded-full bg-primary items-center justify-center mr-4">
-              {profile?.avatar_url ? (
-                <Image
-                  source={{ uri: profile.avatar_url }}
-                  className="w-16 h-16 rounded-full"
-                  contentFit="cover"
-                />
-              ) : (
-                <Image
-                  source={require("@/assets/images/puntos-icon.png")}
-                  className="w-16 h-16 rounded-full"
-                  contentFit="cover"
-                />
-              )}
-            </View>
-            <View className="flex-1">
-              <Text className="text-lg font-poppins-semibold text-neutral-900 dark:text-white">
-                {profile?.name || user.email?.split("@")[0]}
-              </Text>
-              <Text className="text-sm font-poppins-regular text-neutral-500 dark:text-neutral-400">
-                {user.email}
-              </Text>
-            </View>
-            <Ionicons name="chevron-forward-outline" size={15} color="#d4d4d4" />
-          </View>
-        </TouchableOpacity>
+        />
       )}
 
-
+      {/* Account Section */}
       <View>
         <Text className="text-sm font-poppins-semibold text-neutral-600 dark:text-neutral-400 mb-2">
           ACCOUNT SETTINGS
@@ -248,7 +151,7 @@ export default function Settings() {
       <View className="mx-4 mb-6 overflow-hidden bg-background rounded-2xl border border-neutral-200 dark:border-neutral-700">
         <TouchableOpacity
           onPress={() => setSecurityModalVisible(true)}
-          className="flex-row items-center p-4 bg-white dark:bg-neutral-800 active:bg-neutral-50 dark:active:bg-neutral-700 will-change-pressable border-b border-neutral-100 dark:border-neutral-700">
+          className="flex-row items-center p-4 bg-white dark:bg-neutral-800 active:bg-neutral-50 dark:active:bg-neutral-700 will-change-pressable">
           <View className="h-5 w-5 items-center justify-center rounded-lg bg-emerald-50">
             <Ionicons name="settings-outline" size={15} color="#3b82f6" />
           </View>
@@ -257,21 +160,9 @@ export default function Settings() {
           </Text>
           <Ionicons name="chevron-forward-outline" size={15} color="#d4d4d4" />
         </TouchableOpacity>
-
-        <TouchableOpacity
-          onPress={() => setStoreModalVisible(true)}
-          className="flex-row items-center p-4 bg-white dark:bg-neutral-800 active:bg-neutral-50 dark:active:bg-neutral-700 will-change-pressable"
-        >
-          <View className="h-5 w-5 items-center justify-center rounded-lg bg-emerald-50">
-            <Ionicons name="help-outline" size={15} color="#10b981" />
-          </View>
-          <Text className="text-base flex-1 ml-3 font-poppins-semibold text-neutral-900 dark:text-white">
-            Role
-          </Text>
-          <Ionicons name="chevron-forward-outline" size={15} color="#d4d4d4" />
-        </TouchableOpacity>
       </View>
 
+      {/* Preferences Section */}
       <View>
         <Text className="text-sm font-poppins-semibold text-neutral-600 dark:text-neutral-400 mb-2">
           NOTIFICATIONS & PRIVACY
@@ -279,7 +170,8 @@ export default function Settings() {
       </View>
 
       <View className="mx-4 mb-6 overflow-hidden bg-background rounded-2xl border border-neutral-200 dark:border-neutral-700">
-        <View className="flex-row p-4 bg-white dark:bg-neutral-800 active:bg-neutral-50 dark:active:bg-neutral-700 items-center will-change-pressable border border-neutral-100 dark:border-neutral-700">
+        {/* Nearby Alerts Switch */}
+        <View className="flex-row p-4 bg-white dark:bg-neutral-800 border-b border-neutral-100 dark:border-neutral-700 items-center">
           <View className="h-8 w-8 items-center justify-center rounded-lg bg-orange-50">
             <Ionicons name="notifications-outline" size={18} color="#FF6600" />
           </View>
@@ -299,6 +191,7 @@ export default function Settings() {
           />
         </View>
 
+        {/* Location Permission Toggle */}
         <TouchableOpacity
           onPress={async () => {
             if (preferences.location_enabled) {
@@ -306,10 +199,7 @@ export default function Settings() {
                 "Disable Location Access",
                 "To completely revoke location permissions, you must disable the setting in your device's settings menu. Would you like to open it now?",
                 [
-                  {
-                    text: "Cancel",
-                    style: "cancel",
-                  },
+                  { text: "Cancel", style: "cancel" },
                   {
                     text: "Open Settings",
                     onPress: () => {
@@ -326,7 +216,7 @@ export default function Settings() {
               togglePreference('location_enabled');
             }
           }}
-          className="flex-row p-4 bg-white dark:bg-neutral-800 active:bg-neutral-50 dark:active:bg-neutral-700 items-center will-change-pressable border border-neutral-100 dark:border-neutral-700"
+          className="flex-row p-4 bg-white dark:bg-neutral-800 border-b border-neutral-100 dark:border-neutral-700 items-center will-change-pressable"
         >
           <View className="h-8 w-8 items-center justify-center rounded-lg bg-yellow-50">
             <Ionicons name="location-outline" size={18} color="#d8d336" />
@@ -336,14 +226,10 @@ export default function Settings() {
               Location Access
             </Text>
             <Text className="text-xs font-poppins-regular text-neutral-400 dark:text-neutral-500">
-              {locationLoading
-                ? "Checking..."
-                : permissionStatus.granted
-                  ? "Device Access Granted"
-                  : "Device Access Not Allowed"}
+              {locationLoading ? "Checking..." : permissionStatus.granted ? "Access Granted" : "Access Denied"}
             </Text>
           </View>
-          <View className="flex-row items-center justify-center">
+          <View className="flex-row items-center">
             <Text className="text-sm font-poppins-semibold text-primary mr-2">
               {preferences.location_enabled ? 'Enabled' : 'Disabled'}
             </Text>
@@ -351,7 +237,8 @@ export default function Settings() {
           </View>
         </TouchableOpacity>
 
-        <View className="flex-row p-4 bg-white dark:bg-neutral-800 active:bg-neutral-50 dark:active:bg-neutral-700">
+        {/* Promo Emails Switch */}
+        <View className="flex-row p-4 bg-white dark:bg-neutral-800 items-center">
           <View className="h-8 w-8 items-center justify-center rounded-lg bg-pink-50">
             <Ionicons name="megaphone-outline" size={18} color="#ad2291" />
           </View>
@@ -367,62 +254,27 @@ export default function Settings() {
             onValueChange={() => togglePreference('promo_emails')}
           />
         </View>
-
       </View>
 
-      <TouchableOpacity
-        onPress={handleLogout}
-        className="mx-4 bg-primary py-4 rounded-xl items-center flex-row will-change-pressable justify-center border border-neutral-100 dark:border-neutral-700"
-      >
-        <View className="h-5 w-5 items-center">
-          <Ionicons name="log-out-outline" size={15} color="#FFFFFF" />
-        </View>
-        <Text className="text-white text-base font-poppins-semibold">
-          Logout
-        </Text>
-      </TouchableOpacity>
+      <LogoutButton />
 
+      {/* Footer */}
       <View className="mx-8 mt-6 items-center">
         <Text className="text-sm text-center font-poppins-regular text-neutral-500 dark:text-neutral-400">
           Copyright 2026
         </Text>
       </View>
 
+      {/* Modals */}
       <EditProfileModal
         visible={modalVisible}
-        onClose={handleCancelEdit}
-        username={editUsername}
-        email={editEmail}
-        setUsername={setEditUsername}
-        setEmail={setEditEmail}
+        onClose={() => setModalVisible(false)}
+        initialUsername={profile?.name || user?.email?.split("@")[0] || ""}
+        initialEmail={user?.email || ""}
         onSave={handleSaveProfile}
       />
 
       <SecurityModal visible={securityModalVisible} onClose={() => setSecurityModalVisible(false)} />
-
-      <StoreOwnerModal
-        visible={storeModalVisible}
-        onClose={() => setStoreModalVisible(false)}
-        role={profile?.role}
-        onToggleRole={async () => {
-          try {
-            const { data: { user: currentUser } } = await supabase.auth.getUser();
-            if (!currentUser?.id) throw new Error("No authenticated user");
-            const newRole = profile?.role === "store_owner" ? "user" : "store_owner";
-
-            await updateUserProfileService(currentUser.id, { role: newRole });
-
-            setProfile(prev => ({ ...(prev || {}), role: newRole }));
-
-            setStoreModalVisible(false);
-            Alert.alert("Success", `Role updated to ${newRole}`);
-          } catch (err: any) {
-            Alert.alert("Error", err.message || "Failed to change role");
-          }
-        }}
-      />
-
-
     </SafeAreaView>
   );
 }
