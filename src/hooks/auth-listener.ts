@@ -5,6 +5,7 @@ import { getHomeRouteForUserId } from '@/services/access-service';
 import { checkIfAccountDeletedService, AccountDeletedError } from '@/services/auth-service';
 import { Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useAuthStore } from '@/store/auth-store';
 
 export function useAuthListener() {
   const router = useRouter();

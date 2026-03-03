@@ -53,7 +53,7 @@ export async function addAutoUser(){
 
 // New Static QR Code Functions
 export function getStaticQRCode(userId: string): string {
-   
+
   return `puntos:user:${userId}`;
 }
 
@@ -71,7 +71,7 @@ export function parseQRCode(qrValue: string): { type: string; userId: string } |
 export async function createQRTransaction(
   userId: string,
   storeStaffId: string,
-  pointsAwarded: number = 0
+  pointsAwarded: number = 20
 ): Promise<QRTransaction> {
   const { data, error } = await supabase
     .from('qr_transactions')
