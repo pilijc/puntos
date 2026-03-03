@@ -1,4 +1,3 @@
-import { supabase } from "@/supabase/supabase";
 import {
   View,
   Text,
@@ -9,11 +8,10 @@ import {
   Image,
 } from "@/tw";
 import { router } from "expo-router";
-import React from "react";
-import { Alert, KeyboardAvoidingView, Platform } from "react-native";
+import React, { useState } from "react";
+import { ActivityIndicator, KeyboardAvoidingView, Platform } from "react-native";
 import { useAuthStore } from "../../store/auth-store";
 import { Feather, Ionicons } from "@expo/vector-icons";
-import { getHomeRouteForUserId } from "@/services/access-service";
 import { loginService, signInWithGoogleLoginService } from "@/services/auth-service";
 
 export default function Login() {
@@ -46,11 +44,14 @@ export default function Login() {
     try {
       setLoading(true);
       const data = await loginService(trimmedEmail, password);
+      console.log("login component", data);
       router.replace(data.homeRoute ?? "/(user)");
-      setLoading(false);
     } catch (error: any) {
-      const message = error?.message ?? "Something went wrong";
-      setErrors({ ...errors, password: message });
+      console.log("error login component", error);
+      const message =
+        error?.msg ??
+        (typeof error?.message === "string" ? error.message : "Invalid login credentials");
+      setErrors({ email: "", password: message });
     } finally {
       setLoading(false);
     }
@@ -72,7 +73,7 @@ export default function Login() {
 
   return (
     <SafeAreaView className="flex-1 bg-background">
-      <View className="flex-row items-center justify-center mb-6 shadow-xs p-4">
+      <View className="flex-row items-center justify-center shadow-xs p-4 bg">
         <TouchableOpacity
           onPress={() => router.back()}
           hitSlop={10}
@@ -83,7 +84,7 @@ export default function Login() {
           <Text className="text-xl font-poppins-bold text-neutral-900">Login</Text>
         </View>
       </View>
-      <View className="flex-1 justify-center p-6">
+      <View className="flex-1 justify-start p-4">
         <KeyboardAvoidingView
           behavior={Platform.OS === "android" ? "padding" : "height"}
           className="bg-blue-50"
@@ -92,11 +93,11 @@ export default function Login() {
             contentContainerStyle={{ flexGrow: 1 }}
             keyboardShouldPersistTaps="handled"
           >
-            <View className="flex-1 gap-y-4">
+            <View className="flex-1 gap-y-4 px-2">
               <View className="items-center justify-center">
                 <Image
                   source={require("../../assets/images/puntos-icon.png")}
-                  className="w-24 h-24"
+                  className="w-16 h-16"
                 />
               </View>
               <View className="gap-y-4 w-full items-center">
@@ -123,6 +124,11 @@ export default function Login() {
                     onChangeText={setEmail}
                     value={email}
                   />
+                  {errors.email ? (
+                    <Text className="mt-2 text-sm font-poppins text-red-500">
+                      {errors.email}
+                    </Text>
+                  ) : null}
                 </View>
 
                 <View className="w-full">
@@ -164,13 +170,24 @@ export default function Login() {
                       </TouchableOpacity>
                     </View>
                   </View>
+                  {errors.password ? (
+                    <Text className="mt-2 text-sm font-poppins text-red-500 text-center bg-red-50 rounded-xl p-4">
+                      {errors.password}
+                    </Text>
+                  ) : null}
                 </View>
               </View>
 
               <TouchableOpacity className="bg-primary py-4 rounded-xl items-center w-full max-w-md" onPress={handleLogin}>
-                <Text className="text-white text-base font-poppins-semibold">
-                  Login
-                </Text>
+                {loading ? (
+                  <ActivityIndicator size="small" color="white" />
+                ) : (
+                  <>
+                    <Text className="text-white text-base font-poppins-semibold">
+                      Login
+                    </Text>
+                  </>
+                )}
               </TouchableOpacity>
 
               <View className="flex-row items-center gap-x-4 w-full max-w-md">
@@ -185,13 +202,19 @@ export default function Login() {
                 onPress={handleSignInWithGoogle}
                 className="rounded-xl p-4 border border-neutral-200 flex-row items-center justify-center gap-x-3 w-full max-w-md"
               >
-                <Image
-                  source={require("../../assets/images/google-icon.png")}
-                  className="w-5 h-5"
-                />
-                <Text className="font-poppins-medium text-neutral-700">
-                  Continue with Google
-                </Text>
+                {loadingGoogle ? (
+                  <ActivityIndicator size="small" color="gray" />
+                ) : (
+                  <>
+                    <Image
+                      source={require("../../assets/images/google-icon.png")}
+                      className="w-5 h-5"
+                    />
+                    <Text className="font-poppins-medium text-neutral-700">
+                      Continue with Google
+                    </Text>
+                  </>
+                )}
               </TouchableOpacity>
 
               <View className="flex-row justify-center items-center w-full">

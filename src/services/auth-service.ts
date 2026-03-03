@@ -4,7 +4,6 @@ import { Alert } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { getHomeRouteForUserId } from "./access-service";
 import { router } from "expo-router";
-import { getHomeRouteForUserId } from "@/services/access-service";
 
 /**
  * Custom error thrown when an account has been marked as deleted.
@@ -53,7 +52,8 @@ GoogleSignin.configure({
 });
 
 export default async function signUpService(email: string, password: string, name: string) {
-  const { data, error } = await supabase.auth.signUp({ email, password });
+  try {
+    const { data, error } = await supabase.auth.signUp({ email, password });
 
     if (data?.session?.access_token) {
       await AsyncStorage.setItem('sessionToken', data.session.access_token);
@@ -76,10 +76,15 @@ export default async function signUpService(email: string, password: string, nam
   } catch (error) {
     throw error;
   }
-
-  return data;
 }
 
+
+export class GoogleSignInCancelledError extends Error {
+  constructor() {
+    super("Sign in cancelled");
+    this.name = "GoogleSignInCancelled";
+  }
+}
 
 export async function signUpWithGoogleService() {
   try {
@@ -130,6 +135,8 @@ export async function signUpWithGoogleService() {
         throw error;
       }
       return { ...data, homeRoute };
+    } else {
+      throw new GoogleSignInCancelledError();
     }
   } catch (error: any) {
     throw error;
@@ -146,8 +153,9 @@ export async function loginService(email: string, password: string) {
     if (res.error) throw res.error;
     const userId = res.data?.user?.id;
     const homeRoute = userId ? await getHomeRouteForUserId(userId) : "/(user)";
-    return { ...res.data, homeRoute };
+    return { ...res, homeRoute };
   } catch (error: any) {
+    console.log("error login service", error);
     throw error;
   }
 }
@@ -155,7 +163,7 @@ export async function loginService(email: string, password: string) {
 export async function resetPasswordService(email: string) {
   try {
     const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: 'puntosapp://reset-password',
+      redirectTo: 'puntos://reset-password',
     });
     if (error) {
       throw error;
