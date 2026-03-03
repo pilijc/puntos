@@ -14,7 +14,7 @@ const mockStores: StoreCardData[] = [
 		owner: "David Miller",
 		staff_count: 4,
 		is_active: true,
-		store_image: "https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=300&auto=format&fit=crop&q=60",
+		logo: "https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=300&auto=format&fit=crop&q=60",
 		store_pictures: [
 			"https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=300&auto=format&fit=crop&q=60",
 			"https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=300&auto=format&fit=crop&q=60",
@@ -44,7 +44,7 @@ export default function SuperAdminStores() {
 					<View key={store.id ?? i} className="w-full rounded-xl bg-white border border-gray-100 p-4">
 						<View className="flex-row items-start">
 							<Image
-								source={{ uri: store.store_image }}
+								source={{ uri: store.logo }}
 								className="w-20 h-20 rounded-xl bg-slate-100"
 							/>
 							<View className="flex-1 ml-3 justify-center min-w-0">
@@ -53,14 +53,12 @@ export default function SuperAdminStores() {
 										{store.name}
 									</Text>
 									<View
-										className={`px-2.5 py-1 rounded-full flex-shrink-0 ${
-											store.is_active ? "bg-green-100" : "bg-amber-100"
-										}`}
+										className={`px-2.5 py-1 rounded-full flex-shrink-0 ${store.is_active ? "bg-green-100" : "bg-amber-100"
+											}`}
 									>
 										<Text
-											className={`text-xs font-poppins-bold uppercase ${
-												store.is_active ? "text-green-700" : "text-amber-700"
-											}`}
+											className={`text-xs font-poppins-bold uppercase ${store.is_active ? "text-green-700" : "text-amber-700"
+												}`}
 										>
 											{store.is_active ? "Active" : "Inactive"}
 										</Text>
@@ -106,7 +104,7 @@ export default function SuperAdminStores() {
 								</View>
 							</View>
 						</View>
-						
+
 					</View>
 				))}
 			</View>
