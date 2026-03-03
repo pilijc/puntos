@@ -1,51 +1,62 @@
 ﻿import React, { useState } from "react";
-import { Alert, TextInput, Image } from "react-native";
-import { SafeAreaView, ScrollView, Text, TouchableOpacity, View } from "@/tw";
-import { supabase } from "@/supabase/supabase";
+import { Image, Modal, ScrollView } from "react-native";
+import { SafeAreaView, Text, TouchableOpacity, View } from "@/tw";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { useRouter } from "expo-router";
 
 export default function SuperAdminHome() {
+  const router = useRouter();
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [showBlockModal, setShowBlockModal] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
+
   const softCardShadow = {
     shadowColor: "#0F172A",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
-    shadowRadius: 6,
+    shadowRadius: 4,
     elevation: 2,
   };
 
-  const mockUsers = [
-    {
-      id: "u1",
-      name: "Alex Morgan",
-      email: "alex.m@example.com",
-      avatar: "https://api.dicebear.com/7.x/avataaars/png?seed=Alex&backgroundColor=ffdfbf",
-    },
-    {
-      id: "u2",
-      name: "Sarah Jenkins",
-      email: "s.jenkins88@gmail.com",
-      avatar: "https://api.dicebear.com/7.x/avataaars/png?seed=Sarah&backgroundColor=ffecb3",
-    },
-    {
-      id: "u3",
-      name: "Michael Chen",
-      email: "mike.chen@tech.co",
-      avatar: "https://api.dicebear.com/7.x/avataaars/png?seed=Michael&backgroundColor=fbe9e7",
-    },
-  ];
+  const mockUsers = Array.from({ length: 30 }, (_, i) => {
+    const names = [
+      "Alex Morgan","Sarah Jenkins","Michael Chen","Emma Watson",
+      "Daniel Cruz","Sophia Lee","James Carter","Olivia Brown",
+      "Liam Garcia","Isabella Martinez","Noah Anderson",
+      "Mia Thompson","Lucas White","Charlotte Hall",
+      "Ethan Young","Amelia King","Logan Wright",
+      "Harper Scott","Elijah Green","Evelyn Adams",
+      "Mason Baker","Abigail Nelson","Jacob Hill",
+      "Emily Rivera","William Torres","Ella Roberts",
+      "Benjamin Flores","Avery Mitchell","Henry Perez","Scarlett Cox"
+    ];
+    const name = names[i];
+    const email = name.toLowerCase().replace(" ", ".") + "@example.com";
 
+    return {
+      id: `u${i + 1}`,
+      name,
+      email,
+      avatar: `https://api.dicebear.com/7.x/avataaars/png?seed=${name}`,
+      section: i < 20 ? "recent" : "all",
+    };
+  });
+
+  const [recentUsers, setRecentUsers] = useState(mockUsers.filter(u => u.section === "recent"));
   const storeFilters = ["All Stores", "Active", "Deactivated"];
 
+  // USER-STATIC
   const mockStores = [
     {
       id: "s1",
       name: "The Coffee Foundry",
       location: "Brooklyn, NY",
       owner: "David Miller",
-      staffCount: "4 Staff Members",
-      image: "https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=300&auto=format&fit=crop&q=60",
+      staffCount: "4 Staff",
+      image:
+        "https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=300&auto=format&fit=crop&q=60",
       status: "ACTIVE",
-      primaryAction: "Edit Details",
+      primaryAction: "Edit",
       dangerAction: "Deactivate",
     },
     {
@@ -53,302 +64,247 @@ export default function SuperAdminHome() {
       name: "Brew & Bean Co.",
       location: "Seattle, WA",
       owner: "Jessica Wong",
-      staffCount: "2 Staff Members",
-      image: "https://images.unsplash.com/photo-1445116572660-236099ec97a0?w=300&auto=format&fit=crop&q=60",
+      staffCount: "2 Staff",
+      image:
+        "https://images.unsplash.com/photo-1445116572660-236099ec97a0?w=300&auto=format&fit=crop&q=60",
       status: "PENDING",
       primaryAction: "Approve",
       dangerAction: "Reject",
     },
   ];
 
+  const iconColorMap = {
+    registration: "#3B82F6",
+    action: "#FF6600",
+    alert: "#EF4444",
+    default: "#64748B"
+  };
+  // NOTIFICATIONS-STATIC
+  const notifications = [
+    { id: "n1", title: "New Registration", message: "Alex Morgan registered The Coffee Foundry", time: "2m ago", type: "registration", icon: "person-add", unread: true },
+    { id: "n2", title: "Action Required", message: "Brew & Bean Co. is waiting for your review", time: "1h ago", type: "action", icon: "warning", unread: true },
+    { id: "n3", title: "System Alert", message: "New security patches have been applied", time: "5h ago", type: "alert", icon: "info", unread: false },
+  ];
+
   return (
-    <SafeAreaView className="flex-1 bg-backgroundMuted">
-      <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 100 }} showsVerticalScrollIndicator={false}>
-        {/* Header Section */}
-        <View className="bg-primary rounded-b-[35px] px-6 pt-2 pb-20 overflow-hidden">
-          {/* Decorative Circles */}
-          <View className="absolute -top-10 -right-10 w-56 h-56 rounded-full bg-white/10" />
-          <View className="absolute -bottom-12 -left-10 w-28 h-28 rounded-full bg-white/10" />
+    <SafeAreaView className="flex-1 bg-[#F8FAFC]" edges={["top", "left", "right"]}>
+      <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
 
-          {/* Header Top Bar */}
+        {/* Header */}
+        <View className="bg-primary rounded-b-[30px] px-6 pt-2 pb-16 overflow-hidden">
+          <View className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-white/10" />
           <View className="flex-row items-center justify-between mt-2">
-            <View className="w-10 h-10" />
-
-            <Text className="text-white text-xl font-poppins-bold">Super Admin</Text>
-
-            <TouchableOpacity className="w-10 h-10 rounded-full bg-white/15 items-center justify-center relative">
-              <MaterialIcons name="notifications-none" size={19} color="#FFFFFF" />
-              <View className="absolute top-2 right-2 w-2 h-2 rounded-full bg-danger" />
-            </TouchableOpacity>
-          </View>
-
-          {/* Welcome Text */}
-          <View className="mt-8 mb-2">
-            <Text className="text-white text-4xl font-poppins-bold">Dashboard</Text>
-            <Text className="mt-1 text-[13px] text-white/90 font-poppins">Welcome back, Administrator</Text>
-          </View>
-        </View>
-
-        {/* Metrics Section */}
-        <View className="px-6 -mt-12 mb-8">
-          <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-            {/* Total Users Card */}
-            <View
-              style={[
-                softCardShadow,
-                { width: "48%", backgroundColor: "#FFFFFF", borderRadius: 24, paddingVertical: 28, alignItems: "center" }
-              ]}
+            <View className="w-8 h-8" />
+            <Text className="text-white text-base font-poppins-bold">Super Admin</Text>
+            <TouchableOpacity 
+              className="w-9 h-9 rounded-full bg-white/15 items-center justify-center relative"
+              onPress={() => setShowNotifications(true)}
             >
-              <View style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: "#DBEAFE", alignItems: "center", justifyContent: "center", marginBottom: 12 }}>
-                <MaterialIcons name="groups" size={24} color="#3B82F6" />
-              </View>
-              <Text style={{ fontSize: 28, fontFamily: "Poppins-Bold", color: "#0F172A", lineHeight: 32 }}>12,451</Text>
-              <Text style={{ marginTop: 6, fontSize: 10, fontFamily: "Poppins-Bold", color: "#94A3B8", letterSpacing: 1 }}>TOTAL USERS</Text>
+              <MaterialIcons name="notifications-none" size={18} color="#FFFFFF" />
+              <View className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full bg-danger border border-primary" />
+            </TouchableOpacity>
+          </View>
+          <View className="mt-6 mb-2">
+            <Text className="text-white text-2xl font-poppins-bold">Dashboard</Text>
+            <Text className="text-[11px] text-white/80 font-poppins uppercase tracking-wider">
+              Welcome back, Admin
+            </Text>
+          </View>
+        </View>
+
+        {/* Stats */}
+        <View className="px-6 -mt-10 mb-6">
+          <View style={{ flexDirection: "row", gap: 12 }}>
+
+            <View style={[softCardShadow, { flex: 1, backgroundColor: "#FFFFFF", borderRadius: 20, paddingVertical: 18, alignItems: "center" }]}>
+              <MaterialIcons name="groups" size={20} color="#3B82F6" />
+              <Text className="text-[22px] font-poppins-bold text-slate-900 mt-2">{mockUsers.length}</Text>
+              <Text className="text-[9px] font-poppins-bold text-slate-400">TOTAL USERS</Text>
             </View>
 
-            {/* Active Stores Card */}
-            <View
-              style={[
-                softCardShadow,
-                { width: "48%", backgroundColor: "#FFFFFF", borderRadius: 24, paddingVertical: 28, alignItems: "center" }
-              ]}
-            >
-              <View style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: "#DCFCE7", alignItems: "center", justifyContent: "center", marginBottom: 12 }}>
-                <MaterialIcons name="storefront" size={24} color="#22C55E" />
-              </View>
-              <Text style={{ fontSize: 28, fontFamily: "Poppins-Bold", color: "#0F172A", lineHeight: 32 }}>84</Text>
-              <Text style={{ marginTop: 6, fontSize: 10, fontFamily: "Poppins-Bold", color: "#94A3B8", letterSpacing: 1 }}>ACTIVE STORES</Text>
+            <View style={[softCardShadow, { flex: 1, backgroundColor: "#FFFFFF", borderRadius: 20, paddingVertical: 18, alignItems: "center" }]}>
+              <MaterialIcons name="storefront" size={20} color="#22C55E" />
+              <Text className="text-[22px] font-poppins-bold text-slate-900 mt-2">{mockStores.length}</Text>
+              <Text className="text-[9px] font-poppins-bold text-slate-400">TOTAL STORES</Text>
+            </View>
+
+            <View style={[softCardShadow, { flex: 1, backgroundColor: "#FFFFFF", borderRadius: 20, paddingVertical: 18, alignItems: "center" }]}>
+              <MaterialIcons name="storefront" size={20} color="#16A34A" />
+              <Text className="text-[22px] font-poppins-bold text-slate-900 mt-2">{mockStores.filter(store => store.status === "ACTIVE").length}</Text>
+              <Text className="text-[9px] font-poppins-bold text-slate-400">ACTIVE STORES</Text>
             </View>
           </View>
         </View>
 
-        {/* Search Bar Section */}
-        <View className="px-6 mb-8">
-          <View
-            style={[
-              softCardShadow,
-              {
-                flexDirection: "row",
-                alignItems: "center",
-                backgroundColor: "#FFFFFF",
-                borderRadius: 9999, // fully rounded pill
-                paddingHorizontal: 20,
-                height: 56,
-              }
-            ]}
-          >
-            <MaterialIcons name="search" size={24} color="#94A3B8" />
-
-            <TextInput
-              placeholder="Search users, stores, or emails..."
-              placeholderTextColor="#94A3B8"
-              style={{
-                flex: 1,
-                marginLeft: 12,
-                fontSize: 15,
-                fontFamily: "Poppins-Regular",
-                color: "#0F172A",
-              }}
-            />
-
-            <TouchableOpacity style={{ padding: 4 }}>
-              <MaterialIcons name="tune" size={24} color="#94A3B8" />
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* Manage Users Section */}
-        <View className="px-6 mb-12">
-          {/* Header */}
-          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 4, paddingVertical: 12 }}>
-            <View style={{ flexDirection: "row", alignItems: "center" }}>
-              <MaterialIcons name="person-outline" size={26} color="#FF6600" />
-              <Text style={{ fontSize: 22, fontFamily: "Poppins-Bold", color: "#0F172A", marginLeft: 8 }}>Manage Users</Text>
-            </View>
-            <TouchableOpacity style={{ flexDirection: "row", alignItems: "center" }}>
-              <Text style={{ fontSize: 13, fontFamily: "Poppins-Bold", color: "#FF6600", marginRight: 2 }}>VIEW ALL</Text>
-              <MaterialIcons name="chevron-right" size={18} color="#FF6600" />
-            </TouchableOpacity>
-          </View>
-
-          {/* Users List Container */}
-          <View
-            style={[
-              softCardShadow,
-              {
-                backgroundColor: "#FFFFFF",
-                borderRadius: 24,
-                overflow: "hidden",
-                marginTop: 0,
-              }
-            ]}
-          >
-            {mockUsers.map((user, index) => (
-              <View
-                key={user.id}
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  paddingVertical: 20,
-                  paddingHorizontal: 20,
-                  borderTopWidth: index === 0 ? 0 : 1,
-                  borderTopColor: "#F1F5F9",
-                }}
-              >
-                <View style={{ flexDirection: "row", alignItems: "center", flex: 1 }}>
-                  <Image
-                    source={{ uri: user.avatar }}
-                    style={{ width: 52, height: 52, borderRadius: 26, backgroundColor: "#F8FAFC" }}
-                  />
-                  <View style={{ marginLeft: 16, flex: 1 }}>
-                    <Text style={{ fontSize: 16, fontFamily: "Poppins-Bold", color: "#0F172A", marginTop: 4 }}>{user.name}</Text>
-                    <Text style={{ fontSize: 14, fontFamily: "Poppins-Regular", color: "#64748B", marginTop: -2 }}>{user.email}</Text>
-                  </View>
-                </View>
-
-                <TouchableOpacity
-                  style={{
-                    backgroundColor: "#FEF2F2",
-                    paddingHorizontal: 16,
-                    paddingVertical: 8,
-                    borderRadius: 8,
-                  }}
-                >
-                  <Text style={{ color: "#EF4444", fontSize: 14, fontFamily: "Poppins-Medium" }}>Block</Text>
-                </TouchableOpacity>
-              </View>
-            ))}
-          </View>
-        </View>
-
-        {/* Store Management Section */}
-        <View className="px-6 mb-12">
-          {/* Header */}
-          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 4, paddingVertical: 12 }}>
-            <View style={{ flexDirection: "row", alignItems: "center" }}>
-              <MaterialIcons name="storefront" size={26} color="#FF6600" />
-              <Text style={{ fontSize: 22, fontFamily: "Poppins-Bold", color: "#0F172A", marginLeft: 8 }}>Store Management</Text>
-            </View>
-            <TouchableOpacity style={{ flexDirection: "row", alignItems: "center" }}>
-              <Text style={{ fontSize: 13, fontFamily: "Poppins-Bold", color: "#FF6600", marginRight: 2 }}>VIEW ALL</Text>
-              <MaterialIcons name="chevron-right" size={18} color="#FF6600" />
-            </TouchableOpacity>
-          </View>
-
-          {/* Filters */}
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 16 }} contentContainerStyle={{ paddingRight: 20 }}>
-            {storeFilters.map((filter, index) => {
-              const active = index === 0; // Hardcoded 'All Stores' as active for visual matching
-              return (
-                <TouchableOpacity
-                  key={filter}
-                  style={{
-                    backgroundColor: active ? "#FF6600" : "#FFFFFF",
-                    paddingHorizontal: 16,
-                    paddingVertical: 10,
-                    borderRadius: 9999,
-                    marginRight: 10,
-                    borderWidth: active ? 0 : 1,
-                    borderColor: "#E2E8F0"
-                  }}
-                >
-                  <Text style={{ fontSize: 13, fontFamily: "Poppins-Medium", color: active ? "#FFFFFF" : "#475569" }}>
-                    {filter}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </ScrollView>
-
-          {/* Store Cards */}
-          <View style={{ gap: 16 }}>
-            {mockStores.map((store) => (
-              <View
-                key={store.id}
-                style={[
-                  softCardShadow,
-                  {
-                    backgroundColor: "#FFFFFF",
-                    borderRadius: 24,
-                    padding: 20,
-                  }
-                ]}
-              >
-                {/* Top Row: Image, Info, Status */}
-                <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
-                  <View style={{ flexDirection: "row", flex: 1 }}>
-                    <Image
-                      source={{ uri: store.image }}
-                      style={{ width: 64, height: 64, borderRadius: 16, backgroundColor: "#F1F5F9" }}
-                    />
-                    <View style={{ marginLeft: 16, flex: 1, justifyContent: "center" }}>
-                      <Text style={{ fontSize: 16, fontFamily: "Poppins-Bold", color: "#0F172A" }}>{store.name}</Text>
-                      <View style={{ flexDirection: "row", alignItems: "center", marginTop: 4 }}>
-                        <MaterialIcons name="place" size={14} color="#64748B" />
-                        <Text style={{ fontSize: 13, fontFamily: "Poppins-Regular", color: "#64748B", marginLeft: 2 }}>{store.location}</Text>
-                      </View>
-                    </View>
-                  </View>
-
-                  {/* Status Pill */}
-                  <View
-                    style={{
-                      backgroundColor: store.status === "ACTIVE" ? "#DCFCE7" : "#FEF3C7",
-                      paddingHorizontal: 10,
-                      paddingVertical: 6,
-                      borderRadius: 8
-                    }}
-                  >
-                    <Text
-                      style={{
-                        fontSize: 10,
-                        fontFamily: "Poppins-Bold",
-                        color: store.status === "ACTIVE" ? "#16A34A" : "#B45309"
-                      }}
-                    >
-                      {store.status}
+        {/* Notification Modal */}
+        <Modal visible={showNotifications} animationType="slide" transparent>
+          <View style={{ flex: 1, backgroundColor: "rgba(15,23,42,0.4)", justifyContent: "flex-end" }}>
+            <View style={{ backgroundColor: "#FFFFFF", borderTopLeftRadius: 28, borderTopRightRadius: 28, paddingTop: 12, paddingBottom: 32, maxHeight: "65%" }}>
+              <View style={{ width: 36, height: 4, backgroundColor: "#E2E8F0", borderRadius: 2, alignSelf: "center", marginBottom: 20 }} />
+              <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: 24, marginBottom: 4 }}>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                  <Text style={{ fontSize: 16, fontWeight: "700", color: "#0F172A" }}>Notifications</Text>
+                  <View style={{ backgroundColor: "#FF6600", borderRadius: 10, paddingHorizontal: 7, paddingVertical: 2 }}>
+                    <Text style={{ color: "#FFF", fontSize: 10, fontWeight: "700" }}>
+                      {notifications.filter(n => n.unread).length}
                     </Text>
                   </View>
                 </View>
-
-                {/* Middle Row: Owner & Front Desk */}
-                <View style={{ backgroundColor: "#F8FAFC", borderRadius: 16, padding: 16, flexDirection: "row", marginBottom: 20 }}>
-                  <View style={{ flex: 1 }}>
-                    <Text style={{ fontSize: 10, fontFamily: "Poppins-Bold", color: "#94A3B8", letterSpacing: 1 }}>OWNER</Text>
-                    <Text style={{ fontSize: 14, fontFamily: "Poppins-Medium", color: "#334155", marginTop: 4 }}>{store.owner}</Text>
+                <TouchableOpacity onPress={() => setShowNotifications(false)} style={{ padding: 4 }}>
+                  <MaterialIcons name="close" size={20} color="#94A3B8" />
+                </TouchableOpacity>
+              </View>
+              <TouchableOpacity style={{ paddingHorizontal: 24, marginBottom: 16 }}>
+                <Text style={{ fontSize: 11, color: "#FF6600", fontWeight: "600" }}>Mark all as read</Text>
+              </TouchableOpacity>
+              <ScrollView showsVerticalScrollIndicator={false}>
+                {notifications.map((n, index) => (
+                  <View key={n.id}>
+                    {index !== 0 && <View style={{ height: 1, backgroundColor: "#F1F5F9", marginHorizontal: 24 }} />}
+                    <TouchableOpacity
+                      activeOpacity={0.7}
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        paddingHorizontal: 24,
+                        paddingVertical: 14,
+                        backgroundColor: n.unread ? "#FAFAFA" : "#FFFFFF",
+                      }}
+                    >
+                      <View
+                        style={{
+                          width: 38,
+                          height: 38,
+                          borderRadius: 19,
+                          backgroundColor: (iconColorMap[n.type] || iconColorMap.default) + "15",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          marginRight: 14,
+                          flexShrink: 0,
+                        }}
+                      >
+                        <MaterialIcons name={n.icon || "notifications-none"} size={18} color={iconColorMap[n.type] || iconColorMap.default} />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={{ fontSize: 13, fontWeight: "600", color: "#1E293B", marginBottom: 2 }}>
+                          {n.title}
+                        </Text>
+                        <Text style={{ fontSize: 12, color: "#64748B", lineHeight: 17 }}>
+                          {n.message}
+                        </Text>
+                      </View>
+                      <View style={{ alignItems: "flex-end", marginLeft: 10, gap: 6 }}>
+                        <Text style={{ fontSize: 10, color: "#94A3B8" }}>{n.time}</Text>
+                        {n.unread && <View style={{ width: 7, height: 7, borderRadius: 4, backgroundColor: "#FF6600" }} />}
+                      </View>
+                    </TouchableOpacity>
                   </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={{ fontSize: 10, fontFamily: "Poppins-Bold", color: "#94A3B8", letterSpacing: 1 }}>FRONT DESK</Text>
-                    <Text style={{ fontSize: 14, fontFamily: "Poppins-Medium", color: "#334155", marginTop: 4 }}>{store.staffCount}</Text>
+                ))}
+              </ScrollView>
+            </View>
+          </View>
+        </Modal>
+        <Modal visible={showBlockModal} animationType="fade" transparent>
+          <View style={{ flex: 1, backgroundColor: "rgba(15,23,42,0.4)", justifyContent: "center", alignItems: "center" }}>
+            <View style={{ backgroundColor: "#FFF", borderRadius: 20, padding: 24, width: "80%", alignItems: "center" }}>
+              <Text style={{ fontSize: 16, fontWeight: "700", marginBottom: 12 }}>Block User</Text>
+              <Text style={{ fontSize: 13, color: "#64748B", textAlign: "center", marginBottom: 24 }}>
+                Are you sure you want to block{" "}
+                <Text style={{ fontWeight: "700", color: "#EF4444" }}>{selectedUser?.name}</Text>
+                ?
+              </Text>
+              <View style={{ flexDirection: "row", gap: 12 }}>
+                <TouchableOpacity
+                  style={{ flex: 1, paddingVertical: 10, borderRadius: 10, backgroundColor: "#F1F5F9", alignItems: "center" }}
+                  onPress={() => setShowBlockModal(false)}
+                >
+                  <Text style={{ color: "#64748B", fontWeight: "600" }}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={{ flex: 1, paddingVertical: 10, borderRadius: 10, backgroundColor: "#EF4444", alignItems: "center" }}
+                  onPress={() => {
+                    setShowBlockModal(false);
+                  }}
+                >
+                  <Text style={{ color: "#FFF", fontWeight: "600" }}>Block</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
+
+        {/* Manage Users */}
+        <View className="px-6 mb-8">
+          <View className="flex-row justify-between items-center mb-3">
+            <Text className="text-lg font-poppins-bold text-slate-900">Manage Users</Text>
+            <TouchableOpacity className="flex-row items-center" onPress={() => router.push("/(super_admin)/users")}>
+              <Text className="text-[11px] font-poppins-bold text-primary mr-1">VIEW ALL</Text>
+              <MaterialIcons name="chevron-right" size={14} color="#FF6600" />
+            </TouchableOpacity>
+          </View>
+
+          <View style={[softCardShadow, { backgroundColor: "#FFFFFF", borderRadius: 20, overflow: "hidden", maxHeight: 300 }]}>
+            <ScrollView nestedScrollEnabled showsVerticalScrollIndicator={false}>
+              {recentUsers.map((user, index) => (
+                <View key={user.id} style={{ flexDirection: "row", alignItems: "center", padding: 14, borderTopWidth: index === 0 ? 0 : 1, borderTopColor: "#F1F5F9" }}>
+                  <Image source={{ uri: user.avatar }} style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: "#F1F5F9" }} />
+                  <View style={{ marginLeft: 12, flex: 1 }}>
+                    <Text className="text-[14px] font-poppins-bold text-slate-800">{user.name}</Text>
+                    <Text className="text-[12px] font-poppins text-slate-500">{user.email}</Text>
+                  </View>
+                  <TouchableOpacity
+                    className="bg-red-50 px-3 py-1.5 rounded-lg"
+                    onPress={() => {
+                      setSelectedUser(user);
+                      setShowBlockModal(true);
+                    }}
+                  >
+                    <Text className="text-red-500 text-[11px] font-poppins-bold">Block</Text>
+                  </TouchableOpacity>
+                </View>
+              ))}
+            </ScrollView>
+          </View>
+        </View>
+
+        {/* Store Management */}
+        <View className="px-6 mb-6">
+          <View className="flex-row justify-between items-center mb-4">
+            <Text className="text-lg font-poppins-bold text-slate-900">Store Management</Text>
+            <TouchableOpacity onPress={() => router.push("/(super_admin)/stores")}>
+              <Text className="text-[11px] font-poppins-bold text-primary">VIEW ALL</Text>
+            </TouchableOpacity>
+          </View>
+
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mb-4">
+            {storeFilters.map((filter, index) => (
+              <TouchableOpacity key={filter} className={`px-4 py-2 rounded-full mr-2 border ${index === 0 ? "bg-primary border-primary" : "bg-white border-slate-200"}`}>
+                <Text className={`text-[12px] font-poppins-medium ${index === 0 ? "text-white" : "text-slate-600"}`}>{filter}</Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+
+          <View style={{ gap: 12 }}>
+            {mockStores.map((store) => (
+              <View key={store.id} style={[softCardShadow, { backgroundColor: "#FFFFFF", borderRadius: 20, padding: 16 }]}>
+                <View className="flex-row justify-between items-start mb-4">
+                  <View className="flex-row flex-1">
+                    <Image source={{ uri: store.image }} style={{ width: 50, height: 50, borderRadius: 12 }} />
+                    <View className="ml-3 flex-1 justify-center">
+                      <Text className="text-[14px] font-poppins-bold text-slate-800">{store.name}</Text>
+                      <Text className="text-[11px] font-poppins text-slate-500">{store.location}</Text>
+                    </View>
+                  </View>
+                  <View className={`px-2 py-1 rounded-md ${store.status === "ACTIVE" ? "bg-green-50" : "bg-amber-50"}`}>
+                    <Text className={`text-[9px] font-poppins-bold ${store.status === "ACTIVE" ? "text-green-600" : "text-amber-600"}`}>{store.status}</Text>
                   </View>
                 </View>
-
-                {/* Bottom Row: Actions */}
-                <View style={{ flexDirection: "row", gap: 12 }}>
-                  <TouchableOpacity
-                    style={{
-                      flex: 1,
-                      backgroundColor: "#F1F5F9",
-                      paddingVertical: 14,
-                      borderRadius: 12,
-                      alignItems: "center"
-                    }}
-                  >
-                    <Text style={{ fontSize: 14, fontFamily: "Poppins-Bold", color: "#475569" }}>{store.primaryAction}</Text>
+                <View className="flex-row gap-2">
+                  <TouchableOpacity className="flex-1 bg-slate-100 py-2.5 rounded-lg items-center">
+                    <Text className="text-[12px] font-poppins-bold text-slate-600">{store.primaryAction}</Text>
                   </TouchableOpacity>
-                  <TouchableOpacity
-                    style={{
-                      flex: 1,
-                      backgroundColor: "#FFFFFF",
-                      borderWidth: 1,
-                      borderColor: store.status === "ACTIVE" ? "#FECACA" : "#FECACA",
-                      paddingVertical: 14,
-                      borderRadius: 12,
-                      alignItems: "center"
-                    }}
-                  >
-                    <Text style={{ fontSize: 14, fontFamily: "Poppins-Bold", color: "#EF4444" }}>{store.dangerAction}</Text>
+                  <TouchableOpacity className="flex-1 border border-red-100 py-2.5 rounded-lg items-center">
+                    <Text className="text-[12px] font-poppins-bold text-red-500">{store.dangerAction}</Text>
                   </TouchableOpacity>
                 </View>
               </View>

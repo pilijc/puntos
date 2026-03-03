@@ -131,7 +131,8 @@ AnimatedText.displayName = "CSS(AnimatedText)";
 function XXTouchableHighlight(
   props: React.ComponentProps<typeof RNTouchableHighlight>,
 ) {
-  const { underlayColor, ...style } = StyleSheet.flatten(props.style) || {};
+  const flattenedStyle = StyleSheet.flatten(props.style) as any;
+  const { underlayColor, ...style } = flattenedStyle || {};
   return (
     <RNTouchableHighlight
       underlayColor={underlayColor}

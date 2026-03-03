@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { Modal, TextInput, Alert, ActivityIndicator, KeyboardAvoidingView, ScrollView } from "react-native";
-import { View, Text, SafeAreaView, TouchableOpacity } from "@/tw";
+import { Modal, Alert, ActivityIndicator, KeyboardAvoidingView, useColorScheme } from "react-native";
+import { View, Text, SafeAreaView, TouchableOpacity, TextInput, ScrollView } from "@/tw";
 import { Ionicons } from "@expo/vector-icons";
 import { supabase } from "@/supabase/supabase";
 
@@ -17,6 +17,8 @@ export default function ChangePasswordModal({ visible, onClose }: Props) {
 
     // Loading state to disable inputs/buttons while fetching from Supabase
     const [loading, setLoading] = useState(false);
+
+    const isDark = useColorScheme() === 'dark';
 
     // Reset the form fields to blank, typically called after a successful update or when the modal closes
     const resetForm = () => {
@@ -100,49 +102,52 @@ export default function ChangePasswordModal({ visible, onClose }: Props) {
 
                 <KeyboardAvoidingView
                     behavior="height"
-                    className="bg-white rounded-t-3xl"
+                    className="bg-white dark:bg-neutral-800 rounded-t-3xl"
                 >
                     <ScrollView className="p-6 pb-8">
                         <View className="flex-row justify-between items-center mb-6">
-                            <Text className="text-xl font-poppins-bold text-neutral-900">Change Password</Text>
+                            <Text className="text-xl font-poppins-bold text-neutral-900 dark:text-white">Change Password</Text>
                             <TouchableOpacity onPress={handleClose} disabled={loading}>
                                 <Ionicons name="close-outline" size={25} color="#EF4444" />
                             </TouchableOpacity>
                         </View>
 
                         <View className="mb-4">
-                            <Text className="text-sm font-poppins-medium text-neutral-700 mb-2">Current Password</Text>
+                            <Text className="text-sm font-poppins-medium text-neutral-700 dark:text-neutral-300 mb-2">Current Password</Text>
                             <TextInput
-                                className="bg-neutral-50 border border-neutral-200 rounded-xl p-4 font-poppins-regular text-neutral-900"
+                                className="border-neutral-300 dark:border-neutral-600 border rounded-lg p-3 font-poppins-regular text-neutral-900 dark:text-white dark:bg-neutral-700"
                                 placeholder="Enter current password"
                                 secureTextEntry
                                 value={currentPassword}
                                 onChangeText={setCurrentPassword}
                                 editable={!loading}
+                                placeholderTextColor={isDark ? '#6b7280' : '#9CA3AF'}
                             />
                         </View>
 
                         <View className="mb-4">
-                            <Text className="text-sm font-poppins-medium text-neutral-700 mb-2">New Password</Text>
+                            <Text className="text-sm font-poppins-medium text-neutral-700 dark:text-neutral-300 mb-2">New Password</Text>
                             <TextInput
-                                className="border-neutral-500 border rounded-lg p-3 font-poppins-regular text-neutral-900"
+                                className="border-neutral-300 dark:border-neutral-600 border rounded-lg p-3 font-poppins-regular text-neutral-900 dark:text-white dark:bg-neutral-700"
                                 placeholder="Enter new password"
                                 secureTextEntry
                                 value={newPassword}
                                 onChangeText={setNewPassword}
                                 editable={!loading}
+                                placeholderTextColor={isDark ? '#6b7280' : '#9CA3AF'}
                             />
                         </View>
 
                         <View className="mb-6">
-                            <Text className="text-sm font-poppins-medium text-neutral-700 mb-2">Repeat New Password</Text>
+                            <Text className="text-sm font-poppins-medium text-neutral-700 dark:text-neutral-300 mb-2">Repeat New Password</Text>
                             <TextInput
-                                className="border-neutral-500 border rounded-lg p-3 font-poppins-regular text-neutral-900"
+                                className="border-neutral-300 dark:border-neutral-600 border rounded-lg p-3 font-poppins-regular text-neutral-900 dark:text-white dark:bg-neutral-700"
                                 placeholder="Repeat new password"
                                 secureTextEntry
                                 value={repeatNewPassword}
                                 onChangeText={setRepeatNewPassword}
                                 editable={!loading}
+                                placeholderTextColor={isDark ? '#6b7280' : '#9CA3AF'}
                             />
                         </View>
 
@@ -150,9 +155,9 @@ export default function ChangePasswordModal({ visible, onClose }: Props) {
                             <TouchableOpacity
                                 onPress={handleClose}
                                 disabled={loading}
-                                className="flex-1 py-4 rounded-xl items-center bg-neutral-100 Will-change-pressable"
+                                className="flex-1 py-4 rounded-xl items-center bg-neutral-100 dark:bg-neutral-700 Will-change-pressable"
                             >
-                                <Text className="text-neutral-900 font-poppins-semibold">Cancel</Text>
+                                <Text className="text-neutral-900 dark:text-neutral-200 font-poppins-semibold">Cancel</Text>
                             </TouchableOpacity>
 
                             <TouchableOpacity

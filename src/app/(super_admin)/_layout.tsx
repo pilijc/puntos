@@ -1,4 +1,4 @@
-﻿import { Tabs } from "expo-router";
+import { Tabs } from "expo-router";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import React, { useEffect } from "react";
 import { useRouter } from "expo-router";
@@ -16,7 +16,7 @@ export default function SuperAdminLayout() {
         } = await supabase.auth.getUser();
 
         if (!user) {
-          router.replace("/(onboarding)/welcome");
+          router.replace("/(onboarding)/index");
           return;
         }
 
