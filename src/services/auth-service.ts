@@ -78,6 +78,13 @@ export default async function signUpService(email: string, password: string, nam
 }
 
 
+export class GoogleSignInCancelledError extends Error {
+  constructor() {
+    super("Sign in cancelled");
+    this.name = "GoogleSignInCancelled";
+  }
+}
+
 export async function signUpWithGoogleService() {
   try {
     await GoogleSignin.hasPlayServices();
@@ -127,6 +134,8 @@ export async function signUpWithGoogleService() {
         throw error;
       }
       return { ...data, homeRoute };
+    } else {
+      throw new GoogleSignInCancelledError();
     }
   } catch (error: any) {
     throw error;
@@ -137,14 +146,16 @@ export async function signUpWithGoogleService() {
 export async function loginService(email: string, password: string) {
   try {
     const res = await supabase.auth.signInWithPassword({ email, password });
+    console.log("res", res);
     if (res.data?.session?.access_token) {
       await AsyncStorage.setItem('sessionToken', res.data.session.access_token);
     }
     if (res.error) throw res.error;
     const userId = res.data?.user?.id;
     const homeRoute = userId ? await getHomeRouteForUserId(userId) : "/(user)";
-    return { ...res.data, homeRoute };
+    return { ...res, homeRoute };
   } catch (error: any) {
+    console.log("error login service", error);
     throw error;
   }
 }
@@ -152,7 +163,7 @@ export async function loginService(email: string, password: string) {
 export async function resetPasswordService(email: string) {
   try {
     const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: 'puntosapp://reset-password',
+      redirectTo: 'puntos://reset-password',
     });
     if (error) {
       throw error;
