@@ -59,7 +59,7 @@
     "@react-native/metro-config": "^0.84.0",
     "@types/react": "~19.1.10",
     "firebase-tools": "^15.5.1",
-    "typescript": "~5.9.2"
+    "typescript": "^5.9.3"
   },
   "private": true,
   "overrides": {

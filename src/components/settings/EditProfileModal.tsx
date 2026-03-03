@@ -11,11 +11,6 @@ type Props = {
   onSave: (newName: string, newEmail: string) => Promise<void>;
 };
 
-/**
- * EditProfileModal
- * A modernized modal for updating user profile information.
- * Uses local state for inputs and handles its own loading status during saves.
- */
 export default function EditProfileModal({
   visible,
   onClose,
@@ -61,18 +56,15 @@ export default function EditProfileModal({
       statusBarTranslucent
     >
       <SafeAreaView className="flex-1 bg-black/40 justify-end">
-        {/* Backdrop for tapping outside */}
         <TouchableOpacity
           className="flex-1"
           activeOpacity={1}
           onPress={onClose}
         />
 
-        <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
-        >
+
+        <KeyboardAvoidingView behavior="height">
           <View className="bg-white dark:bg-neutral-900 rounded-t-[32px] p-6 pb-10 shadow-2xl">
-            {/* Header Hook */}
             <View className="w-12 h-1 bg-neutral-200 dark:bg-neutral-700 rounded-full self-center mb-6" />
 
             {/* Header Content */}
