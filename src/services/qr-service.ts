@@ -1,7 +1,116 @@
 
 
 import { supabase } from "@/supabase/supabase";
+
 import { QRCodeState, QRTransaction } from "@/type/qr";
+
+
+//import { store } from "expo-router/build/global-state/router-store";
+
+
+
+export async function getCurrentUser() {
+
+  const { data: { user }, error } = await supabase.auth.getUser();
+
+  if (error) throw error;
+
+  return user; 
+
+}
+
+//Add auto user to qr_codes table
+export async function addAutoUser(){
+  
+  const {
+    data: {user},
+    error: userError
+  } = await supabase.auth.getUser();
+  
+  if(userError || !user) {
+    throw new Error('User not found');   
+  }
+
+  const {data, error} = await supabase
+    .from('qr_codes')
+    .insert([{
+      user_id: user.id,
+      created_at: new Date().toISOString(),
+    },
+  ])
+    .select('*');
+
+  if(error) {
+    throw new Error('User not found');   
+  }
+
+  return data[0];
+
+}
+
+
+
+
+// New Static QR Code Functions
+export function getStaticQRCode(userId: string): string {
+   
+  return `puntos:user:${userId}`;
+}
+
+
+// Parse static QR code
+export function parseQRCode(qrValue: string): { type: string; userId: string } | null {
+  const parts = qrValue.split(':');
+  if (parts.length === 3 && parts[0] === 'puntos' && parts[1] === 'user') {
+    return { type: 'user', userId: parts[2] };
+  }
+  return null;
+}
+
+// Create QR transaction
+export async function createQRTransaction(
+  userId: string,
+  storeStaffId: string,
+  pointsAwarded: number = 0
+): Promise<QRTransaction> {
+  const { data, error } = await supabase
+    .from('qr_transactions')
+    .insert([
+      {
+        user_id: userId,
+        store_staff_id: storeStaffId,
+        created_at: new Date().toISOString(),
+        points_earned: pointsAwarded,
+      },
+    ])
+    .select('*')
+    .single();
+
+  if (error) {
+    throw new Error(`Failed to create QR transaction: ${error.message}`);
+  }
+
+  return data as QRTransaction;
+
+}
+
+export function listenToQRTransaction(userId: string, onScanned: () => void) {
+  const channel = supabase.channel(`qr-transaction`)
+  .on("postgres_changes",{
+    event: "INSERT",
+    schema: "public",
+    table: "qr_transactions",
+    filter: `user_id=eq.${userId}`
+  },(payload) => {
+    const newRow = payload.new;
+
+    if(newRow.user_id === userId) {
+      onScanned();
+    }
+  })
+  .subscribe();
+  return channel;
+}
 
 
 
@@ -42,44 +151,3 @@ export async function generateQRCode(userId: string, expiryHours: number = 1) {
   return data[0]; 
 } */
 
-// New Static QR Code Functions
-export function getStaticQRCode(userId: string): string {
-   
-  return `puntos:user:${userId}`;
-}
-
-
-// Parse static QR code
-export function parseQRCode(qrValue: string): { type: string; userId: string } | null {
-  const parts = qrValue.split(':');
-  if (parts.length === 3 && parts[0] === 'puntos' && parts[1] === 'user') {
-    return { type: 'user', userId: parts[2] };
-  }
-  return null;
-}
-
-// Create QR transaction
-export async function createQRTransaction(
-  userId: string,
-  storeStaffId: string,
-  pointsAwarded: number = 0
-): Promise<QRTransaction> {
-  const { data, error } = await supabase
-    .from('qr-transactions')
-    .insert([
-      {
-        user_id: userId,
-        store_staff_id: storeStaffId,
-        scanned_at: new Date().toISOString(),
-        points_awarded: pointsAwarded,
-      },
-    ])
-    .select('*')
-    .single();
-
-  if (error) {
-    throw new Error(`Failed to create QR transaction: ${error.message}`);
-  }
-
-  return data as QRTransaction;
-}

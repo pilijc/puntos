@@ -1,17 +1,19 @@
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator } from 'react-native';
+import { ActivityIndicator, Alert } from 'react-native';
 import { SafeAreaView, View, Text, TouchableOpacity } from '@/tw';
 
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useRouter } from 'expo-router';
 import QRCode from 'react-native-qrcode-svg';
 //import { supabase } from '@/supabase/supabase';
-import { getCurrentUser, getStaticQRCode } from '@/services/qr-service';
+import { getCurrentUser, getStaticQRCode, addAutoUser, listenToQRTransaction } from '@/services/qr-service';
+import { supabase } from 'supabase/supabase';
 
 export default function Qr() {
   const router = useRouter();
   const [qrValue, setQrValue] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [user, SetUser] = useState<any>(null);
 
   // Get static QR code based on userID
   const fetchQRCode = async () => {
@@ -30,6 +32,9 @@ export default function Qr() {
       console.log('Static QR value:', staticQR);
       setQrValue(staticQR);
 
+      const addUser = await addAutoUser();
+      console.log('Add user:', addUser);
+
     } 
     catch (err) {
       console.error('Error getting QR code:', err);
@@ -42,6 +47,37 @@ export default function Qr() {
 
   useEffect(() => {
     fetchQRCode();
+    
+     const setupQR = async () => {
+    
+      //fetch current user
+    const currentUser = await getCurrentUser();
+    if (!currentUser) return;
+
+    SetUser(currentUser);
+
+    //fetch QR code & add user record
+    await fetchQRCode();
+
+    //listen to realtime QR transaction updates
+    const channel = listenToQRTransaction(currentUser.id, () => {
+      console.log('QR transaction received:');
+      Alert.alert('QR Transaction', 'A transaction has been processed!');
+    });
+
+    return channel;
+  };
+
+  let channelRef: any;
+
+  setupQR().then((channel) => {
+    channelRef = channel;
+  });
+
+  return () => {
+    if (channelRef) supabase.removeChannel(channelRef);
+  };
+
   }, []);
 
   return (
