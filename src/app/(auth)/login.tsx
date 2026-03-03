@@ -61,11 +61,11 @@ export default function Login() {
     try {
       setLoadingGoogle(true);
       const data = await signInWithGoogleLoginService();
+      console.log("data", data);
       router.replace(data.homeRoute ?? "/(user)");
-      setLoadingGoogle(false);
     } catch (error: any) {
       const message = error?.message ?? "Something went wrong";
-      setErrors({ ...errors, password: message });
+      setErrors({ email: "", password: message });
     } finally {
       setLoadingGoogle(false);
     }
@@ -124,6 +124,11 @@ export default function Login() {
                     onChangeText={setEmail}
                     value={email}
                   />
+                  {errors.email ? (
+                    <Text className="mt-2 text-sm font-poppins text-red-500">
+                      {errors.email}
+                    </Text>
+                  ) : null}
                 </View>
 
                 <View className="w-full">
@@ -165,6 +170,11 @@ export default function Login() {
                       </TouchableOpacity>
                     </View>
                   </View>
+                  {errors.password ? (
+                    <Text className="mt-2 text-sm font-poppins text-red-500 text-center bg-red-50 rounded-xl p-4">
+                      {errors.password}
+                    </Text>
+                  ) : null}
                 </View>
                 {errors.password || errors.email && (
                     <Text className="mt-2 text-sm font-poppins text-red-500 text-center bg-red-50 rounded-xl p-4 w-full">
