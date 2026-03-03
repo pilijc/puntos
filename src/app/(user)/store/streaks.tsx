@@ -22,7 +22,7 @@ export default function StoreStreaks() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-background">
+    <SafeAreaView className="flex-1 bg-background dark:bg-neutral-900">
       <ScrollView
         className="flex-1"
         contentContainerClassName="px-6 pt-6 pb-10 gap-y-5"
@@ -30,11 +30,11 @@ export default function StoreStreaks() {
         <View className="flex-row items-center gap-x-3">
           <TouchableOpacity
             onPress={() => router.back()}
-            className="w-10 h-10 rounded-full bg-white border border-neutral-200 items-center justify-center"
+            className="w-10 h-10 rounded-full bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 items-center justify-center"
           >
             <MaterialIcons name="chevron-left" size={22} color="#0f172a" />
           </TouchableOpacity>
-          <Text className="text-2xl font-poppins-bold text-neutral-900">
+          <Text className="text-2xl font-poppins-bold text-neutral-900 dark:text-white">
             All Streaks
           </Text>
         </View>
@@ -96,15 +96,15 @@ export default function StoreStreaks() {
               <TouchableOpacity
                 key={streak.storeId}
                 onPress={() => router.push(`/store/${streak.storeId}`)}
-                className="bg-white rounded-3xl p-4 border border-neutral-100"
+                className="bg-white dark:bg-neutral-800 rounded-3xl p-4 border border-neutral-100 dark:border-neutral-700"
               >
                 <View className="flex-row items-center justify-between">
                   <View className="flex-row items-center gap-x-3">
-                    <View className="w-11 h-11 rounded-2xl bg-neutral-100 items-center justify-center">
+                    <View className="w-11 h-11 rounded-2xl bg-neutral-100 dark:bg-neutral-700 items-center justify-center">
                       <MaterialIcons name="storefront" size={20} color="#FF6600" />
                     </View>
                     <View>
-                      <Text className="font-poppins-semibold text-neutral-900">
+                      <Text className="font-poppins-semibold text-neutral-900 dark:text-white">
                         {store?.name ?? "Store"}
                       </Text>
                       <Text className="text-xs text-neutral-500 font-poppins mt-1">
@@ -133,7 +133,7 @@ export default function StoreStreaks() {
                   </Text>
                 </View>
 
-                <View className="h-2 bg-neutral-100 rounded-full mt-3 overflow-hidden w-full">
+                <View className="h-2 bg-neutral-100 dark:bg-neutral-700 rounded-full mt-3 overflow-hidden w-full">
                   <RNView
                     style={{
                       height: 8,

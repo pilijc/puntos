@@ -10,7 +10,7 @@ export default function SuperAdminSettings() {
     const handleLogout = async () => {
         try {
             await supabase.auth.signOut();
-            router.replace("/(onboarding)/welcome");
+            router.replace("/(onboarding)/index");
         } catch (error: any) {
             Alert.alert("Logout error", error?.message || "Unable to logout right now.");
         }

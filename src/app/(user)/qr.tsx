@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator } from 'react-native';
+import { ActivityIndicator, useColorScheme } from 'react-native';
 import { SafeAreaView, View, Text, TouchableOpacity } from '@/tw';
 
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
@@ -10,6 +10,8 @@ import { getCurrentUser, getStaticQRCode } from '@/services/qr-service';
 
 export default function Qr() {
   const router = useRouter();
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
   const [qrValue, setQrValue] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -17,7 +19,7 @@ export default function Qr() {
   const fetchQRCode = async () => {
     setLoading(true);
     try {
-      
+
       const user = await getCurrentUser();
 
       if (!user) {
@@ -30,11 +32,11 @@ export default function Qr() {
       console.log('Static QR value:', staticQR);
       setQrValue(staticQR);
 
-    } 
+    }
     catch (err) {
       console.error('Error getting QR code:', err);
       setQrValue(null);
-    } 
+    }
     finally {
       setLoading(false);
     }
@@ -45,41 +47,48 @@ export default function Qr() {
   }, []);
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
+    <SafeAreaView className="flex-1 bg-white dark:bg-neutral-900">
       <View className="px-6 pt-4 flex-1">
         {/* Header */}
         <View className="flex-row items-center justify-between">
           <TouchableOpacity onPress={() => router.back()} className="px-2 py-2">
-            <MaterialIcons name="close" size={22} color="#0F172A" />
+            <MaterialIcons name="close" size={22} color={isDark ? '#FFFFFF' : '#0F172A'} />
           </TouchableOpacity>
           <View className="w-5" />
         </View>
 
         {/* Instructions */}
-        <Text className="text-base font-semibold text-black text-center mt-4">
+        <Text className="text-base font-semibold text-black dark:text-white text-center mt-4">
           Get your Points Now
         </Text>
-        <Text className="text-sm mt-4 text-gray-500 text-center">
+        <Text className="text-sm mt-4 text-gray-500 dark:text-neutral-400 text-center">
           Let the operator scan your QR code
         </Text>
-        <Text className="text-xs mt-1 text-gray-400 text-center">
+        <Text className="text-xs mt-1 text-gray-400 dark:text-neutral-500 text-center">
           This is your unique customer QR code
         </Text>
 
         {/* QR Code */}
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
           {loading ? (
-            <ActivityIndicator size="large" />
+            <ActivityIndicator size="large" color={isDark ? '#FF6600' : undefined} />
           ) : qrValue ? (
             <>
-              <Text style={{ marginBottom: 20 }}>Your QR Code</Text>
-              <QRCode value={qrValue} size={200} />
-              <Text style={{ marginTop: 10, color: 'gray' }}>
+              <Text className="mb-5 text-sm font-poppins-semibold text-neutral-700 dark:text-neutral-300">
+                Your QR Code
+              </Text>
+              {/* White wrapper so code stays scannable on dark backgrounds */}
+              <View className="bg-white p-4 rounded-2xl">
+                <QRCode value={qrValue} size={200} />
+              </View>
+              <Text className="mt-4 text-xs text-center text-gray-500 dark:text-neutral-400 font-poppins">
                 Show this to the front desk to earn points
               </Text>
             </>
           ) : (
-            <Text>Failed to load QR code. Try again.</Text>
+            <Text className="text-neutral-500 dark:text-neutral-400 font-poppins">
+              Failed to load QR code. Try again.
+            </Text>
           )}
         </View>
       </View>

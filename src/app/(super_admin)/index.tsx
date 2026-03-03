@@ -7,6 +7,8 @@ import { useRouter } from "expo-router";
 export default function SuperAdminHome() {
   const router = useRouter();
   const [showNotifications, setShowNotifications] = useState(false);
+  const [showBlockModal, setShowBlockModal] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
 
   const softCardShadow = {
     shadowColor: "#0F172A",
@@ -16,7 +18,6 @@ export default function SuperAdminHome() {
     elevation: 2,
   };
 
-  // ✅ Generate 30 users
   const mockUsers = Array.from({ length: 30 }, (_, i) => {
     const names = [
       "Alex Morgan","Sarah Jenkins","Michael Chen","Emma Watson",
@@ -41,11 +42,10 @@ export default function SuperAdminHome() {
     };
   });
 
-  // ✅ Only show recent 20 for dashboard
-  const recentUsers = mockUsers.filter(u => u.section === "recent");
-
+  const [recentUsers, setRecentUsers] = useState(mockUsers.filter(u => u.section === "recent"));
   const storeFilters = ["All Stores", "Active", "Deactivated"];
 
+  // USER-STATIC
   const mockStores = [
     {
       id: "s1",
@@ -73,10 +73,17 @@ export default function SuperAdminHome() {
     },
   ];
 
+  const iconColorMap = {
+    registration: "#3B82F6",
+    action: "#FF6600",
+    alert: "#EF4444",
+    default: "#64748B"
+  };
+  // NOTIFICATIONS-STATIC
   const notifications = [
-    { id: "n1", title: "New Registration", message: "Alex Morgan registered The Coffee Foundry", time: "2m ago" },
-    { id: "n2", title: "Action Required", message: "Brew & Bean Co. is waiting for your review", time: "1h ago" },
-    { id: "n3", title: "System Alert", message: "New security patches have been applied", time: "5h ago" },
+    { id: "n1", title: "New Registration", message: "Alex Morgan registered The Coffee Foundry", time: "2m ago", type: "registration", icon: "person-add", unread: true },
+    { id: "n2", title: "Action Required", message: "Brew & Bean Co. is waiting for your review", time: "1h ago", type: "action", icon: "warning", unread: true },
+    { id: "n3", title: "System Alert", message: "New security patches have been applied", time: "5h ago", type: "alert", icon: "info", unread: false },
   ];
 
   return (
@@ -108,6 +115,7 @@ export default function SuperAdminHome() {
         {/* Stats */}
         <View className="px-6 -mt-10 mb-6">
           <View style={{ flexDirection: "row", gap: 12 }}>
+
             <View style={[softCardShadow, { flex: 1, backgroundColor: "#FFFFFF", borderRadius: 20, paddingVertical: 18, alignItems: "center" }]}>
               <MaterialIcons name="groups" size={20} color="#3B82F6" />
               <Text className="text-[22px] font-poppins-bold text-slate-900 mt-2">{mockUsers.length}</Text>
@@ -117,6 +125,12 @@ export default function SuperAdminHome() {
             <View style={[softCardShadow, { flex: 1, backgroundColor: "#FFFFFF", borderRadius: 20, paddingVertical: 18, alignItems: "center" }]}>
               <MaterialIcons name="storefront" size={20} color="#22C55E" />
               <Text className="text-[22px] font-poppins-bold text-slate-900 mt-2">{mockStores.length}</Text>
+              <Text className="text-[9px] font-poppins-bold text-slate-400">TOTAL STORES</Text>
+            </View>
+
+            <View style={[softCardShadow, { flex: 1, backgroundColor: "#FFFFFF", borderRadius: 20, paddingVertical: 18, alignItems: "center" }]}>
+              <MaterialIcons name="storefront" size={20} color="#16A34A" />
+              <Text className="text-[22px] font-poppins-bold text-slate-900 mt-2">{mockStores.filter(store => store.status === "ACTIVE").length}</Text>
               <Text className="text-[9px] font-poppins-bold text-slate-400">ACTIVE STORES</Text>
             </View>
           </View>
@@ -124,23 +138,97 @@ export default function SuperAdminHome() {
 
         {/* Notification Modal */}
         <Modal visible={showNotifications} animationType="slide" transparent>
-          <View className="flex-1 bg-black/50 justify-end">
-            <View className="bg-white rounded-t-[30px] p-6 h-[70%]">
-              <View className="flex-row justify-between items-center mb-6">
-                <Text className="text-lg font-poppins-bold">Notifications</Text>
-                <TouchableOpacity onPress={() => setShowNotifications(false)}>
-                  <MaterialIcons name="close" size={24} color="#000" />
+          <View style={{ flex: 1, backgroundColor: "rgba(15,23,42,0.4)", justifyContent: "flex-end" }}>
+            <View style={{ backgroundColor: "#FFFFFF", borderTopLeftRadius: 28, borderTopRightRadius: 28, paddingTop: 12, paddingBottom: 32, maxHeight: "65%" }}>
+              <View style={{ width: 36, height: 4, backgroundColor: "#E2E8F0", borderRadius: 2, alignSelf: "center", marginBottom: 20 }} />
+              <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: 24, marginBottom: 4 }}>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                  <Text style={{ fontSize: 16, fontWeight: "700", color: "#0F172A" }}>Notifications</Text>
+                  <View style={{ backgroundColor: "#FF6600", borderRadius: 10, paddingHorizontal: 7, paddingVertical: 2 }}>
+                    <Text style={{ color: "#FFF", fontSize: 10, fontWeight: "700" }}>
+                      {notifications.filter(n => n.unread).length}
+                    </Text>
+                  </View>
+                </View>
+                <TouchableOpacity onPress={() => setShowNotifications(false)} style={{ padding: 4 }}>
+                  <MaterialIcons name="close" size={20} color="#94A3B8" />
                 </TouchableOpacity>
               </View>
+              <TouchableOpacity style={{ paddingHorizontal: 24, marginBottom: 16 }}>
+                <Text style={{ fontSize: 11, color: "#FF6600", fontWeight: "600" }}>Mark all as read</Text>
+              </TouchableOpacity>
               <ScrollView showsVerticalScrollIndicator={false}>
-                {notifications.map((n) => (
-                  <View key={n.id} className="mb-4 p-4 bg-orange-50 rounded-2xl">
-                    <Text className="font-poppins-bold text-sm text-slate-800">{n.title}</Text>
-                    <Text className="text-slate-600 text-xs mt-1">{n.message}</Text>
-                    <Text className="text-slate-400 text-[10px] mt-2">{n.time}</Text>
+                {notifications.map((n, index) => (
+                  <View key={n.id}>
+                    {index !== 0 && <View style={{ height: 1, backgroundColor: "#F1F5F9", marginHorizontal: 24 }} />}
+                    <TouchableOpacity
+                      activeOpacity={0.7}
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        paddingHorizontal: 24,
+                        paddingVertical: 14,
+                        backgroundColor: n.unread ? "#FAFAFA" : "#FFFFFF",
+                      }}
+                    >
+                      <View
+                        style={{
+                          width: 38,
+                          height: 38,
+                          borderRadius: 19,
+                          backgroundColor: (iconColorMap[n.type] || iconColorMap.default) + "15",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          marginRight: 14,
+                          flexShrink: 0,
+                        }}
+                      >
+                        <MaterialIcons name={n.icon || "notifications-none"} size={18} color={iconColorMap[n.type] || iconColorMap.default} />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={{ fontSize: 13, fontWeight: "600", color: "#1E293B", marginBottom: 2 }}>
+                          {n.title}
+                        </Text>
+                        <Text style={{ fontSize: 12, color: "#64748B", lineHeight: 17 }}>
+                          {n.message}
+                        </Text>
+                      </View>
+                      <View style={{ alignItems: "flex-end", marginLeft: 10, gap: 6 }}>
+                        <Text style={{ fontSize: 10, color: "#94A3B8" }}>{n.time}</Text>
+                        {n.unread && <View style={{ width: 7, height: 7, borderRadius: 4, backgroundColor: "#FF6600" }} />}
+                      </View>
+                    </TouchableOpacity>
                   </View>
                 ))}
               </ScrollView>
+            </View>
+          </View>
+        </Modal>
+        <Modal visible={showBlockModal} animationType="fade" transparent>
+          <View style={{ flex: 1, backgroundColor: "rgba(15,23,42,0.4)", justifyContent: "center", alignItems: "center" }}>
+            <View style={{ backgroundColor: "#FFF", borderRadius: 20, padding: 24, width: "80%", alignItems: "center" }}>
+              <Text style={{ fontSize: 16, fontWeight: "700", marginBottom: 12 }}>Block User</Text>
+              <Text style={{ fontSize: 13, color: "#64748B", textAlign: "center", marginBottom: 24 }}>
+                Are you sure you want to block{" "}
+                <Text style={{ fontWeight: "700", color: "#EF4444" }}>{selectedUser?.name}</Text>
+                ?
+              </Text>
+              <View style={{ flexDirection: "row", gap: 12 }}>
+                <TouchableOpacity
+                  style={{ flex: 1, paddingVertical: 10, borderRadius: 10, backgroundColor: "#F1F5F9", alignItems: "center" }}
+                  onPress={() => setShowBlockModal(false)}
+                >
+                  <Text style={{ color: "#64748B", fontWeight: "600" }}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={{ flex: 1, paddingVertical: 10, borderRadius: 10, backgroundColor: "#EF4444", alignItems: "center" }}
+                  onPress={() => {
+                    setShowBlockModal(false);
+                  }}
+                >
+                  <Text style={{ color: "#FFF", fontWeight: "600" }}>Block</Text>
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
         </Modal>
@@ -155,7 +243,6 @@ export default function SuperAdminHome() {
             </TouchableOpacity>
           </View>
 
-          {/* Scrollable Recent Users */}
           <View style={[softCardShadow, { backgroundColor: "#FFFFFF", borderRadius: 20, overflow: "hidden", maxHeight: 300 }]}>
             <ScrollView nestedScrollEnabled showsVerticalScrollIndicator={false}>
               {recentUsers.map((user, index) => (
@@ -165,7 +252,13 @@ export default function SuperAdminHome() {
                     <Text className="text-[14px] font-poppins-bold text-slate-800">{user.name}</Text>
                     <Text className="text-[12px] font-poppins text-slate-500">{user.email}</Text>
                   </View>
-                  <TouchableOpacity className="bg-red-50 px-3 py-1.5 rounded-lg">
+                  <TouchableOpacity
+                    className="bg-red-50 px-3 py-1.5 rounded-lg"
+                    onPress={() => {
+                      setSelectedUser(user);
+                      setShowBlockModal(true);
+                    }}
+                  >
                     <Text className="text-red-500 text-[11px] font-poppins-bold">Block</Text>
                   </TouchableOpacity>
                 </View>

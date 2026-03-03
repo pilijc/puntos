@@ -1,5 +1,5 @@
 import React, { useState, useRef } from "react";
-import { Animated } from "react-native";
+import { Animated, TextInput, useColorScheme } from "react-native";
 import { FadeInDown, FadeInUp } from "react-native-reanimated";
 import {
   AnimatedView,
@@ -125,21 +125,31 @@ const HISTORY_DATA = [
 
 export default function History() {
   const [activeTab, setActiveTab] = useState(0);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchText, setSearchText] = useState("");
 
-  const filteredData =
-    activeTab === 0
-      ? HISTORY_DATA
-      : HISTORY_DATA.filter((item) =>
-        activeTab === 1 ? item.type === "earned" : item.type === "claimed"
-      );
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === "dark";
+
+  const filteredData = HISTORY_DATA.filter((item) => {
+    const matchesTab =
+      activeTab === 0
+        ? true
+        : activeTab === 1
+        ? item.type === "earned"
+        : item.type === "claimed";
+    const matchesSearch = item.title.toLowerCase().includes(searchText.toLowerCase());
+    return matchesTab && matchesSearch;
+  });
 
   const sections = [...new Set(filteredData.map((item) => item.section))];
 
   const parsePoints = (value) => Number(value || 0);
 
-  const totalEarnedPoints = HISTORY_DATA
-    .filter((item) => item.type === "earned")
-    .reduce((sum, item) => sum + parsePoints(item.points), 0);
+  const totalEarnedPoints = HISTORY_DATA.filter((item) => item.type === "earned").reduce(
+    (sum, item) => sum + parsePoints(item.points),
+    0
+  );
 
   const formattedTotal =
     totalEarnedPoints > 0
@@ -147,39 +157,78 @@ export default function History() {
       : totalEarnedPoints.toLocaleString();
 
   return (
-    <SafeAreaView className="flex-1 bg-background">
+    <SafeAreaView className="flex-1 bg-background dark:bg-neutral-900">
       <AnimatedView entering={FadeInDown.duration(500)}>
-        <View className="px-6 pt-6 pb-6 bg-primary">
-          <View className="flex-row justify-between items-center">
-            <View>
-              <Text className="text-white text-2xl font-poppins-bold">
-                Activity
-              </Text>
-              <Text className="text-white/70 text-sm font-poppins-regular">
-                Unclaimed Points
-              </Text>
-            </View>
+        <View className="px-6 pt-6 pb-4">
+          <View className="flex-row justify-between items-center mb-5">
+            {!searchOpen ? (
+              <>
+                <View>
+                  <Text className="text-neutral-900 dark:text-white text-2xl font-poppins-bold">
+                    Activity
+                  </Text>
+                </View>
+                <View className="flex-row items-center gap-3">
+                  <View className="bg-orange-50 dark:bg-orange-500/20 px-4 py-2 rounded-xl items-center">
+                    <Text className="text-orange-600 dark:text-orange-400 text-xl font-poppins-bold leading-tight">
+                      {formattedTotal}
+                    </Text>
+                    <Text className="text-orange-400 dark:text-orange-500 text-[7px] font-poppins-medium tracking-wide">
+                      UNCLAIMED
+                    </Text>
+                  </View>
+                  <TouchableOpacity
+                    onPress={() => setSearchOpen(true)}
+                    className="w-10 h-10 rounded-xl bg-neutral-100 dark:bg-neutral-800 items-center justify-center"
+                  >
+                    <Text className="text-4xl font-bold text-neutral-500 dark:text-neutral-300">⌕</Text>
+                  </TouchableOpacity>
+                </View>
+              </>
+            ) : (
+              <View className="flex-row items-center bg-neutral-100 dark:bg-neutral-800 rounded-xl px-1 py-1 w-full">
+                <View className="flex-1 mx-1">
+                  <TextInput
+                    autoFocus
+                    placeholder="Search history..."
+                    placeholderTextColor={isDark ? "#9CA3AF" : "#999"}
+                    style={{ color: isDark ? "#FFFFFF" : "#000000" }}
+                    className="text-base px-3 py-2" 
+                    value={searchText}
+                    onChangeText={setSearchText}
+                  />
+                </View>
+                
+                <TouchableOpacity
+                  onPress={() => {
+                    setSearchOpen(false);
+                    setSearchText("");
+                  }}
+                  className="px-3 justify-center items-center"
+                >
+                  <Text
+                    style={{ color: isDark ? "#FFFFFF" : "#FF6600" }}
+                    className="font-bold text-base"
+                  >
+                    ✕
+                  </Text>
+                </TouchableOpacity>
+              </View>
+          )}
+        </View>
 
-            <Text className="text-white text-3xl font-poppins-bold">
-              {formattedTotal}
-            </Text>
-          </View>
 
-          <View className="flex-row bg-white/20 mt-5 p-1 rounded-xl">
+          {/* Tabs */}
+          <View className="flex-row bg-neutral-200/70 dark:bg-neutral-800/70 p-1 rounded-xl">
             {TABS.map((tab, i) => {
               const isActive = activeTab === i;
-
               return (
                 <TouchableOpacity
                   key={tab}
                   onPress={() => setActiveTab(i)}
-                  className={`flex-1 py-2 rounded-lg items-center ${isActive ? "bg-white" : ""
-                    }`}
+                  className={`flex-1 py-3 rounded-lg items-center ${isActive ? "bg-orange-500" : ""}`}
                 >
-                  <Text
-                    className={`text-sm font-poppins-semibold ${isActive ? "text-primary" : "text-white"
-                      }`}
-                  >
+                  <Text className={`text-sm font-poppins-semibold ${isActive ? "text-white" : "text-neutral-500 dark:text-white"}`}>
                     {tab}
                   </Text>
                 </TouchableOpacity>
@@ -191,17 +240,12 @@ export default function History() {
 
       <ScrollView
         className="flex-1"
-        contentContainerStyle={{
-          paddingHorizontal: 20,
-          paddingBottom: 30,
-          paddingTop: 10,
-        }}
+        contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 30, paddingTop: 10 }}
         showsVerticalScrollIndicator={false}
       >
         {sections.map((section) => (
           <AnimatedView key={section} entering={FadeInUp.duration(500)}>
             <SectionLabel label={section} />
-
             <View className="mt-1">
               {filteredData
                 .filter((item) => item.section === section)
@@ -239,61 +283,38 @@ function HistoryItem({ title, subtitle, time, points, positive, image, icon }) {
   const scaleAnim = useRef(new Animated.Value(1)).current;
 
   const handlePressIn = () => {
-    Animated.spring(scaleAnim, {
-      toValue: 0.97,
-      useNativeDriver: true,
-    }).start();
+    Animated.spring(scaleAnim, { toValue: 0.97, useNativeDriver: true }).start();
   };
 
   const handlePressOut = () => {
-    Animated.spring(scaleAnim, {
-      toValue: 1,
-      useNativeDriver: true,
-    }).start();
+    Animated.spring(scaleAnim, { toValue: 1, useNativeDriver: true }).start();
   };
 
   return (
-    <TouchableOpacity
-      activeOpacity={1}
-      onPressIn={handlePressIn}
-      onPressOut={handlePressOut}
-    >
+    <TouchableOpacity activeOpacity={1} onPressIn={handlePressIn} onPressOut={handlePressOut}>
       <Animated.View
         style={{ transform: [{ scale: scaleAnim }] }}
-        className="bg-white rounded-2xl p-4 mb-3 border border-neutral-100"
+        className="bg-white dark:bg-neutral-800 rounded-2xl p-4 mb-3 border border-neutral-100 dark:border-neutral-700"
       >
         <View className="flex-row items-center justify-between">
           <View className="flex-row items-center flex-1">
-            <View className="w-12 h-12 my-3 rounded-xl bg-background items-center justify-center mr-3 overflow-hidden">
-              {image ? (
-                <Image source={{ uri: image }} className="w-12 h-12" />
-              ) : (
-                <Text className="text-xl">{icon}</Text>
-              )}
+            <View className="w-12 h-12 my-3 rounded-xl bg-background dark:bg-neutral-700 items-center justify-center mr-3">
+              {icon && <Text className="text-xl text-orange-500 dark:text-orange-400">{icon}</Text>}
+              {image && <Image source={{ uri: image }} className="w-12 h-12" />}
             </View>
 
             <View className="flex-1">
-              <Text
-                numberOfLines={1}
-                className="text-base font-poppins-semibold text-neutral-900"
-              >
+              <Text numberOfLines={1} className="text-base font-poppins-semibold text-neutral-900 dark:text-white">
                 {title}
               </Text>
-
               <Text className="text-xs font-poppins-regular text-neutral-400">
                 {subtitle} {time ? `• ${time}` : ""}
               </Text>
             </View>
           </View>
 
-          <View
-            className={`px-3 py-1 rounded-full ${isPositive ? "bg-emerald-50" : "bg-red-50"
-              }`}
-          >
-            <Text
-              className={`text-sm font-poppins-bold ${isPositive ? "text-emerald-500" : "text-red-500"
-                }`}
-            >
+          <View className={`px-3 py-1 rounded-full ${isPositive ? "bg-emerald-50" : "bg-red-50"}`}>
+            <Text className={`text-sm font-poppins-bold ${isPositive ? "text-emerald-500" : "text-red-500"}`}>
               {points}
             </Text>
           </View>
