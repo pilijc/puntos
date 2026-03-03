@@ -161,7 +161,7 @@ export default function SignUp() {
 
   return (
     <SafeAreaView className="flex-1 bg-background">
-      <View className="flex-row items-center justify-center mb-6 shadow-xs p-4">
+      <View className="flex-row items-center justify-centershadow-xs p-4">
         <TouchableOpacity
           onPress={
             currentStep === 1

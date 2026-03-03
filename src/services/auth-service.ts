@@ -137,14 +137,16 @@ export async function signUpWithGoogleService() {
 export async function loginService(email: string, password: string) {
   try {
     const res = await supabase.auth.signInWithPassword({ email, password });
+    console.log("res", res);
     if (res.data?.session?.access_token) {
       await AsyncStorage.setItem('sessionToken', res.data.session.access_token);
     }
     if (res.error) throw res.error;
     const userId = res.data?.user?.id;
     const homeRoute = userId ? await getHomeRouteForUserId(userId) : "/(user)";
-    return { ...res.data, homeRoute };
+    return { ...res, homeRoute };
   } catch (error: any) {
+    console.log("error login service", error);
     throw error;
   }
 }

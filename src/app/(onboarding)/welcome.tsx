@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   SafeAreaView,
   View,
@@ -7,12 +7,13 @@ import {
   Image,
 } from "@/tw";
 import { router } from "expo-router";
-import { Alert } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
+import { ActivityIndicator, Alert } from "react-native";
 import { signInWithGoogleLoginService } from "@/services/auth-service";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function OnboardingWelcome() {
+  const [loadingGoogle, setLoadingGoogle] = useState(false);
+  
   const handleLogin = () => {
     router.push("/login");
   };
@@ -23,13 +24,17 @@ export default function OnboardingWelcome() {
 
   const handleSignInWithGoogle = async () => {
     try {
-      await signInWithGoogleLoginService();
-      router.replace("/(tabs)");
+      setLoadingGoogle(true);
+      const data = await signInWithGoogleLoginService();
+      router.replace(data.homeRoute ?? "/(user)");
     } catch (error: any) {
+      setLoadingGoogle(false);
       const message =
         error?.msg ??
         (typeof error?.message === "string" ? error.message : "Something went wrong");
       Alert.alert("Sign In with Google Failed", message);
+    } finally {
+      setLoadingGoogle(false);
     }
   };
 
@@ -57,7 +62,7 @@ export default function OnboardingWelcome() {
               activeOpacity={0.9}
               onPress={handleLogin}
             >
-              <Text className="text-white text-lg font-poppins-semibold">
+              <Text className="text-white text-md font-poppins-medium">
                 Log in
               </Text>
             </TouchableOpacity>
@@ -66,7 +71,7 @@ export default function OnboardingWelcome() {
               activeOpacity={0.9}
               onPress={handleSignup}
             >
-              <Text className="text-neutral-700 text-lg font-poppins-semibold">
+              <Text className="text-neutral-600 text-md font-poppins-medium">
                 Sign up
               </Text>
             </TouchableOpacity>
@@ -82,13 +87,19 @@ export default function OnboardingWelcome() {
               className="h-14 w-full px-5 rounded-xl border border-neutral-300 bg-transparent flex-row items-center justify-center gap-x-3"
               activeOpacity={0.9}
             >
-              <Image
-                source={require("../../assets/images/google-icon.png")}
-                className="w-5 h-5"
-              />
-              <Text className="text-neutral-700 text-base font-poppins-medium">
-                Continue with Google
-              </Text>
+              {loadingGoogle ? (
+                <ActivityIndicator size="small" color="gray" />
+              ) : (
+                <>
+                  <Image
+                    source={require("../../assets/images/google-icon.png")}
+                    className="w-5 h-5"
+                  />
+                  <Text className="text-neutral-600 text-md font-poppins-medium mt-1">
+                    Continue with Google
+                  </Text>
+                </>
+              )}
             </TouchableOpacity>
           </View>
         </View>
