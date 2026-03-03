@@ -4,14 +4,17 @@ import { useFonts } from "expo-font";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect, useState } from "react";
-import { Animated, Easing, StatusBar, StyleSheet, View } from "react-native";
+import { Animated, Easing, StatusBar, StyleSheet, View, Alert } from "react-native";
 import { supabase } from "@/supabase/supabase";
 import React from "react";
 import { useAuthListener } from "@/hooks/auth-listener";
 import { useAnimatedStyle, useSharedValue, withRepeat, withSequence, withTiming } from "react-native-reanimated";
 import { Image } from "@/tw";
 import { getHomeRouteForUserId } from "@/services/access-service";
+import { checkIfAccountDeletedService, AccountDeletedError } from "@/services/auth-service";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { useAuthStore } from "@/store/auth-store";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -47,7 +50,6 @@ function SplashPulse() {
 
 export default function Layout() {
   useAuthListener();
-  const [sessionChecked, setSessionChecked] = useState(false);
   const router = useRouter();
   const [fontsLoaded] = useFonts({
     "Poppins-Regular": require("../assets/fonts/Poppins-Regular.ttf"),
@@ -55,24 +57,47 @@ export default function Layout() {
     "Poppins-SemiBold": require("../assets/fonts/Poppins-SemiBold.ttf"),
     "Poppins-Bold": require("../assets/fonts/Poppins-Bold.ttf"),
   });
+  const sessionToken = useAuthStore((s) => s.sessionToken);
 
   useEffect(() => {
     const checkSession = async () => {
-      const { data: { session }, error } = await supabase.auth.getSession();
+      const { data: { session } } = await supabase.auth.getSession();
 
-      if (error || !session) {
-        router.replace("/(onboarding)/welcome");
-      } else {
-        const nextRoute = await getHomeRouteForUserId(session.user.id);
-        router.replace(nextRoute);
+      if (!session && !sessionToken) {
+        const hasSeenOnboarding = await AsyncStorage.getItem("hasSeenOnboarding");
+        if (!hasSeenOnboarding) {
+          router.replace("/(onboarding)");
+        } else {
+          router.replace("/(onboarding)/welcome");
+        }
+        return;
       }
-      setSessionChecked(true);
+
+      if (session) {
+        try {
+          const userId = session.user.id;
+
+          // Centralized check for deleted accounts
+          await checkIfAccountDeletedService(userId);
+
+          // Get the appropriate initial route based on user type/data
+          const nextRoute = await getHomeRouteForUserId(userId);
+          router.replace(nextRoute as any);
+        } catch (err: any) {
+          if (err instanceof AccountDeletedError) {
+            Alert.alert("Login Failed", err.message);
+            router.replace("/(auth)/login");
+          } else {
+            console.error("Session restoration error:", err);
+          }
+        }
+      }
     };
 
     if (fontsLoaded) {
       checkSession();
     }
-  }, [fontsLoaded]);
+  }, [fontsLoaded, sessionToken]);
 
   SplashScreen.setOptions({
     duration: 1000,

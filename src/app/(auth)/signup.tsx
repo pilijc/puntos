@@ -7,7 +7,7 @@ import {
   Image
 } from "@/tw";
 import React, { useState } from "react";
-import { KeyboardAvoidingView, Platform, Alert } from "react-native";
+import { KeyboardAvoidingView, Alert, ActivityIndicator, Platform } from "react-native";
 import { router } from "expo-router";
 import { useAuthStore } from "../../store/auth-store";
 import signUpService from "../../services/auth-service";
@@ -18,7 +18,8 @@ import { Ionicons } from "@expo/vector-icons";
 export default function SignUp() {
   const [currentStep, setCurrentStep] = useState(1);
   const totalSteps = 4;
-  
+  const [loading, setLoading] = useState(false);
+  const [loadingGoogle, setLoadingGoogle] = useState(false);
   const {
     name,
     setName,
@@ -109,15 +110,7 @@ export default function SignUp() {
       if (currentStep < totalSteps) {
         setCurrentStep(currentStep + 1);
       } else {
-        Alert.alert(
-          "Create account?",
-          "This is a sample dialog. Tap OK to continue.",
-          [
-            { text: "Cancel", style: "cancel" },
-            { text: "OK", onPress: handleSignup },
-          ],
-          { cancelable: true }
-        );
+        handleSignup();
       }
     }
   };
@@ -130,144 +123,163 @@ export default function SignUp() {
 
   const handleSignup = async () => {
     try {
-      await signUpService(email, password, name);
-      Alert.alert("Success", "Account created!");
-      router.replace("/(user)");
-    } catch (error: any) {
-      Alert.alert("Signup failed", error?.message);
-    } finally {
+      setLoading(true);
+      const data = await signUpService(email, password, name);
       reset();
       setAcceptedTerms(false);
       setCurrentStep(1);
+  
+      Alert.alert("Success", "Account created!");
+      router.replace(data.homeRoute ?? "/(user)");
+    } catch (error: any) {
+      setErrors((prev) => ({
+        ...prev,
+        password: error?.message ?? "Signup failed",
+      }));
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleSignupWithGoogle = async () => {
     try {
-      await signUpWithGoogleService();
+      setLoadingGoogle(true);
+      const data = await signUpWithGoogleService();
       Alert.alert("Success", "Account created!");
-      router.replace("/(user)");
+      router.replace(data.homeRoute ?? "/(user)");
     } catch (error: any) {
+      setLoadingGoogle(false);
       reset();
       const message =
         error?.msg ??
         (typeof error?.message === "string" ? error.message : "Something went wrong");
       Alert.alert("Google Sign-Up Failed", message);
+    } finally {
+      setLoadingGoogle(false);
     }
   };
 
   return (
     <SafeAreaView className="flex-1 bg-background">
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        className="flex-1"
-      >
-        <View className="px-6 py-4 flex-row items-center">
-          {currentStep > 1 ? (
-            <TouchableOpacity onPress={handleBack}>
-              <Ionicons name="chevron-back-outline" size={24} color="#000" />
-            </TouchableOpacity>
-          ) : (
-            <View className="w-6" />
-          )}
-          {/* <Text className="flex-1 text-center font-poppins-semibold text-lg">
-            Create Account
-          </Text> */}
-          <View className="w-6" />
-        </View>
-                      
-        <ScrollView
-          contentContainerStyle={{ flexGrow: 1 }}
-          keyboardShouldPersistTaps="handled"
+      <View className="flex-row items-center justify-center mb-6 shadow-xs p-4">
+        <TouchableOpacity
+          onPress={
+            currentStep === 1
+              ? () => router.replace("/(onboarding)/welcome")
+              : handleBack
+          }
+          hitSlop={10}
         >
-          <View className="p-6 flex-1 justify-between">
-            <View className="flex-1 justify-center">
-              <StepHeader currentStep={currentStep} />
-          
-              {currentStep === 1 && (
-                <NameStep
-                  value={name}
-                  onChange={setName}
-                  error={errors.name}
-                />
-              )}
-              {currentStep === 2 && (
-                <EmailStep
-                  value={email}
-                  onChange={setEmail}
-                  error={errors.email}
-                />
-              )}
-              {currentStep === 3 && (
-                <PasswordStep
-                  password={password}
-                  confirmPassword={confirmPassword}
-                  showPassword={showPassword}
-                  showConfirmPassword={showConfirmPassword}
-                  onPasswordChange={setPassword}
-                  onConfirmPasswordChange={setConfirmPassword}
-                  onTogglePassword={() => setShowPassword(!showPassword)}
-                  onToggleConfirmPassword={() => setShowConfirmPassword(!showConfirmPassword)}
-                  errors={errors}
-                />
-              )}
-              {currentStep === 4 && (
-                <TermsStep
-                  accepted={acceptedTerms}
-                  onToggle={() => setAcceptedTerms(!acceptedTerms)}
-                  error={errors.terms}
-                />
-              )}
-            </View>
-            
-            <View className="gap-y-4 mt-6">
-              <TouchableOpacity
-                onPress={handleNext}
-                className="bg-primary py-4 rounded-xl items-center"
-              >
-                <Text className="text-white text-base font-poppins-semibold">
-                  {currentStep === totalSteps ? 'Create Account' : 'Continue'}
-                </Text>
-              </TouchableOpacity>
-              
-              {currentStep === 1 && (
-                <>
-                  <View className="flex-row items-center gap-x-4">
-                    <View className="flex-1 h-px bg-neutral-200" />
-                    <Text className="text-neutral-500 font-poppins text-sm">
-                      OR CONTINUE WITH
-                    </Text>
-                    <View className="flex-1 h-px bg-neutral-200" />
-                  </View>
-                  
-                  <TouchableOpacity
-                    onPress={handleSignupWithGoogle}
-                    className="bg-background rounded-xl p-4 border border-neutral-200 flex-row items-center justify-center gap-x-3"
-                  >
-                    <Image
-                      source={require("../../assets/images/google-icon.png")}
-                      className="w-5 h-5"
-                    />
-                    <Text className="font-poppins-medium text-neutral-700">
-                      Continue with Google
-                    </Text>
-                  </TouchableOpacity>
-                </>
-              )}
-              <View className="flex-row justify-center">
-                <Text className="font-poppins text-neutral-600">
-                  Already have an account?
-                </Text>
-                <TouchableOpacity onPress={() => router.replace("/login")}>
-                  <Text className="ml-1 font-poppins-semibold text-primary">
-                    Login
+          <Ionicons name="chevron-back" size={18} color="black" />
+        </TouchableOpacity>
+        <View className="flex-1 items-center -ml-10">
+          <Text className="text-xl font-poppins-bold text-neutral-900">
+            Sign Up
+          </Text>
+        </View>
+      </View>
+
+      <View className="flex-1 justify-start p-6">
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "android" ? "padding" : "height"}
+          className="flex-1"
+        >
+          <ScrollView
+            contentContainerStyle={{ flexGrow: 1 }}
+            keyboardShouldPersistTaps="handled"
+          >
+            <View className="flex-1 gap-y-6">
+              <View className="w-full">
+                <StepHeader currentStep={currentStep} />
+
+                {currentStep === 1 && (
+                  <NameStep
+                    value={name}
+                    onChange={setName}
+                    error={errors.name}
+                  />
+                )}
+                {currentStep === 2 && (
+                  <EmailStep
+                    value={email}
+                    onChange={setEmail}
+                    error={errors.email}
+                  />
+                )}
+                {currentStep === 3 && (
+                  <PasswordStep
+                    password={password}
+                    confirmPassword={confirmPassword}
+                    showPassword={showPassword}
+                    showConfirmPassword={showConfirmPassword}
+                    onPasswordChange={setPassword}
+                    onConfirmPasswordChange={setConfirmPassword}
+                    onTogglePassword={() => setShowPassword(!showPassword)}
+                    onToggleConfirmPassword={() =>
+                      setShowConfirmPassword(!showConfirmPassword)
+                    }
+                    errors={errors}
+                  />
+                )}
+                {currentStep === 4 && (
+                  <TermsStep
+                    accepted={acceptedTerms}
+                    onToggle={() => setAcceptedTerms(!acceptedTerms)}
+                    error={errors.terms}
+                  />
+                )}
+              </View>
+
+              <View className="mt-2 gap-y-4 w-full">
+                <TouchableOpacity
+                  onPress={handleNext}
+                  className="bg-primary py-4 rounded-xl items-center"
+                >
+                  <Text className="text-white text-base font-poppins-semibold">
+                    {currentStep === totalSteps ? "Create Account" : "Continue"}
                   </Text>
                 </TouchableOpacity>
+
+                {currentStep === 1 && (
+                  <>
+                    <View className="flex-row items-center gap-x-4">
+                      <View className="flex-1 h-px bg-neutral-200" />
+                      <Text className="text-neutral-500 font-poppins text-sm">
+                        OR CONTINUE WITH
+                      </Text>
+                      <View className="flex-1 h-px bg-neutral-200" />
+                    </View>
+
+                    <TouchableOpacity
+                      onPress={handleSignupWithGoogle}
+                      className="bg-background rounded-xl p-4 border border-neutral-200 flex-row items-center justify-center gap-x-3"
+                    >
+                      <Image
+                        source={require("../../assets/images/google-icon.png")}
+                        className="w-5 h-5"
+                      />
+                      <Text className="font-poppins-medium text-neutral-700">
+                        Continue with Google
+                      </Text>
+                    </TouchableOpacity>
+                  </>
+                )}
+
+                <View className="flex-row justify-center">
+                  <Text className="font-poppins text-neutral-600">
+                    Already have an account?
+                  </Text>
+                  <TouchableOpacity onPress={() => router.replace("/login")}>
+                    <Text className="ml-1 font-poppins-semibold text-primary">
+                      Login
+                    </Text>
+                  </TouchableOpacity>
+                </View>
               </View>
             </View>
-          </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </View>
     </SafeAreaView>
   );
 }
