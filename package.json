@@ -44,6 +44,7 @@
     "react-native": "0.81.5",
     "react-native-css": "^3.0.1",
     "react-native-gesture-handler": "~2.28.0",
+    "react-native-onesignal": "^5.3.1",
     "react-native-qrcode-svg": "^6.3.21",
     "react-native-reanimated": "~4.1.1",
     "react-native-safe-area-context": "~5.6.0",
@@ -60,6 +61,8 @@
     "@react-native/metro-config": "^0.84.0",
     "@types/react": "~19.1.10",
     "firebase-tools": "^15.5.1",
+    "supabase": "^2.76.16",
+    "typescript": "~5.9.2"
     "typescript": "^5.9.3"
   },
   "private": true,

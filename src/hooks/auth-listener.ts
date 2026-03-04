@@ -5,7 +5,8 @@ import { getHomeRouteForUserId } from '@/services/access-service';
 import { checkIfAccountDeletedService, AccountDeletedError } from '@/services/auth-service';
 import { Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useAuthStore } from '@/store/auth-store';
+import { upsertPushId } from '@/services/push-notif';
+import { OneSignal } from 'react-native-onesignal';
 
 export function useAuthListener() {
   const router = useRouter();
@@ -35,17 +36,21 @@ export function useAuthListener() {
                 return;
               }
 
-              await checkIfAccountDeletedService(session.user.id);
-
-              const nextRoute = await getHomeRouteForUserId(session.user.id);
-              router.replace(nextRoute as any);
-            } catch (err: any) {
-              if (err instanceof AccountDeletedError) {
-                Alert.alert("Login Failed", err.message);
-                router.replace("/(auth)/login");
-              } else {
-                console.error("Auth listener session error:", err);
-              }
+            await checkIfAccountDeletedService(session.user.id);
+            
+            const userId = session.user.id;
+            const nextRoute = await getHomeRouteForUserId(userId);
+            
+            await OneSignal.login(userId);
+            await upsertPushId();
+            
+            router.replace(nextRoute as any);
+          } catch (err: any) {
+            if (err instanceof AccountDeletedError) {
+              Alert.alert("Login Failed", err.message);
+              router.replace("/(auth)/login");
+            } else {
+              console.error("Auth listener session error:", err);
             }
           })();
         }

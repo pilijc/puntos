@@ -44,12 +44,15 @@
         }
       ]
     ],
+    "extra": {
+      "oneSignalAppId": "${EXPO_PUBLIC_ONESIGNAL_APP_ID}"
+    },
     "name": "puntos",
     "slug": "puntos",
     "android": {
       "package": "com.project.puntos",
       "newArchEnabled": true,
-      "permissions": ["ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION"]
+      "permissions": ["ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION", "POST_NOTIFICATIONS"],
     },
     "ios": {
       "bundleIdentifier": "com.project.puntos"

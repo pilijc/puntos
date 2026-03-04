@@ -1,16 +1,14 @@
-import { useRouter } from "expo-router";
 import React from "react";
 import { Alert } from "react-native";
 import { SafeAreaView, Text, TouchableOpacity, View } from "@/tw";
 import { supabase } from "@/supabase/supabase";
 
 export default function FrontDeskProfile() {
-    const router = useRouter();
 
     const handleLogout = async () => {
         try {
             await supabase.auth.signOut();
-            router.replace("/(onboarding)/index");
+            // auth-listener handles redirect to /(onboarding)/welcome on SIGNED_OUT
         } catch (error: any) {
             Alert.alert("Logout error", error?.message || "Unable to logout right now.");
         }
