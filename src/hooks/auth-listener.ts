@@ -23,7 +23,6 @@ export function useAuthListener() {
         } else if (event === 'SIGNED_IN' && session) {
           console.log("User logged in:", session.user.email);
           void (async () => {
-
             try {
               const sessionToken = await AsyncStorage.getItem('sessionToken');
               if (!sessionToken && session.access_token) {
@@ -36,28 +35,30 @@ export function useAuthListener() {
                 return;
               }
 
-            await checkIfAccountDeletedService(session.user.id);
-            
-            const userId = session.user.id;
-            const nextRoute = await getHomeRouteForUserId(userId);
-            
-            await OneSignal.login(userId);
-            await upsertPushId();
-            
-            router.replace(nextRoute as any);
-          } catch (err: any) {
-            if (err instanceof AccountDeletedError) {
-              Alert.alert("Login Failed", err.message);
-              router.replace("/(auth)/login");
-            } else {
-              console.error("Auth listener session error:", err);
+              await checkIfAccountDeletedService(session.user.id);
+
+              const userId = session.user.id;
+              const nextRoute = await getHomeRouteForUserId(userId);
+
+              await OneSignal.login(userId);
+              await upsertPushId();
+
+              router.replace(nextRoute as any);
+            } catch (err: any) {
+              if (err instanceof AccountDeletedError) {
+                Alert.alert("Login Failed", err.message);
+                router.replace("/(auth)/login");
+              } else {
+                console.error("Auth listener session error:", err);
+              }
             }
           })();
         }
-        return () => {
-          listener.subscription.unsubscribe();
-        };
-      })
-  }
-  );
+      }
+    );
+
+    return () => {
+      listener.subscription.unsubscribe();
+    };
+  }, [router]);
 }

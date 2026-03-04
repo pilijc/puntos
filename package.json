@@ -63,7 +63,6 @@
     "firebase-tools": "^15.5.1",
     "supabase": "^2.76.16",
     "typescript": "~5.9.2"
-    "typescript": "^5.9.3"
   },
   "private": true,
   "overrides": {

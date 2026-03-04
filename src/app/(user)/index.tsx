@@ -15,6 +15,7 @@ import { Store } from "@/type/store";
 import type * as GeoJSON from "geojson";
 import { OneSignal } from "react-native-onesignal";
 import { getOneSignalId } from "@/services/push-notif";
+import { getStores } from "@/services/store-service";
 
 Mapbox.setAccessToken(process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN);
 
@@ -180,8 +181,6 @@ export default function Discover() {
       animationDuration: 1000,
     });
   }, [mapReady, location]);
-
-  console.log(location);
 
   return (
     <View className="flex-1">
