@@ -162,20 +162,6 @@ export default function Discover() {
     const route = await getRoute(start, end);
     setRouteGeoJSON(route);
     setRouteDrawProgress(0);
-    // if (route && Array.isArray(route.coordinates) && route.coordinates.length >= 2) {
-    //   const coords = [...route.coordinates];
-    //   // ensure the line starts/ends exactly at the same coordinates as the markers
-    //   coords[0] = start;
-    //   coords[coords.length - 1] = end;
-
-    //   setRouteGeoJSON({
-    //     ...route,
-    //     coordinates: coords,
-    //   });
-    // } else {
-    //   setRouteGeoJSON(null);
-    // }
-
     cameraRef.current?.fitBounds(start, end, 80, 1000);
   };
 
@@ -303,14 +289,8 @@ export default function Discover() {
             coordinate={[s.longitude, s.latitude]}
             onSelected={() => handleStoreSelect(s)}
             children={
-              s.type === "restaurant" ? 
-                <Image source={require("../../assets/images/icons/restaurant.png")} 
-                  className="w-4 h-4" 
-                /> : 
-              s.type === "cafe" ? 
-                <Image source={require("../../assets/images/icons/cafe.png")} 
-                  className="w-4 h-4" 
-                  /> : s.type === "bar" ? <Image source={require("../../assets/images/icons/bar.png")} className="w-4 h-4" /> : s.type === "hotel" ? <Image source={require("../../assets/images/icons/hotel.png")} className="w-4 h-4" /> : <Image source={require("../../assets/images/icons/other.png")} className="w-4 h-4" />}
+              <View className="" />
+            }
           />
         ))}
 
