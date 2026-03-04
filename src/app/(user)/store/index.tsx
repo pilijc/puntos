@@ -14,8 +14,9 @@ import { FadeIn, FadeOut, Layout, Easing } from "react-native-reanimated";
 import { router } from "expo-router";
 import RewardCard from "@/components/rewards/RewardCard";
 import SortPill from "@/components/rewards/SortPill";
-import { rewards, stores, storeLogos } from "@/data/rewards";
+import { rewards, storeLogos } from "@/data/rewards";
 import { useRewardsUiStore } from "@/store/rewards-ui-store";
+import { useStoreStore } from "@/store/store-store";
 import { useLocation } from "@/hooks/use-location";
 import { enrichStoresWithLocation } from "@/utils/store-location";
 
@@ -42,12 +43,14 @@ export default function Rewards() {
     setRewardSort,
     setRewardPointsOrder,
   } = useRewardsUiStore();
+  const { stores } = useStoreStore();
   const [isNearbyOpen, setIsNearbyOpen] = useState(false);
   const { location, permissionStatus } = useLocation();
 
   // Enrich stores with location-based distance and nearby status
   const storesWithLocation = useMemo(() => {
-    return enrichStoresWithLocation(stores, location, 2.0);
+    const thresholdMiles = 30 / 1609.344; // 30 meters
+    return enrichStoresWithLocation(stores, location, thresholdMiles);
   }, [stores, location]);
 
   const nearbyStores = storesWithLocation.filter((store) => store.isNearby);
@@ -127,8 +130,8 @@ export default function Rewards() {
               <View className="flex-row items-center gap-x-2 mt-1">
                 <MaterialIcons name="place" size={16} color="#FFFFFF" />
                 <Text className="text-white/90 font-poppins text-xs">
-                  {featuredStore?.location ?? "Brooklyn, NY"} •{" "}
-                  {featuredStore?.distanceMiles.toFixed(1) ?? "0.0"} miles away
+                  {featuredStore?.address ?? "Somewhere"} •{" "}
+                  {featuredStore?.distanceMiles?.toFixed(1) ?? "0.0"} miles away
                 </Text>
               </View>
             </View>
@@ -153,8 +156,8 @@ export default function Rewards() {
                   <Text className="text-white/85 text-xs font-poppins mt-1">
                     {nearbyStores.length > 0
                       ? `${nearbyStores.length} store${nearbyStores.length > 1 ? "s" : ""
-                      } nearby for check-in`
-                      : "Check-in now to earn today's points"}
+                      } nearby for stamping`
+                      : "Stamp now to earn today's points"}
                   </Text>
                 </View>
                 <MaterialIcons
@@ -165,7 +168,7 @@ export default function Rewards() {
               </Pressable>
               <TouchableOpacity className="bg-white px-4 py-2 rounded-full">
                 <Text className="text-primary font-poppins-semibold text-xs">
-                  {nearbyStores.length > 1 ? "CHECK IN ALL" : "CHECK IN"}
+                  {nearbyStores.length > 1 ? "STAMP ALL" : "STAMP"}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -184,9 +187,16 @@ export default function Rewards() {
                   >
                     <View className="flex-row items-center gap-x-3 flex-1">
                       <View className="w-9 h-9 rounded-full bg-white/20 items-center justify-center overflow-hidden">
-                        {storeLogos[store.id] ? (
+                        {store.logo ? (
                           <Image
-                            source={storeLogos[store.id]}
+                            source={{ uri: store.logo }}
+                            className="w-full h-full"
+                            contentFit="cover"
+                            contentPosition="center"
+                          />
+                        ) : storeLogos[store.id.toString()] ? (
+                          <Image
+                            source={storeLogos[store.id.toString()]}
                             className="w-full h-full"
                             contentFit="cover"
                             contentPosition="center"
@@ -202,14 +212,14 @@ export default function Rewards() {
                           {store.name}
                         </Text>
                         <Text className="text-white/80 text-xs font-poppins mt-1">
-                          {store.location} • {store.distanceMiles.toFixed(1)} miles
+                          {store.address} • {store.distanceMiles?.toFixed(1) ?? "0.0"} miles
                         </Text>
                       </View>
                     </View>
                     <View className="flex-row items-center gap-x-2">
                       <TouchableOpacity className="bg-white px-3 py-1 rounded-full">
                         <Text className="text-primary text-[10px] font-poppins-semibold">
-                          CHECK IN
+                          STAMP
                         </Text>
                       </TouchableOpacity>
                       <TouchableOpacity>
@@ -253,7 +263,7 @@ export default function Rewards() {
             <Text className="font-poppins-semibold text-neutral-700">
               {featuredStore?.name ?? "No nearby store detected"}
             </Text>
-            {featuredStore ? ` • ${featuredStore.location}` : ""}
+            {featuredStore ? ` • ${featuredStore.address}` : ""}
           </Text>
 
           <Text className="text-xs font-poppins-medium text-neutral-400 mt-2">
@@ -348,13 +358,13 @@ export default function Rewards() {
 
         <View className="gap-y-4">
           {sortedRewards.map((item) => {
-            const store = storesWithLocation.find((entry) => entry.id === item.storeId);
+            const store = storesWithLocation.find((entry) => entry.id.toString() === item.storeId);
             return (
               <RewardCard
                 key={item.id}
                 reward={item}
                 storeName={store?.name}
-                storeLocation={store?.location}
+                storeLocation={store?.address}
               />
             );
           })}

@@ -1009,7 +1009,7 @@
   },
   {
     "table_name": "user_push_tokens",
-    "column_name": "token",
+    "column_name": "push_sub_id",
     "data_type": "text",
     "is_primary_key": "NO",
     "is_foreign_key": "NO",
