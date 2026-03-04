@@ -17,7 +17,7 @@ export interface LocationPermissionStatus {
 
 /**
  * Calculate distance between two coordinates using Haversine formula
- * Returns distance in miles
+ * Returns distance in METRES
  */
 export function calculateDistance(
   lat1: number,
@@ -25,7 +25,7 @@ export function calculateDistance(
   lat2: number,
   lon2: number
 ): number {
-  const R = 3959; // Earth's radius in miles
+  const R = 6371000; // Earth's radius in metres
   const dLat = toRadians(lat2 - lat1);
   const dLon = toRadians(lon2 - lon1);
   const a =
@@ -210,15 +210,15 @@ export async function watchLocation(
 }
 
 /**
- * Determine if a store is "nearby" based on distance threshold (default: 2 miles)
+ * Determine if a store is "nearby" based on distance threshold (default: 30 metres)
  */
 export function isStoreNearby(
   userLat: number,
   userLon: number,
   storeLat: number,
   storeLon: number,
-  thresholdMiles: number = 2.0
+  thresholdMeters: number = 30
 ): boolean {
   const distance = calculateDistance(userLat, userLon, storeLat, storeLon);
-  return distance <= thresholdMiles;
+  return distance <= thresholdMeters;
 }

@@ -4,7 +4,7 @@ export interface Store {
   address: string;
   latitude: number;
   longitude: number;
-  radius: number;
+  status: string;
   is_active: boolean;
   store_image: string;
   store_pictures: string[];
