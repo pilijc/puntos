@@ -38,9 +38,9 @@ function StoreCard({ store }: { store: StoreRow }) {
         <View style={styles.card}>
             <View style={{ flexDirection: "row", alignItems: "flex-start" }}>
                 <View style={styles.storeImg}>
-                    {store.store_image ? (
+                    {store.logo ? (
                         <Image
-                            source={{ uri: store.store_image }}
+                            source={{ uri: store.logo }}
                             style={{ width: 52, height: 52, borderRadius: 12 }}
                             contentFit="cover"
                             onLoad={() => console.log("[Image onLoad]", store.name)}
@@ -127,7 +127,7 @@ export default function StoreManagerStores() {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) return;
             const data = await getMyStores(user.id);
-            console.log("[stores] fetched store_images:", data.map(s => ({ id: s.id, name: s.name, store_image: s.store_image })));
+            console.log("[stores] fetched logos:", data.map(s => ({ id: s.id, name: s.name, logo: s.logo })));
             setStores(data);
         } catch (e: any) {
             setError(e?.message ?? "Failed to load stores");

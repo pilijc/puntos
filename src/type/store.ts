@@ -29,7 +29,7 @@ export interface Store_Superadmin {
   address: string;
   owner: string;
   staff_count: number;
-  store_image: string;
+  logo: string;
   store_pictures: string[];
 }
 
@@ -46,6 +46,6 @@ export type StoreCardData = {
 	owner: string;
 	staff_count: number;
 	is_active: boolean;
-	store_image: string;
+	logo: string;
 	store_pictures: string[];
 };

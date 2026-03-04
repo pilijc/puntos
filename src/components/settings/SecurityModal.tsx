@@ -29,10 +29,8 @@ export default function SecurityModal({ visible, onClose }: Props) {
               const { data: { user }, error: userError } = await supabase.auth.getUser();
               if (userError || !user) throw new Error("Could not find user.");
 
-              // Soft-delete user by setting deleted_at
               await softDeleteUserAccountService(user.id);
 
-              // Sign out and redirect
               await supabase.auth.signOut();
               onClose();
               router.replace("/(onboarding)/welcome");

@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, useColorScheme } from 'react-native';
+import { ActivityIndicator, useColorScheme, Alert, Vibration } from 'react-native';
 import { SafeAreaView, View, Text, TouchableOpacity } from '@/tw';
 
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useRouter } from 'expo-router';
 import QRCode from 'react-native-qrcode-svg';
 //import { supabase } from '@/supabase/supabase';
-import { getCurrentUser, getStaticQRCode } from '@/services/qr-service';
+import { getCurrentUser, getStaticQRCode, addAutoUser, listenToQRTransaction } from '@/services/qr-service';
+import { supabase } from 'supabase/supabase';
 
 export default function Qr() {
   const router = useRouter();
@@ -14,6 +15,7 @@ export default function Qr() {
   const isDark = colorScheme === 'dark';
   const [qrValue, setQrValue] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<any>(null);
 
   // Get static QR code based on userID
   const fetchQRCode = async () => {
@@ -32,7 +34,10 @@ export default function Qr() {
       console.log('Static QR value:', staticQR);
       setQrValue(staticQR);
 
-    }
+      const addUser = await addAutoUser();
+      console.log('Add user:', addUser);
+
+    } 
     catch (err) {
       console.error('Error getting QR code:', err);
       setQrValue(null);
@@ -43,8 +48,39 @@ export default function Qr() {
   };
 
   useEffect(() => {
-    fetchQRCode();
-  }, []);
+  const setupQR = async () => {
+    const currentUser = await getCurrentUser();
+    if (!currentUser) return;
+
+    setUser(currentUser);
+    const qr = `puntos:user:${currentUser.id}`;
+    setQrValue(qr);
+    setLoading(false);
+
+    // Listen to transactions
+    const channel = listenToQRTransaction(currentUser.id, (transaction) => {
+      console.log('Customer side: QR transaction received!', transaction);
+      // Add vibration for celebration
+      Vibration.vibrate(500);
+      Alert.alert('🎉 Congratulations!', `You just earned ${transaction.points_earned} points!`, [
+        { text: 'Awesome!' }
+      ]);
+    });
+
+    return channel;
+  };
+
+  let channelRef: any;
+  setupQR().then((channel) => {
+    channelRef = channel;
+    return fetchQRCode();
+  });
+
+  return () => {
+    if (channelRef) supabase.removeChannel(channelRef);
+  };
+}, []);
+ 
 
   return (
     <SafeAreaView className="flex-1 bg-white dark:bg-neutral-900">
