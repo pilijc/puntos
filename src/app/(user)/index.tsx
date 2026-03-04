@@ -13,6 +13,8 @@ import { getSearchResultsService, getStoresService } from "@/services/discover-s
 import { useStoreStore } from "@/store/store-store";
 import { Store } from "@/type/store";
 import type * as GeoJSON from "geojson";
+import { getStores } from "@/services/store-service";
+import { ssrSafe } from "zustand/middleware/ssrSafe";
 // import * as Notifications from 'expo-notifications';
 
 
@@ -31,6 +33,7 @@ export default function Discover() {
   const [selectedSearchResult, setSelectedSearchResult] = useState<any>(null);
   const [routeGeoJSON, setRouteGeoJSON] = useState<GeoJSON.LineString | null>(null);
   const [routeDrawProgress, setRouteDrawProgress] = useState(0);
+  const [selectedStore, setSelectedStore] = useState<Store | null>(null);
   const routeAnimationRef = useRef<ReturnType<typeof requestAnimationFrame> | null>(null);
 
   const getToken = async () => {
@@ -95,12 +98,11 @@ export default function Discover() {
 
   useEffect(() => {
     (async () => {
-      const data = await getStoresService();
+      const data = await getStores();
       setStores(data ?? []);
     })();
   }, []);
 
-  // Animate route drawing from start to end
   useEffect(() => {
     if (!routeGeoJSON?.coordinates?.length) return;
     const durationMs = 1800;
@@ -142,6 +144,9 @@ export default function Discover() {
   };
 
   const handleStoreSelect = async (store: Store) => {
+    setSelectedStore(store);
+    bottomSheetRef.current?.snapToIndex(1);
+
     if (!location) return;
 
     const start: [number, number] = [
@@ -213,54 +218,56 @@ export default function Discover() {
   console.log(location);
 
   return (
-    <SafeAreaView className="flex-1">
-      <View className="absolute top-15 left-4 right-4 z-20">
-        <View className="bg-white dark:bg-neutral-800 rounded-xl flex-row justify-between items-center px-4 py-1">
-          <TextInput
-            className="flex-1 text-base text-black dark:text-white font-poppins-semibold items-center justify-center"
-            style={{ fontFamily: "Poppins-Regular" }}
-            placeholderTextColor="gray"
-            placeholder="Search a place"
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            onSubmitEditing={searchPlaces}
-            returnKeyType="search"
-          />
-          {searchQuery.length > 0 ? (
-            <TouchableOpacity onPress={() => setSearchQuery("")}>
-              <Ionicons name="close-outline" size={24} color="darkorange" />
-            </TouchableOpacity>
-          ) : (
-            <Ionicons name="search-outline" size={24} color="darkorange" className="font-poppins-bold" />
+    <View className="flex-1">
+      <SafeAreaView className="absolute top-0 left-0 right-0 z-20">
+        <View className="mt-4 mx-4">
+          <View className="bg-white dark:bg-neutral-800 rounded-xl flex-row justify-between items-center px-4 py-1">
+            <TextInput
+              className="flex-1 text-base text-black dark:text-white font-poppins-semibold items-center justify-center"
+              style={{ fontFamily: "Poppins-Regular" }}
+              placeholderTextColor="gray"
+              placeholder="Search a place"
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              onSubmitEditing={searchPlaces}
+              returnKeyType="search"
+            />
+            {searchQuery.length > 0 ? (
+              <TouchableOpacity onPress={() => setSearchQuery("")}>
+                <Ionicons name="close-outline" size={24} color="darkorange" />
+              </TouchableOpacity>
+            ) : (
+              <Ionicons name="search-outline" size={24} color="darkorange" className="font-poppins-bold" />
+            )}
+          </View>
+
+          {searchResults.length > 0 && (
+            <View className="bg-white dark:bg-neutral-800 mt-2 rounded-xl p-2 max-h-72 border border-neutral-100 dark:border-neutral-700">
+              <ScrollView
+                keyboardShouldPersistTaps="handled"
+                contentContainerClassName="divide-y divide-neutral-100"
+              >
+                {searchResults.map((r) => (
+                  <TouchableOpacity
+                    key={r.id}
+                    onPress={() => handleSearchResultPress(r)}
+                    activeOpacity={0.75}
+                    className="flex-row items-center rounded-xl px-4 gap-x-3"
+                    style={{ marginHorizontal: 4 }}
+                  >
+                    <View className="flex-1 py-2">
+                      <Text className="font-semibold text-base text-neutral-900 dark:text-white">{r.text}</Text>
+                      <Text numberOfLines={1} className="text-xs text-neutral-500 dark:text-neutral-400">
+                        {r.place_name}
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </View>
           )}
         </View>
-
-        {searchResults.length > 0 && (
-          <View className="bg-white dark:bg-neutral-800 mt-2 rounded-xl p-2 max-h-72 border border-neutral-100 dark:border-neutral-700">
-            <ScrollView
-              keyboardShouldPersistTaps="handled"
-              contentContainerClassName="divide-y divide-neutral-100"
-            >
-              {searchResults.map((r) => (
-                <TouchableOpacity
-                  key={r.id}
-                  onPress={() => handleSearchResultPress(r)}
-                  activeOpacity={0.75}
-                  className="flex-row items-center rounded-xl px-4 gap-x-3"
-                  style={{ marginHorizontal: 4 }}
-                >
-                  <View className="flex-1 py-2">
-                    <Text className="font-semibold text-base text-neutral-900 dark:text-white">{r.text}</Text>
-                    <Text numberOfLines={1} className="text-xs text-neutral-500 dark:text-neutral-400">
-                      {r.place_name}
-                    </Text>
-                  </View>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-          </View>
-        )}
-      </View>
+      </SafeAreaView>
 
       <MapView
         style={{ flex: 1 }}
@@ -295,7 +302,15 @@ export default function Discover() {
             id={`store-${s.id}`}
             coordinate={[s.longitude, s.latitude]}
             onSelected={() => handleStoreSelect(s)}
-            children={<View className="" />}
+            children={
+              s.type === "restaurant" ? 
+                <Image source={require("../../assets/images/icons/restaurant.png")} 
+                  className="w-4 h-4" 
+                /> : 
+              s.type === "cafe" ? 
+                <Image source={require("../../assets/images/icons/cafe.png")} 
+                  className="w-4 h-4" 
+                  /> : s.type === "bar" ? <Image source={require("../../assets/images/icons/bar.png")} className="w-4 h-4" /> : s.type === "hotel" ? <Image source={require("../../assets/images/icons/hotel.png")} className="w-4 h-4" /> : <Image source={require("../../assets/images/icons/other.png")} className="w-4 h-4" />}
           />
         ))}
 
@@ -331,13 +346,59 @@ export default function Discover() {
         })()}
       </MapView>
 
-      <BottomSheet
-        ref={bottomSheetRef}
-        snapPoints={["20%", "55%"]}
-        index={0}
-        backgroundStyle={{ backgroundColor: isDark ? '#171717' : '#FFFFFF' }}
-        handleIndicatorStyle={{ backgroundColor: isDark ? '#525252' : '#D4D4D4' }}
-      >
+      {routeGeoJSON && (
+        <TouchableOpacity
+          style={{
+            position: "absolute",
+            right: 16,
+            bottom: 215,
+            zIndex: 999,
+            elevation: 20,
+          }}
+          className="bg-white dark:bg-neutral-800 rounded-full p-2"
+          onPress={() => {
+            setRouteGeoJSON(null);
+            setSelectedStore(null);
+          }}
+        >
+          <MaterialIcons name="clear" size={35} color="#FB8500" />
+        </TouchableOpacity>
+      )}
+
+      {location && (
+        <TouchableOpacity
+          style={{
+            position: "absolute",
+            right: 16,
+            bottom: 170,
+            zIndex: 999,
+            elevation: 20,
+          }}
+          className="bg-white dark:bg-neutral-800 rounded-full p-2"
+          onPress={() => {
+            cameraRef.current?.setCamera({
+              centerCoordinate: [
+                location.coords.longitude,
+                location.coords.latitude,
+              ],
+              zoomLevel: 14,
+              animationDuration: 600,
+              animationMode: "flyTo",
+            });
+          }}
+        >
+          <MaterialIcons name="filter-center-focus" size={35} color="#FB8500" />
+        </TouchableOpacity>
+      )}
+
+      {selectedStore && (
+        <BottomSheet
+          ref={bottomSheetRef}
+          snapPoints={["20%", "55%"]}
+          index={0}
+          backgroundStyle={{ backgroundColor: isDark ? '#171717' : '#FFFFFF' }}
+          handleIndicatorStyle={{ backgroundColor: isDark ? '#525252' : '#D4D4D4' }}
+        >
         <BottomSheetView className="flex-1">
           <ScrollView
             horizontal={false}
@@ -349,50 +410,61 @@ export default function Discover() {
             contentContainerStyle={{ paddingHorizontal: 16, gap: 16 }}
             className="flex-1 pb-4"
           >
+            {stores.map((s) => (
+              <View
+                key={s.id}
+                className="bg-white dark:bg-neutral-800 p-2 flex-row items-center gap-x-3"
+              >
+                <Image
+                  source={{
+                    uri: s.logo ||
+                      "https://lh3.googleusercontent.com/aida-public/AB6AXuC4UoIc5vV5FsC0GfTTA75QiDrtMiMWtt6tFc38XKl5LuFnQw44le3ELNt73nsTAZjzI-LsorNZ4J6gPThjuNutUG2gc0FRc28x32itJuxsbctOi-CTpqY0IciSSDhEW2D_W1HXd4CD76pkUY8zeFOJaseJmsrJWE9GR41XiIsGFBT1LngvIvhlPFBhCuDi0HyB0wgetKeYbvj19Q6ewuYHYo7Hd8NOQrkxpsSZuYEXDgvA6MysHT_fhPQoKSf657uhwFNqQeM9LQ",
+                  }}
+                  className="w-24 h-24 rounded-xl bg-slate-100"
+                />
+                <View className="flex-1">
+                  
+                  <View className="flex-row justify-between items-start">
+                    <Text className="text-lg text-neutral-900 dark:text-white flex-1 font-poppins-semibold" numberOfLines={1}>
+                      {s.name}
+                    </Text>
+                  </View>
+                  <View className="flex-col items-start gap-1 mt-1">
+                    <View className="flex-row items-center gap-2">
+                      <MaterialCommunityIcons name="map-marker-radius-outline" size={14} color="gray" />
+                      <Text className="text-xs text-slate-500 font-poppins" numberOfLines={1}>
+                        {s.address}
+                      </Text>
+                    </View>
 
-            <View
-              className="bg-white dark:bg-neutral-800 p-2 flex-row items-center gap-x-3"
-            >
-              <Image
-                source={{
-                  uri: "https://lh3.googleusercontent.com/aida-public/AB6AXuC4UoIc5vV5FsC0GfTTA75QiDrtMiMWtt6tFc38XKl5LuFnQw44le3ELNt73nsTAZjzI-LsorNZ4J6gPThjuNutUG2gc0FRc28x32itJuxsbctOi-CTpqY0IciSSDhEW2D_W1HXd4CD76pkUY8zeFOJaseJmsrJWE9GR41XiIsGFBT1LngvIvhlPFBhCuDi0HyB0wgetKeYbvj19Q6ewuYHYo7Hd8NOQrkxpsSZuYEXDgvA6MysHT_fhPQoKSf657uhwFNqQeM9LQ",
-                }}
-                className="w-24 h-24 rounded-xl bg-slate-100"
-              />
-              <View className="flex-1">
-                <View className="flex-row justify-between items-start">
-                  <Text className="text-lg text-neutral-900 dark:text-white flex-1 font-poppins-semibold" numberOfLines={1}>
-                    The Artisan Brew
-                  </Text>
-                </View>
-                <View className="flex-col items-start gap-1 mt-1">
-                  <View className="flex-row items-center gap-2">
-                    <MaterialCommunityIcons name="map-marker-radius-outline" size={14} color="gray" />
-                    <Text className="text-xs text-slate-500 font-poppins">123 Address St, City, PH</Text>
-                  </View>
-                  <View className="flex-row items-center gap-2">
-                    <FontAwesome6 name="clock" size={12} color="gray" />
-                    <Text className="text-xs text-slate-500 font-poppins">Open 10:00 AM - 10:00 PM</Text>
-                  </View>
-                </View>
-                <View className="flex-row items-center justify-between mt-3">
-                  <View className="flex-row items-center gap-1">
-                    <Ionicons name="star" size={14} color="#FB8500" />
-                    <Text className="text-xs text-orange-500 ml-0.5 font-poppins">4.9</Text>
+                    <View className="flex-row items-center gap-2">
+                      <FontAwesome6 name="clock" size={12} color="gray" />
+                      <Text className="text-xs text-slate-500 font-poppins">
+                        Open 10:00 AM - 10:00 PM
+                      </Text>
+                    </View>
                   </View>
 
-                  <TouchableOpacity className="bg-orange-500/10 px-3 py-1.5 rounded-xl ">
-                    <Text className="text-xs text-orange-500 font-poppins-semibold">Details</Text>
-                  </TouchableOpacity>
+                  <View className="flex-row items-center justify-between mt-3">
+                    <View className="flex-row items-center gap-1">
+                      <Ionicons name="star" size={14} color="#FB8500" />
+                      <Text className="text-xs text-orange-500 ml-0.5 font-poppins">
+                        4.9
+                      </Text>
+                    </View>
+                    <TouchableOpacity className="bg-orange-500/10 px-3 py-1.5 rounded-xl ">
+                      <Text className="text-xs text-orange-500 font-poppins-semibold">Details</Text>
+                    </TouchableOpacity>
+                  </View>
                 </View>
               </View>
-            </View>
+            ))}
 
             <View className="mt-2">
               <ScrollView
                 horizontal
                 nestedScrollEnabled
-                showsHorizontalScrollIndicator
+                showsHorizontalScrollIndicator={false}
                 contentContainerStyle={{ gap: 12, paddingHorizontal: 4 }}
               >
                 {[
@@ -443,7 +515,6 @@ export default function Discover() {
                           Any medium drink of your choice
                         </Text>
                       </View>
-
                       <View className="flex-row justify-start items-center mt-2">
                         <View className="flex-row items-center gap-x-2 flex-shrink">
                           <FontAwesome6 name="coins" size={12} color="#FB8500" />
@@ -452,7 +523,6 @@ export default function Discover() {
                           </Text>
                         </View>
                       </View>
-
                     </View>
                   </View>
                 </View>
@@ -460,45 +530,8 @@ export default function Discover() {
             </View>
           </ScrollView>
         </BottomSheetView>
-      </BottomSheet>
-
-      {routeGeoJSON && (
-        <TouchableOpacity style={{
-          position: "absolute",
-          right: 16,
-          bottom: 215,
-          zIndex: 999,
-          elevation: 20,
-        }} className="bg-white dark:bg-neutral-800 rounded-full p-2" onPress={() => setRouteGeoJSON(null)}>
-          <MaterialIcons name="clear" size={35} color="#FB8500" />
-        </TouchableOpacity>
+        </BottomSheet>
       )}
-
-      {location && (
-        <TouchableOpacity
-          style={{
-            position: "absolute",
-            right: 16,
-            bottom: 170,
-            zIndex: 999,
-            elevation: 20,
-          }}
-          className="bg-white dark:bg-neutral-800 rounded-full p-2"
-          onPress={() => {
-            cameraRef.current?.setCamera({
-              centerCoordinate: [
-                location.coords.longitude,
-                location.coords.latitude,
-              ],
-              zoomLevel: 14,
-              animationDuration: 600,
-              animationMode: "flyTo",
-            });
-          }}
-        >
-          <MaterialIcons name="filter-center-focus" size={35} color="#FB8500" />
-        </TouchableOpacity>
-      )}
-    </SafeAreaView>
+    </View>
   );
 }

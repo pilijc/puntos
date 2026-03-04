@@ -6,8 +6,15 @@ export interface Store {
   longitude: number;
   radius: number;
   is_active: boolean;
-  store_image: string;
-  store_pictures: string[];
+  logo: string | null;
+  store_pictures: string[] | null;
+  type: string;
+  status: string;
+  owner_id: string;
+  phone: string;
+  registration_number: string;
+  created_at: string;
+  updated_at: string | null;
 }
 
 export type StoreState = {
