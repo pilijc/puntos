@@ -19,7 +19,7 @@ export function useAuthListener() {
           router.replace("/reset-password");
         } else if (event === 'SIGNED_OUT') {
           console.log("User logged out");
-          router.replace("/(onboarding)/index");
+          router.replace("/(onboarding)/welcome");
         } else if (event === 'SIGNED_IN' && session) {
           console.log("User logged in:", session.user.email);
           void (async () => {

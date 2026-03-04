@@ -43,6 +43,7 @@ export default function Layout() {
 
   useEffect(() => {
     const checkSession = async () => {
+      await initOneSignal();
       const { data: { session } } = await supabase.auth.getSession();
 
       if (!session && !sessionToken) {
