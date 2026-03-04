@@ -2,7 +2,11 @@ import { supabase } from "@/supabase/supabase";
 
 export async function getStoresService() {
     try {
-        const { data, error } = await supabase.from("stores").select("*");
+        const { data, error } = await supabase
+            .from("stores")
+            .select("*")
+            .eq("is_active", true)
+            .eq("status", "approved");
         if (error) throw error;
         return data;
     } catch (error) {

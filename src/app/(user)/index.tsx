@@ -1,9 +1,9 @@
 import { Text, SafeAreaView, View, Image } from "@/tw";
 import React, { useEffect, useRef, useState } from "react";
-import Mapbox, { MapView, UserLocation, Camera, PointAnnotation, UserTrackingMode } from "@rnmapbox/maps";
+import Mapbox, { MapView, Camera, PointAnnotation } from "@rnmapbox/maps";
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
-import { Alert, PermissionsAndroid, Platform, TextInput, TextInputSubmitEditingEvent, TouchableOpacity, useColorScheme } from "react-native";
+import { Alert, Platform, TextInput, TouchableOpacity, useColorScheme } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 import * as Location from 'expo-location'
 import { supabase } from "@/supabase/supabase";
@@ -13,8 +13,10 @@ import { getSearchResultsService, getStoresService } from "@/services/discover-s
 import { useStoreStore } from "@/store/store-store";
 import { Store } from "@/type/store";
 import type * as GeoJSON from "geojson";
-import { OneSignal } from "react-native-onesignal";
 import { getOneSignalId } from "@/services/push-notif";
+import { isStoreNearby } from "@/services/location-service";
+
+const GEOFENCE_RADIUS_METERS = 30;
 
 Mapbox.setAccessToken(process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN);
 
@@ -33,48 +35,11 @@ export default function Discover() {
   const [routeDrawProgress, setRouteDrawProgress] = useState(0);
   const routeAnimationRef = useRef<ReturnType<typeof requestAnimationFrame> | null>(null);
 
-  const getToken = async () => {
-    try {
-      const subscriptionId = await getOneSignalId();
-      if (!subscriptionId) {
-        Alert.alert(
-          "No subscription",
-          "Push isn't ready yet. Allow notifications and try again."
-        );
-        return;
-      }
+  // Track which stores we've already sent a push for this session (avoid spam)
+  const notifiedStoreIds = useRef<Set<number>>(new Set());
+  const locationWatchRef = useRef<Location.LocationSubscription | null>(null);
 
-      console.log("subscriptionId:", subscriptionId);
-      const sessionData = await supabase.auth.getSession();
-      const token = sessionData.data?.session?.access_token ?? process.env.EXPO_PUBLIC_ANON_KEY;
-      const { data, error } = await supabase.functions.invoke("notify-nearby-stores", {
-        body: {
-          subscriptionId,
-          title: "Nearby Store",
-          body: "You are near a store",
-        },
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (error) {
-        console.log("notify-nearby-store error full:", JSON.stringify(error, null, 2));
-        Alert.alert("Error", "Could not send test notification. Check logs.");
-        return;
-      }
-
-      if (data?.ok) {
-        Alert.alert("Sent", "Check the top of your screen for the push.");
-      } else {
-        Alert.alert("Push failed", data?.data?.errors?.[0] ?? "OneSignal returned an error.");
-      }
-    } catch (err) {
-      console.error("Error calling notify-nearby-store:", err);
-      Alert.alert("Error", "Something went wrong while sending the notification.");
-    }
-  };
-
+  // ─── Load active/approved stores ────────────────────────────────────────────
   useEffect(() => {
     (async () => {
       const data = await getStoresService();
@@ -82,6 +47,7 @@ export default function Discover() {
     })();
   }, []);
 
+  // ─── Route draw animation ────────────────────────────────────────────────────
   useEffect(() => {
     if (!routeGeoJSON?.coordinates?.length) return;
     const durationMs = 1800;
@@ -100,6 +66,103 @@ export default function Discover() {
     };
   }, [routeGeoJSON]);
 
+  // ─── Geofencing: watch location + check every store within 30 m ─────────────
+  useEffect(() => {
+    let cancelled = false;
+
+    (async () => {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') return;
+
+      // Get initial location for the map camera
+      const initial = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.High,
+      }).catch(() => null)
+        ?? await Location.getLastKnownPositionAsync({}).catch(() => null);
+
+      if (initial && !cancelled) {
+        setLocation(initial);
+      }
+
+      // Start watching – fires every ~5 s or when moved ≥10 m
+      const sub = await Location.watchPositionAsync(
+        {
+          accuracy: Platform.OS === 'android'
+            ? Location.Accuracy.Lowest
+            : Location.Accuracy.Balanced,
+          timeInterval: 5000,
+          distanceInterval: 5,
+        },
+        async (position) => {
+          if (cancelled) return;
+          setLocation(position);
+
+          const { latitude: uLat, longitude: uLon } = position.coords;
+
+          // Get the latest stores snapshot from ref to avoid stale closures
+          const currentStores = useStoreStore.getState().stores;
+
+          for (const store of currentStores) {
+            if (notifiedStoreIds.current.has(store.id)) continue;
+            if (!store.latitude || !store.longitude) continue;
+
+            const nearby = isStoreNearby(uLat, uLon, store.latitude, store.longitude, GEOFENCE_RADIUS_METERS);
+
+            if (nearby) {
+              console.log(`[Geofence] Entered store: ${store.name}`);
+              notifiedStoreIds.current.add(store.id);
+
+              try {
+                const subscriptionId = await getOneSignalId();
+                if (!subscriptionId) continue;
+
+                const sessionData = await supabase.auth.getSession();
+                const token = sessionData.data?.session?.access_token ?? process.env.EXPO_PUBLIC_ANON_KEY;
+
+                await supabase.functions.invoke("notify-nearby-stores", {
+                  body: {
+                    subscriptionId,
+                    title: `You're near ${store.name}! 📍`,
+                    body: `Visit ${store.name} and earn Puntos rewards!`,
+                  },
+                  headers: {
+                    Authorization: `Bearer ${token}`,
+                  },
+                });
+              } catch (err) {
+                console.error('[Geofence] Failed to send push notification:', err);
+              }
+            }
+          }
+        }
+      );
+
+      if (!cancelled) {
+        locationWatchRef.current = sub;
+      } else {
+        sub.remove();
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+      locationWatchRef.current?.remove();
+      locationWatchRef.current = null;
+    };
+  }, []);
+
+  // ─── Camera follows initial location ────────────────────────────────────────
+  useEffect(() => {
+    if (!mapReady || !location) return;
+    const { longitude, latitude } = location.coords;
+    cameraRef.current?.setCamera({
+      centerCoordinate: [longitude, latitude],
+      zoomLevel: 14,
+      animationDuration: 1000,
+    });
+  }, [mapReady, location]);
+
+  // ─── Search ──────────────────────────────────────────────────────────────────
   const searchPlaces = async () => {
     if (!searchQuery.trim()) return;
     try {
@@ -110,55 +173,30 @@ export default function Discover() {
     }
   };
 
+  // ─── Route ───────────────────────────────────────────────────────────────────
   const getRoute = async (
     start: [number, number],
     end: [number, number]
   ): Promise<GeoJSON.LineString | null> => {
     const url = `https://api.mapbox.com/directions/v5/mapbox/driving/${start[0]},${start[1]};${end[0]},${end[1]}?geometries=geojson&access_token=${process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN}`;
-
     const res = await fetch(url);
     const json = await res.json();
-
     return json.routes?.[0]?.geometry ?? null;
   };
 
   const handleStoreSelect = async (store: Store) => {
     if (!location) return;
-
-    const start: [number, number] = [
-      location.coords.longitude,
-      location.coords.latitude,
-    ];
-
-    const end: [number, number] = [
-      store.longitude,
-      store.latitude,
-    ];
-
+    const start: [number, number] = [location.coords.longitude, location.coords.latitude];
+    const end: [number, number] = [store.longitude, store.latitude];
     const route = await getRoute(start, end);
     setRouteGeoJSON(route);
     setRouteDrawProgress(0);
-    // if (route && Array.isArray(route.coordinates) && route.coordinates.length >= 2) {
-    //   const coords = [...route.coordinates];
-    //   // ensure the line starts/ends exactly at the same coordinates as the markers
-    //   coords[0] = start;
-    //   coords[coords.length - 1] = end;
-
-    //   setRouteGeoJSON({
-    //     ...route,
-    //     coordinates: coords,
-    //   });
-    // } else {
-    //   setRouteGeoJSON(null);
-    // }
-
     cameraRef.current?.fitBounds(start, end, 80, 1000);
   };
 
   const handleSearchResultPress = (result: any) => {
     setSelectedSearchResult(result);
     setSearchResults([]);
-
     cameraRef.current?.setCamera({
       centerCoordinate: result.center,
       zoomLevel: 14,
@@ -167,34 +205,10 @@ export default function Discover() {
     });
   };
 
-  useEffect(() => {
-    (async () => {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== "granted") return;
-  
-      const loc = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.High,
-      });
-  
-      setLocation(loc);
-    })();
-  }, []);
-
-  useEffect(() => {
-    if (!mapReady || !location) return;
-    const { longitude, latitude } = location.coords;
-  
-    cameraRef.current?.setCamera({
-      centerCoordinate: [longitude, latitude],
-      zoomLevel: 14,
-      animationDuration: 1000,
-    });
-  }, [mapReady, location]);
-
-  console.log(location);
-
+  // ─── UI ──────────────────────────────────────────────────────────────────────
   return (
     <SafeAreaView className="flex-1">
+      {/* Search bar */}
       <View className="absolute top-15 left-4 right-4 z-20">
         <View className="bg-white dark:bg-neutral-800 rounded-xl flex-row justify-between items-center px-4 py-1">
           <TextInput
@@ -270,16 +284,37 @@ export default function Discover() {
           />
         )}
 
+        {/* Active store pins – orange dot with store icon */}
         {stores.map((s) => (
           <PointAnnotation
             key={s.id.toString()}
             id={`store-${s.id}`}
             coordinate={[s.longitude, s.latitude]}
             onSelected={() => handleStoreSelect(s)}
-            children={<View className="" />}
-          />
+          >
+            <View
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: 18,
+                backgroundColor: '#FF6600',
+                alignItems: 'center',
+                justifyContent: 'center',
+                borderWidth: 2,
+                borderColor: '#fff',
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.3,
+                shadowRadius: 4,
+                elevation: 5,
+              }}
+            >
+              <MaterialIcons name="store" size={18} color="#fff" />
+            </View>
+          </PointAnnotation>
         ))}
 
+        {/* Animated route line */}
         {routeGeoJSON && !searchQuery && (() => {
           const coords = routeGeoJSON.coordinates;
           const total = coords.length;
@@ -312,6 +347,7 @@ export default function Discover() {
         })()}
       </MapView>
 
+      {/* Bottom sheet */}
       <BottomSheet
         ref={bottomSheetRef}
         snapPoints={["20%", "55%"]}
@@ -330,10 +366,7 @@ export default function Discover() {
             contentContainerStyle={{ paddingHorizontal: 16, gap: 16 }}
             className="flex-1 pb-4"
           >
-
-            <View
-              className="bg-white dark:bg-neutral-800 p-2 flex-row items-center gap-x-3"
-            >
+            <View className="bg-white dark:bg-neutral-800 p-2 flex-row items-center gap-x-3">
               <Image
                 source={{
                   uri: "https://lh3.googleusercontent.com/aida-public/AB6AXuC4UoIc5vV5FsC0GfTTA75QiDrtMiMWtt6tFc38XKl5LuFnQw44le3ELNt73nsTAZjzI-LsorNZ4J6gPThjuNutUG2gc0FRc28x32itJuxsbctOi-CTpqY0IciSSDhEW2D_W1HXd4CD76pkUY8zeFOJaseJmsrJWE9GR41XiIsGFBT1LngvIvhlPFBhCuDi0HyB0wgetKeYbvj19Q6ewuYHYo7Hd8NOQrkxpsSZuYEXDgvA6MysHT_fhPQoKSf657uhwFNqQeM9LQ",
@@ -361,10 +394,6 @@ export default function Discover() {
                     <Ionicons name="star" size={14} color="#FB8500" />
                     <Text className="text-xs text-orange-500 ml-0.5 font-poppins">4.9</Text>
                   </View>
-
-                  <TouchableOpacity className="bg-orange-500/10 px-3 py-1.5 rounded-xl" onPress={getToken}>
-                    <Text className="text-xs text-orange-500 font-poppins-semibold">Details</Text>
-                  </TouchableOpacity>
                 </View>
               </View>
             </View>
@@ -402,9 +431,6 @@ export default function Discover() {
                   <Text className="text-lg text-neutral-900 dark:text-white flex-1 font-poppins-semibold">
                     Rewards
                   </Text>
-                  <TouchableOpacity className="bg-orange-500/10 px-3 py-1.5 rounded-xl" onPress={getToken}>
-                    <Text className="text-xs text-orange-500 font-poppins-semibold">View All</Text>
-                  </TouchableOpacity>
                 </View>
 
                 <View className="flex-col items-center gap-y-2">
@@ -443,6 +469,7 @@ export default function Discover() {
         </BottomSheetView>
       </BottomSheet>
 
+      {/* Clear route button */}
       {routeGeoJSON && (
         <TouchableOpacity style={{
           position: "absolute",
@@ -455,6 +482,7 @@ export default function Discover() {
         </TouchableOpacity>
       )}
 
+      {/* Re-centre button */}
       {location && (
         <TouchableOpacity
           style={{

@@ -1,7 +1,6 @@
 import React from "react";
 import { View, Text, TouchableOpacity, Alert, StyleSheet } from "react-native";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { router } from "expo-router";
 import { supabase } from "@/supabase/supabase";
 
 export default function StoreManagerSettings() {
@@ -13,7 +12,7 @@ export default function StoreManagerSettings() {
                 style: "destructive",
                 onPress: async () => {
                     await supabase.auth.signOut();
-                    router.replace("/(onboarding)/index");
+                    // auth-listener handles redirect to /(onboarding)/welcome on SIGNED_OUT
                 },
             },
         ]);
