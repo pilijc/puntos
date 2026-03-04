@@ -165,3 +165,16 @@ export async function updateStoreStatus(
 
     if (error) throw new Error(error.message);
 }
+
+export async function getStores() {
+    try {
+			const { data, error } = await supabase
+				.from("stores")
+				.select("*")
+				.eq("status", "active");
+    if (error) throw new Error(error.message);
+    return data;
+    } catch (error) {
+        throw error;
+    }
+}
