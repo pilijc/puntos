@@ -19,6 +19,23 @@ import { getStores } from "@/services/store-service";
 
 Mapbox.setAccessToken(process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN);
 
+const storeIconKey = (type: string | number) => {
+  const t = String(type).toLowerCase();
+  switch (t) {
+    case "bar":
+      return "bar";
+    case "coffee":
+      return "coffee";
+    case "restaurant":
+      return "restaurant";
+    case "market":
+      return "market";
+    case "shop":
+    default:
+      return "default";
+  }
+};
+
 export default function Discover() {
   const bottomSheetRef = useRef<BottomSheet>(null);
   const cameraRef = useRef(null);
@@ -182,6 +199,22 @@ export default function Discover() {
     });
   }, [mapReady, location]);
 
+  const storeFeatures: GeoJSON.FeatureCollection = {
+    type: "FeatureCollection",
+    features: stores.map((s) => ({
+      type: "Feature",
+      id: s.id,
+      geometry: {
+        type: "Point",
+        coordinates: [s.longitude, s.latitude],
+      },
+      properties: {
+        storeId: String(s.id),
+        icon: storeIconKey(s.type), // <-- "bar" | "coffee" | ...
+      },
+    })),
+  };
+
   return (
     <View className="flex-1">
       <SafeAreaView className="absolute top-0 left-0 right-0 z-20">
@@ -239,6 +272,16 @@ export default function Discover() {
         onDidFinishLoadingMap={() => setMapReady(true)}
         styleURL={isDark ? "mapbox://styles/mapbox/navigation-night-v1" : "mapbox://styles/mapbox/streets-v12"}
       >
+        <Mapbox.Images
+          images={{
+            bar: require("../../assets/images/icons/bar.png"),
+            coffee: require("../../assets/images/icons/cafe.png"),
+            restaurant: require("../../assets/images/icons/restau.png"),
+            market: require("../../assets/images/icons/market.png"),
+            shop: require("../../assets/images/icons/shop.png"),
+            default: require("../../assets/images/icons/default.png"),
+          }}
+        />
         <Mapbox.Camera
           ref={cameraRef}
           followUserLocation={searchQuery ? false : true}
@@ -261,17 +304,31 @@ export default function Discover() {
           />
         )}
 
-        {stores.map((s) => (
-          <PointAnnotation
-            key={s.id.toString()}
-            id={`store-${s.id}`}
-            coordinate={[s.longitude, s.latitude]}
-            onSelected={() => handleStoreSelect(s)}
-            children={
-              <View className="" />
-            }
+        <Mapbox.ShapeSource
+          id="storesSource"
+          shape={storeFeatures}
+          onPress={(e) => {
+            const p = e.features?.[0]?.properties;
+            const storeId = p?.storeId;
+            const store = stores.find((x) => String(x.id) === String(storeId));
+            if (store) handleStoreSelect(store);
+          }}
+        >
+          <Mapbox.SymbolLayer
+            id="storesLayer"
+            style={{
+              iconImage: ["get", "icon"],
+              iconAllowOverlap: true,
+              iconSize: [
+                "interpolate",
+                ["linear"],
+                ["zoom"],
+                5, 0.025,
+                10, 0.02,
+              ],
+            }}
           />
-        ))}
+        </Mapbox.ShapeSource>
 
         {routeGeoJSON && !searchQuery && (() => {
           const coords = routeGeoJSON.coordinates;
