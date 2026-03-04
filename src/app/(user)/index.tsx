@@ -14,6 +14,7 @@ import { useStoreStore } from "@/store/store-store";
 import { Store } from "@/type/store";
 import type * as GeoJSON from "geojson";
 import { OneSignal } from "react-native-onesignal";
+import { getOneSignalId } from "@/services/push-notif";
 
 Mapbox.setAccessToken(process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN);
 
@@ -34,31 +35,42 @@ export default function Discover() {
 
   const getToken = async () => {
     try {
-      await OneSignal.Notifications.requestPermission(true);
+      const subscriptionId = await getOneSignalId();
+      if (!subscriptionId) {
+        Alert.alert(
+          "No subscription",
+          "Push isn't ready yet. Allow notifications and try again."
+        );
+        return;
+      }
 
-      const { data, error } = await supabase.functions.invoke("notify-nearby-store", {
-        body: { store_id: 1 },
+      console.log("subscriptionId:", subscriptionId);
+      const sessionData = await supabase.auth.getSession();
+      const token = sessionData.data?.session?.access_token ?? process.env.EXPO_PUBLIC_ANON_KEY;
+      const { data, error } = await supabase.functions.invoke("notify-nearby-stores", {
+        body: {
+          subscriptionId,
+          title: "Nearby Store",
+          body: "You are near a store",
+        },
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       });
 
-      console.log("notify-nearby-store data:", data);
-      console.log("notify-nearby-store error:", error);
-
       if (error) {
-        console.log("notify-nearby-store error:", error);
-        Alert.alert("Error", "Could not send test notification.");
+        console.log("notify-nearby-store error full:", JSON.stringify(error, null, 2));
+        Alert.alert("Error", "Could not send test notification. Check logs.");
         return;
       }
 
       if (data?.ok) {
-        Alert.alert("Notification sent", "Check the top of your screen for a push alert.");
+        Alert.alert("Sent", "Check the top of your screen for the push.");
       } else {
-        Alert.alert(
-          "No subscription",
-          "We couldn't find a registered push subscription for this user yet."
-        );
+        Alert.alert("Push failed", data?.data?.errors?.[0] ?? "OneSignal returned an error.");
       }
     } catch (err) {
-      console.log("Error calling notify-nearby-store:", err);
+      console.error("Error calling notify-nearby-store:", err);
       Alert.alert("Error", "Something went wrong while sending the notification.");
     }
   };

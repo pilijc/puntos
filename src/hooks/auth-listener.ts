@@ -5,8 +5,8 @@ import { getHomeRouteForUserId } from '@/services/access-service';
 import { checkIfAccountDeletedService, AccountDeletedError } from '@/services/auth-service';
 import { Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { initOneSignal } from '@/app/_layout';
-import { savePushSubIdToSupabase } from '@/services/push-notif';
+import { upsertPushId } from '@/services/push-notif';
+import { OneSignal } from 'react-native-onesignal';
 
 export function useAuthListener() {
   const router = useRouter();
@@ -37,13 +37,13 @@ export function useAuthListener() {
             }
 
             await checkIfAccountDeletedService(session.user.id);
-
-            const nextRoute = await getHomeRouteForUserId(session.user.id);
             
-            const subId = await initOneSignal();
-            if (subId) {
-              await savePushSubIdToSupabase(subId);
-            }
+            const userId = session.user.id;
+            const nextRoute = await getHomeRouteForUserId(userId);
+            
+            await OneSignal.login(userId);
+            await upsertPushId();
+            
             router.replace(nextRoute as any);
           } catch (err: any) {
             if (err instanceof AccountDeletedError) {
