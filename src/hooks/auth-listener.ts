@@ -11,9 +11,9 @@ import { OneSignal } from 'react-native-onesignal';
 export function useAuthListener() {
   const router = useRouter();
 
-  useEffect( () => {
+  useEffect(() => {
     const { data: listener } = supabase.auth.onAuthStateChange(
-      async (event, session) => {        
+      async (event, session) => {
         if (event === 'PASSWORD_RECOVERY' && session) {
           console.log("Password recovery session started for:", session.user.email);
           router.replace("/reset-password");
@@ -24,17 +24,17 @@ export function useAuthListener() {
           console.log("User logged in:", session.user.email);
           void (async () => {
 
-          try {
-            const sessionToken = await AsyncStorage.getItem('sessionToken');
-            if (!sessionToken && session.access_token) {
-              await AsyncStorage.setItem('sessionToken', session.access_token);
-            }
+            try {
+              const sessionToken = await AsyncStorage.getItem('sessionToken');
+              if (!sessionToken && session.access_token) {
+                await AsyncStorage.setItem('sessionToken', session.access_token);
+              }
 
-            const tokenToUse = sessionToken ?? session.access_token ?? null;
-            if (!tokenToUse) {
-              console.log('No session token found in AsyncStorage or session; staying on auth screens.');
-              return;
-            }
+              const tokenToUse = sessionToken ?? session.access_token ?? null;
+              if (!tokenToUse) {
+                console.log('No session token found in AsyncStorage or session; staying on auth screens.');
+                return;
+              }
 
             await checkIfAccountDeletedService(session.user.id);
             
@@ -52,12 +52,12 @@ export function useAuthListener() {
             } else {
               console.error("Auth listener session error:", err);
             }
-          }
           })();
-      }
-    return () => {
-      listener.subscription.unsubscribe();
-      };
-    })}
+        }
+        return () => {
+          listener.subscription.unsubscribe();
+        };
+      })
+  }
   );
 }

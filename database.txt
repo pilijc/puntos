@@ -919,7 +919,7 @@
   },
   {
     "table_name": "stores",
-    "column_name": "store_image",
+    "column_name": "logo",
     "data_type": "text",
     "is_primary_key": "NO",
     "is_foreign_key": "NO",
@@ -930,6 +930,51 @@
     "table_name": "stores",
     "column_name": "store_pictures",
     "data_type": "ARRAY",
+    "is_primary_key": "NO",
+    "is_foreign_key": "NO",
+    "foreign_table_name": null,
+    "foreign_column_name": null
+  },
+  {
+    "table_name": "stores",
+    "column_name": "type",
+    "data_type": "text",
+    "is_primary_key": "NO",
+    "is_foreign_key": "NO",
+    "foreign_table_name": null,
+    "foreign_column_name": null
+  },
+  {
+    "table_name": "stores",
+    "column_name": "status",
+    "data_type": "text",
+    "is_primary_key": "NO",
+    "is_foreign_key": "NO",
+    "foreign_table_name": null,
+    "foreign_column_name": null
+  },
+  {
+    "table_name": "stores",
+    "column_name": "owner_id",
+    "data_type": "uuid",
+    "is_primary_key": "NO",
+    "is_foreign_key": "YES",
+    "foreign_table_name": "users",
+    "foreign_column_name": "id"
+  },
+  {
+    "table_name": "stores",
+    "column_name": "phone",
+    "data_type": "text",
+    "is_primary_key": "NO",
+    "is_foreign_key": "NO",
+    "foreign_table_name": null,
+    "foreign_column_name": null
+  },
+  {
+    "table_name": "stores",
+    "column_name": "registration_number",
+    "data_type": "text",
     "is_primary_key": "NO",
     "is_foreign_key": "NO",
     "foreign_table_name": null,

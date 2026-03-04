@@ -28,7 +28,7 @@
     "expo-constants": "~18.0.8",
     "expo-device": "~8.0.10",
     "expo-image": "^3.0.10",
-    "expo-image-picker": "~17.0.10",
+    "expo-image-picker": "^55.0.10",
     "expo-linking": "~8.0.7",
     "expo-location": "^19.0.8",
     "expo-notifications": "~0.32.16",
@@ -63,6 +63,7 @@
     "firebase-tools": "^15.5.1",
     "supabase": "^2.76.16",
     "typescript": "~5.9.2"
+    "typescript": "^5.9.3"
   },
   "private": true,
   "overrides": {
