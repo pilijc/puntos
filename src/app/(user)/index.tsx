@@ -210,7 +210,7 @@ export default function Discover() {
       },
       properties: {
         storeId: String(s.id),
-        icon: storeIconKey(s.type), // <-- "bar" | "coffee" | ...
+        icon: storeIconKey(s.type),
       },
     })),
   };
