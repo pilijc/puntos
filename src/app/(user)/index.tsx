@@ -56,6 +56,7 @@ export default function Discover() {
   const notifiedStoreIds = useRef<Set<number>>(new Set());
   const locationWatchRef = useRef<Location.LocationSubscription | null>(null);
 
+  // ─── Load active/approved stores ────────────────────────────────────────────
   useEffect(() => {
     (async () => {
       const data = await getStores();
@@ -63,6 +64,7 @@ export default function Discover() {
     })();
   }, []);
 
+  // ─── Route draw animation ────────────────────────────────────────────────────
   useEffect(() => {
     if (!routeGeoJSON?.coordinates?.length) return;
     const durationMs = 1800;
