@@ -56,6 +56,7 @@ export default function Discover() {
   const notifiedStoreIds = useRef<Set<number>>(new Set());
   const locationWatchRef = useRef<Location.LocationSubscription | null>(null);
 
+  // ─── Load active/approved stores ────────────────────────────────────────────
   useEffect(() => {
     (async () => {
       const data = await getStores();
@@ -63,6 +64,7 @@ export default function Discover() {
     })();
   }, []);
 
+  // ─── Route draw animation ────────────────────────────────────────────────────
   useEffect(() => {
     if (!routeGeoJSON?.coordinates?.length) return;
     const durationMs = 1800;
@@ -175,16 +177,6 @@ export default function Discover() {
     }
   };
 
-  const getRoute = async (
-    start: [number, number],
-    end: [number, number]
-  ): Promise<GeoJSON.LineString | null> => {
-    const url = `https://api.mapbox.com/directions/v5/mapbox/driving/${start[0]},${start[1]};${end[0]},${end[1]}?geometries=geojson&access_token=${process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN}`;
-    const res = await fetch(url);
-    const json = await res.json();
-    return json.routes?.[0]?.geometry ?? null;
-  };
-
   const handleStoreSelect = async (store: Store) => {
     setSelectedStore(store);
     bottomSheetRef.current?.snapToIndex(1);
@@ -192,8 +184,8 @@ export default function Discover() {
     if (!location) return;
     const start: [number, number] = [location.coords.longitude, location.coords.latitude];
     const end: [number, number] = [store.longitude, store.latitude];
-    const route = await getRoute(start, end);
-    setRouteGeoJSON(route);
+    const route = await getRouteService(start, end);
+    setRouteGeoJSON(route ?? null);
     setRouteDrawProgress(0);
     cameraRef.current?.fitBounds(start, end, 80, 1000);
   };
