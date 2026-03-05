@@ -16,7 +16,7 @@ export const UserProfileCard = ({ profile, user, onPress }: UserProfileCardProps
     return (
         <TouchableOpacity
             onPress={onPress}
-            className="mx-4 mb-6 bg-background dark:bg-neutral-800 rounded-2xl p-4 border border-neutral-200 dark:border-neutral-700 active:bg-neutral-50 dark:active:bg-neutral-700 will-change-pressable shadow-sm"
+            className="mx-4 mb-6 bg-background dark:bg-darkBackgroundMuted rounded-2xl p-4 border border-neutral-200 dark:border-darkBorder active:bg-neutral-50 dark:active:bg-darkBackgroundCard will-change-pressable shadow-sm"
         >
             <View className="flex-row items-center">
                 {/* Avatar Placeholder */}
@@ -26,10 +26,10 @@ export const UserProfileCard = ({ profile, user, onPress }: UserProfileCardProps
 
                 {/* Info */}
                 <View className="flex-1">
-                    <Text className="text-lg font-poppins-bold text-neutral-900 dark:text-white" numberOfLines={1}>
+                    <Text className="text-lg font-poppins-bold text-neutral-900 dark:text-darkTextPrimary" numberOfLines={1}>
                         {displayName}
                     </Text>
-                    <Text className="text-sm font-poppins-regular text-neutral-500 dark:text-neutral-400" numberOfLines={1}>
+                    <Text className="text-sm font-poppins-regular text-neutral-500 dark:text-darkTextSecondary" numberOfLines={1}>
                         {email}
                     </Text>
                 </View>

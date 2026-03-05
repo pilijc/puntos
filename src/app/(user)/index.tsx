@@ -238,9 +238,9 @@ export default function Discover() {
     <View className="flex-1">
       <SafeAreaView className="absolute top-0 left-0 right-0 z-20">
         <View className="mt-4 mx-4">
-          <View className="bg-white dark:bg-neutral-800 rounded-xl flex-row justify-between items-center px-4 py-1">
+          <View className="bg-white dark:bg-darkBackgroundMuted rounded-xl flex-row justify-between items-center px-4 py-1">
             <TextInput
-              className="flex-1 text-base text-black dark:text-white font-poppins-semibold items-center justify-center"
+              className="flex-1 text-base text-black dark:text-darkTextPrimary font-poppins-semibold items-center justify-center"
               style={{ fontFamily: "Poppins-Regular" }}
               placeholderTextColor="gray"
               placeholder="Search a place"
@@ -259,7 +259,7 @@ export default function Discover() {
           </View>
 
           {searchResults.length > 0 && (
-            <View className="bg-white dark:bg-neutral-800 mt-2 rounded-xl p-2 max-h-72 border border-neutral-100 dark:border-neutral-700">
+            <View className="bg-white dark:bg-darkBackgroundMuted mt-2 rounded-xl p-2 max-h-72 border border-neutral-100 dark:border-darkBorder">
               <ScrollView
                 keyboardShouldPersistTaps="handled"
                 contentContainerClassName="divide-y divide-neutral-100"
@@ -273,8 +273,8 @@ export default function Discover() {
                     style={{ marginHorizontal: 4 }}
                   >
                     <View className="flex-1 py-2">
-                      <Text className="font-semibold text-base text-neutral-900 dark:text-white">{r.text}</Text>
-                      <Text numberOfLines={1} className="text-xs text-neutral-500 dark:text-neutral-400">
+                      <Text className="font-semibold text-base text-neutral-900 dark:text-darkTextPrimary">{r.text}</Text>
+                      <Text numberOfLines={1} className="text-xs text-neutral-500 dark:text-darkTextSecondary">
                         {r.place_name}
                       </Text>
                     </View>
@@ -412,7 +412,7 @@ export default function Discover() {
             zIndex: 101,
             elevation: 4,
           }}
-          className="bg-white dark:bg-neutral-800 rounded-full p-2"
+          className="bg-white dark:bg-darkBackgroundMuted rounded-full p-2"
           onPress={() => {
             setRouteGeoJSON(null);
             setSelectedStore(null);
@@ -444,7 +444,7 @@ export default function Discover() {
             {stores.map((s) => (
               <View
                 key={s.id}
-                className="bg-white dark:bg-neutral-800 p-2 flex-row items-center gap-x-3"
+                className="bg-white dark:bg-darkBackgroundMuted p-2 flex-row items-center gap-x-3"
               >
                 <Image
                   source={{
@@ -456,7 +456,7 @@ export default function Discover() {
                 <View className="flex-1">
                   
                   <View className="flex-row justify-between items-start">
-                    <Text className="text-lg text-neutral-900 dark:text-white flex-1 font-poppins-semibold" numberOfLines={1}>
+                    <Text className="text-lg text-neutral-900 dark:text-darkTextPrimary flex-1 font-poppins-semibold" numberOfLines={1}>
                       {s.name}
                     </Text>
                   </View>
@@ -506,10 +506,10 @@ export default function Discover() {
               </ScrollView>
             </View>
 
-            <View className="bg-white dark:bg-neutral-800 p-2 flex-row items-center gap-x-3">
+            <View className="bg-white dark:bg-darkBackgroundMuted p-2 flex-row items-center gap-x-3">
               <View className="flex-1 justify-between">
                 <View className="flex-row items-center gap-x-2">
-                  <Text className="text-lg text-neutral-900 dark:text-white flex-1 font-poppins-semibold">
+                  <Text className="text-lg text-neutral-900 dark:text-darkTextPrimary flex-1 font-poppins-semibold">
                     Rewards
                   </Text>
                 </View>
@@ -524,10 +524,10 @@ export default function Discover() {
                     />
                     <View className="flex-1 flex-col justify-between ml-3 py-1">
                       <View className="flex-1 flex-col items-start justify-start">
-                        <Text className="text-base font-poppins-semibold text-neutral-900 dark:text-white">
+                        <Text className="text-base font-poppins-semibold text-neutral-900 dark:text-darkTextPrimary">
                           Free Coffee
                         </Text>
-                        <Text className="text-xs font-poppins text-neutral-500 dark:text-neutral-400" numberOfLines={2}>
+                        <Text className="text-xs font-poppins text-neutral-500 dark:text-darkTextSecondary" numberOfLines={2}>
                           Any medium drink of your choice
                         </Text>
                       </View>
