@@ -9,6 +9,12 @@
     },
     "plugins": [
       "expo-router",
+      [
+        "onesignal-expo-plugin",
+        {
+          "mode": "production"
+        }
+      ],
       "expo-sqlite",
       [
         "expo-location",

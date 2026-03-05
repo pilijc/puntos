@@ -38,7 +38,7 @@ export async function sendPushNotification(subscriptionId: string, title: string
         include_subscription_ids: [subscriptionId],
         headings: { en: title ?? "Sample" },
         contents: { en: body ?? "Hello" },
-        android_channel_id: "442775d1-52c6-48c4-b771-d0132fabbdec",
+        android_channel_id: process.env.EXPO_PUBLIC_ONESIGNAL_ANDROID_CHANNEL_ID,
         priority: 10,
       }),
     });
