@@ -3,17 +3,17 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import Mapbox, { MapView, Camera, PointAnnotation } from "@rnmapbox/maps";
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
-import { Alert, Platform, TextInput, TouchableOpacity, useColorScheme } from "react-native";
+import { Alert, TextInput, TouchableOpacity, useColorScheme } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 import * as Location from 'expo-location'
 import { supabase } from "@/supabase/supabase";
 import { Ionicons, MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
 import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
-import { getRouteService, getSearchResultsService, getStoresService } from "@/services/discover-service";
+import { getSearchResultsService } from "@/services/discover-service";
 import { useStoreStore } from "@/store/store-store";
 import { Store } from "@/type/store";
 import type * as GeoJSON from "geojson";
-import { getOneSignalId } from "@/services/push-notif";
+import { getOneSignalId, sendPushNotification } from "@/services/push-notif";
 import { isStoreNearby } from "@/services/location-service";
 import * as turf from "@turf/turf";
 import { getStores } from "@/services/store-service";
@@ -101,11 +101,9 @@ export default function Discover() {
 
       const sub = await Location.watchPositionAsync(
         {
-          accuracy: Platform.OS === 'android'
-            ? Location.Accuracy.Lowest
-            : Location.Accuracy.Balanced,
+          accuracy: Location.Accuracy.Balanced,
           timeInterval: 5000,
-          distanceInterval: 5,
+          distanceInterval: 0,
         },
         async (position) => {
           if (cancelled) return;
@@ -129,19 +127,14 @@ export default function Discover() {
                 const subscriptionId = await getOneSignalId();
                 if (!subscriptionId) continue;
 
-                const sessionData = await supabase.auth.getSession();
-                const token = sessionData.data?.session?.access_token ?? process.env.EXPO_PUBLIC_ANON_KEY;
-
-                await supabase.functions.invoke("notify-nearby-stores", {
-                  body: {
-                    subscriptionId,
-                    title: `You're near ${store.name}! 📍`,
-                    body: `Visit ${store.name} and earn Puntos rewards!`,
-                  },
-                  headers: {
-                    Authorization: `Bearer ${token}`,
-                  },
-                });
+                const res = await sendPushNotification(
+                  subscriptionId,
+                  `You're near ${store.name}! 📍`,
+                  `Visit ${store.name} and earn Puntos rewards!`,
+                );
+                if (res instanceof Response) {
+                  console.log(`[Geofence] Push sent for ${store.name}:`, res.status);
+                }
               } catch (err) {
                 console.error('[Geofence] Failed to send push notification:', err);
               }
@@ -208,29 +201,6 @@ export default function Discover() {
     });
   };
 
-  useEffect(() => {
-    (async () => {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== "granted") return;
-  
-      const loc = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.High,
-      });
-  
-      setLocation(loc);
-    })();
-  }, []);
-
-  useEffect(() => {
-    if (!mapReady || !location) return;
-    const { longitude, latitude } = location.coords;
-  
-    cameraRef.current?.setCamera({
-      centerCoordinate: [longitude, latitude],
-      zoomLevel: 14,
-      animationDuration: 1000,
-    });
-  }, [mapReady, location]);
 
   const storeFeatures: GeoJSON.FeatureCollection = {
     type: "FeatureCollection",
@@ -254,7 +224,7 @@ export default function Discover() {
       .map((s) => {
         const circle = turf.circle(
           [s.longitude, s.latitude],
-          s.radius! / 1000, //store radius meters to km here
+          s.radius! / 1000, 
           { steps: 64, units: "kilometers" }
         );
         circle.properties = { storeId: String(s.id) };
@@ -263,9 +233,6 @@ export default function Discover() {
   
     return turf.featureCollection(features);
   }, [stores]);
-
-  console.log(stores);
-  console.log(circlesFC);
 
   return (
     <View className="flex-1">
@@ -440,10 +407,10 @@ export default function Discover() {
         <TouchableOpacity
           style={{
             position: "absolute",
+            top: 120,
             right: 16,
-            bottom: 0,
-            zIndex: 999,
-            elevation: 20,
+            zIndex: 101,
+            elevation: 4,
           }}
           className="bg-white dark:bg-neutral-800 rounded-full p-2"
           onPress={() => {
@@ -455,7 +422,6 @@ export default function Discover() {
         </TouchableOpacity>
       )}
 
-     
       {selectedStore && (
         <BottomSheet
           ref={bottomSheetRef}
