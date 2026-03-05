@@ -123,10 +123,10 @@ export default function UserSettings() {
         </Text>
       </View>
 
-      <View className="mx-4 mb-6 overflow-hidden bg-background rounded-2xl border border-neutral-200 dark:border-darkBorder">
+      <View className="mx-4 mb-6 overflow-hidden bg-background dark:bg-darkBackgroundMuted rounded-2xl border border-neutral-200 dark:border-darkBorder">
         <TouchableOpacity
           onPress={() => setSecurityModalVisible(true)}
-          className="flex-row items-center p-4 bg-white dark:bg-darkBackgroundMuted active:bg-neutral-50 dark:active:bg-darkBackgroundCard will-change-pressable">
+          className="flex-row items-center p-4 bg-background dark:bg-darkBackgroundMuted active:bg-neutral-50 dark:active:bg-darkBackgroundCard will-change-pressable">
           <View className="h-5 w-5 items-center justify-center rounded-lg bg-emerald-50">
             <Ionicons name="settings-outline" size={15} color="#3b82f6" />
           </View>
@@ -144,8 +144,8 @@ export default function UserSettings() {
         </Text>
       </View>
 
-      <View className="mx-4 mb-6 overflow-hidden bg-background rounded-2xl border border-neutral-200 dark:border-darkBorder">
-        <View className="flex-row p-4 bg-white dark:bg-darkBackgroundMuted border-b border-neutral-100 dark:border-darkBorder items-center">
+      <View className="mx-4 mb-6 overflow-hidden bg-background dark:bg-darkBackgroundMuted rounded-2xl border border-neutral-200 dark:border-darkBorder">
+        <View className="flex-row p-4 bg-background dark:bg-darkBackgroundMuted border-b border-neutral-100 dark:border-darkBorder items-center">
           <View className="h-8 w-8 items-center justify-center rounded-lg bg-orange-50">
             <Ionicons name="notifications-outline" size={18} color="#FF6600" />
           </View>
@@ -190,7 +190,7 @@ export default function UserSettings() {
               togglePreference('location_enabled');
             }
           }}
-          className="flex-row p-4 bg-white dark:bg-darkBackgroundMuted border-b border-neutral-100 dark:border-darkBorder items-center will-change-pressable"
+          className="flex-row p-4 bg-background dark:bg-darkBackgroundMuted border-b border-neutral-100 dark:border-darkBorder items-center will-change-pressable"
         >
           <View className="h-8 w-8 items-center justify-center rounded-lg bg-yellow-50">
             <Ionicons name="location-outline" size={18} color="#d8d336" />
@@ -212,7 +212,7 @@ export default function UserSettings() {
         </TouchableOpacity>
 
         {/* Promo Emails Switch */}
-        <View className="flex-row p-4 bg-white dark:bg-darkBackgroundMuted items-center">
+        <View className="flex-row p-4 bg-background dark:bg-darkBackgroundMuted items-center">
           <View className="h-8 w-8 items-center justify-center rounded-lg bg-pink-50">
             <Ionicons name="megaphone-outline" size={18} color="#ad2291" />
           </View>

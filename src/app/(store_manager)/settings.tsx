@@ -77,7 +77,7 @@ export default function StoreManagerSettings() {
                 </Text>
             </View>
 
-            <View className="mx-4 mb-6 overflow-hidden bg-background rounded-2xl border border-neutral-200 dark:border-darkBorder">
+            <View className="mx-4 mb-6 overflow-hidden bg-background dark:bg-darkBackgroundMuted rounded-2xl border border-neutral-200 dark:border-darkBorder">
                 <TouchableOpacity
                     onPress={() => setSecurityModalVisible(true)}
                     className="flex-row items-center p-4 bg-background dark:bg-darkBackgroundMuted active:bg-neutral-50 dark:active:bg-darkBackgroundCard will-change-pressable">
