@@ -6,8 +6,15 @@ export interface Store {
   longitude: number;
   status: string;
   is_active: boolean;
-  store_image: string;
-  store_pictures: string[];
+  logo: string | null;
+  store_pictures: string[] | null;
+  type: string;
+  status: string;
+  owner_id: string;
+  phone: string;
+  registration_number: string;
+  created_at: string;
+  updated_at: string | null;
 }
 
 export type StoreState = {
@@ -22,7 +29,7 @@ export interface Store_Superadmin {
   address: string;
   owner: string;
   staff_count: number;
-  store_image: string;
+  logo: string;
   store_pictures: string[];
 }
 
@@ -39,6 +46,6 @@ export type StoreCardData = {
 	owner: string;
 	staff_count: number;
 	is_active: boolean;
-	store_image: string;
+	logo: string;
 	store_pictures: string[];
 };

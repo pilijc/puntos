@@ -1,33 +1,124 @@
-import React from "react";
+import React, { useState, useCallback } from "react";
 import { Alert } from "react-native";
-import { SafeAreaView, Text, TouchableOpacity, View } from "@/tw";
-import { supabase } from "@/supabase/supabase";
+import { View, Text, SafeAreaView } from "@/tw";
+import { useFocusEffect } from "expo-router";
 
+// Hooks
+import { useProfile } from "@/hooks/use-profile";
+
+// Components
+import EditProfileModal from "@/components/settings/EditProfileModal";
+import SecurityModal from "@/components/settings/SecurityModal";
+import { LogoutButton } from "@/components/settings/LogoutButton";
+import { UserProfileCard } from "@/components/settings/UserProfileCard";
+import DarkModeToggle from "@/components/ui/dark-mode-toggle";
+
+/**
+ * Super Admin Settings Screen
+ * Standardized for consistent account management across all roles.
+ */
 export default function SuperAdminSettings() {
+    // Component State
+    const [modalVisible, setModalVisible] = useState(false);
+    const [securityModalVisible, setSecurityModalVisible] = useState(false);
 
-    const handleLogout = async () => {
-        try {
-            await supabase.auth.signOut();
-            // auth-listener handles redirect to /(onboarding)/welcome on SIGNED_OUT
-        } catch (error: any) {
-            Alert.alert("Logout error", error?.message || "Unable to logout right now.");
-        }
+    // Profile Hook
+    const {
+        user,
+        profile,
+        loading,
+        updateProfile,
+        refreshProfile,
+    } = useProfile();
+
+    // Refresh profile on screen focus
+    useFocusEffect(
+        useCallback(() => {
+            refreshProfile();
+        }, [])
+    );
+
+    // --- EDIT PROFILE LOGIC ---
+
+    /**
+     * Triggers the edit profile modal
+     */
+    const handleProfilePress = () => {
+        setModalVisible(true);
     };
 
-    return (
-        <SafeAreaView className="flex-1 bg-backgroundMuted p-6">
-            <View className="flex-1 w-full max-w-sm mt-4">
-                <Text className="text-2xl font-poppins-bold mb-6">Settings</Text>
+    /**
+     * Handles saving profile updates from the modal
+     */
+    const handleSaveProfile = async (newName: string, _newEmail: string) => {
+        const result = await updateProfile(newName);
+        if (result.success) {
+            Alert.alert("Success", "Profile updated successfully");
+        } else {
+            throw new Error("Failed to update profile");
+        }
+    };
+    // -------------------------
 
-                <TouchableOpacity
-                    onPress={handleLogout}
-                    className="bg-primary w-full py-4 rounded-xl items-center"
-                >
-                    <Text className="text-white text-base font-poppins-semibold">
-                        Logout
-                    </Text>
-                </TouchableOpacity>
+    // Loading State
+    if (loading && !user) {
+        return (
+            <SafeAreaView className="flex-1 bg-background dark:bg-neutral-900 justify-center items-center">
+                <Text className="text-neutral-500 font-poppins-regular">Loading profile...</Text>
+            </SafeAreaView>
+        );
+    }
+
+    return (
+        <SafeAreaView className="flex-1 bg-background dark:bg-neutral-900 p-4">
+            {/* Header */}
+            <View className="flex-row justify-between items-center mb-6">
+                <Text className="text-2xl font-poppins-bold text-neutral-900 dark:text-white">
+                    Settings
+                </Text>
+                <DarkModeToggle />
             </View>
+
+            {/* User Info Card - Triggers Edit Modal */}
+            {user && (
+                <UserProfileCard
+                    user={user}
+                    profile={profile}
+                    onPress={handleProfilePress}
+                />
+            )}
+
+            {/* Account Settings Section */}
+            <View>
+                <Text className="text-sm font-poppins-semibold text-neutral-600 dark:text-neutral-400 mb-2">
+                    ACCOUNT SETTINGS
+                </Text>
+            </View>
+
+            {/* In a super admin screen, we can keep it as basic or extended as needed, 
+                but keeping the logout button and profile card is essential for a unified UI. */}
+            <LogoutButton />
+
+            {/* Footer */}
+            <View className="mx-8 mt-6 items-center">
+                <Text className="text-sm text-center font-poppins-regular text-neutral-500 dark:text-neutral-400">
+                    Copyright 2026 Admin Panel
+                </Text>
+            </View>
+
+            {/* Modals */}
+            <EditProfileModal
+                visible={modalVisible}
+                onClose={() => setModalVisible(false)}
+                initialUsername={profile?.name || user?.email?.split("@")[0] || ""}
+                initialEmail={user?.email || ""}
+                onSave={handleSaveProfile}
+            />
+
+            <SecurityModal
+                visible={securityModalVisible}
+                onClose={() => setSecurityModalVisible(false)}
+            />
         </SafeAreaView>
     );
 }

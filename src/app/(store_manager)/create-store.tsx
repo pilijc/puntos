@@ -306,12 +306,12 @@ export default function CreateStore() {
                 const fileName = `store-logos/${user.id}/${Date.now()}.${ext}`;
 
                 const { error: uploadError } = await supabase.storage
-                    .from("puntos")
+                    .from("puntos-public")
                     .upload(fileName, bytes, { contentType: mimeType, upsert: true });
 
                 if (uploadError) throw new Error(uploadError.message);
 
-                const { data: urlData } = supabase.storage.from("puntos").getPublicUrl(fileName);
+                const { data: urlData } = supabase.storage.from("puntos-public").getPublicUrl(fileName);
                 setLogoPublicUrl(urlData.publicUrl);
             } catch (err: any) {
                 Alert.alert("Upload Failed", err?.message ?? "Could not upload logo. You can still submit without it.");

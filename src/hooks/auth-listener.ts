@@ -11,9 +11,9 @@ import { OneSignal } from 'react-native-onesignal';
 export function useAuthListener() {
   const router = useRouter();
 
-  useEffect( () => {
+  useEffect(() => {
     const { data: listener } = supabase.auth.onAuthStateChange(
-      async (event, session) => {        
+      async (event, session) => {
         if (event === 'PASSWORD_RECOVERY' && session) {
           console.log("Password recovery session started for:", session.user.email);
           router.replace("/reset-password");
@@ -23,41 +23,42 @@ export function useAuthListener() {
         } else if (event === 'SIGNED_IN' && session) {
           console.log("User logged in:", session.user.email);
           void (async () => {
+            try {
+              const sessionToken = await AsyncStorage.getItem('sessionToken');
+              if (!sessionToken && session.access_token) {
+                await AsyncStorage.setItem('sessionToken', session.access_token);
+              }
 
-          try {
-            const sessionToken = await AsyncStorage.getItem('sessionToken');
-            if (!sessionToken && session.access_token) {
-              await AsyncStorage.setItem('sessionToken', session.access_token);
-            }
+              const tokenToUse = sessionToken ?? session.access_token ?? null;
+              if (!tokenToUse) {
+                console.log('No session token found in AsyncStorage or session; staying on auth screens.');
+                return;
+              }
 
-            const tokenToUse = sessionToken ?? session.access_token ?? null;
-            if (!tokenToUse) {
-              console.log('No session token found in AsyncStorage or session; staying on auth screens.');
-              return;
-            }
+              await checkIfAccountDeletedService(session.user.id);
 
-            await checkIfAccountDeletedService(session.user.id);
-            
-            const userId = session.user.id;
-            const nextRoute = await getHomeRouteForUserId(userId);
-            
-            await OneSignal.login(userId);
-            await upsertPushId();
-            
-            router.replace(nextRoute as any);
-          } catch (err: any) {
-            if (err instanceof AccountDeletedError) {
-              Alert.alert("Login Failed", err.message);
-              router.replace("/(auth)/login");
-            } else {
-              console.error("Auth listener session error:", err);
+              const userId = session.user.id;
+              const nextRoute = await getHomeRouteForUserId(userId);
+
+              await OneSignal.login(userId);
+              await upsertPushId();
+
+              router.replace(nextRoute as any);
+            } catch (err: any) {
+              if (err instanceof AccountDeletedError) {
+                Alert.alert("Login Failed", err.message);
+                router.replace("/(auth)/login");
+              } else {
+                console.error("Auth listener session error:", err);
+              }
             }
-          }
           })();
+        }
       }
+    );
+
     return () => {
       listener.subscription.unsubscribe();
-      };
-    })}
-  );
+    };
+  }, [router]);
 }
