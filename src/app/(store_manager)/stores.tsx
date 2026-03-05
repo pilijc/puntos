@@ -35,7 +35,7 @@ function StoreCard({ store }: { store: StoreRow }) {
     const cfg = STATUS_CONFIG[status] ?? STATUS_CONFIG["inactive"];
 
     return (
-        <View style={styles.card}>
+        <TouchableOpacity style={styles.card} onPress={() => router.push(`/(store_manager)/view-store/${store.id}`)}>
             <View style={{ flexDirection: "row", alignItems: "flex-start" }}>
                 <View style={styles.storeImg}>
                     {store.logo ? (
@@ -91,7 +91,7 @@ function StoreCard({ store }: { store: StoreRow }) {
                     </Text>
                 </View>
             )}
-        </View>
+        </TouchableOpacity>
     );
 }
 

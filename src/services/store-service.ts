@@ -178,3 +178,16 @@ export async function getStores() {
         throw error;
     }
 }
+
+export async function getStoreById(storeId: number) {
+    try {
+			const { data, error } = await supabase
+				.from("stores")
+				.select("*")
+				.eq("id", storeId);
+			if (error) throw new Error(error.message);
+			return data?.[0] ?? null;
+    } catch (error) {
+        throw error;
+    }
+}
