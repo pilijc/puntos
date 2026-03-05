@@ -9,7 +9,7 @@ import * as Location from 'expo-location'
 import { supabase } from "@/supabase/supabase";
 import { Ionicons, MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
 import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
-import { getSearchResultsService, getStoresService } from "@/services/discover-service";
+import { getRouteService, getSearchResultsService, getStoresService } from "@/services/discover-service";
 import { useStoreStore } from "@/store/store-store";
 import { Store } from "@/type/store";
 import type * as GeoJSON from "geojson";
@@ -90,7 +90,6 @@ export default function Discover() {
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') return;
 
-      // Get initial location for the map camera
       const initial = await Location.getCurrentPositionAsync({
         accuracy: Location.Accuracy.High,
       }).catch(() => null)
@@ -185,17 +184,6 @@ export default function Discover() {
     }
   };
 
-  // ─── Route ───────────────────────────────────────────────────────────────────
-  const getRoute = async (
-    start: [number, number],
-    end: [number, number]
-  ): Promise<GeoJSON.LineString | null> => {
-    const url = `https://api.mapbox.com/directions/v5/mapbox/driving/${start[0]},${start[1]};${end[0]},${end[1]}?geometries=geojson&access_token=${process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN}`;
-    const res = await fetch(url);
-    const json = await res.json();
-    return json.routes?.[0]?.geometry ?? null;
-  };
-
   const handleStoreSelect = async (store: Store) => {
     setSelectedStore(store);
     bottomSheetRef.current?.snapToIndex(1);
@@ -203,8 +191,8 @@ export default function Discover() {
     if (!location) return;
     const start: [number, number] = [location.coords.longitude, location.coords.latitude];
     const end: [number, number] = [store.longitude, store.latitude];
-    const route = await getRoute(start, end);
-    setRouteGeoJSON(route);
+    const route = await getRouteService(start, end);
+    setRouteGeoJSON(route ?? null);
     setRouteDrawProgress(0);
     cameraRef.current?.fitBounds(start, end, 80, 1000);
   };
@@ -453,7 +441,7 @@ export default function Discover() {
           style={{
             position: "absolute",
             right: 16,
-            bottom: 215,
+            bottom: 0,
             zIndex: 999,
             elevation: 20,
           }}
@@ -467,32 +455,7 @@ export default function Discover() {
         </TouchableOpacity>
       )}
 
-      {location && (
-        <TouchableOpacity
-          style={{
-            position: "absolute",
-            right: 16,
-            bottom: 170,
-            zIndex: 999,
-            elevation: 20,
-          }}
-          className="bg-white dark:bg-neutral-800 rounded-full p-2"
-          onPress={() => {
-            cameraRef.current?.setCamera({
-              centerCoordinate: [
-                location.coords.longitude,
-                location.coords.latitude,
-              ],
-              zoomLevel: 14,
-              animationDuration: 600,
-              animationMode: "flyTo",
-            });
-          }}
-        >
-          <MaterialIcons name="filter-center-focus" size={35} color="#FB8500" />
-        </TouchableOpacity>
-      )}
-
+     
       {selectedStore && (
         <BottomSheet
           ref={bottomSheetRef}
