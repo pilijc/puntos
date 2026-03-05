@@ -9,7 +9,7 @@ import * as Location from 'expo-location'
 import { supabase } from "@/supabase/supabase";
 import { Ionicons, MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
 import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
-import { getSearchResultsService } from "@/services/discover-service";
+import { getRouteService, getSearchResultsService } from "@/services/discover-service";
 import { useStoreStore } from "@/store/store-store";
 import { Store } from "@/type/store";
 import type * as GeoJSON from "geojson";
