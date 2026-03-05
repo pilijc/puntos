@@ -1,5 +1,5 @@
 import { Text, SafeAreaView, View, Image } from "@/tw";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import Mapbox, { MapView, Camera, PointAnnotation } from "@rnmapbox/maps";
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
@@ -15,8 +15,7 @@ import { Store } from "@/type/store";
 import type * as GeoJSON from "geojson";
 import { getOneSignalId } from "@/services/push-notif";
 import { isStoreNearby } from "@/services/location-service";
-
-const GEOFENCE_RADIUS_METERS = 30;
+import * as turf from "@turf/turf";
 import { getStores } from "@/services/store-service";
 
 Mapbox.setAccessToken(process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN);
@@ -54,7 +53,6 @@ export default function Discover() {
   const [selectedStore, setSelectedStore] = useState<Store | null>(null);
   const routeAnimationRef = useRef<ReturnType<typeof requestAnimationFrame> | null>(null);
 
-  // Track which stores we've already sent a push for this session (avoid spam)
   const notifiedStoreIds = useRef<Set<number>>(new Set());
   const locationWatchRef = useRef<Location.LocationSubscription | null>(null);
 
@@ -85,7 +83,6 @@ export default function Discover() {
     };
   }, [routeGeoJSON]);
 
-  // ─── Geofencing: watch location + check every store within 30 m ─────────────
   useEffect(() => {
     let cancelled = false;
 
@@ -103,7 +100,6 @@ export default function Discover() {
         setLocation(initial);
       }
 
-      // Start watching – fires every ~5 s or when moved ≥10 m
       const sub = await Location.watchPositionAsync(
         {
           accuracy: Platform.OS === 'android'
@@ -118,14 +114,13 @@ export default function Discover() {
 
           const { latitude: uLat, longitude: uLon } = position.coords;
 
-          // Get the latest stores snapshot from ref to avoid stale closures
           const currentStores = useStoreStore.getState().stores;
 
           for (const store of currentStores) {
             if (notifiedStoreIds.current.has(store.id)) continue;
             if (!store.latitude || !store.longitude) continue;
 
-            const nearby = isStoreNearby(uLat, uLon, store.latitude, store.longitude, GEOFENCE_RADIUS_METERS);
+            const nearby = isStoreNearby(uLat, uLon, store.latitude, store.longitude, store.radius!);
 
             if (nearby) {
               console.log(`[Geofence] Entered store: ${store.name}`);
@@ -170,7 +165,6 @@ export default function Discover() {
     };
   }, []);
 
-  // ─── Camera follows initial location ────────────────────────────────────────
   useEffect(() => {
     if (!mapReady || !location) return;
     const { longitude, latitude } = location.coords;
@@ -181,7 +175,6 @@ export default function Discover() {
     });
   }, [mapReady, location]);
 
-  // ─── Search ──────────────────────────────────────────────────────────────────
   const searchPlaces = async () => {
     if (!searchQuery.trim()) return;
     try {
@@ -266,6 +259,25 @@ export default function Discover() {
       },
     })),
   };
+
+  const circlesFC = useMemo(() => {
+    const features = stores
+      .filter((s) => s.latitude && s.longitude)
+      .map((s) => {
+        const circle = turf.circle(
+          [s.longitude, s.latitude],
+          s.radius! / 1000, //store radius meters to km here
+          { steps: 64, units: "kilometers" }
+        );
+        circle.properties = { storeId: String(s.id) };
+        return circle;
+      });
+  
+    return turf.featureCollection(features);
+  }, [stores]);
+
+  console.log(stores);
+  console.log(circlesFC);
 
   return (
     <View className="flex-1">
@@ -380,6 +392,27 @@ export default function Discover() {
               ],
             }}
           />
+        </Mapbox.ShapeSource>
+
+        <Mapbox.ShapeSource id="storeCirclesSource" shape={circlesFC}>
+          <Mapbox.FillLayer
+            id="storeCirclesFill"
+            style={{
+              fillColor: "#f97316",
+              fillOpacity: 0.11,
+            }}
+            belowLayerID="storesLayer"
+          />
+
+          {/* optional if we want to show border line sa circle hehe */}
+          {/* <Mapbox.LineLayer
+            id="storeCirclesBorder"
+            style={{
+              lineColor: "#f97316",
+              lineWidth: 0.3,
+              lineOpacity: 0.5,
+            }}
+          /> */}
         </Mapbox.ShapeSource>
 
         {/* Animated route line */}

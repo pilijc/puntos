@@ -4,13 +4,13 @@ export interface Store {
   address: string;
   latitude: number;
   longitude: number;
-  status: string;
   is_active: boolean;
   logo: string | null;
   store_pictures: string[] | null;
   type: string;
   status: string;
   owner_id: string;
+  radius: number | null;
   phone: string;
   registration_number: string;
   created_at: string;
