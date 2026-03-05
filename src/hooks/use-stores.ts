@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
 import { supabase } from "@/supabase/supabase";
-import { getMyStores, StoreRow } from "@/services/store-service";
+import { getMyStores, StoreRow, deleteStore as deleteStoreService } from "@/services/store-service";
 
 export type StoreStatusFilter = "All" | "active" | "inactive" | "pending_review";
 
@@ -13,6 +13,7 @@ export interface UseStoresReturn {
     activeFilter: StoreStatusFilter;
     setActiveFilter: (filter: StoreStatusFilter) => void;
     refresh: () => void;
+    deleteStore: (storeId: number) => Promise<void>;
     ownerId: string | null;
 }
 
@@ -53,6 +54,11 @@ export function useStores(): UseStoresReturn {
         fetchStores(true);
     }, [fetchStores]);
 
+    const deleteStore = useCallback(async (storeId: number) => {
+        await deleteStoreService(storeId);
+        await fetchStores(true);
+    }, [fetchStores]);
+
     useEffect(() => {
         fetchStores();
     }, [fetchStores]);
@@ -71,6 +77,7 @@ export function useStores(): UseStoresReturn {
         activeFilter,
         setActiveFilter,
         refresh,
+        deleteStore,
         ownerId,
     };
 }

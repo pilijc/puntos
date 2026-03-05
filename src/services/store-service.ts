@@ -188,3 +188,12 @@ export async function updateStore(storeId: number, payload: UpdateStorePayload):
     if (error || !data) throw new Error(error?.message ?? "Failed to update store");
     return data as StoreRow;
 }
+
+export async function deleteStore(storeId: number): Promise<void> {
+    const { error } = await supabase
+        .from("stores")
+        .delete()
+        .eq("id", storeId);
+
+    if (error) throw new Error(error.message);
+}

@@ -3,13 +3,14 @@ import { Modal, ActivityIndicator, Alert, KeyboardAvoidingView, ScrollView, useC
 import { View, Text, TextInput, TouchableOpacity } from "@/tw";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { Image } from "expo-image";
-import { StoreRow, updateStore, UpdateStorePayload } from "@/services/store-service";
+import { StoreRow, updateStore, UpdateStorePayload, deleteStore } from "@/services/store-service";
 
 interface StoreDetailModalProps {
     store: StoreRow | null;
     visible: boolean;
     onClose: () => void;
     onSaved: (updated: StoreRow) => void;
+    onDeleted: (storeId: number) => void;
 }
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; dot: string }> = {
@@ -64,7 +65,7 @@ function InputField({
     );
 }
 
-export default function StoreDetailModal({ store, visible, onClose, onSaved }: StoreDetailModalProps) {
+export default function StoreDetailModal({ store, visible, onClose, onSaved, onDeleted }: StoreDetailModalProps) {
     const isDark = useColorScheme() === "dark";
 
     const [editing, setEditing] = useState(false);
@@ -103,6 +104,34 @@ export default function StoreDetailModal({ store, visible, onClose, onSaved }: S
         } finally {
             setSaving(false);
         }
+    };
+
+    const handleDelete = () => {
+        if (!store) return;
+        Alert.alert(
+            "Delete Store",
+            `Are you sure you want to delete "${store.name}"? This action cannot be undone.`,
+            [
+                { text: "Cancel", style: "cancel" },
+                {
+                    text: "Delete",
+                    style: "destructive",
+                    onPress: async () => {
+                        setSaving(true);
+                        try {
+                            await deleteStore(store.id);
+                            onDeleted(store.id);
+                            handleClose();
+                            Alert.alert("Deleted", "Store has been deleted.");
+                        } catch (e: any) {
+                            Alert.alert("Error", e?.message ?? "Failed to delete store.");
+                        } finally {
+                            setSaving(false);
+                        }
+                    }
+                }
+            ]
+        );
     };
 
     const handleClose = () => {
@@ -152,23 +181,12 @@ export default function StoreDetailModal({ store, visible, onClose, onSaved }: S
                                     </Text>
                                 )}
                             </View>
-                            <View className="flex-row gap-2 items-center">
-                                {!editing && (
-                                    <TouchableOpacity
-                                        className="flex-row items-center gap-1 px-3 py-2 rounded-xl bg-orange-50 dark:bg-darkPrimaryBgMuted border border-orange-200 dark:border-darkPrimaryBorder"
-                                        onPress={() => setEditing(true)}
-                                    >
-                                        <MaterialIcons name="edit" size={14} color="#FF6600" />
-                                        <Text className="text-xs font-poppins-bold text-primary">Edit</Text>
-                                    </TouchableOpacity>
-                                )}
-                                <TouchableOpacity
-                                    className="h-10 w-10 bg-neutral-100 dark:bg-darkBackgroundMuted rounded-full items-center justify-center"
-                                    onPress={handleClose}
-                                >
-                                    <MaterialIcons name="close" size={20} color={isDark ? "#9ca3af" : "#4b5563"} />
-                                </TouchableOpacity>
-                            </View>
+                            <TouchableOpacity
+                                className="h-10 w-10 bg-neutral-100 dark:bg-darkBackgroundMuted rounded-full items-center justify-center"
+                                onPress={handleClose}
+                            >
+                                <MaterialIcons name="close" size={20} color={isDark ? "#9ca3af" : "#4b5563"} />
+                            </TouchableOpacity>
                         </View>
 
                         <ScrollView
@@ -217,6 +235,30 @@ export default function StoreDetailModal({ store, visible, onClose, onSaved }: S
                                         })}
                                     />
                                     <FieldRow label="Active" value={store.is_active ? "Yes" : "No"} />
+
+                                    {/* Actions */}
+                                    <View className="flex-row gap-3 mt-4">
+                                        <TouchableOpacity
+                                            className="flex-1 py-4 rounded-2xl items-center border border-red-100 dark:border-red-900/30 bg-red-50/50 dark:bg-red-950/20"
+                                            onPress={handleDelete}
+                                            disabled={saving}
+                                        >
+                                            <View className="flex-row items-center gap-2">
+                                                <MaterialIcons name="delete-outline" size={18} color="#EF4444" />
+                                                <Text className="text-red-500 font-poppins-bold">Delete</Text>
+                                            </View>
+                                        </TouchableOpacity>
+                                        <TouchableOpacity
+                                            className="flex-[2] py-4 rounded-2xl items-center bg-primary"
+                                            onPress={() => setEditing(true)}
+                                            disabled={saving}
+                                        >
+                                            <View className="flex-row items-center gap-2">
+                                                <MaterialIcons name="edit" size={18} color="#FFFFFF" />
+                                                <Text className="text-white font-poppins-bold">Edit Store</Text>
+                                            </View>
+                                        </TouchableOpacity>
+                                    </View>
                                 </View>
                             ) : (
                                 /* Edit mode */

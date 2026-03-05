@@ -1,10 +1,12 @@
 import React, { useState, useCallback } from "react";
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet, ActivityIndicator, RefreshControl } from "react-native";
+import { StyleSheet, ActivityIndicator, RefreshControl } from "react-native";
 import { Image } from "expo-image";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { router, useFocusEffect } from "expo-router";
 import { supabase } from "@/supabase/supabase";
 import { getMyStores, StoreRow } from "@/services/store-service";
+import { ScrollView, View, Text, TouchableOpacity } from "@/tw";
+import StoreDetailModal from "@/components/stores/StoreDetailModal";
 
 const FILTERS = ["All", "active", "pending_review", "inactive"];
 
@@ -22,7 +24,7 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; 
 };
 
 // ── Store Card ─────────────────────────────────────────────────────────────
-function StoreCard({ store }: { store: StoreRow }) {
+function StoreCard({ store, onPress }: { store: StoreRow, onPress: (s: StoreRow) => void }) {
     const status = store.status ?? "inactive";
     const cfg = STATUS_CONFIG[status] ?? STATUS_CONFIG["inactive"];
 
@@ -69,7 +71,7 @@ function StoreCard({ store }: { store: StoreRow }) {
                         {new Date(store.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
                     </Text>
                 </View>
-                <TouchableOpacity style={styles.manageBtn}>
+                <TouchableOpacity style={styles.manageBtn} onPress={() => onPress(store)}>
                     <Text style={styles.manageBtnText}>Manage</Text>
                     <MaterialIcons name="arrow-forward" size={13} color="#FF6600" />
                 </TouchableOpacity>
@@ -112,6 +114,9 @@ export default function StoreManagerStores() {
     const [refreshing, setRefreshing] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
+    const [selectedStore, setSelectedStore] = useState<StoreRow | null>(null);
+    const [modalVisible, setModalVisible] = useState(false);
+
     const fetchStores = useCallback(async (silent = false) => {
         if (!silent) setLoading(true);
         setError(null);
@@ -140,6 +145,16 @@ export default function StoreManagerStores() {
     const onRefresh = () => {
         setRefreshing(true);
         fetchStores(true);
+    };
+
+    const openStore = (store: StoreRow) => {
+        setSelectedStore(store);
+        setModalVisible(true);
+    };
+
+    const handleStoreSaved = (updated: StoreRow) => {
+        fetchStores(true);
+        setSelectedStore(updated);
     };
 
     const filtered = activeFilter === "All"
@@ -222,7 +237,13 @@ export default function StoreManagerStores() {
 
                 {/* Store cards */}
                 {!loading && filtered.length > 0 &&
-                    filtered.map((store) => <StoreCard key={store.id} store={store} />)
+                    filtered.map((store) => (
+                        <StoreCard
+                            key={store.id}
+                            store={store}
+                            onPress={openStore}
+                        />
+                    ))
                 }
 
                 {/* Empty state */}
@@ -249,6 +270,14 @@ export default function StoreManagerStores() {
                     </View>
                 )}
             </ScrollView>
+
+            <StoreDetailModal
+                store={selectedStore}
+                visible={modalVisible}
+                onClose={() => setModalVisible(false)}
+                onSaved={handleStoreSaved}
+                onDeleted={() => fetchStores(true)}
+            />
         </View>
     );
 }

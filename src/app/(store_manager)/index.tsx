@@ -319,6 +319,7 @@ export default function StoreManagerDashboard() {
                 visible={modalVisible}
                 onClose={() => setModalVisible(false)}
                 onSaved={handleStoreSaved}
+                onDeleted={() => refresh()}
             />
         </View>
     );
