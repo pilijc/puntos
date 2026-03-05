@@ -49,3 +49,5 @@ export type StoreCardData = {
 	logo: string;
 	store_pictures: string[];
 };
+
+export type TravelMode = "driving" | "walking";
