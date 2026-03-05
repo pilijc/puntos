@@ -13,7 +13,7 @@ import { getSearchResultsService, getStoresService } from "@/services/discover-s
 import { useStoreStore } from "@/store/store-store";
 import { Store } from "@/type/store";
 import type * as GeoJSON from "geojson";
-import { getOneSignalId } from "@/services/push-notif";
+import { getOneSignalId, sendPushNotification } from "@/services/push-notif";
 import { isStoreNearby } from "@/services/location-service";
 import * as turf from "@turf/turf";
 import { getStores } from "@/services/store-service";
@@ -56,7 +56,6 @@ export default function Discover() {
   const notifiedStoreIds = useRef<Set<number>>(new Set());
   const locationWatchRef = useRef<Location.LocationSubscription | null>(null);
 
-  // ─── Load active/approved stores ────────────────────────────────────────────
   useEffect(() => {
     (async () => {
       const data = await getStores();
@@ -64,7 +63,6 @@ export default function Discover() {
     })();
   }, []);
 
-  // ─── Route draw animation ────────────────────────────────────────────────────
   useEffect(() => {
     if (!routeGeoJSON?.coordinates?.length) return;
     const durationMs = 1800;
@@ -90,7 +88,6 @@ export default function Discover() {
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') return;
 
-      // Get initial location for the map camera
       const initial = await Location.getCurrentPositionAsync({
         accuracy: Location.Accuracy.High,
       }).catch(() => null)
@@ -130,19 +127,14 @@ export default function Discover() {
                 const subscriptionId = await getOneSignalId();
                 if (!subscriptionId) continue;
 
-                const sessionData = await supabase.auth.getSession();
-                const token = sessionData.data?.session?.access_token ?? process.env.EXPO_PUBLIC_ANON_KEY;
-
-                await supabase.functions.invoke("notify-nearby-stores", {
-                  body: {
-                    subscriptionId,
-                    title: `You're near ${store.name}! 📍`,
-                    body: `Visit ${store.name} and earn Puntos rewards!`,
-                  },
-                  headers: {
-                    Authorization: `Bearer ${token}`,
-                  },
-                });
+                const res = await sendPushNotification(
+                  subscriptionId,
+                  `You're near ${store.name}! 📍`,
+                  `Visit ${store.name} and earn Puntos rewards!`,
+                );
+                if (res instanceof Response) {
+                  console.log(`[Geofence] Push sent for ${store.name}:`, res.status);
+                }
               } catch (err) {
                 console.error('[Geofence] Failed to send push notification:', err);
               }
@@ -185,7 +177,6 @@ export default function Discover() {
     }
   };
 
-  // ─── Route ───────────────────────────────────────────────────────────────────
   const getRoute = async (
     start: [number, number],
     end: [number, number]
@@ -266,7 +257,7 @@ export default function Discover() {
       .map((s) => {
         const circle = turf.circle(
           [s.longitude, s.latitude],
-          s.radius! / 1000, //store radius meters to km here
+          s.radius! / 1000, 
           { steps: 64, units: "kilometers" }
         );
         circle.properties = { storeId: String(s.id) };
@@ -275,9 +266,6 @@ export default function Discover() {
   
     return turf.featureCollection(features);
   }, [stores]);
-
-  console.log(stores);
-  console.log(circlesFC);
 
   return (
     <View className="flex-1">

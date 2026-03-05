@@ -22,3 +22,28 @@ export async function getOneSignalId(): Promise<string | null> {
   await OneSignal.Notifications.requestPermission(true);
   return OneSignal.User.pushSubscription.getIdAsync();
 }
+
+export async function sendPushNotification(subscriptionId: string, title: string, body: string) {
+  try {
+    const res = await fetch("https://api.onesignal.com/notifications?c=push", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Key ${process.env.EXPO_PUBLIC_ONESIGNAL_REST_API_KEY}`,
+      },
+      body: JSON.stringify({
+        app_id: process.env.EXPO_PUBLIC_ONESIGNAL_APP_ID,
+        name: "Puntos",
+        target_channel: "push",
+        include_subscription_ids: [subscriptionId],
+        headings: { en: title ?? "Sample" },
+        contents: { en: body ?? "Hello" },
+        android_channel_id: "442775d1-52c6-48c4-b771-d0132fabbdec",
+        priority: 10,
+      }),
+    });
+    return res;
+  } catch (e) {
+    return e as Error;
+  }
+}

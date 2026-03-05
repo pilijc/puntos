@@ -52,7 +52,7 @@
     "android": {
       "package": "com.project.puntos",
       "newArchEnabled": true,
-      "permissions": ["ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION", "POST_NOTIFICATIONS"],
+      "permissions": ["ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION", "POST_NOTIFICATIONS"]
     },
     "ios": {
       "bundleIdentifier": "com.project.puntos"
