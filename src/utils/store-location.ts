@@ -2,9 +2,9 @@ import { Store } from '@/type/store';
 import { calculateDistance, isStoreNearby, UserLocation } from '@/services/location-service';
 
 export interface StoreWithLocation extends Store {
-  calculatedDistanceMiles?: number;
+  calculatedDistanceMeters?: number;
   calculatedIsNearby?: boolean;
-  distanceMiles: number; // For UI display
+  distanceMeters: number; // For UI display
   isNearby: boolean; // For filtering
 }
 
@@ -20,9 +20,9 @@ export function enrichStoresWithLocation(
     // If no location, return stores with default distance/isNearby values
     return stores.map(store => ({
       ...store,
-      calculatedDistanceMiles: 0,
+      calculatedDistanceMeters: 0,
       calculatedIsNearby: false,
-      distanceMiles: 0,
+      distanceMeters: 0,
       isNearby: false,
     }));
   }
@@ -49,9 +49,9 @@ export function enrichStoresWithLocation(
 
       return {
         ...store,
-        calculatedDistanceMiles: distance,
+        calculatedDistanceMeters: distance,
         calculatedIsNearby: nearby,
-        distanceMiles: distance, // Update the distanceMiles for display
+        distanceMeters: distance, // Update the distanceMeters for display
         isNearby: nearby, // Update isNearby for filtering
       };
     }
@@ -59,9 +59,9 @@ export function enrichStoresWithLocation(
     // Fallback: if somehow a real DB store has no lat/lon
     return {
       ...store,
-      calculatedDistanceMiles: 0,
+      calculatedDistanceMeters: 0,
       calculatedIsNearby: false,
-      distanceMiles: 0,
+      distanceMeters: 0,
       isNearby: false,
     };
   });

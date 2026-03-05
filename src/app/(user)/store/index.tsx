@@ -17,18 +17,14 @@ import SortPill from "@/components/rewards/SortPill";
 import { rewards, storeLogos } from "@/data/rewards";
 import { useRewardsUiStore } from "@/store/rewards-ui-store";
 import { useStoreStore } from "@/store/store-store";
+import { useAuthStore } from "@/store/auth-store";
 import { useLocation } from "@/hooks/use-location";
 import { enrichStoresWithLocation } from "@/utils/store-location";
-
-const streakDays = [
-  { label: "MON", completed: true },
-  { label: "TUE", completed: true },
-  { label: "WED", completed: true },
-  { label: "THU", completed: false },
-  { label: "FRI", completed: false },
-  { label: "SAT", completed: false },
-  { label: "SUN", completed: false, isTarget: true },
-];
+import { addStamp } from "@/services/stamp-service";
+import { supabase } from "@/supabase/supabase";
+import { Alert, ActivityIndicator, RefreshControl } from "react-native";
+import { useStamps } from "@/hooks/use-stamps";
+import { useStampRewards } from "@/hooks/use-stamp-rewards";
 
 const rewardSortOptions = [
   { id: "popular", label: "Popular" },
@@ -47,7 +43,6 @@ export default function Rewards() {
   const [isNearbyOpen, setIsNearbyOpen] = useState(false);
   const { location, permissionStatus } = useLocation();
 
-  // Enrich stores with location-based distance and nearby status
   const storesWithLocation = useMemo(() => {
     const thresholdMiles = 30 / 1609.344; // 30 meters
     return enrichStoresWithLocation(stores, location, thresholdMiles);
@@ -55,6 +50,86 @@ export default function Rewards() {
 
   const nearbyStores = storesWithLocation.filter((store) => store.isNearby);
   const featuredStore = nearbyStores[0] ?? storesWithLocation[0];
+
+  const { sessionToken } = useAuthStore();
+  const { stamps, refetch: refetchStamps } = useStamps();
+  const { stampRewards, refetch: refetchStampRewards } = useStampRewards();
+
+  const [isStamping, setIsStamping] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await Promise.all([refetchStamps(), refetchStampRewards()]);
+    setRefreshing(false);
+  };
+
+  const handleStamp = async (storeId: number) => {
+    setIsStamping(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user?.id) {
+        Alert.alert("Error", "You must be logged in to stamp.");
+        setIsStamping(false);
+        return;
+      }
+
+      const result = await addStamp(user.id, storeId.toString());
+      if (result.success) {
+        Alert.alert("Success!", "You have successfully collected a stamp!");
+        refetchStamps();
+        refetchStampRewards();
+      } else {
+        if (result.reason === "already_stamped_today") {
+          Alert.alert("Notice", "You have already stamped at this store today.");
+        } else if (result.reason === "stamp_not_enabled") {
+          Alert.alert("Notice", "This store currently has stamps disabled.");
+        } else {
+          Alert.alert("Error", "Failed to collect stamp. Please try again.");
+        }
+      }
+    } catch (e) {
+      console.error(e);
+      Alert.alert("Error", "Something went wrong.");
+    } finally {
+      setIsStamping(false);
+    }
+  };
+
+  const currentStampReward = useMemo(() => {
+    if (!featuredStore) return null;
+    return stampRewards.find((s) => s.store_id.toString() === featuredStore.id.toString());
+  }, [stampRewards, featuredStore]);
+
+  const streakDaysCount = currentStampReward?.current_stamp_count || 0;
+
+  const dynamicStreakDays = useMemo(() => {
+    const days = [];
+    const dayLabels = ["Day 1", "Day 2", "Day 3", "Day 4", "Day 5", "Day 6", "Day 7"];
+    for (let i = 0; i < 7; i++) {
+      days.push({
+        label: dayLabels[i],
+        completed: i < streakDaysCount,
+        isTarget: i === 6,
+      });
+    }
+    return days;
+  }, [streakDaysCount]);
+
+  // Helper to check if a specific store has been stamped today
+  const hasStampedToday = (storeId: number) => {
+    const stampProgress = stamps.find(s => s.store_id === storeId);
+    if (!stampProgress?.last_stamp_at) return false;
+
+    const lastStampDate = new Date(stampProgress.last_stamp_at);
+    const today = new Date();
+
+    return (
+      lastStampDate.getFullYear() === today.getFullYear() &&
+      lastStampDate.getMonth() === today.getMonth() &&
+      lastStampDate.getDate() === today.getDate()
+    );
+  };
 
   const sortedRewards = useMemo(() => {
     const list = [...rewards];
@@ -86,6 +161,14 @@ export default function Rewards() {
       <ScrollView
         className="flex-1"
         contentContainerClassName="px-6 pt-6 pb-8 gap-y-6"
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor="#FF6600"
+            colors={["#FF6600"]}
+          />
+        }
       >
         <View className="flex-row items-center justify-between">
           <Text className="text-2xl font-poppins-bold text-neutral-900 dark:text-white">
@@ -131,7 +214,7 @@ export default function Rewards() {
                 <MaterialIcons name="place" size={16} color="#FFFFFF" />
                 <Text className="text-white/90 font-poppins text-xs">
                   {featuredStore?.address ?? "Somewhere"} •{" "}
-                  {featuredStore?.distanceMiles?.toFixed(1) ?? "0.0"} miles away
+                  {featuredStore ? featuredStore.distanceMeters?.toLocaleString(undefined, { maximumFractionDigits: 2 }) : "0"} meters away
                 </Text>
               </View>
             </View>
@@ -166,10 +249,20 @@ export default function Rewards() {
                   color="#FFFFFF"
                 />
               </Pressable>
-              <TouchableOpacity className="bg-white px-4 py-2 rounded-full">
-                <Text className="text-primary font-poppins-semibold text-xs">
-                  {nearbyStores.length > 1 ? "STAMP ALL" : "STAMP"}
-                </Text>
+              <TouchableOpacity
+                className="bg-white px-4 py-2 rounded-full"
+                onPress={() => nearbyStores.length > 0 && handleStamp(nearbyStores[0].id)}
+                disabled={isStamping || (nearbyStores.length > 0 && hasStampedToday(nearbyStores[0].id))}
+              >
+                {isStamping ? (
+                  <ActivityIndicator size="small" color="#FF6600" />
+                ) : (
+                  <Text className={`font-poppins-semibold text-xs ${nearbyStores.length > 0 && hasStampedToday(nearbyStores[0].id) ? "text-neutral-400" : "text-primary"}`}>
+                    {nearbyStores.length > 0 && hasStampedToday(nearbyStores[0].id)
+                      ? "STAMPED"
+                      : (nearbyStores.length > 1 ? "STAMP ALL" : "STAMP")}
+                  </Text>
+                )}
               </TouchableOpacity>
             </View>
 
@@ -212,21 +305,31 @@ export default function Rewards() {
                           {store.name}
                         </Text>
                         <Text className="text-white/80 text-xs font-poppins mt-1">
-                          {store.address} • {store.distanceMiles?.toFixed(1) ?? "0.0"} miles
+                          {store.address} • {store.distanceMeters?.toLocaleString(undefined, { maximumFractionDigits: 2 }) ?? "0"} meters
                         </Text>
                       </View>
                     </View>
                     <View className="flex-row items-center gap-x-2">
-                      <TouchableOpacity className="bg-white px-3 py-1 rounded-full">
-                        <Text className="text-primary text-[10px] font-poppins-semibold">
-                          STAMP
-                        </Text>
+                      <TouchableOpacity
+                        className={`px-3 py-1 rounded-full ${hasStampedToday(store.id) ? "bg-white/50" : "bg-white"}`}
+                        onPress={() => handleStamp(store.id)}
+                        disabled={isStamping || hasStampedToday(store.id)}
+                      >
+                        {isStamping ? (
+                          <ActivityIndicator size="small" color="#FF6600" />
+                        ) : (
+                          <Text className={`text-[10px] font-poppins-semibold ${hasStampedToday(store.id) ? "text-neutral-500" : "text-primary"}`}>
+                            {hasStampedToday(store.id) ? "STAMPED" : "STAMP"}
+                          </Text>
+                        )}
                       </TouchableOpacity>
-                      <TouchableOpacity>
-                        <Text className="text-white/80 text-[10px] font-poppins-semibold">
-                          SKIP
-                        </Text>
-                      </TouchableOpacity>
+                      {!hasStampedToday(store.id) && (
+                        <TouchableOpacity>
+                          <Text className="text-white/80 text-[10px] font-poppins-semibold">
+                            SKIP
+                          </Text>
+                        </TouchableOpacity>
+                      )}
                     </View>
                   </View>
                 ))}
@@ -244,7 +347,7 @@ export default function Rewards() {
                 color="#FF6600"
               />
               <Text className="font-poppins-semibold text-neutral-900 dark:text-white">
-                7-Day Streak
+                Stamp Reward
               </Text>
             </View>
             <TouchableOpacity
@@ -252,7 +355,7 @@ export default function Rewards() {
               className="flex-row items-center gap-x-1"
             >
               <Text className="text-primary text-xs font-poppins-semibold">
-                ALL STREAKS
+                ALL STAMPS
               </Text>
               <MaterialIcons name="chevron-right" size={16} color="#FF6600" />
             </TouchableOpacity>
@@ -267,11 +370,11 @@ export default function Rewards() {
           </Text>
 
           <Text className="text-xs font-poppins-medium text-neutral-400 mt-2">
-            3/7 COMPLETED
+            {streakDaysCount}/7 COMPLETED
           </Text>
 
           <View className="flex-row justify-between mt-4">
-            {streakDays.map((day, index) => {
+            {dynamicStreakDays.map((day, index) => {
               const isCompleted = day.completed;
               const isTarget = day.isTarget;
               const circleClass = isCompleted
@@ -284,7 +387,7 @@ export default function Rewards() {
                   ? "text-primary font-poppins-semibold text-xs"
                   : "text-neutral-400 font-poppins-semibold text-xs";
               return (
-                <View key={`${day.label}-${index}`} className="items-center w-8">
+                <View key={`${day.label}-${index}`} className="items-center w-10">
                   <View className={circleClass}>
                     {isCompleted ? (
                       <MaterialIcons name="check" size={16} color="#FFFFFF" />
@@ -292,7 +395,7 @@ export default function Rewards() {
                       <Text className={textClass}>{index + 1}</Text>
                     )}
                   </View>
-                  <Text className="text-[10px] mt-1 text-neutral-400 font-poppins-medium">
+                  <Text className="text-[11px] mt-1 text-neutral-400 font-poppins-medium text-center whitespace-nowrap">
                     {day.label}
                   </Text>
                 </View>

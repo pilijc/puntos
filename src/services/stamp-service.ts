@@ -1,0 +1,247 @@
+import { supabase } from "@/supabase/supabase";
+
+export interface StampProgress {
+  id: number;
+  user_id: string;
+  store_id: number;
+  stamps_count: number;
+  target: number;
+  last_stamp_at: string;
+  updated_at: string;
+  stores?: {
+    name: string;
+    logo?: string;
+    status: string;
+    is_active: boolean;
+  };
+}
+
+export type StampResult = {
+  success: boolean;
+  reason?: "already_stamped_today" | "stamp_not_enabled" | "error";
+};
+
+export async function getUserStamps(userId: string): Promise<StampProgress[]> {
+  try {
+    const { data, error } = await supabase
+      .from("stamp_progress")
+      .select(`
+        *,
+        stores (
+          name,
+          logo,
+          status,
+          is_active
+        )
+      `)
+      .eq("user_id", userId);
+
+    if (error) {
+      console.error("Error fetching user stamp progress:", error.message);
+      return [];
+    }
+
+    // Filter out stamps for stores that are not active
+    const validStamps = (data as unknown as StampProgress[]).filter(
+      (stamp) => stamp.stores?.status === "active" && stamp.stores?.is_active
+    );
+
+    return validStamps;
+  } catch (error) {
+    console.error("Exception fetching user stamp progress:", error);
+    return [];
+  }
+}
+
+/**
+ * Helper: check whether two ISO date strings fall on the same calendar day
+ * using the device's local timezone.
+ */
+function isSameDay(dateStr1: string, dateStr2: string): boolean {
+  const d1 = new Date(dateStr1);
+  const d2 = new Date(dateStr2);
+  return (
+    d1.getFullYear() === d2.getFullYear() &&
+    d1.getMonth() === d2.getMonth() &&
+    d1.getDate() === d2.getDate()
+  );
+}
+
+/**
+ * Get today's date as YYYY-MM-DD in the local timezone (for user_streaks.last_activity_date which is a `date` column).
+ */
+function todayLocalDate(): string {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+export async function addStamp(
+  userId: string,
+  storeId: number | string,
+): Promise<StampResult> {
+  try {
+    // ──────────────────────────────────────────────
+    // 1. Check store_feature.stamp_enabled
+    // ──────────────────────────────────────────────
+    console.log("[addStamp] Starting for userId:", userId, "storeId:", storeId);
+
+    const { data: featureRow, error: featureError } = await supabase
+      .from("store_feature")
+      .select("stamp_enabled")
+      .eq("store_id", storeId)
+      .maybeSingle();
+
+    console.log("[addStamp] store_feature result:", { featureRow, featureError: featureError?.message, code: featureError?.code });
+
+    if (featureError) {
+      // RLS or network issue — log but don't block the stamp
+      console.warn("[addStamp] Could not read store_feature (possibly RLS). Proceeding anyway.");
+    }
+
+    // Only block if we got a row AND stamp_enabled is explicitly false
+    if (featureRow && featureRow.stamp_enabled === false) {
+      console.log("[addStamp] Blocked: stamp_not_enabled. featureRow:", featureRow);
+      return { success: false, reason: "stamp_not_enabled" };
+    }
+
+    // ──────────────────────────────────────────────
+    // 2. Check existing stamp_progress for daily limit
+    // ──────────────────────────────────────────────
+    const { data: existingProgress, error: fetchError } = await supabase
+      .from("stamp_progress")
+      .select("*")
+      .eq("user_id", userId)
+      .eq("store_id", storeId)
+      .single();
+
+    if (fetchError && fetchError.code !== "PGRST116") {
+      console.error("Error checking existing stamp progress:", fetchError.message);
+      return { success: false, reason: "error" };
+    }
+
+    const now = new Date().toISOString();
+
+    // If user already stamped today for this store → reject
+    if (existingProgress?.last_stamp_at && isSameDay(existingProgress.last_stamp_at, now)) {
+      return { success: false, reason: "already_stamped_today" };
+    }
+
+    // ──────────────────────────────────────────────
+    // 3. Upsert stamp_progress
+    // ──────────────────────────────────────────────
+    if (existingProgress) {
+      const newStampsCount = existingProgress.stamps_count + 1;
+
+      const { error: updateError } = await supabase
+        .from("stamp_progress")
+        .update({
+          stamps_count: newStampsCount,
+          last_stamp_at: now,
+          updated_at: now,
+        })
+        .eq("id", existingProgress.id);
+
+      if (updateError) {
+        console.error("Error updating stamp progress:", updateError.message);
+        return { success: false, reason: "error" };
+      }
+    } else {
+      // Brand new row
+      const { error: insertError } = await supabase
+        .from("stamp_progress")
+        .insert({
+          user_id: userId,
+          store_id: storeId,
+          stamps_count: 1,
+          target: 7,
+          last_stamp_at: now,
+          updated_at: now,
+        });
+
+      if (insertError) {
+        console.error("Error inserting new stamp progress:", insertError.message);
+        return { success: false, reason: "error" };
+      }
+    }
+
+    // ──────────────────────────────────────────────
+    // 4. Upsert stamp_rewards
+    //    Rewards reset after reaching 7 (full cycle).
+    // ──────────────────────────────────────────────
+    const todayDate = todayLocalDate();
+
+    const { data: existingReward, error: rewardFetchError } = await supabase
+      .from("stamp_rewards")
+      .select("*")
+      .eq("user_id", userId)
+      .eq("store_id", storeId)
+      .single();
+
+    if (rewardFetchError && rewardFetchError.code !== "PGRST116") {
+      console.error("Error fetching stamp reward:", rewardFetchError.message);
+    }
+
+    if (existingReward) {
+      // If already logged for today, skip reward update
+      if (existingReward.last_stamp_date !== todayDate) {
+        let newStampCount = existingReward.current_stamp_count + 1;
+
+        // If count has reached target (full cycle completed), reset to 1
+        if (existingReward.current_stamp_count >= existingReward.target_stamps) {
+          newStampCount = 1;
+        }
+
+        const { error: rewardUpdateError } = await supabase
+          .from("stamp_rewards")
+          .update({
+            current_stamp_count: newStampCount,
+            last_stamp_date: todayDate,
+            updated_at: now,
+          })
+          .eq("id", existingReward.id);
+
+        if (rewardUpdateError) {
+          console.error("Error updating stamp reward:", rewardUpdateError.message);
+        }
+      }
+    } else {
+      // First-ever stamp for this store → create reward row
+      const { error: rewardInsertError } = await supabase
+        .from("stamp_rewards")
+        .insert({
+          user_id: userId,
+          store_id: storeId,
+          current_stamp_count: 1,
+          target_stamps: 7, // default target
+          last_stamp_date: todayDate,
+        });
+
+      if (rewardInsertError) {
+        console.error("Error inserting stamp reward:", rewardInsertError.message);
+      }
+    }
+
+    // ──────────────────────────────────────────────
+    // 5. Log stamp_events
+    // ──────────────────────────────────────────────
+    const { error: eventError } = await supabase
+      .from("stamp_events")
+      .insert({
+        user_id: userId,
+        store_id: storeId,
+      });
+
+    if (eventError) {
+      // Non-critical — log but don't fail the stamp
+      console.error("Error logging stamp event:", eventError.message);
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error("Exception adding stamp:", error);
+    return { success: false, reason: "error" };
+  }
+}
