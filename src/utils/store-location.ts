@@ -1,34 +1,36 @@
-import { StoreItem } from '@/data/rewards';
+import { Store } from '@/type/store';
 import { calculateDistance, isStoreNearby, UserLocation } from '@/services/location-service';
 
-export interface StoreWithLocation extends StoreItem {
-  latitude?: number;
-  longitude?: number;
-  calculatedDistanceMiles?: number;
+export interface StoreWithLocation extends Store {
+  calculatedDistanceMeters?: number;
   calculatedIsNearby?: boolean;
+  distanceMeters: number; // For UI display
+  isNearby: boolean; // For filtering
 }
 
 /**
  * Enrich store data with calculated distance and nearby status based on user location
  */
 export function enrichStoresWithLocation(
-  stores: StoreItem[],
+  stores: Store[],
   userLocation: UserLocation | null,
   nearbyThresholdMiles: number = 2.0
 ): StoreWithLocation[] {
   if (!userLocation) {
-    // If no location, return stores with original distance/isNearby values
+    // If no location, return stores with default distance/isNearby values
     return stores.map(store => ({
       ...store,
-      calculatedDistanceMiles: store.distanceMiles,
-      calculatedIsNearby: store.isNearby,
+      calculatedDistanceMeters: 0,
+      calculatedIsNearby: false,
+      distanceMeters: 0,
+      isNearby: false,
     }));
   }
 
   return stores.map(store => {
-    // If store has lat/lon from database, use it; otherwise use mock data
-    const storeLat = (store as any).latitude;
-    const storeLon = (store as any).longitude;
+    // We expect Store to have latitude and longitude
+    const storeLat = store.latitude;
+    const storeLon = store.longitude;
 
     if (storeLat != null && storeLon != null) {
       const distance = calculateDistance(
@@ -47,20 +49,20 @@ export function enrichStoresWithLocation(
 
       return {
         ...store,
-        latitude: storeLat,
-        longitude: storeLon,
-        calculatedDistanceMiles: distance,
+        calculatedDistanceMeters: distance,
         calculatedIsNearby: nearby,
-        distanceMiles: distance, // Update the distanceMiles for display
+        distanceMeters: distance, // Update the distanceMeters for display
         isNearby: nearby, // Update isNearby for filtering
       };
     }
 
-    // Fallback: use existing mock data if no lat/lon
+    // Fallback: if somehow a real DB store has no lat/lon
     return {
       ...store,
-      calculatedDistanceMiles: store.distanceMiles,
-      calculatedIsNearby: store.isNearby,
+      calculatedDistanceMeters: 0,
+      calculatedIsNearby: false,
+      distanceMeters: 0,
+      isNearby: false,
     };
   });
 }
