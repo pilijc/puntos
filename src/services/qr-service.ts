@@ -67,7 +67,7 @@ export function parseQRCode(qrValue: string): { type: string; userId: string } |
   return null;
 }
 
-// Create QR transaction with dynamic points calculation
+// Create QR transaction with purchase tracking and dynamic points calculation
 export async function createQRTransaction(
   userId: string,
   storeStaffId: string,
@@ -77,7 +77,8 @@ export async function createQRTransaction(
   const { data: staffData, error: staffError } = await supabase
     .from('store_staff')
     .select('store_id')
-    .eq('id', storeStaffId)
+    .eq('user_id', storeStaffId)
+    .eq('is_active', true)
     .single();
 
   if (staffError || !staffData) {
@@ -105,7 +106,52 @@ export async function createQRTransaction(
     throw new Error(`Insufficient points balance. Store has ${pointsData.stored_amount} points available, but ${pointsToAward} points needed.`);
   }
 
-  // Create the transaction
+  // Create purchase record first
+  const { data: purchaseData, error: purchaseError } = await supabase
+    .from('purchases')
+    .insert([
+      {
+        user_id: userId,
+        store_id: storeId,
+        amount: purchaseAmount,
+        created_at: new Date().toISOString(),
+      },
+    ])
+    .select('*')
+    .single();
+
+  if (purchaseError) {
+    throw new Error(`Failed to create purchase record: ${purchaseError.message}`);
+  }
+
+  // Update purchase record with points earned
+  const { error: updatePurchaseError } = await supabase
+    .from('purchases')
+    .update({
+      points_earned: pointsToAward,
+    })
+    .eq('id', purchaseData.id);
+
+  if (updatePurchaseError) {
+    console.error('Failed to update purchase record with points earned:', updatePurchaseError);
+  }
+
+  // Decrease the stored_amount in points table
+  const { error: updateError } = await supabase
+    .from('points')
+    .update({
+      stored_amount: pointsData.stored_amount - pointsToAward,
+      updated_at: new Date().toISOString()
+    })
+    .eq('store_id', storeId);
+
+  if (updateError) {
+    console.error('Failed to update points balance:', updateError);
+    // Transaction was created but points balance update failed
+    // In a production system, you'd want to handle this with a rollback or compensation
+  }
+
+  // Create the QR transaction
   const { data, error } = await supabase
     .from('qr_transactions')
     .insert([
@@ -122,21 +168,6 @@ export async function createQRTransaction(
 
   if (error) {
     throw new Error(`Failed to create QR transaction: ${error.message}`);
-  }
-
-  // Decrease the stored_amount in points table
-  const { error: updateError } = await supabase
-    .from('points')
-    .update({
-      stored_amount: pointsData.stored_amount - pointsToAward,
-      updated_at: new Date().toISOString()
-    })
-    .eq('store_id', storeId);
-
-  if (updateError) {
-    console.error('Failed to update points balance:', updateError);
-    // Transaction was created but points balance update failed
-    // In a production system, you'd want to handle this with a rollback or compensation
   }
 
   return data as QRTransaction;
@@ -203,6 +234,9 @@ export async function getUserTransactionHistory(userId: string): Promise<any[]> 
     return [];
   }
 }
+
+
+
 
 // Helper function to format date sections
 function formatDateSection(dateString: string): string {
