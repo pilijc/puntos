@@ -1,6 +1,6 @@
 import { Tabs, usePathname } from "expo-router";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { View, Text, StyleSheet, Pressable } from "react-native";
+import { View, Text, StyleSheet, Pressable, useColorScheme } from "react-native";
 import React, { useEffect, useRef } from "react";
 import Animated, { useSharedValue, useAnimatedStyle, withTiming, interpolate } from "react-native-reanimated";
 import { useRouter } from "expo-router";
@@ -8,6 +8,8 @@ import { supabase } from "@/supabase/supabase";
 import { getRoleTypeForUser } from "@/services/access-service";
 
 export default function StoreManagerLayout() {
+    const colorScheme = useColorScheme();
+    const isDark = colorScheme === 'dark';
     const router = useRouter();
 
     useEffect(() => {
@@ -45,9 +47,14 @@ export default function StoreManagerLayout() {
             initialRouteName="stores"
             screenOptions={{
                 headerShown: false,
-                tabBarStyle: { backgroundColor: "#FFFFFF", height: 70, paddingBottom: 8 },
+                tabBarStyle: {
+                    backgroundColor: isDark ? "#171717" : "#FFFFFF",
+                    borderTopColor: isDark ? "#404040" : "#e5e5e5",
+                    height: 70,
+                    paddingBottom: 8
+                },
                 tabBarActiveTintColor: "#FF6600",
-                tabBarInactiveTintColor: "#8B8D98",
+                tabBarInactiveTintColor: isDark ? "#737373" : "#8B8D98",
                 tabBarLabelStyle: { fontSize: 11, fontFamily: "Poppins-Medium" },
             }}
         >

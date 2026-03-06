@@ -19,13 +19,31 @@ module.exports = {
             background: "#F8FAFC",
             backgroundMuted: "#F3F4F6",
 
-            textPrimary: "#0F172A",
-            textSecondary: "#475569",
-            textMuted: "#94A3B8",
+        textPrimary: "#0F172A",
+        textSecondary: "#475569",
+        textMuted: "#94A3B8",
 
-            success: "#22C55E",
-            danger: "#EF4444",
-        },
+        success: "#22C55E",
+        danger: "#EF4444",
+
+        // Dark Theme
+        darkBackground: "#171717",
+        darkBackgroundMuted: "#262626",
+        darkBackgroundCard: "#404040",
+
+        darkTextPrimary: "#FFFFFF",
+        darkTextSecondary: "#A3A3A3",
+        darkTextMuted: "#737373",
+        darkTextSoft: "#D4D4D4",
+        darkTextSoftest: "#E5E5E5",
+
+        darkBorder: "#404040",
+
+        darkPrimaryText: "#FB923C",
+        darkPrimarySecondary: "#F97316",
+        darkPrimaryBgMuted: "#431407",
+        darkPrimaryBorder: "#9A3412",
+      },
     },
   },
   plugins: [],

@@ -83,7 +83,7 @@ export default function Qr() {
  
 
   return (
-    <SafeAreaView className="flex-1 bg-white dark:bg-neutral-900">
+    <SafeAreaView className="flex-1 bg-white dark:bg-darkBackground">
       <View className="px-6 pt-4 flex-1">
         {/* Header */}
         <View className="flex-row items-center justify-between">
@@ -94,13 +94,13 @@ export default function Qr() {
         </View>
 
         {/* Instructions */}
-        <Text className="text-base font-semibold text-black dark:text-white text-center mt-4">
+        <Text className="text-base font-semibold text-black dark:text-darkTextPrimary text-center mt-4">
           Get your Points Now
         </Text>
-        <Text className="text-sm mt-4 text-gray-500 dark:text-neutral-400 text-center">
+        <Text className="text-sm mt-4 text-gray-500 dark:text-darkTextSecondary text-center">
           Let the operator scan your QR code
         </Text>
-        <Text className="text-xs mt-1 text-gray-400 dark:text-neutral-500 text-center">
+        <Text className="text-xs mt-1 text-gray-400 dark:text-darkTextMuted text-center">
           This is your unique customer QR code
         </Text>
 
@@ -110,19 +110,19 @@ export default function Qr() {
             <ActivityIndicator size="large" color={isDark ? '#FF6600' : undefined} />
           ) : qrValue ? (
             <>
-              <Text className="mb-5 text-sm font-poppins-semibold text-neutral-700 dark:text-neutral-300">
+              <Text className="mb-5 text-sm font-poppins-semibold text-neutral-700 dark:text-darkTextSoft">
                 Your QR Code
               </Text>
               {/* White wrapper so code stays scannable on dark backgrounds */}
               <View className="bg-white p-4 rounded-2xl">
                 <QRCode value={qrValue} size={200} />
               </View>
-              <Text className="mt-4 text-xs text-center text-gray-500 dark:text-neutral-400 font-poppins">
+              <Text className="mt-4 text-xs text-center text-gray-500 dark:text-darkTextSecondary font-poppins">
                 Show this to the front desk to earn points
               </Text>
             </>
           ) : (
-            <Text className="text-neutral-500 dark:text-neutral-400 font-poppins">
+            <Text className="text-neutral-500 dark:text-darkTextSecondary font-poppins">
               Failed to load QR code. Try again.
             </Text>
           )}

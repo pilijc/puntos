@@ -63,6 +63,22 @@ export async function updateUserProfileService(userId: string, updates: Partial<
     if (error) throw error;
 }
 
+export async function deleteOldAvatar(oldUrl: string | null): Promise<void> {
+    if (!oldUrl) return;
+    try {
+        const urlObj = new URL(oldUrl);
+        const pathParts = urlObj.pathname.split('/');
+        const bucketIndex = pathParts.indexOf('puntos-public');
+        if (bucketIndex !== -1) {
+            const filePath = pathParts.slice(bucketIndex + 1).join('/');
+            const { error } = await supabase.storage.from('puntos-public').remove([filePath]);
+            if (error) console.error("Error deleting old avatar:", error);
+        }
+    } catch (e) {
+        console.error("Failed to parse old avatar URL for deletion:", e);
+    }
+}
+
 export async function softDeleteUserAccountService(userId: string): Promise<void> {
     const { error } = await supabase
         .from("user_settings")

@@ -12,6 +12,8 @@ import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { router, useFocusEffect } from "expo-router";
 import { supabase } from "@/supabase/supabase";
 import { getMyStores, StoreRow } from "@/services/store-service";
+import { ScrollView, View, Text, TouchableOpacity } from "@/tw";
+import StoreDetailModal from "@/components/stores/StoreDetailModal";
 
 type TabKey = "all" | "active" | "pending" | "inactive";
 
