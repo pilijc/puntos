@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, useColorScheme, Alert, Vibration } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { ActivityIndicator, useColorScheme, Alert, Vibration, Modal } from 'react-native';
 import { SafeAreaView, View, Text, TouchableOpacity } from '@/tw';
 
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
@@ -13,6 +13,8 @@ export default function Qr() {
   const router = useRouter();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
+  const [showCongratsModal, setShowCongratsModal] = useState(false);
+  const [earnedPoints, setEarnedPoints] = useState(0);
   const [qrValue, setQrValue] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
@@ -62,9 +64,10 @@ export default function Qr() {
       console.log('Customer side: QR transaction received!', transaction);
       // Add vibration for celebration
       Vibration.vibrate(500);
-      Alert.alert('🎉 Congratulations!', `You just earned ${transaction.points_earned} points!`, [
-        { text: 'Awesome!' }
-      ]);
+      
+      // Show custom congratulations modal
+      setEarnedPoints(transaction.points_earned);
+      setShowCongratsModal(true);
     });
 
     return channel;
@@ -128,6 +131,64 @@ export default function Qr() {
           )}
         </View>
       </View>
+
+      {/* Custom Congratulations Modal */}
+      <Modal
+        visible={showCongratsModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowCongratsModal(false)}
+      >
+        <View className="flex-1 bg-black/50 justify-center items-center p-6">
+          <View className="bg-white dark:bg-darkBackground rounded-3xl p-8 w-full max-w-sm shadow-2xl">
+            {/* Celebration Icon */}
+            <View className="items-center mb-6">
+              <View className="w-20 h-20 bg-gradient-to-r from-orange-400 to-orange-600 rounded-full items-center justify-center shadow-lg">
+                <MaterialIcons name="celebration" size={32} color="#FFFFFF" />
+              </View>
+            </View>
+
+            {/* Title */}
+            <Text className="text-2xl font-bold text-center text-gray-800 dark:text-darkTextPrimary mb-2">
+              🎉 Congratulations!
+            </Text>
+
+            {/* Points Message */}
+            <Text className="text-lg text-center text-gray-600 dark:text-darkTextSecondary mb-8">
+              You just earned
+            </Text>
+
+            {/* Points Display */}
+            <View className="bg-gradient-to-r from-orange-100 to-orange-200 dark:from-orange-900/20 dark:to-orange-800/20 rounded-2xl p-6 mb-8">
+              <Text className="text-3xl font-bold text-center text-orange-600 dark:text-orange-400">
+                +{earnedPoints} Points
+              </Text>
+              <Text className="text-sm text-center text-orange-500 dark:text-orange-300 mt-1">
+                Added to your balance
+              </Text>
+            </View>
+
+            {/* Action Button */}
+            <TouchableOpacity
+              onPress={() => setShowCongratsModal(false)}
+              className="bg-gradient-to-r from-orange-500 to-orange-600 py-4 px-6 rounded-xl shadow-lg"
+            >
+              <Text className="text-white font-bold text-center text-lg">
+                Awesome! 🎯
+              </Text>
+            </TouchableOpacity>
+
+            {/* Close hint */}
+            <TouchableOpacity
+              onPress={() => setShowCongratsModal(false)}
+              className="absolute top-4 right-4 w-8 h-8 items-center justify-center"
+            >
+              <MaterialIcons name="close" size={20} color="#9CA3AF" />
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
     </SafeAreaView>
   );
 }
