@@ -133,17 +133,7 @@ export async function createQRTransaction(
   }
 
   // Decrease the stored_amount in points table
-  const { error: updateError } = await supabase
-    .from('store_qr_rewards')
-    .update({
-      updated_at: new Date().toISOString()
-    })
-    .eq('store_id', storeId);
-
-  if (updateError) {
-    console.error('Failed to update points record:', updateError);
-    // Continue with transaction even if update fails
-  }
+   
 
   // Create the QR transaction
   const { data, error } = await supabase
@@ -189,6 +179,7 @@ export function listenToQRTransaction(userId: string, onScanned: (transaction: Q
   return channel;
 }
 
+//HISTORY SIDE
 //Get user transaction history with store names
 export async function getUserTransactionHistory(userId: string): Promise<any[]> {
   try {
