@@ -1,45 +1,45 @@
-import { useState, useCallback, useEffect } from "react";
+import { create } from "zustand";
 import { getUserStamps, StampProgress } from "@/services/stamp-service";
-import { useAuthStore } from "@/store/auth-store";
 import { supabase } from "@/supabase/supabase";
 
-export function useStamps() {
-  const [stamps, setStamps] = useState<StampProgress[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
+interface StampsState {
+  stamps: StampProgress[];
+  isLoading: boolean;
+  error: Error | null;
+  hasFetchedOnce: boolean;
+  fetchStamps: () => Promise<void>;
+  refetch: () => Promise<void>; 
+}
 
-  const { sessionToken } = useAuthStore(); // Check session
+export const useStamps = create<StampsState>((set, get) => ({
+  stamps: [],
+  isLoading: false,
+  error: null,
+  hasFetchedOnce: false,
 
-  const fetchStamps = useCallback(async () => {
+  fetchStamps: async () => {
+    // Only set loading true if it's the very first fetch, to prevent UI flashes on background refetches
+    if (!get().hasFetchedOnce) {
+      set({ isLoading: true, error: null });
+    } else {
+      set({ error: null });
+    }
+
     try {
-      setIsLoading(true);
-      setError(null);
-
       const { data: { user } } = await supabase.auth.getUser();
       if (!user?.id) {
-        setIsLoading(false);
-        setStamps([]);
+        set({ stamps: [], isLoading: false, hasFetchedOnce: true });
         return;
       }
 
       const data = await getUserStamps(user.id);
-      setStamps(data);
+      set({ stamps: data, isLoading: false, hasFetchedOnce: true });
     } catch (e: any) {
-      setError(e);
-    } finally {
-      setIsLoading(false);
+      set({ error: e, isLoading: false, hasFetchedOnce: true });
     }
-  }, [sessionToken]);
+  },
 
-  // Initial fetch
-  useEffect(() => {
-    fetchStamps();
-  }, [fetchStamps]);
-
-  return {
-    stamps,
-    isLoading,
-    error,
-    refetch: fetchStamps,
-  };
-}
+  refetch: async () => {
+    await get().fetchStamps();
+  },
+}));

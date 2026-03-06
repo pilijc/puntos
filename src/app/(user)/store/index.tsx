@@ -44,8 +44,7 @@ export default function Rewards() {
   const { location, permissionStatus } = useLocation();
 
   const storesWithLocation = useMemo(() => {
-    const thresholdMiles = 30 / 1609.344; // 30 meters
-    return enrichStoresWithLocation(stores, location, thresholdMiles);
+    return enrichStoresWithLocation(stores, location);
   }, [stores, location]);
 
   const nearbyStores = storesWithLocation.filter((store) => store.isNearby);

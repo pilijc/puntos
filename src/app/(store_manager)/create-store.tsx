@@ -18,6 +18,33 @@ import { Stepper } from "@/components/stepper";
 import { supabase } from "@/supabase/supabase";
 import { createStore } from "@/services/store-service";
 
+// ── Utility: Base64 to ArrayBuffer ─────────────────────────────────────────
+function base64ToArrayBuffer(base64: string) {
+    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+    const lookup = new Uint8Array(256);
+    for (let i = 0; i < chars.length; i++) lookup[chars.charCodeAt(i)] = i;
+
+    let bufferLength = base64.length * 0.75;
+    if (base64[base64.length - 1] === "=") bufferLength--;
+    if (base64[base64.length - 2] === "=") bufferLength--;
+
+    const arraybuffer = new ArrayBuffer(bufferLength);
+    const bytes = new Uint8Array(arraybuffer);
+
+    let p = 0;
+    for (let i = 0; i < base64.length; i += 4) {
+        const encoded1 = lookup[base64.charCodeAt(i)];
+        const encoded2 = lookup[base64.charCodeAt(i + 1)];
+        const encoded3 = lookup[base64.charCodeAt(i + 2)];
+        const encoded4 = lookup[base64.charCodeAt(i + 3)];
+
+        bytes[p++] = (encoded1 << 2) | (encoded2 >> 4);
+        if (encoded3 !== 64) bytes[p++] = ((encoded2 & 15) << 4) | (encoded3 >> 2);
+        if (encoded4 !== 64) bytes[p++] = ((encoded3 & 3) << 6) | (encoded4 & 63);
+    }
+    return arraybuffer;
+}
+
 // ── Constants ──────────────────────────────────────────────────────────────
 const TOTAL_STEPS = 4;
 
@@ -272,7 +299,7 @@ export default function CreateStore() {
             }
 
             const result = await ImagePicker.launchImageLibraryAsync({
-                mediaTypes: ImagePicker.MediaTypeOptions.Images,
+                mediaTypes: ['images'],
                 allowsEditing: true,
                 aspect: [1, 1],
                 quality: 0.8,
@@ -294,12 +321,9 @@ export default function CreateStore() {
                 const { data: { user } } = await supabase.auth.getUser();
                 if (!user) throw new Error("Not authenticated");
 
-                // Convert base64 → Uint8Array (no local file reading needed)
-                const binaryString = atob(asset.base64);
-                const bytes = new Uint8Array(binaryString.length);
-                for (let i = 0; i < binaryString.length; i++) {
-                    bytes[i] = binaryString.charCodeAt(i);
-                }
+                // Reliable cross-platform base64 arraybuffer decoding
+                // using a custom lightweight decoder to skip 'atob' and fetch blob issues
+                const arrayBuffer = base64ToArrayBuffer(asset.base64);
 
                 const mimeType = asset.mimeType ?? "image/jpeg";
                 const ext = mimeType.split("/")[1] ?? "jpg";
@@ -307,7 +331,7 @@ export default function CreateStore() {
 
                 const { error: uploadError } = await supabase.storage
                     .from("puntos-public")
-                    .upload(fileName, bytes, { contentType: mimeType, upsert: true });
+                    .upload(fileName, arrayBuffer, { contentType: mimeType, upsert: true });
 
                 if (uploadError) throw new Error(uploadError.message);
 
@@ -320,9 +344,9 @@ export default function CreateStore() {
             } finally {
                 setIsUploadingLogo(false);
             }
-        } catch {
-            Alert.alert("Not Available", "Image picker is not available. Please rebuild the app after installing expo-image-picker.");
-
+        } catch (error: any) {
+            console.error("ImagePicker outer catch error:", error);
+            Alert.alert("Store Logo Error", error?.message || "An unexpected error occurred while picking the image.");
         }
     };
 
@@ -491,7 +515,7 @@ const styles = StyleSheet.create({
         gap: 4, overflow: "hidden",
     },
     logoHint: { fontSize: 11, fontFamily: "Poppins-Medium", color: "#94A3B8" },
-    logoSubtext: { fontSize: 11, fontFamily: "Poppins-Regular", color: "#CBD5E1" },
+    logoSubtext: { fontSize: 11, fontFamily: "Poppins-Regular", color: "#64748B" },
     // Form
     label: { fontSize: 13, fontFamily: "Poppins-Medium", color: "#475569", marginBottom: 8 },
     sublabel: { fontSize: 12, fontFamily: "Poppins-Regular", color: "#94A3B8", marginBottom: 6 },
