@@ -9,9 +9,13 @@ import {
   Image,
 } from "@/tw";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import React, { useMemo, useState, useEffect } from "react";
+import React, { useMemo, useState, useEffect, useCallback, useRef } from "react";
 import { FadeIn, FadeOut, Layout, Easing } from "react-native-reanimated";
-import { router } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
+import * as Location from "expo-location";
+import { distance, point } from "@turf/turf";
+import Carousel from "react-native-reanimated-carousel";
+import { Dimensions } from "react-native";
 import RewardCard from "@/components/rewards/RewardCard";
 import SortPill from "@/components/rewards/SortPill";
 import { rewards, storeLogos } from "@/data/rewards";
@@ -25,6 +29,8 @@ import { supabase } from "@/supabase/supabase";
 import { Alert, ActivityIndicator, RefreshControl } from "react-native";
 import { useStamps } from "@/hooks/use-stamps";
 import { useStampRewards } from "@/hooks/use-stamp-rewards";
+
+const { width: screenWidth } = Dimensions.get("window");
 
 const rewardSortOptions = [
   { id: "popular", label: "Popular" },
@@ -41,7 +47,29 @@ export default function Rewards() {
   } = useRewardsUiStore();
   const { stores } = useStoreStore();
   const [isNearbyOpen, setIsNearbyOpen] = useState(false);
-  const { location, permissionStatus } = useLocation();
+  const { location, permissionStatus, startWatching, stopWatching, refreshLocation } = useLocation();
+  const [carouselIndex, setCarouselIndex] = useState(0);
+
+  const [isAutoPlayEnabled, setIsAutoPlayEnabled] = useState(true);
+  const autoPlayTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const handleCarouselInteraction = () => {
+    setIsAutoPlayEnabled(false);
+    if (autoPlayTimeoutRef.current) {
+      clearTimeout(autoPlayTimeoutRef.current);
+    }
+    autoPlayTimeoutRef.current = setTimeout(() => {
+      setIsAutoPlayEnabled(true);
+    }, 15000);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (autoPlayTimeoutRef.current) {
+        clearTimeout(autoPlayTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const storesWithLocation = useMemo(() => {
     return enrichStoresWithLocation(stores, location);
@@ -54,12 +82,35 @@ export default function Rewards() {
   const { stamps, refetch: refetchStamps } = useStamps();
   const { stampRewards, refetch: refetchStampRewards } = useStampRewards();
 
+  const sortedStamps = useMemo(() => {
+    if (!location) return stamps;
+    const userPt = point([location.longitude, location.latitude]);
+
+    return [...stamps].sort((a, b) => {
+      const storeA = a.stores as unknown as { latitude?: number; longitude?: number };
+      const storeB = b.stores as unknown as { latitude?: number; longitude?: number };
+
+      let distA = Infinity;
+      let distB = Infinity;
+
+      if (storeA?.latitude != null && storeA?.longitude != null) {
+        distA = distance(userPt, point([storeA.longitude, storeA.latitude]), { units: "kilometers" });
+      }
+
+      if (storeB?.latitude != null && storeB?.longitude != null) {
+        distB = distance(userPt, point([storeB.longitude, storeB.latitude]), { units: "kilometers" });
+      }
+
+      return distA - distB;
+    });
+  }, [stamps, location]);
+
   const [isStamping, setIsStamping] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await Promise.all([refetchStamps(), refetchStampRewards()]);
+    await Promise.all([refetchStamps(), refetchStampRewards(), refreshLocation()]);
     setRefreshing(false);
   };
 
@@ -115,6 +166,18 @@ export default function Rewards() {
     return days;
   }, [streakDaysCount]);
 
+  // Proximity helper for Streaks
+  const isStoreNearby = (storeLat?: number | null, storeLon?: number | null) => {
+    if (!location || storeLat == null || storeLon == null) return false;
+    const from = point([location.longitude, location.latitude]);
+    const to = point([storeLon, storeLat]);
+    const distKm = distance(from, to, { units: "kilometers" });
+
+    console.log(`[Streaks Proximity Debug] Distance to Store (${storeLat}, ${storeLon}) from User (${location.latitude}, ${location.longitude}) -> ${distKm} km`);
+
+    return distKm <= 0.03;
+  };
+
   // Helper to check if a specific store has been stamped today
   const hasStampedToday = (storeId: number) => {
     const stampProgress = stamps.find(s => s.store_id === storeId);
@@ -150,10 +213,20 @@ export default function Rewards() {
   // Request location permission on mount if not granted
   useEffect(() => {
     if (!permissionStatus.granted && permissionStatus.canAskAgain) {
-      // Optionally auto-request, or let user enable in settings
       // requestLocationPermission();
     }
   }, [permissionStatus]);
+
+  // Actively watch user position strictly when the tab is actively focused
+  useFocusEffect(
+    useCallback(() => {
+      startWatching();
+
+      return () => {
+        stopWatching();
+      };
+    }, [permissionStatus.granted])
+  );
 
   return (
     <SafeAreaView className="flex-1 bg-backgroundMuted dark:bg-darkBackground">
@@ -185,15 +258,81 @@ export default function Rewards() {
 
         <View className="gap-y-0">
           <View className="-mx-6 overflow-hidden bg-neutral-300 h-64 relative">
-            <Image
-              source={require("../../../assets/images/rewards/coffee-shop.png")}
-              className="absolute inset-0 w-full h-full"
-              contentFit="cover"
-              contentPosition="center"
-            />
-            <View className="absolute inset-0 bg-neutral-900/35" />
+            {nearbyStores.length > 0 ? (
+              <>
+                <Image
+                  source={require("../../../assets/images/rewards/coffee-shop.png")}
+                  className="absolute inset-0 w-full h-full"
+                  contentFit="cover"
+                  contentPosition="center"
+                />
+                <View className="absolute inset-0 bg-neutral-900/35" />
 
-            <View className="absolute top-4 left-6 right-6 flex-row items-center justify-between">
+                <View className="absolute bottom-8 left-6 right-6">
+                  <Text className="text-2xl font-poppins-bold text-white">
+                    {featuredStore?.name ?? "Featured Store"}
+                  </Text>
+                  <View className="flex-row items-center gap-x-2 mt-1">
+                    <MaterialIcons name="place" size={16} color="#FFFFFF" />
+                    <Text className="text-white/90 font-poppins text-xs">
+                      {featuredStore?.address ?? "Somewhere"} •{" "}
+                      {featuredStore ? featuredStore.distanceMeters?.toLocaleString(undefined, { maximumFractionDigits: 2 }) : "0"} meters away
+                    </Text>
+                  </View>
+                </View>
+              </>
+            ) : (
+              <Carousel
+                width={screenWidth}
+                height={256} // h-64 = 256px
+                data={storesWithLocation.filter(s => s.is_active)}
+                scrollAnimationDuration={1500}
+                loop={true}
+                autoPlay={true}
+                autoPlayInterval={4000}
+                renderItem={({ item: store }) => (
+                  <View className="w-full h-full relative">
+                    <Image
+                      source={
+                        store.banner
+                          ? { uri: store.banner }
+                          : store.logo
+                            ? { uri: store.logo }
+                            : require("../../../assets/images/rewards/coffee-shop.png")
+                      }
+                      className="absolute inset-0 w-full h-full"
+                      contentFit="cover"
+                      contentPosition="center"
+                    />
+                    <View className="absolute inset-0 bg-neutral-900/40" />
+
+                    <View className="absolute top-16 left-6 right-6 z-10">
+                      <View className="bg-primary/90 self-start px-2 py-0.5 rounded-sm shadow-sm mb-2">
+                        <Text className="text-[10px] text-white font-poppins-semibold tracking-wider">DISCOVER PARTNERS</Text>
+                      </View>
+
+                      <Text className="text-2xl font-poppins-bold text-white shadow-sm" numberOfLines={1}>
+                        {store.name}
+                      </Text>
+
+                      <View className="flex-col gap-y-1 mt-1">
+                        <View className="bg-white/20 px-2 py-0.5 rounded-full self-start">
+                          <Text className="text-[10px] text-white font-poppins-medium uppercase">{store.type || "Store"}</Text>
+                        </View>
+                        <View className="flex-row items-center gap-x-1">
+                          <MaterialIcons name="storefront" size={14} color="#FFFFFF" />
+                          <Text className="text-white/90 font-poppins text-xs shadow-sm flex-1" numberOfLines={1}>
+                            {store.address}
+                          </Text>
+                        </View>
+                      </View>
+                    </View>
+                  </View>
+                )}
+              />
+            )}
+
+            <View className="absolute top-4 left-6 right-6 flex-row items-center justify-between z-10">
               <TouchableOpacity
                 className="w-9 h-9 rounded-full bg-black/40 items-center justify-center"
                 onPress={() => router.back()}
@@ -203,19 +342,6 @@ export default function Rewards() {
               <TouchableOpacity className="w-9 h-9 rounded-full bg-black/40 items-center justify-center">
                 <MaterialIcons name="share" size={18} color="#FFFFFF" />
               </TouchableOpacity>
-            </View>
-
-            <View className="absolute bottom-8 left-6 right-6">
-              <Text className="text-2xl font-poppins-bold text-white">
-                {featuredStore?.name ?? "Featured Store"}
-              </Text>
-              <View className="flex-row items-center gap-x-2 mt-1">
-                <MaterialIcons name="place" size={16} color="#FFFFFF" />
-                <Text className="text-white/90 font-poppins text-xs">
-                  {featuredStore?.address ?? "Somewhere"} •{" "}
-                  {featuredStore ? featuredStore.distanceMeters?.toLocaleString(undefined, { maximumFractionDigits: 2 }) : "0"} meters away
-                </Text>
-              </View>
             </View>
           </View>
 
@@ -227,39 +353,50 @@ export default function Rewards() {
               <Pressable
                 onPress={() => setIsNearbyOpen((prev) => !prev)}
                 className="flex-row items-center gap-x-3 flex-1"
+                disabled={nearbyStores.length === 0}
               >
                 <View className="w-10 h-10 rounded-full bg-white items-center justify-center">
-                  <MaterialIcons name="check" size={20} color="#FF6600" />
+                  <MaterialIcons
+                    name={nearbyStores.length > 0 ? "check" : "location-off"}
+                    size={20}
+                    color={nearbyStores.length > 0 ? "#FF6600" : "#9ca3af"}
+                  />
                 </View>
-                <View className="flex-1">
-                  <Text className="text-white font-poppins-semibold">
-                    You are within range!
+                <View className="flex-1 pr-2 justify-center">
+                  <Text
+                    className="text-white font-poppins-semibold"
+                    numberOfLines={1}
+                    adjustsFontSizeToFit
+                  >
+                    {nearbyStores.length > 0 ? "You are within range!" : "Not in range of any store"}
                   </Text>
-                  <Text className="text-white/85 text-xs font-poppins mt-1">
+                  <Text className="text-white/85 text-[11px] font-poppins mt-1" numberOfLines={1}>
                     {nearbyStores.length > 0
-                      ? `${nearbyStores.length} store${nearbyStores.length > 1 ? "s" : ""
-                      } nearby for stamping`
-                      : "Stamp now to earn today's points"}
+                      ? `${nearbyStores.length} store${nearbyStores.length > 1 ? "s" : ""} nearby for stamping`
+                      : "Explore other branches"}
                   </Text>
                 </View>
-                <MaterialIcons
-                  name={isNearbyOpen ? "expand-less" : "expand-more"}
-                  size={20}
-                  color="#FFFFFF"
-                />
+                {nearbyStores.length > 0 && (
+                  <MaterialIcons
+                    name={isNearbyOpen ? "expand-less" : "expand-more"}
+                    size={20}
+                    color="#FFFFFF"
+                  />
+                )}
               </Pressable>
               <TouchableOpacity
                 className="bg-white px-4 py-2 rounded-full"
-                onPress={() => nearbyStores.length > 0 && handleStamp(nearbyStores[0].id)}
-                disabled={isStamping || (nearbyStores.length > 0 && hasStampedToday(nearbyStores[0].id))}
+                onPress={() => nearbyStores.length > 0 ? handleStamp(nearbyStores[0].id) : router.push("/store/stores")}
+                disabled={nearbyStores.length > 0 ? (isStamping || hasStampedToday(nearbyStores[0].id)) : false}
               >
                 {isStamping ? (
                   <ActivityIndicator size="small" color="#FF6600" />
                 ) : (
                   <Text className={`font-poppins-semibold text-xs ${nearbyStores.length > 0 && hasStampedToday(nearbyStores[0].id) ? "text-neutral-400" : "text-primary"}`}>
-                    {nearbyStores.length > 0 && hasStampedToday(nearbyStores[0].id)
-                      ? "STAMPED"
-                      : (nearbyStores.length > 1 ? "STAMP ALL" : "STAMP")}
+                    {nearbyStores.length > 0
+                      ? (hasStampedToday(nearbyStores[0].id) ? "STAMPED" : (nearbyStores.length > 1 ? "STAMP ALL" : "STAMP"))
+                      : "EXPLORE"
+                    }
                   </Text>
                 )}
               </TouchableOpacity>
@@ -337,78 +474,139 @@ export default function Rewards() {
           </AnimatedView>
         </View>
 
-        <View className="bg-white dark:bg-darkBackgroundMuted rounded-2xl p-4 border border-neutral-100 dark:border-darkBorder">
-          <View className="flex-row items-center justify-between">
-            <View className="flex-row items-center gap-x-2">
-              <MaterialIcons
-                name="local-fire-department"
-                size={18}
-                color="#FF6600"
-              />
-              <Text className="font-poppins-semibold text-neutral-900 dark:text-white">
-                Stamp Reward
-              </Text>
+        <View>
+          {sortedStamps.length === 0 ? (
+            <View className="bg-white dark:bg-darkBackgroundMuted rounded-2xl p-6 border border-neutral-100 dark:border-darkBorder items-center">
+              <MaterialIcons name="local-fire-department" size={32} color="#d1d5db" className="mb-2" />
+              <Text className="text-neutral-500 font-poppins-semibold text-sm mt-2">No Active Stamps</Text>
+              <Text className="text-neutral-400 font-poppins text-xs text-center mt-1">Visit a partner store to start your streak!</Text>
             </View>
-            <TouchableOpacity
-              onPress={() => router.push("/store/streaks")}
-              className="flex-row items-center gap-x-1"
-            >
-              <Text className="text-primary text-xs font-poppins-semibold">
-                ALL STAMPS
-              </Text>
-              <MaterialIcons name="chevron-right" size={16} color="#FF6600" />
-            </TouchableOpacity>
-          </View>
+          ) : (
+            <View>
+              <Carousel
+                width={screenWidth - 48}
+                height={210}
+                data={sortedStamps}
+                scrollAnimationDuration={1000}
+                loop={true}
+                autoPlay={isAutoPlayEnabled}
+                autoPlayInterval={3000}
+                onScrollStart={handleCarouselInteraction}
+                onSnapToItem={(index) => setCarouselIndex(index)}
+                renderItem={({ item: stamp }) => {
+                  const stampReward = stampRewards.find((s) => s.store_id === stamp.store_id);
+                  const count = stampReward?.current_stamp_count || stamp.stamps_count || 0;
 
-          <Text className="text-xs text-neutral-500 font-poppins mt-2">
-            Current store:{" "}
-            <Text className="font-poppins-semibold text-neutral-700">
-              {featuredStore?.name ?? "No nearby store detected"}
-            </Text>
-            {featuredStore ? ` • ${featuredStore.address}` : ""}
-          </Text>
+                  // Compute Nearby Status
+                  const storeStr = stamp.stores as unknown as { latitude?: number; longitude?: number; name?: string; is_active?: boolean };
+                  const storeName = storeStr?.name ?? "Store";
+                  const storeAddress = (stamp.stores as any)?.address ?? "Unknown Location";
+                  const nearby = isStoreNearby(storeStr?.latitude, storeStr?.longitude);
 
-          <Text className="text-xs font-poppins-medium text-neutral-400 mt-2">
-            {streakDaysCount}/7 COMPLETED
-          </Text>
+                  const days = [];
+                  for (let i = 0; i < 7; i++) {
+                    days.push({ label: `Day ${i + 1}`, completed: i < count, isTarget: i === 6 });
+                  }
 
-          <View className="flex-row justify-between mt-4">
-            {dynamicStreakDays.map((day, index) => {
-              const isCompleted = day.completed;
-              const isTarget = day.isTarget;
-              const circleClass = isCompleted
-                ? "w-8 h-8 rounded-full bg-primary items-center justify-center"
-                : isTarget
-                  ? "w-8 h-8 rounded-full border border-primary items-center justify-center"
-                  : "w-8 h-8 rounded-full bg-neutral-100 dark:bg-darkBackgroundCard items-center justify-center";
-              const textClass =
-                isCompleted || isTarget
-                  ? "text-primary font-poppins-semibold text-xs"
-                  : "text-neutral-400 font-poppins-semibold text-xs";
-              return (
-                <View key={`${day.label}-${index}`} className="items-center w-10">
-                  <View className={circleClass}>
-                    {isCompleted ? (
-                      <MaterialIcons name="check" size={16} color="#FFFFFF" />
-                    ) : (
-                      <Text className={textClass}>{index + 1}</Text>
-                    )}
-                  </View>
-                  <Text className="text-[11px] mt-1 text-neutral-400 font-poppins-medium text-center whitespace-nowrap">
-                    {day.label}
-                  </Text>
+                  return (
+                    <View className="bg-white dark:bg-darkBackgroundMuted rounded-2xl p-4 border border-neutral-100 dark:border-darkBorder mx-1 h-full shadow-sm">
+                      <View className="flex-row items-center justify-between">
+                        <View className="flex-row items-center gap-x-2">
+                          <MaterialIcons name="local-fire-department" size={18} color="#FF6600" />
+                          <Text className="font-poppins-semibold text-neutral-900 dark:text-white">
+                            Stamp Reward
+                          </Text>
+                        </View>
+                        <View className="flex-row items-center gap-x-3">
+                          {nearby && (
+                            <View className="bg-green-100 dark:bg-green-900/30 px-2.5 py-1 rounded-full flex-row items-center gap-x-1">
+                              <View className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                              <Text className="text-[10px] font-poppins-semibold text-green-700 dark:text-green-400">
+                                Nearby
+                              </Text>
+                            </View>
+                          )}
+                          <TouchableOpacity
+                            onPress={() => router.push("/store/streaks")}
+                            className="flex-row items-center gap-x-1"
+                          >
+                            <Text className="text-primary text-xs font-poppins-semibold">
+                              VIEW ALL
+                            </Text>
+                            <MaterialIcons name="chevron-right" size={16} color="#FF6600" />
+                          </TouchableOpacity>
+                        </View>
+                      </View>
+
+                      <Text className="text-xs text-neutral-500 font-poppins mt-2">
+                        Current store:{" "}
+                        <Text className="font-poppins-semibold text-neutral-700 dark:text-neutral-300">
+                          {storeName}
+                        </Text>
+                        {storeAddress ? ` • ${storeAddress}` : ""}
+                      </Text>
+
+                      <Text className="text-xs font-poppins-medium text-neutral-400 mt-2">
+                        {count}/7 COMPLETED
+                      </Text>
+
+                      <View className="flex-row justify-between mt-4">
+                        {days.map((day, index) => {
+                          const isCompleted = day.completed;
+                          const isTarget = day.isTarget;
+                          const circleClass = isCompleted
+                            ? "w-8 h-8 rounded-full bg-primary items-center justify-center"
+                            : isTarget
+                              ? "w-8 h-8 rounded-full border border-primary items-center justify-center"
+                              : "w-8 h-8 rounded-full bg-neutral-100 dark:bg-darkBackgroundCard items-center justify-center";
+                          const textClass = isCompleted || isTarget
+                            ? "text-primary font-poppins-semibold text-xs"
+                            : "text-neutral-400 font-poppins-semibold text-xs";
+                          return (
+                            <View key={`${day.label}-${index}`} className="items-center w-10">
+                              <View className={circleClass}>
+                                {isCompleted ? (
+                                  <MaterialIcons name="check" size={16} color="#FFFFFF" />
+                                ) : (
+                                  <Text className={textClass}>{index + 1}</Text>
+                                )}
+                              </View>
+                              <Text className="text-[11px] mt-1 text-neutral-400 font-poppins-medium text-center whitespace-nowrap">
+                                {day.label}
+                              </Text>
+                            </View>
+                          );
+                        })}
+                      </View>
+
+                      <Text className="text-xs text-neutral-500 font-poppins mt-4">
+                        Finish your 7-day streak to earn{" "}
+                        <Text className="text-primary font-poppins-semibold">
+                          +500 bonus Puntos
+                        </Text>
+                        !
+                      </Text>
+                    </View>
+                  );
+                }}
+              />
+
+              {/* Pagination Dots */}
+              {sortedStamps.length > 1 && (
+                <View className="flex-row justify-center items-center gap-x-2 mt-3">
+                  {sortedStamps.map((_, i) => (
+                    <View
+                      key={i}
+                      className={`h-1.5 rounded-full transition-all ${carouselIndex === i
+                        ? "w-5 bg-primary"
+                        : "w-1.5 bg-neutral-300 dark:bg-neutral-600"
+                        }`}
+                    />
+                  ))}
                 </View>
-              );
-            })}
-          </View>
-
-          <Text className="text-xs text-neutral-500 font-poppins mt-3">
-            Finish your 7-day streak to earn{" "}
-            <Text className="text-primary font-poppins-semibold">
-              +500 bonus Puntos
-            </Text>
-            !
-          </Text>
+              )}
+            </View>
+          )}
         </View>
 
         <View className="flex-row items-center justify-between">

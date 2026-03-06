@@ -13,6 +13,9 @@ export interface StampProgress {
     logo?: string;
     status: string;
     is_active: boolean;
+    latitude?: number;
+    longitude?: number;
+    address?: string;
   };
 }
 
@@ -31,7 +34,10 @@ export async function getUserStamps(userId: string): Promise<StampProgress[]> {
           name,
           logo,
           status,
-          is_active
+          is_active,
+          latitude,
+          longitude,
+          address
         )
       `)
       .eq("user_id", userId);
