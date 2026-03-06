@@ -1,100 +1,102 @@
-import React, { useState } from "react";
-import { ScrollView, Switch, TouchableOpacity, useColorScheme } from "react-native";
-import { View, Text } from "@/tw";
+import React, { useEffect, useState } from "react";
+import { Switch, useColorScheme } from "react-native";
+import { View, Text, TouchableOpacity, ScrollView, Image } from "@/tw";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { usePathname, useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { getStoreById } from "@/services/store-service";
 
-type Feature = {
-  id: string;
-  title: string;
-  description: string;
-  icon: keyof typeof MaterialIcons.glyphMap;
-  iconColor: string;
-  iconBg: string;
-  enabled: boolean;
-  badge: string | null;
-};
-
-const INITIAL_FEATURES: Feature[] = [
+// Manual base for features
+const MANUAL_FEATURES = [
   {
     id: "streaks",
     title: "Streaks",
     description: "Reward daily consecutive visits.",
-    icon: "local-fire-department",
+    icon: "local-fire-department" as const,
     iconColor: "#F97316",
     iconBg: "rgba(249,115,22,0.10)",
     enabled: true,
-    badge: "5 points/day • 7-day streak",
+    badge: "5 points/day • 7-day streak"
   },
   {
     id: "stamps",
     title: "Stamps",
     description: "Digital punch cards for purchases.",
-    icon: "loyalty",
+    icon: "loyalty" as const,
     iconColor: "#3B82F6",
     iconBg: "rgba(59,130,246,0.10)",
     enabled: true,
-    badge: "Buy 9 get 1 free • Hot Drinks",
+    badge: "Buy 9 get 1 free • Hot Drinks"
   },
   {
-    id: "qr",
+    id: "purchased",
     title: "QR Purchase Rewards",
     description: "Scan at checkout to earn.",
-    icon: "qr-code-2",
+    icon: "qr-code-2" as const,
     iconColor: "#A855F7",
     iconBg: "rgba(168,85,247,0.10)",
     enabled: false,
-    badge: null,
-  },
+    badge: null
+  }
 ];
 
-const TABS = ["Overview", "Features & Settings", "Media"];
+const TABS = ["Overview", "Features", "Media"];
 
-export default async function ViewStore() {
-  const pathname = usePathname();
-  const storeId = pathname.split("/").pop() as string;
-  const store = await getStoreById(Number(storeId));
+export default function ViewStore() {
+  const { id } = useLocalSearchParams();
+  const storeId = Number(id);
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
 
-  console.log("View Store", store);
-
+  const [store, setStore] = useState<Awaited<ReturnType<typeof getStoreById>> | null>(null);
   const [activeTab, setActiveTab] = useState(1);
-  const [features, setFeatures] = useState<Feature[]>(INITIAL_FEATURES);
+  const [features, setFeatures] = useState(MANUAL_FEATURES);
 
-  const toggleFeature = (id: string) =>
+  const navigateToConfig = (featureId: string) => {
+    if (featureId === "streaks") {
+      router.push({ pathname: "/(store_manager)/configure-streaks", params: { storeId } });
+    }
+    // You can add conditions for other features here.
+  };
+
+  const handleToggle = (featureId: string, currentEnabled: boolean) => {
+    const nextEnabled = !currentEnabled;
     setFeatures((prev) =>
-      prev.map((f) => (f.id === id ? { ...f, enabled: !f.enabled } : f))
+      prev.map((f) => (f.id === featureId ? { ...f, enabled: nextEnabled } : f))
     );
+    if (nextEnabled) {
+      navigateToConfig(featureId);
+    }
+  };
 
-
+  useEffect(() => {
+    (async () => {
+      const store = await getStoreById(storeId);
+      setStore(store);
+    })();
+  }, [storeId]);
 
   return (
-    <View className="flex-1 bg-background dark:bg-neutral-900">
-
+    <View className="flex-1 bg-backgroundMuted dark:bg-neutral-900">
       <View
-        className="border-b border-neutral-200 dark:border-neutral-700 bg-background dark:bg-neutral-800"
-        style={{ paddingTop: insets.top }}
+        className="border-b border-neutral-100 dark:border-neutral-700 bg-background dark:bg-neutral-800"
+        style={{ paddingTop: insets.top + 8, paddingBottom: 12 }}
       >
-        <View className="flex-row items-center justify-between px-4 py-3">
+        <View className="flex-row items-center px-2">
           <TouchableOpacity
             onPress={() => router.push("/(store_manager)/stores")}
             className="w-10 h-10 rounded-full items-center justify-center"
             activeOpacity={0.7}
           >
-            <MaterialIcons name="chevron-left" size={24} color={isDark ? "#F1F5F9" : "#0F172A"} />
+            <MaterialIcons name="chevron-left" size={22} color={isDark ? "#F1F5F9" : "#0F172A"} />
           </TouchableOpacity>
-
-          <Text className="flex-1 text-center text-[17px] font-poppins-bold text-[#0F172A] dark:text-[#F1F5F9]">
+          <Text className="flex-1 text-center text-[17px] font-poppins-bold text-[#0F172A] dark:text-[#F1F5F9] pr-10">
             Store Details
           </Text>
-
           <TouchableOpacity
-            className="w-10 h-10 items-end justify-center"
+            className="w-10 h-10 items-center justify-center"
             activeOpacity={0.7}
           >
             <MaterialIcons name="more-vert" size={24} color={isDark ? "#F1F5F9" : "#0F172A"} />
@@ -103,72 +105,78 @@ export default async function ViewStore() {
       </View>
 
       <ScrollView
-        className="flex-1"
+        className="flex-1 gap-y-4"
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 32 }}
       >
 
-        <View className="items-center gap-y-3 py-7 px-6">
-          <View className="w-24 h-24 rounded-[24px] bg-primary/10 border-2 border-primary/20 items-center justify-center">
-            <MaterialIcons name="local-cafe" size={42} color="primary" />
+        <View className="items-center gap-y-1">
+          <View className="w-full h-30 items-center justify-center overflow-hidden">
+            {store?.logo ? (
+              <Image
+                source={{ uri: store.logo }}
+                className="w-full h-full"
+                contentFit="cover"
+              />
+            ) : (
+              <Image
+                source={require("@/assets/images/puntos-icon.png")}
+                className="w-full h-full object-cover"
+              />
+            )}
           </View>
 
-          <View className="items-center gap-y-1">
-            <Text className="text-[22px] font-poppins-bold text-textPrimary dark:text-textPrimary">
-              Main Street Coffee
+          <View className="items-center w-full space-y-2 py-2 bg-white">
+            <Text className="text-2xl font-poppins-bold text-textbg-Primary dark:text-textbg-Primary">
+              {store?.name}
             </Text>
-            <Text className="text-[13px] font-poppins text-textMuted dark:text-textMuted">
-              Merchant ID: 882931
-            </Text>
+            {store?.address && (
+              <Text className="text-sm font-poppins text-textMuted dark:text-textMuted">
+                {store?.address}
+              </Text>
+            )}
           </View>
         </View>
 
-        <View className="flex-row border-b border-neutral-200 dark:border-neutral-700 px-4 bg-background dark:bg-neutral-800">
-          {TABS.map((tab, i) => (
-            <TouchableOpacity
-              key={tab}
-              onPress={() => setActiveTab(i)}
-              className="flex-1 items-center gap-y-1.5 py-3"
-              style={{
-                borderBottomWidth: 2,
-                borderBottomColor: activeTab === i ? "primary" : "transparent",
-              }}
-              activeOpacity={0.7}
-            >
-              <Text
-                className={`text-xs font-poppins-bold ${
-                  activeTab === i
-                    ? "text-[#197FE6]"
-                    : "text-slate-500 dark:text-slate-500"
-                }`}
-              >
-                {tab}
-              </Text>
-            </TouchableOpacity>
-          ))}
+        <View className="flex-row dark:border-neutral-700 px-4 pt-2 bg-white dark:bg-neutral-800">
+          {TABS.map((tab, i) => {
+            const selected = activeTab === i;
+            return (
+              <View key={tab} className="flex-1 items-center justify-center">
+                <TouchableOpacity
+                  onPress={() => setActiveTab(i)}
+                  className="w-full items-center justify-center"
+                  activeOpacity={0.7}
+                >
+                  <View
+                    className={`items-center pb-2 border-b-2 w-full ${
+                      selected ? "border-primary" : "border-transparent"
+                    }`}
+                  >
+                    <Text
+                      className={`text-sm font-poppins-semibold text-center ${
+                        selected
+                          ? "text-primary"
+                          : "text-slate-500 dark:text-slate-400"
+                      }`}
+                    >
+                      {tab}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              </View>
+            );
+          })}
         </View>
 
         {activeTab === 1 && (
-          <View className="px-4 pt-6 gap-y-3">
-
-            <Text className="text-[11px] font-poppins-bold text-slate-500 dark:text-slate-500 tracking-widest uppercase px-1 mb-1">
-              Active Loyalty Programs
-            </Text>
-
+          <View className="px-4 elevation-0.5 mt-4">
             {features.map((feature) => (
               <View
                 key={feature.id}
-                className="rounded-2xl p-4 border border-[#E2E8F0] dark:border-[#1E2D3D] bg-white dark:bg-[#0F1928]/80"
-                style={{
-                  opacity: feature.enabled ? 1 : 0.55,
-                  shadowColor: "#000",
-                  shadowOffset: { width: 0, height: 2 },
-                  shadowOpacity: isDark ? 0 : 0.06,
-                  shadowRadius: 8,
-                  elevation: feature.enabled ? 2 : 0,
-                }}
+                className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl overflow-hidden mb-3"
               >
-                <View className="flex-row items-start justify-between">
+                <View className="p-4 flex-row items-start justify-between">
                   <View className="flex-row gap-x-3 flex-1">
                     <View
                       className="w-12 h-12 rounded-xl items-center justify-center"
@@ -176,7 +184,6 @@ export default async function ViewStore() {
                     >
                       <MaterialIcons name={feature.icon} size={24} color={feature.iconColor} />
                     </View>
-
                     <View className="flex-1 justify-center">
                       <Text className="text-[15px] font-poppins-bold text-[#0F172A] dark:text-[#F1F5F9]">
                         {feature.title}
@@ -186,26 +193,39 @@ export default async function ViewStore() {
                       </Text>
                     </View>
                   </View>
-
                   <Switch
                     value={feature.enabled}
-                    onValueChange={() => toggleFeature(feature.id)}
-                    trackColor={{ false: isDark ? "#374151" : "#D1D5DB", true: "#197FE6" }}
+                    onValueChange={() => handleToggle(feature.id, feature.enabled)}
+                    trackColor={{ false: "#E2E8F0", true: "#FF6600" }}
                     thumbColor="#FFFFFF"
                   />
                 </View>
-
                 {feature.enabled && feature.badge && (
-                  <View className="mt-3 pt-3 border-t border-[#F1F5F9] dark:border-[#1E2D3D] flex-row items-center justify-between">
-                    <View className="flex-row items-center gap-x-1.5 bg-[#197FE6]/10 px-2.5 py-1 rounded-lg">
-                      <MaterialIcons name="info-outline" size={13} color="#197FE6" />
-                      <Text className="text-xs font-poppins-semibold text-[#197FE6]">
+                  <View className="px-4 py-3 border-t border-slate-100 dark:border-slate-800 flex-row items-center justify-between bg-slate-50 dark:bg-slate-800/30">
+                    <View
+                      className="flex-row items-center gap-x-1.5 px-2.5 py-1 rounded-lg"
+                      style={{
+                        backgroundColor: isDark ? "textPrimary" : "#197FE61A"
+                      }}
+                    >
+                      <MaterialIcons
+                        name="info-outline"
+                        size={13}
+                        color={isDark ? "textPrimary" : "#197FE6"}
+                      />
+                      <Text
+                        className="text-xs font-poppins-semibold"
+                        style={{ color: isDark ? "textPrimary" : "#197FE6" }}
+                      >
                         {feature.badge}
                       </Text>
                     </View>
-
-                    <TouchableOpacity activeOpacity={0.7}>
-                      <Text className="text-[13px] font-poppins-bold text-[#197FE6]">
+                    <TouchableOpacity
+                      className="flex-row items-center gap-x-1"
+                      activeOpacity={0.7}
+                      onPress={() => navigateToConfig(feature.id)}
+                    >
+                      <Text className="text-sm font-poppins-semibold text-primary">
                         Configure
                       </Text>
                     </TouchableOpacity>
@@ -215,17 +235,9 @@ export default async function ViewStore() {
             ))}
 
             <TouchableOpacity
-              activeOpacity={0.85}
-              className="bg-[#197FE6] rounded-[14px] py-4 items-center mt-2"
-              style={{
-                shadowColor: "#197FE6",
-                shadowOffset: { width: 0, height: 6 },
-                shadowOpacity: 0.30,
-                shadowRadius: 12,
-                elevation: 6,
-              }}
+              className="rounded-xl items-center mt-2 px-6 py-4 bg-primary"
             >
-              <Text className="text-[15px] font-poppins-bold text-white">
+              <Text className="text-sm font-poppins-bold text-white">
                 Save Changes
               </Text>
             </TouchableOpacity>
@@ -240,7 +252,6 @@ export default async function ViewStore() {
             </Text>
           </View>
         )}
-
       </ScrollView>
     </View>
   );

@@ -42,6 +42,7 @@ export default function StoreManagerLayout() {
 
     return (
         <Tabs
+            initialRouteName="stores"
             screenOptions={{
                 headerShown: false,
                 tabBarStyle: { backgroundColor: "#FFFFFF", height: 70, paddingBottom: 8 },
@@ -96,6 +97,10 @@ export default function StoreManagerLayout() {
             />
             <Tabs.Screen
                 name="view-store/[id]"
+                options={{ href: null }}
+            />
+            <Tabs.Screen
+                name="configure-streaks"
                 options={{ href: null }}
             />
         </Tabs>
