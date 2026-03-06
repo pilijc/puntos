@@ -105,6 +105,11 @@ export default function Rewards() {
     });
   }, [stamps, location]);
 
+  const displayStamps = useMemo(() => {
+    if (nearbyStores.length === 0) return sortedStamps;
+    return sortedStamps.filter(stamp => nearbyStores.some(ns => ns.id === stamp.store_id));
+  }, [sortedStamps, nearbyStores]);
+
   const [isStamping, setIsStamping] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -259,28 +264,55 @@ export default function Rewards() {
         <View className="gap-y-0">
           <View className="-mx-6 overflow-hidden bg-neutral-300 h-64 relative">
             {nearbyStores.length > 0 ? (
-              <>
-                <Image
-                  source={require("../../../assets/images/rewards/coffee-shop.png")}
-                  className="absolute inset-0 w-full h-full"
-                  contentFit="cover"
-                  contentPosition="center"
-                />
-                <View className="absolute inset-0 bg-neutral-900/35" />
+              <Carousel
+                width={screenWidth}
+                height={256}
+                data={nearbyStores}
+                scrollAnimationDuration={1000}
+                loop={nearbyStores.length > 1}
+                autoPlay={nearbyStores.length > 1}
+                autoPlayInterval={4000}
+                renderItem={({ item: store }) => (
+                  <View className="w-full h-full relative">
+                    <Image
+                      source={
+                        store.banner
+                          ? { uri: store.banner }
+                          : store.logo
+                            ? { uri: store.logo }
+                            : storeLogos[store.id.toString()]
+                              ? storeLogos[store.id.toString()]
+                              : require("../../../assets/images/rewards/coffee-shop.png")
+                      }
+                      className="absolute inset-0 w-full h-full"
+                      contentFit="cover"
+                      contentPosition="center"
+                    />
+                    <View className="absolute inset-0 bg-neutral-900/40" />
 
-                <View className="absolute bottom-8 left-6 right-6">
-                  <Text className="text-2xl font-poppins-bold text-white">
-                    {featuredStore?.name ?? "Featured Store"}
-                  </Text>
-                  <View className="flex-row items-center gap-x-2 mt-1">
-                    <MaterialIcons name="place" size={16} color="#FFFFFF" />
-                    <Text className="text-white/90 font-poppins text-xs">
-                      {featuredStore?.address ?? "Somewhere"} •{" "}
-                      {featuredStore ? featuredStore.distanceMeters?.toLocaleString(undefined, { maximumFractionDigits: 2 }) : "0"} meters away
-                    </Text>
+                    <View className="absolute bottom-20 left-6 right-6 z-10">
+                      <Text className="text-2xl font-poppins-bold text-white shadow-sm" numberOfLines={1}>
+                        {store.name}
+                      </Text>
+
+                      <View className="flex-col gap-y-1 mt-1">
+                        <View
+                          className="bg-white/20 px-2 py-0.5 self-start"
+                          style={{ borderRadius: 8 }}
+                        >
+                          <Text className="text-[10px] text-white font-poppins-medium uppercase">{store.type || "Store"}</Text>
+                        </View>
+                        <View className="flex-row items-center gap-x-1">
+                          <MaterialIcons name="place" size={14} color="#FFFFFF" />
+                          <Text className="text-white/90 font-poppins text-xs shadow-sm flex-1" numberOfLines={1}>
+                            {store.address || "Unknown Location"} • {store.distanceMeters?.toLocaleString(undefined, { maximumFractionDigits: 2 }) ?? "0"} meters away
+                          </Text>
+                        </View>
+                      </View>
+                    </View>
                   </View>
-                </View>
-              </>
+                )}
+              />
             ) : (
               <Carousel
                 width={screenWidth}
@@ -306,7 +338,7 @@ export default function Rewards() {
                     />
                     <View className="absolute inset-0 bg-neutral-900/40" />
 
-                    <View className="absolute top-16 left-6 right-6 z-10">
+                    <View className="absolute top-15 left-6 right-6 z-10">
                       <View className="bg-primary/90 self-start px-2 py-0.5 rounded-sm shadow-sm mb-2">
                         <Text className="text-[10px] text-white font-poppins-semibold tracking-wider">DISCOVER PARTNERS</Text>
                       </View>
@@ -316,7 +348,10 @@ export default function Rewards() {
                       </Text>
 
                       <View className="flex-col gap-y-1 mt-1">
-                        <View className="bg-white/20 px-2 py-0.5 rounded-full self-start">
+                        <View
+                          className="bg-white/20 px-2 py-0.5 self-start"
+                          style={{ borderRadius: 8 }}
+                        >
                           <Text className="text-[10px] text-white font-poppins-medium uppercase">{store.type || "Store"}</Text>
                         </View>
                         <View className="flex-row items-center gap-x-1">
@@ -347,7 +382,7 @@ export default function Rewards() {
 
           <AnimatedView
             layout={Layout.duration(260).easing(Easing.out(Easing.cubic))}
-            className="bg-primary rounded-2xl p-4 gap-y-3 -mt-6 border border-primary/20"
+            className="bg-primary rounded-2xl p-4 gap-y-3 -mt-6 border border-primary/20 w-[90%] self-center"
           >
             <View className="flex-row items-center justify-between">
               <Pressable
@@ -368,11 +403,15 @@ export default function Rewards() {
                     numberOfLines={1}
                     adjustsFontSizeToFit
                   >
-                    {nearbyStores.length > 0 ? "You are within range!" : "Not in range of any store"}
+                    {nearbyStores.length > 1
+                      ? `${nearbyStores.length} stores are within range!`
+                      : nearbyStores.length === 1
+                        ? "You are within range!"
+                        : "Not in range of any store"}
                   </Text>
                   <Text className="text-white/85 text-[11px] font-poppins mt-1" numberOfLines={1}>
                     {nearbyStores.length > 0
-                      ? `${nearbyStores.length} store${nearbyStores.length > 1 ? "s" : ""} nearby for stamping`
+                      ? "Make a purchase to earn a stamp"
                       : "Explore other branches"}
                   </Text>
                 </View>
@@ -384,22 +423,20 @@ export default function Rewards() {
                   />
                 )}
               </Pressable>
-              <TouchableOpacity
-                className="bg-white px-4 py-2 rounded-full"
-                onPress={() => nearbyStores.length > 0 ? handleStamp(nearbyStores[0].id) : router.push("/store/stores")}
-                disabled={nearbyStores.length > 0 ? (isStamping || hasStampedToday(nearbyStores[0].id)) : false}
-              >
-                {isStamping ? (
-                  <ActivityIndicator size="small" color="#FF6600" />
-                ) : (
-                  <Text className={`font-poppins-semibold text-xs ${nearbyStores.length > 0 && hasStampedToday(nearbyStores[0].id) ? "text-neutral-400" : "text-primary"}`}>
-                    {nearbyStores.length > 0
-                      ? (hasStampedToday(nearbyStores[0].id) ? "STAMPED" : (nearbyStores.length > 1 ? "STAMP ALL" : "STAMP"))
-                      : "EXPLORE"
-                    }
+              {nearbyStores.length === 0 ? (
+                <TouchableOpacity
+                  className="bg-white px-4 py-2 rounded-full"
+                  onPress={() => router.push("/")}
+                >
+                  <Text className="font-poppins-semibold text-xs text-primary">
+                    EXPLORE
                   </Text>
-                )}
-              </TouchableOpacity>
+                </TouchableOpacity>
+              ) : (
+                <View>
+                  {/* TODO: Implement Purchase-Based Reward Button Here */}
+                </View>
+              )}
             </View>
 
             {isNearbyOpen && nearbyStores.length > 0 && (
@@ -475,18 +512,22 @@ export default function Rewards() {
         </View>
 
         <View>
-          {sortedStamps.length === 0 ? (
+          {displayStamps.length === 0 ? (
             <View className="bg-white dark:bg-darkBackgroundMuted rounded-2xl p-6 border border-neutral-100 dark:border-darkBorder items-center">
               <MaterialIcons name="local-fire-department" size={32} color="#d1d5db" className="mb-2" />
-              <Text className="text-neutral-500 font-poppins-semibold text-sm mt-2">No Active Stamps</Text>
-              <Text className="text-neutral-400 font-poppins text-xs text-center mt-1">Visit a partner store to start your streak!</Text>
+              <Text className="text-neutral-500 font-poppins-semibold text-sm mt-2 text-center">
+                {nearbyStores.length > 0 ? "No active stamps for nearby stores" : "No Active Stamps"}
+              </Text>
+              <Text className="text-neutral-400 font-poppins text-xs text-center mt-1">
+                {nearbyStores.length > 0 ? "Make a purchase to start your streak!" : "Visit a partner store to start your streak!"}
+              </Text>
             </View>
           ) : (
             <View>
               <Carousel
                 width={screenWidth - 48}
                 height={210}
-                data={sortedStamps}
+                data={displayStamps}
                 scrollAnimationDuration={1000}
                 loop={true}
                 autoPlay={isAutoPlayEnabled}
@@ -592,9 +633,9 @@ export default function Rewards() {
               />
 
               {/* Pagination Dots */}
-              {sortedStamps.length > 1 && (
+              {displayStamps.length > 1 && (
                 <View className="flex-row justify-center items-center gap-x-2 mt-3">
-                  {sortedStamps.map((_, i) => (
+                  {displayStamps.map((_, i) => (
                     <View
                       key={i}
                       className={`h-1.5 rounded-full transition-all ${carouselIndex === i
