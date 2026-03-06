@@ -2,11 +2,11 @@ import React, { useState, useCallback } from "react";
 import { StyleSheet, ActivityIndicator, RefreshControl } from "react-native";
 import { Image } from "expo-image";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { router, useFocusEffect } from "expo-router";
-import { supabase } from "@/supabase/supabase";
+import { router } from "expo-router";
 import { getMyStores, StoreRow } from "@/services/store-service";
 import { ScrollView, View, Text, TouchableOpacity } from "@/tw";
 import StoreDetailModal from "@/components/stores/StoreDetailModal";
+import { useManagerStoresStore } from "@/store/manager-stores-store";
 
 const FILTERS = ["All", "active", "pending_review", "inactive"];
 
@@ -109,42 +109,24 @@ function SkeletonCard() {
 // ── Screen ─────────────────────────────────────────────────────────────────
 export default function StoreManagerStores() {
     const [activeFilter, setActiveFilter] = useState("All");
-    const [stores, setStores] = useState<StoreRow[]>([]);
-    const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
-    const [error, setError] = useState<string | null>(null);
+
+    const { stores, loading, error, hasFetchedOnce, fetchStores } = useManagerStoresStore();
 
     const [selectedStore, setSelectedStore] = useState<StoreRow | null>(null);
     const [modalVisible, setModalVisible] = useState(false);
 
-    const fetchStores = useCallback(async (silent = false) => {
-        if (!silent) setLoading(true);
-        setError(null);
-        try {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) return;
-            const data = await getMyStores(user.id);
-            console.log("[stores] fetched logos:", data.map(s => ({ id: s.id, name: s.name, logo: s.logo })));
-            setStores(data);
-        } catch (e: any) {
-            setError(e?.message ?? "Failed to load stores");
-        } finally {
-            setLoading(false);
-            setRefreshing(false);
-        }
-    }, []);
-
-    // Refetch every time the Stores tab comes into focus (covers post-create, post-edit, etc.)
-    useFocusEffect(
-        useCallback(() => {
+    // Initial Fetch (Only hits the network if it's the very first time opening the tab)
+    React.useEffect(() => {
+        if (!hasFetchedOnce) {
             fetchStores();
-            setRefreshing(false);
-        }, [])
-    );
+        }
+    }, [hasFetchedOnce, fetchStores]);
 
-    const onRefresh = () => {
+    const onRefresh = async () => {
         setRefreshing(true);
-        fetchStores(true);
+        await fetchStores(true);
+        setRefreshing(false);
     };
 
     const openStore = (store: StoreRow) => {
@@ -153,7 +135,7 @@ export default function StoreManagerStores() {
     };
 
     const handleStoreSaved = (updated: StoreRow) => {
-        fetchStores(true);
+        useManagerStoresStore.getState().updateStoreOptimistically(updated);
         setSelectedStore(updated);
     };
 
