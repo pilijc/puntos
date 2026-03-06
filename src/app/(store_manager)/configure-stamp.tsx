@@ -10,7 +10,6 @@ import { View, Text, TouchableOpacity, TextInput } from "@/tw";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import * as ImagePicker from "expo-image-picker";
 import { Image } from "expo-image";
 import { useStampStore } from "@/store/store-manager/stamp-store";
 import { createStamp } from "@/services/store-manager/stamp-service";
