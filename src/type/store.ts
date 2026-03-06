@@ -4,13 +4,13 @@ export interface Store {
   address: string;
   latitude: number;
   longitude: number;
-  radius: number;
   is_active: boolean;
   logo: string | null;
   store_pictures: string[] | null;
   type: string;
   status: string;
   owner_id: string;
+  radius: number | null;
   phone: string;
   registration_number: string;
   created_at: string;
@@ -49,3 +49,5 @@ export type StoreCardData = {
 	logo: string;
 	store_pictures: string[];
 };
+
+export type TravelMode = "driving" | "walking";

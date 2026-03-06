@@ -25,7 +25,7 @@ export const LogoutButton = ({ showIcon = true }: LogoutButtonProps) => {
         <TouchableOpacity
             onPress={confirmLogout}
             activeOpacity={0.7}
-            className="mx-4 bg-primary py-4 rounded-xl items-center flex-row will-change-pressable justify-center border border-neutral-100 dark:border-neutral-700"
+            className="mx-4 bg-primary py-4 rounded-xl items-center flex-row will-change-pressable justify-center border border-neutral-100 dark:border-darkBorder"
         >
             {showIcon && (
                 <View className="h-5 w-5 items-center mr-2">

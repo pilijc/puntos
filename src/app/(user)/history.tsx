@@ -157,36 +157,36 @@ export default function History() {
       : totalEarnedPoints.toLocaleString();
 
   return (
-    <SafeAreaView className="flex-1 bg-background dark:bg-neutral-900">
+    <SafeAreaView className="flex-1 bg-background dark:bg-darkBackground">
       <AnimatedView entering={FadeInDown.duration(500)}>
         <View className="px-6 pt-6 pb-4">
           <View className="flex-row justify-between items-center mb-5">
             {!searchOpen ? (
               <>
                 <View>
-                  <Text className="text-neutral-900 dark:text-white text-2xl font-poppins-bold">
+                  <Text className="text-neutral-900 dark:text-darkTextPrimary text-2xl font-poppins-bold">
                     Activity
                   </Text>
                 </View>
                 <View className="flex-row items-center gap-3">
-                  <View className="bg-orange-50 dark:bg-orange-500/20 px-4 py-2 rounded-xl items-center">
-                    <Text className="text-orange-600 dark:text-orange-400 text-xl font-poppins-bold leading-tight">
+                  <View className="bg-orange-50 dark:bg-darkPrimarySecondary/20 px-4 py-2 rounded-xl items-center">
+                    <Text className="text-orange-600 dark:text-darkPrimaryText text-xl font-poppins-bold leading-tight">
                       {formattedTotal}
                     </Text>
-                    <Text className="text-orange-400 dark:text-orange-500 text-[7px] font-poppins-medium tracking-wide">
+                    <Text className="text-orange-400 dark:text-darkPrimarySecondary text-[7px] font-poppins-medium tracking-wide">
                       UNCLAIMED
                     </Text>
                   </View>
                   <TouchableOpacity
                     onPress={() => setSearchOpen(true)}
-                    className="w-10 h-10 rounded-xl bg-neutral-100 dark:bg-neutral-800 items-center justify-center"
+                    className="w-10 h-10 rounded-xl bg-neutral-100 dark:bg-darkBackgroundMuted items-center justify-center"
                   >
-                    <Text className="text-4xl font-bold text-neutral-500 dark:text-neutral-300">⌕</Text>
+                    <Text className="text-4xl font-bold text-neutral-500 dark:text-darkTextSoft">⌕</Text>
                   </TouchableOpacity>
                 </View>
               </>
             ) : (
-              <View className="flex-row items-center bg-neutral-100 dark:bg-neutral-800 rounded-xl px-1 py-1 w-full">
+              <View className="flex-row items-center bg-neutral-100 dark:bg-darkBackgroundMuted rounded-xl px-1 py-1 w-full">
                 <View className="flex-1 mx-1">
                   <TextInput
                     autoFocus
@@ -219,7 +219,7 @@ export default function History() {
 
 
           {/* Tabs */}
-          <View className="flex-row bg-neutral-200/70 dark:bg-neutral-800/70 p-1 rounded-xl">
+          <View className="flex-row bg-neutral-200/70 dark:bg-darkBackgroundMuted/70 p-1 rounded-xl">
             {TABS.map((tab, i) => {
               const isActive = activeTab === i;
               return (
@@ -228,7 +228,7 @@ export default function History() {
                   onPress={() => setActiveTab(i)}
                   className={`flex-1 py-3 rounded-lg items-center ${isActive ? "bg-orange-500" : ""}`}
                 >
-                  <Text className={`text-sm font-poppins-semibold ${isActive ? "text-white" : "text-neutral-500 dark:text-white"}`}>
+                  <Text className={`text-sm font-poppins-semibold ${isActive ? "text-white" : "text-neutral-500 dark:text-darkTextPrimary"}`}>
                     {tab}
                   </Text>
                 </TouchableOpacity>
@@ -294,17 +294,17 @@ function HistoryItem({ title, subtitle, time, points, positive, image, icon }) {
     <TouchableOpacity activeOpacity={1} onPressIn={handlePressIn} onPressOut={handlePressOut}>
       <Animated.View
         style={{ transform: [{ scale: scaleAnim }] }}
-        className="bg-white dark:bg-neutral-800 rounded-2xl p-4 mb-3 border border-neutral-100 dark:border-neutral-700"
+        className="bg-white dark:bg-darkBackgroundMuted rounded-2xl p-4 mb-3 border border-neutral-100 dark:border-darkBorder"
       >
         <View className="flex-row items-center justify-between">
           <View className="flex-row items-center flex-1">
-            <View className="w-12 h-12 my-3 rounded-xl bg-background dark:bg-neutral-700 items-center justify-center mr-3">
-              {icon && <Text className="text-xl text-orange-500 dark:text-orange-400">{icon}</Text>}
+            <View className="w-12 h-12 my-3 rounded-xl bg-background dark:bg-darkBackgroundCard items-center justify-center mr-3">
+              {icon && <Text className="text-xl text-orange-500 dark:text-darkPrimaryText">{icon}</Text>}
               {image && <Image source={{ uri: image }} className="w-12 h-12" />}
             </View>
 
             <View className="flex-1">
-              <Text numberOfLines={1} className="text-base font-poppins-semibold text-neutral-900 dark:text-white">
+              <Text numberOfLines={1} className="text-base font-poppins-semibold text-neutral-900 dark:text-darkTextPrimary">
                 {title}
               </Text>
               <Text className="text-xs font-poppins-regular text-neutral-400">

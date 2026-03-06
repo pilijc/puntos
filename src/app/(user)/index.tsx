@@ -1,20 +1,21 @@
 import { Text, SafeAreaView, View, Image } from "@/tw";
-import React, { useEffect, useRef, useState } from "react";
-import Mapbox, { MapView, UserLocation, Camera, PointAnnotation, UserTrackingMode } from "@rnmapbox/maps";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import Mapbox, { MapView, Camera, PointAnnotation } from "@rnmapbox/maps";
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
-import { Alert, PermissionsAndroid, Platform, TextInput, TextInputSubmitEditingEvent, TouchableOpacity, useColorScheme } from "react-native";
+import { Alert, TextInput, TouchableOpacity, useColorScheme } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 import * as Location from 'expo-location'
 import { supabase } from "@/supabase/supabase";
 import { Ionicons, MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
 import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
-import { getSearchResultsService, getStoresService } from "@/services/discover-service";
+import { getRouteService, getSearchResultsService } from "@/services/discover-service";
 import { useStoreStore } from "@/store/store-store";
 import { Store } from "@/type/store";
 import type * as GeoJSON from "geojson";
-import { OneSignal } from "react-native-onesignal";
-import { getOneSignalId } from "@/services/push-notif";
+import { getOneSignalId, sendPushNotification } from "@/services/push-notif";
+import { isStoreNearby } from "@/services/location-service";
+import * as turf from "@turf/turf";
 import { getStores } from "@/services/store-service";
 
 Mapbox.setAccessToken(process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN);
@@ -52,48 +53,10 @@ export default function Discover() {
   const [selectedStore, setSelectedStore] = useState<Store | null>(null);
   const routeAnimationRef = useRef<ReturnType<typeof requestAnimationFrame> | null>(null);
 
-  const getToken = async () => {
-    try {
-      const subscriptionId = await getOneSignalId();
-      if (!subscriptionId) {
-        Alert.alert(
-          "No subscription",
-          "Push isn't ready yet. Allow notifications and try again."
-        );
-        return;
-      }
+  const notifiedStoreIds = useRef<Set<number>>(new Set());
+  const locationWatchRef = useRef<Location.LocationSubscription | null>(null);
 
-      console.log("subscriptionId:", subscriptionId);
-      const sessionData = await supabase.auth.getSession();
-      const token = sessionData.data?.session?.access_token ?? process.env.EXPO_PUBLIC_ANON_KEY;
-      const { data, error } = await supabase.functions.invoke("notify-nearby-stores", {
-        body: {
-          subscriptionId,
-          title: "Nearby Store",
-          body: "You are near a store",
-        },
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (error) {
-        console.log("notify-nearby-store error full:", JSON.stringify(error, null, 2));
-        Alert.alert("Error", "Could not send test notification. Check logs.");
-        return;
-      }
-
-      if (data?.ok) {
-        Alert.alert("Sent", "Check the top of your screen for the push.");
-      } else {
-        Alert.alert("Push failed", data?.data?.errors?.[0] ?? "OneSignal returned an error.");
-      }
-    } catch (err) {
-      console.error("Error calling notify-nearby-store:", err);
-      Alert.alert("Error", "Something went wrong while sending the notification.");
-    }
-  };
-
+  // ─── Load active/approved stores ────────────────────────────────────────────
   useEffect(() => {
     (async () => {
       const data = await getStores();
@@ -101,6 +64,7 @@ export default function Discover() {
     })();
   }, []);
 
+  // ─── Route draw animation ────────────────────────────────────────────────────
   useEffect(() => {
     if (!routeGeoJSON?.coordinates?.length) return;
     const durationMs = 1800;
@@ -119,6 +83,90 @@ export default function Discover() {
     };
   }, [routeGeoJSON]);
 
+  useEffect(() => {
+    let cancelled = false;
+
+    (async () => {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') return;
+
+      const initial = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.High,
+      }).catch(() => null)
+        ?? await Location.getLastKnownPositionAsync({}).catch(() => null);
+
+      if (initial && !cancelled) {
+        setLocation(initial);
+      }
+
+      const sub = await Location.watchPositionAsync(
+        {
+          accuracy: Location.Accuracy.Balanced,
+          timeInterval: 5000,
+          distanceInterval: 0,
+        },
+        async (position) => {
+          if (cancelled) return;
+          setLocation(position);
+
+          const { latitude: uLat, longitude: uLon } = position.coords;
+
+          const currentStores = useStoreStore.getState().stores;
+
+          for (const store of currentStores) {
+            if (notifiedStoreIds.current.has(store.id)) continue;
+            if (!store.latitude || !store.longitude) continue;
+
+            const nearby = isStoreNearby(uLat, uLon, store.latitude, store.longitude, store.radius!);
+
+            if (nearby) {
+              console.log(`[Geofence] Entered store: ${store.name}`);
+              notifiedStoreIds.current.add(store.id);
+
+              try {
+                const subscriptionId = await getOneSignalId();
+                if (!subscriptionId) continue;
+
+                const res = await sendPushNotification(
+                  subscriptionId,
+                  `You're near ${store.name}! 📍`,
+                  `Visit ${store.name} and earn Puntos rewards!`,
+                );
+                if (res instanceof Response) {
+                  console.log(`[Geofence] Push sent for ${store.name}:`, res.status);
+                }
+              } catch (err) {
+                console.error('[Geofence] Failed to send push notification:', err);
+              }
+            }
+          }
+        }
+      );
+
+      if (!cancelled) {
+        locationWatchRef.current = sub;
+      } else {
+        sub.remove();
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+      locationWatchRef.current?.remove();
+      locationWatchRef.current = null;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!mapReady || !location) return;
+    const { longitude, latitude } = location.coords;
+    cameraRef.current?.setCamera({
+      centerCoordinate: [longitude, latitude],
+      zoomLevel: 14,
+      animationDuration: 1000,
+    });
+  }, [mapReady, location]);
+
   const searchPlaces = async () => {
     if (!searchQuery.trim()) return;
     try {
@@ -129,36 +177,15 @@ export default function Discover() {
     }
   };
 
-  const getRoute = async (
-    start: [number, number],
-    end: [number, number]
-  ): Promise<GeoJSON.LineString | null> => {
-    const url = `https://api.mapbox.com/directions/v5/mapbox/driving/${start[0]},${start[1]};${end[0]},${end[1]}?geometries=geojson&access_token=${process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN}`;
-
-    const res = await fetch(url);
-    const json = await res.json();
-
-    return json.routes?.[0]?.geometry ?? null;
-  };
-
   const handleStoreSelect = async (store: Store) => {
     setSelectedStore(store);
     bottomSheetRef.current?.snapToIndex(1);
 
     if (!location) return;
-
-    const start: [number, number] = [
-      location.coords.longitude,
-      location.coords.latitude,
-    ];
-
-    const end: [number, number] = [
-      store.longitude,
-      store.latitude,
-    ];
-
-    const route = await getRoute(start, end);
-    setRouteGeoJSON(route);
+    const start: [number, number] = [location.coords.longitude, location.coords.latitude];
+    const end: [number, number] = [store.longitude, store.latitude];
+    const route = await getRouteService(start, end);
+    setRouteGeoJSON(route ?? null);
     setRouteDrawProgress(0);
     cameraRef.current?.fitBounds(start, end, 80, 1000);
   };
@@ -166,7 +193,6 @@ export default function Discover() {
   const handleSearchResultPress = (result: any) => {
     setSelectedSearchResult(result);
     setSearchResults([]);
-
     cameraRef.current?.setCamera({
       centerCoordinate: result.center,
       zoomLevel: 14,
@@ -175,29 +201,6 @@ export default function Discover() {
     });
   };
 
-  useEffect(() => {
-    (async () => {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== "granted") return;
-  
-      const loc = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.High,
-      });
-  
-      setLocation(loc);
-    })();
-  }, []);
-
-  useEffect(() => {
-    if (!mapReady || !location) return;
-    const { longitude, latitude } = location.coords;
-  
-    cameraRef.current?.setCamera({
-      centerCoordinate: [longitude, latitude],
-      zoomLevel: 14,
-      animationDuration: 1000,
-    });
-  }, [mapReady, location]);
 
   const storeFeatures: GeoJSON.FeatureCollection = {
     type: "FeatureCollection",
@@ -215,13 +218,29 @@ export default function Discover() {
     })),
   };
 
+  const circlesFC = useMemo(() => {
+    const features = stores
+      .filter((s) => s.latitude && s.longitude)
+      .map((s) => {
+        const circle = turf.circle(
+          [s.longitude, s.latitude],
+          s.radius! / 1000, 
+          { steps: 64, units: "kilometers" }
+        );
+        circle.properties = { storeId: String(s.id) };
+        return circle;
+      });
+  
+    return turf.featureCollection(features);
+  }, [stores]);
+
   return (
     <View className="flex-1">
       <SafeAreaView className="absolute top-0 left-0 right-0 z-20">
         <View className="mt-4 mx-4">
-          <View className="bg-white dark:bg-neutral-800 rounded-xl flex-row justify-between items-center px-4 py-1">
+          <View className="bg-white dark:bg-darkBackgroundMuted rounded-xl flex-row justify-between items-center px-4 py-1">
             <TextInput
-              className="flex-1 text-base text-black dark:text-white font-poppins-semibold items-center justify-center"
+              className="flex-1 text-base text-black dark:text-darkTextPrimary font-poppins-semibold items-center justify-center"
               style={{ fontFamily: "Poppins-Regular" }}
               placeholderTextColor="gray"
               placeholder="Search a place"
@@ -240,7 +259,7 @@ export default function Discover() {
           </View>
 
           {searchResults.length > 0 && (
-            <View className="bg-white dark:bg-neutral-800 mt-2 rounded-xl p-2 max-h-72 border border-neutral-100 dark:border-neutral-700">
+            <View className="bg-white dark:bg-darkBackgroundMuted mt-2 rounded-xl p-2 max-h-72 border border-neutral-100 dark:border-darkBorder">
               <ScrollView
                 keyboardShouldPersistTaps="handled"
                 contentContainerClassName="divide-y divide-neutral-100"
@@ -254,8 +273,8 @@ export default function Discover() {
                     style={{ marginHorizontal: 4 }}
                   >
                     <View className="flex-1 py-2">
-                      <Text className="font-semibold text-base text-neutral-900 dark:text-white">{r.text}</Text>
-                      <Text numberOfLines={1} className="text-xs text-neutral-500 dark:text-neutral-400">
+                      <Text className="font-semibold text-base text-neutral-900 dark:text-darkTextPrimary">{r.text}</Text>
+                      <Text numberOfLines={1} className="text-xs text-neutral-500 dark:text-darkTextSecondary">
                         {r.place_name}
                       </Text>
                     </View>
@@ -330,6 +349,28 @@ export default function Discover() {
           />
         </Mapbox.ShapeSource>
 
+        <Mapbox.ShapeSource id="storeCirclesSource" shape={circlesFC}>
+          <Mapbox.FillLayer
+            id="storeCirclesFill"
+            style={{
+              fillColor: "#f97316",
+              fillOpacity: 0.11,
+            }}
+            belowLayerID="storesLayer"
+          />
+
+          {/* optional if we want to show border line sa circle hehe */}
+          {/* <Mapbox.LineLayer
+            id="storeCirclesBorder"
+            style={{
+              lineColor: "#f97316",
+              lineWidth: 0.3,
+              lineOpacity: 0.5,
+            }}
+          /> */}
+        </Mapbox.ShapeSource>
+
+        {/* Animated route line */}
         {routeGeoJSON && !searchQuery && (() => {
           const coords = routeGeoJSON.coordinates;
           const total = coords.length;
@@ -366,44 +407,18 @@ export default function Discover() {
         <TouchableOpacity
           style={{
             position: "absolute",
+            top: 120,
             right: 16,
-            bottom: 215,
-            zIndex: 999,
-            elevation: 20,
+            zIndex: 101,
+            elevation: 4,
           }}
-          className="bg-white dark:bg-neutral-800 rounded-full p-2"
+          className="bg-white dark:bg-darkBackgroundMuted rounded-full p-2"
           onPress={() => {
             setRouteGeoJSON(null);
             setSelectedStore(null);
           }}
         >
           <MaterialIcons name="clear" size={35} color="#FB8500" />
-        </TouchableOpacity>
-      )}
-
-      {location && (
-        <TouchableOpacity
-          style={{
-            position: "absolute",
-            right: 16,
-            bottom: 170,
-            zIndex: 999,
-            elevation: 20,
-          }}
-          className="bg-white dark:bg-neutral-800 rounded-full p-2"
-          onPress={() => {
-            cameraRef.current?.setCamera({
-              centerCoordinate: [
-                location.coords.longitude,
-                location.coords.latitude,
-              ],
-              zoomLevel: 14,
-              animationDuration: 600,
-              animationMode: "flyTo",
-            });
-          }}
-        >
-          <MaterialIcons name="filter-center-focus" size={35} color="#FB8500" />
         </TouchableOpacity>
       )}
 
@@ -429,7 +444,7 @@ export default function Discover() {
             {stores.map((s) => (
               <View
                 key={s.id}
-                className="bg-white dark:bg-neutral-800 p-2 flex-row items-center gap-x-3"
+                className="bg-white dark:bg-darkBackgroundMuted p-2 flex-row items-center gap-x-3"
               >
                 <Image
                   source={{
@@ -441,7 +456,7 @@ export default function Discover() {
                 <View className="flex-1">
                   
                   <View className="flex-row justify-between items-start">
-                    <Text className="text-lg text-neutral-900 dark:text-white flex-1 font-poppins-semibold" numberOfLines={1}>
+                    <Text className="text-lg text-neutral-900 dark:text-darkTextPrimary flex-1 font-poppins-semibold" numberOfLines={1}>
                       {s.name}
                     </Text>
                   </View>
@@ -460,10 +475,6 @@ export default function Discover() {
                       </Text>
                     </View>
                   </View>
-
-                  <TouchableOpacity className="bg-orange-500/10 px-3 py-1.5 rounded-xl" onPress={getToken}>
-                    <Text className="text-xs text-orange-500 font-poppins-semibold">Details</Text>
-                  </TouchableOpacity>
                 </View>
               </View>
             ))}
@@ -495,15 +506,12 @@ export default function Discover() {
               </ScrollView>
             </View>
 
-            <View className="bg-white dark:bg-neutral-800 p-2 flex-row items-center gap-x-3">
+            <View className="bg-white dark:bg-darkBackgroundMuted p-2 flex-row items-center gap-x-3">
               <View className="flex-1 justify-between">
                 <View className="flex-row items-center gap-x-2">
-                  <Text className="text-lg text-neutral-900 dark:text-white flex-1 font-poppins-semibold">
+                  <Text className="text-lg text-neutral-900 dark:text-darkTextPrimary flex-1 font-poppins-semibold">
                     Rewards
                   </Text>
-                  <TouchableOpacity className="bg-orange-500/10 px-3 py-1.5 rounded-xl" onPress={getToken}>
-                    <Text className="text-xs text-orange-500 font-poppins-semibold">View All</Text>
-                  </TouchableOpacity>
                 </View>
 
                 <View className="flex-col items-center gap-y-2">
@@ -516,10 +524,10 @@ export default function Discover() {
                     />
                     <View className="flex-1 flex-col justify-between ml-3 py-1">
                       <View className="flex-1 flex-col items-start justify-start">
-                        <Text className="text-base font-poppins-semibold text-neutral-900 dark:text-white">
+                        <Text className="text-base font-poppins-semibold text-neutral-900 dark:text-darkTextPrimary">
                           Free Coffee
                         </Text>
-                        <Text className="text-xs font-poppins text-neutral-500 dark:text-neutral-400" numberOfLines={2}>
+                        <Text className="text-xs font-poppins text-neutral-500 dark:text-darkTextSecondary" numberOfLines={2}>
                           Any medium drink of your choice
                         </Text>
                       </View>

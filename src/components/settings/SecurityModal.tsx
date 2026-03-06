@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Modal, Alert } from "react-native";
+import { Modal, Alert, useColorScheme } from "react-native";
 import { View, Text, SafeAreaView, TouchableOpacity } from "@/tw";
 import { Ionicons } from "@expo/vector-icons";
 import ChangePasswordModal from "./ChangePasswordModal";
@@ -13,6 +13,7 @@ type Props = {
 };
 
 export default function SecurityModal({ visible, onClose }: Props) {
+  const isDark = useColorScheme() === "dark";
   const [changePasswordVisible, setChangePasswordVisible] = useState(false);
 
   const handleDeleteAccount = async () => {
@@ -28,9 +29,7 @@ export default function SecurityModal({ visible, onClose }: Props) {
             try {
               const { data: { user }, error: userError } = await supabase.auth.getUser();
               if (userError || !user) throw new Error("Could not find user.");
-
               await softDeleteUserAccountService(user.id);
-
               await supabase.auth.signOut();
               onClose();
               router.replace("/(onboarding)/welcome");
@@ -45,34 +44,49 @@ export default function SecurityModal({ visible, onClose }: Props) {
 
   return (
     <>
-      <Modal animationType="slide" transparent visible={visible} onRequestClose={onClose}>
-        <SafeAreaView className="flex-1">
+      <Modal animationType="slide" transparent statusBarTranslucent visible={visible} onRequestClose={onClose}>
+        <SafeAreaView style={{ flex: 1 }}>
+          {/* Scrim */}
           <TouchableOpacity className="flex-1 bg-black/50" activeOpacity={1} onPress={onClose} />
 
-          <View className="bg-white dark:bg-neutral-800 rounded-t-3xl p-6 pb-8">
+          {/* Sheet */}
+          <View className="bg-background dark:bg-darkBackground rounded-t-[32px] px-6 pt-3 pb-8">
+            {/* Handle */}
+            <View className="w-10 h-1 rounded-full bg-neutral-200 dark:bg-darkBackgroundCard self-center mb-5" />
+
+            {/* Header */}
             <View className="flex-row justify-between items-center mb-6">
-              <Text className="text-xl font-poppins-bold text-neutral-900 dark:text-white">Security</Text>
-              <TouchableOpacity onPress={onClose}>
-                <Ionicons name="close-outline" size={25} color="#EF4444" />
+              <View>
+                <Text className="text-xl font-poppins-bold text-neutral-900 dark:text-darkTextPrimary">Security</Text>
+                <Text className="text-sm font-poppins-regular text-neutral-500 dark:text-darkTextSecondary">Manage your account security</Text>
+              </View>
+              <TouchableOpacity
+                onPress={onClose}
+                className="h-10 w-10 bg-neutral-100 dark:bg-darkBackgroundMuted rounded-full items-center justify-center"
+              >
+                <Ionicons name="close-outline" size={22} color={isDark ? "#9ca3af" : "#4b5563"} />
               </TouchableOpacity>
             </View>
 
+            {/* Change Password */}
             <TouchableOpacity
-              className="mx-4 mb-6 p-4 bg-primary rounded-2xl items-center"
+              className="py-4 rounded-2xl items-center bg-primary mb-3"
               onPress={() => setChangePasswordVisible(true)}
             >
-              <Text className="text-white text-base font-poppins-semibold">Change Password</Text>
+              <Text className="text-white text-base font-poppins-bold">Change Password</Text>
             </TouchableOpacity>
 
+            {/* Delete Account */}
             <TouchableOpacity
-              className="mx-4 mb-6 p-4 bg-danger rounded-2xl items-center"
+              className="py-4 rounded-2xl items-center bg-danger"
               onPress={handleDeleteAccount}
             >
-              <Text className="text-white text-base font-poppins-semibold">Delete Account</Text>
+              <Text className="text-white text-base font-poppins-bold">Delete Account</Text>
             </TouchableOpacity>
           </View>
         </SafeAreaView>
       </Modal>
+
       <ChangePasswordModal
         visible={changePasswordVisible}
         onClose={() => setChangePasswordVisible(false)}

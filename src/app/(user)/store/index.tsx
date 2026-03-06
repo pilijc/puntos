@@ -157,7 +157,7 @@ export default function Rewards() {
   }, [permissionStatus]);
 
   return (
-    <SafeAreaView className="flex-1 bg-backgroundMuted dark:bg-neutral-900">
+    <SafeAreaView className="flex-1 bg-backgroundMuted dark:bg-darkBackground">
       <ScrollView
         className="flex-1"
         contentContainerClassName="px-6 pt-6 pb-8 gap-y-6"
@@ -171,14 +171,14 @@ export default function Rewards() {
         }
       >
         <View className="flex-row items-center justify-between">
-          <Text className="text-2xl font-poppins-bold text-neutral-900 dark:text-white">
+          <Text className="text-2xl font-poppins-bold text-neutral-900 dark:text-darkTextPrimary">
             Rewards
           </Text>
           <TouchableOpacity
             onPress={() => router.push("/store/stores")}
-            className="px-3 py-2 rounded-full border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800"
+            className="px-3 py-2 rounded-full border border-neutral-200 dark:border-darkBorder bg-white dark:bg-darkBackgroundMuted"
           >
-            <Text className="text-xs font-poppins-semibold text-neutral-700 dark:text-neutral-300">
+            <Text className="text-xs font-poppins-semibold text-neutral-700 dark:text-darkTextSoft">
               VIEW STORES
             </Text>
           </TouchableOpacity>
@@ -338,7 +338,7 @@ export default function Rewards() {
           </AnimatedView>
         </View>
 
-        <View className="bg-white dark:bg-neutral-800 rounded-2xl p-4 border border-neutral-100 dark:border-neutral-700">
+        <View className="bg-white dark:bg-darkBackgroundMuted rounded-2xl p-4 border border-neutral-100 dark:border-darkBorder">
           <View className="flex-row items-center justify-between">
             <View className="flex-row items-center gap-x-2">
               <MaterialIcons
@@ -381,7 +381,7 @@ export default function Rewards() {
                 ? "w-8 h-8 rounded-full bg-primary items-center justify-center"
                 : isTarget
                   ? "w-8 h-8 rounded-full border border-primary items-center justify-center"
-                  : "w-8 h-8 rounded-full bg-neutral-100 dark:bg-neutral-700 items-center justify-center";
+                  : "w-8 h-8 rounded-full bg-neutral-100 dark:bg-darkBackgroundCard items-center justify-center";
               const textClass =
                 isCompleted || isTarget
                   ? "text-primary font-poppins-semibold text-xs"
@@ -413,7 +413,7 @@ export default function Rewards() {
         </View>
 
         <View className="flex-row items-center justify-between">
-          <Text className="text-lg font-poppins-semibold text-neutral-900 dark:text-white">
+          <Text className="text-lg font-poppins-semibold text-neutral-900 dark:text-darkTextPrimary">
             Reward Catalog
           </Text>
           <TouchableOpacity className="flex-row items-center gap-x-1">

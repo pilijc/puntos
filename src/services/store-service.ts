@@ -76,11 +76,10 @@ export async function createStore(payload: CreateStorePayload): Promise<StoreRow
         max_points_per_transaction: 100,
     });
 
-    // 4. Get manager role id and link via user_roles
     const { data: roleData } = await supabase
-        .from("roles")
+        .from("user_roles")
         .select("id")
-        .eq("role_type", "manager")
+        .eq("role_id", "2")
         .maybeSingle();
 
     if (roleData?.id) {
@@ -94,9 +93,6 @@ export async function createStore(payload: CreateStorePayload): Promise<StoreRow
     return store as StoreRow;
 }
 
-/**
- * Fetches all stores owned by the given user id.
- */
 export async function getMyStores(ownerId: string): Promise<StoreRow[]> {
     const { data, error } = await supabase
         .from("stores")
@@ -108,9 +104,6 @@ export async function getMyStores(ownerId: string): Promise<StoreRow[]> {
     return (data ?? []) as StoreRow[];
 }
 
-/**
- * Updates the logo URL for an existing store.
- */
 export async function updateStoreLogo(storeId: number, imageUrl: string): Promise<void> {
     const { error } = await supabase
         .from("stores")
@@ -124,10 +117,6 @@ export interface AdminStoreRow extends StoreRow {
     owner_name: string | null;
 }
 
-/**
- * Fetches ALL stores across all owners. Used by super-admin.
- * Joins owner email + full_name from the users table.
- */
 export async function getAllStores(): Promise<AdminStoreRow[]> {
     const { data, error } = await supabase
         .from("stores")
@@ -177,4 +166,34 @@ export async function getStores() {
     } catch (error) {
         throw error;
     }
+}
+
+export interface UpdateStorePayload {
+    name?: string;
+    type?: string;
+    address?: string;
+    phone?: string;
+    registration_number?: string;
+    logo?: string;
+}
+
+export async function updateStore(storeId: number, payload: UpdateStorePayload): Promise<StoreRow> {
+    const { data, error } = await supabase
+        .from("stores")
+        .update(payload)
+        .eq("id", storeId)
+        .select()
+        .single();
+
+    if (error || !data) throw new Error(error?.message ?? "Failed to update store");
+    return data as StoreRow;
+}
+
+export async function deleteStore(storeId: number): Promise<void> {
+    const { error } = await supabase
+        .from("stores")
+        .delete()
+        .eq("id", storeId);
+
+    if (error) throw new Error(error.message);
 }
