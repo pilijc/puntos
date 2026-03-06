@@ -8,9 +8,8 @@ import { useAuthStore } from '@/store/auth-store';
 export const useAuthActions = () => {
     const handleLogout = async () => {
         try {
-            //Para kung mo logout ang user mo clear sd ang input fields sa login form page 
+            // Commented out for now
             // useAuthStore.getState().reset();
-
             // await AsyncStorage.removeItem('sessionToken');
 
             try {
@@ -24,7 +23,6 @@ export const useAuthActions = () => {
                 console.error("Supabase signOut error (ignoring to allow local logout):", error.message);
             }
 
-            // Ensure we navigate back to welcome
             router.replace("/(onboarding)/welcome");
         } catch (error: any) {
             console.error("Logout process error:", error);

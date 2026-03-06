@@ -36,8 +36,8 @@ export default function StoreManagerSettings() {
         setModalVisible(true);
     };
 
-    const handleSaveProfile = async (newName: string, _newEmail: string) => {
-        const result = await updateProfile(newName);
+    const handleSaveProfile = async (newName: string, _newEmail: string, newAvatarUrl?: string | null) => {
+        const result = await updateProfile({ name: newName, avatar_url: newAvatarUrl });
         if (result.success) {
             Alert.alert("Success", "Profile updated successfully");
         } else {
@@ -104,6 +104,8 @@ export default function StoreManagerSettings() {
                 onClose={() => setModalVisible(false)}
                 initialUsername={profile?.name || user?.email?.split("@")[0] || ""}
                 initialEmail={user?.email || ""}
+                initialAvatar={profile?.avatar_url}
+                userId={user?.id}
                 onSave={handleSaveProfile}
             />
 
