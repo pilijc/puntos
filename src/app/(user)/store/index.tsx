@@ -107,7 +107,8 @@ export default function Rewards() {
 
   const displayStamps = useMemo(() => {
     if (nearbyStores.length === 0) return sortedStamps;
-    return sortedStamps.filter(stamp => nearbyStores.some(ns => ns.id === stamp.store_id));
+    const filtered = sortedStamps.filter(stamp => nearbyStores.some(ns => ns.id === stamp.store_id));
+    return filtered.length > 0 ? filtered : sortedStamps;
   }, [sortedStamps, nearbyStores]);
 
   const [isStamping, setIsStamping] = useState(false);
@@ -513,12 +514,8 @@ export default function Rewards() {
           {displayStamps.length === 0 ? (
             <View className="bg-white dark:bg-darkBackgroundMuted rounded-2xl p-6 border border-neutral-100 dark:border-darkBorder items-center">
               <MaterialIcons name="local-fire-department" size={32} color="#d1d5db" className="mb-2" />
-              <Text className="text-neutral-500 font-poppins-semibold text-sm mt-2 text-center">
-                {nearbyStores.length > 0 ? "No active stamps for nearby stores" : "No Active Stamps"}
-              </Text>
-              <Text className="text-neutral-400 font-poppins text-xs text-center mt-1">
-                {nearbyStores.length > 0 ? "Make a purchase to start your streak!" : "Visit a partner store to start your streak!"}
-              </Text>
+              <Text className="text-neutral-500 font-poppins-semibold text-sm mt-2">No Active Stamps</Text>
+              <Text className="text-neutral-400 font-poppins text-xs text-center mt-1">Visit a partner store to start your streak!</Text>
             </View>
           ) : (
             <View>
