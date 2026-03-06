@@ -103,6 +103,10 @@ export default function StoreManagerLayout() {
                 name="configure-streaks"
                 options={{ href: null }}
             />
+             <Tabs.Screen
+                name="configure-stamp"
+                options={{ href: null }}
+            />
         </Tabs>
     );
 }

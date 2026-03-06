@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from "react";
-import { Switch, useColorScheme } from "react-native";
+import { ActivityIndicator, Alert, Switch, useColorScheme } from "react-native";
 import { View, Text, TouchableOpacity, ScrollView, Image } from "@/tw";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { getStoreById } from "@/services/store-service";
+import { getStoreFeaturesById, updateStoreFeatures } from "@/services/store-manager/feature-service";
 
-// Manual base for features
-const MANUAL_FEATURES = [
+const FEATURES = [
   {
     id: "streaks",
     title: "Streaks",
@@ -15,8 +15,7 @@ const MANUAL_FEATURES = [
     icon: "local-fire-department" as const,
     iconColor: "#F97316",
     iconBg: "rgba(249,115,22,0.10)",
-    enabled: true,
-    badge: "5 points/day • 7-day streak"
+    badge: "5 points/day • 7-day streak",
   },
   {
     id: "stamps",
@@ -25,8 +24,7 @@ const MANUAL_FEATURES = [
     icon: "loyalty" as const,
     iconColor: "#3B82F6",
     iconBg: "rgba(59,130,246,0.10)",
-    enabled: true,
-    badge: "Buy 9 get 1 free • Hot Drinks"
+    badge: "Buy 9 get 1 free • Hot Drinks",
   },
   {
     id: "purchased",
@@ -35,9 +33,8 @@ const MANUAL_FEATURES = [
     icon: "qr-code-2" as const,
     iconColor: "#A855F7",
     iconBg: "rgba(168,85,247,0.10)",
-    enabled: false,
-    badge: null
-  }
+    badge: null,
+  },
 ];
 
 const TABS = ["Overview", "Features", "Media"];
@@ -49,34 +46,83 @@ export default function ViewStore() {
   const router = useRouter();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
-
   const [store, setStore] = useState<Awaited<ReturnType<typeof getStoreById>> | null>(null);
   const [activeTab, setActiveTab] = useState(1);
-  const [features, setFeatures] = useState(MANUAL_FEATURES);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // What's currently saved in the DB
+  const [savedFeatures, setSavedFeatures] = useState({
+    streak_enabled: false,
+    stamp_enabled: false,
+    reward_enabled: false,
+  });
+
+  // Local (possibly unsaved) state
+  const [streakEnabled, setStreakEnabled] = useState(false);
+  const [stampEnabled, setStampEnabled] = useState(false);
+  const [rewardEnabled, setRewardEnabled] = useState(false);
+
+  const toggleStreak = () => setStreakEnabled(prev => !prev);
+  const toggleStamp  = () => setStampEnabled(prev => !prev);
+  const toggleReward = () => setRewardEnabled(prev => !prev);
+
+  const featureToggles: Record<string, { enabled: boolean; toggle: () => void }> = {
+    streaks:   { enabled: streakEnabled, toggle: toggleStreak },
+    stamps:    { enabled: stampEnabled,  toggle: toggleStamp  },
+    purchased: { enabled: rewardEnabled, toggle: toggleReward },
+  };
+
+  // True only when local state differs from what's saved in DB
+  const hasChanges =
+    streakEnabled !== savedFeatures.streak_enabled ||
+    stampEnabled  !== savedFeatures.stamp_enabled  ||
+    rewardEnabled !== savedFeatures.reward_enabled;
 
   const navigateToConfig = (featureId: string) => {
     if (featureId === "streaks") {
       router.push({ pathname: "/(store_manager)/configure-streaks", params: { storeId } });
     }
-    // You can add conditions for other features here.
-  };
-
-  const handleToggle = (featureId: string, currentEnabled: boolean) => {
-    const nextEnabled = !currentEnabled;
-    setFeatures((prev) =>
-      prev.map((f) => (f.id === featureId ? { ...f, enabled: nextEnabled } : f))
-    );
-    if (nextEnabled) {
-      navigateToConfig(featureId);
-    }
   };
 
   useEffect(() => {
     (async () => {
-      const store = await getStoreById(storeId);
-      setStore(store);
+      const [storeData, featureData] = await Promise.all([
+        getStoreById(storeId),
+        getStoreFeaturesById(String(storeId)),
+      ]);
+      setStore(storeData);
+
+      const saved = {
+        streak_enabled: featureData?.streak_enabled ?? false,
+        stamp_enabled:  featureData?.stamp_enabled  ?? false,
+        reward_enabled: featureData?.reward_enabled ?? false,
+      };
+      // Sync both the baseline and local state
+      setSavedFeatures(saved);
+      setStreakEnabled(saved.streak_enabled);
+      setStampEnabled(saved.stamp_enabled);
+      setRewardEnabled(saved.reward_enabled);
     })();
   }, [storeId]);
+
+  const handleSaveChanges = async () => {
+    try {
+      setIsSubmitting(true);
+      await updateStoreFeatures({
+        store_id: storeId,
+        streak_enabled: streakEnabled,
+        stamp_enabled: stampEnabled,
+        reward_enabled: rewardEnabled,
+      });
+      setSavedFeatures({ streak_enabled: streakEnabled, stamp_enabled: stampEnabled, reward_enabled: rewardEnabled });
+      Alert.alert("Success", "Changes saved successfully");
+    } catch (error) {
+      console.error("Failed to save changes", error);
+      Alert.alert("Error", (error as Error).message ?? "Failed to save changes");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <View className="flex-1 bg-backgroundMuted dark:bg-neutral-900">
@@ -171,75 +217,85 @@ export default function ViewStore() {
 
         {activeTab === 1 && (
           <View className="px-4 elevation-0.5 mt-4">
-            {features.map((feature) => (
-              <View
-                key={feature.id}
-                className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl overflow-hidden mb-3"
-              >
-                <View className="p-4 flex-row items-start justify-between">
-                  <View className="flex-row gap-x-3 flex-1">
-                    <View
-                      className="w-12 h-12 rounded-xl items-center justify-center"
-                      style={{ backgroundColor: feature.iconBg }}
-                    >
-                      <MaterialIcons name={feature.icon} size={24} color={feature.iconColor} />
-                    </View>
-                    <View className="flex-1 justify-center">
-                      <Text className="text-[15px] font-poppins-bold text-[#0F172A] dark:text-[#F1F5F9]">
-                        {feature.title}
-                      </Text>
-                      <Text className="text-[13px] font-poppins text-slate-500 dark:text-slate-500 mt-0.5">
-                        {feature.description}
-                      </Text>
-                    </View>
-                  </View>
-                  <Switch
-                    value={feature.enabled}
-                    onValueChange={() => handleToggle(feature.id, feature.enabled)}
-                    trackColor={{ false: "#E2E8F0", true: "#FF6600" }}
-                    thumbColor="#FFFFFF"
-                  />
-                </View>
-                {feature.enabled && feature.badge && (
-                  <View className="px-4 py-3 border-t border-slate-100 dark:border-slate-800 flex-row items-center justify-between bg-slate-50 dark:bg-slate-800/30">
-                    <View
-                      className="flex-row items-center gap-x-1.5 px-2.5 py-1 rounded-lg"
-                      style={{
-                        backgroundColor: isDark ? "textPrimary" : "#197FE61A"
-                      }}
-                    >
-                      <MaterialIcons
-                        name="info-outline"
-                        size={13}
-                        color={isDark ? "textPrimary" : "#197FE6"}
-                      />
-                      <Text
-                        className="text-xs font-poppins-semibold"
-                        style={{ color: isDark ? "textPrimary" : "#197FE6" }}
+            {FEATURES.map((feature) => {
+              const { enabled, toggle } = featureToggles[feature.id];
+              return (
+                <View
+                  key={feature.id}
+                  className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl overflow-hidden mb-3"
+                >
+                  <View className="p-4 flex-row items-start justify-between">
+                    <View className="flex-row gap-x-3 flex-1">
+                      <View
+                        className="w-12 h-12 rounded-xl items-center justify-center"
+                        style={{ backgroundColor: feature.iconBg }}
                       >
-                        {feature.badge}
-                      </Text>
+                        <MaterialIcons name={feature.icon} size={24} color={feature.iconColor} />
+                      </View>
+                      <View className="flex-1 justify-center">
+                        <Text className="text-[15px] font-poppins-bold text-[#0F172A] dark:text-[#F1F5F9]">
+                          {feature.title}
+                        </Text>
+                        <Text className="text-[13px] font-poppins text-slate-500 dark:text-slate-500 mt-0.5">
+                          {feature.description}
+                        </Text>
+                      </View>
                     </View>
-                    <TouchableOpacity
-                      className="flex-row items-center gap-x-1"
-                      activeOpacity={0.7}
-                      onPress={() => navigateToConfig(feature.id)}
-                    >
-                      <Text className="text-sm font-poppins-semibold text-primary">
-                        Configure
-                      </Text>
-                    </TouchableOpacity>
+                    <Switch
+                      value={enabled}
+                      onValueChange={toggle}
+                      trackColor={{ false: "#E2E8F0", true: "#FF6600" }}
+                      thumbColor="#FFFFFF"
+                    />
                   </View>
-                )}
-              </View>
-            ))}
+                  {enabled && feature.badge && (
+                    <View className="px-4 py-3 border-t border-slate-100 dark:border-slate-800 flex-row items-center justify-between bg-slate-50 dark:bg-slate-800/30">
+                      <View
+                        className="flex-row items-center gap-x-1.5 px-2.5 py-1 rounded-lg"
+                        style={{
+                          backgroundColor: isDark ? "textPrimary" : "#197FE61A"
+                        }}
+                      >
+                        <MaterialIcons
+                          name="info-outline"
+                          size={13}
+                          color={isDark ? "textPrimary" : "#197FE6"}
+                        />
+                        <Text
+                          className="text-xs font-poppins-semibold"
+                          style={{ color: isDark ? "textPrimary" : "#197FE6" }}
+                        >
+                          {feature.badge}
+                        </Text>
+                      </View>
+                      <TouchableOpacity
+                        className="flex-row items-center gap-x-1"
+                        activeOpacity={0.7}
+                        onPress={() => navigateToConfig(feature.id)}
+                      >
+                        <Text className="text-sm font-poppins-semibold text-primary">
+                          Configure
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                  )}
+                </View>
+              );
+            })}
 
             <TouchableOpacity
-              className="rounded-xl items-center mt-2 px-6 py-4 bg-primary"
+              className={`rounded-xl items-center mt-2 px-6 py-4 ${hasChanges ? "bg-primary" : "bg-slate-200 dark:bg-slate-700"}`}
+              onPress={handleSaveChanges}
+              disabled={!hasChanges || isSubmitting}
+              activeOpacity={0.85}
             >
-              <Text className="text-sm font-poppins-bold text-white">
-                Save Changes
-              </Text>
+              {isSubmitting ? (
+                <ActivityIndicator size="small" color="white" />
+              ) : (
+                <Text className={`text-sm font-poppins-bold ${hasChanges ? "text-white" : "text-slate-400 dark:text-slate-500"}`}>
+                  Save Changes
+                </Text>
+              )}
             </TouchableOpacity>
           </View>
         )}
