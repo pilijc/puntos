@@ -6,6 +6,8 @@ import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { getStoreById } from "@/services/store-service";
 import { getStoreFeaturesById, updateStoreFeatures } from "@/services/store-manager/feature-service";
+import { getRewardsByStoreId } from "@/services/store-manager/reward-service";
+import { Reward } from "@/type/store-manager/reward";
 
 const FEATURES = [
   {
@@ -37,7 +39,7 @@ const FEATURES = [
   },
 ];
 
-const TABS = ["Overview", "Features", "Media"];
+const TABS = ["Overview", "Features", "Rewards"];
 
 export default function ViewStore() {
   const { id } = useLocalSearchParams();
@@ -49,6 +51,7 @@ export default function ViewStore() {
   const [store, setStore] = useState<Awaited<ReturnType<typeof getStoreById>> | null>(null);
   const [activeTab, setActiveTab] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [rewards, setRewards] = useState<Reward[]>([]);
 
   // What's currently saved in the DB
   const [savedFeatures, setSavedFeatures] = useState({
@@ -81,16 +84,20 @@ export default function ViewStore() {
   const navigateToConfig = (featureId: string) => {
     if (featureId === "streaks") {
       router.push({ pathname: "/(store_manager)/configure-streaks", params: { storeId } });
+    } else if (featureId === "stamps") {
+      router.push({ pathname: "/(store_manager)/configure-stamp", params: { storeId } });
     }
   };
 
   useEffect(() => {
     (async () => {
-      const [storeData, featureData] = await Promise.all([
+      const [storeData, featureData, rewardsData] = await Promise.all([
         getStoreById(storeId),
         getStoreFeaturesById(String(storeId)),
+        getRewardsByStoreId(String(storeId)),
       ]);
       setStore(storeData);
+      setRewards(rewardsData);
 
       const saved = {
         streak_enabled: featureData?.streak_enabled ?? false,
@@ -300,7 +307,7 @@ export default function ViewStore() {
           </View>
         )}
 
-        {activeTab !== 1 && (
+        {activeTab === 0 && (
           <View className="pt-16 items-center gap-y-3">
             <MaterialIcons name="construction" size={40} color="#64748B" />
             <Text className="text-sm font-poppins text-slate-500 dark:text-slate-500">
@@ -308,7 +315,64 @@ export default function ViewStore() {
             </Text>
           </View>
         )}
+
+        {activeTab === 2 && (
+          <View className="px-4 mt-4 gap-y-3">
+            {rewards.length === 0 ? (
+              <View className="pt-12 items-center gap-y-3">
+                <MaterialIcons name="redeem" size={40} color="#94A3B8" />
+                <Text className="text-sm font-poppins text-slate-400 dark:text-slate-500">
+                  No rewards yet. Create your first one!
+                </Text>
+              </View>
+            ) : (
+              rewards.map((reward) => (
+                <View
+                  key={reward.id}
+                  className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl p-4 flex-row items-start gap-x-3"
+                >
+                  {reward.image_url ? (
+                    <Image
+                      source={{ uri: reward.image_url }}
+                      className="w-20 h-20 rounded-xl"
+                    />
+                  ) : (
+                    <View className="w-20 h-20 rounded-xl bg-primary/10 items-center justify-center">
+                      <MaterialIcons name="redeem" size={32} color="#FF6600" />
+                    </View>
+                  )}
+                  <View className="flex-1">
+                    <View className="flex-row justify-between items-start">
+                      <Text
+                        className="text-md font-poppins-bold text-slate-900 dark:text-slate-100 flex-shrink"
+                        numberOfLines={1}
+                      >
+                        {reward.title}
+                      </Text>
+                      <Text className="text-sm font-poppins-bold text-primary ml-2 whitespace-nowrap">
+                        {reward.points_cost} pts
+                      </Text>
+                    </View>
+                    <Text className="text-xs font-poppins text-slate-500 dark:text-slate-400" numberOfLines={2}>
+                      {reward.description}
+                    </Text>
+                  </View>
+                </View>
+              ))
+            )}
+          </View>
+        )}
       </ScrollView>
+
+      {activeTab === 2 && (
+        <TouchableOpacity
+          className="absolute bottom-8 right-6 w-14 h-14 rounded-full bg-primary items-center justify-center shadow-lg"
+          activeOpacity={0.85}
+          onPress={() => router.push({ pathname: "/(store_manager)/rewards", params: { storeId } })}
+        >
+          <MaterialIcons name="add" size={28} color="#fff" />
+        </TouchableOpacity>
+      )}
     </View>
   );
 }
