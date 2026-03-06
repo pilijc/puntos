@@ -69,7 +69,8 @@ export default async function signUpService(email: string, password: string, nam
       if (!existingProfile) {
         await supabase.from("users").insert({ id: data.user.id, name });
       }
-    }else if (error) {
+    }
+    if (error) {
       throw error;
     }
     return { ...data, homeRoute};
@@ -147,6 +148,7 @@ export async function signUpWithGoogleService() {
 export async function loginService(email: string, password: string) {
   try {
     const res = await supabase.auth.signInWithPassword({ email, password });
+    console.log("res", res);
     if (res.data?.session?.access_token) {
       await AsyncStorage.setItem('sessionToken', res.data.session.access_token);
     }

@@ -34,7 +34,7 @@ export default function Stores() {
   const totalPoints = stores.reduce((sum, store) => sum + store.points, 0);
 
   return (
-    <SafeAreaView className="flex-1 bg-background dark:bg-neutral-900">
+    <SafeAreaView className="flex-1 bg-background dark:bg-darkBackground">
       <ScrollView
         className="flex-1"
         contentContainerClassName="px-6 pt-6 pb-8 gap-y-4"
@@ -42,11 +42,11 @@ export default function Stores() {
         <View className="flex-row items-center gap-x-3">
           <TouchableOpacity
             onPress={() => router.back()}
-            className="w-10 h-10 rounded-full bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 items-center justify-center"
+            className="w-10 h-10 rounded-full bg-white dark:bg-darkBackgroundMuted border border-neutral-200 dark:border-darkBorder items-center justify-center"
           >
             <MaterialIcons name="chevron-left" size={22} color="#0f172a" />
           </TouchableOpacity>
-          <Text className="text-2xl font-poppins-bold text-neutral-900 dark:text-white">
+          <Text className="text-2xl font-poppins-bold text-neutral-900 dark:text-darkTextPrimary">
             My Stores
           </Text>
         </View>

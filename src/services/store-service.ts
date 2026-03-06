@@ -21,7 +21,7 @@ export interface StoreRow {
     longitude: number | null;
     status: string;
     is_active: boolean;
-    store_image: string | null;
+    logo: string | null;
     owner_id: string | null;
     phone: string | null;
     registration_number: string | null;
@@ -46,7 +46,7 @@ export async function createStore(payload: CreateStorePayload): Promise<StoreRow
             longitude: payload.longitude ?? null,
             phone: payload.phone ?? null,
             registration_number: payload.registrationNumber ?? null,
-            store_image: payload.storeImageUrl ?? null,
+            logo: payload.storeImageUrl ?? null,
             owner_id: payload.ownerId,
             status: "pending_review",
             is_active: false,
@@ -76,11 +76,10 @@ export async function createStore(payload: CreateStorePayload): Promise<StoreRow
         max_points_per_transaction: 100,
     });
 
-    // 4. Get manager role id and link via user_roles
     const { data: roleData } = await supabase
-        .from("roles")
+        .from("user_roles")
         .select("id")
-        .eq("role_type", "manager")
+        .eq("role_id", "2")
         .maybeSingle();
 
     if (roleData?.id) {
@@ -94,13 +93,10 @@ export async function createStore(payload: CreateStorePayload): Promise<StoreRow
     return store as StoreRow;
 }
 
-/**
- * Fetches all stores owned by the given user id.
- */
 export async function getMyStores(ownerId: string): Promise<StoreRow[]> {
     const { data, error } = await supabase
         .from("stores")
-        .select("id, name, type, address, latitude, longitude, status, is_active, store_image, owner_id, phone, registration_number, created_at")
+        .select("id, name, type, address, latitude, longitude, status, is_active, logo, owner_id, phone, registration_number, created_at")
         .eq("owner_id", ownerId)
         .order("created_at", { ascending: false });
 
@@ -108,13 +104,95 @@ export async function getMyStores(ownerId: string): Promise<StoreRow[]> {
     return (data ?? []) as StoreRow[];
 }
 
-/**
- * Updates the store_image URL for an existing store.
- */
 export async function updateStoreLogo(storeId: number, imageUrl: string): Promise<void> {
     const { error } = await supabase
         .from("stores")
-        .update({ store_image: imageUrl })
+        .update({ logo: imageUrl })
+        .eq("id", storeId);
+
+    if (error) throw new Error(error.message);
+}
+
+export interface AdminStoreRow extends StoreRow {
+    owner_name: string | null;
+}
+
+export async function getAllStores(): Promise<AdminStoreRow[]> {
+    const { data, error } = await supabase
+        .from("stores")
+        .select(`
+            id, name, type, address, latitude, longitude,
+            status, is_active, logo, owner_id,
+            phone, registration_number, created_at,
+            users ( name )
+        `)
+        .order("created_at", { ascending: false });
+
+    if (error) throw new Error(error.message);
+
+    return (data ?? []).map((row: any) => ({
+        ...row,
+        owner_name: row.users?.name ?? null,
+        users: undefined,
+    })) as AdminStoreRow[];
+}
+
+/**
+ * Approves or rejects a store by updating its status and is_active flag.
+ * - Approve: status = 'active',   is_active = true
+ * - Reject:  status = 'inactive', is_active = false
+ */
+export async function updateStoreStatus(
+    storeId: number,
+    status: "active" | "inactive" | "pending_review",
+    isActive: boolean,
+): Promise<void> {
+    const { error } = await supabase
+        .from("stores")
+        .update({ status, is_active: isActive })
+        .eq("id", storeId);
+
+    if (error) throw new Error(error.message);
+}
+
+export async function getStores() {
+    try {
+			const { data, error } = await supabase
+				.from("stores")
+				.select("*")
+				.eq("status", "active");
+    if (error) throw new Error(error.message);
+    return data;
+    } catch (error) {
+        throw error;
+    }
+}
+
+export interface UpdateStorePayload {
+    name?: string;
+    type?: string;
+    address?: string;
+    phone?: string;
+    registration_number?: string;
+    logo?: string;
+}
+
+export async function updateStore(storeId: number, payload: UpdateStorePayload): Promise<StoreRow> {
+    const { data, error } = await supabase
+        .from("stores")
+        .update(payload)
+        .eq("id", storeId)
+        .select()
+        .single();
+
+    if (error || !data) throw new Error(error?.message ?? "Failed to update store");
+    return data as StoreRow;
+}
+
+export async function deleteStore(storeId: number): Promise<void> {
+    const { error } = await supabase
+        .from("stores")
+        .delete()
         .eq("id", storeId);
 
     if (error) throw new Error(error.message);

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Modal, Alert, ActivityIndicator, KeyboardAvoidingView, useColorScheme } from "react-native";
+import { Modal, Alert, ActivityIndicator, KeyboardAvoidingView, Platform, useColorScheme } from "react-native";
 import { View, Text, SafeAreaView, TouchableOpacity, TextInput, ScrollView } from "@/tw";
 import { Ionicons } from "@expo/vector-icons";
 import { supabase } from "@/supabase/supabase";
@@ -10,79 +10,54 @@ type Props = {
 };
 
 export default function ChangePasswordModal({ visible, onClose }: Props) {
-    // Local state for holding the input values for the password
+    const isDark = useColorScheme() === "dark";
+
     const [currentPassword, setCurrentPassword] = useState("");
     const [newPassword, setNewPassword] = useState("");
     const [repeatNewPassword, setRepeatNewPassword] = useState("");
-
-    // Loading state to disable inputs/buttons while fetching from Supabase
     const [loading, setLoading] = useState(false);
 
-    const isDark = useColorScheme() === 'dark';
-
-    // Reset the form fields to blank, typically called after a successful update or when the modal closes
     const resetForm = () => {
         setCurrentPassword("");
         setNewPassword("");
         setRepeatNewPassword("");
     };
 
-    // Helper function to handle closing the modal and clearing state
     const handleClose = () => {
         resetForm();
         onClose();
     };
 
-    // Triggered when the user presses "Confirm"
     const handleConfirm = async () => {
-        // Validation: Verify all fields are populated
         if (!currentPassword || !newPassword || !repeatNewPassword) {
             Alert.alert("Error", "Please fill in all fields");
             return;
         }
-
-        // Validation: Verify the two new passwords actually match
         if (newPassword !== repeatNewPassword) {
             Alert.alert("Error", "New passwords do not match");
             return;
         }
-
-        // Validation: Supabase has a default minimum of 6 characters
-        if (newPassword.length < 6) {
-            Alert.alert("Error", "Password should be at least 6 characters");
+        if (newPassword.length < 8) {
+            Alert.alert("Error", "Password should be at least 8 characters");
             return;
         }
 
         setLoading(true);
-
         try {
-            // 1. Get current authenticated user to fetch their email
-            // We need this email to attempt a sign-in with the current password
             const { data: { user }, error: userError } = await supabase.auth.getUser();
             if (userError || !user?.email) throw new Error("Could not find authenticated user");
 
-            // 2. Verify the current password by attempting to sign in
-            // This ensures the user typing in the old password is correct before allowing a change
             const { error: signInError } = await supabase.auth.signInWithPassword({
                 email: user.email,
                 password: currentPassword,
             });
+            if (signInError) throw new Error("Current password is incorrect");
 
-            if (signInError) {
-                // If sign-in fails, the user typed the wrong current password
-                throw new Error("Current password is incorrect");
-            }
-
-            // 3. If correct, update the user's password to the new one
-            // We are already authenticated so updateUser works against the currently logged-in user
-            const { error: updateError } = await supabase.auth.updateUser({
-                password: newPassword,
-            });
-
+            const { error: updateError } = await supabase.auth.updateUser({ password: newPassword });
             if (updateError) throw updateError;
 
             Alert.alert("Success", "Your password has been changed successfully.");
-            handleClose(); // Successfully done, wipe state and close modal
+            handleClose();
         } catch (error: any) {
             Alert.alert("Error", error.message || "Failed to update password");
         } finally {
@@ -91,90 +66,124 @@ export default function ChangePasswordModal({ visible, onClose }: Props) {
     };
 
     return (
-        <Modal animationType="slide" visible={visible} onRequestClose={handleClose}>
-            <SafeAreaView className="flex-1 p-6">
+        <Modal
+            animationType="slide"
+            transparent
+            statusBarTranslucent
+            visible={visible}
+            onRequestClose={handleClose}
+        >
+            <KeyboardAvoidingView
+                behavior={Platform.OS === "ios" ? "padding" : undefined}
+                style={{ flex: 1 }}
+            >
+                {/* Scrim */}
                 <TouchableOpacity
-                    className="flex-1"
-                    style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+                    className="absolute inset-0 bg-black/50"
                     activeOpacity={1}
                     onPress={handleClose}
                 />
 
-                <KeyboardAvoidingView
-                    behavior="height"
-                    className="bg-white dark:bg-neutral-800 rounded-t-3xl"
-                >
-                    <ScrollView className="p-6 pb-8">
-                        <View className="flex-row justify-between items-center mb-6">
-                            <Text className="text-xl font-poppins-bold text-neutral-900 dark:text-white">Change Password</Text>
-                            <TouchableOpacity onPress={handleClose} disabled={loading}>
-                                <Ionicons name="close-outline" size={25} color="#EF4444" />
-                            </TouchableOpacity>
-                        </View>
+                {/* Sheet */}
+                <View style={{ flex: 1, justifyContent: "flex-end" }}>
+                    <SafeAreaView className="bg-background dark:bg-darkBackground rounded-t-[32px]">
+                        <View className="px-6 pt-3 pb-2">
+                            {/* Handle */}
+                            <View className="w-10 h-1 rounded-full bg-neutral-200 dark:bg-darkBackgroundCard self-center mb-5" />
 
-                        <View className="mb-4">
-                            <Text className="text-sm font-poppins-medium text-neutral-700 dark:text-neutral-300 mb-2">Current Password</Text>
-                            <TextInput
-                                className="border-neutral-300 dark:border-neutral-600 border rounded-lg p-3 font-poppins-regular text-neutral-900 dark:text-white dark:bg-neutral-700"
-                                placeholder="Enter current password"
-                                secureTextEntry
-                                value={currentPassword}
-                                onChangeText={setCurrentPassword}
-                                editable={!loading}
-                                placeholderTextColor={isDark ? '#6b7280' : '#9CA3AF'}
-                            />
-                        </View>
+                            {/* Header */}
+                            <View className="flex-row justify-between items-center mb-6">
+                                <View>
+                                    <Text className="text-xl font-poppins-bold text-neutral-900 dark:text-darkTextPrimary">Change Password</Text>
+                                    <Text className="text-sm font-poppins-regular text-neutral-500 dark:text-darkTextSecondary">Enter your current and new password</Text>
+                                </View>
+                                <TouchableOpacity
+                                    onPress={handleClose}
+                                    disabled={loading}
+                                    className="h-10 w-10 bg-neutral-100 dark:bg-darkBackgroundMuted rounded-full items-center justify-center"
+                                >
+                                    <Ionicons name="close-outline" size={22} color={isDark ? "#9ca3af" : "#4b5563"} />
+                                </TouchableOpacity>
+                            </View>
 
-                        <View className="mb-4">
-                            <Text className="text-sm font-poppins-medium text-neutral-700 dark:text-neutral-300 mb-2">New Password</Text>
-                            <TextInput
-                                className="border-neutral-300 dark:border-neutral-600 border rounded-lg p-3 font-poppins-regular text-neutral-900 dark:text-white dark:bg-neutral-700"
-                                placeholder="Enter new password"
-                                secureTextEntry
-                                value={newPassword}
-                                onChangeText={setNewPassword}
-                                editable={!loading}
-                                placeholderTextColor={isDark ? '#6b7280' : '#9CA3AF'}
-                            />
-                        </View>
+                            <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+                                {/* Current Password */}
+                                <View className="mb-4">
+                                    <Text className="text-xs font-poppins-bold text-neutral-600 dark:text-darkTextSecondary mb-1.5 ml-1">Current Password</Text>
+                                    <View className="flex-row items-center bg-neutral-50 dark:bg-darkBackgroundMuted border border-neutral-200 dark:border-darkBorder rounded-xl px-4 py-1">
+                                        <Ionicons name="lock-closed-outline" size={18} color={isDark ? "#6b7280" : "#9CA3AF"} />
+                                        <TextInput
+                                            className="flex-1 p-3 font-poppins-medium text-neutral-900 dark:text-darkTextPrimary"
+                                            placeholder="Enter current password"
+                                            secureTextEntry
+                                            value={currentPassword}
+                                            onChangeText={setCurrentPassword}
+                                            editable={!loading}
+                                            placeholderTextColor={isDark ? "#4b5563" : "#9CA3AF"}
+                                        />
+                                    </View>
+                                </View>
 
-                        <View className="mb-6">
-                            <Text className="text-sm font-poppins-medium text-neutral-700 dark:text-neutral-300 mb-2">Repeat New Password</Text>
-                            <TextInput
-                                className="border-neutral-300 dark:border-neutral-600 border rounded-lg p-3 font-poppins-regular text-neutral-900 dark:text-white dark:bg-neutral-700"
-                                placeholder="Repeat new password"
-                                secureTextEntry
-                                value={repeatNewPassword}
-                                onChangeText={setRepeatNewPassword}
-                                editable={!loading}
-                                placeholderTextColor={isDark ? '#6b7280' : '#9CA3AF'}
-                            />
-                        </View>
+                                {/* New Password */}
+                                <View className="mb-4">
+                                    <Text className="text-xs font-poppins-bold text-neutral-600 dark:text-darkTextSecondary mb-1.5 ml-1">New Password</Text>
+                                    <View className="flex-row items-center bg-neutral-50 dark:bg-darkBackgroundMuted border border-neutral-200 dark:border-darkBorder rounded-xl px-4 py-1">
+                                        <Ionicons name="lock-open-outline" size={18} color={isDark ? "#6b7280" : "#9CA3AF"} />
+                                        <TextInput
+                                            className="flex-1 p-3 font-poppins-medium text-neutral-900 dark:text-darkTextPrimary"
+                                            placeholder="Enter new password"
+                                            secureTextEntry
+                                            value={newPassword}
+                                            onChangeText={setNewPassword}
+                                            editable={!loading}
+                                            placeholderTextColor={isDark ? "#4b5563" : "#9CA3AF"}
+                                        />
+                                    </View>
+                                </View>
 
-                        <View className="flex-row items-center gap-4">
-                            <TouchableOpacity
-                                onPress={handleClose}
-                                disabled={loading}
-                                className="flex-1 py-4 rounded-xl items-center bg-neutral-100 dark:bg-neutral-700 Will-change-pressable"
-                            >
-                                <Text className="text-neutral-900 dark:text-neutral-200 font-poppins-semibold">Cancel</Text>
-                            </TouchableOpacity>
+                                {/* Repeat New Password */}
+                                <View className="mb-6">
+                                    <Text className="text-xs font-poppins-bold text-neutral-600 dark:text-darkTextSecondary mb-1.5 ml-1">Repeat New Password</Text>
+                                    <View className="flex-row items-center bg-neutral-50 dark:bg-darkBackgroundMuted border border-neutral-200 dark:border-darkBorder rounded-xl px-4 py-1">
+                                        <Ionicons name="shield-checkmark-outline" size={18} color={isDark ? "#6b7280" : "#9CA3AF"} />
+                                        <TextInput
+                                            className="flex-1 p-3 font-poppins-medium text-neutral-900 dark:text-darkTextPrimary"
+                                            placeholder="Repeat new password"
+                                            secureTextEntry
+                                            value={repeatNewPassword}
+                                            onChangeText={setRepeatNewPassword}
+                                            editable={!loading}
+                                            placeholderTextColor={isDark ? "#4b5563" : "#9CA3AF"}
+                                        />
+                                    </View>
+                                </View>
 
-                            <TouchableOpacity
-                                onPress={handleConfirm}
-                                disabled={loading}
-                                className="flex-1 py-4 rounded-xl items-center bg-primary"
-                            >
-                                {loading ? (
-                                    <ActivityIndicator color="#fff" />
-                                ) : (
-                                    <Text className="text-white font-poppins-semibold">Confirm</Text>
-                                )}
-                            </TouchableOpacity>
+                                {/* Actions */}
+                                <View className="flex-row gap-3">
+                                    <TouchableOpacity
+                                        onPress={handleClose}
+                                        disabled={loading}
+                                        className="flex-1 py-4 rounded-2xl items-center bg-neutral-100 dark:bg-darkBackgroundMuted"
+                                    >
+                                        <Text className="text-neutral-900 dark:text-darkTextSoftest font-poppins-bold">Cancel</Text>
+                                    </TouchableOpacity>
+                                    <TouchableOpacity
+                                        onPress={handleConfirm}
+                                        disabled={loading}
+                                        className={`flex-1 py-4 rounded-2xl items-center bg-primary ${loading ? "opacity-60" : ""}`}
+                                    >
+                                        {loading ? (
+                                            <ActivityIndicator color="#fff" />
+                                        ) : (
+                                            <Text className="text-white font-poppins-bold">Confirm</Text>
+                                        )}
+                                    </TouchableOpacity>
+                                </View>
+                            </ScrollView>
                         </View>
-                    </ScrollView>
-                </KeyboardAvoidingView>
-            </SafeAreaView>
+                    </SafeAreaView>
+                </View>
+            </KeyboardAvoidingView>
         </Modal>
     );
 }

@@ -31,8 +31,8 @@ export default function FrontDeskScan() {
 
       if (result.success) {
         Alert.alert(
-          "Success!",
-          `Customer QR scanned successfully. Transaction ID: ${result.transactionId}`,
+          "✅ Success!",
+          `Points awarded to customer!\nTransaction ID: ${result.transactionId}`,
           [
             {
               text: "Scan Another",
@@ -115,9 +115,6 @@ export default function FrontDeskScan() {
                   <View style={[styles.corner, { top: 20, right: 20, borderTopWidth: 4, borderRightWidth: 4 }]} />
                   <View style={[styles.corner, { bottom: 20, left: 20, borderBottomWidth: 4, borderLeftWidth: 4 }]} />
                   <View style={[styles.corner, { bottom: 20, right: 20, borderBottomWidth: 4, borderRightWidth: 4 }]} />
-
-                  {/* Laser Line */}
-                  <View style={[styles.laserLine, { backgroundColor: "#10B981", shadowColor: "#10B981" }]} />
                   
                   {/* Scan Area Indicator */}
                   <View style={styles.scanArea}>
@@ -188,7 +185,7 @@ export default function FrontDeskScan() {
                   <Text style={styles.recentTime}>2 minutes ago</Text>
                 </View>
               </View>
-              <Text style={styles.pointsText}>+10 pts</Text>
+              <Text style={styles.pointsText}>+1,000,000 pts</Text>
             </View>
           </View>
         </View>

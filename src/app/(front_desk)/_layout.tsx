@@ -16,7 +16,7 @@ export default function FrontDeskLayout() {
                 } = await supabase.auth.getUser();
 
                 if (!user) {
-                    router.replace("/(onboarding)/index");
+                    // Auth listener owns the SIGNED_OUT redirect; returning here avoids a race
                     return;
                 }
 

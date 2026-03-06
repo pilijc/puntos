@@ -1,274 +1,185 @@
-# Puntos Mobile — Docker + Android Setup (Summary)
+# Puntos Mobile
+
+Expo/React Native app for the Puntos rewards platform. This guide covers running the app with **Docker** (Metro + Node) and building/installing on **Android** from your host.
+
+---
 
 ## Architecture
 
-Docker handles:
+| Environment | Responsibilities |
+|------------|------------------|
+| **Docker** | Node, Expo, Metro bundler, JS dependencies, Android SDK + Gradle cache |
+| **Host** | ADB, Android emulator or USB device, APK install / `npm run android` |
 
-- Node / Expo / Metro
-- JS dependencies
-- Android SDK + Gradle cache
+Docker cannot access USB devices on Windows, so the Android app is built and installed from the host while Metro runs inside the container.
 
-Host handles:
+---
 
-- ADB
-- Android emulator / USB device
-- APK install
+## Prerequisites
 
-Reason: Docker on Windows/macOS cannot access USB devices.
+- **Docker** — [Install Docker](https://docs.docker.com/get-docker/)
+- **Java 17** — [Oracle JDK 17](https://www.oracle.com/java/technologies/javase/jdk17-archive-downloads.html) (required for Android build)
+- **ADB** — Android Debug Bridge (for devices/emulators)
+  - Ubuntu: `sudo apt install adb`
+- **Ubuntu** — clone and run the project on Ubuntu (native or WSL2 on Windows). [Download Ubuntu](https://ubuntu.com/download)
 
 ---
 
 ## First-Time Setup
 
-Reset Docker (optional):
+### 1. Clone the repository (on Ubuntu)
 
-```
-docker rm -f $(docker ps -aq) 2>/dev/null || true
-docker volume rm puntos_node_modules gradle-cache 2>/dev/null || true
-docker rmi puntos 2>/dev/null || true
+Clone the project on your Ubuntu machine or WSL2:
+
+```bash
+git clone https://github.com/pilijc/puntos.git
+cd puntos
 ```
 
-Build Docker image:
+### 2. Build the Docker image
 
-```
+```bash
 docker build -t puntos .
 ```
 
-Start Docker Metro (keep running) on (terminal 1):
+### 3. Start Metro inside Docker (Terminal 1 — keep this running)
 
-```
+```bash
 docker run --rm -it \
-  -p 8081:8081 -p 19000:19000 -p 19001:19001 -p 19002:19002
-  -v ${PWD}:/app
-  -v puntos_node_modules:/app/node_modules
-  -v gradle-cache:/root/.gradle
+  -p 8081:8081 -p 19000:19000 -p 19001:19001 -p 19002:19002 \
+  -v ${PWD}:/app \
+  -v puntos_node_modules:/app/node_modules \
+  -v gradle-cache:/root/.gradle \
   puntos
 ```
 
-Install Android app from running container (terminal 2):
+### 4. Install dependencies ( Terminal + Docker Container Exec )
 
-```
+**Inside the container** (Docker Desktop → container → Exec, or from a new terminal):
+
+```bash
 docker ps
-docker exec -it <container-id> npm run android
+docker exec -it <container-id> npm i
 ```
 
-If Docker install cannot detect device, run on host instead:
-Install Android app (run on host):
+**On your host** (Terminal 2, in the project root):
 
+```bash
+npm i
 ```
+
+Once both finish, continue to the next step.
+
+### 5. Connect your Android device or emulator
+
+**Option A — USB:** Enable Developer options and USB debugging, then connect the device with a cable.
+
+**Option B — Wireless (Wi‑Fi debugging):** Ensure your laptop and Android device are on the **same Wi‑Fi network**, then:
+
+1. Connect the device once via USB and enable USB debugging.
+2. Run:
+   ```bash
+   adb tcpip 5555
+   adb connect <device-ip>:5555
+   ```
+   Replace `<device-ip>` with the device’s IP (Settings → About phone → Status, or Developer options → Wireless debugging).
+3. Unplug the USB cable. The device stays connected over Wi‑Fi.
+4. For later sessions on the same network, you can run only:
+   ```bash
+   adb connect <device-ip>:5555
+   ```
+
+**Option C – Emulator:** You can use the Android Emulator instead of a physical device.
+
+1. **Install Android Studio:**  
+   [Download Android Studio](https://developer.android.com/studio) and install it on your host machine (not inside Docker).
+
+2. **Set up an AVD (Android Virtual Device):**  
+   - Open Android Studio.
+   - Go to **Tools > Device Manager** (or **Configure > AVD Manager** on some versions).
+   - Click **Create Device...**.
+   - Choose a device definition (e.g., Pixel 5), and click **Next**.
+   - Select a system image (e.g., "R" or "Tiramisu" for Android 13), then **Download** if necessary, and click **Next**.
+   - Adjust AVD settings if needed, then click **Finish**.
+
+3. **Launch your emulator:**  
+   - In the Device Manager/AVD Manager, click the **Play** ▶️ button next to your AVD to start it.
+   - Wait for the emulator to fully boot (home screen appears).
+
+4. **Verify connection:**  
+   In a terminal on your host, run:
+   ```bash
+   adb devices
+   ```
+   You should see your emulator listed (e.g., `emulator-5554 device`).  
+   If not, make sure adb is installed and in your PATH, and that the emulator is running.
+
+### 6. Install and run the app (Terminal 2 — from host)
+
+From the **project root on your host** (not inside Docker):
+
+```bash
 npm run android
 ```
 
-If asked for another port → type `n`.
+If Metro asks to use a different port, choose **No** (`n`) so it keeps using the port exposed by Docker.
 
 ---
 
-## Start Dev Server (Docker)
+## Environment Variables
 
-```
-docker run --rm -it 
-  -p 8081:8081 -p 19000:19000 -p 19001:19001 -p 19002:19002 
-  -v ${PWD}:/app 
-  -v puntos_node_modules:/app/node_modules 
-  -v gradle-cache:/root/.gradle 
-  puntos
-```
+1. **Create your env file from the example:**
 
----
+   ```bash
+   cp .env.example .env
+   ```
 
-## Connect App to Docker Metro
-
-```
-adb reverse tcp:8081 tcp:8081
-```
+2. **Restart Metro / the app** after changing `.env` so Expo picks up the new values.
 
 ---
 
 ## Daily Development
 
-```
-docker run ...
-```
+1. **Start Metro (Docker):**
 
-Open app on device/emulator.
+   ```bash
+   docker run --rm -it \
+     -p 8081:8081 -p 19000:19000 -p 19001:19001 -p 19002:19002 \
+     -v ${PWD}:/app \
+     -v puntos_node_modules:/app/node_modules \
+     -v gradle-cache:/root/.gradle \
+     puntos
+   ```
+
+2. **Launch the App**: In another terminal, run `npm run android`. Before proceeding, ensure your device or emulator is connected by running `adb devices` and confirming it appears in the device list.
 
 ---
 
 ## Important
 
-- Do NOT press `a` in Docker Metro
-- Android install runs on host
-- Reinstall only if native changes
+- **Do not press `a`** in the Docker Metro terminal to run Android — that would try to run the build inside the container, which cannot see your device.
+- **Android build/install** is done on the **host** via `npm run android` and ADB.
+- **Reinstall the app** (e.g. `npm run android` or reinstall APK) only when you change native code or add new native dependencies; JS-only changes are served by Metro.
+- **Wireless debugging:** Device and laptop must be on the **same Wi‑Fi network** for Wi‑Fi ADB to work.
 
 ---
 
-## Workflow Summary
+## Sample Accounts
 
-First time:
+Use these test accounts to explore different roles in the app:
 
-```
-docker build -t puntos .
-npm run android
-docker run ...
-adb reverse tcp:8081 tcp:8081
-```
+- **Super Admin**
+  - Email: `superadmin@tsg.com`
+  - Password: `Password123$`
 
-Daily:
+- **Store Manager / Owner**
+  - Email: `storemanager@tsg.com`
+  - Password: `Password123$`
 
-```
-docker run ...
-```
+- **Front-desk**
+  - Email: `frontdesk@tsg.com`
+  - Password: `Password123$`
 
-
-<!-- # Puntos
-
-Expo Router + NativeWind app with a Docker-based local dev workflow.
-
-## Why We Changed the Setup
-
-We support teammates using:
-- Android emulator (no physical phone)
-- Android physical phone (USB/Wi-Fi)
-- iOS physical device (Wi-Fi)
-
-`expo run:android` inside Docker is unreliable in this environment because Expo/ADB tries to control emulator/device connections from inside the container. That caused issues like `emulator-5554` connection failures.
-
-So we split responsibilities:
-- Docker: Metro + Android APK build
-- Host machine: ADB install/reverse/launch
-
-## Current Standard
-
-- Do not run `expo run:android` inside Docker.
-- Use Docker commands below for Metro/APK.
-- Keep this override in `package.json` (already added):
-
-```json
-"overrides": {
-  "lightningcss": "1.30.1"
-}
-```
-
-## One-Time Setup
-
-### 1) Build Docker image
-
-```powershell
-docker build -t puntos .
-```
-
-### 2) Install dependencies into Linux volume
-
-Do this so container uses Linux-native modules (not host Windows `node_modules`).
-
-```powershell
-docker run --rm -it -v ${PWD}:/app -v puntos_node_modules:/app/node_modules puntos npm install
-docker run --rm -it -v ${PWD}:/app -v puntos_node_modules:/app/node_modules puntos npm ls lightningcss
-```
-
-Expected: `lightningcss@1.30.1`.
-
-## Team Workflows
-
-`package.json` has helper scripts:
-- `docker:metro:localhost`
-- `docker:metro:lan`
-- `docker:apk`
-
-Important: these scripts run **inside container** using `docker run ... puntos npm run ...`.
-
-### A) Android Emulator or Android USB Phone
-
-### Start Metro (localhost mode)
-
-```powershell
-docker run --rm -it `
-  -p 8081:8081 -p 19000:19000 -p 19001:19001 -p 19002:19002 `
-  -v ${PWD}:/app `
-  -v puntos_node_modules:/app/node_modules `
-  puntos npm run docker:metro:localhost
-```
-
-### Reverse port from device/emulator (host terminal)
-
-Emulator:
-
-```powershell
-adb -s emulator-5554 reverse tcp:8081 tcp:8081
-```
-
-USB physical device:
-
-```powershell
-adb devices
-adb -s <device_serial> reverse tcp:8081 tcp:8081
-```
-
-### Build APK (when native dependencies/config changed)
-
-```powershell
-docker run --rm -it `
-  -v ${PWD}:/app `
-  -v gradle-cache:/root/.gradle `
-  -v puntos_node_modules:/app/node_modules `
-  puntos npm run docker:apk
-```
-
-Install and launch:
-
-```powershell
-adb -s emulator-5554 install -r android/app/build/outputs/apk/debug/app-debug.apk
-adb -s emulator-5554 shell monkey -p com.project.puntos -c android.intent.category.LAUNCHER 1
-```
-
-For USB phone, replace `emulator-5554` with `<device_serial>`.
-
-### B) Android/iOS Phone on Wi-Fi
-
-### Start Metro (LAN mode)
-
-```powershell
-docker run --rm -it `
-  -p 8081:8081 -p 19000:19000 -p 19001:19001 -p 19002:19002 `
-  -v ${PWD}:/app `
-  -v puntos_node_modules:/app/node_modules `
-  puntos npm run docker:metro:lan
-```
-
-No `adb reverse` needed for Wi-Fi mode.
-
-## Optional Host-Only Flow (Physical Android)
-
-If someone prefers host-native workflow and has Android tooling set up:
-
-```powershell
-npx expo run:android
-```
-
-This is host-only. Do not run it inside Docker.
-
-## Troubleshooting
-
-### Volume is in use
-
-```powershell
-docker ps -a --filter volume=puntos_node_modules
-docker rm <container_id>
-```
-
-### `gradlew` line ending issue (`/bin/sh^M`)
-
-`android/gradlew` is normalized via `.gitattributes`:
-
-```gitattributes
-android/gradlew text eol=lf
-```
-
-### Wrong app installed on emulator
-
-If package mismatch happens, reinstall:
-
-```powershell
-adb -s emulator-5554 uninstall com.anonymous.puntos
-adb -s emulator-5554 install -r android/app/build/outputs/apk/debug/app-debug.apk
-``` -->
+- **User**
+  - Email: `user@mail.com`
+  - Password: `password`

@@ -14,6 +14,7 @@ import signUpService, { GoogleSignInCancelledError } from "../../services/auth-s
 import { signUpWithGoogleService } from "@/services/auth-service";
 import { NameStep, EmailStep, PasswordStep, TermsStep, StepHeader } from "../../components/stepper";
 import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function SignUp() {
   const [currentStep, setCurrentStep] = useState(1);
@@ -78,13 +79,13 @@ export default function SignUp() {
         setErrors(newErrors);
         return false;
       }
-      if (password.length < 8) {
-        newErrors.password = 'Password must be at least 8 characters';
+      if (password !== confirmPassword) {
+        newErrors.confirmPassword = 'Passwords do not match';
         setErrors(newErrors);
         return false;
       }
-      if (password !== confirmPassword) {
-        newErrors.confirmPassword = 'Passwords do not match';
+      if (password.length < 8) {
+        newErrors.password = 'Password must be at least 8 characters';
         setErrors(newErrors);
         return false;
       }

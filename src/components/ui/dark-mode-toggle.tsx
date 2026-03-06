@@ -42,7 +42,7 @@ export default function DarkModeToggle({
     const iconColor = onPrimary ? "#FFFFFF" : (isDark ? "#fcd34d" : "#f59e0b");
     const baseClass = onPrimary
         ? "h-10 w-10 bg-white/20 rounded-full items-center justify-center border border-white/30 active:bg-white/30"
-        : "h-10 w-10 bg-white dark:bg-neutral-800 rounded-full items-center justify-center border border-neutral-200 dark:border-neutral-700 active:bg-neutral-50 dark:active:bg-neutral-700";
+        : "h-10 w-10 bg-white dark:bg-darkBackgroundMuted rounded-full items-center justify-center border border-neutral-200 dark:border-darkBorder active:bg-neutral-50 dark:active:bg-darkBackgroundCard";
 
     return (
         <TouchableOpacity

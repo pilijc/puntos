@@ -61,11 +61,11 @@ export default function Login() {
     try {
       setLoadingGoogle(true);
       const data = await signInWithGoogleLoginService();
+      console.log("data", data);
       router.replace(data.homeRoute ?? "/(user)");
-      setLoadingGoogle(false);
     } catch (error: any) {
       const message = error?.message ?? "Something went wrong";
-      setErrors({ ...errors, password: message });
+      setErrors({ email: "", password: message });
     } finally {
       setLoadingGoogle(false);
     }
@@ -176,6 +176,11 @@ export default function Login() {
                     </Text>
                   ) : null}
                 </View>
+                {(errors.password || errors.email) ? (
+                    <Text className="mt-2 text-sm font-poppins text-red-500 text-center bg-red-50 rounded-xl p-4 w-full">
+                      {errors.password || errors.email}
+                    </Text>
+                ) : null}
               </View>
 
               <TouchableOpacity className="bg-primary py-4 rounded-xl items-center w-full max-w-md" onPress={handleLogin}>
