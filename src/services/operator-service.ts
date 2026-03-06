@@ -33,6 +33,7 @@ export async function processFrontDeskScan(
       success: true,
       message: "Customer QR scanned successfully",
       transactionId: transaction.id,
+      pointsEarned: transaction.points_earned,
     };
   } catch (error) {
     console.error("Failed to create transaction:", error);

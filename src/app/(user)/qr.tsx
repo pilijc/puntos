@@ -140,41 +140,41 @@ export default function Qr() {
         onRequestClose={() => setShowCongratsModal(false)}
       >
         <View className="flex-1 bg-black/50 justify-center items-center p-6">
-          <View className="bg-white dark:bg-darkBackground rounded-3xl p-8 w-full max-w-sm shadow-2xl">
+          <View className="bg-white rounded-3xl p-8 w-full max-w-sm shadow-2xl">
             {/* Celebration Icon */}
             <View className="items-center mb-6">
-              <View className="w-20 h-20 bg-gradient-to-r from-orange-400 to-orange-600 rounded-full items-center justify-center shadow-lg">
-                <MaterialIcons name="celebration" size={32} color="#FFFFFF" />
+              <View className="w-16 h-16 bg-orange-500 rounded-2xl items-center justify-center">
+                <MaterialIcons name="celebration" size={28} color="#FFFFFF" />
               </View>
             </View>
 
             {/* Title */}
-            <Text className="text-2xl font-bold text-center text-gray-800 dark:text-darkTextPrimary mb-2">
-              🎉 Congratulations!
+            <Text className="text-2xl font-bold text-center text-gray-900 mb-2">
+              Congratulations!
             </Text>
 
             {/* Points Message */}
-            <Text className="text-lg text-center text-gray-600 dark:text-darkTextSecondary mb-8">
-              You just earned
+            <Text className="text-base text-center text-gray-600 mb-6">
+              You earned points
             </Text>
 
             {/* Points Display */}
-            <View className="bg-gradient-to-r from-orange-100 to-orange-200 dark:from-orange-900/20 dark:to-orange-800/20 rounded-2xl p-6 mb-8">
-              <Text className="text-3xl font-bold text-center text-orange-600 dark:text-orange-400">
-                +{earnedPoints} Points
+            <View className="bg-orange-50 rounded-2xl p-6 mb-8 border border-orange-100">
+              <Text className="text-3xl font-bold text-center text-orange-600">
+                +{earnedPoints}
               </Text>
-              <Text className="text-sm text-center text-orange-500 dark:text-orange-300 mt-1">
-                Added to your balance
+              <Text className="text-sm text-center text-orange-500 mt-1">
+                Points Added
               </Text>
             </View>
 
             {/* Action Button */}
             <TouchableOpacity
               onPress={() => setShowCongratsModal(false)}
-              className="bg-gradient-to-r from-orange-500 to-orange-600 py-4 px-6 rounded-xl shadow-lg"
+              className="bg-orange-500 py-4 px-6 rounded-xl"
             >
               <Text className="text-white font-bold text-center text-lg">
-                Awesome! 🎯
+                Great!
               </Text>
             </TouchableOpacity>
 
@@ -183,7 +183,7 @@ export default function Qr() {
               onPress={() => setShowCongratsModal(false)}
               className="absolute top-4 right-4 w-8 h-8 items-center justify-center"
             >
-              <MaterialIcons name="close" size={20} color="#9CA3AF" />
+              <MaterialIcons name="close" size={20} color="#6B7280" />
             </TouchableOpacity>
           </View>
         </View>

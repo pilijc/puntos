@@ -1,6 +1,6 @@
 import { useRouter } from "expo-router";
 import React, { useState, useEffect } from "react";
-import { Alert } from "react-native";
+import { Alert, Modal } from "react-native";
 import { SafeAreaView, ScrollView, View, Text, TouchableOpacity, TextInput } from "@/tw";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { CameraView, useCameraPermissions } from "expo-camera";
@@ -16,6 +16,9 @@ export default function FrontDeskScan() {
   const [showAmountInput, setShowAmountInput] = useState(true);
   const [recentScans, setRecentScans] = useState<Array<{points: number; timestamp: Date; amount: number}>>([]);
   const [storeInfo, setStoreInfo] = useState<{name: string; id: number} | null>(null);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [successTransactionId, setSuccessTransactionId] = useState<string>("");
+  const [successPoints, setSuccessPoints] = useState(0);
 
   useEffect(() => {
     const fetchStoreInfo = async () => {
@@ -55,32 +58,12 @@ export default function FrontDeskScan() {
       if (result.success) {
         
         const amount = parseFloat(purchaseAmount);
-         
+        const pointsAwarded = result.pointsEarned || Math.ceil(amount * 0.1); // Use actual points or fallback
         
-        Alert.alert(
-          "✅ Success!",
-          `Points awarded to customer!\nTransaction ID: ${result.transactionId}`,
-          [
-            {
-              text: "Scan Another",
-              onPress: () => {
-                // Add this scan to recent scans before resetting
-                const pointsAwarded = Math.floor(amount * 0.1); // Assuming 10% for now, should be dynamic
-                setRecentScans(prev => [{
-                  points: pointsAwarded,
-                  timestamp: new Date(),
-                  amount: amount
-                }, ...prev.slice(0, 4)]); // Keep only last 5 scans
-                
-                setScanned(false);
-                setIsProcessing(false);
-                setShowCamera(false);
-                setShowAmountInput(true);
-                setPurchaseAmount("");
-              },
-            },
-          ]
-        );
+        // Show success modal instead of alert
+        setSuccessTransactionId(result.transactionId || "");
+        setSuccessPoints(pointsAwarded);
+        setShowSuccessModal(true);
       } else {
         Alert.alert("Error", result.message, [
           {
@@ -116,6 +99,24 @@ export default function FrontDeskScan() {
     if (minutes < 60) return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
     if (hours < 24) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
     return `${Math.floor(hours / 24)} day${Math.floor(hours / 24) > 1 ? 's' : ''} ago`;
+  };
+
+  const handleModalClose = () => {
+    // Add this scan to recent scans before resetting
+    const amount = parseFloat(purchaseAmount);
+    setRecentScans(prev => [{
+      points: successPoints,
+      timestamp: new Date(),
+      amount: amount
+    }, ...prev.slice(0, 4)]); // Keep only last 5 scans
+    
+    // Reset scan state
+    setScanned(false);
+    setIsProcessing(false);
+    setShowCamera(false);
+    setShowAmountInput(true);
+    setPurchaseAmount("");
+    setShowSuccessModal(false);
   };
 
   return (
@@ -297,6 +298,64 @@ export default function FrontDeskScan() {
           )}
         </View>
       </ScrollView>
+
+      {/* Success Modal */}
+      <Modal
+        visible={showSuccessModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowSuccessModal(false)}
+      >
+        <View className="flex-1 bg-black/50 justify-center items-center p-6">
+          <View className="bg-white rounded-3xl p-8 w-full max-w-sm shadow-2xl">
+            {/* Success Icon */}
+            <View className="items-center mb-6">
+              <View className="w-16 h-16 bg-green-500 rounded-2xl items-center justify-center">
+                <MaterialIcons name="check" size={28} color="#FFFFFF" />
+              </View>
+            </View>
+
+            {/* Title */}
+            <Text className="text-2xl font-bold text-center text-gray-900 mb-2">
+              Success!
+            </Text>
+
+            {/* Transaction ID */}
+            <Text className="text-base text-center text-gray-600 mb-6">
+              Transaction ID: {successTransactionId}
+            </Text>
+
+            {/* Points Display */}
+            <View className="bg-orange-50 rounded-2xl p-6 mb-8 border border-orange-100">
+              <Text className="text-3xl font-bold text-center text-orange-600">
+                +{successPoints}
+              </Text>
+              <Text className="text-sm text-center text-orange-500 mt-1">
+                Points Awarded
+              </Text>
+            </View>
+
+            {/* Action Button */}
+            <TouchableOpacity
+              onPress={handleModalClose}
+              className="bg-orange-500 py-4 px-6 rounded-xl"
+            >
+              <Text className="text-white font-bold text-center text-lg">
+                Scan Another
+              </Text>
+            </TouchableOpacity>
+
+            {/* Close hint */}
+            <TouchableOpacity
+              onPress={() => setShowSuccessModal(false)}
+              className="absolute top-4 right-4 w-8 h-8 items-center justify-center"
+            >
+              <MaterialIcons name="close" size={20} color="#6B7280" />
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
     </View>
   );
 }
