@@ -53,11 +53,9 @@ export default function FrontDeskScan() {
       const result = await processFrontDeskScan(data, amount);
 
       if (result.success) {
-        // Calculate the points that were awarded (we need to get this from the transaction)
-        // For now, we'll calculate it based on the percentage logic we implemented
+        
         const amount = parseFloat(purchaseAmount);
-        // Note: We should ideally get the actual points from the transaction response
-        // For now, we'll estimate based on the logic
+         
         
         Alert.alert(
           "✅ Success!",
@@ -170,10 +168,20 @@ export default function FrontDeskScan() {
                 <TextInput
                   className="flex-1 text-lg font-bold text-gray-700"
                   value={purchaseAmount}
-                  onChangeText={setPurchaseAmount}
+                  onChangeText={(text) => {
+                    // Only allow numbers and decimal point
+                    const numericText = text.replace(/[^0-9.]/g, '');
+                    // Ensure only one decimal point
+                    const parts = numericText.split('.');
+                    const filteredText = parts.length > 2 
+                      ? parts[0] + '.' + parts.slice(1).join('') 
+                      : numericText;
+                    setPurchaseAmount(filteredText);
+                  }}
                   placeholder="0.00"
                   keyboardType="numeric"
                   autoFocus
+                  maxLength={10} // Prevent extremely long inputs
                 />
               </View>
               <TouchableOpacity onPress={handleAmountSubmit} className="bg-orange-500 py-4 px-5 rounded-xl shadow-lg shadow-black/10 elevation-10 w-full">

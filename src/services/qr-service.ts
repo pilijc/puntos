@@ -89,8 +89,8 @@ export async function createQRTransaction(
 
   // Get points configuration for this store
   const { data: pointsData, error: pointsError } = await supabase
-    .from('points')
-    .select('stored_amount, percentage')
+    .from('store_qr_rewards')
+    .select('percentage')
     .eq('store_id', storeId)
     .single();
 
@@ -98,13 +98,9 @@ export async function createQRTransaction(
     throw new Error('Failed to get points configuration for store');
   }
 
-  // Calculate points to award based on purchase amount and percentage
-  const pointsToAward = Math.floor(purchaseAmount * (pointsData.percentage / 100));
-
-  // Check if store has enough points
-  if (pointsData.stored_amount < pointsToAward) {
-    throw new Error(`Insufficient points balance. Store has ${pointsData.stored_amount} points available, but ${pointsToAward} points needed.`);
-  }
+  // Calculate points for purchase amount and percentage
+  const pointsToAward = Math.ceil(purchaseAmount * (pointsData.percentage / 100));
+   
 
   // Create purchase record first
   const { data: purchaseData, error: purchaseError } = await supabase
@@ -138,17 +134,15 @@ export async function createQRTransaction(
 
   // Decrease the stored_amount in points table
   const { error: updateError } = await supabase
-    .from('points')
+    .from('store_qr_rewards')
     .update({
-      stored_amount: pointsData.stored_amount - pointsToAward,
       updated_at: new Date().toISOString()
     })
     .eq('store_id', storeId);
 
   if (updateError) {
-    console.error('Failed to update points balance:', updateError);
-    // Transaction was created but points balance update failed
-    // In a production system, you'd want to handle this with a rollback or compensation
+    console.error('Failed to update points record:', updateError);
+    // Continue with transaction even if update fails
   }
 
   // Create the QR transaction
@@ -179,11 +173,11 @@ export function listenToQRTransaction(userId: string, onScanned: (transaction: Q
       event: 'INSERT',  
       schema: 'public',
       table: 'qr_transactions',
-      // filter: `user_id=eq.${userId}`  // Temporarily removed for testing
+      // filter: `user_id=eq.${userId}`   
     }, (payload) => {
       console.log("Realtime triggered:", payload);
       const newRow = payload.new as QRTransaction;
-      // Only process if it's for this user
+       
       if (newRow.user_id === userId) {
         onScanned(newRow);
       }
