@@ -168,32 +168,15 @@ export async function getStores() {
     }
 }
 
-export interface UpdateStorePayload {
-    name?: string;
-    type?: string;
-    address?: string;
-    phone?: string;
-    registration_number?: string;
-    logo?: string;
-}
-
-export async function updateStore(storeId: number, payload: UpdateStorePayload): Promise<StoreRow> {
-    const { data, error } = await supabase
-        .from("stores")
-        .update(payload)
-        .eq("id", storeId)
-        .select()
-        .single();
-
-    if (error || !data) throw new Error(error?.message ?? "Failed to update store");
-    return data as StoreRow;
-}
-
-export async function deleteStore(storeId: number): Promise<void> {
-    const { error } = await supabase
-        .from("stores")
-        .delete()
-        .eq("id", storeId);
-
-    if (error) throw new Error(error.message);
+export async function getStoreById(storeId: number) {
+    try {
+			const { data, error } = await supabase
+				.from("stores")
+				.select("*")
+				.eq("id", storeId);
+			if (error) throw new Error(error.message);
+			return data?.[0] ?? null;
+    } catch (error) {
+        throw error;
+    }
 }

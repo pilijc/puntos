@@ -22,7 +22,7 @@ import { createStore } from "@/services/store-service";
 const TOTAL_STEPS = 4;
 
 const STORE_TYPES = [
-    "Café", "Restaurant", "Retail", "Salon & Beauty",
+    "Coffee", "Restaurant", "Bar", "Salon & Beauty",
     "Bakery", "Pharmacy", "Grocery", "Clothing", "Electronics", "Other",
 ];
 

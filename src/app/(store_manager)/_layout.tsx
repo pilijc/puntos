@@ -44,6 +44,7 @@ export default function StoreManagerLayout() {
 
     return (
         <Tabs
+            initialRouteName="stores"
             screenOptions={{
                 headerShown: false,
                 tabBarStyle: {
@@ -76,17 +77,6 @@ export default function StoreManagerLayout() {
                 }}
             />
             <Tabs.Screen
-                name="features"
-                options={{
-                    title: "Features",
-                    tabBarIcon: () => null,
-                    tabBarLabel: () => null,
-                    tabBarButton: (props: any) => (
-                        <CustomTabBarButton onPress={props.onPress} />
-                    ),
-                }}
-            />
-            <Tabs.Screen
                 name="analytics"
                 options={{
                     title: "Analytics",
@@ -112,66 +102,19 @@ export default function StoreManagerLayout() {
                 name="create-store"
                 options={{ href: null }}
             />
+            <Tabs.Screen
+                name="view-store/[id]"
+                options={{ href: null }}
+            />
+            <Tabs.Screen
+                name="configure-streaks"
+                options={{ href: null }}
+            />
+             <Tabs.Screen
+                name="configure-stamp"
+                options={{ href: null }}
+            />
         </Tabs>
-    );
-}
-
-function CustomTabBarButton({ onPress }: { onPress?: () => void }) {
-    const pathname = usePathname();
-    const isCompact = pathname.includes("create-store");
-
-    // 0 = fully compact, 1 = fully full FAB
-    const progress = useSharedValue(isCompact ? 0 : 1);
-
-    useEffect(() => {
-        progress.value = withTiming(isCompact ? 0 : 1, { duration: 220 });
-    }, [isCompact]);
-
-    // Full FAB: fades + scales out when going compact
-    const fullStyle = useAnimatedStyle(() => ({
-        opacity: interpolate(progress.value, [0, 1], [0, 1]),
-        transform: [{ scale: interpolate(progress.value, [0, 1], [0.55, 1]) }],
-    }));
-
-    // Compact icon: fades + scales in when going compact
-    const compactStyle = useAnimatedStyle(() => ({
-        opacity: interpolate(progress.value, [0, 1], [1, 0]),
-        transform: [{ scale: interpolate(progress.value, [0, 1], [1, 0.55]) }],
-    }));
-
-    const pressScale = useSharedValue(1);
-    const pressStyle = useAnimatedStyle(() => ({
-        transform: [{ scale: pressScale.value }],
-    }));
-
-    return (
-        <Pressable
-            onPress={onPress}
-            onPressIn={() => { pressScale.value = withTiming(0.88, { duration: 100 }); }}
-            onPressOut={() => { pressScale.value = withTiming(1, { duration: 150 }); }}
-            style={isCompact ? styles.fabCompactContainer : styles.fabContainer}
-        >
-            <Animated.View style={pressStyle}>
-                {/* Full FAB — fades out when compact */}
-                <Animated.View style={[{ alignItems: "center" }, fullStyle]} pointerEvents={isCompact ? "none" : "auto"}>
-                    <View style={styles.fab}>
-                        <MaterialIcons name="auto-awesome" size={26} color="#FFFFFF" />
-                    </View>
-                    <Text style={styles.fabLabel}>Features</Text>
-                </Animated.View>
-
-                {/* Compact icon — fades in when compact */}
-                <Animated.View
-                    style={[{ alignItems: "center", position: "absolute", top: 0 }, compactStyle]}
-                    pointerEvents={isCompact ? "auto" : "none"}
-                >
-                    <View style={styles.fabCompact}>
-                        <MaterialIcons name="auto-awesome" size={16} color="#FFFFFF" />
-                    </View>
-                    <Text style={styles.fabCompactLabel}>Features</Text>
-                </Animated.View>
-            </Animated.View>
-        </Pressable>
     );
 }
 
