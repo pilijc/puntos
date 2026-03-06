@@ -2,13 +2,18 @@ import React, { useState, useEffect } from "react";
 import { Modal, ActivityIndicator, KeyboardAvoidingView, useColorScheme } from "react-native";
 import { View, Text, SafeAreaView, TouchableOpacity, TextInput, ScrollView } from "@/tw";
 import { Ionicons } from "@expo/vector-icons";
+import * as ImagePicker from 'expo-image-picker';
+import { Image } from "expo-image";
+import { supabase } from "@/supabase/supabase";
 
 type Props = {
   visible: boolean;
   onClose: () => void;
   initialUsername?: string;
   initialEmail?: string;
-  onSave: (newName: string, newEmail: string) => Promise<void>;
+  initialAvatar?: string | null;
+  userId?: string;
+  onSave: (newName: string, newEmail: string, newAvatarUrl?: string | null) => Promise<void>;
 };
 
 export default function EditProfileModal({
@@ -16,31 +21,93 @@ export default function EditProfileModal({
   onClose,
   initialUsername = "",
   initialEmail = "",
+  initialAvatar = null,
+  userId = "",
   onSave,
 }: Props) {
   const isDark = useColorScheme() === "dark";
 
   const [username, setUsername] = useState(initialUsername);
   const [email, setEmail] = useState(initialEmail);
+  const initialAvatarUrl = initialAvatar || (initialAvatar as any)?.avatarUrl || (initialAvatar as any)?.logo;
+  const [avatarUri, setAvatarUri] = useState<string | null>(initialAvatarUrl || null);
   const [isSaving, setIsSaving] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
 
   useEffect(() => {
     if (visible) {
       setUsername(initialUsername);
       setEmail(initialEmail);
+      const url = initialAvatar || (initialAvatar as any)?.avatarUrl || (initialAvatar as any)?.logo;
+      setAvatarUri(url || null);
     }
-  }, [visible, initialUsername, initialEmail]);
+  }, [visible, initialUsername, initialEmail, initialAvatar]);
+
+  const pickImage = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.5,
+    });
+
+    if (!result.canceled) {
+      setAvatarUri(result.assets[0].uri);
+    }
+  };
+
+  const uploadImage = async (uri: string): Promise<string | null> => {
+    if (!userId) return null;
+    if (uri.startsWith('http')) return uri;
+
+    const fileExt = uri.split('.').pop()?.toLowerCase() || 'jpeg';
+    const fileName = `${userId}_${Math.random()}.${fileExt}`;
+    const filePath = `profile-pictures/${fileName}`;
+    const fileType = `image/${fileExt === 'jpg' ? 'jpeg' : fileExt}`;
+
+    const formData = new FormData();
+    formData.append('file', {
+      uri,
+      name: fileName,
+      type: fileType,
+    } as any);
+
+    const { error: uploadError } = await supabase.storage
+      .from('puntos-public')
+      .upload(filePath, formData, {
+        contentType: fileType,
+        upsert: true
+      });
+
+    if (uploadError) throw uploadError;
+
+    const { data } = supabase.storage
+      .from('puntos-public')
+      .getPublicUrl(filePath);
+
+    return data.publicUrl;
+  };
 
   const handleSave = async () => {
-    if (isSaving) return;
+    if (isSaving || isUploading) return;
     setIsSaving(true);
     try {
-      await onSave(username, email);
+      const effectiveInitialAvatar = initialAvatar || (initialAvatar as any)?.avatarUrl || (initialAvatar as any)?.logo;
+      let finalAvatarUrl = effectiveInitialAvatar;
+
+      if (avatarUri && avatarUri !== effectiveInitialAvatar) {
+        setIsUploading(true);
+        finalAvatarUrl = await uploadImage(avatarUri);
+        setIsUploading(false);
+      }
+
+      await onSave(username, email, finalAvatarUrl);
       onClose();
     } catch (error) {
       console.error("Failed to save profile:", error);
     } finally {
       setIsSaving(false);
+      setIsUploading(false);
     }
   };
 
@@ -85,6 +152,30 @@ export default function EditProfileModal({
               </View>
 
               <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+                {/* Avatar Picker */}
+                <View className="items-center mb-6">
+                  <View className="relative">
+                    <View className="h-24 w-24 rounded-full bg-primary/10 items-center justify-center overflow-hidden border-2 border-primary/20">
+                      {avatarUri ? (
+                        <Image
+                          source={{ uri: avatarUri }}
+                          className="h-full w-full"
+                          cachePolicy="none"
+                        />
+                      ) : (
+                        <Ionicons name="person-outline" size={40} color="#FF6600" />
+                      )}
+                    </View>
+                    <TouchableOpacity
+                      onPress={pickImage}
+                      className="absolute bottom-0 right-0 bg-primary h-8 w-8 rounded-full items-center justify-center border-2 border-white dark:border-darkBackground"
+                    >
+                      <Ionicons name="camera" size={16} color="white" />
+                    </TouchableOpacity>
+                  </View>
+                  <Text className="text-xs font-poppins-medium text-primary mt-2">Change profile photo</Text>
+                </View>
+
                 {/* Username */}
                 <View className="mb-4">
                   <Text className="text-xs font-poppins-bold text-neutral-600 dark:text-darkTextSecondary mb-1.5 ml-1">Username</Text>

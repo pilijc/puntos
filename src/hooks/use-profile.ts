@@ -5,7 +5,8 @@ import {
     getUserProfileService,
     getUserSettingsService,
     updateUserProfileService,
-    updateUserSettingsService
+    updateUserSettingsService,
+    deleteOldAvatar
 } from "@/services/settings-service";
 import { UserPreferences } from "@/type/settings";
 
@@ -41,7 +42,10 @@ export const useProfile = () => {
                 getUserSettingsService(currentUser.id)
             ]);
 
-            if (profileData) setProfile(profileData);
+            if (profileData) {
+                console.log("Profile Data Fetched:", profileData);
+                setProfile(profileData);
+            }
 
             if (settingsData) {
                 setPreferences({
@@ -58,14 +62,19 @@ export const useProfile = () => {
     };
 
     /**
-     * Updates the user's display name.
-     * @param newName The new name to set.
+     * Updates the user's profile information.
+     * @param updates Object containing new profile data (e.g., name, avatar_url).
      */
-    const updateProfile = async (newName: string) => {
+    const updateProfile = async (updates: { name?: string; avatar_url?: string | null }) => {
         if (!user?.id) return { success: false };
         try {
-            await updateUserProfileService(user.id, { name: newName });
-            setProfile((prev: any) => ({ ...prev, name: newName }));
+            // If updating avatar, delete the old one first
+            if (updates.avatar_url && profile?.avatar_url && updates.avatar_url !== profile.avatar_url) {
+                await deleteOldAvatar(profile.avatar_url);
+            }
+
+            await updateUserProfileService(user.id, updates);
+            setProfile((prev: any) => ({ ...prev, ...updates }));
             return { success: true };
         } catch (err: any) {
             Alert.alert("Error", err.message || "Failed to update profile");

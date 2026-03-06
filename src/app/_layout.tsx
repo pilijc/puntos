@@ -1,3 +1,4 @@
+import "react-native-url-polyfill/auto";
 import "../global.css";
 import { Slot, useRouter } from "expo-router";
 import { useFonts } from "expo-font";
@@ -27,7 +28,7 @@ export async function initOneSignal() {
   OneSignal.Notifications.requestPermission(true);
 
   const subId = await OneSignal.User.pushSubscription.getIdAsync();
-  return subId; 
+  return subId;
 }
 
 export default function Layout() {
