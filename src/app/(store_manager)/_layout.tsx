@@ -114,6 +114,10 @@ export default function StoreManagerLayout() {
                 name="configure-stamp"
                 options={{ href: null }}
             />
+             <Tabs.Screen
+                name="rewards"
+                options={{ href: null }}
+            />
         </Tabs>
     );
 }
