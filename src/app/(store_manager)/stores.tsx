@@ -1,18 +1,11 @@
 import React, { useState, useCallback } from "react";
 import { Switch, RefreshControl } from "react-native";
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  ScrollView,
-  SafeAreaView,
-} from "@/tw";
 import { Image } from "expo-image";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { router, useFocusEffect } from "expo-router";
 import { supabase } from "@/supabase/supabase";
 import { getMyStores, StoreRow } from "@/services/store-service";
-import { ScrollView, View, Text, TouchableOpacity } from "@/tw";
+import { ScrollView, View, Text, TouchableOpacity, SafeAreaView } from "@/tw";
 import StoreDetailModal from "@/components/stores/StoreDetailModal";
 
 type TabKey = "all" | "active" | "pending" | "inactive";
