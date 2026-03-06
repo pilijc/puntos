@@ -314,57 +314,60 @@ export default function Rewards() {
                 )}
               />
             ) : (
-              <Carousel
-                width={screenWidth}
-                height={256} // h-64 = 256px
-                data={storesWithLocation.filter(s => s.is_active)}
-                scrollAnimationDuration={1500}
-                loop={true}
-                autoPlay={true}
-                autoPlayInterval={4000}
-                renderItem={({ item: store }) => (
-                  <View className="w-full h-full relative">
-                    <Image
-                      source={
-                        store.banner
-                          ? { uri: store.banner }
-                          : store.logo
-                            ? { uri: store.logo }
-                            : require("../../../assets/images/rewards/coffee-shop.png")
-                      }
-                      className="absolute inset-0 w-full h-full"
-                      contentFit="cover"
-                      contentPosition="center"
-                    />
-                    <View className="absolute inset-0 bg-neutral-900/40" />
+              <>
+                <View className="absolute top-15 left-6 z-20">
+                  <View className="bg-primary/90 self-start px-2 py-0.5 rounded-sm shadow-sm mb-2">
+                    <Text className="text-[10px] text-white font-poppins-semibold tracking-wider">DISCOVER PARTNERS</Text>
+                  </View>
+                </View>
+                <Carousel
+                  width={screenWidth}
+                  height={256} // h-64 = 256px
+                  data={storesWithLocation.filter(s => s.is_active)}
+                  scrollAnimationDuration={1500}
+                  loop={true}
+                  autoPlay={true}
+                  autoPlayInterval={4000}
+                  renderItem={({ item: store }) => (
+                    <View className="w-full h-full relative">
+                      <Image
+                        source={
+                          store.banner
+                            ? { uri: store.banner }
+                            : store.logo
+                              ? { uri: store.logo }
+                              : require("../../../assets/images/rewards/coffee-shop.png")
+                        }
+                        className="absolute inset-0 w-full h-full"
+                        contentFit="cover"
+                        contentPosition="center"
+                      />
+                      <View className="absolute inset-0 bg-neutral-900/40" />
+                      {/* Store Tab View [when stores are nearby] */}
+                      <View className="absolute top-22 left-6 right-6 z-10">
+                        <Text className="text-2xl font-poppins-bold text-white shadow-sm" numberOfLines={1}>
+                          {store.name}
+                        </Text>
 
-                    <View className="absolute top-15 left-6 right-6 z-10">
-                      <View className="bg-primary/90 self-start px-2 py-0.5 rounded-sm shadow-sm mb-2">
-                        <Text className="text-[10px] text-white font-poppins-semibold tracking-wider">DISCOVER PARTNERS</Text>
-                      </View>
-
-                      <Text className="text-2xl font-poppins-bold text-white shadow-sm" numberOfLines={1}>
-                        {store.name}
-                      </Text>
-
-                      <View className="flex-col gap-y-1 mt-1">
-                        <View
-                          className="bg-white/20 px-2 py-0.5 self-start"
-                          style={{ borderRadius: 8 }}
-                        >
-                          <Text className="text-[10px] text-white font-poppins-medium uppercase">{store.type || "Store"}</Text>
-                        </View>
-                        <View className="flex-row items-center gap-x-1">
-                          <MaterialIcons name="storefront" size={14} color="#FFFFFF" />
-                          <Text className="text-white/90 font-poppins text-xs shadow-sm flex-1" numberOfLines={1}>
-                            {store.address}
-                          </Text>
+                        <View className="flex-col gap-y-1 mt-1">
+                          <View
+                            className="bg-white/20 px-2 py-0.5 self-start"
+                            style={{ borderRadius: 8 }}
+                          >
+                            <Text className="text-[10px] text-white font-poppins-medium uppercase">{store.type || "Store"}</Text>
+                          </View>
+                          <View className="flex-row items-center gap-x-1">
+                            <MaterialIcons name="storefront" size={14} color="#FFFFFF" />
+                            <Text className="text-white/90 font-poppins text-xs shadow-sm flex-1" numberOfLines={1}>
+                              {store.address}
+                            </Text>
+                          </View>
                         </View>
                       </View>
                     </View>
-                  </View>
-                )}
-              />
+                  )}
+                />
+              </>
             )}
 
             <View className="absolute top-4 left-6 right-6 flex-row items-center justify-between z-10">
@@ -483,9 +486,10 @@ export default function Rewards() {
                       </View>
                     </View>
                     <View className="flex-row items-center gap-x-2">
+                      {/* STAMP button repurposed to open QR for purchase-based transactions */}
                       <TouchableOpacity
                         className={`px-3 py-1 rounded-full ${hasStampedToday(store.id) ? "bg-white/50" : "bg-white"}`}
-                        onPress={() => handleStamp(store.id)}
+                        onPress={() => router.push("/qr")}
                         disabled={isStamping || hasStampedToday(store.id)}
                       >
                         {isStamping ? (
@@ -496,13 +500,7 @@ export default function Rewards() {
                           </Text>
                         )}
                       </TouchableOpacity>
-                      {!hasStampedToday(store.id) && (
-                        <TouchableOpacity>
-                          <Text className="text-white/80 text-[10px] font-poppins-semibold">
-                            SKIP
-                          </Text>
-                        </TouchableOpacity>
-                      )}
+                      {/* SKIP button removed as stamps are now transaction-based */}
                     </View>
                   </View>
                 ))}
