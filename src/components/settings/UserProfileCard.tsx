@@ -26,7 +26,8 @@ export const UserProfileCard = ({ profile, user, onPress }: UserProfileCardProps
                     {avatarUrl ? (
                         <Image
                             source={{ uri: avatarUrl }}
-                            className="h-full w-full"
+                            style={{ width: '100%', height: '100%' }}
+                            contentFit="cover"
                             cachePolicy="none"
                         />
                     ) : (

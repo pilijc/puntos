@@ -159,7 +159,8 @@ export default function EditProfileModal({
                       {avatarUri ? (
                         <Image
                           source={{ uri: avatarUri }}
-                          className="h-full w-full"
+                          style={{ width: '100%', height: '100%' }}
+                          contentFit="cover"
                           cachePolicy="none"
                         />
                       ) : (
