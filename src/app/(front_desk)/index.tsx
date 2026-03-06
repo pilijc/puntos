@@ -1,10 +1,10 @@
 import { useRouter } from "expo-router";
-import React, { useState } from "react";
-import { Alert, StyleSheet, View, Text, TouchableOpacity } from "react-native";
-import { SafeAreaView, ScrollView } from "@/tw";
+import React, { useState, useEffect } from "react";
+import { Alert } from "react-native";
+import { SafeAreaView, ScrollView, View, Text, TouchableOpacity, TextInput } from "@/tw";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { CameraView, useCameraPermissions } from "expo-camera";
-import { processFrontDeskScan } from "@/services/operator-service";
+import { processFrontDeskScan, getCurrentUserStore } from "@/services/operator-service";
 
 export default function FrontDeskScan() {
   const router = useRouter();
@@ -12,12 +12,34 @@ export default function FrontDeskScan() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [permission, requestPermission] = useCameraPermissions();
   const [showCamera, setShowCamera] = useState(false);
+  const [purchaseAmount, setPurchaseAmount] = useState("");
+  const [showAmountInput, setShowAmountInput] = useState(true);
+  const [recentScans, setRecentScans] = useState<Array<{points: number; timestamp: Date; amount: number}>>([]);
+  const [storeInfo, setStoreInfo] = useState<{name: string; id: number} | null>(null);
+
+  useEffect(() => {
+    const fetchStoreInfo = async () => {
+      const storeInfo = await getCurrentUserStore();
+      setStoreInfo(storeInfo);
+    };
+
+    fetchStoreInfo();
+  }, []);
 
   const handleStartScanning = async () => {
     if (!permission?.granted) {
       await requestPermission();
     }
     setShowCamera(true);
+  };
+
+  const handleAmountSubmit = () => {
+    const amount = parseFloat(purchaseAmount);
+    if (isNaN(amount) || amount <= 0) {
+      Alert.alert("Invalid Amount", "Please enter a valid purchase amount greater than 0.");
+      return;
+    }
+    setShowAmountInput(false);
   };
 
   const handleBarCodeScanned = async ({ data }: { data: string }) => {
@@ -27,9 +49,16 @@ export default function FrontDeskScan() {
     setIsProcessing(true);
 
     try {
-      const result = await processFrontDeskScan(data, 10);
+      const amount = parseFloat(purchaseAmount);
+      const result = await processFrontDeskScan(data, amount);
 
       if (result.success) {
+        // Calculate the points that were awarded (we need to get this from the transaction)
+        // For now, we'll calculate it based on the percentage logic we implemented
+        const amount = parseFloat(purchaseAmount);
+        // Note: We should ideally get the actual points from the transaction response
+        // For now, we'll estimate based on the logic
+        
         Alert.alert(
           "✅ Success!",
           `Points awarded to customer!\nTransaction ID: ${result.transactionId}`,
@@ -37,8 +66,19 @@ export default function FrontDeskScan() {
             {
               text: "Scan Another",
               onPress: () => {
+                // Add this scan to recent scans before resetting
+                const pointsAwarded = Math.floor(amount * 0.1); // Assuming 10% for now, should be dynamic
+                setRecentScans(prev => [{
+                  points: pointsAwarded,
+                  timestamp: new Date(),
+                  amount: amount
+                }, ...prev.slice(0, 4)]); // Keep only last 5 scans
+                
                 setScanned(false);
                 setIsProcessing(false);
+                setShowCamera(false);
+                setShowAmountInput(true);
+                setPurchaseAmount("");
               },
             },
           ]
@@ -68,129 +108,188 @@ export default function FrontDeskScan() {
     }
   };
 
+  const formatTimeAgo = (timestamp: Date) => {
+    const now = new Date();
+    const diff = now.getTime() - timestamp.getTime();
+    const minutes = Math.floor(diff / (1000 * 60));
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    
+    if (minutes < 1) return 'Just now';
+    if (minutes < 60) return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
+    if (hours < 24) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+    return `${Math.floor(hours / 24)} day${Math.floor(hours / 24) > 1 ? 's' : ''} ago`;
+  };
+
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
+    <View className="flex-1 bg-gray-50">
+      <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
         {/* Header */}
-        <View style={styles.header}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+        <View className="bg-orange-500 pt-20 px-5 pb-10 rounded-b-3xl">
+          <View className="flex-row items-center justify-between">
             <TouchableOpacity
               onPress={() => router.back()}
-              style={styles.headerButton}
+              className="w-10 h-10 rounded-full items-center justify-center bg-white/20"
             >
               <MaterialIcons name="arrow-back" size={24} color="#FFFFFF" />
             </TouchableOpacity>
-            <Text style={styles.headerTitle}>
+            <Text className="text-lg font-bold text-white">
               Scan QR Code
             </Text>
-            <TouchableOpacity style={styles.headerButton}>
+            <TouchableOpacity className="w-10 h-10 rounded-full items-center justify-center bg-white/20">
               <MaterialIcons name="help-outline" size={24} color="#FFFFFF" />
             </TouchableOpacity>
           </View>
+          {/* Store Info */}
+          {storeInfo && (
+            <View className="bg-white/10 p-2 rounded-lg mb-2">
+              <Text className="text-sm text-white/80 text-center">
+                {storeInfo.name}
+              </Text>
+            </View>
+          )}
           {/* Status indicator */}
-          <View style={styles.statusIndicator}>
-            <View style={[styles.statusDot, { backgroundColor: showCamera ? '#10B981' : '#F59E0B' }]} />
-            <Text style={styles.statusText}>
+          <View className="bg-white/20 p-3 rounded-xl mt-5">
+            <View className={`w-2 h-2 rounded-full ${showCamera ? 'bg-green-400' : 'bg-yellow-400'} mr-3`} />
+            <Text className="text-sm text-white">
               {showCamera ? 'Camera Active' : 'Ready to Scan'}
             </Text>
           </View>
         </View>
 
-        {/* Scanner Card */}
-        <View style={styles.scannerCard}>
-          {showCamera ? (
-            <View style={styles.scannerFrame}>
-              {permission?.granted ? (
-                <CameraView
-                  style={{ flex: 1 }}
-                  facing="back"
-                  onBarcodeScanned={scanned ? undefined : handleBarCodeScanned}
-                  barcodeScannerSettings={{ barcodeTypes: ["qr"] }}
-                >
-                  {/* Scan Overlay */}
-                  <View style={styles.scanOverlay} />
-                  
-                  {/* Corner Markers */}
-                  <View style={[styles.corner, { top: 20, left: 20, borderTopWidth: 4, borderLeftWidth: 4 }]} />
-                  <View style={[styles.corner, { top: 20, right: 20, borderTopWidth: 4, borderRightWidth: 4 }]} />
-                  <View style={[styles.corner, { bottom: 20, left: 20, borderBottomWidth: 4, borderLeftWidth: 4 }]} />
-                  <View style={[styles.corner, { bottom: 20, right: 20, borderBottomWidth: 4, borderRightWidth: 4 }]} />
-                  
-                  {/* Scan Area Indicator */}
-                  <View style={styles.scanArea}>
-                    <View style={styles.scanAreaBorder} />
-                  </View>
-                </CameraView>
-              ) : (
-                <View style={styles.permissionContainer}>
-                  <View style={styles.cameraIcon}>
-                    <MaterialIcons name="camera-alt" size={32} color="#FFFFFF" />
-                  </View>
-                  <Text style={styles.permissionTitle}>
-                    Camera Access Required
-                  </Text>
-                  <Text style={styles.permissionText}>
-                    Allow camera access to scan QR codes and award points to customers
-                  </Text>
-                  <TouchableOpacity
-                    onPress={() => requestPermission()}
-                    style={styles.enableButton}
+        {/* Purchase Amount Input or Scanner Card */}
+        {showAmountInput ? (
+          <View className="bg-white rounded-3xl p-5 -mt-10 shadow-lg shadow-black/10 elevation-10">
+            <View className="items-center py-5">
+              <MaterialIcons name="attach-money" size={48} color="#FF6F00" />
+              <Text className="text-xl font-bold text-gray-700 mt-4 mb-3">Enter Purchase Amount</Text>
+              <Text className="text-sm text-gray-500 text-center mb-8">
+                Enter the customer's purchase amount to calculate points
+              </Text>
+              <View className="flex-row items-center border-2 border-gray-300 rounded-xl px-5 py-4 mb-8 w-full">
+                <Text className="text-lg font-bold text-gray-700 mr-3">₱</Text>
+                <TextInput
+                  className="flex-1 text-lg font-bold text-gray-700"
+                  value={purchaseAmount}
+                  onChangeText={setPurchaseAmount}
+                  placeholder="0.00"
+                  keyboardType="numeric"
+                  autoFocus
+                />
+              </View>
+              <TouchableOpacity onPress={handleAmountSubmit} className="bg-orange-500 py-4 px-5 rounded-xl shadow-lg shadow-black/10 elevation-10 w-full">
+                <Text className="text-white font-bold text-base text-center">Continue to Scan</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        ) : (
+          <View className="bg-white rounded-3xl p-5 -mt-10 shadow-lg shadow-black/10 elevation-10">
+            {showCamera ? (
+              <View className="bg-black rounded-3xl h-75">
+                {permission?.granted ? (
+                  <CameraView
+                    style={{ flex: 1 }}
+                    facing="back"
+                    onBarcodeScanned={scanned ? undefined : handleBarCodeScanned}
+                    barcodeScannerSettings={{ barcodeTypes: ["qr"] }}
                   >
-                    <Text style={styles.enableButtonText}>Enable Camera</Text>
-                  </TouchableOpacity>
-                </View>
-              )}
-            </View>
-          ) : (
-            <View style={styles.scannerPlaceholder}>
-              <MaterialIcons name="qr-code-scanner" size={64} color="#9CA3AF" />
-              <Text style={styles.placeholderText}>
-                Tap "Start Scanning" to begin
+                    {/* Scan Overlay */}
+                    <View className="absolute inset-0 bg-black/50" />
+                    
+                    {/* Corner Markers */}
+                    <View className="absolute top-5 left-5 w-6 h-6 border-t-4 border-l-4 border-orange-500 border-solid rounded-sm" />
+                    <View className="absolute top-5 right-5 w-6 h-6 border-t-4 border-r-4 border-orange-500 border-solid rounded-sm" />
+                    <View className="absolute bottom-5 left-5 w-6 h-6 border-b-4 border-l-4 border-orange-500 border-solid rounded-sm" />
+                    <View className="absolute bottom-5 right-5 w-6 h-6 border-b-4 border-r-4 border-orange-500 border-solid rounded-sm" />
+                    
+                    {/* Scan Area Indicator */}
+                    <View className="absolute top-1/2 left-1/2 -mt-24 -ml-24 w-48 h-48 items-center justify-center">
+                      <View className="w-48 h-48 border-2 border-white/30 rounded-lg" />
+                    </View>
+                  </CameraView>
+                ) : (
+                  <View className="flex-1 items-center justify-center bg-gray-900 p-5">
+                    <View className="w-16 h-16 bg-orange-500 rounded-2xl items-center justify-center mb-5">
+                      <MaterialIcons name="camera-alt" size={32} color="#FFFFFF" />
+                    </View>
+                    <Text className="text-base font-bold text-white mb-3">
+                      Camera Access Required
+                    </Text>
+                    <Text className="text-sm text-gray-400 text-center mb-5">
+                      Allow camera access to scan QR codes and award points to customers
+                    </Text>
+                    <TouchableOpacity
+                      onPress={() => requestPermission()}
+                      className="bg-orange-500 py-4 px-5 rounded-xl shadow-lg shadow-black/10 elevation-10"
+                    >
+                      <Text className="text-white font-bold text-center">Enable Camera</Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
+              </View>
+            ) : (
+              <View className="flex-1 h-75 items-center justify-center bg-gray-100 rounded-3xl">
+                <MaterialIcons name="qr-code-scanner" size={64} color="#9CA3AF" />
+                <Text className="text-base text-gray-500 mt-4 text-center">
+                  Tap "Start Scanning" to begin
+                </Text>
+              </View>
+            )}
+
+            {/* Instructions */}
+            <View className="mt-5">
+              <View className="flex-row items-center justify-center">
+                <View className="w-2 h-2 bg-green-500 rounded-full mr-3" />
+                <Text className="text-sm text-gray-700 font-medium">
+                  Position QR code within the frame
+                </Text>
+              </View>
+              <Text className="text-xs text-gray-500 text-center mt-3">
+                The scanner will automatically detect and process the QR code
               </Text>
             </View>
-          )}
 
-          {/* Instructions */}
-          <View style={styles.instructions}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
-              <View style={styles.statusDot} />
-              <Text style={styles.instructionText}>
-                Position QR code within the frame
-              </Text>
+            {/* Action Button */}
+            <View className="mt-5">
+              <TouchableOpacity onPress={handleStartScanning} className="bg-orange-500 py-4 px-5 rounded-xl shadow-lg shadow-black/10 elevation-10">
+                <Text className="text-white font-medium text-center">Start Scanning</Text>
+              </TouchableOpacity>
             </View>
-            <Text style={styles.subInstructionText}>
-              The scanner will automatically detect and process the QR code
-            </Text>
           </View>
-
-          {/* Action Button */}
-          <View style={styles.buttonContainer}>
-            <TouchableOpacity onPress={handleStartScanning} style={styles.scanButton}>
-              <Text style={styles.scanButtonText}>Start Scanning</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
+        )}
 
         {/* Recent Activity */}
-        <View style={styles.recentActivity}>
-          <Text style={styles.recentTitle}>Recent Scans</Text>
-          <View style={styles.recentCard}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                <View style={styles.checkIcon}>
-                  <MaterialIcons name="check" size={16} color="#10B981" />
-                </View>
-                <View>
-                  <Text style={styles.recentName}>Customer Awarded</Text>
-                  <Text style={styles.recentTime}>2 minutes ago</Text>
+        <View className="p-5">
+          <Text className="text-base font-bold text-gray-700 mb-4">Recent Scans</Text>
+          {recentScans.length > 0 ? (
+            recentScans.map((scan, index) => (
+              <View key={index} className="bg-white p-4 rounded-xl shadow-md shadow-black/5 elevation-5 mb-3">
+                <View className="flex-row items-center justify-between">
+                  <View className="flex-row items-center">
+                    <View className="w-8 h-8 bg-green-100 rounded-2xl items-center justify-center mr-4">
+                      <MaterialIcons name="check" size={16} color="#10B981" />
+                    </View>
+                    <View>
+                      <Text className="text-sm font-medium text-gray-700">₱{scan.amount.toFixed(2)} Purchase</Text>
+                      <Text className="text-xs text-gray-500">{formatTimeAgo(scan.timestamp)}</Text>
+                    </View>
+                  </View>
+                  <Text className="text-sm font-bold text-orange-500">+{scan.points} pts</Text>
                 </View>
               </View>
-              <Text style={styles.pointsText}>+1,000,000 pts</Text>
+            ))
+          ) : (
+            <View className="bg-white p-4 rounded-xl shadow-md shadow-black/5 elevation-5">
+              <View className="flex-row items-center justify-center">
+                <MaterialIcons name="history" size={20} color="#9CA3AF" />
+                <Text className="text-sm font-medium text-gray-500 ml-3">
+                  No recent scans
+                </Text>
+              </View>
             </View>
-          </View>
+          )}
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -201,263 +300,3 @@ export default function FrontDeskScan() {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#F7F7F7",
-  },
-  header: {
-    backgroundColor: "#FF6F00",
-    paddingTop: 60,
-    paddingHorizontal: 20,
-    paddingBottom: 30,
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
-  },
-  headerButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "rgba(255, 255, 255, 0.2)",
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#FFFFFF",
-  },
-  statusIndicator: {
-    backgroundColor: "rgba(255, 255, 255, 0.2)",
-    padding: 10,
-    borderRadius: 10,
-    marginTop: 20,
-  },
-  statusText: {
-    fontSize: 14,
-    color: "#FFFFFF",
-  },
-  scannerCard: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 20,
-    padding: 20,
-    marginTop: -40,
-    shadowColor: "#000000",
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-    elevation: 10,
-  },
-  scannerFrame: {
-    backgroundColor: "#000000",
-    borderRadius: 20,
-    height: 300,
-  },
-  scanOverlay: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-  },
-  corner: {
-    position: "absolute",
-    width: 25,
-    height: 25,
-    borderColor: "#FF6F00",
-    borderWidth: 4,
-    borderRadius: 5,
-  },
-  laserLine: {
-    position: "absolute",
-    width: "85%",
-    height: 4,
-    top: "50%",
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.9,
-    shadowRadius: 12,
-    elevation: 12,
-  },
-  scanArea: {
-    position: "absolute",
-    top: "50%",
-    left: "50%",
-    marginTop: -96,
-    marginLeft: -96,
-    width: 192,
-    height: 192,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  scanAreaBorder: {
-    width: 192,
-    height: 192,
-    borderWidth: 2,
-    borderColor: "rgba(255, 255, 255, 0.3)",
-    borderRadius: 8,
-  },
-  permissionContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#1A1A1A",
-    padding: 20,
-  },
-  cameraIcon: {
-    width: 64,
-    height: 64,
-    backgroundColor: "#FF6F00",
-    borderRadius: 32,
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 20,
-  },
-  permissionTitle: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#FFFFFF",
-    marginBottom: 10,
-  },
-  permissionText: {
-    fontSize: 14,
-    color: "#9CA3AF",
-    textAlign: "center",
-    marginBottom: 20,
-  },
-  enableButton: {
-    backgroundColor: "#FF6F00",
-    padding: 15,
-    borderRadius: 10,
-    shadowColor: "#000000",
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-    elevation: 10,
-  },
-  enableButtonText: {
-    color: "#FFFFFF",
-    fontWeight: "bold",
-    textAlign: "center",
-  },
-  instructions: {
-    marginTop: 20,
-  },
-  statusDot: {
-    width: 8,
-    height: 8,
-    backgroundColor: "#10B981",
-    borderRadius: 4,
-    marginRight: 10,
-  },
-  instructionText: {
-    fontSize: 14,
-    color: "#374151",
-    fontWeight: "500",
-  },
-  subInstructionText: {
-    fontSize: 12,
-    color: "#9CA3AF",
-    textAlign: "center",
-    marginTop: 10,
-  },
-  buttonContainer: {
-    marginTop: 20,
-  },
-  scannerPlaceholder: {
-    flex: 1,
-    height: 300,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#F9FAFB",
-    borderRadius: 20,
-  },
-  placeholderText: {
-    fontSize: 16,
-    color: "#9CA3AF",
-    marginTop: 15,
-    textAlign: "center",
-  },
-  buttonRow: {
-    marginTop: 20,
-    flexDirection: "row",
-  },
-  manualButton: {
-    flex: 1,
-    backgroundColor: "#F3F4F6",
-    padding: 15,
-    borderRadius: 10,
-    marginRight: 10,
-  },
-  manualButtonText: {
-    color: "#374151",
-    fontWeight: "500",
-    textAlign: "center",
-  },
-  scanButton: {
-    flex: 1,
-    backgroundColor: "#FF6F00",
-    padding: 15,
-    borderRadius: 10,
-    shadowColor: "#000000",
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-    elevation: 10,
-  },
-  scanButtonText: {
-    color: "#FFFFFF",
-    fontWeight: "500",
-    textAlign: "center",
-  },
-  recentActivity: {
-    padding: 20,
-  },
-  recentTitle: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#374151",
-    marginBottom: 15,
-  },
-  recentCard: {
-    backgroundColor: "#FFFFFF",
-    padding: 15,
-    borderRadius: 10,
-    shadowColor: "#000000",
-    shadowOpacity: 0.05,
-    shadowRadius: 5,
-    elevation: 5,
-  },
-  checkIcon: {
-    width: 32,
-    height: 32,
-    backgroundColor: "#D1FAE5",
-    borderRadius: 16,
-    justifyContent: "center",
-    alignItems: "center",
-    marginRight: 15,
-  },
-  recentName: {
-    fontSize: 14,
-    fontWeight: "500",
-    color: "#374151",
-  },
-  recentTime: {
-    fontSize: 12,
-    color: "#9CA3AF",
-  },
-  pointsText: {
-    fontSize: 14,
-    fontWeight: "bold",
-    color: "#FF6F00",
-  },
-});
