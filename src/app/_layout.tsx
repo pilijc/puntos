@@ -1,4 +1,5 @@
 import "react-native-url-polyfill/auto";
+import "react-native-gesture-handler";
 import "../global.css";
 import { Slot, useRouter } from "expo-router";
 import { useFonts } from "expo-font";
