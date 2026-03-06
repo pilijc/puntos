@@ -181,7 +181,7 @@ export default function FrontDeskScan() {
                   placeholder="0.00"
                   keyboardType="numeric"
                   autoFocus
-                  maxLength={10} // Prevent extremely long inputs
+                  maxLength={7} // Prevent extremely long inputs
                 />
               </View>
               <TouchableOpacity onPress={handleAmountSubmit} className="bg-orange-500 py-4 px-5 rounded-xl shadow-lg shadow-black/10 elevation-10 w-full">
