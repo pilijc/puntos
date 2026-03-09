@@ -1,4 +1,4 @@
-export type RewardType = "discount" | "free_item" | "bogo";
+export type RewardType = "streak" | "stamp";
 
 export interface Reward {
   id?: string | null;
@@ -6,6 +6,7 @@ export interface Reward {
   title: string;
   description: string;
   points_cost: number;
+  type: RewardType;
   image_url: string;
 }
 
@@ -16,6 +17,8 @@ export interface RewardState {
   setDescription:(value: string) => void;
   points_cost: number;
   setPointsCost:(value: number) => void;
+  type: RewardType;
+  setType:(value: RewardType) => void;
   image_url: string;
   setImageUrl:    (value: string) => void;
   reset: () => void;

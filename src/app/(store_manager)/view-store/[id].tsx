@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import { ActivityIndicator, Alert, Switch, useColorScheme } from "react-native";
+import React, { useCallback, useEffect, useState } from "react";
+import { ActivityIndicator, Alert, RefreshControl, Switch, useColorScheme } from "react-native";
 import { View, Text, TouchableOpacity, ScrollView, Image } from "@/tw";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
@@ -8,6 +8,8 @@ import { getStoreById } from "@/services/store-service";
 import { getStoreFeaturesById, updateStoreFeatures } from "@/services/store-manager/feature-service";
 import { getRewardsByStoreId } from "@/services/store-manager/reward-service";
 import { Reward } from "@/type/store-manager/reward";
+import { getActiveStampProgram } from "@/services/store-manager/stamp-service";
+import { Stamp } from "@/type/store-manager/stamp";
 
 const FEATURES = [
   {
@@ -24,17 +26,17 @@ const FEATURES = [
     title: "Stamps",
     description: "Digital punch cards for purchases.",
     icon: "loyalty" as const,
-    iconColor: "#3B82F6",
-    iconBg: "rgba(59,130,246,0.10)",
-    badge: "Buy 9 get 1 free • Hot Drinks",
+    iconColor: "#F97316",
+    iconBg: "rgba(249,115,22,0.10)",
+    badge: null,
   },
   {
     id: "purchased",
     title: "QR Purchase Rewards",
     description: "Scan at checkout to earn.",
     icon: "qr-code-2" as const,
-    iconColor: "#A855F7",
-    iconBg: "rgba(168,85,247,0.10)",
+    iconColor: "#F97316",
+    iconBg: "rgba(249,115,22,0.10)",
     badge: null,
   },
 ];
@@ -52,15 +54,15 @@ export default function ViewStore() {
   const [activeTab, setActiveTab] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [rewards, setRewards] = useState<Reward[]>([]);
+  const [activeStamp, setActiveStamp] = useState<Stamp | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
 
-  // What's currently saved in the DB
   const [savedFeatures, setSavedFeatures] = useState({
     streak_enabled: false,
     stamp_enabled: false,
     reward_enabled: false,
   });
 
-  // Local (possibly unsaved) state
   const [streakEnabled, setStreakEnabled] = useState(false);
   const [stampEnabled, setStampEnabled] = useState(false);
   const [rewardEnabled, setRewardEnabled] = useState(false);
@@ -75,40 +77,64 @@ export default function ViewStore() {
     purchased: { enabled: rewardEnabled, toggle: toggleReward },
   };
 
-  // True only when local state differs from what's saved in DB
   const hasChanges =
     streakEnabled !== savedFeatures.streak_enabled ||
     stampEnabled  !== savedFeatures.stamp_enabled  ||
     rewardEnabled !== savedFeatures.reward_enabled;
 
-  const navigateToConfig = (featureId: string) => {
-    if (featureId === "streaks") {
-      router.push({ pathname: "/(store_manager)/configure-streaks", params: { storeId } });
-    } else if (featureId === "stamps") {
-      router.push({ pathname: "/(store_manager)/configure-stamp", params: { storeId } });
+    const navigateToView = (featureId: string) => {
+      if (featureId === "streaks") {
+        router.push({ pathname: "/(store_manager)/configure-streaks", params: { storeId } });
+      } else if (featureId === "stamps") {
+        router.push({ pathname: "/(store_manager)/view-stamp", params: { storeId } });
+      }
+    };
+    
+    const navigateToConfigure = (featureId: string) => {
+      if (featureId === "streaks") {
+        router.push({ pathname: "/(store_manager)/configure-streaks", params: { storeId } });
+      } else if (featureId === "stamps") {
+        router.push({ pathname: "/(store_manager)/configure-stamp", params: { storeId } });
+      }
+    };
+
+  const fetchDynamicData = useCallback(async () => {
+    const [rewardsData, stampData] = await Promise.all([
+      getRewardsByStoreId(String(storeId)),
+      getActiveStampProgram(String(storeId)),
+    ]);
+    setRewards(rewardsData);
+    setActiveStamp(stampData);
+  }, [storeId]);
+
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await fetchDynamicData();
+    } finally {
+      setRefreshing(false);
     }
-  };
+  }, [fetchDynamicData]);
 
   useEffect(() => {
     (async () => {
-      const [storeData, featureData, rewardsData] = await Promise.all([
+      const [storeData, featureData] = await Promise.all([
         getStoreById(storeId),
         getStoreFeaturesById(String(storeId)),
-        getRewardsByStoreId(String(storeId)),
       ]);
       setStore(storeData);
-      setRewards(rewardsData);
 
       const saved = {
         streak_enabled: featureData?.streak_enabled ?? false,
         stamp_enabled:  featureData?.stamp_enabled  ?? false,
         reward_enabled: featureData?.reward_enabled ?? false,
       };
-      // Sync both the baseline and local state
       setSavedFeatures(saved);
       setStreakEnabled(saved.streak_enabled);
       setStampEnabled(saved.stamp_enabled);
       setRewardEnabled(saved.reward_enabled);
+
+      await fetchDynamicData();
     })();
   }, [storeId]);
 
@@ -161,6 +187,14 @@ export default function ViewStore() {
         className="flex-1 gap-y-4"
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 32 }}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            colors={["#FF6600"]}
+            tintColor="#FF6600"
+          />
+        }
       >
 
         <View className="items-center gap-y-1">
@@ -232,7 +266,11 @@ export default function ViewStore() {
                   className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl overflow-hidden mb-3"
                 >
                   <View className="p-4 flex-row items-start justify-between">
-                    <View className="flex-row gap-x-3 flex-1">
+                    <TouchableOpacity
+                      className="flex-row gap-x-3 flex-1"
+                      activeOpacity={0.7}
+                      onPress={() => navigateToView(feature.id)}
+                    >
                       <View
                         className="w-12 h-12 rounded-xl items-center justify-center"
                         style={{ backgroundColor: feature.iconBg }}
@@ -247,7 +285,7 @@ export default function ViewStore() {
                           {feature.description}
                         </Text>
                       </View>
-                    </View>
+                    </TouchableOpacity>
                     <Switch
                       value={enabled}
                       onValueChange={toggle}
@@ -255,37 +293,40 @@ export default function ViewStore() {
                       thumbColor="#FFFFFF"
                     />
                   </View>
-                  {enabled && feature.badge && (
-                    <View className="px-4 py-3 border-t border-slate-100 dark:border-slate-800 flex-row items-center justify-between bg-slate-50 dark:bg-slate-800/30">
-                      <View
-                        className="flex-row items-center gap-x-1.5 px-2.5 py-1 rounded-lg"
-                        style={{
-                          backgroundColor: isDark ? "textPrimary" : "#197FE61A"
-                        }}
-                      >
-                        <MaterialIcons
-                          name="info-outline"
-                          size={13}
-                          color={isDark ? "textPrimary" : "#197FE6"}
-                        />
-                        <Text
-                          className="text-xs font-poppins-semibold"
-                          style={{ color: isDark ? "textPrimary" : "#197FE6" }}
+                  {enabled && (feature.badge || feature.id === "stamps") && (() => {
+                    const badgeText = feature.id === "stamps"
+                      ? activeStamp
+                        ? `${activeStamp.total_stamps} stamps • ${rewards.find(r => r.id === activeStamp.reward_id)?.title ?? "Reward"}`
+                        : "No active program"
+                      : feature.badge;
+                    return (
+                      <View className="px-4 py-3 border-t border-slate-100 dark:border-slate-800 flex-row items-center justify-between bg-slate-50 dark:bg-slate-900">
+                        <View
+                          className="flex-row items-center gap-x-1.5 px-2.5 py-1 rounded-lg"
                         >
-                          {feature.badge}
-                        </Text>
+                          <MaterialIcons
+                            name="info-outline"
+                            size={13}
+                            color="#334155"
+                          />
+                          <Text
+                            className="text-xs font-poppins-semibold text-slate-700 dark:text-slate-200"
+                          >
+                            {badgeText}
+                          </Text>
+                        </View>
+                        <TouchableOpacity
+                          className="flex-row items-center gap-x-1"
+                          activeOpacity={0.7}
+                          onPress={() => navigateToConfigure(feature.id)}
+                        >
+                          <Text className="text-sm font-poppins-semibold text-primary">
+                            Configure
+                          </Text>
+                        </TouchableOpacity>
                       </View>
-                      <TouchableOpacity
-                        className="flex-row items-center gap-x-1"
-                        activeOpacity={0.7}
-                        onPress={() => navigateToConfig(feature.id)}
-                      >
-                        <Text className="text-sm font-poppins-semibold text-primary">
-                          Configure
-                        </Text>
-                      </TouchableOpacity>
-                    </View>
-                  )}
+                    );
+                  })()}
                 </View>
               );
             })}
@@ -349,9 +390,16 @@ export default function ViewStore() {
                       >
                         {reward.title}
                       </Text>
-                      <Text className="text-sm font-poppins-bold text-primary ml-2 whitespace-nowrap">
-                        {reward.points_cost} pts
-                      </Text>
+                      {reward.type === "stamp" ? (
+                        <View className="ml-2 flex-row items-center gap-x-1 px-2 py-0.5 rounded-lg bg-primary/10">
+                          <MaterialIcons name="loyalty" size={11} color="#FF6600" />
+                          <Text className="text-xs font-poppins-semibold text-primary">Stamp</Text>
+                        </View>
+                      ) : (
+                        <Text className="text-sm font-poppins-bold text-primary ml-2 whitespace-nowrap">
+                          {reward.points_cost} pts
+                        </Text>
+                      )}
                     </View>
                     <Text className="text-xs font-poppins text-slate-500 dark:text-slate-400" numberOfLines={2}>
                       {reward.description}
