@@ -5,12 +5,11 @@ import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useRouter } from "expo-router";
 import { supabase } from "@/supabase/supabase";
 
-// Import your new components
+// Import your sub-components
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { UserRow } from "@/components/users/UserRow";
 import { StoreCard } from "@/components/stores/StoreCard";
-import { StatCard } from "@/components/ui/StatCard"; // Create this in ui/
-import { NotificationModal } from "@/components/ui/NotificationModal"; // Create this in ui/
+import { StatCard } from "@/components/ui/StatCard";
 
 // ────────────────── Configuration ──────────────────
 const BUCKET_URL = "https://[YOUR_PROJECT_ID].supabase.co/storage/v1/object/public/puntos-public/profile-pictures";
@@ -27,24 +26,15 @@ export default function SuperAdminDashboard() {
   const router = useRouter();
 
   // ────────────────── State ──────────────────
-  const [showNotifications, setShowNotifications] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [users, setUsers] = useState([]);
   const [stores, setStores] = useState([]);
-  const [notifications, setNotifications] = useState([
-    { id: "n1", title: "New Registration", message: "Alex Morgan registered", time: "2m ago", type: "registration", icon: "person-add", unread: true },
-    { id: "n2", title: "Action Required", message: "Brew & Bean Co. is waiting", time: "1h ago", type: "action", icon: "warning", unread: true },
-    { id: "n3", title: "System Alert", message: "Security patches applied", time: "5h ago", type: "alert", icon: "info", unread: false },
-  ]);
 
-  const unreadCount = useMemo(() => notifications.filter(n => n.unread).length, [notifications]);
-  
   const activeStoresCount = useMemo(() => 
     stores.filter(s => s.status?.toString().toUpperCase().trim() === "ACTIVE").length, 
   [stores]);
 
-  // ────────────────── Data Fetching ──────────────────
   const fetchDashboardData = useCallback(async () => {
     try {
       const [{ data: userData, error: userError }, { data: storeData, error: storeError }] = await Promise.all([
@@ -73,29 +63,25 @@ export default function SuperAdminDashboard() {
     }
   }, []);
 
-useEffect(() => {
-  let isMounted = true;
+  useEffect(() => {
+    let isMounted = true;
 
-  const loadData = async () => {
-    if (isMounted) {
-      await fetchDashboardData();
-    }
-  };
+    const loadInitialData = async () => {
+      if (isMounted) {
+        await fetchDashboardData();
+      }
+    };
 
-  loadData();
+    loadInitialData();
 
-  return () => {
-    isMounted = false;
-  };
-}, [fetchDashboardData]);
+    return () => {
+      isMounted = false;
+    };
+  }, [fetchDashboardData]);
 
   const onRefresh = () => {
     setRefreshing(true);
     fetchDashboardData();
-  };
-
-  const markAsRead = (id: string) => {
-    setNotifications(prev => prev.map(n => n.id === id ? { ...n, unread: false } : n));
   };
 
   if (loading) {
@@ -111,26 +97,32 @@ useEffect(() => {
       <ScrollView
         className="flex-1"
         contentContainerStyle={{ paddingBottom: 40 }}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#FF6600" />}
+        refreshControl={
+          <RefreshControl 
+            refreshing={refreshing} 
+            onRefresh={onRefresh} 
+            tintColor="#FF6600" 
+          />
+        }
       >
         {/* Header */}
         <View className="px-6 pt-4 pb-4">
           <View className="flex-row items-center justify-between">
             <View>
-              <Text className="text-[9px] font-poppins text-primary uppercase tracking-widest mb-0.5">Welcome back!</Text>
-              <Text className="text-3xl font-poppins-bold text-textPrimary leading-tight">Dashboard</Text>
+              <Text className="text-[9px] font-poppins text-primary uppercase tracking-widest mb-0.5">
+                Welcome back!
+              </Text>
+              <Text className="text-3xl font-poppins-bold text-textPrimary leading-tight">
+                Dashboard
+              </Text>
             </View>
 
+            {/* Replaced Notifications with Settings Icon */}
             <TouchableOpacity
-              style={[SOFT_CARD_SHADOW, styles.notificationBtn]}
-              onPress={() => setShowNotifications(true)}
+              style={[SOFT_CARD_SHADOW, styles.headerBtn]}
+              onPress={() => console.log("Open Settings")}
             >
-              <MaterialIcons name="notifications-none" size={18} color="#334155" />
-              {unreadCount > 0 && (
-                <View className="absolute top-1.5 right-1.5 min-w-[14px] h-[14px] rounded-full bg-primary items-center justify-center">
-                  <Text className="text-white text-[8px] font-poppins-bold">{unreadCount}</Text>
-                </View>
-              )}
+              <MaterialIcons name="settings" size={20} color="#334155" />
             </TouchableOpacity>
           </View>
           <View className="h-[1px] bg-backgroundMuted mt-4" />
@@ -147,13 +139,22 @@ useEffect(() => {
 
         {/* User Management */}
         <View className="px-6 mb-8">
-          <SectionHeader title="Manage Users" onAction={() => router.push("/(super_admin)/users")} />
+          <SectionHeader 
+            title="Manage Users" 
+            onAction={() => router.push("/(super_admin)/users")} 
+          />
           <View style={[SOFT_CARD_SHADOW, styles.userContainer]}>
-            <ScrollView nestedScrollEnabled showsVerticalScrollIndicator={false}>
+            <ScrollView 
+              nestedScrollEnabled 
+              showsVerticalScrollIndicator={false}
+              style={{ maxHeight: 350 }}
+            >
               {users.length === 0 ? (
                 <Text className="text-center py-10 text-textMuted font-poppins">No users found</Text>
               ) : (
-                users.map((user, idx) => <UserRow key={user.id} user={user} isFirst={idx === 0} />)
+                users.map((user, idx) => (
+                  <UserRow key={user.id} user={user} isFirst={idx === 0} />
+                ))
               )}
             </ScrollView>
           </View>
@@ -161,7 +162,10 @@ useEffect(() => {
 
         {/* Store Management */}
         <View className="px-6 mb-6">
-          <SectionHeader title="Store Management" onAction={() => router.push("/(super_admin)/stores")} />
+          <SectionHeader 
+            title="Store Management" 
+            onAction={() => router.push("/(super_admin)/stores")} 
+          />
           <View style={{ gap: 12 }}>
             {stores.length === 0 ? (
               <Text className="text-center text-textMuted py-4 font-poppins">No stores found.</Text>
@@ -170,25 +174,27 @@ useEffect(() => {
             )}
           </View>
         </View>
-
-        {/* Notifications Modal */}
-        <NotificationModal 
-          visible={showNotifications} 
-          onClose={() => setShowNotifications(false)} 
-          data={notifications}
-          onMarkRead={markAsRead}
-        />
       </ScrollView>
     </SafeAreaView>
   );
 }
 
 const styles = {
-  notificationBtn: {
-    width: 40, height: 40, borderRadius: 12, backgroundColor: "#FFF",
-    alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: "#F1F5F9"
+  headerBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: "#FFF",
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: "#F1F5F9",
   },
   userContainer: {
-    backgroundColor: "#FFF", borderRadius: 16, overflow: "hidden", maxHeight: 350, borderWidth: 1, borderColor: "#F1F5F9"
+    backgroundColor: "#FFF",
+    borderRadius: 16,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "#F1F5F9",
   },
 } as const;
