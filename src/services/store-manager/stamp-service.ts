@@ -59,6 +59,35 @@ export async function createStamp(payload: Omit<Stamp, "id" | "is_active" | "end
       });
 
     if (error) throw new Error(error.message);
+
+    // Keep store feature flag aligned with actual stamp program state.
+    // If a store launches a stamp program, stamp feature should be enabled.
+    const { data: existingFeature, error: featureReadError } = await supabase
+      .from("store_feature")
+      .select("streak_enabled, reward_enabled")
+      .eq("store_id", payload.store_id)
+      .maybeSingle();
+
+    if (featureReadError) {
+      throw new Error(featureReadError.message);
+    }
+
+    const { error: featureUpsertError } = await supabase
+      .from("store_feature")
+      .upsert(
+        {
+          store_id: payload.store_id,
+          streak_enabled: existingFeature?.streak_enabled ?? false,
+          stamp_enabled: true,
+          reward_enabled: existingFeature?.reward_enabled ?? false,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "store_id" },
+      );
+
+    if (featureUpsertError) {
+      throw new Error(featureUpsertError.message);
+    }
   } catch (error) {
     console.error("Error in createStamp:", error);
     throw error;

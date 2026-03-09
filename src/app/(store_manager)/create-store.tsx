@@ -12,11 +12,40 @@ import {
 } from "react-native";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { router, useFocusEffect } from "expo-router";
+import { router } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
 import { Stepper } from "@/components/stepper";
 import { supabase } from "@/supabase/supabase";
 import { createStore } from "@/services/store-service";
+import { useCreateStoreStore } from "@/store/create-store-store";
+import { useManagerStoresStore } from "@/store/manager-stores-store";
+
+// ── Utility: Base64 to ArrayBuffer ─────────────────────────────────────────
+function base64ToArrayBuffer(base64: string) {
+    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+    const lookup = new Uint8Array(256);
+    for (let i = 0; i < chars.length; i++) lookup[chars.charCodeAt(i)] = i;
+
+    let bufferLength = base64.length * 0.75;
+    if (base64[base64.length - 1] === "=") bufferLength--;
+    if (base64[base64.length - 2] === "=") bufferLength--;
+
+    const arraybuffer = new ArrayBuffer(bufferLength);
+    const bytes = new Uint8Array(arraybuffer);
+
+    let p = 0;
+    for (let i = 0; i < base64.length; i += 4) {
+        const encoded1 = lookup[base64.charCodeAt(i)];
+        const encoded2 = lookup[base64.charCodeAt(i + 1)];
+        const encoded3 = lookup[base64.charCodeAt(i + 2)];
+        const encoded4 = lookup[base64.charCodeAt(i + 3)];
+
+        bytes[p++] = (encoded1 << 2) | (encoded2 >> 4);
+        if (encoded3 !== 64) bytes[p++] = ((encoded2 & 15) << 4) | (encoded3 >> 2);
+        if (encoded4 !== 64) bytes[p++] = ((encoded3 & 3) << 6) | (encoded4 & 63);
+    }
+    return arraybuffer;
+}
 
 // ── Constants ──────────────────────────────────────────────────────────────
 const TOTAL_STEPS = 4;
@@ -221,46 +250,15 @@ function ReviewStep({ storeName, storeType, address, latitude, longitude, phone,
 export default function CreateStore() {
     const insets = useSafeAreaInsets();
 
-    const [currentStep, setCurrentStep] = useState(1);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isUploadingLogo, setIsUploadingLogo] = useState(false);
 
-    // Step 1
-    const [storeName, setStoreName] = useState("");
-    const [storeType, setStoreType] = useState("");
-    const [logoUri, setLogoUri] = useState<string | null>(null);
-    const [logoPublicUrl, setLogoPublicUrl] = useState<string | null>(null);
+    // Global Store State
+    const store = useCreateStoreStore();
+
+    // Validation States (Keep Local)
     const [step1Errors, setStep1Errors] = useState<{ storeName?: string; storeType?: string }>({});
-
-    // Step 2
-    const [address, setAddress] = useState("");
-    const [latitude, setLatitude] = useState("");
-    const [longitude, setLongitude] = useState("");
     const [step2Errors, setStep2Errors] = useState<{ address?: string }>({});
-
-    // Step 3
-    const [phone, setPhone] = useState("");
-    const [registrationNumber, setRegistrationNumber] = useState("");
-
-    // ── Reset all state every time this screen comes into focus ───────────
-    useFocusEffect(
-        useCallback(() => {
-            setCurrentStep(1);
-            setIsSubmitting(false);
-            setIsUploadingLogo(false);
-            setStoreName("");
-            setStoreType("");
-            setLogoUri(null);
-            setLogoPublicUrl(null);
-            setStep1Errors({});
-            setAddress("");
-            setLatitude("");
-            setLongitude("");
-            setStep2Errors({});
-            setPhone("");
-            setRegistrationNumber("");
-        }, [])
-    );
 
     // ── Logo picker + Supabase Storage upload ─────────────────────────────
     const handlePickLogo = async () => {
@@ -287,19 +285,16 @@ export default function CreateStore() {
                 return;
             }
 
-            setLogoUri(asset.uri);
+            store.setLogoUri(asset.uri);
             setIsUploadingLogo(true);
 
             try {
                 const { data: { user } } = await supabase.auth.getUser();
                 if (!user) throw new Error("Not authenticated");
 
-                // Convert base64 → Uint8Array (no local file reading needed)
-                const binaryString = atob(asset.base64);
-                const bytes = new Uint8Array(binaryString.length);
-                for (let i = 0; i < binaryString.length; i++) {
-                    bytes[i] = binaryString.charCodeAt(i);
-                }
+                // Reliable cross-platform base64 arraybuffer decoding
+                // using a custom lightweight decoder to skip 'atob' and fetch blob issues
+                const arrayBuffer = base64ToArrayBuffer(asset.base64);
 
                 const mimeType = asset.mimeType ?? "image/jpeg";
                 const ext = mimeType.split("/")[1] ?? "jpg";
@@ -307,50 +302,50 @@ export default function CreateStore() {
 
                 const { error: uploadError } = await supabase.storage
                     .from("puntos-public")
-                    .upload(fileName, bytes, { contentType: mimeType, upsert: true });
+                    .upload(fileName, arrayBuffer, { contentType: mimeType, upsert: true });
 
                 if (uploadError) throw new Error(uploadError.message);
 
                 const { data: urlData } = supabase.storage.from("puntos-public").getPublicUrl(fileName);
-                setLogoPublicUrl(urlData.publicUrl);
+                store.setLogoPublicUrl(urlData.publicUrl);
             } catch (err: any) {
                 Alert.alert("Upload Failed", err?.message ?? "Could not upload logo. You can still submit without it.");
-                setLogoUri(null);
-                setLogoPublicUrl(null);
+                store.setLogoUri(null);
+                store.setLogoPublicUrl(null);
             } finally {
                 setIsUploadingLogo(false);
             }
-        } catch {
-            Alert.alert("Not Available", "Image picker is not available. Please rebuild the app after installing expo-image-picker.");
-
+        } catch (error: any) {
+            console.error("ImagePicker outer catch error:", error);
+            Alert.alert("Store Logo Error", error?.message || "An unexpected error occurred while picking the image.");
         }
     };
 
     // ── Validation ────────────────────────────────────────────────────────
     const validateStep1 = () => {
         const errs: { storeName?: string; storeType?: string } = {};
-        if (!storeName.trim()) errs.storeName = "Store name is required";
-        if (!storeType) errs.storeType = "Please select a store type";
+        if (!store.storeName.trim()) errs.storeName = "Store name is required";
+        if (!store.storeType) errs.storeType = "Please select a store type";
         setStep1Errors(errs);
         return Object.keys(errs).length === 0;
     };
 
     const validateStep2 = () => {
         const errs: { address?: string } = {};
-        if (!address.trim()) errs.address = "Address is required";
+        if (!store.address.trim()) errs.address = "Address is required";
         setStep2Errors(errs);
         return Object.keys(errs).length === 0;
     };
 
     // ── Navigation ────────────────────────────────────────────────────────
     const goNext = () => {
-        if (currentStep === 1 && !validateStep1()) return;
-        if (currentStep === 2 && !validateStep2()) return;
-        if (currentStep < TOTAL_STEPS) setCurrentStep((s) => s + 1);
+        if (store.currentStep === 1 && !validateStep1()) return;
+        if (store.currentStep === 2 && !validateStep2()) return;
+        if (store.currentStep < TOTAL_STEPS) store.setCurrentStep(store.currentStep + 1);
     };
 
     const goBack = () => {
-        if (currentStep > 1) setCurrentStep((s) => s - 1);
+        if (store.currentStep > 1) store.setCurrentStep(store.currentStep - 1);
         else router.back();
     };
 
@@ -361,22 +356,47 @@ export default function CreateStore() {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) { Alert.alert("Error", "You must be logged in to create a store."); return; }
 
+            // Construct optimistic store row to inject into dashboard immediately
+            const optimisticStore = {
+                id: Math.random(), // Temporary ID since Supabase will assign the real one
+                name: store.storeName.trim(),
+                type: store.storeType || null,
+                address: store.address.trim() || null,
+                latitude: store.latitude ? parseFloat(store.latitude) : null,
+                longitude: store.longitude ? parseFloat(store.longitude) : null,
+                phone: store.phone.trim() || null,
+                registration_number: store.registrationNumber.trim() || null,
+                owner_id: user.id,
+                logo: store.logoPublicUrl ?? null,
+                status: "pending_review",
+                created_at: new Date().toISOString()
+            };
+
             await createStore({
-                name: storeName.trim(),
-                type: storeType,
-                address: address.trim(),
-                latitude: latitude ? parseFloat(latitude) : null,
-                longitude: longitude ? parseFloat(longitude) : null,
-                phone: phone.trim() || undefined,
-                registrationNumber: registrationNumber.trim() || undefined,
-                ownerId: user.id,
-                storeImageUrl: logoPublicUrl ?? undefined,
+                name: optimisticStore.name,
+                type: optimisticStore.type ?? undefined,
+                address: optimisticStore.address ?? undefined,
+                latitude: optimisticStore.latitude,
+                longitude: optimisticStore.longitude,
+                phone: optimisticStore.phone ?? undefined,
+                registrationNumber: optimisticStore.registration_number ?? undefined,
+                ownerId: optimisticStore.owner_id,
+                storeImageUrl: optimisticStore.logo ?? undefined,
             });
+
+            // Optimistically add it to the manager's dashboard right now
+            useManagerStoresStore.getState().addStoreOptimistically(optimisticStore as any);
 
             Alert.alert(
                 "Store Submitted! 🎉",
                 "Your store is now pending review. Our team will verify it within 1–2 business days.",
-                [{ text: "Got it", onPress: () => router.replace("/(store_manager)/stores") }]
+                [{
+                    text: "Got it",
+                    onPress: () => {
+                        store.resetForm();
+                        router.replace("/(store_manager)/stores");
+                    }
+                }]
             );
         } catch (error: any) {
             Alert.alert("Submission Failed", error?.message ?? "Something went wrong. Please try again.");
@@ -404,43 +424,43 @@ export default function CreateStore() {
             </View>
 
             {/* Stepper */}
-            <Stepper currentStep={currentStep} totalSteps={TOTAL_STEPS} />
+            <Stepper currentStep={store.currentStep} totalSteps={TOTAL_STEPS} />
 
             {/* Step label */}
             <View style={styles.stepLabel}>
-                <Text style={styles.stepTitle}>{STEP_META[currentStep - 1].title}</Text>
-                <Text style={styles.stepDesc}>{STEP_META[currentStep - 1].desc}</Text>
+                <Text style={styles.stepTitle}>{STEP_META[store.currentStep - 1].title}</Text>
+                <Text style={styles.stepDesc}>{STEP_META[store.currentStep - 1].desc}</Text>
             </View>
 
             {/* Step content */}
             <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
-                {currentStep === 1 && (
+                {store.currentStep === 1 && (
                     <StoreBasicsStep
-                        storeName={storeName} onStoreName={setStoreName}
-                        storeType={storeType} onStoreType={setStoreType}
-                        logoUri={logoUri} onPickLogo={handlePickLogo}
+                        storeName={store.storeName} onStoreName={store.setStoreName}
+                        storeType={store.storeType} onStoreType={store.setStoreType}
+                        logoUri={store.logoUri} onPickLogo={handlePickLogo}
                         isUploadingLogo={isUploadingLogo} errors={step1Errors}
                     />
                 )}
-                {currentStep === 2 && (
+                {store.currentStep === 2 && (
                     <LocationStep
-                        address={address} onAddress={setAddress}
-                        latitude={latitude} onLatitude={setLatitude}
-                        longitude={longitude} onLongitude={setLongitude}
+                        address={store.address} onAddress={store.setAddress}
+                        latitude={store.latitude} onLatitude={store.setLatitude}
+                        longitude={store.longitude} onLongitude={store.setLongitude}
                         errors={step2Errors}
                     />
                 )}
-                {currentStep === 3 && (
+                {store.currentStep === 3 && (
                     <BusinessVerificationStep
-                        phone={phone} onPhone={setPhone}
-                        registrationNumber={registrationNumber} onRegistrationNumber={setRegistrationNumber}
+                        phone={store.phone} onPhone={store.setPhone}
+                        registrationNumber={store.registrationNumber} onRegistrationNumber={store.setRegistrationNumber}
                     />
                 )}
-                {currentStep === 4 && (
+                {store.currentStep === 4 && (
                     <ReviewStep
-                        storeName={storeName} storeType={storeType}
-                        address={address} latitude={latitude} longitude={longitude}
-                        phone={phone} registrationNumber={registrationNumber} logoUri={logoUri}
+                        storeName={store.storeName} storeType={store.storeType}
+                        address={store.address} latitude={store.latitude} longitude={store.longitude}
+                        phone={store.phone} registrationNumber={store.registrationNumber} logoUri={store.logoUri}
                     />
                 )}
             </ScrollView>
@@ -448,7 +468,7 @@ export default function CreateStore() {
             {/* Footer CTA */}
             <View style={[styles.footer, { paddingBottom: insets.bottom + 16 }]}>
                 <TouchableOpacity
-                    onPress={currentStep === TOTAL_STEPS ? handleSubmit : goNext}
+                    onPress={store.currentStep === TOTAL_STEPS ? handleSubmit : goNext}
                     style={[styles.nextBtn, isSubmitting && { opacity: 0.7 }]}
                     disabled={isSubmitting}
                 >
@@ -456,7 +476,7 @@ export default function CreateStore() {
                         <ActivityIndicator color="#FFFFFF" size="small" />
                     ) : (
                         <>
-                            <Text style={styles.nextBtnText}>{currentStep === TOTAL_STEPS ? "Submit for Review" : "Continue"}</Text>
+                            <Text style={styles.nextBtnText}>{store.currentStep === TOTAL_STEPS ? "Submit for Review" : "Continue"}</Text>
                             <MaterialIcons name="arrow-forward" size={18} color="#FFFFFF" />
                         </>
                     )}
@@ -491,7 +511,7 @@ const styles = StyleSheet.create({
         gap: 4, overflow: "hidden",
     },
     logoHint: { fontSize: 11, fontFamily: "Poppins-Medium", color: "#94A3B8" },
-    logoSubtext: { fontSize: 11, fontFamily: "Poppins-Regular", color: "#CBD5E1" },
+    logoSubtext: { fontSize: 11, fontFamily: "Poppins-Regular", color: "#64748B" },
     // Form
     label: { fontSize: 13, fontFamily: "Poppins-Medium", color: "#475569", marginBottom: 8 },
     sublabel: { fontSize: 12, fontFamily: "Poppins-Regular", color: "#94A3B8", marginBottom: 6 },

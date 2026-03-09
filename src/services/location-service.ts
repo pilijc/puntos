@@ -189,9 +189,9 @@ export async function watchLocation(
 
     const subscription = await Location.watchPositionAsync(
       {
-        accuracy: options?.accuracy || Location.Accuracy.Balanced,
-        timeInterval: options?.timeInterval || 5000,
-        distanceInterval: options?.distanceInterval || 10,
+        accuracy: options?.accuracy || Location.Accuracy.Highest,
+        timeInterval: options?.timeInterval || 2000,
+        distanceInterval: options?.distanceInterval || 1,
       },
       (location) => {
         callback({
