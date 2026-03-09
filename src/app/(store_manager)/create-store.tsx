@@ -22,7 +22,7 @@ import { createStore } from "@/services/store-service";
 const TOTAL_STEPS = 4;
 
 const STORE_TYPES = [
-    "Café", "Restaurant", "Retail", "Salon & Beauty",
+    "Coffee", "Restaurant", "Bar", "Salon & Beauty",
     "Bakery", "Pharmacy", "Grocery", "Clothing", "Electronics", "Other",
 ];
 
@@ -272,7 +272,7 @@ export default function CreateStore() {
             }
 
             const result = await ImagePicker.launchImageLibraryAsync({
-                mediaTypes: ImagePicker.MediaTypeOptions.Images,
+                mediaTypes: ['images'],
                 allowsEditing: true,
                 aspect: [1, 1],
                 quality: 0.8,
