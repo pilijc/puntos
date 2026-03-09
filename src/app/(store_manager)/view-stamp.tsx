@@ -9,20 +9,13 @@ import { getRewardsByStoreId } from "@/services/store-manager/reward-service";
 import {
   getAllStampsByStoreId,
   getCollectorsByProgramId,
+  getCollectorsCountByProgramId,
   endStampProgram,
   getProgramStatus,
-  type StampCollector,
-  type ProgramStatus,
 } from "@/services/store-manager/stamp-service";
-import { Stamp } from "@/type/store-manager/stamp";
+import { ProgramStatus, Stamp, StampCollector, TabKey, Tabs } from "@/type/store-manager/stamp";
 import { Reward } from "@/type/store-manager/reward";
 
-const TABS = [
-  { key: "active", label: "Active" },
-  { key: "inactive", label: "Inactive" },
-] as const;
-
-type TabKey = (typeof TABS)[number]["key"];
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString(undefined, {
@@ -69,12 +62,12 @@ function CollectorRow({ item, total }: { item: StampCollector; total: number }) 
         </Text>
         {cardExpired && (
           <View className="bg-red-50 dark:bg-red-900/20 px-1.5 py-0.5 rounded">
-            <Text className="text-[9px] font-poppins-bold text-red-500">EXPIRED</Text>
+            <Text className="text-xs font-poppins-semibold text-red-500">EXPIRED</Text>
           </View>
         )}
         {item.card_status === "completed" && !cardExpired && (
           <View className="bg-emerald-50 dark:bg-emerald-900/20 px-1.5 py-0.5 rounded">
-            <Text className="text-[9px] font-poppins-bold text-emerald-500">REDEEMABLE</Text>
+            <Text className="text-xs font-poppins-semibold text-emerald-500">REDEEMABLE</Text>
           </View>
         )}
       </View>
@@ -110,21 +103,47 @@ function StampCard({
   onEnd?: () => void;
   isEnding?: boolean;
 }) {
+  const PAGE_SIZE = 5;
+
   const [collectorsOpen, setCollectorsOpen] = useState(false);
   const [collectors, setCollectors] = useState<StampCollector[]>([]);
+  const [collectorsCount, setCollectorsCount] = useState(0);
+  const [collectorsPage, setCollectorsPage] = useState(0);
   const [collectorsLoading, setCollectorsLoading] = useState(false);
-  const [collectorsLoaded, setCollectorsLoaded] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
   const status = getProgramStatus(stamp);
 
-  // Load count eagerly on mount so badge is always visible
+  const hasMore = collectors.length < collectorsCount;
+
   React.useEffect(() => {
     if (!stamp.id) return;
-    setCollectorsLoading(true);
-    getCollectorsByProgramId(stamp.id)
-      .then((data) => { setCollectors(data); setCollectorsLoaded(true); })
-      .catch(() => setCollectors([]))
-      .finally(() => setCollectorsLoading(false));
+    getCollectorsCountByProgramId(stamp.id)
+      .then(setCollectorsCount)
+      .catch(() => {});
   }, [stamp.id]);
+
+  React.useEffect(() => {
+    if (!collectorsOpen || !stamp.id || collectors.length > 0) return;
+    setCollectorsLoading(true);
+    getCollectorsByProgramId(stamp.id, 0, PAGE_SIZE)
+      .then((data) => { setCollectors(data); setCollectorsPage(0); })
+      .catch(() => {})
+      .finally(() => setCollectorsLoading(false));
+  }, [collectorsOpen, stamp.id]);
+
+  const handleLoadMore = async () => {
+    if (!stamp.id || loadingMore) return;
+    const nextPage = collectorsPage + 1;
+    setLoadingMore(true);
+    try {
+      const more = await getCollectorsByProgramId(stamp.id, nextPage, PAGE_SIZE);
+      setCollectors((prev) => [...prev, ...more]);
+      setCollectorsPage(nextPage);
+    } catch {
+    } finally {
+      setLoadingMore(false);
+    }
+  };
 
   return (
     <View className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl overflow-hidden">
@@ -151,11 +170,22 @@ function StampCard({
         </View>
       )}
 
+			{/* Ended date */}
+			{status !== "active" && stamp.ended_at && (
+        <View className="flex-row items-center justify-between px-4 py-2.5 border-b border-slate-100 dark:border-slate-800">
+          <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">Ended on</Text>
+          <Text className="text-xs font-poppins-semibold text-slate-600 dark:text-slate-300">
+            {formatDate(stamp.ended_at)}
+          </Text>
+        </View>
+      )}
+
       {/* Stamps required */}
       <View className="flex-row items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-slate-800">
-        <Text className="text-sm font-poppins text-slate-500 dark:text-slate-400">Stamps required</Text>
-        <Text className="text-sm font-poppins-bold text-primary">{stamp.total_stamps}</Text>
+        <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">Stamps required</Text>
+        <Text className="text-xs font-poppins-bold text-primary">{stamp.total_stamps}</Text>
       </View>
+
 
       {/* Expiration mode */}
       <View className="flex-row items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-slate-800">
@@ -201,16 +231,6 @@ function StampCard({
         </View>
       )}
 
-      {/* Ended date */}
-      {status !== "active" && stamp.ended_at && (
-        <View className="flex-row items-center justify-between px-4 py-2.5 border-b border-slate-100 dark:border-slate-800">
-          <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">Ended on</Text>
-          <Text className="text-xs font-poppins-semibold text-slate-600 dark:text-slate-300">
-            {formatDate(stamp.ended_at)}
-          </Text>
-        </View>
-      )}
-
       {/* Collectors toggle */}
       <TouchableOpacity
         activeOpacity={0.7}
@@ -224,15 +244,11 @@ function StampCard({
           <Text className="text-sm font-poppins-semibold text-slate-700 dark:text-slate-300">
             Collectors
           </Text>
-          {collectorsLoading ? (
-            <ActivityIndicator size="small" color="#94A3B8" />
-          ) : (
-            <View className="bg-slate-100 dark:bg-slate-700 rounded-full px-2 py-0.5 min-w-[22px] items-center">
-              <Text className="text-[10px] font-poppins-bold text-slate-500 dark:text-slate-400">
-                {collectors.length}
-              </Text>
-            </View>
-          )}
+          <View className="bg-slate-100 dark:bg-slate-700 rounded-full px-2 py-0.5 min-w-[22px] items-center">
+            <Text className="text-[10px] font-poppins-bold text-slate-500 dark:text-slate-400">
+              {collectorsCount}
+            </Text>
+          </View>
         </View>
         <MaterialIcons
           name={collectorsOpen ? "keyboard-arrow-up" : "keyboard-arrow-down"}
@@ -255,9 +271,39 @@ function StampCard({
               </Text>
             </View>
           ) : (
-            collectors.map((item) => (
-              <CollectorRow key={item.user_id} item={item} total={stamp.total_stamps} />
-            ))
+            <>
+              {collectors.map((item) => (
+                <CollectorRow key={item.user_id} item={item} total={stamp.total_stamps} />
+              ))}
+
+              {hasMore && (
+                <TouchableOpacity
+                  activeOpacity={0.7}
+                  onPress={handleLoadMore}
+                  disabled={loadingMore}
+                  className="py-3 items-center flex-row justify-center gap-x-2 border-t border-slate-100 dark:border-slate-800"
+                >
+                  {loadingMore ? (
+                    <ActivityIndicator size="small" color="#FF6600" />
+                  ) : (
+                    <>
+                      <MaterialIcons name="expand-more" size={16} color="#FF6600" />
+                      <Text className="text-xs font-poppins-semibold text-primary">
+                        Load more ({collectorsCount - collectors.length} remaining)
+                      </Text>
+                    </>
+                  )}
+                </TouchableOpacity>
+              )}
+
+              {!hasMore && collectors.length > 0 && (
+                <View className="py-2.5 items-center border-t border-slate-100 dark:border-slate-800">
+                  <Text className="text-[10px] font-poppins text-slate-300 dark:text-slate-600">
+                    All {collectorsCount} collectors shown
+                  </Text>
+                </View>
+              )}
+            </>
           )}
         </View>
       )}
@@ -379,7 +425,7 @@ export default function ViewStamp() {
 
       {/* Tabs */}
       <View className="bg-white dark:bg-neutral-800 border-b border-slate-100 dark:border-slate-800 flex-row px-6">
-        {TABS.map((tab) => {
+        {Tabs.map((tab) => {
           const isActive = activeTab === tab.key;
           const count = tab.key === "active" ? activeStamps.length : inactiveStamps.length;
           return (
