@@ -24,7 +24,8 @@ import { useStoreStore } from "@/store/store-store";
 import { useAuthStore } from "@/store/auth-store";
 import { useLocation } from "@/hooks/use-location";
 import { enrichStoresWithLocation } from "@/utils/store-location";
-import { addStamp } from "@/services/stamp-service";
+import { addStamp, getStoresWithEnabledActiveStampProgram, StampProgress } from "@/services/stamp-service";
+import { getStores } from "@/services/store-service";
 import { supabase } from "@/supabase/supabase";
 import { Alert, ActivityIndicator, RefreshControl } from "react-native";
 import { useStamps } from "@/hooks/use-stamps";
@@ -45,13 +46,26 @@ export default function Rewards() {
     setRewardSort,
     setRewardPointsOrder,
   } = useRewardsUiStore();
-  const { stores } = useStoreStore();
+  const { stores, setStores } = useStoreStore();
   const [isNearbyOpen, setIsNearbyOpen] = useState(false);
   const { location, permissionStatus, startWatching, stopWatching, refreshLocation } = useLocation();
   const [carouselIndex, setCarouselIndex] = useState(0);
 
   const [isAutoPlayEnabled, setIsAutoPlayEnabled] = useState(true);
   const autoPlayTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const fetchActiveStores = useCallback(async () => {
+    try {
+      const data = await getStores();
+      setStores(data ?? []);
+    } catch (e) {
+      console.error("Failed to load stores in Store tab:", e);
+    }
+  }, [setStores]);
+
+  useEffect(() => {
+    fetchActiveStores();
+  }, [fetchActiveStores]);
 
   const handleCarouselInteraction = () => {
     setIsAutoPlayEnabled(false);
@@ -77,6 +91,7 @@ export default function Rewards() {
 
   const nearbyStores = storesWithLocation.filter((store) => store.isNearby);
   const featuredStore = nearbyStores[0] ?? storesWithLocation[0];
+  const [eligibleNearbyStoreIds, setEligibleNearbyStoreIds] = useState<number[]>([]);
 
   const { sessionToken } = useAuthStore();
   const { stamps, refetch: refetchStamps } = useStamps();
@@ -105,18 +120,109 @@ export default function Rewards() {
     });
   }, [stamps, location]);
 
+  useEffect(() => {
+    let isCancelled = false;
+
+    const loadEligibleNearbyStores = async () => {
+      const nearbyIds = nearbyStores.map((store) => Number(store.id));
+      if (nearbyIds.length === 0) {
+        if (!isCancelled) setEligibleNearbyStoreIds([]);
+        return;
+      }
+
+      const ids = await getStoresWithEnabledActiveStampProgram(nearbyIds);
+      if (!isCancelled) setEligibleNearbyStoreIds(ids);
+    };
+
+    loadEligibleNearbyStores();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [nearbyStores]);
+
   const displayStamps = useMemo(() => {
-    if (nearbyStores.length === 0) return sortedStamps;
-    const filtered = sortedStamps.filter(stamp => nearbyStores.some(ns => ns.id === stamp.store_id));
-    return filtered.length > 0 ? filtered : sortedStamps;
-  }, [sortedStamps, nearbyStores]);
+    if (!location) return sortedStamps;
+
+    const nearbyEligible = nearbyStores
+      .filter((store) => eligibleNearbyStoreIds.includes(Number(store.id)))
+      .map((store) => {
+        const existing = sortedStamps.find((stamp) => Number(stamp.store_id) === Number(store.id));
+        if (existing) return existing;
+
+        const virtualStamp: StampProgress = {
+          id: -Number(store.id),
+          user_id: "",
+          store_id: Number(store.id),
+          stamps_count: 0,
+          target: 7,
+          last_stamp_at: "",
+          updated_at: "",
+          stores: {
+            name: store.name,
+            logo: store.logo ?? undefined,
+            status: store.status,
+            is_active: store.is_active,
+            latitude: store.latitude ?? undefined,
+            longitude: store.longitude ?? undefined,
+            address: store.address ?? undefined,
+          },
+        };
+        return virtualStamp;
+      });
+
+    // If no nearby eligible stores, fallback to old behavior: stamped stores only.
+    if (nearbyEligible.length === 0) {
+      return sortedStamps;
+    }
+
+    // Prioritize nearby stores first, then keep the rest of stamped stores.
+    const nearbyStoreIds = new Set(nearbyEligible.map((item) => Number(item.store_id)));
+    const nonNearbyStamped = sortedStamps.filter(
+      (stamp) => !nearbyStoreIds.has(Number(stamp.store_id)),
+    );
+
+    return [...nearbyEligible, ...nonNearbyStamped];
+  }, [sortedStamps, nearbyStores, eligibleNearbyStoreIds, location]);
+
+  useEffect(() => {
+    console.log("[StoreStampDebug]", {
+      hasLocation: !!location,
+      nearbyStoreIds: nearbyStores.map((s) => Number(s.id)),
+      eligibleNearbyStoreIds,
+      stampedStoreIds: sortedStamps.map((s) => Number(s.store_id)),
+      displayStoreIds: displayStamps.map((s) => Number(s.store_id)),
+    });
+  }, [location, nearbyStores, eligibleNearbyStoreIds, sortedStamps, displayStamps]);
+
+  useEffect(() => {
+    const countSources = displayStamps.map((stamp) => {
+      const rewardRow = stampRewards.find((s) => Number(s.store_id) === Number(stamp.store_id));
+      const resolved = stamp.stamps_count ?? rewardRow?.current_stamp_count ?? 0;
+      return {
+        storeId: Number(stamp.store_id),
+        progressCount: stamp.stamps_count,
+        rewardCount: rewardRow?.current_stamp_count ?? null,
+        resolvedCount: resolved,
+      };
+    });
+
+    console.log("[StoreStampCountDebug]", countSources);
+  }, [displayStamps, stampRewards]);
+
+  useEffect(() => {
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      console.log("[StoreStampDebugUser]", { userId: user?.id ?? null });
+    })();
+  }, []);
 
   const [isStamping, setIsStamping] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await Promise.all([refetchStamps(), refetchStampRewards(), refreshLocation()]);
+    await Promise.all([fetchActiveStores(), refetchStamps(), refetchStampRewards(), refreshLocation()]);
     setRefreshing(false);
   };
 
@@ -226,12 +332,15 @@ export default function Rewards() {
   // Actively watch user position strictly when the tab is actively focused
   useFocusEffect(
     useCallback(() => {
+      refetchStamps();
+      refetchStampRewards();
+      fetchActiveStores();
       startWatching();
 
       return () => {
         stopWatching();
       };
-    }, [permissionStatus.granted])
+    }, [permissionStatus.granted, fetchActiveStores, refetchStamps, refetchStampRewards])
   );
 
   return (
@@ -239,6 +348,7 @@ export default function Rewards() {
       <ScrollView
         className="flex-1"
         contentContainerClassName="px-6 pt-6 pb-8 gap-y-6"
+        onTouchStart={handleCarouselInteraction}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -271,7 +381,7 @@ export default function Rewards() {
                 data={nearbyStores}
                 scrollAnimationDuration={1000}
                 loop={nearbyStores.length > 1}
-                autoPlay={nearbyStores.length > 1}
+                autoPlay={nearbyStores.length > 1 && isAutoPlayEnabled}
                 autoPlayInterval={4000}
                 renderItem={({ item: store }) => (
                   <View className="w-full h-full relative">
@@ -327,7 +437,7 @@ export default function Rewards() {
                   data={storesWithLocation.filter(s => s.is_active)}
                   scrollAnimationDuration={1500}
                   loop={true}
-                  autoPlay={true}
+                  autoPlay={isAutoPlayEnabled}
                   autoPlayInterval={4000}
                   renderItem={({ item: store }) => (
                     <View className="w-full h-full relative">
@@ -531,7 +641,11 @@ export default function Rewards() {
                 onSnapToItem={(index) => setCarouselIndex(index)}
                 renderItem={({ item: stamp }) => {
                   const stampReward = stampRewards.find((s) => s.store_id === stamp.store_id);
-                  const count = stampReward?.current_stamp_count || stamp.stamps_count || 0;
+                  // Source priority:
+                  // 1) stamp_progress (display item itself)
+                  // 2) stamp_rewards fallback
+                  // This keeps nearby virtual cards at 0 unless there is true progress.
+                  const count = stamp.stamps_count ?? stampReward?.current_stamp_count ?? 0;
 
                   // Compute Nearby Status
                   const storeStr = stamp.stores as unknown as { latitude?: number; longitude?: number; name?: string; is_active?: boolean };
@@ -715,4 +829,3 @@ export default function Rewards() {
     </SafeAreaView>
   );
 }
-
