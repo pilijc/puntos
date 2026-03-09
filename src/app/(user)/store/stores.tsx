@@ -4,8 +4,12 @@ import React, { useMemo } from "react";
 import { router } from "expo-router";
 import SortPill from "@/components/rewards/SortPill";
 import StoreCard from "@/components/rewards/StoreCard";
-import { stores } from "@/data/rewards";
+import { StoreItem } from "@/data/rewards";
 import { useRewardsUiStore } from "@/store/rewards-ui-store";
+import { useStoreStore } from "@/store/store-store";
+import { useStamps } from "@/hooks/use-stamps";
+import { useLocation } from "@/hooks/use-location";
+import { enrichStoresWithLocation } from "@/utils/store-location";
 
 const storeSortOptions = [
   { id: "nearby", label: "Nearby" },
@@ -17,8 +21,33 @@ export default function Stores() {
   const { storeSort, storePointsOrder, setStoreSort, setStorePointsOrder } =
     useRewardsUiStore();
 
+  const { stores: realStores } = useStoreStore();
+  const { stamps } = useStamps();
+  const { location } = useLocation();
+
+  const allStores: StoreItem[] = useMemo(() => {
+    const stampedIds = new Set(stamps.map((s) => s.store_id.toString()));
+    const myStores = realStores.filter((s) => stampedIds.has(s.id.toString()));
+    const enrichedStores = enrichStoresWithLocation(myStores, location);
+
+    return enrichedStores.map((s) => {
+      const stampProgress = stamps.find(
+        (p) => p.store_id.toString() === s.id.toString()
+      );
+      return {
+        id: s.id.toString(),
+        name: s.name,
+        location: s.address || "Unknown location",
+        distanceMeters: s.distanceMeters,
+        points: 0, // Points are a separate feature
+        isNearby: s.isNearby,
+        logo: s.logo,
+      };
+    });
+  }, [realStores, stamps, location]);
+
   const sortedStores = useMemo(() => {
-    const list = [...stores];
+    const list = [...allStores];
     if (storeSort === "points") {
       list.sort((a, b) =>
         storePointsOrder === "desc" ? b.points - a.points : a.points - b.points
@@ -26,12 +55,12 @@ export default function Stores() {
     } else if (storeSort === "az") {
       list.sort((a, b) => a.name.localeCompare(b.name));
     } else {
-      list.sort((a, b) => a.distanceMiles - b.distanceMiles);
+      list.sort((a, b) => a.distanceMeters - b.distanceMeters);
     }
     return list;
-  }, [storeSort, storePointsOrder]);
+  }, [allStores, storeSort, storePointsOrder]);
 
-  const totalPoints = stores.reduce((sum, store) => sum + store.points, 0);
+  const totalPoints = allStores.reduce((sum, store) => sum + store.points, 0);
 
   return (
     <SafeAreaView className="flex-1 bg-background dark:bg-darkBackground">
@@ -52,7 +81,7 @@ export default function Stores() {
         </View>
 
         <Text className="text-xs text-neutral-500 font-poppins">
-          {stores.length} stores • {totalPoints.toLocaleString()} pts total
+          {allStores.length} stores • {totalPoints.toLocaleString()} pts total
         </Text>
 
         <View className="flex-row gap-x-2">
