@@ -1,7 +1,8 @@
 import React, { useCallback, useState } from "react";
-import { ActivityIndicator, Alert, ScrollView, useColorScheme } from "react-native";
+import { ActivityIndicator, ScrollView, useColorScheme } from "react-native";
 import { View, Text, TouchableOpacity } from "@/tw";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { Modal } from "@/components/modal";
 import { useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Image } from "expo-image";
@@ -15,6 +16,7 @@ import {
 } from "@/services/store-manager/stamp-service";
 import { ProgramStatus, Stamp, StampCollector, TabKey, Tabs } from "@/type/store-manager/stamp";
 import { Reward } from "@/type/store-manager/reward";
+import { ModalButton } from "@/components/modal";
 
 
 function formatDate(iso: string) {
@@ -344,6 +346,7 @@ export default function ViewStamp() {
   const [rewards, setRewards] = useState<Reward[]>([]);
   const [loading, setLoading] = useState(true);
   const [endingId, setEndingId] = useState<number | null>(null);
+	const [modal, setModal] = useState<{ title: string; message: string; buttons: ModalButton[] } | null>(null);
 
   const load = useCallback(() => {
     if (!storeId) return;
@@ -366,26 +369,15 @@ export default function ViewStamp() {
   useFocusEffect(load);
 
   const handleEndProgram = (stamp: Stamp) => {
-    Alert.alert(
-      "End Stamp Program",
-      "Choose a grace period during which users can still redeem existing stamps. After the grace period, no earning or redeeming is possible.",
-      [
-        {
-          text: "No Grace Period",
-          style: "destructive",
-          onPress: () => doEnd(stamp.id!, 0),
-        },
-        {
-          text: "7-Day Grace Period",
-          onPress: () => doEnd(stamp.id!, 7),
-        },
-        {
-          text: "14-Day Grace Period",
-          onPress: () => doEnd(stamp.id!, 14),
-        },
-        { text: "Cancel", style: "cancel" },
-      ]
-    );
+    setModal({
+      title: "End Stamp Program",
+      message: "Choose a grace period during which users can still redeem existing stamps. After the grace period, no earning or redeeming is possible.",
+      buttons: [
+        { label: "14-Day Grace Period",variant: "primary",   onPress: () => { setModal(null); doEnd(stamp.id!, 14); } },
+        { label: "7-Day Grace Period", variant: "secondary", onPress: () => { setModal(null); doEnd(stamp.id!, 7);  } },
+        { label: "No Grace Period",    variant: "secondary",    onPress: () => { setModal(null); doEnd(stamp.id!, 0);  } },
+      ],
+    });
   };
 
   const doEnd = async (programId: number, graceDays: number) => {
@@ -394,7 +386,11 @@ export default function ViewStamp() {
       await endStampProgram(programId, graceDays);
       load();
     } catch (e) {
-      Alert.alert("Error", (e as Error).message ?? "Failed to end program.");
+      setModal({
+        title: "Error",
+        message: (e as Error).message ?? "Failed to end program.",
+        buttons: [{ label: "OK", variant: "secondary", onPress: () => setModal(null) }],
+      });
     } finally {
       setEndingId(null);
     }
@@ -406,6 +402,14 @@ export default function ViewStamp() {
 
   return (
     <View className="flex-1 bg-backgroundMuted dark:bg-[#111921]">
+      <Modal
+        visible={!!modal}
+        onClose={() => setModal(null)}
+        title={modal?.title ?? ""}
+        message={modal?.message}
+        buttons={modal?.buttons}
+      />
+
       {/* Header */}
       <View
         className="bg-background dark:bg-[#111921] border-b border-slate-200 dark:border-slate-800 flex-row items-center px-2"
