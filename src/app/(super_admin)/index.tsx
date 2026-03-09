@@ -1,25 +1,19 @@
 ﻿import React, { useState, useEffect, useCallback, useMemo } from "react";
-import { Image, Modal, ScrollView, ActivityIndicator, RefreshControl } from "react-native";
+import { ScrollView, ActivityIndicator, RefreshControl } from "react-native";
 import { SafeAreaView, Text, TouchableOpacity, View } from "@/tw";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useRouter } from "expo-router";
 import { supabase } from "@/supabase/supabase";
 
-// ────────────────── Configuration & Constants ──────────────────
+// Import your new components
+import { SectionHeader } from "@/components/ui/SectionHeader";
+import { UserRow } from "@/components/users/UserRow";
+import { StoreCard } from "@/components/stores/StoreCard";
+import { StatCard } from "@/components/ui/StatCard"; // Create this in ui/
+import { NotificationModal } from "@/components/ui/NotificationModal"; // Create this in ui/
+
+// ────────────────── Configuration ──────────────────
 const BUCKET_URL = "https://[YOUR_PROJECT_ID].supabase.co/storage/v1/object/public/puntos-public/profile-pictures";
-
-const STATUS_CONFIG: Record<string, { label: string; color: string; dot: string }> = {
-  ACTIVE: { label: "Active", color: "#16A34A", dot: "#22C55E" },
-  PENDING: { label: "Pending", color: "#DC2626", dot: "#EF4444" },
-  INACTIVE: { label: "Inactive", color: "#DC2626", dot: "#EF4444" },
-};
-
-const ICON_COLOR_MAP: Record<string, string> = {
-  registration: "#3B82F6",
-  action: "#FF6600",
-  alert: "#EF4444",
-  default: "#64748B"
-};
 
 const SOFT_CARD_SHADOW = {
   shadowColor: "#0F172A",
@@ -27,19 +21,6 @@ const SOFT_CARD_SHADOW = {
   shadowOpacity: 0.04,
   shadowRadius: 6,
   elevation: 2,
-};
-
-// ────────────────── Helpers ──────────────────
-const getRoleDetails = (roleType: string, roleLevel?: number) => {
-  const roles: Record<string, { label: string; bg: string; text: string }> = {
-    super_admin: { label: "S-ADMIN", bg: "#FAF5FF", text: "#A855F7" },
-    manager: { label: "MANAGER", bg: "#F0FDF4", text: "#16A34A" },
-    front_desk: { label: "STAFF", bg: "#F0F9FF", text: "#0EA5E9" },
-  };
-
-  if (roles[roleType]) return roles[roleType];
-  if (roleLevel === 0) return { label: "BLOCKED", bg: "#FEE2E2", text: "#EF4444" };
-  return { label: "USER", bg: "#F1F5F9", text: "#94A3B8" };
 };
 
 export default function SuperAdminDashboard() {
@@ -84,7 +65,7 @@ export default function SuperAdminDashboard() {
 
       setUsers(processedUsers);
       setStores(storeData || []);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Dashboard Fetch Error:", error.message);
     } finally {
       setLoading(false);
@@ -92,7 +73,21 @@ export default function SuperAdminDashboard() {
     }
   }, []);
 
-  useEffect(() => { fetchDashboardData(); }, [fetchDashboardData]);
+useEffect(() => {
+  let isMounted = true;
+
+  const loadData = async () => {
+    if (isMounted) {
+      await fetchDashboardData();
+    }
+  };
+
+  loadData();
+
+  return () => {
+    isMounted = false;
+  };
+}, [fetchDashboardData]);
 
   const onRefresh = () => {
     setRefreshing(true);
@@ -188,118 +183,12 @@ export default function SuperAdminDashboard() {
   );
 }
 
-// ────────────────── Sub-Components ──────────────────
-
-const StatCard = ({ label, val, icon, color }: any) => (
-  <View style={[SOFT_CARD_SHADOW, styles.statCard]}>
-    <MaterialIcons name={icon} size={16} color={color} />
-    <Text className="text-[18px] font-poppins-bold text-textPrimary">{val}</Text>
-    <Text className="text-[8px] font-poppins-bold text-textMuted uppercase">{label}</Text>
-  </View>
-);
-
-const SectionHeader = ({ title, onAction }: { title: string, onAction: () => void }) => (
-  <View className="flex-row justify-between items-center mb-3">
-    <Text className="text-base font-poppins-bold text-textPrimary">{title}</Text>
-    <TouchableOpacity className="flex-row items-center" onPress={onAction}>
-      <Text className="text-[11px] font-poppins-bold text-primary mr-0.5">VIEW ALL</Text>
-      <MaterialIcons name="chevron-right" size={14} color="#FF6600" />
-    </TouchableOpacity>
-  </View>
-);
-
-const UserRow = ({ user, isFirst }: any) => {
-  const roleInfo = getRoleDetails(user.role_type, user.role);
-  return (
-    <View style={[styles.userRow, { borderTopWidth: isFirst ? 0 : 1 }]}>
-      <Image source={{ uri: user.avatar }} style={styles.avatar} />
-      <View className="ml-3 flex-1">
-        <Text className="text-[13px] font-poppins-bold text-textPrimary">{user.name || "User"}</Text>
-        <Text className="text-[10px] font-poppins text-textMuted italic">{user.displayEmail}</Text>
-      </View>
-      <View style={[styles.roleBadge, { backgroundColor: roleInfo.bg }]}>
-        <Text style={{ color: roleInfo.text }} className="text-[9px] font-poppins-bold">{roleInfo.label}</Text>
-      </View>
-    </View>
-  );
-};
-
-const StoreCard = ({ store }: any) => {
-  const status = store.status?.toUpperCase() ?? "INACTIVE";
-  const cfg = STATUS_CONFIG[status] || STATUS_CONFIG["INACTIVE"];
-  
-  return (
-    <View style={[SOFT_CARD_SHADOW, styles.storeCard]}>
-      <View className="flex-row justify-between items-center mb-4">
-        <View className="flex-row flex-1 items-center">
-          <Image
-            source={{ uri: store.logo || store.image || `https://api.dicebear.com/7.x/identicon/png?seed=${store.name || store.id}` }}
-            style={styles.storeLogo}
-          />
-          <View className="ml-3 flex-1">
-            <Text className="text-[14px] font-poppins-bold text-textPrimary">{store.name}</Text>
-            {store.location && <Text className="text-[11px] font-poppins text-textMuted">{store.location}</Text>}
-          </View>
-        </View>
-        <View style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: cfg.dot }} />
-      </View>
-      <View className="flex-row gap-2">
-        <TouchableOpacity style={styles.btnSecondary}><Text className="text-xs font-poppins-bold text-textSecondary">Edit</Text></TouchableOpacity>
-        <TouchableOpacity style={styles.btnDanger}><Text className="text-xs font-poppins-bold text-danger">Deactivate</Text></TouchableOpacity>
-      </View>
-    </View>
-  );
-};
-
-const NotificationModal = ({ visible, onClose, data, onMarkRead }: any) => (
-  <Modal visible={visible} animationType="slide" transparent>
-    <View className="flex-1 bg-black/40 justify-end">
-      <View className="bg-white rounded-t-[28px] pt-3 pb-8 max-h-[65%]">
-        <View className="w-9 h-1 bg-backgroundMuted rounded-full self-center mb-5" />
-        <View className="flex-row justify-between items-center px-6 mb-4">
-          <Text className="text-base font-poppins-bold text-textPrimary">Notifications</Text>
-          <TouchableOpacity onPress={onClose}><MaterialIcons name="close" size={20} color="#94A3B8"/></TouchableOpacity>
-        </View>
-        <ScrollView>
-          {data.map((n: any) => (
-            <TouchableOpacity key={n.id} onPress={() => onMarkRead(n.id)} className={`flex-row px-6 py-3.5 ${n.unread ? 'bg-primary/5' : 'bg-white'}`}>
-              <View style={{ backgroundColor: (ICON_COLOR_MAP[n.type] || ICON_COLOR_MAP.default) + "15" }} className="w-9 h-9 rounded-full items-center justify-center mr-3.5">
-                <MaterialIcons name={n.icon} size={18} color={ICON_COLOR_MAP[n.type] || ICON_COLOR_MAP.default}/>
-              </View>
-              <View className="flex-1">
-                <Text className="text-[13px] font-poppins-bold text-textPrimary">{n.title}</Text>
-                <Text className="text-[12px] font-poppins text-textSecondary">{n.message}</Text>
-                <Text className="text-[10px] font-poppins text-textMuted mt-0.5">{n.time}</Text>
-              </View>
-              {n.unread && <View className="w-2 h-2 rounded-full bg-primary mt-1.5" />}
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-      </View>
-    </View>
-  </Modal>
-);
-
-// ────────────────── Styles──────────────────
 const styles = {
   notificationBtn: {
     width: 40, height: 40, borderRadius: 12, backgroundColor: "#FFF",
     alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: "#F1F5F9"
   },
-  statCard: {
-    flex: 1, backgroundColor: "#FFF", borderRadius: 16, paddingVertical: 14, 
-    alignItems: "center", borderWidth: 1, borderColor: "#F1F5F9"
-  },
   userContainer: {
     backgroundColor: "#FFF", borderRadius: 16, overflow: "hidden", maxHeight: 350, borderWidth: 1, borderColor: "#F1F5F9"
   },
-  userRow: {
-    flexDirection: "row", alignItems: "center", padding: 14, borderTopColor: "#F8FAFC"
-  },
-  avatar: { width: 38, height: 38, borderRadius: 10, backgroundColor: "#F1F5F9" },
-  roleBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 6 },
-  storeCard: { backgroundColor: "#FFF", borderRadius: 16, padding: 16, borderWidth: 1, borderColor: "#F1F5F9" },
-  storeLogo: { width: 48, height: 48, borderRadius: 12, backgroundColor: "#F1F5F9" },
-  btnSecondary: { flex: 1, paddingVertical: 10, borderRadius: 10, alignItems: "center", backgroundColor: "#F8FAFC", borderWidth: 1, borderColor: "#E2E8F0" },
-  btnDanger: { flex: 1, paddingVertical: 10, borderRadius: 10, alignItems: "center", backgroundColor: "#FFF5F5", borderWidth: 1, borderColor: "#FEE2E2" },
 } as const;
