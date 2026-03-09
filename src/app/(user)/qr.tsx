@@ -62,7 +62,7 @@ export default function Qr() {
     // Listen to transactions
     const channel = listenToQRTransaction(currentUser.id, (transaction) => {
       console.log('Customer side: QR transaction received!', transaction);
-      // Add vibration for celebration
+      //vibration for celebration
       Vibration.vibrate(500);
       
       // Show custom congratulations modal

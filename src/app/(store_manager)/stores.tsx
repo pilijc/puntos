@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useEffect,useState, useCallback } from "react";
 import { Switch, RefreshControl } from "react-native";
 import {
   View,
@@ -12,6 +12,8 @@ import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { router, useFocusEffect } from "expo-router";
 import { supabase } from "@/supabase/supabase";
 import { getMyStores, StoreRow } from "@/services/store-service";
+import { hasPaidStoreFee, getStoreByOwnerId } from "@/services/store-manager/payment-service";
+import  PaymentModal  from "@/components/payment/paymentBoxModal";
 
 type TabKey = "all" | "active" | "pending" | "inactive";
 
@@ -46,7 +48,7 @@ const STATUS_BADGE: Record<
 function StoreCard({ store }: { store: StoreRow }) {
   const status = store.status ?? "inactive";
   const badge = STATUS_BADGE[status] ?? STATUS_BADGE.inactive;
-
+ 
   return (
     <TouchableOpacity
       className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl overflow-hidden mb-3"
@@ -168,6 +170,10 @@ export default function StoreManagerStores() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [hasPaidStoreFee, setHasPaidStoreFee] = useState(false);
+  const [user, setUser] = useState<string | null>(null);
+
 
   const fetchStores = useCallback(
     async (silent = false) => {
@@ -190,15 +196,37 @@ export default function StoreManagerStores() {
     []
   );
 
+  const checkPaymentStatus = useCallback(async () => {
+      try {
+        const { data } = await supabase.auth.getUser();
+        const user = data.user;
+        if (!user) return;
+        const owner = await getStoreByOwnerId(user.id);
+        setUser(data.user.id);
+        if (owner) {
+          setHasPaidStoreFee(owner.has_paid_store_fee);
+        }
+      } catch (err) {
+        console.error("Error checking payment status:", err);
+      }
+  }, [])
+    
   useFocusEffect(
     useCallback(() => {
       fetchStores();
     }, [fetchStores])
   );
 
+   useFocusEffect(
+    useCallback(() => {
+      checkPaymentStatus();
+    }, [checkPaymentStatus])
+  );
+
   const onRefresh = () => {
     setRefreshing(true);
     fetchStores(true);
+    checkPaymentStatus();
   };
 
   const filtered = stores.filter((s) => {
@@ -336,10 +364,24 @@ export default function StoreManagerStores() {
 
         <TouchableOpacity
           className="absolute bottom-5 right-6 w-14 h-14 rounded-full bg-primary items-center justify-center"
-          onPress={() => router.push("/(store_manager)/create-store")}
+          onPress={() => {
+            // if (!hasPaidStoreFee) {
+            //     setShowPaymentModal(true)
+            //    console.log("Payment required to create store");
+            //   return;
+            // }
+            router.push("/(store_manager)/create-store");
+          }}
         >
           <MaterialIcons name="add" size={28} color="#fff" />
         </TouchableOpacity>
+        {showPaymentModal && (
+          <PaymentModal
+            setShowPaymentModal={setShowPaymentModal}
+            userId={user}
+            amount={199}
+          />
+        )}
       </View>
     </SafeAreaView>
   );
