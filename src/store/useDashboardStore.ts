@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { supabase } from "@/supabase/supabase";
 
-const BUCKET_URL = "https://[YOUR_PROJECT_ID].supabase.co/storage/v1/object/public/puntos-public/profile-pictures";
+const BUCKET_URL = "https://gtxlhnmpvsrvryeisbqa.supabase.co/storage/v1/object/public/puntos-public/profile-pictures";
 
 interface DashboardState {
   users: any[];
