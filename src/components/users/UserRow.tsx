@@ -1,6 +1,6 @@
 import React from "react";
 import { Image } from "react-native";
-import { View, Text } from "@/tw"; // Use your TW wrapper
+import { View, Text } from "@/tw";
 
 const getRoleDetails = (roleType: string, roleLevel?: number) => {
   const roles: Record<string, { label: string; bg: string; text: string }> = {
@@ -10,7 +10,7 @@ const getRoleDetails = (roleType: string, roleLevel?: number) => {
   };
   if (roles[roleType]) return roles[roleType];
   if (roleLevel === 0) return { label: "BLOCKED", bg: "#FEE2E2", text: "#EF4444" };
-  return { label: "USER", bg: "#F1F5F9", text: "#94A3B8" };
+  return { label: "USER", bg: "#f6f0e7", text: "#ecb62f" };
 };
 
 export const UserRow = ({ user, isFirst }: any) => {

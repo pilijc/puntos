@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text } from "@/tw"; // Ensure this is your tailwind import
+import { View, Text } from "@/tw";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 
 const SOFT_CARD_SHADOW = {
