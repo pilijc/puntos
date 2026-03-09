@@ -16,6 +16,7 @@ import EditProfileModal from "@/components/settings/EditProfileModal";
 import SecurityModal from "@/components/settings/SecurityModal";
 import { LogoutButton } from "@/components/settings/LogoutButton";
 import { UserProfileCard } from "@/components/settings/UserProfileCard";
+import { SecurityCard } from "@/components/settings/SecurityCard";
 
 // Services (Used for background tasks like location sync)
 import { syncLocationService } from "@/services/settings-service";
@@ -123,19 +124,7 @@ export default function UserSettings() {
         </Text>
       </View>
 
-      <View className="mx-4 mb-6 overflow-hidden bg-background dark:bg-darkBackgroundMuted rounded-2xl border border-neutral-200 dark:border-darkBorder">
-        <TouchableOpacity
-          onPress={() => setSecurityModalVisible(true)}
-          className="flex-row items-center p-4 bg-background dark:bg-darkBackgroundMuted active:bg-neutral-50 dark:active:bg-darkBackgroundCard will-change-pressable">
-          <View className="h-5 w-5 items-center justify-center rounded-lg bg-emerald-50">
-            <Ionicons name="settings-outline" size={15} color="#3b82f6" />
-          </View>
-          <Text className="text-base flex-1 ml-3 font-poppins-semibold text-neutral-900 dark:text-darkTextPrimary">
-            Security
-          </Text>
-          <Ionicons name="chevron-forward-outline" size={15} color="#d4d4d4" />
-        </TouchableOpacity>
-      </View>
+      <SecurityCard onPress={() => setSecurityModalVisible(true)} />
 
       {/* Preferences Section */}
       <View>

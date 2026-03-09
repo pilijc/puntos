@@ -33,6 +33,7 @@ export default function EditProfileModal({
   const [avatarUri, setAvatarUri] = useState<string | null>(initialAvatarUrl || null);
   const [isSaving, setIsSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (visible) {
@@ -145,6 +146,7 @@ export default function EditProfileModal({
                 </View>
                 <TouchableOpacity
                   onPress={onClose}
+                  disabled={loading}
                   className="h-10 w-10 bg-neutral-100 dark:bg-darkBackgroundMuted rounded-full items-center justify-center"
                 >
                   <Ionicons name="close-outline" size={22} color={isDark ? "#9ca3af" : "#4b5563"} />

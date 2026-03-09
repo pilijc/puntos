@@ -44,7 +44,13 @@ export default function SecurityModal({ visible, onClose }: Props) {
 
   return (
     <>
-      <Modal animationType="slide" transparent statusBarTranslucent visible={visible} onRequestClose={onClose}>
+      <Modal
+        animationType="slide"
+        transparent
+        statusBarTranslucent
+        visible={visible}
+        onRequestClose={onClose}
+      >
         <SafeAreaView style={{ flex: 1 }}>
           {/* Scrim */}
           <TouchableOpacity className="flex-1 bg-black/50" activeOpacity={1} onPress={onClose} />

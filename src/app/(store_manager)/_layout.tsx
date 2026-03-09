@@ -44,7 +44,6 @@ export default function StoreManagerLayout() {
 
     return (
         <Tabs
-            initialRouteName="stores"
             screenOptions={{
                 headerShown: false,
                 tabBarStyle: {
@@ -110,11 +109,11 @@ export default function StoreManagerLayout() {
                 name="configure-streaks"
                 options={{ href: null }}
             />
-             <Tabs.Screen
+            <Tabs.Screen
                 name="configure-stamp"
                 options={{ href: null }}
             />
-             <Tabs.Screen
+            <Tabs.Screen
                 name="rewards"
                 options={{ href: null }}
             />
