@@ -9,6 +9,9 @@ import {
 } from "@/tw";
 import { Image } from "expo-image";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { router } from "expo-router";
+import { StoreRow } from "@/services/store-service";
+import { useManagerStoresStore } from "@/store/manager-stores-store";
 import { router, useFocusEffect } from "expo-router";
 import { supabase } from "@/supabase/supabase";
 import { getMyStores, StoreRow } from "@/services/store-service";
@@ -165,6 +168,30 @@ function SkeletonCard() {
 }
 
 export default function StoreManagerStores() {
+    const [activeTab, setActiveTab] = useState<TabKey>("all");
+    const [refreshing, setRefreshing] = useState(false);
+
+    const { stores, loading, error, hasFetchedOnce, fetchStores } = useManagerStoresStore();
+
+    const [selectedStore, setSelectedStore] = useState<StoreRow | null>(null);
+    const [modalVisible, setModalVisible] = useState(false);
+
+    const filtered = React.useMemo(() => {
+        if (activeTab === "all") return stores;
+        if (activeTab === "pending") return stores.filter(s => s.status === "pending_review");
+        return stores.filter(s => s.status === activeTab);
+    }, [stores, activeTab]);
+
+    // Initial Fetch (Only hits the network if it's the very first time opening the tab)
+    React.useEffect(() => {
+        if (!hasFetchedOnce) {
+            fetchStores();
+        }
+    }, [hasFetchedOnce, fetchStores]);
+
+    const onRefresh = async () => {
+        setRefreshing(true);
+        await fetchStores(true);
   const [activeTab, setActiveTab] = useState<TabKey>("all");
   const [stores, setStores] = useState<StoreRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -191,6 +218,12 @@ export default function StoreManagerStores() {
       } finally {
         setLoading(false);
         setRefreshing(false);
+    };
+
+    const handleStoreSaved = (updated: StoreRow) => {
+        useManagerStoresStore.getState().updateStoreOptimistically(updated);
+        setSelectedStore(updated);
+    };
       }
     },
     []

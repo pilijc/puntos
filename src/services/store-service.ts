@@ -22,6 +22,7 @@ export interface StoreRow {
     status: string;
     is_active: boolean;
     logo: string | null;
+    banner: string | null;
     owner_id: string | null;
     phone: string | null;
     registration_number: string | null;
@@ -96,7 +97,7 @@ export async function createStore(payload: CreateStorePayload): Promise<StoreRow
 export async function getMyStores(ownerId: string): Promise<StoreRow[]> {
     const { data, error } = await supabase
         .from("stores")
-        .select("id, name, type, address, latitude, longitude, status, is_active, logo, owner_id, phone, registration_number, created_at")
+        .select("id, name, type, address, latitude, longitude, status, is_active, logo, banner, owner_id, phone, registration_number, created_at")
         .eq("owner_id", ownerId)
         .order("created_at", { ascending: false });
 
@@ -122,7 +123,7 @@ export async function getAllStores(): Promise<AdminStoreRow[]> {
         .from("stores")
         .select(`
             id, name, type, address, latitude, longitude,
-            status, is_active, logo, owner_id,
+            status, is_active, logo, banner, owner_id,
             phone, registration_number, created_at,
             users ( name )
         `)
