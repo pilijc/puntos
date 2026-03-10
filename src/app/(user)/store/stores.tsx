@@ -1,18 +1,11 @@
-import React from "react";
 import { Modal as RNModal, Linking, Alert } from "react-native";
-import { View, Text, SafeAreaView, ScrollView, TouchableOpacity } from "@/tw";
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { View, Text, TouchableOpacity } from "@/tw";
 import React, { useMemo } from "react";
-import { router } from "expo-router";
-import SortPill from "@/components/rewards/SortPill";
-import StoreCard from "@/components/rewards/StoreCard";
 import { StoreItem } from "@/data/rewards";
-import { useRewardsUiStore } from "@/store/rewards-ui-store";
 import { useStoreStore } from "@/store/store-store";
 import { useStamps } from "@/hooks/use-stamps";
 import { useLocation } from "@/hooks/use-location";
 import { enrichStoresWithLocation } from "@/utils/store-location";
-
 export interface ResubsaleModalProps {
   visible: boolean;
   setShowModal: (show: boolean) => void;
@@ -28,22 +21,6 @@ export interface ResubsaleModalProps {
   icon?: React.ReactNode | string;
 }
 
-/**
- * Global, reusable modal for payments, resubscriptions, or any sale action.
- * Everything is customizable!
- *
- * Props:
- * - visible: Show the modal (required)
- * - setShowModal: Fn to control visibility (required)
- * - userId: Associated user, optional for certain flows
- * - amount: Optional amount for payment context
- * - type: payment | resubscription | sale | global (hint for styling)
- * - title, description: Any modal title/text
- * - onSuccess: Called after action completes (optional)
- * - onSubmit: Optional custom handler (if not set, defaults to pay action)
- * - submitLabel, cancelLabel: Custom button texts
- * - icon: JSX or emoji to show
- */
 export default function ResubsaleModal({
   visible,
   setShowModal,
@@ -158,20 +135,6 @@ export default function ResubsaleModal({
       };
     });
   }, [realStores, stamps, location]);
-
-  const sortedStores = useMemo(() => {
-    const list = [...allStores];
-    if (storeSort === "points") {
-      list.sort((a, b) =>
-        storePointsOrder === "desc" ? b.points - a.points : a.points - b.points
-      );
-    } else if (storeSort === "az") {
-      list.sort((a, b) => a.name.localeCompare(b.name));
-    } else {
-      list.sort((a, b) => a.distanceMeters - b.distanceMeters);
-    }
-    return list;
-  }, [allStores, storeSort, storePointsOrder]);
 
   const totalPoints = allStores.reduce((sum, store) => sum + store.points, 0);
 
