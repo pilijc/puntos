@@ -1,35 +1,44 @@
 import React, { useState, useCallback } from "react";
-import { ActivityIndicator, RefreshControl, useColorScheme, FlatList, Dimensions } from "react-native";
-import { ScrollView, View, Text, TouchableOpacity, SafeAreaView } from "@/tw";
+import { RefreshControl, useColorScheme, FlatList, Dimensions } from "react-native";
+import { ScrollView, View, Text, SafeAreaView } from "@/tw";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import Svg, { Path, Circle, Defs, LinearGradient, Stop } from "react-native-svg";
 import { useFocusEffect } from "expo-router";
 
 import { StoreRow } from "@/services/store-service";
 
 //hooks
-import { useStores, StoreStatusFilter } from "@/hooks/use-stores";
+import { useStores } from "@/hooks/use-stores";
 import { useStoreDashboardMetrics } from "@/hooks/use-store-metrics";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
+const HORIZONTAL_PADDING = 20; // consistent with p-5
+const CARD_WIDTH = SCREEN_WIDTH - (HORIZONTAL_PADDING * 2);
 
 // ── Store Card Component ──────────────────────────────────────────────────
 function StoreCard({ store }: { store: StoreRow }) {
-    const { activeUsers, todayTransactions, loading: metricsLoading } = useStoreDashboardMetrics(
+    const { activeUsers, todayTransactions, weeklyActivity, loading: metricsLoading } = useStoreDashboardMetrics(
         store.id,
         store.latitude,
         store.longitude,
         store.radius ?? 100
     );
 
+    const maxActivity = Math.max(...weeklyActivity, 1);
+    const dayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const last7DaysLabels = [...Array(7)].map((_, i) => {
+        const d = new Date();
+        d.setDate(d.getDate() - (6 - i));
+        return dayLabels[d.getDay()];
+    });
+
     return (
-        <View style={{ width: SCREEN_WIDTH }} className="px-5">
-            <View className="bg-white rounded-[32px] p-6 shadow-sm dark:bg-darkBackgroundCard min-h-[250px]">
+        <View style={{ width: CARD_WIDTH }}>
+            <View className="bg-white rounded-[24px] p-4 dark:bg-darkBackgroundCard min-h-[250px]">
 
                 {/* Store Header Info */}
                 <View className="mb-6">
-                    <Text className="text-2xl font-poppins-bold text-textPrimary dark:text-darkTextPrimary" numberOfLines={1}>
+                    <Text className="text-xl font-poppins-bold text-textPrimary dark:text-darkTextPrimary" numberOfLines={1}>
                         {store.name}
                     </Text>
                     {store.address && (
@@ -45,12 +54,12 @@ function StoreCard({ store }: { store: StoreRow }) {
                 {/* Metrics Row */}
                 <View className="flex-row justify-between mb-6">
                     {/* Active Users Section */}
-                    <View className="flex-1 bg-blue-50/50 rounded-2xl p-4 mr-2 dark:bg-blue-900/20">
+                    <View className="flex-1 bg-orange-50/50 rounded-xl p-4 mr-2 dark:bg-orange-900/20">
                         <View className="flex-row items-center mb-2">
-                            <View className="bg-blue-100 p-1.5 rounded-full mr-2 dark:bg-blue-800">
-                                <MaterialIcons name="people" size={16} color="#3B82F6" />
+                            <View className="bg-orange-100 p-1.5 rounded-full mr-1 dark:bg-orange-800">
+                                <MaterialIcons name="people" size={16} color="#FF6600" />
                             </View>
-                            <Text className="text-[11px] font-poppins-bold text-blue-600 tracking-wider dark:text-blue-400 uppercase">In-Store</Text>
+                            <Text className="text-[11px] font-poppins-bold text-orange-600 tracking-wider dark:text-darkPrimarySecondary uppercase">In-Store</Text>
                         </View>
                         <Text className="text-3xl font-poppins-bold text-textPrimary dark:text-darkTextPrimary">
                             {metricsLoading ? "-" : activeUsers}
@@ -58,12 +67,12 @@ function StoreCard({ store }: { store: StoreRow }) {
                     </View>
 
                     {/* Today's Transactions Section */}
-                    <View className="flex-1 bg-green-50/50 rounded-2xl p-4 ml-2 dark:bg-green-900/20">
+                    <View className="flex-1 bg-orange-50/50 rounded-xl p-4 ml-2 dark:bg-orange-900/20">
                         <View className="flex-row items-center mb-2">
-                            <View className="bg-green-100 p-1.5 rounded-full mr-2 dark:bg-green-800">
-                                <MaterialIcons name="receipt" size={16} color="#22C55E" />
+                            <View className="bg-orange-100 p-1.5 rounded-full mr-1 dark:bg-orange-800">
+                                <MaterialIcons name="receipt" size={16} color="#FF6600" />
                             </View>
-                            <Text className="text-[11px] font-poppins-bold text-green-600 tracking-wider dark:text-green-400 uppercase">Today's Scans</Text>
+                            <Text className="text-[11px] font-poppins-bold text-orange-600 tracking-wider dark:text-darkPrimarySecondary uppercase">Today's Scans</Text>
                         </View>
                         <Text className="text-3xl font-poppins-bold text-textPrimary dark:text-darkTextPrimary">
                             {metricsLoading ? "-" : todayTransactions}
@@ -74,22 +83,22 @@ function StoreCard({ store }: { store: StoreRow }) {
                 {/* Transaction Activity Graph Section */}
                 <View className="mt-2">
                     <Text className="text-[11px] font-poppins-bold text-textMuted tracking-widest mb-3 dark:text-darkTextSecondary uppercase">
-                        Activity Overview
+                        Weekly Scan Activity
                     </Text>
-                    <View className="h-16 flex-row items-end justify-between px-1">
-                        {/* Simple placeholder bars for a "graph" feel */}
-                        {[0.3, 0.5, 0.8, 0.4, 0.9, 0.6, 0.7].map((val, i) => (
-                            <View
-                                key={i}
-                                className="w-[10%] bg-primary/20 rounded-t-sm"
-                                style={{ height: `${val * 100}%` }}
-                            />
+                    <View className="flex-row justify-between px-1">
+                        {weeklyActivity.map((count, i) => (
+                            <View key={i} className="items-center" style={{ width: (CARD_WIDTH - 40) / 7 }}>
+                                <View className="h-16 w-full items-center justify-end">
+                                    <View
+                                        className={`w-6 rounded-t-sm ${i === 6 ? "bg-primary" : "bg-primary/20"}`}
+                                        style={{ height: `${Math.max((count / maxActivity) * 100, 5)}%` }}
+                                    />
+                                </View>
+                                <Text className={`text-[9px] font-poppins-bold mt-2 ${i === 6 ? "text-primary" : "text-textMuted dark:text-darkTextSecondary"}`}>
+                                    {last7DaysLabels[i].toUpperCase()}
+                                </Text>
+                            </View>
                         ))}
-                    </View>
-                    <View className="flex-row justify-between mt-1">
-                        <Text className="text-[9px] font-poppins text-textMuted dark:text-darkTextSecondary">EARLY</Text>
-                        <Text className="text-[9px] font-poppins text-textMuted dark:text-darkTextSecondary">PEAK</Text>
-                        <Text className="text-[9px] font-poppins text-textMuted dark:text-darkTextSecondary">LATE</Text>
                     </View>
                 </View>
             </View>
@@ -102,12 +111,10 @@ export default function StoreManagerDashboard() {
     const isDark = useColorScheme() === "dark";
     const insets = useSafeAreaInsets();
 
-    const { stores, filteredStores, loading, refreshing, error, activeFilter, setActiveFilter, refresh } = useStores();
+    const { stores, filteredStores, refreshing, refresh } = useStores();
 
     useFocusEffect(useCallback(() => { refresh(); }, []));
 
-    const [selectedStore, setSelectedStore] = useState<StoreRow | null>(null);
-    const [modalVisible, setModalVisible] = useState(false);
     const [currentIndex, setCurrentIndex] = useState(0);
 
     const onViewableItemsChanged = useCallback(({ viewableItems }: any) => {
@@ -121,25 +128,21 @@ export default function StoreManagerDashboard() {
         <StoreCard store={store} />
     ), []);
 
-    const firstStore = filteredStores[0] ?? stores[0];
-
     return (
-        <SafeAreaView className="flex-1 bg-backgroundMuted dark:bg-darkBackground">
+        <SafeAreaView className="flex-1 bg-backgroundMuted dark:bg-darkBackground p-5">
             <ScrollView
                 className="flex-1"
                 contentContainerStyle={{ flexGrow: 1 }}
                 showsVerticalScrollIndicator={false}
                 refreshControl={
-                    <RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor="#FFFFFF" colors={["#FF6600"]} />
+                    <RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor="#FFFFFF" colors={["#FF6600"]}
+                    />
                 }
             >
                 {/* ── NEW HEADER
                 ──────────────────────────────────────── */}
-                <View
-                    className="flex-row justify-between items-center px-6 mb-4"
-                    style={{ paddingTop: insets.top + 12 }}
-                >
-                    <Text className="text-2xl font-poppins-bold text-neutral-900 dark:text-darkTextPrimary">
+                <View className="justify-between mb-6">
+                    <Text className="text-xl font-poppins-bold text-textPrimary dark:text-darkTextPrimary">
                         Dashboard
                     </Text>
                 </View>
@@ -152,12 +155,13 @@ export default function StoreManagerDashboard() {
                         keyExtractor={(item) => item.id.toString()}
                         horizontal
                         showsHorizontalScrollIndicator={false}
-                        snapToInterval={SCREEN_WIDTH}
+                        snapToInterval={CARD_WIDTH + 8} // CARD_WIDTH + gap
                         snapToAlignment="start"
                         decelerationRate="fast"
                         disableIntervalMomentum={true}
                         onViewableItemsChanged={onViewableItemsChanged}
                         viewabilityConfig={{ itemVisiblePercentThreshold: 50 }}
+                        ItemSeparatorComponent={() => <View style={{ width: 8 }} />}
                     />
 
                     {/* ── Dot Indicators ── */}

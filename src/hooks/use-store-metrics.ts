@@ -9,6 +9,7 @@ export function useStoreDashboardMetrics(
 ) {
     const [activeUsers, setActiveUsers] = useState(0);
     const [todayTransactions, setTodayTransactions] = useState(0);
+    const [weeklyActivity, setWeeklyActivity] = useState<number[]>([0, 0, 0, 0, 0, 0, 0]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -22,6 +23,7 @@ export function useStoreDashboardMetrics(
             if (isMounted) {
                 setActiveUsers(data.activeUsers);
                 setTodayTransactions(data.todayTransactions);
+                setWeeklyActivity(data.weeklyActivity);
                 setLoading(false);
             }
         }
@@ -33,5 +35,5 @@ export function useStoreDashboardMetrics(
         return () => { isMounted = false; };
     }, [storeId, lat, lng, radius]);
 
-    return { activeUsers, todayTransactions, loading };
+    return { activeUsers, todayTransactions, weeklyActivity, loading };
 }
