@@ -1,5 +1,5 @@
-import React, { useState, useCallback } from "react";
-import { Switch, RefreshControl } from "react-native";
+import React, { useState } from "react";
+import { RefreshControl } from "react-native";
 import {
   View,
   Text,
@@ -10,8 +10,7 @@ import {
 import { Image } from "expo-image";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { router } from "expo-router";
-import { getMyStores, StoreRow } from "@/services/store-service";
-import StoreDetailModal from "@/components/stores/StoreDetailModal";
+import { StoreRow } from "@/services/store-service";
 import { useManagerStoresStore } from "@/store/manager-stores-store";
 
 type TabKey = "all" | "active" | "pending" | "inactive";

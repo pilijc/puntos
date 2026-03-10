@@ -122,6 +122,10 @@ export default function StoreManagerLayout() {
                 name="view-stamp"
                 options={{ href: null }}
             />
+             <Tabs.Screen
+                name="view-streak"
+                options={{ href: null }}
+            />
         </Tabs>
     );
 }

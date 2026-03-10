@@ -84,7 +84,7 @@ export default function ViewStore() {
 
     const navigateToView = (featureId: string) => {
       if (featureId === "streaks") {
-        router.push({ pathname: "/(store_manager)/configure-streaks", params: { storeId } });
+        router.push({ pathname: "/(store_manager)/view-streak", params: { storeId } });
       } else if (featureId === "stamps") {
         router.push({ pathname: "/(store_manager)/view-stamp", params: { storeId } });
       }
