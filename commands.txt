@@ -1,0 +1,24 @@
+update stores
+set is_active = true,
+    status = 'active'
+where id = 18;
+
+
+Success. No rows returned
+
+select id, name, status, is_active, latitude, longitude, radius
+from stores
+where id = 18;
+
+
+[
+  {
+    "id": 18,
+    "name": "This is my Store",
+    "status": "active",
+    "is_active": true,
+    "latitude": 10.3157,
+    "longitude": 123.885,
+    "radius": 30
+  }
+]

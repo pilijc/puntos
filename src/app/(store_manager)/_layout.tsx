@@ -117,6 +117,14 @@ export default function StoreManagerLayout() {
                 name="rewards"
                 options={{ href: null }}
             />
+            <Tabs.Screen
+                name="view-stamp"
+                options={{ href: null }}
+            />
+             <Tabs.Screen
+                name="view-streak"
+                options={{ href: null }}
+            />
         </Tabs>
     );
 }

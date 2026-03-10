@@ -13,6 +13,9 @@ export interface StampProgress {
     logo?: string;
     status: string;
     is_active: boolean;
+    latitude?: number;
+    longitude?: number;
+    address?: string;
   };
 }
 
@@ -31,7 +34,10 @@ export async function getUserStamps(userId: string): Promise<StampProgress[]> {
           name,
           logo,
           status,
-          is_active
+          is_active,
+          latitude,
+          longitude,
+          address
         )
       `)
       .eq("user_id", userId);
@@ -243,5 +249,71 @@ export async function addStamp(
   } catch (error) {
     console.error("Exception adding stamp:", error);
     return { success: false, reason: "error" };
+  }
+}
+
+export async function getStoresWithEnabledActiveStampProgram(
+  storeIds: number[],
+): Promise<number[]> {
+  if (storeIds.length === 0) return [];
+
+  try {
+    const { data: stampRows, error: stampError } = await supabase
+      .from("store_stamps")
+      .select("store_id")
+      .in("store_id", storeIds)
+      .eq("is_active", true);
+
+    const activeStoreIds = stampError
+      ? []
+      : Array.from(new Set((stampRows ?? []).map((row: any) => Number(row.store_id))));
+
+    // Prefer strict enforcement (stamp_enabled + active program).
+    // If feature read is blocked by RLS in user context, gracefully fallback to active programs.
+    const { data: featureRows, error: featureError } = await supabase
+      .from("store_feature")
+      .select("store_id, stamp_enabled")
+      .in("store_id", storeIds);
+
+    const featureFlagByStoreId = new Map<number, boolean | null>(
+      (featureRows ?? []).map((row: any) => [
+        Number(row.store_id),
+        row.stamp_enabled as boolean | null,
+      ]),
+    );
+
+    // Match addStamp() behavior: block only when stamp_enabled is explicitly false.
+    // If feature row is missing, treat it as allowed.
+    const isFeatureAllowed = (storeId: number) =>
+      featureFlagByStoreId.get(storeId) !== false;
+
+    // Best case: both queries readable -> strict intersection.
+    if (!stampError && !featureError) {
+      return activeStoreIds.filter((id) => isFeatureAllowed(id));
+    }
+
+    // If one side is blocked by RLS, fallback to the side we can read.
+    if (stampError && !featureError) {
+      console.warn(
+        "store_stamps is not readable in current context; falling back to stamp_enabled stores.",
+      );
+      return storeIds.filter((id) => isFeatureAllowed(id));
+    }
+
+    if (!stampError && featureError) {
+      console.warn(
+        "store_feature is not readable in current context; falling back to active stamp programs.",
+      );
+      return activeStoreIds;
+    }
+
+    // If both are unreadable, avoid emptying the UI; defer strict validation to actual stamp action.
+    console.warn(
+      "store_stamps and store_feature are not readable in current context; falling back to nearby stores.",
+    );
+    return storeIds;
+  } catch (error) {
+    console.error("Exception fetching eligible stamp stores:", error);
+    return storeIds;
   }
 }

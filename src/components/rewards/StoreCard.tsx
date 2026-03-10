@@ -17,7 +17,14 @@ export default function StoreCard({ store, onPress }: StoreCardProps) {
       className="bg-white dark:bg-darkBackgroundMuted rounded-2xl p-3 border border-neutral-100 dark:border-darkBorder flex-row gap-x-3 items-center"
     >
       <View className="w-14 h-14 rounded-xl bg-neutral-100 dark:bg-darkBackgroundCard items-center justify-center overflow-hidden">
-        {logoSource ? (
+        {store.logo ? (
+          <Image
+            source={{ uri: store.logo }}
+            className="w-full h-full"
+            contentFit="cover"
+            contentPosition="center"
+          />
+        ) : logoSource ? (
           <Image
             source={logoSource}
             className="w-full h-full"
@@ -33,7 +40,7 @@ export default function StoreCard({ store, onPress }: StoreCardProps) {
           {store.name}
         </Text>
         <Text className="text-xs text-neutral-500 dark:text-darkTextSecondary font-poppins mt-1">
-          {store.location} • {store.distanceMiles.toFixed(1)} miles away
+          {store.location} • {store.distanceMeters.toLocaleString(undefined, { maximumFractionDigits: 2 })} meters away
         </Text>
         <Text className="text-primary font-poppins-semibold mt-2">
           {store.points.toLocaleString()} pts

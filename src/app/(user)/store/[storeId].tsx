@@ -36,7 +36,7 @@ export default function StoreRewards() {
 
   // Enrich stores with location data
   const storesWithLocation = useMemo(() => {
-    return enrichStoresWithLocation(stores, location, 2.0);
+    return enrichStoresWithLocation(stores, location);
   }, [stores, location]);
 
   const store = storesWithLocation.find((item) => item.id.toString() === storeId);
@@ -45,7 +45,7 @@ export default function StoreRewards() {
   const [selectedReward, setSelectedReward] = useState<typeof rewards[0] | null>(null);
 
   const { sessionToken } = useAuthStore();
-  const { stamps, refetch: refetchStamps } = useStamps();
+  const { stamps, isLoading: isStampsLoading, refetch: refetchStamps } = useStamps();
   const { refetch: refetchStampRewards } = useStampRewards();
 
   const [isStamping, setIsStamping] = useState(false);
@@ -158,7 +158,7 @@ export default function StoreRewards() {
             </Text>
             <Text className="text-xs text-neutral-500 font-poppins mt-1">
               {store?.address ?? "Location"} •{" "}
-              {store ? store.distanceMeters?.toLocaleString() : "0"} meters away
+              {store ? store.distanceMeters?.toLocaleString(undefined, { maximumFractionDigits: 2 }) : "0"} meters away
             </Text>
           </View>
         </View>
@@ -181,9 +181,9 @@ export default function StoreRewards() {
             <TouchableOpacity
               className={`${hasStampedToday ? "bg-primary/50" : "bg-primary"} px-3 py-2 rounded-full`}
               onPress={handleStamp}
-              disabled={isStamping || hasStampedToday}
+              disabled={isStamping || hasStampedToday || isStampsLoading}
             >
-              {isStamping ? (
+              {isStamping || isStampsLoading ? (
                 <ActivityIndicator size="small" color="#FFFFFF" />
               ) : (
                 <Text className="text-white text-[10px] font-poppins-semibold">

@@ -4,6 +4,7 @@
   "main": "expo-router/entry",
   "scripts": {
     "start": "expo start",
+    "typecheck": "tsc --noEmit",
     "web": "expo start --web",
     "deploy": "npx expo export -p web && npx eas-cli@latest deploy",
     "android": "expo run:android",
@@ -24,6 +25,7 @@
     "@turf/turf": "^7.3.4",
     "expo": "^54.0.33",
     "expo-auth-session": "~7.0.10",
+    "expo-blur": "~15.0.8",
     "expo-build-properties": "^1.0.10",
     "expo-camera": "~17.0.10",
     "expo-constants": "~18.0.8",

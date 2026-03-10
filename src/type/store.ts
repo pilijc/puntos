@@ -6,6 +6,7 @@ export interface Store {
   longitude: number;
   is_active: boolean;
   logo: string | null;
+  banner: string | null;
   store_pictures: string[] | null;
   type: string;
   status: string;
