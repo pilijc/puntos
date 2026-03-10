@@ -108,34 +108,35 @@ export default function Discover() {
           setLocation(position);
 
           const { latitude: uLat, longitude: uLon } = position.coords;
-
           const currentStores = useStoreStore.getState().stores;
 
+          const nearbyStoreIds: number[] = [];
           for (const store of currentStores) {
             if (notifiedStoreIds.current.has(store.id)) continue;
             if (!store.latitude || !store.longitude) continue;
-
             const nearby = isStoreNearby(uLat, uLon, store.latitude, store.longitude, store.radius!);
+            if (nearby) nearbyStoreIds.push(store.id);
+          }
 
-            if (nearby) {
-              console.log(`[Geofence] Entered store: ${store.name}`);
-              notifiedStoreIds.current.add(store.id);
+          const nearbyCount = nearbyStoreIds.length;
 
-              try {
-                const subscriptionId = await getOneSignalId();
-                if (!subscriptionId) continue;
-
+          console.log(`[Geofence] Nearby stores count: ${nearbyCount}`);
+          if (nearbyCount > 2) {
+            try {
+              const subscriptionId = await getOneSignalId();
+              if (subscriptionId) {
                 const res = await sendPushNotification(
                   subscriptionId,
-                  `You're near ${store.name}! 📍`,
-                  `Visit ${store.name} and earn Puntos rewards!`,
+                  `${nearbyCount} stores nearby 📍`,
+                  `Visit nearby stores and earn Puntos rewards!`,
                 );
                 if (res instanceof Response) {
-                  console.log(`[Geofence] Push sent for ${store.name}:`, res.status);
+                  console.log(`[Geofence] Push sent (${nearbyCount} stores nearby):`, res.status);
                 }
-              } catch (err) {
-                console.error('[Geofence] Failed to send push notification:', err);
+                nearbyStoreIds.forEach((id) => notifiedStoreIds.current.add(id));
               }
+            } catch (err) {
+              console.error('[Geofence] Failed to send push notification:', err);
             }
           }
         }
