@@ -73,7 +73,7 @@ export default function PaymentModal({
             className="w-full bg-orange-500 py-3 rounded-xl items-center mb-3 active:opacity-80"
           >
             <Text className="text-white font-semibold text-base">
-              Pay with CASH G!!
+              Pay with GCASH
             </Text>
           </TouchableOpacity>
 
