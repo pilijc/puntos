@@ -1,6 +1,17 @@
 import React from "react";
 import { Modal as RNModal, Linking, Alert } from "react-native";
-import { View, Text, TouchableOpacity } from "@/tw";
+import { View, Text, SafeAreaView, ScrollView, TouchableOpacity } from "@/tw";
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import React, { useMemo } from "react";
+import { router } from "expo-router";
+import SortPill from "@/components/rewards/SortPill";
+import StoreCard from "@/components/rewards/StoreCard";
+import { StoreItem } from "@/data/rewards";
+import { useRewardsUiStore } from "@/store/rewards-ui-store";
+import { useStoreStore } from "@/store/store-store";
+import { useStamps } from "@/hooks/use-stamps";
+import { useLocation } from "@/hooks/use-location";
+import { enrichStoresWithLocation } from "@/utils/store-location";
 
 export interface ResubsaleModalProps {
   visible: boolean;
@@ -123,6 +134,46 @@ export default function ResubsaleModal({
       ? "Complete Sale"
       : "Continue");
   const CANCEL_LABEL = cancelLabel || "Cancel";
+  const { stores: realStores } = useStoreStore();
+  const { stamps } = useStamps();
+  const { location } = useLocation();
+
+  const allStores: StoreItem[] = useMemo(() => {
+    const stampedIds = new Set(stamps.map((s) => s.store_id.toString()));
+    const myStores = realStores.filter((s) => stampedIds.has(s.id.toString()));
+    const enrichedStores = enrichStoresWithLocation(myStores, location);
+
+    return enrichedStores.map((s) => {
+      const stampProgress = stamps.find(
+        (p) => p.store_id.toString() === s.id.toString()
+      );
+      return {
+        id: s.id.toString(),
+        name: s.name,
+        location: s.address || "Unknown location",
+        distanceMeters: s.distanceMeters,
+        points: 0, // Points are a separate feature
+        isNearby: s.isNearby,
+        logo: s.logo,
+      };
+    });
+  }, [realStores, stamps, location]);
+
+  const sortedStores = useMemo(() => {
+    const list = [...allStores];
+    if (storeSort === "points") {
+      list.sort((a, b) =>
+        storePointsOrder === "desc" ? b.points - a.points : a.points - b.points
+      );
+    } else if (storeSort === "az") {
+      list.sort((a, b) => a.name.localeCompare(b.name));
+    } else {
+      list.sort((a, b) => a.distanceMeters - b.distanceMeters);
+    }
+    return list;
+  }, [allStores, storeSort, storePointsOrder]);
+
+  const totalPoints = allStores.reduce((sum, store) => sum + store.points, 0);
 
   return (
     <RNModal visible={visible} transparent animationType="fade" onRequestClose={() => setShowModal(false)}>
@@ -154,6 +205,9 @@ export default function ResubsaleModal({
               <Text className="text-3xl font-bold text-orange-500">₱{amount}</Text>
             </View>
           )}
+        <Text className="text-xs text-neutral-500 font-poppins">
+          {allStores.length} stores • {totalPoints.toLocaleString()} pts total
+        </Text>
 
           {/* Submit Button */}
           <TouchableOpacity

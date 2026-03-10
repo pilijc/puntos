@@ -9,9 +9,10 @@ import {
 } from "@/tw";
 import { Image } from "expo-image";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { router, useFocusEffect } from "expo-router";
-import { supabase } from "@/supabase/supabase";
+import { router } from "expo-router";
 import { getMyStores, StoreRow } from "@/services/store-service";
+import StoreDetailModal from "@/components/stores/StoreDetailModal";
+import { useManagerStoresStore } from "@/store/manager-stores-store";
 
 type TabKey = "all" | "active" | "pending" | "inactive";
 
@@ -163,50 +164,37 @@ function SkeletonCard() {
 }
 
 export default function StoreManagerStores() {
-  const [activeTab, setActiveTab] = useState<TabKey>("all");
-  const [stores, setStores] = useState<StoreRow[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+    const [activeTab, setActiveTab] = useState<TabKey>("all");
+    const [refreshing, setRefreshing] = useState(false);
 
-  const fetchStores = useCallback(
-    async (silent = false) => {
-      if (!silent) setLoading(true);
-      setError(null);
-      try {
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
-        if (!user) return;
-        const data = await getMyStores(user.id);
-        setStores(data);
-      } catch (e: any) {
-        setError(e?.message ?? "Failed to load stores");
-      } finally {
-        setLoading(false);
+    const { stores, loading, error, hasFetchedOnce, fetchStores } = useManagerStoresStore();
+
+    const [selectedStore, setSelectedStore] = useState<StoreRow | null>(null);
+    const [modalVisible, setModalVisible] = useState(false);
+
+    const filtered = React.useMemo(() => {
+        if (activeTab === "all") return stores;
+        if (activeTab === "pending") return stores.filter(s => s.status === "pending_review");
+        return stores.filter(s => s.status === activeTab);
+    }, [stores, activeTab]);
+
+    // Initial Fetch (Only hits the network if it's the very first time opening the tab)
+    React.useEffect(() => {
+        if (!hasFetchedOnce) {
+            fetchStores();
+        }
+    }, [hasFetchedOnce, fetchStores]);
+
+    const onRefresh = async () => {
+        setRefreshing(true);
+        await fetchStores(true);
         setRefreshing(false);
-      }
-    },
-    []
-  );
+    };
 
-  useFocusEffect(
-    useCallback(() => {
-      fetchStores();
-    }, [fetchStores])
-  );
-
-  const onRefresh = () => {
-    setRefreshing(true);
-    fetchStores(true);
-  };
-
-  const filtered = stores.filter((s) => {
-    if (activeTab === "active") return s.status === "active";
-    if (activeTab === "pending") return s.status === "pending_review";
-    if (activeTab === "inactive") return s.status === "inactive";
-    return true;
-  });
+    const handleStoreSaved = (updated: StoreRow) => {
+        useManagerStoresStore.getState().updateStoreOptimistically(updated);
+        setSelectedStore(updated);
+    };
 
   return (
     <SafeAreaView className="flex-1 bg-backgroundMuted dark:bg-slate-950">
