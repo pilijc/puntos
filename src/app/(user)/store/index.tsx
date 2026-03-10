@@ -89,7 +89,10 @@ export default function Rewards() {
     return enrichStoresWithLocation(stores, location);
   }, [stores, location]);
 
-  const nearbyStores = storesWithLocation.filter((store) => store.isNearby);
+  const nearbyStores = useMemo(
+    () => storesWithLocation.filter((store) => store.isNearby),
+    [storesWithLocation],
+  );
   const featuredStore = nearbyStores[0] ?? storesWithLocation[0];
   const [eligibleNearbyStoreIds, setEligibleNearbyStoreIds] = useState<number[]>([]);
 
@@ -126,12 +129,25 @@ export default function Rewards() {
     const loadEligibleNearbyStores = async () => {
       const nearbyIds = nearbyStores.map((store) => Number(store.id));
       if (nearbyIds.length === 0) {
-        if (!isCancelled) setEligibleNearbyStoreIds([]);
+        if (!isCancelled) {
+          setEligibleNearbyStoreIds((prev) => (prev.length === 0 ? prev : []));
+        }
         return;
       }
 
       const ids = await getStoresWithEnabledActiveStampProgram(nearbyIds);
-      if (!isCancelled) setEligibleNearbyStoreIds(ids);
+      if (!isCancelled) {
+        const nextIds = Array.from(new Set(ids.map((id) => Number(id)))).sort((a, b) => a - b);
+        setEligibleNearbyStoreIds((prev) => {
+          if (
+            prev.length === nextIds.length &&
+            prev.every((value, index) => value === nextIds[index])
+          ) {
+            return prev;
+          }
+          return nextIds;
+        });
+      }
     };
 
     loadEligibleNearbyStores();
@@ -185,37 +201,6 @@ export default function Rewards() {
     return [...nearbyEligible, ...nonNearbyStamped];
   }, [sortedStamps, nearbyStores, eligibleNearbyStoreIds, location]);
 
-  useEffect(() => {
-    console.log("[StoreStampDebug]", {
-      hasLocation: !!location,
-      nearbyStoreIds: nearbyStores.map((s) => Number(s.id)),
-      eligibleNearbyStoreIds,
-      stampedStoreIds: sortedStamps.map((s) => Number(s.store_id)),
-      displayStoreIds: displayStamps.map((s) => Number(s.store_id)),
-    });
-  }, [location, nearbyStores, eligibleNearbyStoreIds, sortedStamps, displayStamps]);
-
-  useEffect(() => {
-    const countSources = displayStamps.map((stamp) => {
-      const rewardRow = stampRewards.find((s) => Number(s.store_id) === Number(stamp.store_id));
-      const resolved = stamp.stamps_count ?? rewardRow?.current_stamp_count ?? 0;
-      return {
-        storeId: Number(stamp.store_id),
-        progressCount: stamp.stamps_count,
-        rewardCount: rewardRow?.current_stamp_count ?? null,
-        resolvedCount: resolved,
-      };
-    });
-
-    console.log("[StoreStampCountDebug]", countSources);
-  }, [displayStamps, stampRewards]);
-
-  useEffect(() => {
-    (async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      console.log("[StoreStampDebugUser]", { userId: user?.id ?? null });
-    })();
-  }, []);
 
   const [isStamping, setIsStamping] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -284,8 +269,6 @@ export default function Rewards() {
     const from = point([location.longitude, location.latitude]);
     const to = point([storeLon, storeLat]);
     const distKm = distance(from, to, { units: "kilometers" });
-
-    console.log(`[Streaks Proximity Debug] Distance to Store (${storeLat}, ${storeLon}) from User (${location.latitude}, ${location.longitude}) -> ${distKm} km`);
 
     return distKm <= 0.03;
   };
@@ -634,8 +617,9 @@ export default function Rewards() {
                 height={210}
                 data={displayStamps}
                 scrollAnimationDuration={1000}
-                loop={true}
-                autoPlay={isAutoPlayEnabled}
+                enabled={displayStamps.length > 1}
+                loop={displayStamps.length > 1}
+                autoPlay={isAutoPlayEnabled && displayStamps.length > 1}
                 autoPlayInterval={3000}
                 onScrollStart={handleCarouselInteraction}
                 onSnapToItem={(index) => setCarouselIndex(index)}

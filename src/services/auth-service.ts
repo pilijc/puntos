@@ -148,7 +148,6 @@ export async function signUpWithGoogleService() {
 export async function loginService(email: string, password: string) {
   try {
     const res = await supabase.auth.signInWithPassword({ email, password });
-    console.log("res", res);
     if (res.data?.session?.access_token) {
       await AsyncStorage.setItem('sessionToken', res.data.session.access_token);
     }
