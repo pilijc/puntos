@@ -67,10 +67,10 @@ export default async function signUpService(email: string, password: string, nam
         .single();
 
       if (!existingProfile) {
+        //add new user from table users /auth
         //add new user from table users
         await supabase.from("users").insert({ id: data.user.id, name });
       }
-
       // Assign role for user or manager/owner
       const roleToId: Record<string, number> = { user: 4, manager: 2 };
       const roleId = roleToId[role];
@@ -139,6 +139,9 @@ export async function signUpWithGoogleService() {
           if (insertError) {
             throw insertError;
           }
+
+          // Assign default role 'user'
+          await supabase.from("user_roles").insert({ user_id: data.user.id, role_id: 4, store_id: null });
 
           // Assign default role 'user'
           await supabase.from("user_roles").insert({ user_id: data.user.id, role_id: 4, store_id: null });
