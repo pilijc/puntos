@@ -3,8 +3,12 @@ import { create } from "zustand";
 
 export const useStampStore = create<StampStore>((set) => ({
   total_stamps: 0,
-  reward_id: 0,
-  setTotalStamps: (total_stamps: number) => set({ total_stamps }),
-  setRewardId: (reward_id: number) => set({ reward_id }),
-  reset: () => set({ total_stamps: 0, reward_id: 0 }),
-}));    
+  reward_id: "",
+  expiration_mode: "none",
+  expiration_days: 30,
+  setTotalStamps: (total_stamps) => set({ total_stamps }),
+  setRewardId: (reward_id) => set({ reward_id }),
+  setExpirationMode: (expiration_mode) => set({ expiration_mode }),
+  setExpirationDays: (expiration_days) => set({ expiration_days }),
+  reset: () => set({ total_stamps: 0, reward_id: "", expiration_mode: "none", expiration_days: 30 }),
+}));
