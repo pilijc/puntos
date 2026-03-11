@@ -1,4 +1,4 @@
-import { Store } from "../store";
+import { Store } from "../user/store";
 
 export type StoreCardVariant = "list" | "preview";
 
