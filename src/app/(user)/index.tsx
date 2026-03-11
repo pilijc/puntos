@@ -1,12 +1,10 @@
 import { Text, SafeAreaView, View, Image } from "@/tw";
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import Mapbox, { MapView, Camera, PointAnnotation } from "@rnmapbox/maps";
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import Mapbox, { MapView, PointAnnotation } from "@rnmapbox/maps";
 import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
-import { Alert, TextInput, TouchableOpacity, useColorScheme } from "react-native";
+import { TextInput, TouchableOpacity, useColorScheme } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 import * as Location from 'expo-location'
-import { supabase } from "@/supabase/supabase";
 import { Ionicons, MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
 import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
 import { getRouteService, getSearchResultsService } from "@/services/discover-service";

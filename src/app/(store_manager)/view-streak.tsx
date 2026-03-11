@@ -437,8 +437,8 @@ export default function ViewStreak() {
       title: "Publish Streak Program",
       message: "Users will be able to see this program is coming. You can activate it when you're ready.",
       buttons: [
-        { label: "Publish", variant: "primary", onPress: () => { setModal(null); doPublish(streak.id!); } },
         { label: "Cancel",  variant: "secondary", onPress: () => setModal(null) },
+        { label: "Publish", variant: "primary", onPress: () => { setModal(null); doPublish(streak.id!); } },
       ],
     });
   };
@@ -460,8 +460,8 @@ export default function ViewStreak() {
       title: "Activate Streak Program",
       message: "Users will be able to start earning streak points immediately.",
       buttons: [
-        { label: "Activate", variant: "success", onPress: () => { setModal(null); doActivate(streak.id!); } },
         { label: "Cancel",   variant: "secondary", onPress: () => setModal(null) },
+        { label: "Activate", variant: "primary", onPress: () => { setModal(null); doActivate(streak.id!); } },
       ],
     });
   };
