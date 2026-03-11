@@ -7,21 +7,21 @@ export async function processFrontDeskScan(
   qrData: string,
   purchaseAmount: number
 ): Promise<FrontDeskScanResult> {
-  // 1. Parse the QR code
+  // Parse the QR code
   const parsed = parseQRCode(qrData);
 
   if (!parsed) {
     return { success: false, message: "Invalid QR Code. This QR code is not recognized." };
   }
 
-  // 2. Get current staff user
+  //Get current staff user
   const { data: { user }, error: authError } = await supabase.auth.getUser();
 
   if (authError || !user) {
     return { success: false, message: "Staff not authenticated." };
   }
 
-  // 3. Create QR transaction
+  //Create QR transaction
   try {
     const transaction = await createQRTransaction(
       parsed.userId,
@@ -65,6 +65,7 @@ export async function getCurrentUserStore(): Promise<{name: string; id: number} 
       .from('stores')
       .select('name')
       .eq('id', staffData.store_id)
+      .eq('status', 'active')
       .single();
 
     if (storeError || !storeData) {

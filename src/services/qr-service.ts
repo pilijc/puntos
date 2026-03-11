@@ -67,13 +67,13 @@ export function parseQRCode(qrValue: string): { type: string; userId: string } |
   return null;
 }
 
-// Create QR transaction with purchase tracking and dynamic points calculation
+// Create QR transaction with purchase tracking and dynamic points calculation --> THIS METHOD WILL CALL TO OPERATOR-SERVICE
 export async function createQRTransaction(
   userId: string,
   storeStaffId: string,
   purchaseAmount: number
 ): Promise<QRTransaction> {
-  // First, get the store_id from store_staff
+  // get the store_id from store_staff
   const { data: staffData, error: staffError } = await supabase
     .from('store_staff')
     .select('store_id')

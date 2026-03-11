@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { RefreshControl } from "react-native";
+import React, { useEffect, useState, useCallback } from "react";
+import { Switch, RefreshControl } from "react-native";
 import {
   View,
   Text,
@@ -8,10 +8,13 @@ import {
   SafeAreaView,
 } from "@/tw";
 import { Image } from "expo-image";
+import { useRouter, useFocusEffect } from "expo-router";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { router } from "expo-router";
-import { StoreRow } from "@/services/store-service";
+import { StoreRow, getMyStores } from "@/services/store-service";
 import { useManagerStoresStore } from "@/store/manager-stores-store";
+import { supabase } from "@/supabase/supabase";
+import { getStoreByOwnerId } from "@/services/store-manager/payment-service";
+import PaymentModal from "@/components/payment/paymentBoxModal";
 
 type TabKey = "all" | "active" | "pending" | "inactive";
 
@@ -43,7 +46,7 @@ const STATUS_BADGE: Record<
   },
 };
 
-function StoreCard({ store }: { store: StoreRow }) {
+function StoreCard({ store, router }: { store: StoreRow; router: any }) {
   const status = store.status ?? "inactive";
   const badge = STATUS_BADGE[status] ?? STATUS_BADGE.inactive;
 
@@ -58,7 +61,6 @@ function StoreCard({ store }: { store: StoreRow }) {
         })
       }
     >
-
       <View className="p-4 flex-row gap-3">
         <View className="w-[60px] h-[60px] rounded-xl bg-slate-100 dark:bg-slate-800 items-center justify-center overflow-hidden">
           {store.logo ? (
@@ -113,7 +115,7 @@ function StoreCard({ store }: { store: StoreRow }) {
       <View className="px-4 py-3 border-t border-slate-100 dark:border-slate-800 flex-row items-center justify-between bg-slate-50 dark:bg-slate-800/30">
         <View className="flex-row items-center gap-2">
           <Text className="text-sm font-poppins-medium text-slate-500 dark:text-slate-400">
-            {store?.type ? store.type.charAt(0).toUpperCase() + store.type.slice(1) : ""}
+            {store.type ? store.type.charAt(0).toUpperCase() + store.type.slice(1) : ""}
           </Text>
         </View>
         <TouchableOpacity
@@ -163,19 +165,37 @@ function SkeletonCard() {
 }
 
 export default function StoreManagerStores() {
-    const [activeTab, setActiveTab] = useState<TabKey>("all");
-    const [refreshing, setRefreshing] = useState(false);
+  const [activeTab, setActiveTab] = useState<TabKey>("all");
 
-    const { stores, loading, error, hasFetchedOnce, fetchStores } = useManagerStoresStore();
+  const router = useRouter();
 
-    const [selectedStore, setSelectedStore] = useState<StoreRow | null>(null);
-    const [modalVisible, setModalVisible] = useState(false);
+  const { stores, loading, error, hasFetchedOnce, fetchStores } = useManagerStoresStore();
 
-    const filtered = React.useMemo(() => {
-        if (activeTab === "all") return stores;
-        if (activeTab === "pending") return stores.filter(s => s.status === "pending_review");
-        return stores.filter(s => s.status === activeTab);
-    }, [stores, activeTab]);
+  const [selectedStore, setSelectedStore] = useState<StoreRow | null>(null);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [user, setUser] = useState<string | null>(null);
+  const [hasPaidStoreFee, setHasPaidStoreFee] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const filtered = React.useMemo(() => {
+    if (activeTab === "all") return stores;
+    if (activeTab === "pending") return stores.filter(s => s.status === "pending_review");
+    return stores.filter(s => s.status === activeTab);
+  }, [stores, activeTab]);
+
+  // Initial Fetch (Only hits the network if it's the very first time opening the tab)
+  React.useEffect(() => {
+    if (!hasFetchedOnce) {
+      fetchStores();
+    }
+  }, [hasFetchedOnce, fetchStores]);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchStores(true);
+    await checkPaymentStatus();
+  };
 
     React.useEffect(() => {
         if (!hasFetchedOnce) {
@@ -183,20 +203,20 @@ export default function StoreManagerStores() {
         }
     }, [hasFetchedOnce, fetchStores]);
 
-    const onRefresh = async () => {
-        setRefreshing(true);
-        await fetchStores(true);
-        setRefreshing(false);
-    };
+  useFocusEffect(
+    useCallback(() => {
+      fetchStores();
+    }, [fetchStores])
+  );
 
-    const handleStoreSaved = (updated: StoreRow) => {
-        useManagerStoresStore.getState().updateStoreOptimistically(updated);
-        setSelectedStore(updated);
-    };
+  useFocusEffect(
+    useCallback(() => {
+      checkPaymentStatus();
+    }, [checkPaymentStatus])
+  );
 
   return (
     <SafeAreaView className="flex-1 bg-backgroundMuted dark:bg-slate-950">
-			
       <View className="bg-white border-b border-slate-100 dark:bg-slate-900 dark:border-slate-800 px-6 py-4 flex-row items-center justify-start">
         <View className="flex-row items-center gap-2 py-1">
           <MaterialIcons name="storefront" size={22} color="black" className="mt-1" />
@@ -297,7 +317,7 @@ export default function StoreManagerStores() {
           )}
           {!loading &&
             filtered.map((store) => (
-              <StoreCard key={store.id} store={store} />
+              <StoreCard key={store.id} store={store} router={router} />
             ))}
           {!loading && filtered.length === 0 && !error && (
             <View className="items-center pt-16 gap-3">
@@ -322,10 +342,24 @@ export default function StoreManagerStores() {
 
         <TouchableOpacity
           className="absolute bottom-5 right-6 w-14 h-14 rounded-full bg-primary items-center justify-center"
-          onPress={() => router.push("/(store_manager)/create-store")}
+          onPress={() => {
+            if (!hasPaidStoreFee) {
+              setShowPaymentModal(true);
+              console.log("Payment required to create store");
+              return;
+            }
+            router.push("/(store_manager)/create-store");
+          }}
         >
           <MaterialIcons name="add" size={28} color="#fff" />
         </TouchableOpacity>
+        {showPaymentModal && (
+          <PaymentModal
+            setShowPaymentModal={setShowPaymentModal}
+            userId={user}
+            amount={199}
+          />
+        )}
       </View>
     </SafeAreaView>
   );
