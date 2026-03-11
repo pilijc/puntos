@@ -12,6 +12,7 @@ import EditProfileModal from "@/components/settings/EditProfileModal";
 import SecurityModal from "@/components/settings/SecurityModal";
 import { LogoutButton } from "@/components/settings/LogoutButton";
 import { UserProfileCard } from "@/components/settings/UserProfileCard";
+import { SecurityCard } from "@/components/settings/SecurityCard";
 import DarkModeToggle from "@/components/ui/dark-mode-toggle";
 
 export default function StoreManagerSettings() {
@@ -57,7 +58,7 @@ export default function StoreManagerSettings() {
         <SafeAreaView className="flex-1 bg-background dark:bg-darkBackground p-4">
             {/* Header */}
             <View className="flex-row justify-between items-center mb-6">
-                <Text className="text-2xl font-poppins-bold text-neutral-900 dark:text-darkTextPrimary">
+                <Text className="text-xl font-poppins-bold text-neutral-900 dark:text-darkTextPrimary">
                     Settings
                 </Text>
                 <DarkModeToggle />
@@ -77,25 +78,13 @@ export default function StoreManagerSettings() {
                 </Text>
             </View>
 
-            <View className="mx-4 mb-6 overflow-hidden bg-background dark:bg-darkBackgroundMuted rounded-2xl border border-neutral-200 dark:border-darkBorder">
-                <TouchableOpacity
-                    onPress={() => setSecurityModalVisible(true)}
-                    className="flex-row items-center p-4 bg-background dark:bg-darkBackgroundMuted active:bg-neutral-50 dark:active:bg-darkBackgroundCard will-change-pressable">
-                    <View className="h-5 w-5 items-center justify-center rounded-lg bg-emerald-50">
-                        <Ionicons name="settings-outline" size={15} color="#3b82f6" />
-                    </View>
-                    <Text className="text-base flex-1 ml-3 font-poppins-semibold text-textPrimary dark:text-darkTextPrimary">
-                        Security
-                    </Text>
-                    <Ionicons name="chevron-forward-outline" size={15} color="#d4d4d4" />
-                </TouchableOpacity>
-            </View>
+            <SecurityCard onPress={() => setSecurityModalVisible(true)} />
 
             <LogoutButton />
 
             <View className="mx-8 mt-6 items-center">
                 <Text className="text-sm text-center font-poppins-regular text-neutral-500 dark:text-darkTextSecondary">
-                    Copyright 2026
+                    Copyright 2026 Store Manager
                 </Text>
             </View>
 

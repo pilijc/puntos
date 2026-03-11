@@ -53,6 +53,12 @@ export interface TermsStepProps {
   error?: string;
 }
 
+export interface RoleStepProps {
+  value: string;
+  onChange: (value: string) => void;
+  error?: string;
+}
+
 export interface StepperProps {
   currentStep: number;
   totalSteps: number;

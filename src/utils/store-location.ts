@@ -1,4 +1,4 @@
-import { Store } from '@/type/store';
+import { Store } from '@/type/user/store';
 import { calculateDistance, isStoreNearby, UserLocation } from '@/services/location-service';
 
 export interface StoreWithLocation extends Store {
