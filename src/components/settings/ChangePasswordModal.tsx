@@ -74,7 +74,7 @@ export default function ChangePasswordModal({ visible, onClose }: Props) {
             onRequestClose={handleClose}
         >
             <KeyboardAvoidingView
-                behavior={Platform.OS === "ios" ? "padding" : undefined}
+                behavior={"padding"}
                 style={{ flex: 1 }}
             >
                 {/* Scrim */}

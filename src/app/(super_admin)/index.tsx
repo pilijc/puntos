@@ -204,9 +204,9 @@ export default function SuperAdminDashboard() {
 
         <View className="px-6 mb-6 mt-4">
           <View className="flex-row gap-2">
-            <StatCard label="Total Users" val={users.length} icon="groups" color="#3B82F6" />
-            <StatCard label="Total Stores" val={stores.length} icon="storefront" color="#22C55E" />
-            <StatCard label="Active Stores" val={activeStoresCount} icon="storefront" color="#16A34A" />
+            <StatCard label="Total Users"   val={users.length}        icon="groups"     color="#3B82F6" />
+            <StatCard label="Total Stores"  val={stores.length}       icon="storefront" color="#22C55E" />
+            <StatCard label="Active Stores" val={activeStoresCount}   icon="storefront" color="#16A34A" />
           </View>
         </View>
         {/* Manage Users Section */}

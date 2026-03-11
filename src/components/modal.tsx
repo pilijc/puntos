@@ -204,11 +204,6 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     borderWidth: 1,
     overflow: "hidden",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.2,
-    shadowRadius: 20,
-    elevation: 12,
     zIndex: 2,
   },
   row: {

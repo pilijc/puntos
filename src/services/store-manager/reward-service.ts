@@ -32,7 +32,7 @@ export async function uploadRewardImage(
   }
 
   const ext = mimeType.split("/")[1] ?? "jpg";
-  const filePath = `store-rewards/${storeId}/${Date.now()}.${ext}`;
+  const filePath = `store/rewards/${storeId}/${Date.now()}.${ext}`;
 
   const { error: uploadError } = await supabase.storage
     .from("puntos-public")
