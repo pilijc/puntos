@@ -177,7 +177,6 @@ export default function StoreManagerStores() {
         return stores.filter(s => s.status === activeTab);
     }, [stores, activeTab]);
 
-    // Initial Fetch (Only hits the network if it's the very first time opening the tab)
     React.useEffect(() => {
         if (!hasFetchedOnce) {
             fetchStores();
