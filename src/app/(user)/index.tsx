@@ -544,8 +544,46 @@ export default function Discover() {
             </View>
           </ScrollView>
         </BottomSheetView>
-        </BottomSheet>
+      </BottomSheet>
+
+      { routeGeoJSON && (
+        <TouchableOpacity style={{
+          position: "absolute",
+          right: 16,
+          bottom: 215,
+          zIndex: 999,
+          elevation: 20, 
+        }} className="bg-white rounded-full p-2" onPress={() => setRouteGeoJSON(null)}>
+          <MaterialIcons name="clear" size={35} color="#FB8500" />
+        </TouchableOpacity>
       )}
-    </View>
+
+      {location && (
+        <TouchableOpacity
+          style={{
+            position: "absolute",
+            right: 16,
+            bottom: 170,
+            zIndex: 999,
+            elevation: 20, 
+          }}
+          className="bg-white rounded-full p-2"
+          onPress={() => {
+            cameraRef.current?.setCamera({
+              centerCoordinate: [
+                location.coords.longitude,
+                location.coords.latitude,
+              ],
+              zoomLevel: 14,
+              animationDuration: 600,
+              animationMode: "flyTo",
+            });
+          }}
+        >
+          <MaterialIcons name="filter-center-focus" size={35} color="#FB8500" />
+        </TouchableOpacity>
+      )}
+      <Text>Testing</Text>
+    </SafeAreaView>
   );
 }
