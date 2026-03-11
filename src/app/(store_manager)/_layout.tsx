@@ -38,7 +38,6 @@ export default function StoreManagerLayout() {
 
     return (
         <Tabs
-            initialRouteName="stores"
             screenOptions={{
                 headerShown: false,
                 tabBarStyle: {
@@ -93,12 +92,38 @@ export default function StoreManagerLayout() {
                     ),
                 }}
             />
-            <Tabs.Screen name="profile" options={{ href: null }} />
-            <Tabs.Screen name="create-store" options={{ href: null }} />
-            <Tabs.Screen name="view-store/[id]" options={{ href: null }} />
-            <Tabs.Screen name="configure-streaks" options={{ href: null }} />
-            <Tabs.Screen name="configure-stamp" options={{ href: null }} />
-            <Tabs.Screen name="rewards" options={{ href: null }} />
+            <Tabs.Screen
+                name="profile"
+                options={{ href: null }}
+            />
+            <Tabs.Screen
+                name="create-store"
+                options={{ href: null }}
+            />
+            <Tabs.Screen
+                name="view-store/[id]"
+                options={{ href: null }}
+            />
+            <Tabs.Screen
+                name="configure-streaks"
+                options={{ href: null }}
+            />
+            <Tabs.Screen
+                name="configure-stamp"
+                options={{ href: null }}
+            />
+            <Tabs.Screen
+                name="rewards"
+                options={{ href: null }}
+            />
+            <Tabs.Screen
+                name="view-stamp"
+                options={{ href: null }}
+            />
+             <Tabs.Screen
+                name="view-streak"
+                options={{ href: null }}
+            />
         </Tabs>
     );
 }

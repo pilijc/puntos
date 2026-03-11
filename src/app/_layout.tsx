@@ -1,7 +1,7 @@
 import "react-native-url-polyfill/auto";
 import "react-native-gesture-handler";
 import "../global.css";
-import { Slot, useRouter } from "expo-router";
+import { Slot, useRouter, Stack } from "expo-router";
 import { useFonts } from "expo-font";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as SplashScreen from "expo-splash-screen";
@@ -18,6 +18,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { useAuthStore } from "@/store/auth-store";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { OneSignal } from "react-native-onesignal";
+import { useStamps } from "@/hooks/use-stamps";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -42,6 +43,7 @@ export default function Layout() {
     "Poppins-Bold": require("../assets/fonts/Poppins-Bold.ttf"),
   });
   const sessionToken = useAuthStore((s) => s.sessionToken);
+  const fetchStamps = useStamps((s) => s.fetchStamps);
 
   useEffect(() => {
     const checkSession = async () => {
@@ -61,6 +63,9 @@ export default function Layout() {
       if (session) {
         try {
           const userId = session.user.id;
+
+          // Pre-fetch global state data
+          fetchStamps();
 
           await checkIfAccountDeletedService(userId);
           const nextRoute = await getHomeRouteForUserId(userId);
