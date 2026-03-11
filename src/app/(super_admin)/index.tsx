@@ -269,8 +269,4 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#F1F5F9",
   },
-<<<<<<< HEAD
 });
-=======
-});
->>>>>>> origin/develop
