@@ -326,6 +326,31 @@ export async function getStoresWithEnabledActiveStampProgram(
   }
 }
 
+export async function getStoresWithEnabledStreaks(
+  storeIds: number[],
+): Promise<number[]> {
+  if (storeIds.length === 0) return [];
+
+  try {
+    const { data: featureRows, error: featureError } = await supabase
+      .from("store_feature")
+      .select("store_id, streak_enabled")
+      .in("store_id", storeIds);
+
+    if (featureError) {
+      console.warn("[getStoresWithEnabledStreaks] Could not read store_feature:", featureError.message);
+      return [];
+    }
+
+    return (featureRows ?? [])
+      .filter((row: any) => row.streak_enabled === true)
+      .map((row: any) => Number(row.store_id));
+  } catch (error) {
+    console.error("Exception fetching eligible streak stores:", error);
+    return [];
+  }
+}
+
 export async function getActiveStampProgramRewards(
   storeIds: number[],
 ): Promise<ActiveStampProgramReward[]> {

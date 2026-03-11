@@ -30,6 +30,7 @@ import {
   getStoresWithEnabledActiveStampProgram,
   StampProgress,
   ActiveStampProgramReward,
+  getStoresWithEnabledStreaks,
 } from "@/services/stamp-service";
 import { getStores } from "@/services/store-service";
 import { supabase } from "@/supabase/supabase";
@@ -116,6 +117,7 @@ export default function Rewards() {
   );
   const featuredStore = nearbyStores[0] ?? storesWithLocation[0];
   const [eligibleNearbyStoreIds, setEligibleNearbyStoreIds] = useState<number[]>([]);
+  const [eligibleStreakStoreIds, setEligibleStreakStoreIds] = useState<number[]>([]);
   const [activeStampProgramRewards, setActiveStampProgramRewards] = useState<ActiveStampProgramReward[]>([]);
 
   const { sessionToken } = useAuthStore();
@@ -226,6 +228,34 @@ export default function Rewards() {
   useEffect(() => {
     let isCancelled = false;
 
+    const loadEligibleStreakStores = async () => {
+      const storeIds = Array.from(
+        new Set(displayStamps.map((stamp) => Number(stamp.store_id)).filter((id) => !Number.isNaN(id))),
+      );
+
+      if (storeIds.length === 0) {
+        if (!isCancelled) {
+          setEligibleStreakStoreIds([]);
+        }
+        return;
+      }
+
+      const ids = await getStoresWithEnabledStreaks(storeIds);
+      if (!isCancelled) {
+        setEligibleStreakStoreIds(ids);
+      }
+    };
+
+    loadEligibleStreakStores();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [displayStamps]);
+
+  useEffect(() => {
+    let isCancelled = false;
+
     const loadActiveStampProgramRewards = async () => {
       const storeIds = Array.from(
         new Set(displayStamps.map((stamp) => Number(stamp.store_id)).filter((id) => !Number.isNaN(id))),
@@ -250,6 +280,10 @@ export default function Rewards() {
       isCancelled = true;
     };
   }, [displayStamps]);
+
+  const displayStreaks = useMemo(() => {
+    return displayStamps.filter((stamp) => eligibleStreakStoreIds.includes(Number(stamp.store_id)));
+  }, [displayStamps, eligibleStreakStoreIds]);
 
 
   const [isStamping, setIsStamping] = useState(false);
@@ -634,6 +668,150 @@ export default function Rewards() {
         </View>
 
         <View>
+          {displayStreaks.length > 0 && (
+            <View className="mb-3">
+              <Carousel
+                width={screenWidth - 48}
+                height={150}
+                data={displayStreaks}
+                scrollAnimationDuration={1000}
+                enabled={displayStreaks.length > 1}
+                loop={displayStreaks.length > 1}
+                autoPlay={isAutoPlayEnabled && displayStreaks.length > 1}
+                autoPlayInterval={3500}
+                onScrollStart={handleCarouselInteraction}
+                renderItem={({ item: streak }) => {
+                  const storeStr = streak.stores as any;
+                  const storeName = storeStr?.name ?? "Store";
+                  const storeAddress = storeStr?.address ?? "Unknown Location";
+                  const nearby = nearbyStores.some((s) => Number(s.id) === Number(streak.store_id)) ||
+                    isStoreNearby(storeStr?.latitude, storeStr?.longitude);
+
+                  // Mocking streak progress for UI: use 3 days completed for now
+                  const clampedCount = 3;
+                  const targetCount = 7;
+                  const streakDays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+
+                  const days = streakDays.map((label, index) => ({
+                    label: label,
+                    state:
+                      index < clampedCount
+                        ? "completed"
+                        : index === clampedCount
+                          ? "current"
+                          : "upcoming",
+                  }));
+
+                  return (
+                    <AnimatedView
+                      layout={Layout.duration(300)}
+                      className="bg-white dark:bg-darkBackgroundMuted rounded-2xl border border-neutral-100 dark:border-darkBorder overflow-hidden mx-1"
+                    >
+                      <View className="p-3">
+                        <View className="flex-row items-center justify-between">
+                          <View className="flex-row items-center gap-x-2">
+                            <MaterialIcons name="local-fire-department" size={18} color="#FF6600" />
+                            <Text className="font-poppins-semibold text-neutral-900 dark:text-white">
+                              Streak Log
+                            </Text>
+                          </View>
+                          <View className="flex-row items-center gap-x-3">
+                            <TouchableOpacity
+                              disabled={true}
+                              className="px-2 py-1 opacity-50"
+                            >
+                              <Text className="text-primary text-xs font-poppins-semibold">
+                                VIEW ALL
+                              </Text>
+                            </TouchableOpacity>
+                          </View>
+                        </View>
+
+                        <View className="flex-row items-center gap-x-3 mt-1.5">
+                          <View className="w-10 h-10 rounded-full bg-neutral-100 dark:bg-darkBackgroundCard items-center justify-center overflow-hidden border border-neutral-100 dark:border-darkBorder">
+                            {(storeStr?.logo || storeStr?.banner) ? (
+                              <Image
+                                source={{ uri: storeStr?.logo || storeStr?.banner }}
+                                className="w-full h-full"
+                                contentFit="cover"
+                              />
+                            ) : storeLogos[streak.store_id.toString()] ? (
+                              <Image
+                                source={storeLogos[streak.store_id.toString()]}
+                                className="w-full h-full"
+                                contentFit="cover"
+                              />
+                            ) : (
+                              <MaterialIcons name="storefront" size={20} color="#FF6600" />
+                            )}
+                          </View>
+                          <View className="flex-1 flex-row items-center justify-between">
+                            <View className="flex-row items-center gap-x-1 flex-wrap flex-1">
+                              <Text className="font-poppins-semibold text-neutral-900 dark:text-neutral-100" numberOfLines={1}>
+                                {storeName}
+                              </Text>
+                              <Text className="text-[10px] text-neutral-500 dark:text-neutral-400 font-poppins" numberOfLines={1}>
+                                • {storeAddress}
+                              </Text>
+                            </View>
+                            {nearby && (
+                              <View className="bg-green-100 dark:bg-green-900/30 px-2.5 py-1 rounded-full flex-row items-center gap-x-1 ml-2">
+                                <View className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                                <Text className="text-[10px] font-poppins-semibold text-green-700 dark:text-green-400">
+                                  Nearby
+                                </Text>
+                              </View>
+                            )}
+                          </View>
+                        </View>
+
+                        <Text className="text-[10px] font-poppins-medium text-neutral-400 mt-1">
+                          {clampedCount}/{targetCount} DAYS THIS WEEK
+                        </Text>
+
+                        <View className="flex-row flex-wrap justify-between mt-2.5 gap-y-2 px-1">
+                          {days.map((day, index) => {
+                            const isCompleted = day.state === "completed";
+                            const isCurrent = day.state === "current";
+                            const circleClass = isCompleted
+                              ? "w-10 h-10 rounded-full bg-primary items-center justify-center"
+                              : isCurrent
+                                ? "w-10 h-10 rounded-full items-center justify-center"
+                                : "w-10 h-10 rounded-full bg-neutral-100 dark:bg-darkBackgroundCard items-center justify-center";
+                            const textClass = isCompleted || isCurrent
+                              ? "text-primary font-poppins-semibold text-[10px]"
+                              : "text-neutral-400 font-poppins-semibold text-[10px]";
+                            return (
+                              <View key={`${day.label}-${index}`} className="items-center w-11">
+                                <View
+                                  className={circleClass}
+                                  style={isCurrent ? {
+                                    borderWidth: 1.5,
+                                    borderColor: "#FF6600",
+                                    borderStyle: "dashed",
+                                  } : undefined}
+                                >
+                                  {isCompleted ? (
+                                    <View className="items-center justify-center">
+                                      <MaterialIcons name="check" size={12} color="#FFFFFF" className="mb-0.5" />
+                                      <Text className="text-white font-poppins-bold text-[8px] uppercase">{day.label}</Text>
+                                    </View>
+                                  ) : (
+                                    <Text className={textClass}>{day.label}</Text>
+                                  )}
+                                </View>
+                              </View>
+                            );
+                          })}
+                        </View>
+                      </View>
+                    </AnimatedView>
+                  );
+                }}
+              />
+            </View>
+          )}
+
           {displayStamps.length === 0 ? (
             <View
               className="bg-white dark:bg-darkBackgroundMuted rounded-2xl p-6 items-center mx-1"
@@ -708,6 +886,13 @@ export default function Rewards() {
                             </Text>
                           </View>
                           <View className="flex-row items-center gap-x-3">
+                            <AnimatedView style={chevronStyle}>
+                              <MaterialIcons
+                                name="expand-more"
+                                size={22}
+                                color="#FF6600"
+                              />
+                            </AnimatedView>
                             <TouchableOpacity
                               onPress={(e) => {
                                 e.stopPropagation();
@@ -719,13 +904,6 @@ export default function Rewards() {
                                 VIEW ALL
                               </Text>
                             </TouchableOpacity>
-                            <AnimatedView style={chevronStyle}>
-                              <MaterialIcons
-                                name="expand-more"
-                                size={22}
-                                color="#FF6600"
-                              />
-                            </AnimatedView>
                           </View>
                         </View>
 
@@ -817,15 +995,7 @@ export default function Rewards() {
                               <View className="flex-row items-center gap-x-3 flex-1">
                                 <View className="relative">
                                   <View className="w-14 h-14 rounded-2xl bg-white dark:bg-darkBackgroundCard items-center justify-center overflow-hidden border border-primary/5">
-                                    {activeProgramReward?.reward_image_url ? (
-                                      <Image
-                                        source={{ uri: activeProgramReward.reward_image_url }}
-                                        className="w-full h-full"
-                                        contentFit="cover"
-                                      />
-                                    ) : (
-                                      <MaterialIcons name="redeem" size={28} color="#FF6600" />
-                                    )}
+                                    <MaterialIcons name="monetization-on" size={28} color="#FF6600" />
                                   </View>
                                   {clampedCount >= targetCount && (
                                     <View className="absolute -top-1.5 -right-1.5 bg-green-500 w-5 h-5 rounded-full items-center justify-center border-2 border-white dark:border-darkBackgroundMuted">
@@ -841,11 +1011,11 @@ export default function Rewards() {
                                     className="text-sm text-neutral-800 dark:text-neutral-100 font-poppins-bold"
                                     numberOfLines={1}
                                   >
-                                    {activeProgramReward?.reward_title ?? "Wait for it..."}
+                                    500 Points
                                   </Text>
                                   <Text className="text-[10px] text-neutral-400 font-poppins mt-0.5" numberOfLines={1}>
                                     {clampedCount >= targetCount
-                                      ? "Claim your gift now!"
+                                      ? "Claim your points now!"
                                       : `${targetCount - clampedCount} stamps more to unlock`}
                                   </Text>
                                 </View>
