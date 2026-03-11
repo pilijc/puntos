@@ -86,9 +86,6 @@ export default function Layout() {
     }
   }, [fontsLoaded, sessionToken]);
 
-
-
-
   SplashScreen.setOptions({
     duration: 1000,
     fade: true,
