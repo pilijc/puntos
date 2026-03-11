@@ -105,14 +105,36 @@ export async function createStore(payload: CreateStorePayload): Promise<StoreRow
 }
 
 export async function getMyStores(ownerId: string): Promise<StoreRow[]> {
-    const { data, error } = await supabase
+
+    const { data: ownedData, error: ownedError } = await supabase
         .from("stores")
         .select("*")
         .eq("owner_id", ownerId)
         .order("created_at", { ascending: false });
 
-    if (error) throw new Error(error.message);
-    return (data ?? []) as StoreRow[];
+    if (ownedError) throw new Error(ownedError.message);
+
+    const { data: roleData, error: roleError } = await supabase
+        .from("user_roles")
+        .select(`store_id, stores:store_id ( id )`)
+        .eq("user_id", ownerId)
+        .not("store_id", "is", null);
+
+    if (roleError) throw new Error(roleError.message);
+
+    const roleStores = (roleData ?? [])
+        .map((r: any) => r.stores)
+        .filter(Boolean) as StoreRow[];
+
+    const allStores = [...(ownedData ?? []) as StoreRow[], ...roleStores];
+    const seen = new Set<number>();
+    const unique = allStores.filter((s) => {
+        if (seen.has(s.id)) return false;
+        seen.add(s.id);
+        return true;
+    });
+
+    return unique;
 }
 
 export async function updateStoreLogo(storeId: number, imageUrl: string): Promise<void> {
@@ -169,11 +191,6 @@ export async function getAllStores(): Promise<AdminStoreRow[]> {
     })) as AdminStoreRow[];
 }
 
-/**
- * Approves or rejects a store by updating its status and is_active flag.
- * - Approve: status = 'active',   is_active = true
- * - Reject:  status = 'inactive', is_active = false
- */
 export async function updateStoreStatus(
     storeId: number,
     status: "active" | "inactive" | "pending_review",

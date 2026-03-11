@@ -1,29 +1,23 @@
 import React, { useState, useCallback } from "react";
-import { Alert } from "react-native";
 import { View, Text, SafeAreaView } from "@/tw";
 import { useFocusEffect } from "expo-router";
-import { Ionicons } from '@expo/vector-icons';
 
 // Hooks
 import { useProfile } from "@/hooks/use-profile";
 
 // Components
 import EditProfileModal from "@/components/settings/EditProfileModal";
-import SecurityModal from "@/components/settings/SecurityModal";
 import { LogoutButton } from "@/components/settings/LogoutButton";
 import { UserProfileCard } from "@/components/settings/UserProfileCard";
 import { SecurityCard } from "@/components/settings/SecurityCard";
 import DarkModeToggle from "@/components/ui/dark-mode-toggle";
 
 export default function SuperAdminSettings() {
-    const [modalVisible, setModalVisible] = useState(false);
-    const [securityModalVisible, setSecurityModalVisible] = useState(false);
+    const [editModalVisible, setEditModalVisible] = useState(false);
 
     const {
         user,
         profile,
-        loading,
-        updateProfile,
         refreshProfile,
     } = useProfile();
 
@@ -34,25 +28,8 @@ export default function SuperAdminSettings() {
     );
 
     const handleProfilePress = () => {
-        setModalVisible(true);
+        setEditModalVisible(true);
     };
-
-    const handleSaveProfile = async (newName: string, _newEmail: string, newAvatarUrl?: string | null) => {
-        const result = await updateProfile({ name: newName, avatar_url: newAvatarUrl });
-        if (result.success) {
-            Alert.alert("Success", "Profile updated successfully");
-        } else {
-            throw new Error("Failed to update profile");
-        }
-
-        if (loading && !user) {
-            return (
-                <SafeAreaView className="flex-1 bg-background dark:bg-darkBackground justify-center items-center">
-                    <Text className="text-neutral-500 font-poppins-regular">Loading profile...</Text>
-                </SafeAreaView>
-            );
-        }
-    }
 
     return (
         <SafeAreaView className="flex-1 bg-background dark:bg-darkBackground p-4">
@@ -79,7 +56,7 @@ export default function SuperAdminSettings() {
                 </Text>
             </View>
 
-            <SecurityCard onPress={() => setSecurityModalVisible(true)} />
+            <SecurityCard />
 
             <LogoutButton />
 
@@ -91,18 +68,8 @@ export default function SuperAdminSettings() {
             </View>
 
             <EditProfileModal
-                visible={modalVisible}
-                onClose={() => setModalVisible(false)}
-                initialUsername={profile?.name || user?.email?.split("@")[0] || ""}
-                initialEmail={user?.email || ""}
-                initialAvatar={profile?.avatar_url}
-                userId={user?.id}
-                onSave={handleSaveProfile}
-            />
-
-            <SecurityModal
-                visible={securityModalVisible}
-                onClose={() => setSecurityModalVisible(false)}
+                visible={editModalVisible}
+                onClose={() => setEditModalVisible(false)}
             />
         </SafeAreaView>
     );
