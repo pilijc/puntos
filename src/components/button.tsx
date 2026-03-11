@@ -67,7 +67,11 @@ export function Button({
   loading = false,
   disabled = false,
 }: ButtonProps) {
-  const { container, text, iconColor, spinnerColor } = config[variant];
+  let { container, text, iconColor, spinnerColor } = config[variant];
+
+  if (variant === "primary" && disabled) {
+    container = container.replace("bg-primary", "bg-primary/50");
+  }
 
   return (
     <TouchableOpacity
