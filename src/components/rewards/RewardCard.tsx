@@ -1,4 +1,4 @@
-﻿import { View, Text, Pressable, Image } from "@/tw";
+import { View, Text, Pressable, Image } from "@/tw";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import React from "react";
 import type { RewardItem } from "@/data/rewards";
@@ -23,7 +23,7 @@ export default function RewardCard({
   return (
     <Pressable
       onPress={onPress}
-      className="bg-white dark:bg-darkBackgroundMuted rounded-2xl p-3 border border-neutral-100 dark:border-darkBorder flex-row gap-x-3"
+      className="bg-white dark:bg-darkBackgroundMuted rounded-2xl p-3 flex-row gap-x-3"
     >
       <View className="w-16 h-16 rounded-xl bg-neutral-100 dark:bg-darkBackgroundCard items-center justify-center overflow-hidden">
         {reward.imageUrl ? (

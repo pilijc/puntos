@@ -1441,7 +1441,7 @@
   },
   {
     "table_name": "stores",
-    "column_name": "banner",
+    "column_name": "business_document_image",
     "data_type": "text",
     "is_primary_key": "NO",
     "is_foreign_key": "NO",
@@ -1449,45 +1449,18 @@
     "foreign_column_name": null
   },
   {
-    "table_name": "user_list",
-    "column_name": "id",
-    "data_type": "bigint",
-    "is_primary_key": "YES",
-    "is_foreign_key": "NO",
-    "foreign_table_name": null,
-    "foreign_column_name": null
-  },
-  {
-    "table_name": "user_list",
-    "column_name": "created_at",
-    "data_type": "timestamp with time zone",
+    "table_name": "stores",
+    "column_name": "store_open",
+    "data_type": "time without time zone",
     "is_primary_key": "NO",
     "is_foreign_key": "NO",
     "foreign_table_name": null,
     "foreign_column_name": null
   },
   {
-    "table_name": "user_list",
-    "column_name": "name",
-    "data_type": "text",
-    "is_primary_key": "NO",
-    "is_foreign_key": "NO",
-    "foreign_table_name": null,
-    "foreign_column_name": null
-  },
-  {
-    "table_name": "user_list",
-    "column_name": "role",
-    "data_type": "smallint",
-    "is_primary_key": "NO",
-    "is_foreign_key": "YES",
-    "foreign_table_name": "roles",
-    "foreign_column_name": "id"
-  },
-  {
-    "table_name": "user_list",
-    "column_name": "email",
-    "data_type": "text",
+    "table_name": "stores",
+    "column_name": "store_close",
+    "data_type": "time without time zone",
     "is_primary_key": "NO",
     "is_foreign_key": "NO",
     "foreign_table_name": null,
