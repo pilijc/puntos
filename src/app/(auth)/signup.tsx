@@ -11,7 +11,7 @@ import { KeyboardAvoidingView, Alert, ActivityIndicator, Platform } from "react-
 import { router } from "expo-router";
 import { useAuthStore } from "../../store/auth-store";
 import signUpService, { GoogleSignInCancelledError } from "../../services/auth-service";
-import { signUpWithGoogleService } from "@/services/auth-service";
+import { signUpWithGoogleService, checkEmailExists } from "@/services/auth-service";
 import { NameStep, EmailStep, PasswordStep, TermsStep, RoleStep, StepHeader } from "../../components/stepper";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -50,7 +50,7 @@ export default function SignUp() {
     terms: '',
   });
 
-  const validateStep = (): boolean => {
+  const validateStep = async (): Promise<boolean> => {
     const newErrors = { ...errors };
     
     if (currentStep === 1) {
@@ -70,6 +70,12 @@ export default function SignUp() {
       }
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
         newErrors.email = 'Please enter a valid email';
+        setErrors(newErrors);
+        return false;
+      }
+      const emailExists = await checkEmailExists(email);
+      if(emailExists) {
+        newErrors.email = 'Email is already in use';
         setErrors(newErrors);
         return false;
       }
@@ -109,8 +115,10 @@ export default function SignUp() {
     return true;
   };
 
-  const handleNext = () => {
-    if (validateStep()) {
+  const handleNext = async () => {
+    const isValid = await validateStep();
+    if (!isValid) return;
+     
       if (currentStep < totalSteps) {
         setCurrentStep(currentStep + 1);
       } else {
@@ -120,7 +128,7 @@ export default function SignUp() {
           handleSignup();
         }
       }
-    }
+    
   };
 
   const handleBack = () => {
@@ -172,6 +180,13 @@ export default function SignUp() {
     } else {
       newErrors.email = '';
     }
+
+    const emailExists = await checkEmailExists(email);
+      if(emailExists) {
+        newErrors.email = 'Email is already in use';
+        setErrors(newErrors);
+        return false;
+      }
 
     // Validate password
     if (!password) {

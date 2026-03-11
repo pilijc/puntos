@@ -5,20 +5,18 @@ import { useRouter } from "expo-router";
 import { supabase } from "@/supabase/supabase";
 import { getRoleTypeForUser } from "@/services/access-service";
 
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+
 export default function SuperAdminLayout() {
   const router = useRouter();
+
+  const insets = useSafeAreaInsets();
 
   useEffect(() => {
     const verifyAccess = async () => {
       try {
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
-
-        if (!user) {
-          // Auth listener owns the SIGNED_OUT redirect; returning here avoids a race
-          return;
-        }
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
 
         const roleType = await getRoleTypeForUser(user.id);
         if (roleType !== "super_admin") {
@@ -28,7 +26,6 @@ export default function SuperAdminLayout() {
         router.replace("/(user)");
       }
     };
-
     verifyAccess();
   }, [router]);
 
@@ -36,10 +33,20 @@ export default function SuperAdminLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarStyle: { backgroundColor: "#FFFFFF", height: 70, paddingBottom: 8 },
         tabBarActiveTintColor: "#FF6600",
         tabBarInactiveTintColor: "#8B8D98",
-        tabBarLabelStyle: { fontSize: 12, fontFamily: "Poppins-Medium" },
+        tabBarLabelStyle: { 
+          fontSize: 12, 
+          fontFamily: "Poppins-Medium",
+          marginBottom: insets.bottom > 0 ? 0 : 5 
+        },
+        tabBarStyle: { 
+          backgroundColor: "#FFFFFF", 
+          borderTopWidth: 1,
+          borderTopColor: '#F3F4F6',
+          height: 60 + insets.bottom, 
+          paddingBottom: insets.bottom > 0 ? insets.bottom : 8, 
+        },
       }}
     >
       <Tabs.Screen

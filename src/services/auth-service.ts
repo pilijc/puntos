@@ -67,7 +67,6 @@ export default async function signUpService(email: string, password: string, nam
         .single();
 
       if (!existingProfile) {
-        //add new user from table users /auth
         //add new user from table users
         await supabase.from("users").insert({ id: data.user.id, name });
       }
@@ -239,3 +238,23 @@ export async function signInWithGoogleLoginService() {
     throw error;
   }
 }
+export async function checkEmailExists(email: string): Promise<boolean> {
+   try{
+    const { data, error } = await supabase.auth.signUp({ email, password: "dummyPassword123!" });
+    
+   if (error) {
+       if (error.message.includes("already registered")) {
+        return true;
+      }
+       return false;
+    }
+    
+  return false;
+   } catch (error) {
+    console.error("Error checking email existence:", error);
+    return false;
+   }
+}
+
+
+ 

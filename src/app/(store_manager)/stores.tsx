@@ -197,20 +197,11 @@ export default function StoreManagerStores() {
     await checkPaymentStatus();
   };
 
-  const checkPaymentStatus = useCallback(async () => {
-    try {
-      const { data } = await supabase.auth.getUser();
-      const userData = data.user;
-      if (!userData) return;
-      const owner = await getStoreByOwnerId(userData.id);
-      setUser(userData.id);
-      if (owner) {
-        setHasPaidStoreFee(owner.has_paid_store_fee);
-      }
-    } catch (err) {
-      console.error("Error checking payment status:", err);
-    }
-  }, []);
+    React.useEffect(() => {
+        if (!hasFetchedOnce) {
+            fetchStores();
+        }
+    }, [hasFetchedOnce, fetchStores]);
 
   useFocusEffect(
     useCallback(() => {
