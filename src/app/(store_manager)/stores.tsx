@@ -194,25 +194,18 @@ export default function StoreManagerStores() {
   const onRefresh = async () => {
     setRefreshing(true);
     await fetchStores(true);
-    await checkPaymentStatus();
   };
 
-    React.useEffect(() => {
-        if (!hasFetchedOnce) {
-            fetchStores();
-        }
-    }, [hasFetchedOnce, fetchStores]);
+  React.useEffect(() => {
+      if (!hasFetchedOnce) {
+          fetchStores();
+      }
+  }, [hasFetchedOnce, fetchStores]);
 
   useFocusEffect(
     useCallback(() => {
       fetchStores();
     }, [fetchStores])
-  );
-
-  useFocusEffect(
-    useCallback(() => {
-      checkPaymentStatus();
-    }, [checkPaymentStatus])
   );
 
   return (
