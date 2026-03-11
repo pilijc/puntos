@@ -2,12 +2,13 @@ import { Tabs } from 'expo-router';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React from 'react';
-import { View, StyleSheet, useColorScheme } from 'react-native';
-import { TouchableOpacity } from '@/tw';
+import { View, StyleSheet, useColorScheme, Platform, TouchableOpacity } from 'react-native';
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
+  const insets = useSafeAreaInsets();
 
   return (
     <Tabs
@@ -16,12 +17,16 @@ export default function TabLayout() {
         tabBarStyle: {
           backgroundColor: isDark ? '#171717' : '#FFFFFF',
           borderTopColor: isDark ? '#404040' : '#e5e5e5',
-          height: 70,
-          paddingBottom: 8,
+          height: Platform.OS === 'ios' ? 88 : 60 + insets.bottom,
+          paddingBottom: insets.bottom > 0 ? insets.bottom : 8,
         },
         tabBarActiveTintColor: '#FF6600',
         tabBarInactiveTintColor: isDark ? '#737373' : '#8B8D98',
-        tabBarLabelStyle: { fontSize: 12, fontFamily: 'Poppins-Medium' },
+        tabBarLabelStyle: { 
+            fontSize: 12, 
+            fontFamily: 'Poppins-Medium',
+            marginBottom: insets.bottom > 0 ? 0 : 4
+        },
       }}>
       <Tabs.Screen
         name="index"
@@ -43,7 +48,7 @@ export default function TabLayout() {
           title: 'Qr',
           tabBarIcon: ({ color }) => <MaterialCommunityIcons size={22} name="qrcode-scan" color={color} />,
           tabBarButton: (props: any) => (
-            <CustomTabBarButton onPress={props.onPress} />
+            <CustomTabBarButton onPress={props.onPress} bottomInset={insets.bottom} />
           ),
         }}
       />
@@ -65,12 +70,15 @@ export default function TabLayout() {
   );
 }
 
-function CustomTabBarButton({ onPress }: { onPress?: () => void }) {
+function CustomTabBarButton({ onPress, bottomInset }: { onPress?: () => void, bottomInset: number }) {
   return (
     <TouchableOpacity
       onPress={onPress}
-      className="items-center justify-center"
-      style={styles.fabContainer}
+      activeOpacity={0.8}
+      style={[
+        styles.fabContainer, 
+        { top: Platform.OS === 'ios' ? -30 : -28 - (bottomInset / 4) }
+      ]}
     >
       <View style={styles.fab}>
         <MaterialCommunityIcons name="qrcode-scan" size={28} color="#FFFFFF" />
@@ -81,7 +89,6 @@ function CustomTabBarButton({ onPress }: { onPress?: () => void }) {
 
 const styles = StyleSheet.create({
   fabContainer: {
-    top: -28,
     width: 70,
     height: 70,
     alignItems: 'center',
