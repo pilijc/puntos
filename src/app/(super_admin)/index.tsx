@@ -1,5 +1,5 @@
 ﻿import React, { useState, useEffect, useMemo, useRef } from "react";
-import { ScrollView, ActivityIndicator, RefreshControl, Modal, Image, Animated } from "react-native";
+import { ScrollView, ActivityIndicator, RefreshControl, Modal, Image, Animated, StyleSheet } from "react-native";
 import { SafeAreaView, Text, TouchableOpacity, View } from "@/tw";
 import { useRouter } from "expo-router";
 import { useDashboardStore } from "@/store/useDashboardStore";
@@ -16,7 +16,6 @@ const SOFT_CARD_SHADOW = {
   elevation: 2,
 };
 
-// 8 particles bursting in different directions
 const PARTICLES = [
   { angle: 0,   color: "#FF6600" },
   { angle: 45,  color: "#3B82F6" },
@@ -26,7 +25,11 @@ const PARTICLES = [
   { angle: 225, color: "#8B5CF6" },
   { angle: 270, color: "#14B8A6" },
   { angle: 315, color: "#FF6600" },
-];
+].map(p => ({
+  ...p,
+  cos: Math.cos((p.angle * Math.PI) / 180),
+  sin: Math.sin((p.angle * Math.PI) / 180),
+}));
 
 function AvatarWithBurst({ uri, onLongPress, onPressOut }: any) {
   const scaleAnim = useRef(new Animated.Value(1)).current;
@@ -39,14 +42,12 @@ function AvatarWithBurst({ uri, onLongPress, onPressOut }: any) {
   ).current;
 
   const triggerBurst = () => {
-    // Burst and Pulse the avatar
     Animated.sequence([
       Animated.spring(scaleAnim, { toValue: 1.2, useNativeDriver: true, speed: 50 }),
       Animated.spring(scaleAnim, { toValue: 1,   useNativeDriver: true, speed: 20 }),
     ]).start();
 
     const animations = particleAnims.map((p, i) => {
-      const rad = (PARTICLES[i].angle * Math.PI) / 180;
       const dist = 28 + Math.random() * 14;
       p.position.setValue({ x: 0, y: 0 });
       p.opacity.setValue(1);
@@ -54,7 +55,7 @@ function AvatarWithBurst({ uri, onLongPress, onPressOut }: any) {
 
       return Animated.parallel([
         Animated.timing(p.position, {
-          toValue: { x: Math.cos(rad) * dist, y: Math.sin(rad) * dist },
+          toValue: { x: PARTICLES[i].cos * dist, y: PARTICLES[i].sin * dist },
           duration: 500,
           useNativeDriver: true,
         }),
@@ -65,11 +66,7 @@ function AvatarWithBurst({ uri, onLongPress, onPressOut }: any) {
         }),
         Animated.sequence([
           Animated.delay(200),
-          Animated.timing(p.opacity, {
-            toValue: 0,
-            duration: 300,
-            useNativeDriver: true,
-          }),
+          Animated.timing(p.opacity, { toValue: 0, duration: 300, useNativeDriver: true }),
         ]),
       ]);
     });
@@ -92,8 +89,8 @@ function AvatarWithBurst({ uri, onLongPress, onPressOut }: any) {
           pointerEvents="none"
           style={{
             position: "absolute",
-            top: 16,
-            left: 16,
+            top: 17,
+            left: 17,
             width: 10,
             height: 10,
             borderRadius: 5,
@@ -109,7 +106,6 @@ function AvatarWithBurst({ uri, onLongPress, onPressOut }: any) {
         />
       ))}
 
-      {/* User Avatar */}
       <Animated.Image
         source={{ uri }}
         style={{
@@ -142,22 +138,25 @@ export default function SuperAdminDashboard() {
   const router = useRouter();
   const { users, stores, adminInfo, loading, fetchDashboardData, fetchAdminSession } = useDashboardStore();
 
-  const [refreshing, setRefreshing]       = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [showProfileCard, setShowProfileCard] = useState(false);
 
-  const activeStoresCount = useMemo(
-    () => stores.filter(s => s.status?.toString().toUpperCase().trim() === "ACTIVE").length,
+  const activeStoresCount = useMemo(() => 
+    (stores || []).filter(s => s.status?.toString().toUpperCase().trim() === "ACTIVE").length,
     [stores]
   );
 
   useEffect(() => {
-    fetchAdminSession();
-    fetchDashboardData();
+    initData();
   }, []);
+
+  const initData = async () => {
+    await Promise.all([fetchAdminSession(), fetchDashboardData()]);
+  };
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await Promise.all([fetchAdminSession(), fetchDashboardData()]);
+    await initData();
     setRefreshing(false);
   };
 
@@ -176,28 +175,33 @@ export default function SuperAdminDashboard() {
         contentContainerStyle={{ paddingBottom: 40 }}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#FF6600" />}
       >
-        {/* Header */}
-        <View className="px-6 pt-4 pb-4">
-          <View className="flex-row items-center justify-between">
-            <View>
-              <View className="flex-row items-center bg-primary/10 self-start px-2.5 py-1 rounded-full mb-1">
-                <Text className="text-[8px] font-poppins-medium text-primary uppercase tracking-wider">
-                  Welcome back, {adminInfo.username.split(" ")[0]}!
+        {/* Header Section */}
+        <View className="pt-4 pb-3">
+          <View className="px-6.5">
+            <View className="flex-row items-center justify-between">
+              <View className="flex-1 pl-2 pt-4 items-start"> 
+                <Text className="text-sm text-[#94A3B8] font-[Poppins-Regular]">
+                  Welcome, <Text className="text-orange-500 font-[Poppins-Bold]">
+                    {adminInfo?.username?.split(" ")[0] || "Admin"}
+                  </Text>!
+                </Text>
+                <Text className="text-2xl font-[Poppins-Bold] text-[#0F172A]">
+                  Dashboard
                 </Text>
               </View>
-              <Text className="text-3xl font-poppins-bold text-textPrimary leading-tight">Dashboard</Text>
+
+              <AvatarWithBurst
+                uri={adminInfo?.avatar}
+                onLongPress={() => setShowProfileCard(true)}
+                onPressOut={() => setShowProfileCard(false)}
+              />
             </View>
-            
-            <AvatarWithBurst
-              uri={adminInfo.avatar}
-              onLongPress={() => setShowProfileCard(true)}
-              onPressOut={() => setShowProfileCard(false)}
-            />
           </View>
-          <View className="h-[1px] bg-backgroundMuted mt-4" />
+          <View className="px-2 mt-3">
+            <View className="h-[1px] w-full bg-[#E2E8F0]" />
+          </View>
         </View>
 
-        {/* Stats */}
         <View className="px-6 mb-6 mt-4">
           <View className="flex-row gap-2">
             <StatCard label="Total Users"   val={users.length}        icon="groups"     color="#3B82F6" />
@@ -205,52 +209,51 @@ export default function SuperAdminDashboard() {
             <StatCard label="Active Stores" val={activeStoresCount}   icon="storefront" color="#16A34A" />
           </View>
         </View>
-
-        {/* User Management */}
+        {/* Manage Users Section */}
         <View className="px-6 mb-8">
           <SectionHeader title="Manage Users" onAction={() => router.push("/(super_admin)/users")} />
           <View style={[SOFT_CARD_SHADOW, styles.userContainer]}>
             <ScrollView nestedScrollEnabled showsVerticalScrollIndicator={false} style={{ maxHeight: 350 }}>
               {users.length === 0 ? (
-                <Text className="text-center py-10 text-textMuted font-poppins">No users found</Text>
+                <Text className="text-center py-10 text-[#94A3B8] font-[Poppins-Regular]">No users found</Text>
               ) : (
                 users.map((user, idx) => <UserRow key={user.id} user={user} isFirst={idx === 0} />)
               )}
             </ScrollView>
           </View>
         </View>
-
-        {/* Store Management */}
+        {/* Store Management Section */}
         <View className="px-6 mb-6">
           <SectionHeader title="Store Management" onAction={() => router.push("/(super_admin)/stores")} />
           <View style={{ gap: 12 }}>
             {stores.length === 0 ? (
-              <Text className="text-center text-textMuted py-4 font-poppins">No stores found.</Text>
+              <Text className="text-center text-[#94A3B8] py-4 font-[Poppins-Regular]">No stores found.</Text>
             ) : (
               stores.map(store => <StoreCard key={store.id} store={store} />)
             )}
           </View>
         </View>
       </ScrollView>
-
-      {/* Profile Modal */}
+      {/* User Profile Section */}
       <Modal visible={showProfileCard} transparent animationType="fade">
         <TouchableOpacity
           className="flex-1 bg-black/40 items-center justify-center px-6"
           activeOpacity={1}
           onPress={() => setShowProfileCard(false)}
         >
-          <View style={SOFT_CARD_SHADOW} className="bg-white w-full max-w-[280px] rounded-[30px] p-8 items-center">
+          <View style={SOFT_CARD_SHADOW} className="bg-white w-full max-w-[280px] rounded-xl p-8 items-center">
             <Image
-              source={{ uri: adminInfo.avatar }}
+              source={{ uri: adminInfo?.avatar }}
               style={{ width: 90, height: 90, borderRadius: 32, marginBottom: 16 }}
             />
-            <Text className="text-xl font-poppins-bold text-textPrimary text-center">{adminInfo.name}</Text>
-            <Text className="text-sm font-poppins text-textMuted mb-8 text-center">@{adminInfo.username}</Text>
+            <Text className="text-xl font-[Poppins-Bold] text-[#0F172A] text-center">{adminInfo?.name}</Text>
+            <Text className="text-sm font-[Poppins-Regular] text-[#94A3B8] mb-8 text-center">@{adminInfo?.username}</Text>
             <TouchableOpacity
               onPress={() => { setShowProfileCard(false); router.push("/(super_admin)/profile"); }}
-              className="w-full bg-primary py-1.5 rounded-3xl items-center shadow-sm"
-            />
+              className="w-full bg-orange-500 py-3 rounded-xl items-center"
+            >
+              <Text className="text-white font-[Poppins-Bold]">View Profile</Text>
+            </TouchableOpacity>
           </View>
         </TouchableOpacity>
       </Modal>
@@ -258,7 +261,7 @@ export default function SuperAdminDashboard() {
   );
 }
 
-const styles = {
+const styles = StyleSheet.create({
   userContainer: {
     backgroundColor: "#FFF",
     borderRadius: 16,
@@ -266,4 +269,4 @@ const styles = {
     borderWidth: 1,
     borderColor: "#F1F5F9",
   },
-} as const;
+});
