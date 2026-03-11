@@ -1,7 +1,7 @@
 import { View, Text, TextInput, Pressable, ScrollView, Image } from "@/tw";
 import { Feather, Ionicons } from "@expo/vector-icons";
 import React from "react";
-import { StepProps, PasswordStepProps, TermsStepProps, StepperProps, StepHeaderProps } from "@/type/auth";
+import { StepProps, PasswordStepProps, TermsStepProps, StepperProps, StepHeaderProps, RoleStepProps } from "@/type/auth";
 
 export const STEP_DATA = [
   {
@@ -189,48 +189,72 @@ export function PasswordStep({
   );
 }
 
-export function TermsStep({ accepted, onToggle, error }: TermsStepProps) {
+export function RoleStep({ value, onChange, error }: RoleStepProps) {
+  const roles = [
+    { label: "Customer", value: "user", description: "Earn points and redeem rewards" },
+    { label: "Store Manager", value: "manager", description: "Manage your store and staff" },
+  ];
+
   return (
     <View className="gap-y-4">
-      <View className="bg-background rounded-xl p-4 border border-neutral-200 max-h-64">
-        <Text className="font-poppins-semibold text-neutral-900 mb-2">
-          Terms of Service & Privacy Policy
+      <Text className="text-sm font-poppins-medium text-neutral-700">
+        Select your role
+      </Text>
+      {roles.map((role) => (
+        <Pressable
+          key={role.value}
+          onPress={() => onChange(role.value)}
+          className={`p-4 rounded-xl border ${value === role.value ? 'border-primary bg-primary/5' : 'border-neutral-200'}`}
+        >
+          <View className="flex-row items-center gap-x-3">
+            <View
+              className={`w-4 h-4 rounded-full border-2 ${value === role.value ? 'border-primary bg-primary' : 'border-neutral-300'}`}
+            >
+              {value === role.value && (
+                <View className="w-2 h-2 rounded-full bg-white m-0.5" />
+              )}
+            </View>
+            <View className="flex-1">
+              <Text className="font-poppins-semibold text-neutral-900">
+                {role.label}
+              </Text>
+              <Text className="font-poppins text-neutral-600 text-sm">
+                {role.description}
+              </Text>
+            </View>
+          </View>
+        </Pressable>
+      ))}
+      {error && (
+        <Text className="text-red-500 text-sm font-poppins rounded-xl p-4 text-center bg-red-50">
+          {error}
         </Text>
-        <ScrollView showsVerticalScrollIndicator={true}>
-          <Text className="font-poppins text-neutral-600 text-sm">
-            By creating an account, you agree to our Terms of Service and Privacy Policy.
-            {'\n\n'}
-            We collect and process your data to provide our services. Your information will be stored securely and used only for the purposes described in our Privacy Policy.
-            {'\n\n'}
-            You can delete your account at any time from the settings menu.
-          </Text>
-        </ScrollView>
-      </View>
+      )}
+    </View>
+  );
+}
 
+export function TermsStep({ accepted, onToggle, error }: TermsStepProps) {
+  return (
+    <View className="gap-y-2">
+      <Text className="text-sm font-poppins-medium text-neutral-700">
+        Terms and Conditions
+      </Text>
       <Pressable
         onPress={onToggle}
-        className="flex-row items-start gap-x-3"
+        className="flex-row items-center gap-x-3 p-4 rounded-xl border border-neutral-200"
       >
         <View
-          className={`w-4 h-4 rounded border-1 items-center justify-center mt-0.5 ${accepted ? 'bg-primary border-primary' : 'border-neutral-300'
-            }`}
+          className={`w-5 h-5 rounded border-2 ${accepted ? 'border-primary bg-primary' : 'border-neutral-300'}`}
         >
           {accepted && (
-            <Ionicons name="checkmark" size={12} color="white" />
+            <Ionicons name="checkmark" size={16} color="white" />
           )}
         </View>
-        <Text className="flex-1 font-poppins text-neutral-700">
-          I agree to the{' '}
-          <Text className="font-poppins-semibold text-primary">
-            Terms of Service
-          </Text>
-          {' '}and{' '}
-          <Text className="font-poppins-semibold text-primary">
-            Privacy Policy
-          </Text>
+        <Text className="font-poppins text-neutral-700 flex-1">
+          I agree to the Terms and Conditions
         </Text>
       </Pressable>
-
       {error && (
         <Text className="text-red-500 text-sm font-poppins rounded-xl p-4 text-center bg-red-50">
           {error}

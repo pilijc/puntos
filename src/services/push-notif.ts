@@ -23,7 +23,12 @@ export async function getOneSignalId(): Promise<string | null> {
   return OneSignal.User.pushSubscription.getIdAsync();
 }
 
-export async function sendPushNotification(subscriptionId: string, title: string, body: string) {
+export async function sendPushNotification(
+  subscriptionId: string,
+  title: string,
+  body: string,
+  data?: Record<string, any>,
+) {
   try {
     const res = await fetch("https://api.onesignal.com/notifications?c=push", {
       method: "POST",
@@ -38,6 +43,7 @@ export async function sendPushNotification(subscriptionId: string, title: string
         include_subscription_ids: [subscriptionId],
         headings: { en: title ?? "Sample" },
         contents: { en: body ?? "Hello" },
+        data,
         android_channel_id: process.env.EXPO_PUBLIC_ONESIGNAL_ANDROID_CHANNEL_ID,
         priority: 10,
       }),

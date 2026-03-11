@@ -51,14 +51,14 @@ GoogleSignin.configure({
   webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
 });
 
-export default async function signUpService(email: string, password: string, name: string) {
+export default async function signUpService(email: string, password: string, name: string, role: string) {
   try {
     const { data, error } = await supabase.auth.signUp({ email, password });
 
     if (data?.session?.access_token) {
       await AsyncStorage.setItem('sessionToken', data.session.access_token);
     }
-    const homeRoute = data?.user?.id ? await getHomeRouteForUserId(data.user.id) : "/(user)";
+    let homeRoute = "/(user)";
     if (data.user) {
       const { data: existingProfile } = await supabase
         .from("users")
@@ -67,8 +67,16 @@ export default async function signUpService(email: string, password: string, nam
         .single();
 
       if (!existingProfile) {
+        //add new user from table users /auth
+        //add new user from table users
         await supabase.from("users").insert({ id: data.user.id, name });
       }
+      // Assign role for user or manager/owner
+      const roleToId: Record<string, number> = { user: 4, manager: 2 };
+      const roleId = roleToId[role];
+      await supabase.from("user_roles").insert({ user_id: data.user.id, role_id: roleId, store_id: null });
+
+      homeRoute = await getHomeRouteForUserId(data.user.id);
     }
     if (error) {
       throw error;
@@ -131,6 +139,12 @@ export async function signUpWithGoogleService() {
           if (insertError) {
             throw insertError;
           }
+
+          // Assign default role 'user'
+          await supabase.from("user_roles").insert({ user_id: data.user.id, role_id: 4, store_id: null });
+
+          // Assign default role 'user'
+          await supabase.from("user_roles").insert({ user_id: data.user.id, role_id: 4, store_id: null });
         }
       } else if (error) {
         throw error;
