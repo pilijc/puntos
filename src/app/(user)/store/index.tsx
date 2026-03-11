@@ -72,6 +72,7 @@ export default function Rewards() {
 
   const { location, permissionStatus, startWatching, stopWatching, refreshLocation } = useLocation();
   const [carouselIndex, setCarouselIndex] = useState(0);
+  const [heroIndex, setHeroIndex] = useState(0);
 
   const [isAutoPlayEnabled, setIsAutoPlayEnabled] = useState(true);
   const autoPlayTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -181,49 +182,78 @@ export default function Rewards() {
     };
   }, [nearbyStores]);
 
+  // Effect to load pure feature flags (enabled/disabled) for stamps
+  useEffect(() => {
+    let isCancelled = false;
+    const loadStampFeatureFlags = async () => {
+      const nearbyIds = nearbyStores.map((store) => Number(store.id));
+      if (nearbyIds.length === 0) {
+        if (!isCancelled) setEnabledStampFeatureStoreIds([]);
+        return;
+      }
+      // Re-use streaks service logic but for stamps flag if needed, 
+      // or just fetch all features for these stores
+      const { data: featureRows } = await supabase
+        .from("store_feature")
+        .select("store_id, stamp_enabled")
+        .in("store_id", nearbyIds);
+      
+      if (!isCancelled && featureRows) {
+        const enabledIds = featureRows
+          .filter((row: any) => row.stamp_enabled === true)
+          .map((row: any) => Number(row.store_id));
+        setEnabledStampFeatureStoreIds(enabledIds);
+      }
+    };
+    loadStampFeatureFlags();
+    return () => { isCancelled = true; };
+  }, [nearbyStores]);
+
+  // Reset hero index when nearby stores change to avoid out of bounds
+  useEffect(() => {
+    setHeroIndex(0);
+  }, [nearbyStores.length]);
+
   const displayStamps = useMemo(() => {
     if (!location) return sortedStamps;
 
-    const nearbyEligible = nearbyStores
-      .filter((store) => eligibleNearbyStoreIds.includes(Number(store.id)))
-      .map((store) => {
-        const existing = sortedStamps.find((stamp) => Number(stamp.store_id) === Number(store.id));
-        if (existing) return existing;
+    // Strict Nearby Mode: If we are near ANY active store, focus ONLY on the one visible in the hero banner
+    if (nearbyStores.length > 0) {
+      const focusedStore = nearbyStores[heroIndex];
+      if (!focusedStore) return [];
 
-        const virtualStamp: StampProgress = {
-          id: -Number(store.id),
-          user_id: "",
-          store_id: Number(store.id),
-          stamps_count: 0,
-          target: 7,
-          last_stamp_at: "",
-          updated_at: "",
-          stores: {
-            name: store.name,
-            logo: store.logo ?? undefined,
-            status: store.status,
-            is_active: store.is_active,
-            latitude: store.latitude ?? undefined,
-            longitude: store.longitude ?? undefined,
-            address: store.address ?? undefined,
-          },
-        };
-        return virtualStamp;
-      });
+      // Relaxed check: show if feature is ENABLED in store_feature, 
+      // even if no active program row exists in store_stamps.
+      const isEnabled = enabledStampFeatureStoreIds.includes(Number(focusedStore.id));
+      if (!isEnabled) return []; // Will show "Upcoming Events" if displayStreaks is also empty
 
-    // If no nearby eligible stores, fallback to old behavior: stamped stores only.
-    if (nearbyEligible.length === 0) {
-      return sortedStamps;
+      const existing = sortedStamps.find((stamp) => Number(stamp.store_id) === Number(focusedStore.id));
+      if (existing) return [existing];
+
+      const virtualStamp: StampProgress = {
+        id: -Number(focusedStore.id),
+        user_id: "",
+        store_id: Number(focusedStore.id),
+        stamps_count: 0,
+        target: 7,
+        last_stamp_at: "",
+        updated_at: "",
+        stores: {
+          name: focusedStore.name,
+          logo: focusedStore.logo ?? undefined,
+          status: focusedStore.status,
+          is_active: focusedStore.is_active,
+          latitude: focusedStore.latitude ?? undefined,
+          longitude: focusedStore.longitude ?? undefined,
+          address: focusedStore.address ?? undefined,
+        },
+      };
+      return [virtualStamp];
     }
 
-    // Prioritize nearby stores first, then keep the rest of stamped stores.
-    const nearbyStoreIds = new Set(nearbyEligible.map((item) => Number(item.store_id)));
-    const nonNearbyStamped = sortedStamps.filter(
-      (stamp) => !nearbyStoreIds.has(Number(stamp.store_id)),
-    );
-
-    return [...nearbyEligible, ...nonNearbyStamped];
-  }, [sortedStamps, nearbyStores, eligibleNearbyStoreIds, location]);
+    // Away Mode: Show all stores the user has stamps with
+    return sortedStamps;
+  }, [sortedStamps, nearbyStores, eligibleNearbyStoreIds, location, heroIndex]);
 
   useEffect(() => {
     let isCancelled = false;
@@ -430,6 +460,7 @@ export default function Rewards() {
                 loop={nearbyStores.length > 1}
                 autoPlay={nearbyStores.length > 1 && isAutoPlayEnabled}
                 autoPlayInterval={4000}
+                onSnapToItem={(index) => setHeroIndex(index)}
                 renderItem={({ item: store }) => (
                   <View className="w-full h-full relative">
                     <Image
@@ -820,6 +851,19 @@ export default function Rewards() {
               <Text className="text-neutral-500 font-poppins-semibold text-sm mt-2">No Active Stamps</Text>
               <Text className="text-neutral-400 font-poppins text-xs text-center mt-1">Visit a partner store to start your stamp log!</Text>
             </View>
+          )}
+
+          {displayStamps.length === 0 ? (
+            /* Away Mode Placeholder */
+            nearbyStores.length === 0 && (
+              <View
+                className="bg-white dark:bg-darkBackgroundMuted rounded-2xl p-6 items-center mx-1"
+              >
+                <MaterialIcons name="stars" size={32} color="#d1d5db" className="mb-2" />
+                <Text className="text-neutral-500 font-poppins-semibold text-sm mt-2">No Active Stamps</Text>
+                <Text className="text-neutral-400 font-poppins text-xs text-center mt-1">Visit a partner store to start your stamp log!</Text>
+              </View>
+            )
           ) : (
             <View>
               <Carousel
