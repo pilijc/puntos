@@ -587,7 +587,7 @@ export default function CreateStore() {
                   </Text>
                   <TouchableOpacity
                     onPress={() => setShowOpenTimePicker(true)}
-                    className="w-full rounded-xl bg-white dark:bg-slate-800/50 h-12 px-4 justify-center border border-slate-200 dark:border-slate-700"
+                    className="w-full rounded-xl bg-white dark:bg-slate-800/50 h-12 px-4 justify-center"
                     activeOpacity={0.8}
                   >
                     <Text className="text-slate-900 dark:text-slate-100 font-poppins">
@@ -643,7 +643,7 @@ export default function CreateStore() {
                   </Text>
                   <TouchableOpacity
                     onPress={() => setShowCloseTimePicker(true)}
-                    className="w-full rounded-xl bg-white dark:bg-slate-800/50 h-12 px-4 justify-center border border-slate-200 dark:border-slate-700"
+                    className="w-full rounded-xl bg-white dark:bg-slate-800/50 h-12 px-4 justify-center"
                     activeOpacity={0.8}
                   >
                     <Text className="text-slate-900 dark:text-slate-100 font-poppins">
@@ -824,7 +824,6 @@ export default function CreateStore() {
               label={activeStep === "location" ? "Create Store" : "Continue"}
               onPress={goNext}
               variant="primary"
-              icon={activeStep === "location" ? "add" : undefined}
               loading={isSubmitting}
               fullWidth={true}
               disabled={
