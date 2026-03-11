@@ -1,4 +1,4 @@
-import { Store_Superadmin, StoreState, StoreState_Superadmin } from "@/type/store";
+import { Store_Superadmin, StoreState, StoreState_Superadmin } from "@/type/user/store";
 import { create } from "zustand";
 
 export const useStoreStore = create<StoreState>((set) => ({

@@ -16,6 +16,7 @@ import EditProfileModal from "@/components/settings/EditProfileModal";
 import SecurityModal from "@/components/settings/SecurityModal";
 import { LogoutButton } from "@/components/settings/LogoutButton";
 import { UserProfileCard } from "@/components/settings/UserProfileCard";
+import { SecurityCard } from "@/components/settings/SecurityCard";
 
 // Services (Used for background tasks like location sync)
 import { syncLocationService } from "@/services/settings-service";
@@ -82,8 +83,8 @@ export default function UserSettings() {
   };
 
 
-  const handleSaveProfile = async (newName: string, _newEmail: string) => {
-    const result = await updateProfile(newName);
+  const handleSaveProfile = async (newName: string, _newEmail: string, newAvatarUrl?: string | null) => {
+    const result = await updateProfile({ name: newName, avatar_url: newAvatarUrl });
     if (result.success) {
       Alert.alert("Success", "Profile updated successfully");
     } else {
@@ -93,16 +94,16 @@ export default function UserSettings() {
 
   if (loading && !user) {
     return (
-      <SafeAreaView className="flex-1 bg-background dark:bg-neutral-900 justify-center items-center">
+      <SafeAreaView className="flex-1 bg-background dark:bg-darkBackground justify-center items-center">
         <Text className="text-neutral-500 font-poppins-regular">Loading profile...</Text>
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-background dark:bg-neutral-900 p-4">
+    <SafeAreaView className="flex-1 bg-background dark:bg-darkBackground p-4">
       <View className="flex-row justify-between items-center mb-6">
-        <Text className="text-2xl font-poppins-bold text-neutral-900 dark:text-white">
+        <Text className="text-2xl font-poppins-bold text-neutral-900 dark:text-darkTextPrimary">
           Settings
         </Text>
         <DarkModeToggle />
@@ -118,42 +119,30 @@ export default function UserSettings() {
 
       {/* Account Section */}
       <View>
-        <Text className="text-sm font-poppins-semibold text-neutral-600 dark:text-neutral-400 mb-2">
+        <Text className="text-sm font-poppins-semibold text-neutral-600 dark:text-darkTextSecondary mb-2">
           ACCOUNT SETTINGS
         </Text>
       </View>
 
-      <View className="mx-4 mb-6 overflow-hidden bg-background rounded-2xl border border-neutral-200 dark:border-neutral-700">
-        <TouchableOpacity
-          onPress={() => setSecurityModalVisible(true)}
-          className="flex-row items-center p-4 bg-white dark:bg-neutral-800 active:bg-neutral-50 dark:active:bg-neutral-700 will-change-pressable">
-          <View className="h-5 w-5 items-center justify-center rounded-lg bg-emerald-50">
-            <Ionicons name="settings-outline" size={15} color="#3b82f6" />
-          </View>
-          <Text className="text-base flex-1 ml-3 font-poppins-semibold text-neutral-900 dark:text-white">
-            Security
-          </Text>
-          <Ionicons name="chevron-forward-outline" size={15} color="#d4d4d4" />
-        </TouchableOpacity>
-      </View>
+      <SecurityCard onPress={() => setSecurityModalVisible(true)} />
 
       {/* Preferences Section */}
       <View>
-        <Text className="text-sm font-poppins-semibold text-neutral-600 dark:text-neutral-400 mb-2">
+        <Text className="text-sm font-poppins-semibold text-neutral-600 dark:text-darkTextSecondary mb-2">
           NOTIFICATIONS & PRIVACY
         </Text>
       </View>
 
-      <View className="mx-4 mb-6 overflow-hidden bg-background rounded-2xl border border-neutral-200 dark:border-neutral-700">
-        <View className="flex-row p-4 bg-white dark:bg-neutral-800 border-b border-neutral-100 dark:border-neutral-700 items-center">
+      <View className="mx-4 mb-6 overflow-hidden bg-background dark:bg-darkBackgroundMuted rounded-2xl border border-neutral-200 dark:border-darkBorder">
+        <View className="flex-row p-4 bg-background dark:bg-darkBackgroundMuted border-b border-neutral-100 dark:border-darkBorder items-center">
           <View className="h-8 w-8 items-center justify-center rounded-lg bg-orange-50">
             <Ionicons name="notifications-outline" size={18} color="#FF6600" />
           </View>
           <View className="ml-3 flex-1">
-            <Text className="text-base font-poppins-semibold text-neutral-800 dark:text-white">
+            <Text className="text-base font-poppins-semibold text-neutral-800 dark:text-darkTextPrimary">
               Nearby Alerts
             </Text>
-            <Text className="text-xs font-poppins-regular text-neutral-400 dark:text-neutral-500">
+            <Text className="text-xs font-poppins-regular text-neutral-400 dark:text-darkTextMuted">
               Get notified when rewards are close
             </Text>
           </View>
@@ -190,16 +179,16 @@ export default function UserSettings() {
               togglePreference('location_enabled');
             }
           }}
-          className="flex-row p-4 bg-white dark:bg-neutral-800 border-b border-neutral-100 dark:border-neutral-700 items-center will-change-pressable"
+          className="flex-row p-4 bg-background dark:bg-darkBackgroundMuted border-b border-neutral-100 dark:border-darkBorder items-center will-change-pressable"
         >
           <View className="h-8 w-8 items-center justify-center rounded-lg bg-yellow-50">
             <Ionicons name="location-outline" size={18} color="#d8d336" />
           </View>
           <View className="ml-3 flex-1">
-            <Text className="text-base font-poppins-semibold text-neutral-800 dark:text-white">
+            <Text className="text-base font-poppins-semibold text-neutral-800 dark:text-darkTextPrimary">
               Location Access
             </Text>
-            <Text className="text-xs font-poppins-regular text-neutral-400 dark:text-neutral-500">
+            <Text className="text-xs font-poppins-regular text-neutral-400 dark:text-darkTextMuted">
               {locationLoading ? "Checking..." : permissionStatus.granted ? "Access Granted" : "Access Denied"}
             </Text>
           </View>
@@ -212,12 +201,12 @@ export default function UserSettings() {
         </TouchableOpacity>
 
         {/* Promo Emails Switch */}
-        <View className="flex-row p-4 bg-white dark:bg-neutral-800 items-center">
+        <View className="flex-row p-4 bg-background dark:bg-darkBackgroundMuted items-center">
           <View className="h-8 w-8 items-center justify-center rounded-lg bg-pink-50">
             <Ionicons name="megaphone-outline" size={18} color="#ad2291" />
           </View>
           <View className="ml-3 flex-1">
-            <Text className="text-base font-poppins-semibold text-neutral-800 dark:text-white">
+            <Text className="text-base font-poppins-semibold text-neutral-800 dark:text-darkTextPrimary">
               Promotional Emails
             </Text>
           </View>
@@ -234,7 +223,7 @@ export default function UserSettings() {
 
       {/* Footer */}
       <View className="mx-8 mt-6 items-center">
-        <Text className="text-sm text-center font-poppins-regular text-neutral-500 dark:text-neutral-400">
+        <Text className="text-sm text-center font-poppins-regular text-neutral-500 dark:text-darkTextSecondary">
           Copyright 2026
         </Text>
       </View>
@@ -245,6 +234,8 @@ export default function UserSettings() {
         onClose={() => setModalVisible(false)}
         initialUsername={profile?.name || user?.email?.split("@")[0] || ""}
         initialEmail={user?.email || ""}
+        initialAvatar={profile?.avatar_url}
+        userId={user?.id}
         onSave={handleSaveProfile}
       />
 

@@ -3,17 +3,16 @@ import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import React from "react";
 import { View as RNView } from "react-native";
 import { router } from "expo-router";
-import { stores } from "@/data/rewards";
-
-const streaks = [
-  { storeId: "coffee-foundry", completed: 3, total: 7, bonus: 500 },
-  { storeId: "bean-lab", completed: 1, total: 7, bonus: 300 },
-  { storeId: "harbor-roast", completed: 5, total: 7, bonus: 700 },
-];
+import { useStamps } from "@/hooks/use-stamps";
 
 export default function StoreStreaks() {
-  const longestStreak = Math.max(...streaks.map((streak) => streak.completed));
-  const activeStreaks = streaks.length;
+  const { stamps, isLoading } = useStamps();
+
+  const activeStamps = stamps.length;
+  // Guard against spread on empty array
+  const highestStampCount = activeStamps > 0
+    ? Math.max(...stamps.map((s) => s.stamps_count))
+    : 0;
 
   const getTier = (completed: number) => {
     if (completed >= 5) return { label: "Gold", color: "text-amber-500" };
@@ -22,7 +21,7 @@ export default function StoreStreaks() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-background dark:bg-neutral-900">
+    <SafeAreaView className="flex-1 bg-background dark:bg-darkBackground">
       <ScrollView
         className="flex-1"
         contentContainerClassName="px-6 pt-6 pb-10 gap-y-5"
@@ -30,12 +29,12 @@ export default function StoreStreaks() {
         <View className="flex-row items-center gap-x-3">
           <TouchableOpacity
             onPress={() => router.back()}
-            className="w-10 h-10 rounded-full bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 items-center justify-center"
+            className="w-10 h-10 rounded-full bg-white dark:bg-darkBackgroundMuted border border-neutral-200 dark:border-darkBorder items-center justify-center"
           >
             <MaterialIcons name="chevron-left" size={22} color="#0f172a" />
           </TouchableOpacity>
           <Text className="text-2xl font-poppins-bold text-neutral-900 dark:text-white">
-            All Streaks
+            All Stamps
           </Text>
         </View>
 
@@ -43,39 +42,39 @@ export default function StoreStreaks() {
           <View className="flex-row items-center justify-between">
             <View>
               <Text className="text-white/80 text-xs font-poppins">
-                Weekly Momentum
+                Lifetime Stamps
               </Text>
               <Text className="text-white text-xl font-poppins-bold mt-1">
-                Streak Master
+                Stamp Collector
               </Text>
             </View>
             <View className="w-12 h-12 rounded-full bg-white/20 items-center justify-center">
-              <MaterialIcons name="local-fire-department" size={22} color="#FFFFFF" />
+              <MaterialIcons name="stars" size={22} color="#FFFFFF" />
             </View>
           </View>
 
           <View className="flex-row gap-x-3 mt-4">
             <View className="flex-1 bg-white/15 rounded-2xl p-3 items-center">
               <Text className="text-white/70 text-[10px] font-poppins text-center">
-                ACTIVE STREAKS
+                ACTIVE CARDS
               </Text>
               <Text className="text-white text-lg font-poppins-bold mt-1 text-center">
-                {activeStreaks}
+                {activeStamps}
               </Text>
             </View>
             <View className="flex-1 bg-white/15 rounded-2xl p-3 items-center">
               <Text className="text-white/70 text-[10px] font-poppins text-center">
-                LONGEST STREAK
+                HIGHEST STAMPS
               </Text>
               <Text className="text-white text-lg font-poppins-bold mt-1 text-center">
-                {longestStreak} days
+                {highestStampCount} stamps
               </Text>
             </View>
           </View>
 
           <View className="flex-row items-center justify-between mt-4">
             <Text className="text-white/80 text-xs font-poppins">
-              Keep checking in to unlock bonus rewards.
+              Keep stamping to unlock bonus rewards.
             </Text>
             <View className="flex-row items-center gap-x-1">
               <MaterialIcons name="emoji-events" size={14} color="#FFFFFF" />
@@ -87,78 +86,96 @@ export default function StoreStreaks() {
         </View>
 
         <View className="gap-y-3">
-          {streaks.map((streak) => {
-            const store = stores.find((item) => item.id === streak.storeId);
-            const progress = Math.round((streak.completed / streak.total) * 100);
-            const safeProgress = Math.min(Math.max(progress, 0), 100);
-            const tier = getTier(streak.completed);
-            return (
-              <TouchableOpacity
-                key={streak.storeId}
-                onPress={() => router.push(`/store/${streak.storeId}`)}
-                className="bg-white dark:bg-neutral-800 rounded-3xl p-4 border border-neutral-100 dark:border-neutral-700"
-              >
-                <View className="flex-row items-center justify-between">
-                  <View className="flex-row items-center gap-x-3">
-                    <View className="w-11 h-11 rounded-2xl bg-neutral-100 dark:bg-neutral-700 items-center justify-center">
-                      <MaterialIcons name="storefront" size={20} color="#FF6600" />
+          {isLoading ? (
+            <View className="items-center justify-center p-10 py-16 text-center">
+              <Text className="text-neutral-500 font-poppins">Loading active stamps...</Text>
+            </View>
+          ) : activeStamps === 0 ? (
+            <View className="bg-white dark:bg-neutral-800 rounded-3xl p-8 items-center">
+              <MaterialIcons name="stars" size={40} color="#d1d5db" className="mb-2" />
+              <Text className="text-neutral-500 font-poppins-semibold text-base mt-2">No Active Stamps Found</Text>
+              <Text className="text-neutral-400 font-poppins text-xs text-center mt-2 px-4">
+                You haven't collected any stamps yet. Visit a partner store and scan to begin!
+              </Text>
+            </View>
+          ) : (
+            stamps.map((stamp) => {
+              const targetDays = stamp.target || 7; // For now assuming 7 day standard
+              const completed = stamp.stamps_count;
+              const bonus = 500; // Placeholder bonus points
+
+              const progress = Math.round((completed / targetDays) * 100);
+              const safeProgress = Math.min(Math.max(progress, 0), 100);
+              const tier = getTier(completed);
+
+              return (
+                <TouchableOpacity
+                  key={stamp.store_id}
+                  onPress={() => router.push(`/store/${stamp.store_id}`)}
+                  className="bg-white dark:bg-neutral-800 rounded-3xl p-4 border border-neutral-100 dark:border-neutral-700"
+                >
+                  <View className="flex-row items-center justify-between">
+                    <View className="flex-row items-center gap-x-3">
+                      <View className="w-11 h-11 rounded-2xl bg-neutral-100 dark:bg-neutral-700 items-center justify-center">
+                        <MaterialIcons name="storefront" size={20} color="#FF6600" />
+                      </View>
+                      <View>
+                        <Text className="font-poppins-semibold text-neutral-900 dark:text-white">
+                          {stamp.stores?.name ?? "Store"}
+                        </Text>
+                        <Text className="text-xs text-neutral-500 font-poppins mt-1">
+                          {stamp.stores?.is_active ? "Active Partner Store" : "Inactive"}
+                        </Text>
+                      </View>
                     </View>
-                    <View>
-                      <Text className="font-poppins-semibold text-neutral-900 dark:text-white">
-                        {store?.name ?? "Store"}
+                    <MaterialIcons
+                      name="chevron-right"
+                      size={20}
+                      color="#94a3b8"
+                    />
+                  </View>
+
+                  <View className="flex-row items-center justify-between mt-4">
+                    <View className="flex-row items-center gap-x-2">
+                      <Text className="text-xs font-poppins-medium text-neutral-400">
+                        {completed}/{targetDays} COMPLETED
                       </Text>
-                      <Text className="text-xs text-neutral-500 font-poppins mt-1">
-                        {store?.location ?? "Location"}
+                      <Text className={`text-xs font-poppins-semibold ${tier.color}`}>
+                        {tier.label}
+                      </Text>
+                    </View>
+                    <Text className="text-xs font-poppins-semibold text-primary">
+                      +{bonus} bonus pts
+                    </Text>
+                  </View>
+
+                  <View className="h-2 bg-neutral-100 dark:bg-neutral-700 rounded-full mt-3 overflow-hidden w-full">
+                    <RNView
+                      style={{
+                        height: 8,
+                        width: `${safeProgress}%`,
+                        minWidth: 6,
+                        backgroundColor: "#FF6600",
+                        borderRadius: 999,
+                      }}
+                    />
+                  </View>
+
+                  <View className="flex-row items-center justify-between mt-3">
+                    <Text className="text-[11px] text-neutral-400 font-poppins-medium">
+                      {progress}% complete
+                    </Text>
+                    <View className="flex-row items-center gap-x-1">
+                      <MaterialIcons name="bolt" size={14} color="#FF6600" />
+                      <Text className="text-[11px] text-neutral-500 font-poppins-medium">
+                        Keep stamping to reach your target!
                       </Text>
                     </View>
                   </View>
-                  <MaterialIcons
-                    name="chevron-right"
-                    size={20}
-                    color="#94a3b8"
-                  />
-                </View>
-
-                <View className="flex-row items-center justify-between mt-4">
-                  <View className="flex-row items-center gap-x-2">
-                    <Text className="text-xs font-poppins-medium text-neutral-400">
-                      {streak.completed}/{streak.total} COMPLETED
-                    </Text>
-                    <Text className={`text-xs font-poppins-semibold ${tier.color}`}>
-                      {tier.label}
-                    </Text>
-                  </View>
-                  <Text className="text-xs font-poppins-semibold text-primary">
-                    +{streak.bonus} bonus pts
-                  </Text>
-                </View>
-
-                <View className="h-2 bg-neutral-100 dark:bg-neutral-700 rounded-full mt-3 overflow-hidden w-full">
-                  <RNView
-                    style={{
-                      height: 8,
-                      width: `${safeProgress}%`,
-                      minWidth: 6,
-                      backgroundColor: "#FF6600",
-                      borderRadius: 999,
-                    }}
-                  />
-                </View>
-
-                <View className="flex-row items-center justify-between mt-3">
-                  <Text className="text-[11px] text-neutral-400 font-poppins-medium">
-                    {progress}% complete
-                  </Text>
-                  <View className="flex-row items-center gap-x-1">
-                    <MaterialIcons name="bolt" size={14} color="#FF6600" />
-                    <Text className="text-[11px] text-neutral-500 font-poppins-medium">
-                      Check in to keep streak alive
-                    </Text>
-                  </View>
-                </View>
-              </TouchableOpacity>
-            );
-          })}
+                </TouchableOpacity>
+              );
+            })
+          )}
         </View>
       </ScrollView>
     </SafeAreaView>

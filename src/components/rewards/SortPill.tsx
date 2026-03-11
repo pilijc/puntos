@@ -19,13 +19,13 @@ export default function SortPill({
   return (
     <TouchableOpacity
       onPress={onPress}
-      className={`px-3 py-1 rounded-full ${active ? "bg-primary/10" : "bg-neutral-100 dark:bg-neutral-700"
+      className={`px-3 py-1 rounded-full ${active ? "bg-primary/10" : "bg-neutral-100 dark:bg-darkBackgroundCard"
         }`}
     >
       <View className="flex-row items-center gap-x-1">
         {leftIcon ? <View className="items-center">{leftIcon}</View> : null}
         <Text
-          className={`text-[11px] font-poppins-semibold ${active ? "text-primary" : "text-neutral-500 dark:text-neutral-300"
+          className={`text-[11px] font-poppins-semibold ${active ? "text-primary" : "text-neutral-500 dark:text-darkTextSoft"
             }`}
         >
           {label}

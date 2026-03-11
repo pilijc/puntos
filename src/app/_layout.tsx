@@ -1,5 +1,7 @@
+import "react-native-url-polyfill/auto";
+import "react-native-gesture-handler";
 import "../global.css";
-import { Slot, useRouter } from "expo-router";
+import { Slot, useRouter, Stack } from "expo-router";
 import { useFonts } from "expo-font";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as SplashScreen from "expo-splash-screen";
@@ -15,37 +17,20 @@ import { checkIfAccountDeletedService, AccountDeletedError } from "@/services/au
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { useAuthStore } from "@/store/auth-store";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { OneSignal } from "react-native-onesignal";
+import { useStamps } from "@/hooks/use-stamps";
 
 SplashScreen.preventAutoHideAsync();
 
-function SplashPulse() {
-  const scale = useSharedValue(1);
+export async function initOneSignal() {
+  const appId = process.env.EXPO_PUBLIC_ONESIGNAL_APP_ID;
+  if (!appId) throw new Error("Missing EXPO_PUBLIC_ONESIGNAL_APP_ID");
 
-  useEffect(() => {
-    scale.value = withRepeat(
-      withSequence(
-        withTiming(1.12, { duration: 800, easing: Easing.inOut(Easing.ease) }),
-        withTiming(1, { duration: 800, easing: Easing.inOut(Easing.ease) })
-      ),
-      -1,
-      true
-    );
-  }, []);
+  OneSignal.initialize(appId);
+  OneSignal.Notifications.requestPermission(true);
 
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
-  }));
-
-  return (
-    <View className="flex-1 bg-background justify-center items-center">
-      <Animated.View style={animatedStyle}>
-        <Image
-          source={require("../assets/images/puntos-icon.png")}
-          className="w-10 h-10"
-        />
-      </Animated.View>
-    </View>
-  );
+  const subId = await OneSignal.User.pushSubscription.getIdAsync();
+  return subId;
 }
 
 export default function Layout() {
@@ -58,9 +43,11 @@ export default function Layout() {
     "Poppins-Bold": require("../assets/fonts/Poppins-Bold.ttf"),
   });
   const sessionToken = useAuthStore((s) => s.sessionToken);
+  const fetchStamps = useStamps((s) => s.fetchStamps);
 
   useEffect(() => {
     const checkSession = async () => {
+      await initOneSignal();
       const { data: { session } } = await supabase.auth.getSession();
 
       if (!session && !sessionToken) {
@@ -77,10 +64,10 @@ export default function Layout() {
         try {
           const userId = session.user.id;
 
-          // Centralized check for deleted accounts
-          await checkIfAccountDeletedService(userId);
+          // Pre-fetch global state data
+          fetchStamps();
 
-          // Get the appropriate initial route based on user type/data
+          await checkIfAccountDeletedService(userId);
           const nextRoute = await getHomeRouteForUserId(userId);
           router.replace(nextRoute as any);
         } catch (err: any) {

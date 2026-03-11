@@ -1,4 +1,4 @@
-# Puntos Mobile
+\# Puntos Mobile
 
 Expo/React Native app for the Puntos rewards platform. This guide covers running the app with **Docker** (Metro + Node) and building/installing on **Android** from your host.
 
@@ -169,15 +169,15 @@ If Metro asks to use a different port, choose **No** (`n`) so it keeps using the
 Use these test accounts to explore different roles in the app:
 
 - **Super Admin**
-  - Email: `kaelzerefp@gmail.com`
+  - Email: `superadmin@tsg.com`
   - Password: `Password123$`
 
 - **Store Manager / Owner**
-  - Email: `joelchandlerpili111@gmail.com`
+  - Email: `storemanager@tsg.com`
   - Password: `Password123$`
-
+xx
 - **Front-desk**
-  - Email: `joelchandlerp@gmail.com`
+  - Email: `frontdesk@tsg.com`
   - Password: `Password123$`
 
 - **User**

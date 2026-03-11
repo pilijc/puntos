@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, useColorScheme, Alert, Vibration } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { ActivityIndicator, useColorScheme, Alert, Vibration, Modal } from 'react-native';
 import { SafeAreaView, View, Text, TouchableOpacity } from '@/tw';
 
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
@@ -13,6 +13,8 @@ export default function Qr() {
   const router = useRouter();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
+  const [showCongratsModal, setShowCongratsModal] = useState(false);
+  const [earnedPoints, setEarnedPoints] = useState(0);
   const [qrValue, setQrValue] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
@@ -60,11 +62,12 @@ export default function Qr() {
     // Listen to transactions
     const channel = listenToQRTransaction(currentUser.id, (transaction) => {
       console.log('Customer side: QR transaction received!', transaction);
-      // Add vibration for celebration
+      //vibration for celebration
       Vibration.vibrate(500);
-      Alert.alert('🎉 Congratulations!', `You just earned ${transaction.points_earned} points!`, [
-        { text: 'Awesome!' }
-      ]);
+      
+      // Show custom congratulations modal
+      setEarnedPoints(transaction.points_earned);
+      setShowCongratsModal(true);
     });
 
     return channel;
@@ -83,7 +86,7 @@ export default function Qr() {
  
 
   return (
-    <SafeAreaView className="flex-1 bg-white dark:bg-neutral-900">
+    <SafeAreaView className="flex-1 bg-white dark:bg-darkBackground">
       <View className="px-6 pt-4 flex-1">
         {/* Header */}
         <View className="flex-row items-center justify-between">
@@ -94,13 +97,13 @@ export default function Qr() {
         </View>
 
         {/* Instructions */}
-        <Text className="text-base font-semibold text-black dark:text-white text-center mt-4">
+        <Text className="text-base font-semibold text-black dark:text-darkTextPrimary text-center mt-4">
           Get your Points Now
         </Text>
-        <Text className="text-sm mt-4 text-gray-500 dark:text-neutral-400 text-center">
+        <Text className="text-sm mt-4 text-gray-500 dark:text-darkTextSecondary text-center">
           Let the operator scan your QR code
         </Text>
-        <Text className="text-xs mt-1 text-gray-400 dark:text-neutral-500 text-center">
+        <Text className="text-xs mt-1 text-gray-400 dark:text-darkTextMuted text-center">
           This is your unique customer QR code
         </Text>
 
@@ -110,24 +113,82 @@ export default function Qr() {
             <ActivityIndicator size="large" color={isDark ? '#FF6600' : undefined} />
           ) : qrValue ? (
             <>
-              <Text className="mb-5 text-sm font-poppins-semibold text-neutral-700 dark:text-neutral-300">
+              <Text className="mb-5 text-sm font-poppins-semibold text-neutral-700 dark:text-darkTextSoft">
                 Your QR Code
               </Text>
               {/* White wrapper so code stays scannable on dark backgrounds */}
               <View className="bg-white p-4 rounded-2xl">
                 <QRCode value={qrValue} size={200} />
               </View>
-              <Text className="mt-4 text-xs text-center text-gray-500 dark:text-neutral-400 font-poppins">
+              <Text className="mt-4 text-xs text-center text-gray-500 dark:text-darkTextSecondary font-poppins">
                 Show this to the front desk to earn points
               </Text>
             </>
           ) : (
-            <Text className="text-neutral-500 dark:text-neutral-400 font-poppins">
+            <Text className="text-neutral-500 dark:text-darkTextSecondary font-poppins">
               Failed to load QR code. Try again.
             </Text>
           )}
         </View>
       </View>
+
+      {/* Custom Congratulations Modal */}
+      <Modal
+        visible={showCongratsModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowCongratsModal(false)}
+      >
+        <View className="flex-1 bg-black/50 justify-center items-center p-6">
+          <View className="bg-white rounded-3xl p-8 w-full max-w-sm shadow-2xl">
+            {/* Celebration Icon */}
+            <View className="items-center mb-6">
+              <View className="w-16 h-16 bg-orange-500 rounded-2xl items-center justify-center">
+                <MaterialIcons name="celebration" size={28} color="#FFFFFF" />
+              </View>
+            </View>
+
+            {/* Title */}
+            <Text className="text-2xl font-bold text-center text-gray-900 mb-2">
+              Congratulations!
+            </Text>
+
+            {/* Points Message */}
+            <Text className="text-base text-center text-gray-600 mb-6">
+              You earned points
+            </Text>
+
+            {/* Points Display */}
+            <View className="bg-orange-50 rounded-2xl p-6 mb-8 border border-orange-100">
+              <Text className="text-3xl font-bold text-center text-orange-600">
+                +{earnedPoints}
+              </Text>
+              <Text className="text-sm text-center text-orange-500 mt-1">
+                Points Added
+              </Text>
+            </View>
+
+            {/* Action Button */}
+            <TouchableOpacity
+              onPress={() => setShowCongratsModal(false)}
+              className="bg-orange-500 py-4 px-6 rounded-xl"
+            >
+              <Text className="text-white font-bold text-center text-lg">
+                Great!
+              </Text>
+            </TouchableOpacity>
+
+            {/* Close hint */}
+            <TouchableOpacity
+              onPress={() => setShowCongratsModal(false)}
+              className="absolute top-4 right-4 w-8 h-8 items-center justify-center"
+            >
+              <MaterialIcons name="close" size={20} color="#6B7280" />
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
     </SafeAreaView>
   );
 }

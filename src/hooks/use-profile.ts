@@ -5,14 +5,11 @@ import {
     getUserProfileService,
     getUserSettingsService,
     updateUserProfileService,
-    updateUserSettingsService
+    updateUserSettingsService,
+    deleteOldAvatar
 } from "@/services/settings-service";
 import { UserPreferences } from "@/type/settings";
 
-/**
- * Hook to manage user profile, preferences, and authentication state.
- * Centralizes profile-related logic for use across different settings screens.
- */
 export const useProfile = () => {
     const [user, setUser] = useState<any>(null);
     const [profile, setProfile] = useState<any>(null);
@@ -23,9 +20,7 @@ export const useProfile = () => {
         promo_emails: false,
     });
 
-    /**
-     * Loads the current user's profile and settings from Supabase.
-     */
+
     const loadUserProfile = async () => {
         setLoading(true);
         try {
@@ -41,13 +36,15 @@ export const useProfile = () => {
                 getUserSettingsService(currentUser.id)
             ]);
 
-            if (profileData) setProfile(profileData);
+            if (profileData) {
+                setProfile(profileData);
+            }
 
             if (settingsData) {
                 setPreferences({
                     near_store_notifications: settingsData.near_store_notifications ?? false,
                     location_enabled: settingsData.location_enabled ?? false,
-                    promo_emails: false, // Default currently set as false as the database of it doesn't exist
+                    promo_emails: false, // Default currently set as false as the database of it doesn't exist yet
                 });
             }
         } catch (error) {
@@ -57,15 +54,15 @@ export const useProfile = () => {
         }
     };
 
-    /**
-     * Updates the user's display name.
-     * @param newName The new name to set.
-     */
-    const updateProfile = async (newName: string) => {
+    const updateProfile = async (updates: { name?: string; avatar_url?: string | null }) => {
         if (!user?.id) return { success: false };
         try {
-            await updateUserProfileService(user.id, { name: newName });
-            setProfile((prev: any) => ({ ...prev, name: newName }));
+            if (updates.avatar_url && profile?.avatar_url && updates.avatar_url !== profile.avatar_url) {
+                await deleteOldAvatar(profile.avatar_url);
+            }
+
+            await updateUserProfileService(user.id, updates);
+            setProfile((prev: any) => ({ ...prev, ...updates }));
             return { success: true };
         } catch (err: any) {
             Alert.alert("Error", err.message || "Failed to update profile");
@@ -73,10 +70,6 @@ export const useProfile = () => {
         }
     };
 
-    /**
-     * Updates user preferences in the database and local state.
-     * @param updates Partial object containing the preference changes.
-     */
     const updatePreferences = async (updates: Partial<UserPreferences>) => {
         if (!user?.id) return;
 
@@ -103,7 +96,6 @@ export const useProfile = () => {
         profile,
         loading,
         preferences,
-        setPreferences, // Keep for legacy if needed, but prefer updatePreferences
         updatePreferences,
         updateProfile,
         refreshProfile: loadUserProfile

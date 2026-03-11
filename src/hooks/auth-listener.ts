@@ -5,7 +5,8 @@ import { getHomeRouteForUserId } from '@/services/access-service';
 import { checkIfAccountDeletedService, AccountDeletedError } from '@/services/auth-service';
 import { Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useAuthStore } from '@/store/auth-store';
+import { upsertPushId } from '@/services/push-notif';
+import { OneSignal } from 'react-native-onesignal';
 
 export function useAuthListener() {
   const router = useRouter();
@@ -22,7 +23,6 @@ export function useAuthListener() {
         } else if (event === 'SIGNED_IN' && session) {
           console.log("User logged in:", session.user.email);
           void (async () => {
-
             try {
               const sessionToken = await AsyncStorage.getItem('sessionToken');
               if (!sessionToken && session.access_token) {
@@ -37,7 +37,12 @@ export function useAuthListener() {
 
               await checkIfAccountDeletedService(session.user.id);
 
-              const nextRoute = await getHomeRouteForUserId(session.user.id);
+              const userId = session.user.id;
+              const nextRoute = await getHomeRouteForUserId(userId);
+
+              await OneSignal.login(userId);
+              await upsertPushId();
+
               router.replace(nextRoute as any);
             } catch (err: any) {
               if (err instanceof AccountDeletedError) {
@@ -49,10 +54,11 @@ export function useAuthListener() {
             }
           })();
         }
-        return () => {
-          listener.subscription.unsubscribe();
-        };
-      })
-  }
-  );
+      }
+    );
+
+    return () => {
+      listener.subscription.unsubscribe();
+    };
+  }, [router]);
 }
