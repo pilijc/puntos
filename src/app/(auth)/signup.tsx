@@ -12,7 +12,7 @@ import { router } from "expo-router";
 import { useAuthStore } from "../../store/auth-store";
 import signUpService, { GoogleSignInCancelledError } from "../../services/auth-service";
 import { signUpWithGoogleService } from "@/services/auth-service";
-import { NameStep, EmailStep, PasswordStep, TermsStep, StepHeader } from "../../components/stepper";
+import { NameStep, EmailStep, PasswordStep, TermsStep, RoleStep, StepHeader } from "../../components/stepper";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -39,11 +39,14 @@ export default function SignUp() {
   
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   
+  const [role, setRole] = useState('user');
+  
   const [errors, setErrors] = useState({
     name: '',
     email: '',
     password: '',
     confirmPassword: '',
+    role: '',
     terms: '',
   });
 
@@ -92,7 +95,7 @@ export default function SignUp() {
       newErrors.password = '';
       newErrors.confirmPassword = '';
     }
-    
+
     if (currentStep === 4) {
       if (!acceptedTerms) {
         newErrors.terms = 'You must accept the terms';
@@ -111,7 +114,11 @@ export default function SignUp() {
       if (currentStep < totalSteps) {
         setCurrentStep(currentStep + 1);
       } else {
-        handleSignup();
+        if (role === 'manager') {
+          handleStoreManagerSignup();
+        } else {
+          handleSignup();
+        }
       }
     }
   };
@@ -125,9 +132,80 @@ export default function SignUp() {
   const handleSignup = async () => {
     try {
       setLoading(true);
-      const data = await signUpService(email, password, name);
+      const data = await signUpService(email, password, name, role);
       reset();
       setAcceptedTerms(false);
+      setRole('user');
+      setCurrentStep(1);
+  
+      Alert.alert("Success", "Account created!");
+      router.replace(data.homeRoute ?? "/(user)");
+    } catch (error: any) {
+      setErrors((prev) => ({
+        ...prev,
+        password: error?.message ?? "Signup failed",
+      }));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleStoreManagerSignup = async () => {
+    const newErrors = { ...errors };
+    let isValid = true;
+
+    // Validate name
+    if (!name.trim()) {
+      newErrors.name = 'Name is required';
+      isValid = false;
+    } else {
+      newErrors.name = '';
+    }
+
+    // Validate email
+    if (!email.trim()) {
+      newErrors.email = 'Email is required';
+      isValid = false;
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      newErrors.email = 'Please enter a valid email';
+      isValid = false;
+    } else {
+      newErrors.email = '';
+    }
+
+    // Validate password
+    if (!password) {
+      newErrors.password = 'Password is required';
+      isValid = false;
+    } else if (password !== confirmPassword) {
+      newErrors.confirmPassword = 'Passwords do not match';
+      isValid = false;
+    } else if (password.length < 8) {
+      newErrors.password = 'Password must be at least 8 characters';
+      isValid = false;
+    } else {
+      newErrors.password = '';
+      newErrors.confirmPassword = '';
+    }
+
+    // Validate terms
+    if (!acceptedTerms) {
+      newErrors.terms = 'You must accept the terms';
+      isValid = false;
+    } else {
+      newErrors.terms = '';
+    }
+
+    setErrors(newErrors);
+
+    if (!isValid) return;
+
+    try {
+      setLoading(true);
+      const data = await signUpService(email, password, name, role);
+      reset();
+      setAcceptedTerms(false);
+      setRole('user');
       setCurrentStep(1);
   
       Alert.alert("Success", "Account created!");
@@ -146,7 +224,7 @@ export default function SignUp() {
     try {
       setLoadingGoogle(true);
       const data = await signUpWithGoogleService();
-      if (!data) {  return; }
+      if (!data) { return; }
 
       Alert.alert("Success", "Account created!");
       router.replace(data.homeRoute ?? "/(user)");
@@ -177,7 +255,7 @@ export default function SignUp() {
         </TouchableOpacity>
         <View className="flex-1 items-center -ml-10">
           <Text className="text-xl font-poppins-bold text-neutral-900">
-            Sign Up
+            {role === 'manager' ? "Sign Up as Store Manager" : "Sign Up"}
           </Text>
         </View>
       </View>
@@ -265,6 +343,22 @@ export default function SignUp() {
                         Continue with Google
                       </Text>
                     </TouchableOpacity>
+
+                    {role !== 'manager' && (
+                      <View className="flex-row justify-center mt-2">
+                        <Text className="font-poppins text-neutral-600">
+                          Sign up as Store Owner?
+                        </Text>
+                        <TouchableOpacity onPress={() => { setRole('manager'); reset(); }} className="flex-row items-center ml-1">
+                          <Text className={`font-poppins-semibold ${role === 'manager' ? 'text-green-600' : 'text-primary'}`}>
+                            Sign up
+                          </Text>
+                          {role === 'manager' && (
+                            <Ionicons name="checkmark-circle" size={16} color="#22C55E" className="ml-1" />
+                          )}
+                        </TouchableOpacity>
+                      </View>
+                    )}
                   </>
                 )}
 

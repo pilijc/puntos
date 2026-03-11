@@ -249,32 +249,32 @@ export default function Rewards() {
 								<Text className="text-xs font-poppins-bold text-red-500">*</Text>
 							</View>
 							<TouchableOpacity
-							onPress={pickImage}
-							activeOpacity={0.7}
-							disabled={isUploadingImage}
-							className="w-full h-55 rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 items-center justify-center gap-y-1"
-							>
-							{isUploadingImage ? (
-									<>
-									<ActivityIndicator size="large" color="#94A3B8" />
-									<Text className="text-xs font-poppins text-slate-400 dark:text-slate-500 mt-2">
-											Uploading image...
-									</Text>
-									</>
-							) : image_url ? (
-									<Image
-									source={{ uri: image_url }}
-									style={{ width: "100%", height: "100%", borderRadius: 12 }}
-									contentFit="cover"
-									/>
-							) : (
-									<>
-									<MaterialIcons name="image" size={32} color="#94A3B8" />
-									<Text className="text-xs font-poppins text-slate-400 dark:text-slate-500 mt-1">
-											Upload or tap to choose a photo
-									</Text>
-									</>
-							)}
+								onPress={pickImage}
+								activeOpacity={0.7}
+								disabled={isUploadingImage}
+								className="w-full h-55 rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 items-center justify-center gap-y-1"
+								>
+								{isUploadingImage ? (
+										<>
+										<ActivityIndicator size="large" color="#94A3B8" />
+										<Text className="text-xs font-poppins text-slate-400 dark:text-slate-500 mt-2">
+												Uploading image...
+										</Text>
+										</>
+								) : image_url ? (
+										<Image
+										source={{ uri: image_url }}
+										style={{ width: "100%", height: "100%", borderRadius: 12 }}
+										contentFit="cover"
+										/>
+								) : (
+										<>
+										<MaterialIcons name="image" size={32} color="#94A3B8" />
+										<Text className="text-xs font-poppins text-slate-400 dark:text-slate-500 mt-1">
+												Upload or tap to choose a photo
+										</Text>
+										</>
+								)}
 							</TouchableOpacity>
 						</View>
 
