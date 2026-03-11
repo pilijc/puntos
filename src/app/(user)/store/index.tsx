@@ -10,7 +10,7 @@ import {
 } from "@/tw";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import React, { useMemo, useState, useEffect, useCallback, useRef } from "react";
-import { FadeIn, FadeOut, Layout, Easing } from "react-native-reanimated";
+import { FadeIn, FadeOut, Layout, Easing, useAnimatedStyle, withTiming, interpolate } from "react-native-reanimated";
 import { router, useFocusEffect } from "expo-router";
 import * as Location from "expo-location";
 import { distance, point } from "@turf/turf";
@@ -54,6 +54,21 @@ export default function Rewards() {
   } = useRewardsUiStore();
   const { stores, setStores } = useStoreStore();
   const [isNearbyOpen, setIsNearbyOpen] = useState(false);
+  const [isStampLogOpen, setIsStampLogOpen] = useState(false);
+
+  const chevronStyle = useAnimatedStyle(() => {
+    return {
+      transform: [
+        {
+          rotate: withTiming(isStampLogOpen ? "180deg" : "0deg", {
+            duration: 300,
+            easing: Easing.bezier(0.4, 0, 0.2, 1),
+          }),
+        },
+      ],
+    };
+  }, [isStampLogOpen]);
+
   const { location, permissionStatus, startWatching, stopWatching, refreshLocation } = useLocation();
   const [carouselIndex, setCarouselIndex] = useState(0);
 
@@ -278,7 +293,7 @@ export default function Rewards() {
     }
   };
 
-  // Proximity helper for Streaks
+  // Proximity helper for Stamp Logs
   const isStoreNearby = (storeLat?: number | null, storeLon?: number | null) => {
     if (!location || storeLat == null || storeLon == null) return false;
     const from = point([location.longitude, location.latitude]);
@@ -618,20 +633,21 @@ export default function Rewards() {
           </AnimatedView>
         </View>
 
-        <View className="mb-1">
+        <View>
           {displayStamps.length === 0 ? (
             <View
               className="bg-white dark:bg-darkBackgroundMuted rounded-2xl p-6 items-center mx-1"
             >
               <MaterialIcons name="stars" size={32} color="#d1d5db" className="mb-2" />
               <Text className="text-neutral-500 font-poppins-semibold text-sm mt-2">No Active Stamps</Text>
-              <Text className="text-neutral-400 font-poppins text-xs text-center mt-1">Visit a partner store to start your streak!</Text>
+              <Text className="text-neutral-400 font-poppins text-xs text-center mt-1">Visit a partner store to start your stamp log!</Text>
             </View>
           ) : (
             <View>
               <Carousel
                 width={screenWidth - 48}
-                height={278}
+                //Manually changed height to fit the content
+                height={isStampLogOpen ? 250 : 150}
                 data={displayStamps}
                 scrollAnimationDuration={1000}
                 enabled={displayStamps.length > 1}
@@ -676,169 +692,194 @@ export default function Rewards() {
                   }));
 
                   return (
-                    <View className="bg-white dark:bg-darkBackgroundMuted rounded-2xl p-4 mx-1 h-full">
-                      <View className="flex-row items-center justify-between">
-                        <View className="flex-row items-center gap-x-2">
-                          <MaterialIcons name="stars" size={18} color="#FF6600" />
-                          <Text className="font-poppins-semibold text-neutral-900 dark:text-white">
-                            Stamp Log
-                          </Text>
-                        </View>
-                        <View className="flex-row items-center gap-x-3">
-                          <TouchableOpacity
-                            onPress={() => router.push("/store/streaks")}
-                            className="flex-row items-center gap-x-1"
-                          >
-                            <Text className="text-primary text-xs font-poppins-semibold">
-                              VIEW ALL
-                            </Text>
-                            <MaterialIcons name="chevron-right" size={16} color="#FF6600" />
-                          </TouchableOpacity>
-                        </View>
-                      </View>
-
-                      <View className="flex-row items-center gap-x-3 mt-3">
-                        <View className="w-10 h-10 rounded-full bg-neutral-100 dark:bg-darkBackgroundCard items-center justify-center overflow-hidden border border-neutral-100 dark:border-darkBorder">
-                          {((stamp.stores as any)?.logo || (stamp.stores as any)?.banner) ? (
-                            <Image
-                              source={{ uri: (stamp.stores as any)?.logo || (stamp.stores as any)?.banner }}
-                              className="w-full h-full"
-                              contentFit="cover"
-                            />
-                          ) : storeLogos[stamp.store_id.toString()] ? (
-                            <Image
-                              source={storeLogos[stamp.store_id.toString()]}
-                              className="w-full h-full"
-                              contentFit="cover"
-                            />
-                          ) : (
-                            <MaterialIcons name="storefront" size={20} color="#FF6600" />
-                          )}
-                        </View>
-                        <View className="flex-1 flex-row items-center justify-between">
-                          <View className="flex-row items-center gap-x-1 flex-wrap flex-1">
-                            <Text className="font-poppins-semibold text-neutral-900 dark:text-neutral-100" numberOfLines={1}>
-                              {storeName}
-                            </Text>
-                            <Text className="text-[10px] text-neutral-500 dark:text-neutral-400 font-poppins" numberOfLines={1}>
-                              • {storeAddress}
+                    <AnimatedView
+                      layout={Layout.duration(300)}
+                      className="bg-white dark:bg-darkBackgroundMuted rounded-2xl border border-neutral-100 dark:border-darkBorder overflow-hidden mx-1"
+                    >
+                      <Pressable
+                        onPress={() => setIsStampLogOpen((prev) => !prev)}
+                        className="p-3"
+                      >
+                        <View className="flex-row items-center justify-between">
+                          <View className="flex-row items-center gap-x-2">
+                            <MaterialIcons name="stars" size={18} color="#FF6600" />
+                            <Text className="font-poppins-semibold text-neutral-900 dark:text-white">
+                              Stamp Log
                             </Text>
                           </View>
-                          {nearby && (
-                            <View className="bg-green-100 dark:bg-green-900/30 px-2.5 py-1 rounded-full flex-row items-center gap-x-1 ml-2">
-                              <View className="w-1.5 h-1.5 rounded-full bg-green-500" />
-                              <Text className="text-[10px] font-poppins-semibold text-green-700 dark:text-green-400">
-                                Nearby
+                          <View className="flex-row items-center gap-x-3">
+                            <TouchableOpacity
+                              onPress={(e) => {
+                                e.stopPropagation();
+                                router.push("/store/streaks");
+                              }}
+                              className="px-2 py-1"
+                            >
+                              <Text className="text-primary text-xs font-poppins-semibold">
+                                VIEW ALL
+                              </Text>
+                            </TouchableOpacity>
+                            <AnimatedView style={chevronStyle}>
+                              <MaterialIcons
+                                name="expand-more"
+                                size={22}
+                                color="#FF6600"
+                              />
+                            </AnimatedView>
+                          </View>
+                        </View>
+
+                        <View className="flex-row items-center gap-x-3 mt-1.5">
+                          <View className="w-10 h-10 rounded-full bg-neutral-100 dark:bg-darkBackgroundCard items-center justify-center overflow-hidden border border-neutral-100 dark:border-darkBorder">
+                            {((stamp.stores as any)?.logo || (stamp.stores as any)?.banner) ? (
+                              <Image
+                                source={{ uri: (stamp.stores as any)?.logo || (stamp.stores as any)?.banner }}
+                                className="w-full h-full"
+                                contentFit="cover"
+                              />
+                            ) : storeLogos[stamp.store_id.toString()] ? (
+                              <Image
+                                source={storeLogos[stamp.store_id.toString()]}
+                                className="w-full h-full"
+                                contentFit="cover"
+                              />
+                            ) : (
+                              <MaterialIcons name="storefront" size={20} color="#FF6600" />
+                            )}
+                          </View>
+                          <View className="flex-1 flex-row items-center justify-between">
+                            <View className="flex-row items-center gap-x-1 flex-wrap flex-1">
+                              <Text className="font-poppins-semibold text-neutral-900 dark:text-neutral-100" numberOfLines={1}>
+                                {storeName}
+                              </Text>
+                              <Text className="text-[10px] text-neutral-500 dark:text-neutral-400 font-poppins" numberOfLines={1}>
+                                • {storeAddress}
                               </Text>
                             </View>
-                          )}
+                            {nearby && (
+                              <View className="bg-green-100 dark:bg-green-900/30 px-2.5 py-1 rounded-full flex-row items-center gap-x-1 ml-2">
+                                <View className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                                <Text className="text-[10px] font-poppins-semibold text-green-700 dark:text-green-400">
+                                  Nearby
+                                </Text>
+                              </View>
+                            )}
+                          </View>
                         </View>
-                      </View>
 
-                      <Text className="text-xs font-poppins-medium text-neutral-400 mt-2">
-                        {clampedCount}/{targetCount} COMPLETED
-                      </Text>
+                        <Text className="text-[10px] font-poppins-medium text-neutral-400 mt-1">
+                          {clampedCount}/{targetCount} COMPLETED
+                        </Text>
 
-                      <View className="flex-row flex-wrap justify-between mt-4 gap-y-3">
-                        {days.map((day, index) => {
-                          const isCompleted = day.state === "completed";
-                          const isCurrent = day.state === "current";
-                          const circleClass = isCompleted
-                            ? "w-10 h-10 rounded-full bg-primary items-center justify-center"
-                            : isCurrent
-                              ? "w-10 h-10 rounded-full items-center justify-center"
-                              : "w-10 h-10 rounded-full bg-neutral-100 dark:bg-darkBackgroundCard items-center justify-center";
-                          const textClass = isCompleted || isCurrent
-                            ? "text-primary font-poppins-semibold text-sm"
-                            : "text-neutral-400 font-poppins-semibold text-sm";
-                          return (
-                            <View key={`${day.label}-${index}`} className="items-center w-11">
-                              <View
-                                className={circleClass}
-                                style={isCurrent ? {
-                                  borderWidth: 1.5,
-                                  borderColor: "#FF6600",
-                                  borderStyle: "dashed",
-                                } : undefined}
-                              >
-                                {isCompleted ? (
-                                  <MaterialIcons name="check" size={16} color="#FFFFFF" />
-                                ) : (
-                                  <Text className={textClass}>{day.number}</Text>
-                                )}
-                              </View>
-                            </View>
-                          );
-                        })}
-                      </View>
-
-                      <View className="mt-5 pt-4 border-t border-neutral-100 dark:border-darkBorder">
-                        <View className="bg-primary/5 dark:bg-primary/10 rounded-2xl p-3 flex-row items-center justify-between border border-primary/10">
-                          <View className="flex-row items-center gap-x-3 flex-1">
-                            <View className="relative">
-                              <View className="w-14 h-14 rounded-2xl bg-white dark:bg-darkBackgroundCard items-center justify-center overflow-hidden border border-primary/5">
-                                {activeProgramReward?.reward_image_url ? (
-                                  <Image
-                                    source={{ uri: activeProgramReward.reward_image_url }}
-                                    className="w-full h-full"
-                                    contentFit="cover"
-                                  />
-                                ) : (
-                                  <MaterialIcons name="redeem" size={28} color="#FF6600" />
-                                )}
-                              </View>
-                              {clampedCount >= targetCount && (
-                                <View className="absolute -top-1.5 -right-1.5 bg-green-500 w-5 h-5 rounded-full items-center justify-center border-2 border-white dark:border-darkBackgroundMuted">
-                                  <MaterialIcons name="check" size={12} color="white" />
+                        <View className="flex-row flex-wrap justify-between mt-2.5 gap-y-2">
+                          {days.map((day, index) => {
+                            const isCompleted = day.state === "completed";
+                            const isCurrent = day.state === "current";
+                            const circleClass = isCompleted
+                              ? "w-10 h-10 rounded-full bg-primary items-center justify-center"
+                              : isCurrent
+                                ? "w-10 h-10 rounded-full items-center justify-center"
+                                : "w-10 h-10 rounded-full bg-neutral-100 dark:bg-darkBackgroundCard items-center justify-center";
+                            const textClass = isCompleted || isCurrent
+                              ? "text-primary font-poppins-semibold text-sm"
+                              : "text-neutral-400 font-poppins-semibold text-sm";
+                            return (
+                              <View key={`${day.label}-${index}`} className="items-center w-11">
+                                <View
+                                  className={circleClass}
+                                  style={isCurrent ? {
+                                    borderWidth: 1.5,
+                                    borderColor: "#FF6600",
+                                    borderStyle: "dashed",
+                                  } : undefined}
+                                >
+                                  {isCompleted ? (
+                                    <MaterialIcons name="check" size={16} color="#FFFFFF" />
+                                  ) : (
+                                    <Text className={textClass}>{day.number}</Text>
+                                  )}
                                 </View>
-                              )}
-                            </View>
-                            <View className="flex-1 ml-0.5">
-                              <Text className="text-[10px] font-poppins-bold text-primary uppercase tracking-[1.2px] mb-0.5">
-                                {clampedCount >= targetCount ? "UNLOCKED!" : "REWARD"}
-                              </Text>
-                              <Text
-                                className="text-sm text-neutral-800 dark:text-neutral-100 font-poppins-bold"
-                                numberOfLines={1}
-                              >
-                                {activeProgramReward?.reward_title ?? "Wait for it..."}
-                              </Text>
-                              <Text className="text-[10px] text-neutral-400 font-poppins mt-0.5" numberOfLines={1}>
-                                {clampedCount >= targetCount
-                                  ? "Claim your gift now!"
-                                  : `${targetCount - clampedCount} stamps more to unlock`}
-                              </Text>
-                            </View>
-                          </View>
-
-                          <TouchableOpacity
-                            className={`px-4 py-2.5 rounded-xl ${clampedCount >= targetCount ? "bg-primary" : "bg-white dark:bg-darkBackgroundCard opacity-60"}`}
-                            disabled={clampedCount < targetCount}
-                            onPress={() => {
-                              Alert.alert(
-                                "Claim Reward",
-                                `Ready to claim "${activeProgramReward?.reward_title}"? Please present this to the store staff.`,
-                                [
-                                  { text: "Cancel", style: "cancel" },
-                                  { text: "Claim Now", onPress: () => Alert.alert("Success", "Reward claimed! Please check your history.") }
-                                ]
-                              );
-                            }}
-                          >
-                            <Text className={`text-[11px] font-poppins-bold tracking-wider ${clampedCount >= targetCount ? "text-white" : "text-neutral-400"}`}>
-                              CLAIM
-                            </Text>
-                          </TouchableOpacity>
+                              </View>
+                            );
+                          })}
                         </View>
-                      </View>
-                    </View>
+
+                      </Pressable>
+
+                      {isStampLogOpen && (
+                        <AnimatedView
+                          entering={FadeIn.duration(300)}
+                          exiting={FadeOut.duration(200)}
+                          layout={Layout.duration(250)}
+                          className="px-3 pb-3 pt-1 border-t border-neutral-50 dark:border-darkBorder bg-neutral-50/10"
+                        >
+                          <View className="flex-row items-center justify-between border border-primary/10 bg-primary/5 dark:bg-primary/10 rounded-2xl p-3">
+                              <View className="flex-row items-center gap-x-3 flex-1">
+                                <View className="relative">
+                                  <View className="w-14 h-14 rounded-2xl bg-white dark:bg-darkBackgroundCard items-center justify-center overflow-hidden border border-primary/5">
+                                    {activeProgramReward?.reward_image_url ? (
+                                      <Image
+                                        source={{ uri: activeProgramReward.reward_image_url }}
+                                        className="w-full h-full"
+                                        contentFit="cover"
+                                      />
+                                    ) : (
+                                      <MaterialIcons name="redeem" size={28} color="#FF6600" />
+                                    )}
+                                  </View>
+                                  {clampedCount >= targetCount && (
+                                    <View className="absolute -top-1.5 -right-1.5 bg-green-500 w-5 h-5 rounded-full items-center justify-center border-2 border-white dark:border-darkBackgroundMuted">
+                                      <MaterialIcons name="check" size={12} color="white" />
+                                    </View>
+                                  )}
+                                </View>
+                                <View className="flex-1 ml-0.5">
+                                  <Text className="text-[10px] font-poppins-bold text-primary uppercase tracking-[1.2px] mb-0.5">
+                                    {clampedCount >= targetCount ? "UNLOCKED!" : "REWARD"}
+                                  </Text>
+                                  <Text
+                                    className="text-sm text-neutral-800 dark:text-neutral-100 font-poppins-bold"
+                                    numberOfLines={1}
+                                  >
+                                    {activeProgramReward?.reward_title ?? "Wait for it..."}
+                                  </Text>
+                                  <Text className="text-[10px] text-neutral-400 font-poppins mt-0.5" numberOfLines={1}>
+                                    {clampedCount >= targetCount
+                                      ? "Claim your gift now!"
+                                      : `${targetCount - clampedCount} stamps more to unlock`}
+                                  </Text>
+                                </View>
+                              </View>
+
+                              <TouchableOpacity
+                                className={`px-4 py-2.5 rounded-xl ${clampedCount >= targetCount ? "bg-primary" : "bg-white dark:bg-darkBackgroundCard opacity-60"}`}
+                                disabled={clampedCount < targetCount}
+                                onPress={() => {
+                                  Alert.alert(
+                                    "Claim Reward",
+                                    `Ready to claim "${activeProgramReward?.reward_title}"? Please present this to the store staff.`,
+                                    [
+                                      { text: "Cancel", style: "cancel" },
+                                      { text: "Claim Now", onPress: () => Alert.alert("Success", "Reward claimed! Please check your history.") }
+                                    ]
+                                  );
+                                }}
+                              >
+                                <Text className={`text-[11px] font-poppins-bold tracking-wider ${clampedCount >= targetCount ? "text-white" : "text-neutral-400"}`}>
+                                  CLAIM
+                                </Text>
+                              </TouchableOpacity>
+                            </View>
+                        </AnimatedView>
+                      )}
+                    </AnimatedView>
                   );
                 }}
               />
 
               {/* Pagination Dots */}
               {displayStamps.length > 1 && (
-                <View className="flex-row justify-center items-center gap-x-2 mt-3">
+                <View className="flex-row justify-center items-center gap-x-2 mt-1">
                   {displayStamps.map((_, i) => (
                     <View
                       key={i}
@@ -854,65 +895,67 @@ export default function Rewards() {
           )}
         </View>
 
-        <View className="flex-row items-center justify-between">
-          <Text className="text-lg font-poppins-semibold text-neutral-900 dark:text-darkTextPrimary">
-            Reward Catalog
-          </Text>
-          <TouchableOpacity className="flex-row items-center gap-x-1">
-            <Text className="text-primary text-xs font-poppins-semibold">
-              VIEW ALL
+        <View className="gap-y-6">
+          <View className="flex-row items-center justify-between">
+            <Text className="text-lg font-poppins-semibold text-neutral-900 dark:text-darkTextPrimary">
+              Reward Catalog
             </Text>
-            <MaterialIcons name="chevron-right" size={16} color="#FF6600" />
-          </TouchableOpacity>
-        </View>
+            <TouchableOpacity className="flex-row items-center gap-x-1">
+              <Text className="text-primary text-xs font-poppins-semibold">
+                VIEW ALL
+              </Text>
+              <MaterialIcons name="chevron-right" size={16} color="#FF6600" />
+            </TouchableOpacity>
+          </View>
 
-        <View className="flex-row gap-x-2">
-          {rewardSortOptions.map((option) => {
-            const isPoints = option.id === "points";
-            const isActive = rewardSort === option.id;
-            const arrowColor = isActive ? "#FF6600" : "#94a3b8";
-            const arrowName =
-              rewardPointsOrder === "asc" ? "arrow-upward" : "arrow-downward";
-            return (
-              <SortPill
-                key={option.id}
-                label={option.label}
-                active={isActive}
-                rightIcon={
-                  isPoints ? (
-                    <MaterialIcons name={arrowName} size={12} color={arrowColor} />
-                  ) : null
-                }
-                onPress={() => {
-                  if (isPoints) {
-                    if (rewardSort === "points") {
-                      setRewardPointsOrder(
-                        rewardPointsOrder === "desc" ? "asc" : "desc"
-                      );
-                    } else {
-                      setRewardSort("points");
-                    }
-                  } else {
-                    setRewardSort(option.id);
+          <View className="flex-row gap-x-2">
+            {rewardSortOptions.map((option) => {
+              const isPoints = option.id === "points";
+              const isActive = rewardSort === option.id;
+              const arrowColor = isActive ? "#FF6600" : "#94a3b8";
+              const arrowName =
+                rewardPointsOrder === "asc" ? "arrow-upward" : "arrow-downward";
+              return (
+                <SortPill
+                  key={option.id}
+                  label={option.label}
+                  active={isActive}
+                  rightIcon={
+                    isPoints ? (
+                      <MaterialIcons name={arrowName} size={12} color={arrowColor} />
+                    ) : null
                   }
-                }}
-              />
-            );
-          })}
-        </View>
+                  onPress={() => {
+                    if (isPoints) {
+                      if (rewardSort === "points") {
+                        setRewardPointsOrder(
+                          rewardPointsOrder === "desc" ? "asc" : "desc"
+                        );
+                      } else {
+                        setRewardSort("points");
+                      }
+                    } else {
+                      setRewardSort(option.id);
+                    }
+                  }}
+                />
+              );
+            })}
+          </View>
 
-        <View className="gap-y-4">
-          {sortedRewards.map((item) => {
-            const store = storesWithLocation.find((entry) => entry.id.toString() === item.storeId);
-            return (
-              <RewardCard
-                key={item.id}
-                reward={item}
-                storeName={store?.name}
-                storeLocation={store?.address}
-              />
-            );
-          })}
+          <View className="gap-y-4">
+            {sortedRewards.map((item) => {
+              const store = storesWithLocation.find((entry) => entry.id.toString() === item.storeId);
+              return (
+                <RewardCard
+                  key={item.id}
+                  reward={item}
+                  storeName={store?.name}
+                  storeLocation={store?.address}
+                />
+              );
+            })}
+          </View>
         </View>
 
         <View className="items-center pt-4">
