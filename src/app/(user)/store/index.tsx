@@ -120,6 +120,7 @@ export default function Rewards() {
   const [eligibleNearbyStoreIds, setEligibleNearbyStoreIds] = useState<number[]>([]);
   const [eligibleStreakStoreIds, setEligibleStreakStoreIds] = useState<number[]>([]);
   const [activeStampProgramRewards, setActiveStampProgramRewards] = useState<ActiveStampProgramReward[]>([]);
+  const [enabledStampFeatureStoreIds, setEnabledStampFeatureStoreIds] = useState<number[]>([]);
 
   const { sessionToken } = useAuthStore();
   const { stamps, refetch: refetchStamps } = useStamps();
@@ -840,16 +841,6 @@ export default function Rewards() {
                   );
                 }}
               />
-            </View>
-          )}
-
-          {displayStamps.length === 0 ? (
-            <View
-              className="bg-white dark:bg-darkBackgroundMuted rounded-2xl p-6 items-center mx-1"
-            >
-              <MaterialIcons name="stars" size={32} color="#d1d5db" className="mb-2" />
-              <Text className="text-neutral-500 font-poppins-semibold text-sm mt-2">No Active Stamps</Text>
-              <Text className="text-neutral-400 font-poppins text-xs text-center mt-1">Visit a partner store to start your stamp log!</Text>
             </View>
           )}
 
