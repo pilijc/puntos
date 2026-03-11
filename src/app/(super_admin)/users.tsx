@@ -11,7 +11,7 @@ import {
   PanResponder,
 } from "react-native";
 import { SafeAreaView, Text, View, TouchableOpacity } from "@/tw";
-import { useSafeAreaInsets } from "react-native-safe-area-context"; // Added this
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MaterialIcons, Feather } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { supabase } from "@/supabase/supabase";
@@ -74,18 +74,10 @@ export default function UsersScreen() {
     ]).start(() => setShowFilterModal(false));
   };
 
-    const closeSheet = useCallback(() => {
+  const closeSheet = useCallback(() => {
     Animated.parallel([
-      Animated.timing(translateY, {
-        toValue: 300,
-        duration: 200,
-        useNativeDriver: true,
-      }),
-      Animated.timing(backdropOpacity, {
-        toValue: 0,
-        duration: 180,
-        useNativeDriver: true,
-      }),
+      Animated.timing(translateY, { toValue: 300, duration: 200, useNativeDriver: true }),
+      Animated.timing(backdropOpacity, { toValue: 0, duration: 180, useNativeDriver: true }),
     ]).start(() => setShowFilterModal(false));
   }, [translateY, backdropOpacity]);
   
@@ -165,6 +157,16 @@ export default function UsersScreen() {
       setUpdatingUserId(null);
     }
   }, [selectedUser]);
+
+  // ────────────────── Tab Counts ──────────────────
+  const tabCounts = useMemo(() => {
+    return {
+      All: users.length,
+      User: users.filter(u => u.role === "User").length,
+      Manager: users.filter(u => u.role === "Manager").length,
+      Staff: users.filter(u => u.role === "Staff").length,
+    };
+  }, [users]);
 
   // ────────────────── Filtered Data ──────────────────
   const filteredData = useMemo(() => {
@@ -253,8 +255,19 @@ export default function UsersScreen() {
           </TouchableOpacity>
 
           {(["All", "User", "Manager", "Staff"] as UserRole[]).map((tab) => (
-            <TouchableOpacity key={tab} onPress={() => setActiveTab(tab)} className={`flex-row items-center h-10 px-5 rounded-full mr-2 ${activeTab === tab ? "bg-orange-500" : "bg-white border border-slate-100"}`}>
-              <Text className={`text-[11px] font-poppins-bold ${activeTab === tab ? "text-white" : "text-slate-500"}`}>{tab === "All" ? "All" : tab + "s"}</Text>
+            <TouchableOpacity 
+              key={tab} 
+              onPress={() => setActiveTab(tab)} 
+              className={`flex-row items-center h-10 px-4 rounded-full mr-2 ${activeTab === tab ? "bg-orange-500" : "bg-white border border-slate-100"}`}
+            >
+              <Text className={`text-[11px] font-poppins-bold ${activeTab === tab ? "text-white" : "text-slate-500"}`}>
+                {tab === "All" ? "All" : tab + "s"}
+              </Text>
+              <View className={`ml-2 px-1.5 py-0.5 rounded-md ${activeTab === tab ? "bg-white/20" : "bg-slate-100"}`}>
+                <Text className={`text-[9px] font-poppins-bold ${activeTab === tab ? "text-white" : "text-slate-400"}`}>
+                  {tabCounts[tab]}
+                </Text>
+              </View>
             </TouchableOpacity>
           ))}
         </ScrollView>
