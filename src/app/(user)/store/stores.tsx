@@ -15,15 +15,15 @@ export default function StoreListScreen() {
   const insets = useSafeAreaInsets();
   const [searchQuery, setSearchQuery] = useState("");
   const [refreshing, setRefreshing] = useState(false);
-  const { stores: realStores, loading: storesLoading, fetchStores } = useStoreStore();
-  const { stamps, loading: stampsLoading, refetch: refetchStamps } = useStamps();
+  const { stores: realStores } = useStoreStore();
+  const { stamps, isLoading: stampsLoading, refetch: refetchStamps } = useStamps();
   const { location } = useLocation();
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await Promise.all([fetchStores(true), refetchStamps()]);
+    await refetchStamps();
     setRefreshing(false);
-  }, [fetchStores, refetchStamps]);
+  }, [refetchStamps]);
 
   const allStores = useMemo(() => {
     const stampedIds = new Set(stamps.map((s) => s.store_id.toString()));
@@ -53,8 +53,84 @@ export default function StoreListScreen() {
     );
   }, [allStores, searchQuery]);
 
+  const { nearbyStoresSection, joinedStoresSection } = useMemo(() => {
+    return {
+      nearbyStoresSection: filteredStores.filter(s => s.isNearby),
+      joinedStoresSection: filteredStores.filter(s => !s.isNearby)
+    };
+  }, [filteredStores]);
+
   const totalStamps = allStores.reduce((sum, store) => sum + store.stampsCount, 0);
-  const isLoading = (storesLoading || stampsLoading) && !refreshing;
+  const isLoading = stampsLoading && !refreshing;
+
+  const renderStoreItem = (store: any, index: number, sectionDelay: number = 0) => (
+    <AnimatedView
+      key={store.id}
+      entering={FadeInDown.delay(sectionDelay + index * 100).duration(400)}
+      layout={Layout.springify()}
+    >
+      <TouchableOpacity
+        onPress={() => router.push(`/store/${store.id}`)}
+        activeOpacity={0.7}
+        className="bg-white dark:bg-darkBackgroundCard rounded-3xl p-4 flex-row items-center border border-neutral-100 dark:border-darkBorder shadow-sm shadow-neutral-100 dark:shadow-none"
+      >
+        <View className="w-16 h-16 rounded-2xl bg-neutral-50 dark:bg-white/5 items-center justify-center overflow-hidden border border-neutral-100 dark:border-darkBorder">
+          {store.logo ? (
+            <Image
+              source={{ uri: store.logo }}
+              className="w-full h-full"
+              contentFit="cover"
+            />
+          ) : (
+            <MaterialIcons name="storefront" size={32} color="#FF6600" />
+          )}
+        </View>
+
+        <View className="flex-1 ml-4 justify-center">
+          <View className="flex-row items-center justify-between mb-0.5">
+            <Text className="text-lg font-poppins-bold text-neutral-900 dark:text-white flex-1" numberOfLines={1}>
+              {store.name}
+            </Text>
+            {store.isNearby && (
+              <View className="bg-green-100 dark:bg-green-900/30 px-2 py-0.5 rounded-lg">
+                <Text className="text-[9px] font-poppins-bold text-green-700 dark:text-green-400">NEARBY</Text>
+              </View>
+            )}
+          </View>
+
+          <View className="flex-row items-center mb-2">
+            <MaterialIcons name="place" size={14} color="#9CA3AF" />
+            <Text className="text-xs text-neutral-400 font-poppins ml-1 flex-1" numberOfLines={1}>
+              {store.location}
+            </Text>
+          </View>
+
+          <View>
+            <View className="flex-row items-center justify-between mb-1.5">
+              <Text className="text-[10px] font-poppins-semibold text-neutral-500 dark:text-neutral-400">
+                STAMP PROGRESS
+              </Text>
+              <Text className="text-[10px] font-poppins-bold text-primary">
+                {store.stampsCount}/{store.targetStamps}
+              </Text>
+            </View>
+            <View className="h-1.5 w-full bg-neutral-100 dark:bg-white/10 rounded-full overflow-hidden">
+              <View
+                className="h-full bg-primary rounded-full"
+                style={{ width: `${Math.min((store.stampsCount / store.targetStamps) * 100, 100)}%` }}
+              />
+            </View>
+          </View>
+        </View>
+
+        <View className="ml-3">
+          <View className="w-8 h-8 rounded-full bg-neutral-50 dark:bg-white/5 items-center justify-center">
+            <MaterialIcons name="chevron-right" size={24} color="#CBD5E1" />
+          </View>
+        </View>
+      </TouchableOpacity>
+    </AnimatedView>
+  );
 
   return (
     <SafeAreaView className="flex-1 bg-backgroundMuted dark:bg-darkBackground">
@@ -76,31 +152,22 @@ export default function StoreListScreen() {
         }
       >
         {/* Header - Aligned to match main Rewards title */}
-        {/* EDIT mt-2 BELOW TO MANUALLY ADJUST VERTICAL POSITION */}
-        <View className="flex-row items-center justify-between mb-2 mt-4.5">
-          <View className="flex-row items-center flex-1">
-            <TouchableOpacity
-              onPress={() => router.back()}
-              activeOpacity={0.7}
-              className="-ml-3 mr-1" // Negative margin to align text correctly
-            >
-              <MaterialIcons name="chevron-left" size={36} color="#FF6600" />
-            </TouchableOpacity>
-            <Text className="text-2xl font-poppins-bold text-neutral-900 dark:text-white">
-              My Stores
-            </Text>
-          </View>
-
-          <View className="bg-primary/10 px-3 py-1.5 rounded-full flex-row items-center gap-x-1.5">
-            <MaterialIcons name="stars" size={16} color="#FF6600" />
-            <Text className="text-[10px] font-poppins-bold text-primary uppercase tracking-tight">
-              {totalStamps} Stamps
-            </Text>
-          </View>
+        {/* EDIT mt-4.5 BELOW TO MANUALLY ADJUST VERTICAL POSITION */}
+        <View className="flex-row items-center mb-2 mt-4.5">
+          <TouchableOpacity
+            onPress={() => router.back()}
+            activeOpacity={0.7}
+            className="-ml-3 mr-1"
+          >
+            <MaterialIcons name="chevron-left" size={36} color="#FF6600" />
+          </TouchableOpacity>
+          <Text className="text-2xl font-poppins-bold text-neutral-900 dark:text-white">
+            Stores
+          </Text>
         </View>
 
         {/* Search Bar */}
-        <View className="flex-row items-center bg-white dark:bg-darkBackgroundCard rounded-2xl px-4 py-3.5 border border-neutral-100 dark:border-darkBorder shadow-sm shadow-neutral-100 dark:shadow-none mt-2">
+        <View className="flex-row items-center bg-white dark:bg-darkBackgroundCard rounded-2xl px-4 py-1 border border-neutral-100 dark:border-darkBorder shadow-sm shadow-neutral-100 dark:shadow-none mt-2">
           <MaterialIcons name="search" size={20} color="#9CA3AF" />
           <TextInput
             placeholder="Search your stores..."
@@ -123,7 +190,7 @@ export default function StoreListScreen() {
             <Text className="mt-4 font-poppins text-neutral-400">Loading your stores...</Text>
           </View>
         ) : (
-          <View className="mt-4 gap-y-4">
+          <View className="mt-6 gap-y-8">
             {filteredStores.length === 0 ? (
               <View className="items-center justify-center py-20">
                 <View className="w-24 h-24 rounded-full bg-neutral-100 dark:bg-white/5 items-center justify-center mb-6">
@@ -139,74 +206,27 @@ export default function StoreListScreen() {
                 </Text>
               </View>
             ) : (
-              filteredStores.map((store, index) => (
-                <AnimatedView
-                  key={store.id}
-                  entering={FadeInDown.delay(index * 100).duration(400)}
-                  layout={Layout.springify()}
-                >
-                  <TouchableOpacity
-                    onPress={() => router.push(`/store/${store.id}`)}
-                    activeOpacity={0.7}
-                    className="bg-white dark:bg-darkBackgroundCard rounded-3xl p-4 flex-row items-center border border-neutral-100 dark:border-darkBorder shadow-sm shadow-neutral-100 dark:shadow-none"
-                  >
-                    <View className="w-16 h-16 rounded-2xl bg-neutral-50 dark:bg-white/5 items-center justify-center overflow-hidden border border-neutral-100 dark:border-darkBorder">
-                      {store.logo ? (
-                        <Image
-                          source={{ uri: store.logo }}
-                          className="w-full h-full"
-                          contentFit="cover"
-                        />
-                      ) : (
-                        <MaterialIcons name="storefront" size={32} color="#FF6600" />
-                      )}
-                    </View>
+              <>
+                {nearbyStoresSection.length > 0 && (
+                  <View className="gap-y-4">
+                    <Text className="text-xs font-poppins-bold text-neutral-500 dark:text-neutral-400 uppercase tracking-widest ml-1">
+                      Nearby Stores
+                    </Text>
+                    {nearbyStoresSection.map((store, index) => renderStoreItem(store, index))}
+                  </View>
+                )}
 
-                    <View className="flex-1 ml-4 justify-center">
-                      <View className="flex-row items-center justify-between mb-0.5">
-                        <Text className="text-lg font-poppins-bold text-neutral-900 dark:text-white flex-1" numberOfLines={1}>
-                          {store.name}
-                        </Text>
-                        {store.isNearby && (
-                          <View className="bg-green-100 dark:bg-green-900/30 px-2 py-0.5 rounded-lg">
-                            <Text className="text-[9px] font-poppins-bold text-green-700 dark:text-green-400">NEARBY</Text>
-                          </View>
-                        )}
-                      </View>
-
-                      <View className="flex-row items-center mb-2">
-                        <MaterialIcons name="place" size={14} color="#9CA3AF" />
-                        <Text className="text-xs text-neutral-400 font-poppins ml-1 flex-1" numberOfLines={1}>
-                          {store.location}
-                        </Text>
-                      </View>
-
-                      <View>
-                        <View className="flex-row items-center justify-between mb-1.5">
-                          <Text className="text-[10px] font-poppins-semibold text-neutral-500 dark:text-neutral-400">
-                            STAMP PROGRESS
-                          </Text>
-                          <Text className="text-[10px] font-poppins-bold text-primary">
-                            {store.stampsCount}/{store.targetStamps}
-                          </Text>
-                        </View>
-                        <View className="h-1.5 w-full bg-neutral-100 dark:bg-white/10 rounded-full overflow-hidden">
-                          <View
-                            className="h-full bg-primary rounded-full"
-                            style={{ width: `${Math.min((store.stampsCount / store.targetStamps) * 100, 100)}%` }}
-                          />
-                        </View>
-                      </View>
-                    </View>
-
-                    <View className="ml-3">
-                      <View className="w-8 h-8 rounded-full bg-neutral-50 dark:bg-white/5 items-center justify-center">
-                        <MaterialIcons name="chevron-right" size={24} color="#CBD5E1" />
-                      </View>
-                    </View>
-                  </TouchableOpacity>
-                </AnimatedView>
-              ))
+                {joinedStoresSection.length > 0 && (
+                  <View className="gap-y-4">
+                    <Text className="text-xs font-poppins-bold text-neutral-500 dark:text-neutral-400 uppercase tracking-widest ml-1">
+                      My Stores
+                    </Text>
+                    {joinedStoresSection.map((store, index) =>
+                      renderStoreItem(store, index, nearbyStoresSection.length * 100)
+                    )}
+                  </View>
+                )}
+              </>
             )}
           </View>
         )}

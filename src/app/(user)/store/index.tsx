@@ -10,7 +10,7 @@ import {
 } from "@/tw";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import React, { useMemo, useState, useEffect, useCallback, useRef } from "react";
-import { FadeIn, FadeOut, Layout, Easing, useAnimatedStyle, withTiming, interpolate } from "react-native-reanimated";
+import { FadeIn, FadeOut, Layout, Easing, useAnimatedStyle, withTiming, interpolate, useSharedValue, withRepeat, withSequence } from "react-native-reanimated";
 import { router, useFocusEffect } from "expo-router";
 import * as Location from "expo-location";
 import { distance, point } from "@turf/turf";
@@ -214,6 +214,27 @@ export default function Rewards() {
   useEffect(() => {
     setHeroIndex(0);
   }, [nearbyStores.length]);
+
+  // Blinking swipe indicator animation
+  const swipeIndicatorOpacity = useSharedValue(0);
+  useEffect(() => {
+    if (nearbyStores.length >= 2) {
+      swipeIndicatorOpacity.value = withRepeat(
+        withSequence(
+          withTiming(1, { duration: 600 }),
+          withTiming(0.2, { duration: 600 }),
+        ),
+        -1, // infinite
+        true
+      );
+    } else {
+      swipeIndicatorOpacity.value = 0;
+    }
+  }, [nearbyStores.length]);
+
+  const swipeIndicatorStyle = useAnimatedStyle(() => ({
+    opacity: swipeIndicatorOpacity.value,
+  }));
 
   const displayStamps = useMemo(() => {
     if (!location) return sortedStamps;
@@ -598,16 +619,13 @@ export default function Rewards() {
               </>
             )}
 
-            <View className="absolute top-4 left-6 right-6 flex-row items-center justify-between z-10">
-              <TouchableOpacity
-                className="w-9 h-9 rounded-full bg-black/40 items-center justify-center"
-                onPress={() => router.back()}
-              >
-                <MaterialIcons name="chevron-left" size={20} color="#FFFFFF" />
-              </TouchableOpacity>
-              <TouchableOpacity className="w-9 h-9 rounded-full bg-black/40 items-center justify-center">
-                <MaterialIcons name="share" size={18} color="#FFFFFF" />
-              </TouchableOpacity>
+            <View className="absolute top-4 left-97 right-6 flex-row items-center justify-between z-10">
+              {/* Blinking swipe indicator in place of share button */}
+              {nearbyStores.length >= 2 && (
+                <AnimatedView style={swipeIndicatorStyle}>
+                  <MaterialIcons name="chevron-right" size={28} color="#FFFFFF" />
+                </AnimatedView>
+              )}
             </View>
           </View>
 
