@@ -10,6 +10,8 @@ import { getRewardsByStoreId } from "@/services/store-manager/reward-service";
 import { Reward } from "@/type/store-manager/reward";
 import { getActiveStampProgram } from "@/services/store-manager/stamp-service";
 import { Stamp } from "@/type/store-manager/stamp";
+import { Button } from "@/components/button";
+import { Modal, ModalButton, ModalProps } from "@/components/modal";
 
 const FEATURES = [
   {
@@ -56,6 +58,12 @@ export default function ViewStore() {
   const [rewards, setRewards] = useState<Reward[]>([]);
   const [activeStamp, setActiveStamp] = useState<Stamp | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [modal, setModal] = useState<{
+    title: string;
+    message: string;
+    buttons: ModalButton[];
+    timer?: boolean;
+  } | null>(null);
 
   const [savedFeatures, setSavedFeatures] = useState({
     streak_enabled: false,
@@ -148,10 +156,18 @@ export default function ViewStore() {
         reward_enabled: rewardEnabled,
       });
       setSavedFeatures({ streak_enabled: streakEnabled, stamp_enabled: stampEnabled, reward_enabled: rewardEnabled });
-      Alert.alert("Success", "Changes saved successfully");
+      setModal({
+        title: "Success",
+        message: "Changes saved successfully",
+        buttons: [{ label: "OK", onPress: () => setModal(null) }],
+        timer: 3000,
+      });
     } catch (error) {
-      console.error("Failed to save changes", error);
-      Alert.alert("Error", (error as Error).message ?? "Failed to save changes");
+      setModal({
+        title: "Error",
+        message: (error as Error).message ?? "Failed to save changes",
+        buttons: [{ label: "OK", onPress: () => setModal(null) }],
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -159,6 +175,14 @@ export default function ViewStore() {
 
   return (
     <View className="flex-1 bg-backgroundMuted dark:bg-neutral-900">
+      <Modal
+        visible={!!modal}
+        onClose={() => setModal(null)}
+        title={modal?.title ?? ""}
+        message={modal?.message}
+        buttons={modal?.buttons}
+        timer={modal?.timer}
+      />
       <View
         className="border-b border-neutral-100 dark:border-neutral-700 bg-background dark:bg-neutral-800"
         style={{ paddingTop: insets.top + 8, paddingBottom: 12 }}
@@ -273,15 +297,14 @@ export default function ViewStore() {
                     >
                       <View
                         className="w-12 h-12 rounded-xl items-center justify-center"
-                        style={{ backgroundColor: feature.iconBg }}
                       >
                         <MaterialIcons name={feature.icon} size={24} color={feature.iconColor} />
                       </View>
                       <View className="flex-1 justify-center">
-                        <Text className="text-[15px] font-poppins-bold text-[#0F172A] dark:text-[#F1F5F9]">
+                        <Text className="text-base font-poppins-bold text-[#0F172A] dark:text-[#F1F5F9]">
                           {feature.title}
                         </Text>
-                        <Text className="text-[13px] font-poppins text-slate-500 dark:text-slate-500 mt-0.5">
+                        <Text className="text-xs font-poppins text-slate-500 dark:text-slate-500 mt-0.5">
                           {feature.description}
                         </Text>
                       </View>
@@ -331,20 +354,16 @@ export default function ViewStore() {
               );
             })}
 
-            <TouchableOpacity
-              className={`rounded-xl items-center mt-2 px-6 py-4 ${hasChanges ? "bg-primary" : "bg-slate-200 dark:bg-slate-700"}`}
-              onPress={handleSaveChanges}
-              disabled={!hasChanges || isSubmitting}
-              activeOpacity={0.85}
-            >
-              {isSubmitting ? (
-                <ActivityIndicator size="small" color="white" />
-              ) : (
-                <Text className={`text-sm font-poppins-bold ${hasChanges ? "text-white" : "text-slate-400 dark:text-slate-500"}`}>
-                  Save Changes
-                </Text>
-              )}
-            </TouchableOpacity>
+            {hasChanges && (
+              <Button
+                label="Save Changes"
+                onPress={handleSaveChanges}
+                variant="primary"
+                loading={isSubmitting}
+                disabled={!hasChanges || isSubmitting}
+                fullWidth={true}
+              />
+            )}
           </View>
         )}
 

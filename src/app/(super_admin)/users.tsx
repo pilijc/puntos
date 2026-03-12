@@ -203,6 +203,14 @@ export default function UsersScreen() {
             onChangeText={setSearch} 
           />
         </View>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mb-2">
+          <TouchableOpacity 
+            onPress={openFilter}
+            className={`flex-row items-center h-10 px-4 rounded-full mr-2 border ${statusFilter !== "All" ? "bg-orange-50 border-orange-200" : "bg-white border-slate-100"}`}
+          >
+            <Feather name="sliders" size={13} color={statusFilter !== "All" ? "#FF6600" : "#94a3b8"} style={{ marginRight: 6 }} />
+            <Text className={`text-[11px] font-poppins-bold ${statusFilter !== "All" ? "text-orange-600" : "text-slate-500"}`}>Filter</Text>
+          </TouchableOpacity>
 
         <FlatList
           horizontal
@@ -319,6 +327,61 @@ export default function UsersScreen() {
                   </TouchableOpacity>
                 </View>
               </View>
+              <Text className="text-[9px] font-poppins-bold text-slate-400 uppercase tracking-widest mb-2">
+                Account Status
+              </Text>
+              <View className="gap-2">
+                {FILTER_OPTIONS.map((option) => {
+                  const isActive  = statusFilter === option.value;
+                  const iconColor =
+                    option.value === "Active"  ? "#10b981" :
+                    option.value === "Blocked" ? "#ef4444" : "#f97316";
+
+                  return (
+                    <TouchableOpacity
+                      key={option.value}
+                      onPress={() => { setStatusFilter(option.value); closeSheet(); }}
+                      activeOpacity={0.7}
+                      className={`flex-row items-center px-3 py-2.5 rounded-xl border ${
+                        isActive ? "bg-orange-50 border-orange-200" : "bg-slate-50 border-slate-100"
+                      }`}
+                    >
+                      <View
+                        className={`w-8 h-8 rounded-lg items-center justify-center mr-3 ${
+                          isActive ? "bg-orange-100" : "bg-white"
+                        }`}
+                        style={!isActive ? { borderWidth: 1, borderColor: "#f1f5f9" } : undefined}
+                      >
+                        <Feather
+                          name={option.value === "Active" ? "check-circle" : option.value === "Blocked" ? "slash" : "users"}
+                          size={14}
+                          color={isActive ? "#f97316" : iconColor}
+                        />
+                      </View>
+                      <View className="flex-1">
+                        <Text className={`text-[12px] ${isActive ? "font-poppins-bold text-orange-600" : "font-poppins-medium text-slate-700"}`}>
+                          {option.label}
+                        </Text>
+                        <Text className="text-[10px] font-poppins text-slate-400">{option.desc}</Text>
+                      </View>
+                      {isActive && (
+                        <View className="w-5 h-5 rounded-full bg-orange-500 items-center justify-center">
+                          <Feather name="check" size={10} color="#fff" />
+                        </View>
+                      )}
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+              {statusFilter !== "All" && (
+                <TouchableOpacity
+                  onPress={() => { setStatusFilter("All"); closeSheet(); }}
+                  className="mt-3 mb-1 self-center flex-row items-center gap-1"
+                >
+                  <Feather name="rotate-ccw" size={10} color="#94a3b8" />
+                  <Text className="text-[11px] font-poppins text-slate-400">Reset filter</Text>
+                </TouchableOpacity>
+              )}
             </View>
           </View>
         </View>
