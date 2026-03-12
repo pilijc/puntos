@@ -41,14 +41,19 @@ function toRoleId(value: number | string | null | undefined): number | null {
 }
 
 export async function getRoleTypeForUser(userId: string): Promise<string | null> {
+  console.log("Querying roles for user:", userId);
+  
   const { data: userRoles, error: userRolesError } = await supabase
     .from("user_roles")
     .select("role_id")
     .eq("user_id", userId);
 
   if (userRolesError) {
+    console.error("Error querying user_roles:", userRolesError);
     throw userRolesError;
   }
+
+  console.log("Found user_roles data:", userRoles);
 
   const roleIds = Array.from(
     new Set(
@@ -58,7 +63,10 @@ export async function getRoleTypeForUser(userId: string): Promise<string | null>
     )
   );
 
+  console.log("Extracted role IDs:", roleIds);
+
   if (roleIds.length === 0) {
+    console.log("No role IDs found for user:", userId);
     return null;
   }
 
@@ -101,7 +109,7 @@ export function mapRoleToHomeRoute(roleType: string | null | undefined): AppHome
   if (roleType === "front_desk" || roleType === "frontdesk") {
     return "/(front_desk)";
   }
-  if (roleType === "manager" || roleType === "store_owner") {
+  if (roleType === "manager" || roleType === "store_owner" || roleType === "store_manager") {
     return "/(store_manager)";
   }
   return "/(user)";
@@ -110,6 +118,25 @@ export function mapRoleToHomeRoute(roleType: string | null | undefined): AppHome
 export async function getHomeRouteForUserId(userId: string): Promise<AppHomeRoute> {
   try {
     const roleType = await getRoleTypeForUser(userId);
+    
+    console.log(`Determined role type for user ${userId}: ${roleType}`);
+    
+    // If no role found, assign default user role
+    if (!roleType) {
+      console.log(`No role found for user ${userId}, assigning default user role`);
+      const { error: insertError } = await supabase
+        .from("user_roles")
+        .insert({ user_id: userId, role_id: 4, store_id: null });
+      
+      if (insertError) {
+        console.error("Failed to insert default role:", insertError);
+      } else {
+        console.log("Default user role inserted successfully");
+      }
+      
+      return "/(user)";
+    }
+    
     return mapRoleToHomeRoute(roleType);
   } catch {
     return "/(user)";

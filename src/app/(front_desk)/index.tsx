@@ -125,12 +125,12 @@ export default function FrontDeskScan() {
         {/* Header */}
         <View className="bg-orange-500 pt-20 px-5 pb-10 rounded-b-3xl">
           <View className="flex-row items-center justify-between">
-            <TouchableOpacity
+            {/* <TouchableOpacity
               onPress={() => router.back()}
               className="w-10 h-10 rounded-full items-center justify-center bg-white/20"
             >
               <MaterialIcons name="arrow-back" size={24} color="#FFFFFF" />
-            </TouchableOpacity>
+            </TouchableOpacity> */}
             <Text className="text-lg font-bold text-white">
               Scan QR Code
             </Text>
