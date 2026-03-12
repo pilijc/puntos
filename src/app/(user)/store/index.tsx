@@ -118,9 +118,9 @@ export default function Rewards() {
   );
   const featuredStore = nearbyStores[0] ?? storesWithLocation[0];
   const [eligibleNearbyStoreIds, setEligibleNearbyStoreIds] = useState<number[]>([]);
+  const [enabledStampFeatureStoreIds, setEnabledStampFeatureStoreIds] = useState<number[]>([]);
   const [eligibleStreakStoreIds, setEligibleStreakStoreIds] = useState<number[]>([]);
   const [activeStampProgramRewards, setActiveStampProgramRewards] = useState<ActiveStampProgramReward[]>([]);
-  const [enabledStampFeatureStoreIds, setEnabledStampFeatureStoreIds] = useState<number[]>([]);
 
   const { sessionToken } = useAuthStore();
   const { stamps, refetch: refetchStamps } = useStamps();
@@ -198,7 +198,7 @@ export default function Rewards() {
         .from("store_feature")
         .select("store_id, stamp_enabled")
         .in("store_id", nearbyIds);
-      
+
       if (!isCancelled && featureRows) {
         const enabledIds = featureRows
           .filter((row: any) => row.stamp_enabled === true)
@@ -261,7 +261,10 @@ export default function Rewards() {
 
     const loadEligibleStreakStores = async () => {
       const storeIds = Array.from(
-        new Set(displayStamps.map((stamp) => Number(stamp.store_id)).filter((id) => !Number.isNaN(id))),
+        new Set([
+          ...displayStamps.map((stamp) => Number(stamp.store_id)),
+          ...nearbyStores.map((store) => Number(store.id))
+        ].filter((id) => !Number.isNaN(id))),
       );
 
       if (storeIds.length === 0) {
@@ -282,7 +285,7 @@ export default function Rewards() {
     return () => {
       isCancelled = true;
     };
-  }, [displayStamps]);
+  }, [displayStamps, nearbyStores]);
 
   useEffect(() => {
     let isCancelled = false;
@@ -313,8 +316,43 @@ export default function Rewards() {
   }, [displayStamps]);
 
   const displayStreaks = useMemo(() => {
+    // If we are near ANY active store, we filter the streak log by the focused store too
+    if (nearbyStores.length > 0) {
+      const focusedStore = nearbyStores[heroIndex];
+      if (!focusedStore) return [];
+
+      const isEligible = eligibleStreakStoreIds.includes(Number(focusedStore.id));
+      if (!isEligible) return [];
+
+      // Important: Decouple from displayStamps filtering. 
+      // We look at sortedStamps (which has real progress) or create a virtual entry.
+      const existing = sortedStamps.find((stamp) => Number(stamp.store_id) === Number(focusedStore.id));
+      if (existing) return [existing];
+
+      const virtualEntry: StampProgress = {
+        id: -Number(focusedStore.id),
+        user_id: "",
+        store_id: Number(focusedStore.id),
+        stamps_count: 0,
+        target: 7,
+        last_stamp_at: "",
+        updated_at: "",
+        stores: {
+          name: focusedStore.name,
+          logo: focusedStore.logo ?? undefined,
+          status: focusedStore.status,
+          is_active: focusedStore.is_active,
+          latitude: focusedStore.latitude ?? undefined,
+          longitude: focusedStore.longitude ?? undefined,
+          address: focusedStore.address ?? undefined,
+        },
+      };
+      return [virtualEntry];
+    }
+
+    // Away Mode: Show all stores the user has stamps with that also have streaks enabled
     return displayStamps.filter((stamp) => eligibleStreakStoreIds.includes(Number(stamp.store_id)));
-  }, [displayStamps, eligibleStreakStoreIds]);
+  }, [displayStamps, sortedStamps, eligibleStreakStoreIds, nearbyStores, heroIndex]);
 
 
   const [isStamping, setIsStamping] = useState(false);
@@ -700,6 +738,22 @@ export default function Rewards() {
         </View>
 
         <View>
+          {/* 1. Upcoming Events fallback for focused nearby store with no features */}
+          {nearbyStores.length > 0 && displayStreaks.length === 0 && displayStamps.length === 0 && (
+            <AnimatedView
+              entering={FadeIn.duration(400)}
+              className="bg-white dark:bg-darkBackgroundMuted rounded-2xl p-8 items-center border border-neutral-100 dark:border-darkBorder mx-1"
+            >
+              <MaterialIcons name="event-note" size={40} color="#FF6600" />
+              <Text className="text-neutral-900 dark:text-white font-poppins-bold text-lg mt-3 text-center">
+                Watch out for upcoming events!
+              </Text>
+              <Text className="text-neutral-500 text-center font-poppins text-xs mt-1 px-4">
+                This store doesn't have active rewards right now. Check back soon for stamps and streaks!
+              </Text>
+            </AnimatedView>
+          )}
+
           {displayStreaks.length > 0 && (
             <View className="mb-3">
               <Carousel
@@ -712,6 +766,7 @@ export default function Rewards() {
                 autoPlay={isAutoPlayEnabled && displayStreaks.length > 1}
                 autoPlayInterval={3500}
                 onScrollStart={handleCarouselInteraction}
+                onSnapToItem={(index) => setCarouselIndex(index)}
                 renderItem={({ item: streak }) => {
                   const storeStr = streak.stores as any;
                   const storeName = storeStr?.name ?? "Store";
@@ -748,6 +803,14 @@ export default function Rewards() {
                             </Text>
                           </View>
                           <View className="flex-row items-center gap-x-3">
+                            {nearby && (
+                              <View className="bg-green-100 dark:bg-green-900/30 px-2.5 py-1 rounded-full flex-row items-center gap-x-1">
+                                <View className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                                <Text className="text-[10px] font-poppins-semibold text-green-700 dark:text-green-400">
+                                  Nearby
+                                </Text>
+                              </View>
+                            )}
                             <TouchableOpacity
                               disabled={true}
                               className="px-2 py-1 opacity-50"
@@ -786,14 +849,6 @@ export default function Rewards() {
                                 • {storeAddress}
                               </Text>
                             </View>
-                            {nearby && (
-                              <View className="bg-green-100 dark:bg-green-900/30 px-2.5 py-1 rounded-full flex-row items-center gap-x-1 ml-2">
-                                <View className="w-1.5 h-1.5 rounded-full bg-green-500" />
-                                <Text className="text-[10px] font-poppins-semibold text-green-700 dark:text-green-400">
-                                  Nearby
-                                </Text>
-                              </View>
-                            )}
                           </View>
                         </View>
 
@@ -921,6 +976,14 @@ export default function Rewards() {
                             </Text>
                           </View>
                           <View className="flex-row items-center gap-x-3">
+                            {nearby && (
+                              <View className="bg-green-100 dark:bg-green-900/30 px-2.5 py-1 rounded-full flex-row items-center gap-x-1">
+                                <View className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                                <Text className="text-[10px] font-poppins-semibold text-green-700 dark:text-green-400">
+                                  Nearby
+                                </Text>
+                              </View>
+                            )}
                             <AnimatedView style={chevronStyle}>
                               <MaterialIcons
                                 name="expand-more"
@@ -969,14 +1032,6 @@ export default function Rewards() {
                                 • {storeAddress}
                               </Text>
                             </View>
-                            {nearby && (
-                              <View className="bg-green-100 dark:bg-green-900/30 px-2.5 py-1 rounded-full flex-row items-center gap-x-1 ml-2">
-                                <View className="w-1.5 h-1.5 rounded-full bg-green-500" />
-                                <Text className="text-[10px] font-poppins-semibold text-green-700 dark:text-green-400">
-                                  Nearby
-                                </Text>
-                              </View>
-                            )}
                           </View>
                         </View>
 
@@ -1027,54 +1082,54 @@ export default function Rewards() {
                           className="px-3 pb-3 pt-1 border-t border-neutral-50 dark:border-darkBorder bg-neutral-50/10"
                         >
                           <View className="flex-row items-center justify-between border border-primary/10 bg-primary/5 dark:bg-primary/10 rounded-2xl p-3">
-                              <View className="flex-row items-center gap-x-3 flex-1">
-                                <View className="relative">
-                                  <View className="w-14 h-14 rounded-2xl bg-white dark:bg-darkBackgroundCard items-center justify-center overflow-hidden border border-primary/5">
-                                    <MaterialIcons name="monetization-on" size={28} color="#FF6600" />
+                            <View className="flex-row items-center gap-x-3 flex-1">
+                              <View className="relative">
+                                <View className="w-14 h-14 rounded-2xl bg-white dark:bg-darkBackgroundCard items-center justify-center overflow-hidden border border-primary/5">
+                                  <MaterialIcons name="monetization-on" size={28} color="#FF6600" />
+                                </View>
+                                {clampedCount >= targetCount && (
+                                  <View className="absolute -top-1.5 -right-1.5 bg-green-500 w-5 h-5 rounded-full items-center justify-center border-2 border-white dark:border-darkBackgroundMuted">
+                                    <MaterialIcons name="check" size={12} color="white" />
                                   </View>
-                                  {clampedCount >= targetCount && (
-                                    <View className="absolute -top-1.5 -right-1.5 bg-green-500 w-5 h-5 rounded-full items-center justify-center border-2 border-white dark:border-darkBackgroundMuted">
-                                      <MaterialIcons name="check" size={12} color="white" />
-                                    </View>
-                                  )}
-                                </View>
-                                <View className="flex-1 ml-0.5">
-                                  <Text className="text-[10px] font-poppins-bold text-primary uppercase tracking-[1.2px] mb-0.5">
-                                    {clampedCount >= targetCount ? "UNLOCKED!" : "REWARD"}
-                                  </Text>
-                                  <Text
-                                    className="text-sm text-neutral-800 dark:text-neutral-100 font-poppins-bold"
-                                    numberOfLines={1}
-                                  >
-                                    500 Points
-                                  </Text>
-                                  <Text className="text-[10px] text-neutral-400 font-poppins mt-0.5" numberOfLines={1}>
-                                    {clampedCount >= targetCount
-                                      ? "Claim your points now!"
-                                      : `${targetCount - clampedCount} stamps more to unlock`}
-                                  </Text>
-                                </View>
+                                )}
                               </View>
-
-                              <TouchableOpacity
-                                className={`px-4 py-2.5 rounded-xl ${clampedCount >= targetCount ? "bg-primary" : "bg-white dark:bg-darkBackgroundCard opacity-60"}`}
-                                disabled={clampedCount < targetCount}
-                                onPress={() => {
-                                  Alert.alert(
-                                    "Claim Reward",
-                                    `Ready to claim "${activeProgramReward?.reward_title}"? Please present this to the store staff.`,
-                                    [
-                                      { text: "Cancel", style: "cancel" },
-                                      { text: "Claim Now", onPress: () => Alert.alert("Success", "Reward claimed! Please check your history.") }
-                                    ]
-                                  );
-                                }}
-                              >
-                                <Text className={`text-[11px] font-poppins-bold tracking-wider ${clampedCount >= targetCount ? "text-white" : "text-neutral-400"}`}>
-                                  CLAIM
+                              <View className="flex-1 ml-0.5">
+                                <Text className="text-[10px] font-poppins-bold text-primary uppercase tracking-[1.2px] mb-0.5">
+                                  {clampedCount >= targetCount ? "UNLOCKED!" : "REWARD"}
                                 </Text>
-                              </TouchableOpacity>
+                                <Text
+                                  className="text-sm text-neutral-800 dark:text-neutral-100 font-poppins-bold"
+                                  numberOfLines={1}
+                                >
+                                  500 Points
+                                </Text>
+                                <Text className="text-[10px] text-neutral-400 font-poppins mt-0.5" numberOfLines={1}>
+                                  {clampedCount >= targetCount
+                                    ? "Claim your points now!"
+                                    : `${targetCount - clampedCount} stamps more to unlock`}
+                                </Text>
+                              </View>
                             </View>
+
+                            <TouchableOpacity
+                              className={`px-4 py-2.5 rounded-xl ${clampedCount >= targetCount ? "bg-primary" : "bg-white dark:bg-darkBackgroundCard opacity-60"}`}
+                              disabled={clampedCount < targetCount}
+                              onPress={() => {
+                                Alert.alert(
+                                  "Claim Reward",
+                                  `Ready to claim "${activeProgramReward?.reward_title}"? Please present this to the store staff.`,
+                                  [
+                                    { text: "Cancel", style: "cancel" },
+                                    { text: "Claim Now", onPress: () => Alert.alert("Success", "Reward claimed! Please check your history.") }
+                                  ]
+                                );
+                              }}
+                            >
+                              <Text className={`text-[11px] font-poppins-bold tracking-wider ${clampedCount >= targetCount ? "text-white" : "text-neutral-400"}`}>
+                                CLAIM
+                              </Text>
+                            </TouchableOpacity>
+                          </View>
                         </AnimatedView>
                       )}
                     </AnimatedView>
@@ -1100,7 +1155,7 @@ export default function Rewards() {
           )}
         </View>
 
-        <View className="gap-y-6">
+        <View className="gap-y-3">
           <View className="flex-row items-center justify-between">
             <Text className="text-lg font-poppins-semibold text-neutral-900 dark:text-darkTextPrimary">
               Reward Catalog
