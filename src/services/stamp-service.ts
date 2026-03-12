@@ -19,6 +19,14 @@ export interface StampProgress {
   };
 }
 
+export interface ActiveStampProgramReward {
+  store_id: number;
+  total_stamps: number;
+  reward_id: string;
+  reward_title: string | null;
+  reward_image_url: string | null;
+}
+
 export type StampResult = {
   success: boolean;
   reason?: "already_stamped_today" | "stamp_not_enabled" | "error";
@@ -315,5 +323,93 @@ export async function getStoresWithEnabledActiveStampProgram(
   } catch (error) {
     console.error("Exception fetching eligible stamp stores:", error);
     return storeIds;
+  }
+}
+
+export async function getStoresWithEnabledStreaks(
+  storeIds: number[],
+): Promise<number[]> {
+  if (storeIds.length === 0) return [];
+
+  try {
+    const { data: featureRows, error: featureError } = await supabase
+      .from("store_feature")
+      .select("store_id, streak_enabled")
+      .in("store_id", storeIds);
+
+    if (featureError) {
+      console.warn("[getStoresWithEnabledStreaks] Could not read store_feature:", featureError.message);
+      return [];
+    }
+
+    return (featureRows ?? [])
+      .filter((row: any) => row.streak_enabled === true)
+      .map((row: any) => Number(row.store_id));
+  } catch (error) {
+    console.error("Exception fetching eligible streak stores:", error);
+    return [];
+  }
+}
+
+export async function getActiveStampProgramRewards(
+  storeIds: number[],
+): Promise<ActiveStampProgramReward[]> {
+  if (storeIds.length === 0) return [];
+
+  try {
+    const { data: stampRows, error: stampError } = await supabase
+      .from("store_stamps")
+      .select("store_id, total_stamps, reward_id")
+      .in("store_id", storeIds)
+      .eq("is_active", true);
+
+    if (stampError) {
+      throw new Error(stampError.message);
+    }
+
+    const activePrograms = (stampRows ?? []) as Array<{
+      store_id: number | string;
+      total_stamps: number;
+      reward_id: string;
+    }>;
+
+    if (activePrograms.length === 0) return [];
+
+    const rewardIds = Array.from(
+      new Set(activePrograms.map((row) => row.reward_id).filter(Boolean)),
+    );
+
+    const { data: rewardRows, error: rewardError } = await supabase
+      .from("store_rewards")
+      .select("id, title, image_url")
+      .in("id", rewardIds);
+
+    if (rewardError) {
+      throw new Error(rewardError.message);
+    }
+
+    const rewardById = new Map(
+      (rewardRows ?? []).map((row: any) => [
+        String(row.id),
+        {
+          title: row.title as string | null,
+          image_url: row.image_url as string | null,
+        },
+      ]),
+    );
+
+    return activePrograms.map((program) => {
+      const reward = rewardById.get(String(program.reward_id));
+      return {
+        store_id: Number(program.store_id),
+        total_stamps: program.total_stamps,
+        reward_id: program.reward_id,
+        reward_title: reward?.title ?? null,
+        reward_image_url: reward?.image_url ?? null,
+      };
+    });
+  } catch (error) {
+    console.error("Exception fetching active stamp program rewards:", error);
+    return [];
   }
 }
