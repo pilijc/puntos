@@ -15,15 +15,15 @@ export default function StoreListScreen() {
   const insets = useSafeAreaInsets();
   const [searchQuery, setSearchQuery] = useState("");
   const [refreshing, setRefreshing] = useState(false);
-  const { stores: realStores, loading: storesLoading, fetchStores } = useStoreStore();
-  const { stamps, loading: stampsLoading, refetch: refetchStamps } = useStamps();
+  const { stores: realStores } = useStoreStore();
+  const { stamps, isLoading: stampsLoading, refetch: refetchStamps } = useStamps();
   const { location } = useLocation();
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await Promise.all([fetchStores(true), refetchStamps()]);
+    await refetchStamps();
     setRefreshing(false);
-  }, [fetchStores, refetchStamps]);
+  }, [refetchStamps]);
 
   const allStores = useMemo(() => {
     const stampedIds = new Set(stamps.map((s) => s.store_id.toString()));
@@ -54,7 +54,7 @@ export default function StoreListScreen() {
   }, [allStores, searchQuery]);
 
   const totalStamps = allStores.reduce((sum, store) => sum + store.stampsCount, 0);
-  const isLoading = (storesLoading || stampsLoading) && !refreshing;
+  const isLoading = stampsLoading && !refreshing;
 
   return (
     <SafeAreaView className="flex-1 bg-backgroundMuted dark:bg-darkBackground">
@@ -76,27 +76,18 @@ export default function StoreListScreen() {
         }
       >
         {/* Header - Aligned to match main Rewards title */}
-        {/* EDIT mt-2 BELOW TO MANUALLY ADJUST VERTICAL POSITION */}
-        <View className="flex-row items-center justify-between mb-2 mt-4.5">
-          <View className="flex-row items-center flex-1">
-            <TouchableOpacity
-              onPress={() => router.back()}
-              activeOpacity={0.7}
-              className="-ml-3 mr-1" // Negative margin to align text correctly
-            >
-              <MaterialIcons name="chevron-left" size={36} color="#FF6600" />
-            </TouchableOpacity>
-            <Text className="text-2xl font-poppins-bold text-neutral-900 dark:text-white">
-              My Stores
-            </Text>
-          </View>
-
-          <View className="bg-primary/10 px-3 py-1.5 rounded-full flex-row items-center gap-x-1.5">
-            <MaterialIcons name="stars" size={16} color="#FF6600" />
-            <Text className="text-[10px] font-poppins-bold text-primary uppercase tracking-tight">
-              {totalStamps} Stamps
-            </Text>
-          </View>
+        {/* EDIT mt-4.5 BELOW TO MANUALLY ADJUST VERTICAL POSITION */}
+        <View className="flex-row items-center mb-2 mt-4.5">
+          <TouchableOpacity
+            onPress={() => router.back()}
+            activeOpacity={0.7}
+            className="-ml-3 mr-1"
+          >
+            <MaterialIcons name="chevron-left" size={36} color="#FF6600" />
+          </TouchableOpacity>
+          <Text className="text-2xl font-poppins-bold text-neutral-900 dark:text-white">
+            My Stores
+          </Text>
         </View>
 
         {/* Search Bar */}
