@@ -497,7 +497,7 @@ export default function Rewards() {
                 data={nearbyStores}
                 scrollAnimationDuration={1000}
                 loop={nearbyStores.length > 1}
-                autoPlay={nearbyStores.length > 1 && isAutoPlayEnabled}
+                autoPlay={false}
                 autoPlayInterval={4000}
                 onSnapToItem={(index) => setHeroIndex(index)}
                 renderItem={({ item: store }) => (
@@ -554,7 +554,7 @@ export default function Rewards() {
                   data={storesWithLocation.filter(s => s.is_active)}
                   scrollAnimationDuration={1500}
                   loop={true}
-                  autoPlay={isAutoPlayEnabled}
+                  autoPlay={false}
                   autoPlayInterval={4000}
                   renderItem={({ item: store }) => (
                     <View className="w-full h-full relative">
