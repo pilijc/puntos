@@ -217,7 +217,7 @@ export default function SuperAdminDashboard() {
               {users.length === 0 ? (
                 <Text className="text-center py-10 text-[#94A3B8] font-[Poppins-Regular]">No users found</Text>
               ) : (
-                users.map((user, idx) => <UserRow key={user.id} user={user} isFirst={idx === 0} />)
+                users.map((user, idx) => <UserRow key={`${user.id}-${idx}`} user={user} isFirst={idx === 0} />)
               )}
             </ScrollView>
           </View>
