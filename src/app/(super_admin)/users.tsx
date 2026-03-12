@@ -134,7 +134,6 @@ export default function UsersScreen() {
     const isBlocked = c.status === "Blocked";
     return (
       <TouchableOpacity
-        key={c.id}
         activeOpacity={0.7}
         onPress={() => { setSelectedUser(c); setShowBlockModal(true); }}
       >
@@ -210,7 +209,13 @@ export default function UsersScreen() {
               <Text className="text-[10px] font-poppins-bold text-slate-400 uppercase tracking-widest mr-2">{letter}</Text>
               <View className="flex-1 h-[0.5px] bg-slate-200" />
             </View>
-            {groupedUsers[letter].map(renderUserCard)}
+                {groupedUsers[letter].map((user, idx) => (
+                  <React.Fragment
+                    key={`${letter}-${user.id ?? user.email ?? user.name}-${idx}`}
+                  >
+                    {renderUserCard(user)}
+                  </React.Fragment>
+                ))}
           </View>
         ))}
       </ScrollView>
