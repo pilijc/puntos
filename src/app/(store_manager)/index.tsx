@@ -12,7 +12,7 @@ import { useStores } from "@/hooks/use-stores";
 import { useStoreDashboardMetrics } from "@/hooks/use-store-metrics";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
-const HORIZONTAL_PADDING = 20; // consistent with p-5
+const HORIZONTAL_PADDING = 20;
 const CARD_WIDTH = SCREEN_WIDTH - (HORIZONTAL_PADDING * 2);
 
 // ── Store Card Component ──────────────────────────────────────────────────
