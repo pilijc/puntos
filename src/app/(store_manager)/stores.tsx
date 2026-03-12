@@ -184,7 +184,7 @@ export default function StoreManagerStores() {
     return stores.filter(s => s.status === activeTab);
   }, [stores, activeTab]);
 
-  // Initial Fetch (Only hits the network if it's the very first time opening the tab)
+  // Initial fetch — only fires when the tab has never loaded data yet
   React.useEffect(() => {
     if (!hasFetchedOnce) {
       fetchStores();
@@ -196,16 +196,13 @@ export default function StoreManagerStores() {
     await fetchStores(true);
   };
 
-  React.useEffect(() => {
-      if (!hasFetchedOnce) {
-          fetchStores();
-      }
-  }, [hasFetchedOnce, fetchStores]);
-
+  // Re-fetch silently when the tab regains focus (skips if already loaded)
   useFocusEffect(
     useCallback(() => {
-      fetchStores();
-    }, [fetchStores])
+      if (hasFetchedOnce) {
+        fetchStores();
+      }
+    }, [hasFetchedOnce, fetchStores])
   );
 
   return (
@@ -226,10 +223,10 @@ export default function StoreManagerStores() {
             tab.key === "all"
               ? stores.length
               : stores.filter((s) =>
-                  tab.key === "pending"
-                    ? s.status === "pending_review"
-                    : s.status === tab.key
-                ).length;
+                tab.key === "pending"
+                  ? s.status === "pending_review"
+                  : s.status === tab.key
+              ).length;
 
           return (
             <TouchableOpacity
@@ -253,18 +250,16 @@ export default function StoreManagerStores() {
               </Text>
               {count > 0 && (
                 <View
-                  className={`rounded-full px-1.5 min-w-[18px] items-center ${
-                    active
+                  className={`rounded-full px-1.5 min-w-[18px] items-center ${active
                       ? "bg-primary/10"
                       : "bg-neutral-100 dark:bg-neutral-700"
-                  }`}
+                    }`}
                 >
                   <Text
-                    className={`text-[9px] font-poppins-bold ${
-                      active
+                    className={`text-[9px] font-poppins-bold ${active
                         ? "text-primary"
                         : "text-neutral-500 dark:text-neutral-400"
-                    }`}
+                      }`}
                   >
                     {count}
                   </Text>
