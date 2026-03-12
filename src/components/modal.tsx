@@ -21,9 +21,10 @@ export interface ModalButton {
   variant?: ButtonVariant;
   loading?: boolean;
   disabled?: boolean;
+  timer?: number;
 }
 
-interface ModalProps {
+export interface ModalProps {
   visible: boolean;
   onClose: () => void;
   title: string;
@@ -32,6 +33,7 @@ interface ModalProps {
   children?: React.ReactNode;
   dismissOnBackdrop?: boolean;
   showCloseButton?: boolean;
+  timer?: number;
 }
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
@@ -46,9 +48,18 @@ export function Modal({
   children,
   dismissOnBackdrop = true,
   showCloseButton = true,
+  timer,
 }: ModalProps) {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
+
+  React.useEffect(() => {
+    if (!visible || typeof timer !== "number") return;
+
+    const id = setTimeout(onClose, timer);
+
+    return () => clearTimeout(id);
+  }, [visible, typeof timer, onClose]);
 
   return (
     <RNModal

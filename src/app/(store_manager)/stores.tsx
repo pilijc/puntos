@@ -336,23 +336,23 @@ export default function StoreManagerStores() {
         <TouchableOpacity
           className="absolute bottom-5 right-6 w-14 h-14 rounded-full bg-primary items-center justify-center"
           onPress={() => {
-            if (!hasPaidStoreFee) {
-              setShowPaymentModal(true);
-              console.log("Payment required to create store");
-              return;
-            }
+            // if (!hasPaidStoreFee) {
+            //   setShowPaymentModal(true);
+            //   console.log("Payment required to create store");
+            //   return;
+            // }
             router.push("/(store_manager)/create-store");
           }}
         >
           <MaterialIcons name="add" size={28} color="#fff" />
         </TouchableOpacity>
-        {showPaymentModal && (
+        {/* {showPaymentModal && (
           <PaymentModal
             setShowPaymentModal={setShowPaymentModal}
             userId={user}
             amount={199}
           />
-        )}
+        )} */}
       </View>
     </SafeAreaView>
   );
