@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { LayoutAnimation, UIManager, Platform } from 'react-native';
+import { LayoutAnimation } from 'react-native';
 import { View, Text, TouchableOpacity } from "@/tw";
 import { Ionicons } from '@expo/vector-icons';
 import { router } from "expo-router";
@@ -10,7 +10,7 @@ import { softDeleteUserAccountService } from "@/services/settings-service";
 
 // Components
 import { Modal } from "@/components/modal";
-import ChangePasswordModal from "@/components/settings/ChangePasswordModal";
+import ChangePasswordModal from "@/components/settings/modal/ChangePasswordModal";
 import { useTranslation } from "react-i18next";
 
 

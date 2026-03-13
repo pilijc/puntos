@@ -10,12 +10,12 @@ import { getCurrentLocation } from "@/services/location-service";
 import { useProfile } from "@/hooks/use-profile";
 
 // Components
-import EditProfileModal from "@/components/settings/EditProfileModal";
+import EditProfileModal from "@/components/settings/modal/EditProfileModal";
 import { LogoutButton } from "@/components/settings/LogoutButton";
-import { UserProfileCard } from "@/components/settings/UserProfileCard";
-import { SecurityCard } from "@/components/settings/SecurityCard";
-import { LanguageCard } from "@/components/settings/LanguageCard";
-import { AppearanceCard } from "@/components/settings/AppearanceCard";
+import { UserProfileCard } from "@/components/settings/card/UserProfileCard";
+import { SecurityCard } from "@/components/settings/card/SecurityCard";
+import { LanguageCard } from "@/components/settings/card/LanguageCard";
+import { AppearanceCard } from "@/components/settings/card/AppearanceCard";
 import { useTranslation } from "react-i18next";
 
 // Services

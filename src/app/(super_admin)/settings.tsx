@@ -6,10 +6,10 @@ import { useFocusEffect } from "expo-router";
 import { useProfile } from "@/hooks/use-profile";
 
 // Components
-import EditProfileModal from "@/components/settings/EditProfileModal";
+import EditProfileModal from "@/components/settings/modal/EditProfileModal";
 import { LogoutButton } from "@/components/settings/LogoutButton";
-import { UserProfileCard } from "@/components/settings/UserProfileCard";
-import { SecurityCard } from "@/components/settings/SecurityCard";
+import { UserProfileCard } from "@/components/settings/card/UserProfileCard";
+import { SecurityCard } from "@/components/settings/card/SecurityCard";
 import DarkModeToggle from "@/components/ui/dark-mode-toggle";
 
 export default function SuperAdminSettings() {
