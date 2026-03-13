@@ -7,6 +7,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useStreakStore } from "@/store/store-manager/streak-store";
 import { createStreak } from "@/services/store-manager/streak-service";
 import { PointsMode } from "@/type/store-manager/streak";
+import { Button } from "@/components/button";
+import { Modal, type ModalButton } from "@/components/modal";
 
 export default function ConfigureStreaks() {
   const router = useRouter();
@@ -15,7 +17,12 @@ export default function ConfigureStreaks() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
   const [isSubmitting, setIsSubmitting] = useState(false);
-
+  const [modal, setModal] = useState<{
+    title: string;
+    message: string;
+    buttons: ModalButton[];
+    timer?: boolean;
+  } | null>(null);
   const {
     points_mode, setPointsMode,
     fixed_points_per_day, setFixedPointsPerDay,
@@ -36,19 +43,35 @@ export default function ConfigureStreaks() {
 
   const handleSave = async () => {
     if (!streak_length || streak_length < 1) {
-      Alert.alert("Validation Error", "Streak length must be at least 1 day.");
+      setModal({
+        title: "Validation Error",
+        message: "Streak length must be at least 1 day.",
+        buttons: [{ label: "OK", onPress: () => setModal(null) }],
+      });
       return;
     }
     if (isFixed && (!fixed_points_per_day || fixed_points_per_day < 1)) {
-      Alert.alert("Validation Error", "Please enter a valid points per day amount.");
+      setModal({
+        title: "Validation Error",
+        message: "Please enter a valid points per day amount.",
+        buttons: [{ label: "OK", onPress: () => setModal(null) }],
+      });
       return;
     }
     if (!isFixed && (!starting_points || starting_points < 1)) {
-      Alert.alert("Validation Error", "Please enter a valid starting points amount.");
+      setModal({
+        title: "Validation Error",
+        message: "Please enter a valid starting points amount.",
+        buttons: [{ label: "OK", onPress: () => setModal(null) }],
+      });
       return;
     }
     if (!isFixed && (!increment_value || increment_value < 1)) {
-      Alert.alert("Validation Error", "Please enter a valid increment per day.");
+      setModal({
+        title: "Validation Error",
+        message: "Please enter a valid increment per day.",
+        buttons: [{ label: "OK", onPress: () => setModal(null) }],
+      });
       return;
     }
 
@@ -68,10 +91,18 @@ export default function ConfigureStreaks() {
       setRawPointsPerDay("");
       setRawStartingPoints("");
       setRawIncrementValue("");
-      Alert.alert("Success", "Streak configuration saved successfully");
+      setModal({
+        title: "Success",
+        message: "Streak configuration saved successfully",
+        buttons: [{ label: "OK", onPress: () => router.push({ pathname: "/(store_manager)/view-streak", params: { storeId } }) }],
+      });
       router.push({ pathname: "/(store_manager)/view-streak", params: { storeId } });
     } catch (error) {
-      Alert.alert("Error", (error as Error).message ?? "Failed to save streak configuration");
+      setModal({
+        title: "Error",
+        message: (error as Error).message ?? "Failed to save streak configuration",
+        buttons: [{ label: "OK", onPress: () => setModal(null) }],
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -83,6 +114,13 @@ export default function ConfigureStreaks() {
       className="bg-background dark:bg-[#111921]"
       behavior={Platform.OS === "android" ? "height" : "padding"}
     >
+      <Modal
+        visible={!!modal}
+        onClose={() => setModal(null)}
+        title={modal?.title ?? ""}
+        message={modal?.message}
+        buttons={modal?.buttons}
+      />
       <View
         className="bg-background dark:bg-[#111921] border-b border-slate-200 dark:border-slate-800 flex-row items-center px-2"
         style={{ paddingTop: insets.top + 8, paddingBottom: 12 }}
@@ -295,15 +333,15 @@ export default function ConfigureStreaks() {
 
         {/* Customer preview */}
         <View>
-          <Text className="text-xs font-poppins-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-3 px-1">
+          <Text className="text-sm font-poppins-semibold ttext-slate-700 dark:text-slate-300 mb-3 px-1">
             Customer Preview
           </Text>
-          <View className="bg-primary/5 rounded-2xl p-5 flex-row gap-4 items-start">
-            <View className="bg-primary rounded-full p-2 items-center justify-center">
-              <MaterialIcons name="local-fire-department" size={24} color="#fff" />
+          <View className="bg-primary/3 rounded-xl p-5 flex-row gap-4 items-start">
+            <View className="p-2 items-center justify-center">
+              <MaterialIcons name="local-fire-department" size={24} color="#FF6600" />
             </View>
             <View className="flex-1">
-              <Text className="text-[17px] font-poppins-bold text-primary">
+              <Text className="text-sm font-poppins-bold text-primary">
                 Daily Streak Active
               </Text>
 
@@ -374,29 +412,22 @@ export default function ConfigureStreaks() {
 
         {/* Actions */}
         <View className="gap-y-3 border-t border-slate-200 dark:border-slate-800 pt-3">
-          <TouchableOpacity
-            className="w-full bg-primary rounded-xl py-4 items-center"
-            activeOpacity={0.85}
+          <Button
+            label="Save as Draft"
             onPress={handleSave}
             disabled={isSubmitting}
-          >
-            {isSubmitting ? (
-              <ActivityIndicator size="small" color="white" />
-            ) : (
-              <Text className="text-white font-poppins-bold text-[15px]">
-                Save as Draft
-              </Text>
-            )}
-          </TouchableOpacity>
-          <TouchableOpacity
-            className="w-full py-4 items-center rounded-xl bg-slate-100 border border-slate-200 dark:border-slate-700 dark:bg-slate-900"
-            activeOpacity={0.7}
+            loading={isSubmitting}
+            fullWidth={true}
+            variant="primary"
+          />
+          <Button
+            label="Cancel"
             onPress={() => router.push({ pathname: "/(store_manager)/view-store/[id]", params: { id: storeId } })}
-          >
-            <Text className="text-sm font-poppins-medium text-slate-500 dark:text-slate-400">
-              Cancel
-            </Text>
-          </TouchableOpacity>
+            disabled={isSubmitting}
+            loading={isSubmitting}
+            fullWidth={true}
+            variant="secondary"
+          />
         </View>
       </ScrollView>
     </KeyboardAvoidingView>

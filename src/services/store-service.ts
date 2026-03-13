@@ -78,6 +78,7 @@ export async function createStore(payload: CreateStorePayload): Promise<StoreRow
         streak_enabled: false,
         stamp_enabled: false,
         reward_enabled: false,
+        qr_enabled: false,
     });
 
     await supabase.from("store_points_rules").insert({
@@ -105,21 +106,23 @@ export async function createStore(payload: CreateStorePayload): Promise<StoreRow
 }
 
 export async function getMyStores(ownerId: string): Promise<StoreRow[]> {
-
-    const { data: ownedData, error: ownedError } = await supabase
-        .from("stores")
-        .select("*")
-        .eq("owner_id", ownerId)
-        .order("created_at", { ascending: false });
+    const [
+        { data: ownedData, error: ownedError },
+        { data: roleData, error: roleError },
+    ] = await Promise.all([
+        supabase
+            .from("stores")
+            .select("*")
+            .eq("owner_id", ownerId)
+            .order("created_at", { ascending: false }),
+        supabase
+            .from("user_roles")
+            .select(`store_id, stores:store_id ( id )`)
+            .eq("user_id", ownerId)
+            .not("store_id", "is", null),
+    ]);
 
     if (ownedError) throw new Error(ownedError.message);
-
-    const { data: roleData, error: roleError } = await supabase
-        .from("user_roles")
-        .select(`store_id, stores:store_id ( id )`)
-        .eq("user_id", ownerId)
-        .not("store_id", "is", null);
-
     if (roleError) throw new Error(roleError.message);
 
     const roleStores = (roleData ?? [])

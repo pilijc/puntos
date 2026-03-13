@@ -7,6 +7,7 @@ interface ManagerStoresState {
     loading: boolean;
     error: string | null;
     hasFetchedOnce: boolean;
+    isFetching: boolean;
 
     fetchStores: (forceRefresh?: boolean) => Promise<void>;
     addStoreOptimistically: (store: StoreRow) => void;
@@ -18,18 +19,24 @@ export const useManagerStoresStore = create<ManagerStoresState>((set, get) => ({
     loading: false,
     error: null,
     hasFetchedOnce: false,
+    isFetching: false,
 
     fetchStores: async (forceRefresh = false) => {
         const state = get();
-        // If we already have the data in memory and don't need a hard refresh, skip reloading
+
+        // Skip if data is fresh and no force refresh requested
         if (!forceRefresh && state.hasFetchedOnce) return;
 
-        set({ loading: !state.hasFetchedOnce, error: null });
+        // Prevent concurrent in-flight fetches
+        if (state.isFetching) return;
+
+        // Only show skeleton on first-ever load; background refreshes are silent
+        set({ isFetching: true, loading: !state.hasFetchedOnce, error: null });
 
         try {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) {
-                set({ loading: false });
+                set({ loading: false, isFetching: false });
                 return;
             }
 
@@ -38,13 +45,13 @@ export const useManagerStoresStore = create<ManagerStoresState>((set, get) => ({
         } catch (e: any) {
             set({ error: e?.message ?? "Failed to load stores" });
         } finally {
-            set({ loading: false });
+            set({ loading: false, isFetching: false });
         }
     },
 
     addStoreOptimistically: (store) => {
         set((state) => ({
-            stores: [store, ...state.stores] // Insert at the top of the list
+            stores: [store, ...state.stores]
         }));
     },
 
@@ -54,3 +61,4 @@ export const useManagerStoresStore = create<ManagerStoresState>((set, get) => ({
         }));
     }
 }));
+
