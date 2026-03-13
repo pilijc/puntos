@@ -1,0 +1,89 @@
+{
+    "label": {
+        "confirm": "Confirm",
+        "cancel": "Cancel",
+        "save": "Save",
+        "delete": "Delete",
+        "enabled": "Enabled",
+        "disabled": "Disabled"
+    },
+    "error": {
+        "title": "Error",
+        "missingFields": "Please fill in all fields",
+        "passwordMatch": "New passwords do not match",
+        "passwordLimit": "Password should be at least 8 characters"
+    },
+    "settings": {
+        "title": "Settings",
+        "logout": {
+            "title": "Logout",
+            "confirmTitle": "Logout",
+            "confirmMessage": "Are you sure you want to logout?"
+        },
+        "checking": "Checking...",
+        "copyright": "Copyright",
+        "profile": {
+            "title": "Edit Profile",
+            "description": "Update your account information",
+            "emailDescription": "Email verification is required to update your email address",
+            "label": {
+                "pic": "Change Profile Picture",
+                "name": "Username",
+                "email": "Email Address"
+            },
+            "input": {
+                "name": "Enter Username",
+                "email": "Enter Email Address"
+            }
+        },
+        "account": {
+            "title": "ACCOUNT SETTINGS",
+            "security": {
+                "title": "Security",
+                "changePassword": {
+                    "title": "Change Password",
+                    "description": "Enter your current and new password",
+                    "label": {
+                        "current": "Current Password",
+                        "new": "New Password",
+                        "repeat": "Repeat New Password"
+                    },
+                    "input": {
+                        "current": "Enter Current Password",
+                        "new": "Enter New Password",
+                        "repeat": "Enter Repeat New Password"
+                    }
+                },
+                "deleteAccount": {
+                    "title": "Delete Account",
+                    "description": "Are you sure you want to delete your account? This action cannot be undone"
+                }
+            },
+            "language": {
+                "title": "Language",
+                "en": "English",
+                "jp": "Japanese"
+            },
+            "appearance": {
+                "title": "Appearance",
+                "light": "Light Mode",
+                "dark": "Dark Mode"
+            }
+        },
+        "notificationsPrivacy": {
+            "title": "NOTIFICATIONS & PRIVACY",
+            "alerts": {
+                "title": "Nearby Alerts",
+                "description": "Get notified when rewards are close"
+            },
+            "location": {
+                "title": "Location Access",
+                "allow": "Access Allowed",
+                "denied": "Access Denied"
+            },
+            "email": {
+                "title": "Promotional Emails"
+            }
+        }
+    }
+}

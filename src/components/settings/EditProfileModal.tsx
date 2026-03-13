@@ -5,6 +5,7 @@ import {
     useColorScheme,
     StyleSheet,
     PanResponder,
+    Settings,
 } from "react-native";
 import { View, Text, SafeAreaView, TouchableOpacity, TextInput, ScrollView } from "@/tw";
 import { Ionicons } from "@expo/vector-icons";
@@ -17,6 +18,7 @@ import { useProfileStore } from "@/store/profile-store";
 // components
 import { Button } from "@/components/button";
 import { Modal as AppModal } from "@/components/modal";
+import { useTranslation } from "react-i18next";
 
 type Props = {
     visible: boolean;
@@ -25,6 +27,7 @@ type Props = {
 
 export default function EditProfileModal({ visible, onClose }: Props) {
     const isDark = useColorScheme() === "dark";
+    const { t: translate } = useTranslation();
 
     const {
         user,
@@ -114,8 +117,8 @@ export default function EditProfileModal({ visible, onClose }: Props) {
                             {/* header */}
                             <View className="flex-row justify-between items-center mb-6">
                                 <View>
-                                    <Text className="text-xl font-poppins-bold text-textSecondary dark:text-darkTextPrimary">Edit Profile</Text>
-                                    <Text className="text-sm font-poppins-regular text-textSecondary dark:text-darkTextSecondary">Update your account information</Text>
+                                    <Text className="text-xl font-poppins-bold text-textSecondary dark:text-darkTextPrimary">{translate("settings.profile.title")}</Text>
+                                    <Text className="text-sm font-poppins-regular text-textSecondary dark:text-darkTextSecondary">{translate("settings.profile.description")}</Text>
                                 </View>
                                 <TouchableOpacity
                                     onPress={onClose}
@@ -151,17 +154,17 @@ export default function EditProfileModal({ visible, onClose }: Props) {
                                             <Ionicons name="camera" size={16} color="white" />
                                         </TouchableOpacity>
                                     </View>
-                                    <Text className="text-xs font-poppins-medium text-primary mt-2">Change profile photo</Text>
+                                    <Text className="text-xs font-poppins-medium text-primary mt-2">{translate("settings.profile.label.pic")}</Text>
                                 </View>
 
                                 {/* Username */}
                                 <View className="mb-4">
-                                    <Text className="text-xs font-poppins-bold text-neutral-600 dark:text-darkTextSecondary mb-1.5 ml-1">Username</Text>
+                                    <Text className="text-xs font-poppins-bold text-neutral-600 dark:text-darkTextSecondary mb-1.5 ml-1">{translate("settings.profile.label.name")}</Text>
                                     <View className="flex-row items-center bg-neutral-50 dark:bg-darkBackgroundMuted border border-neutral-200 dark:border-darkBorder rounded-xl px-4 py-1">
                                         <Ionicons name="person-outline" size={18} color={isDark ? "#6b7280" : "#9CA3AF"} />
                                         <TextInput
                                             className="flex-1 p-3 font-poppins-medium text-neutral-900 dark:text-darkTextPrimary"
-                                            placeholder="Enter username"
+                                            placeholder={translate("settings.profile.input.name")}
                                             value={username}
                                             onChangeText={setUsername}
                                             placeholderTextColor={isDark ? "#4b5563" : "#9ca3af"}
@@ -172,12 +175,12 @@ export default function EditProfileModal({ visible, onClose }: Props) {
 
                                 {/* Email Input (read-only) */}
                                 <View className="mb-6">
-                                    <Text className="text-xs font-poppins-bold text-neutral-600 dark:text-darkTextSecondary mb-1.5 ml-1">Email Address</Text>
+                                    <Text className="text-xs font-poppins-bold text-neutral-600 dark:text-darkTextSecondary mb-1.5 ml-1">{translate("settings.profile.label.email")}</Text>
                                     <View className="flex-row items-center bg-neutral-50 dark:bg-darkBackgroundMuted border border-neutral-200 dark:border-darkBorder rounded-xl px-4 py-1">
                                         <Ionicons name="mail-outline" size={18} color={isDark ? "#6b7280" : "#9CA3AF"} />
                                         <TextInput
                                             className="flex-1 p-3 font-poppins-medium text-neutral-900 dark:text-darkTextPrimary"
-                                            placeholder="Enter email"
+                                            placeholder={translate("settings.profile.input.email")}
                                             value={user?.email || ""}
                                             keyboardType="email-address"
                                             autoCapitalize="none"
@@ -186,7 +189,7 @@ export default function EditProfileModal({ visible, onClose }: Props) {
                                         />
                                     </View>
                                     <Text className="text-[10px] font-poppins-regular text-textMuted dark:text-darkTextMuted mt-1.5 ml-1">
-                                        Email verification is required to update your email address.
+                                        {translate("settings.profile.emailDescription")}
                                     </Text>
                                 </View>
 
@@ -194,7 +197,7 @@ export default function EditProfileModal({ visible, onClose }: Props) {
                                 <View className="flex-row gap-3 mb-2">
                                     <View className="flex-1">
                                         <Button
-                                            label="Cancel"
+                                            label={translate("label.cancel")}
                                             variant="secondary"
                                             fullWidth
                                             onPress={onClose}
@@ -203,7 +206,7 @@ export default function EditProfileModal({ visible, onClose }: Props) {
                                     </View>
                                     <View className="flex-1">
                                         <Button
-                                            label="Save Changes"
+                                            label={translate("label.save")}
                                             variant="primary"
                                             fullWidth
                                             onPress={handleSave}
@@ -221,7 +224,7 @@ export default function EditProfileModal({ visible, onClose }: Props) {
             <AppModal
                 visible={errorVisible}
                 onClose={() => setErrorVisible(false)}
-                title="Error"
+                title={translate("error.title")}
                 message="Failed to save profile. Please try again."
                 buttons={[
                     {

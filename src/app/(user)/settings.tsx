@@ -8,20 +8,23 @@ import { Ionicons } from '@expo/vector-icons';
 import { useLocation } from "@/hooks/use-location";
 import { getCurrentLocation } from "@/services/location-service";
 import { useProfile } from "@/hooks/use-profile";
-import { useAuthActions } from "@/hooks/use-authActions";
 
 // Components
 import EditProfileModal from "@/components/settings/EditProfileModal";
 import { LogoutButton } from "@/components/settings/LogoutButton";
 import { UserProfileCard } from "@/components/settings/UserProfileCard";
 import { SecurityCard } from "@/components/settings/SecurityCard";
-import DarkModeToggle from "@/components/ui/dark-mode-toggle";
+import { LanguageCard } from "@/components/settings/LanguageCard";
+import { AppearanceCard } from "@/components/settings/AppearanceCard";
+import { useTranslation } from "react-i18next";
 
 // Services
 import { syncLocationService } from "@/services/settings-service";
 
 export default function UserSettings() {
   const [editModalVisible, setEditModalVisible] = useState(false);
+  const { t: translate } = useTranslation();
+
 
   const {
     user,
@@ -91,9 +94,8 @@ export default function UserSettings() {
     <SafeAreaView className="flex-1 bg-background dark:bg-darkBackground p-4">
       <View className="flex-row justify-between items-center mb-6">
         <Text className="text-2xl font-poppins-bold text-neutral-900 dark:text-darkTextPrimary">
-          Settings
+          {translate('settings.title')}
         </Text>
-        <DarkModeToggle />
       </View>
 
       {user && (
@@ -107,16 +109,20 @@ export default function UserSettings() {
       {/* Account Section */}
       <View>
         <Text className="text-sm font-poppins-semibold text-neutral-600 dark:text-darkTextSecondary mb-2">
-          ACCOUNT SETTINGS
+          {translate('settings.account.title')}
         </Text>
       </View>
 
-      <SecurityCard />
+      <View className="mx-4 mb-6 overflow-hidden bg-background dark:bg-darkBackgroundMuted rounded-2xl border border-neutral-200 dark:border-darkBorder">
+        <SecurityCard />
+        <LanguageCard />
+        <AppearanceCard />
+      </View>
 
       {/* Preferences Section */}
       <View>
         <Text className="text-sm font-poppins-semibold text-neutral-600 dark:text-darkTextSecondary mb-2">
-          NOTIFICATIONS & PRIVACY
+          {translate('settings.notificationsPrivacy.title')}
         </Text>
       </View>
 
@@ -127,10 +133,10 @@ export default function UserSettings() {
           </View>
           <View className="ml-3 flex-1">
             <Text className="text-base font-poppins-semibold text-neutral-800 dark:text-darkTextPrimary">
-              Nearby Alerts
+              {translate('settings.notificationsPrivacy.alerts.title')}
             </Text>
             <Text className="text-xs font-poppins-regular text-neutral-400 dark:text-darkTextMuted">
-              Get notified when rewards are close
+              {translate('settings.notificationsPrivacy.alerts.description')}
             </Text>
           </View>
           <Switch
@@ -141,7 +147,7 @@ export default function UserSettings() {
           />
         </View>
 
-        {/* Location Permission Toggle */}
+        {/* Location Permission Toggle CHANGE THIS TO MODAL PLS*/}
         <TouchableOpacity
           onPress={async () => {
             if (preferences.location_enabled) {
@@ -173,37 +179,16 @@ export default function UserSettings() {
           </View>
           <View className="ml-3 flex-1">
             <Text className="text-base font-poppins-semibold text-neutral-800 dark:text-darkTextPrimary">
-              Location Access
+              {translate('settings.notificationsPrivacy.location.title')}
             </Text>
             <Text className="text-xs font-poppins-regular text-neutral-400 dark:text-darkTextMuted">
-              {locationLoading ? "Checking..." : permissionStatus.granted ? "Access Granted" : "Access Denied"}
+              {locationLoading ? translate('settings.checking') : permissionStatus.granted ? translate('settings.notificationsPrivacy.location.allow') : translate('settings.notificationsPrivacy.location.denied')}
             </Text>
           </View>
           <View className="flex-row items-center">
-            <Text className="text-sm font-poppins-semibold text-primary mr-2">
-              {preferences.location_enabled ? 'Enabled' : 'Disabled'}
-            </Text>
             <Ionicons name="chevron-forward-outline" size={15} color="#d4d4d4" />
           </View>
         </TouchableOpacity>
-
-        {/* Promo Emails Switch */}
-        <View className="flex-row p-4 bg-background dark:bg-darkBackgroundMuted items-center">
-          <View className="h-8 w-8 items-center justify-center rounded-lg bg-pink-50">
-            <Ionicons name="megaphone-outline" size={18} color="#ad2291" />
-          </View>
-          <View className="ml-3 flex-1">
-            <Text className="text-base font-poppins-semibold text-neutral-800 dark:text-darkTextPrimary">
-              Promotional Emails
-            </Text>
-          </View>
-          <Switch
-            trackColor={{ false: '#d4d4d4', true: '#FF6600' }}
-            thumbColor="#FFFFFF"
-            value={preferences.promo_emails}
-            onValueChange={() => togglePreference('promo_emails')}
-          />
-        </View>
       </View>
 
       <LogoutButton />
@@ -211,7 +196,7 @@ export default function UserSettings() {
       {/* Footer */}
       <View className="mx-8 mt-6 items-center">
         <Text className="text-sm text-center font-poppins-regular text-neutral-500 dark:text-darkTextSecondary">
-          Copyright 2026
+          {translate("settings.copyright")} 2026
         </Text>
       </View>
 

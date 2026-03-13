@@ -86,7 +86,7 @@ export function Modal({
             styles.card,
             {
               width: MODAL_WIDTH,
-              backgroundColor: isDark ? "#0f172a" : "#ffffff",
+              backgroundColor: isDark ? "#404040" : "#ffffff",
               borderColor: isDark ? "#1e293b" : "#e2e8f0",
             },
           ]}

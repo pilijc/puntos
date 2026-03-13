@@ -11,12 +11,15 @@ import { softDeleteUserAccountService } from "@/services/settings-service";
 // Components
 import { Modal } from "@/components/modal";
 import ChangePasswordModal from "@/components/settings/ChangePasswordModal";
+import { useTranslation } from "react-i18next";
+
 
 export const SecurityCard = () => {
     const [isOpen, setIsOpen] = useState(false);
     const [changePasswordVisible, setChangePasswordVisible] = useState(false);
     const [deleteModalVisible, setDeleteModalVisible] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
+    const { t: translate } = useTranslation();
 
     const toggleOpen = () => {
         LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
@@ -41,18 +44,18 @@ export const SecurityCard = () => {
 
     return (
         <>
-            <View className="mx-4 mb-6 bg-background dark:bg-darkBackgroundMuted rounded-2xl p-4 border border-neutral-200 dark:border-darkBorder overflow-hidden">
+            <View className="bg-background dark:bg-darkBackgroundMuted p-4 border-t border-neutral-200 dark:border-darkBorder overflow-hidden">
                 <TouchableOpacity
                     onPress={toggleOpen}
                     className="flex-row items-center"
                     activeOpacity={0.7}
                 >
-                    <View className="h-10 w-10 rounded-lg bg-blue-50 dark:bg-blue-900/20 items-center justify-center">
-                        <Ionicons name="shield-checkmark-outline" size={18} color="#3b82f6" />
+                    <View className="h-8 w-8 rounded-lg bg-blue-50 dark:bg-blue-900/20 items-center justify-center">
+                        <Ionicons name="shield-checkmark-outline" size={15} color="#3b82f6" />
                     </View>
 
                     <Text className="flex-1 ml-3 text-base font-poppins-semibold text-neutral-800 dark:text-darkTextPrimary">
-                        Security
+                        {translate('settings.account.security.title')}
                     </Text>
 
                     <Ionicons
@@ -74,7 +77,7 @@ export const SecurityCard = () => {
                             activeOpacity={0.6}
                         >
                             <Text className="flex-1 text-sm font-poppins-medium text-neutral-600 dark:text-darkTextSecondary">
-                                Change Password
+                                {translate('settings.account.security.changePassword.title')}
                             </Text>
                             <Ionicons name="chevron-forward" size={14} color="#94a3b8" />
                         </TouchableOpacity>
@@ -89,7 +92,7 @@ export const SecurityCard = () => {
                             activeOpacity={0.6}
                         >
                             <Text className="flex-1 text-sm font-poppins-medium text-danger">
-                                Delete Account
+                                {translate('settings.account.security.deleteAccount.title')}
                             </Text>
                             <Ionicons name="chevron-forward" size={14} color="#94a3b8" />
                         </TouchableOpacity>
@@ -105,16 +108,16 @@ export const SecurityCard = () => {
             <Modal
                 visible={deleteModalVisible}
                 onClose={() => setDeleteModalVisible(false)}
-                title="Delete Account"
-                message="Are you sure you want to delete your account? This action cannot be undone."
+                title={translate("settings.account.security.deleteAccount.title")}
+                message={translate("settings.account.security.deleteAccount.description")}
                 buttons={[
                     {
-                        label: "Cancel",
+                        label: translate("label.cancel"),
                         variant: "secondary",
                         onPress: () => setDeleteModalVisible(false)
                     },
                     {
-                        label: "Delete",
+                        label: translate("label.delete"),
                         variant: "danger",
                         onPress: handleDeleteAccount,
                         loading: isDeleting
