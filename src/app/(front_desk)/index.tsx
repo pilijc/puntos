@@ -41,9 +41,9 @@ export default function FrontDeskScan() {
   }, []);
   
   useEffect(() => {
-    // Set up the global handler
-    const handleQRPress = () => {
-      setShowPriceModal(true);
+    const handleQRPress = async () => {
+        setShowPriceModal(true);
+        router.replace("/(front_desk)");
     };
     
     (global as any).handleCenterQRButton = handleQRPress;
