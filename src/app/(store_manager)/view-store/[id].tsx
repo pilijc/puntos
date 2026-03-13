@@ -252,6 +252,17 @@ export default function ViewStore() {
           })}
         </View>
 
+        {activeTab === 0 && (
+          <View className="flex-1 items-center gap-y-3 py-2 px-4">
+            <View className="flex-1 justify-center items-center w-full gap-y-3">
+              <MaterialIcons name="people-alt" size={40} color="#94A3B8" />
+              <Text className="text-sm font-poppins text-slate-400 dark:text-slate-500 text-center">
+                No staff yet. Add your first one!
+              </Text>
+            </View>
+          </View>
+        )}
+
         {activeTab === 1 && (
           <View className="px-4 elevation-0.5 mt-4">
             {FEATURES.map((featureItem) => {
@@ -356,15 +367,6 @@ export default function ViewStore() {
           </View>
         )}
 
-        {activeTab === 0 && (
-          <View className="pt-16 items-center gap-y-3">
-            <MaterialIcons name="construction" size={40} color="#64748B" />
-            <Text className="text-sm font-poppins text-slate-500 dark:text-slate-500">
-              Coming soon
-            </Text>
-          </View>
-        )}
-
         {activeTab === 2 && (
           <View className="px-4 mt-4 gap-y-3">
             {rewards.length === 0 ? (
@@ -425,6 +427,16 @@ export default function ViewStore() {
           className="absolute bottom-8 right-6 w-14 h-14 rounded-full bg-primary items-center justify-center shadow-lg"
           activeOpacity={0.85}
           onPress={() => router.push({ pathname: "/(store_manager)/rewards", params: { storeId } })}
+        >
+          <MaterialIcons name="add" size={28} color="#fff" />
+        </TouchableOpacity>
+      )}
+
+      {activeTab === 0 && (
+        <TouchableOpacity
+          className="absolute bottom-8 right-6 w-14 h-14 rounded-full bg-primary items-center justify-center shadow-lg"
+          activeOpacity={0.85}
+          onPress={() => router.push({ pathname: "/(store_manager)/add-staff", params: { storeId } })}
         >
           <MaterialIcons name="add" size={28} color="#fff" />
         </TouchableOpacity>
