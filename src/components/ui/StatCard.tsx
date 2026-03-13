@@ -20,7 +20,7 @@ export const StatCard = ({ label, val, icon }: any) => (
       </View>
 
       <View className="items-center">
-        <Text className="text-[10px] font-poppins-bold text-[#94A3B8]">{label}</Text>
+        <Text className="text-[10px] font-poppins text-textMuted">{label}</Text>
       </View>
     </View>
   </View>
