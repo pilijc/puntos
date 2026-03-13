@@ -124,6 +124,14 @@ export default function StoreManagerLayout() {
                 name="view-streak"
                 options={{ href: null }}
             />
+            <Tabs.Screen
+                name="view-staff"
+                options={{ href: null }}
+            />
+             <Tabs.Screen
+                name="add-staff"
+                options={{ href: null }}
+            />
         </Tabs>
     );
 }
