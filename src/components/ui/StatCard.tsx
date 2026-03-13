@@ -2,21 +2,26 @@ import React from "react";
 import { View, Text } from "@/tw";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 
-const SOFT_CARD_SHADOW = {
-  shadowColor: "#0F172A",
-  shadowOffset: { width: 0, height: 1 },
-  shadowOpacity: 0.04,
-  shadowRadius: 6,
-  elevation: 2,
-};
-
-export const StatCard = ({ label, val, icon, color }: any) => (
+export const StatCard = ({ label, val, icon }: any) => (
   <View 
-    style={[SOFT_CARD_SHADOW, { backgroundColor: "#FFF", borderRadius: 16, paddingVertical: 14, borderWidth: 1, borderColor: "#F1F5F9" }]}
-    className="flex-1 items-center" 
+    style={{ 
+      backgroundColor: "#FFF", 
+      borderRadius: 16, 
+      paddingVertical: 14, 
+      borderWidth: 1, 
+      borderColor: "#F1F5F9" 
+    }}
+    className="flex-1 px-4 py-3"
   >
-    <MaterialIcons name={icon} size={16} color={color} />
-    <Text className="text-[18px] font-poppins-bold text-textPrimary">{val}</Text>
-    <Text className="text-[8px] font-poppins-bold text-textMuted uppercase">{label}</Text>
+    <View className="flex-1 justify-between">
+      <View className="flex-row items-center justify-center gap-x-2">
+        <MaterialIcons name={icon} size={16} color="#0F172A" />
+        <Text className="text-[20px] font-poppins-bold text-primary">{val}</Text>
+      </View>
+
+      <View className="items-center">
+        <Text className="text-[10px] font-poppins-bold text-[#94A3B8]">{label}</Text>
+      </View>
+    </View>
   </View>
 );
