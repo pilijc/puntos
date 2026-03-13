@@ -174,8 +174,7 @@ export default function SignUp() {
   };
 
   const handleSignup = async () => {
-    // Prevent multiple simultaneous calls using ref for immediate check
-    if (isSigningUp.current) {
+     if (isSigningUp.current) {
       console.log("Signup already in progress (ref check), ignoring call");
       return;
     }
@@ -263,7 +262,7 @@ export default function SignUp() {
         Alert.alert("Store Manager Signup Failed", "Email is already registered. Please login instead.", [
           {
             text: "Try Different Email",
-            onPress: () => setCurrentStep(2) // Go back to email step
+            onPress: () => setCurrentStep(2) 
           },
           {
             text: "Go to Login",

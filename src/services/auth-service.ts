@@ -5,9 +5,6 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { getHomeRouteForUserId } from "./access-service";
 import { router } from "expo-router";
 
-/**
- * Custom error thrown when an account has been marked as deleted.
- */
 export class AccountDeletedError extends Error {
   constructor() {
     super("Invalid login credentials.");
@@ -15,10 +12,6 @@ export class AccountDeletedError extends Error {
   }
 }
 
-/**
- * Checks if a user's account has been soft-deleted.
- * If deleted, it signs the user out and throws an AccountDeletedError.
- */
 export async function checkIfAccountDeletedService(userId: string): Promise<void> {
   const { data: userSettings, error } = await supabase
     .from("user_settings")
@@ -34,9 +27,6 @@ export async function checkIfAccountDeletedService(userId: string): Promise<void
   }
 }
 
-/**
- * Soft-deletes a user account by setting the deleted_at timestamp.
- */
 export async function softDeleteUserService(userId: string): Promise<void> {
   const { error } = await supabase
     .from("user_settings")
@@ -78,12 +68,9 @@ export default async function signUpService(email: string, password: string, nam
         name,
         email
       });
-    } else {
-      console.log("User already exists in users table, skipping insert");
-    }
-
+    } 
     const roleToId: Record<string, number> = { user: 4, manager: 2 };
-    const roleId = roleToId[role] || 4; // Default to 'user' role if not found
+    const roleId = roleToId[role] || 4;  
 
 
 
@@ -94,19 +81,16 @@ export default async function signUpService(email: string, password: string, nam
     });
 
     if (roleError) {
-      console.error("Role insertion failed:", roleError);
+      //console.error("Role insertion failed:", roleError);
       throw roleError;
     }
-
-    console.log("Role insertion successful:", roleInsertData);
-
+    //console.log("Role insertion successful:", roleInsertData);
     const homeRoute = await getHomeRouteForUserId(userId);
     return { ...data, homeRoute};
   } catch (error) {
     throw error;
   }
 }
-
 
 export class GoogleSignInCancelledError extends Error {
   constructor() {
@@ -159,10 +143,9 @@ export async function signUpWithGoogleService() {
           if (insertError) {
             throw insertError;
           }
-          // Assign default role 'user'
+         
           await supabase.from("user_roles").insert({ user_id: data.user.id, role_id: 4, store_id: null });
         } else {
-          // User exists but might not have a role, check and assign if needed
           const { data: existingRole } = await supabase
             .from("user_roles")
             .select("role_id")
@@ -170,7 +153,6 @@ export async function signUpWithGoogleService() {
             .maybeSingle();
           
           if (!existingRole) {
-            //console.log("Existing Google user has no role, assigning default user role");
             await supabase.from("user_roles").insert({ user_id: data.user.id, role_id: 4, store_id: null });
           }
         }
@@ -259,26 +241,24 @@ export async function signInWithGoogleLoginService() {
       } else if (error) {
         throw error;
       }
-
       return { ...data, homeRoute };
     }
   } catch (error: any) {
     throw error;
   }
 }
+
 export async function isEmailTaken(email: string): Promise<boolean> {
   const { data, error } = await supabase
-    .from("users")       // your public users table
+    .from("users")       
     .select("id")
     .eq("email", email)
     .maybeSingle();
 
   if (error) {
-    console.error("Error checking email:", error);
-    return false; // treat as not taken to avoid blocking signup
+    return false;  
   }
-
-  return !!data; // true if user exists
+  return !!data;  
 }
 
 
