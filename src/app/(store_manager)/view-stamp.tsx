@@ -506,7 +506,7 @@ export default function ViewStamp() {
           {/* New program CTA — shown below active stamp */}
           {activeTab === "active" && activeStamps.length === 0 && (
             <TouchableOpacity
-              className="w-full border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-2xl py-6 items-center gap-y-2"
+              className="w-full border border-dashed border-slate-200 dark:border-slate-700 rounded-2xl py-6 items-center gap-y-2"
               activeOpacity={0.7}
               onPress={() => router.push({ pathname: "/(store_manager)/configure-stamp", params: { storeId } })}
             >
