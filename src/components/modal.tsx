@@ -108,7 +108,7 @@ export function Modal({
                 <MaterialIcons
                   name="close"
                   size={18}
-                  color={isDark ? "#94A3B8" : "#64748B"}
+                  color={isDark ? "#262626" : "#64748B"}
                 />
               </TouchableOpacity>
             )}

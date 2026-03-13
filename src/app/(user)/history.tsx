@@ -81,7 +81,7 @@ export default function History() {
             {!searchOpen ? (
               <>
                 <View>
-                  <Text className="text-neutral-900 dark:text-darkTextPrimary text-2xl font-poppins-bold">
+                  <Text className="text-neutral-900 dark:text-darkTextPrimary text-xl font-poppins-bold">
                     {translate("activity.title")}
                   </Text>
                 </View>
@@ -235,7 +235,7 @@ function HistoryItem({ title, subtitle, time, points, positive, image, icon }) {
     <TouchableOpacity activeOpacity={1} onPressIn={handlePressIn} onPressOut={handlePressOut}>
       <Animated.View
         style={{ transform: [{ scale: scaleAnim }] }}
-        className="bg-white dark:bg-darkBackgroundMuted rounded-2xl p-4 mb-3 border border-neutral-100 dark:border-darkBorder"
+        className="bg-white dark:bg-darkBackgroundMuted rounded-xl p-4 mb-3 border border-neutral-100 dark:border-darkBorder"
       >
         <View className="flex-row items-center justify-between">
           <View className="flex-row items-center flex-1">

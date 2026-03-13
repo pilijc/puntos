@@ -497,7 +497,7 @@ export default function Rewards() {
         }
       >
         <View className="flex-row items-center justify-between">
-          <Text className="text-2xl font-poppins-bold text-neutral-900 dark:text-darkTextPrimary">
+          <Text className="text-xl font-poppins-bold text-neutral-900 dark:text-darkTextPrimary">
             {translate("rewards.title")}
           </Text>
           <TouchableOpacity
@@ -541,7 +541,7 @@ export default function Rewards() {
                     <View className="absolute inset-0 bg-neutral-900/40" />
 
                     <View className="absolute bottom-20 left-6 right-6 z-10">
-                      <Text className="text-2xl font-poppins-bold text-white" numberOfLines={1}>
+                      <Text className="text-xl font-poppins-bold text-white" numberOfLines={1}>
                         {store.name}
                       </Text>
 
@@ -595,7 +595,7 @@ export default function Rewards() {
                       <View className="absolute inset-0 bg-neutral-900/40" />
                       {/* Store Tab View [when stores are nearby] */}
                       <View className="absolute top-22 left-6 right-6 z-10">
-                        <Text className="text-2xl font-poppins-bold text-white" numberOfLines={1}>
+                        <Text className="text-xl font-poppins-bold text-white" numberOfLines={1}>
                           {store.name}
                         </Text>
 
@@ -632,7 +632,7 @@ export default function Rewards() {
 
           <AnimatedView
             layout={Layout.duration(260).easing(Easing.out(Easing.cubic))}
-            className="bg-white dark:bg-darkBackgroundCard rounded-2xl p-4 gap-y-3 -mt-6 mx-1"
+            className="bg-white dark:bg-darkBackgroundCard rounded-xl p-4 gap-y-3 -mt-6 mx-1"
           >
             <View className="flex-row items-center justify-between">
               <Pressable
@@ -761,7 +761,7 @@ export default function Rewards() {
           {nearbyStores.length > 0 && displayStreaks.length === 0 && displayStamps.length === 0 && (
             <AnimatedView
               entering={FadeIn.duration(400)}
-              className="bg-white dark:bg-darkBackgroundMuted rounded-2xl p-8 items-center border border-neutral-100 dark:border-darkBorder mx-1"
+              className="bg-white dark:bg-darkBackgroundMuted rounded-xl p-8 items-center border border-neutral-100 dark:border-darkBorder mx-1"
             >
               <MaterialIcons name="event-note" size={40} color="#FF6600" />
               <Text className="text-neutral-900 dark:text-white font-poppins-bold text-lg mt-3 text-center">
@@ -819,7 +819,7 @@ export default function Rewards() {
                   return (
                     <AnimatedView
                       layout={Layout.duration(300)}
-                      className="bg-white dark:bg-darkBackgroundMuted rounded-2xl border border-neutral-100 dark:border-darkBorder overflow-hidden mx-1"
+                      className="bg-white dark:bg-darkBackgroundMuted rounded-xl border border-neutral-100 dark:border-darkBorder overflow-hidden mx-1"
                     >
                       <View className="p-3">
                         <View className="flex-row items-center justify-between">
@@ -930,7 +930,7 @@ export default function Rewards() {
             /* Away Mode Placeholder */
             nearbyStores.length === 0 && (
               <View
-                className="bg-white dark:bg-darkBackgroundMuted rounded-2xl p-6 items-center mx-1"
+                className="bg-white dark:bg-darkBackgroundMuted rounded-xl p-6 items-center mx-1"
               >
                 <MaterialIcons name="stars" size={32} color="#d1d5db" className="mb-2" />
                 <Text className="text-neutral-500 font-poppins-semibold text-sm mt-2">{translate("rewards.noActiveStamps")}</Text>
@@ -989,7 +989,7 @@ export default function Rewards() {
                   return (
                     <AnimatedView
                       layout={Layout.duration(300)}
-                      className="bg-white dark:bg-darkBackgroundMuted rounded-2xl border border-neutral-100 dark:border-darkBorder overflow-hidden mx-1"
+                      className="bg-white dark:bg-darkBackgroundMuted rounded-xl border border-neutral-100 dark:border-darkBorder overflow-hidden mx-1"
                     >
                       <Pressable
                         onPress={() => setIsStampLogOpen((prev) => !prev)}
@@ -1108,10 +1108,10 @@ export default function Rewards() {
                           layout={Layout.duration(250)}
                           className="px-3 pb-3 pt-1 border-t border-neutral-50 dark:border-darkBorder bg-neutral-50/10"
                         >
-                          <View className="flex-row items-center justify-between border border-primary/10 bg-primary/5 dark:bg-primary/10 rounded-2xl p-3">
+                          <View className="flex-row items-center justify-between border border-primary/10 bg-primary/5 dark:bg-primary/10 rounded-xl p-3">
                             <View className="flex-row items-center gap-x-3 flex-1">
                               <View className="relative">
-                                <View className="w-14 h-14 rounded-2xl bg-white dark:bg-darkBackgroundCard items-center justify-center overflow-hidden border border-primary/5">
+                                <View className="w-14 h-14 rounded-xl bg-white dark:bg-darkBackgroundCard items-center justify-center overflow-hidden border border-primary/5">
                                   <MaterialIcons name="monetization-on" size={28} color="#FF6600" />
                                 </View>
                                 {clampedCount >= targetCount && (

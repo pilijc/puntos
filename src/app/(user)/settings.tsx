@@ -38,8 +38,6 @@ export default function UserSettings() {
     }, [])
   );
 
-
-
   React.useEffect(() => {
     let intervalId: NodeJS.Timeout;
 
@@ -81,7 +79,7 @@ export default function UserSettings() {
   return (
     <SafeAreaView className="flex-1 bg-background dark:bg-darkBackground p-4">
       <View className="flex-row justify-between items-center mb-6">
-        <Text className="text-2xl font-poppins-bold text-neutral-900 dark:text-darkTextPrimary">
+        <Text className="text-xl font-poppins-bold text-neutral-900 dark:text-darkTextPrimary">
           {translate('settings.title')}
         </Text>
       </View>
@@ -101,7 +99,7 @@ export default function UserSettings() {
         </Text>
       </View>
 
-      <View className="mx-4 mb-6 overflow-hidden bg-background dark:bg-darkBackgroundMuted rounded-2xl border border-neutral-200 dark:border-darkBorder">
+      <View className="mx-4 mb-6 overflow-hidden bg-background dark:bg-darkBackgroundMuted rounded-xl border border-neutral-200 dark:border-darkBorder">
         <SecurityCard />
         <LanguageCard />
         <AppearanceCard />
@@ -114,7 +112,7 @@ export default function UserSettings() {
         </Text>
       </View>
 
-      <View className="mx-4 mb-6 overflow-hidden bg-background dark:bg-darkBackgroundMuted rounded-2xl border border-neutral-200 dark:border-darkBorder">
+      <View className="mx-4 mb-6 overflow-hidden bg-background dark:bg-darkBackgroundMuted rounded-xl border border-neutral-200 dark:border-darkBorder">
         <NotificationCard />
         <LocationCard />
       </View>
