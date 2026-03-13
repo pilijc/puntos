@@ -1,29 +1,32 @@
 import React from "react";
-import { Image, TouchableOpacity } from "react-native";
+import { Image } from "react-native";
 import { View, Text } from "@/tw";
+import { Button } from "@/components/button";
 
-const SOFT_CARD_SHADOW = {
-  shadowColor: "#0F172A",
-  shadowOffset: { width: 0, height: 1 },
-  shadowOpacity: 0.04,
-  shadowRadius: 6,
-  elevation: 2,
-};
+const SOFT_CARD_SHADOW = {};
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; dot: string; bg: string }> = {
   ACTIVE: { label: "Active", color: "#16A34A", dot: "#22C55E", bg: "#F0FDF4" },
-  PENDING: { label: "Pending", color: "#2563EB", dot: "#3B82F6", bg: "#EFF6FF" }, // The "Blue" status
+  PENDING: { label: "Pending", color: "#2563EB", dot: "#3B82F6", bg: "#EFF6FF" }, 
   INACTIVE: { label: "Inactive", color: "#DC2626", dot: "#EF4444", bg: "#FEF2F2" },
 };
 
-export const StoreCard = ({ store }: any) => {
+type StoreCardProps = {
+  store: any;
+  onEdit?: (store: any) => void;
+  onActivate?: (store: any) => void;
+  onDeactivate?: (store: any) => void;
+};
+
+export const StoreCard = ({ store, onEdit, onActivate, onDeactivate }: StoreCardProps) => {
   const status = store.status?.toUpperCase() ?? "INACTIVE";
   const cfg = STATUS_CONFIG[status] || STATUS_CONFIG["INACTIVE"];
-  
+  const isActive = status === "ACTIVE";
+
   return (
     <View 
       style={[SOFT_CARD_SHADOW, { backgroundColor: "#FFF", borderRadius: 16, padding: 16, borderWidth: 1, borderColor: "#F1F5F9" }]}
-      className="mb-3"
+      className="mb-2"
     >
       <View className="flex-row justify-between items-start mb-4">
         <View className="flex-row flex-1 items-center">
@@ -52,14 +55,31 @@ export const StoreCard = ({ store }: any) => {
       </View>
 
       <View className="flex-row gap-2">
-        <TouchableOpacity className="flex-1 py-2.5 rounded-xl items-center bg-[#F8FAFC] border border-[#E2E8F0]">
-          <Text className="text-xs font-poppins-bold text-textSecondary">Edit</Text>
-        </TouchableOpacity>
-        <TouchableOpacity className="flex-1 py-2.5 rounded-xl items-center bg-[#FFF5F5] border border-[#FEE2E2]">
-          <Text className="text-xs font-poppins-bold text-[#DC2626]">
-            {status === "ACTIVE" ? "Deactivate" : "Activate"}
-          </Text>
-        </TouchableOpacity>
+        <View className="flex-1">
+          <Button
+            label="Edit"
+            variant="secondary"
+            onPress={() => onEdit?.(store)}
+            fullWidth
+          />
+        </View>
+        <View className="flex-1">
+          {isActive ? (
+            <Button
+              label="Deactivate"
+              variant="danger"
+              onPress={() => onDeactivate?.(store)}
+              fullWidth
+            />
+          ) : (
+            <Button
+              label="Activate"
+              variant="success"
+              onPress={() => onActivate?.(store)}
+              fullWidth
+            />
+          )}
+        </View>
       </View>
     </View>
   );

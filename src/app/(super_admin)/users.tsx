@@ -37,11 +37,16 @@ const TYPO = {
 };
 
 const ROLE_CONFIG: Record<string, { bg: string; text: string }> = {
-  "s-admin": { bg: "bg-amber-100", text: "text-amber-700" },
-  Manager: { bg: "bg-purple-100", text: "text-purple-600" },
-  Staff: { bg: "bg-blue-100", text: "text-blue-600" },
-  User: { bg: "bg-slate-100", text: "text-slate-600" },
-  Blocked: { bg: "bg-red-100", text: "text-red-600" },
+  // Keep roles consistent (orange), only "Blocked" stays red.
+  "s-admin": { bg: "bg-transparent", text: "text-primary" },
+  super_admin: { bg: "bg-transparent", text: "text-primary" },
+  Manager: { bg: "bg-transparent", text: "text-primary" },
+  manager: { bg: "bg-transparent", text: "text-primary" },
+  Staff: { bg: "bg-transparent", text: "text-primary" },
+  front_desk: { bg: "bg-transparent", text: "text-primary" },
+  User: { bg: "bg-transparent", text: "text-primary" },
+  user: { bg: "bg-transparent", text: "text-primary" },
+  Blocked: { bg: "bg-transparent", text: "text-red-600" },
 };
 
 export default function UsersScreen() {
