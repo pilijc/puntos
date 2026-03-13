@@ -15,7 +15,10 @@ import { router, useFocusEffect } from "expo-router";
 import * as Location from "expo-location";
 import { distance, point } from "@turf/turf";
 import Carousel from "react-native-reanimated-carousel";
-import { Dimensions } from "react-native";
+import { Alert, ActivityIndicator, RefreshControl, Dimensions } from "react-native";
+import { useStamps } from "@/hooks/use-stamps";
+import { useStampRewards } from "@/hooks/use-stamp-rewards";
+import { useTranslation } from "react-i18next";
 import RewardCard from "@/components/rewards/RewardCard";
 import SortPill from "@/components/rewards/SortPill";
 import { rewards, storeLogos } from "@/data/rewards";
@@ -34,16 +37,13 @@ import {
 } from "@/services/stamp-service";
 import { getStores } from "@/services/store-service";
 import { supabase } from "@/supabase/supabase";
-import { Alert, ActivityIndicator, RefreshControl } from "react-native";
-import { useStamps } from "@/hooks/use-stamps";
-import { useStampRewards } from "@/hooks/use-stamp-rewards";
 
 const { width: screenWidth } = Dimensions.get("window");
 
 const rewardSortOptions = [
-  { id: "popular", label: "Popular" },
-  { id: "points", label: "Points" },
-  { id: "newest", label: "Newest" },
+  { id: "popular", label: "popular" },
+  { id: "points", label: "points" },
+  { id: "newest", label: "newest" },
 ] as const;
 
 export default function Rewards() {
@@ -53,6 +53,7 @@ export default function Rewards() {
     setRewardSort,
     setRewardPointsOrder,
   } = useRewardsUiStore();
+  const { t: translate } = useTranslation();
   const { stores, setStores } = useStoreStore();
   const [isNearbyOpen, setIsNearbyOpen] = useState(false);
   const [isStampLogOpen, setIsStampLogOpen] = useState(false);
@@ -390,28 +391,28 @@ export default function Rewards() {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user?.id) {
-        Alert.alert("Error", "You must be logged in to stamp.");
+        Alert.alert("Error", translate("rewards.messages.signInToStamp"));
         setIsStamping(false);
         return;
       }
 
       const result = await addStamp(user.id, storeId.toString());
       if (result.success) {
-        Alert.alert("Success!", "You have successfully collected a stamp!");
+        Alert.alert("Success!", translate("rewards.messages.stampSuccess"));
         refetchStamps();
         refetchStampRewards();
       } else {
         if (result.reason === "already_stamped_today") {
-          Alert.alert("Notice", "You have already stamped at this store today.");
+          Alert.alert("Notice", translate("rewards.messages.alreadyStamped"));
         } else if (result.reason === "stamp_not_enabled") {
-          Alert.alert("Notice", "This store currently has stamps disabled.");
+          Alert.alert("Notice", translate("rewards.messages.stampDisabled"));
         } else {
-          Alert.alert("Error", "Failed to collect stamp. Please try again.");
+          Alert.alert("Error", translate("rewards.messages.stampFailed"));
         }
       }
     } catch (e) {
       console.error(e);
-      Alert.alert("Error", "Something went wrong.");
+      Alert.alert("Error", translate("rewards.messages.error"));
     } finally {
       setIsStamping(false);
     }
@@ -497,14 +498,14 @@ export default function Rewards() {
       >
         <View className="flex-row items-center justify-between">
           <Text className="text-2xl font-poppins-bold text-neutral-900 dark:text-darkTextPrimary">
-            Rewards
+            {translate("rewards.title")}
           </Text>
           <TouchableOpacity
             onPress={() => router.push("/store/stores")}
             className="px-3 py-2 rounded-full border border-neutral-200 dark:border-darkBorder bg-white dark:bg-darkBackgroundMuted"
           >
             <Text className="text-xs font-poppins-semibold text-neutral-700 dark:text-darkTextSoft">
-              VIEW STORES
+              {translate("rewards.viewStores")}
             </Text>
           </TouchableOpacity>
         </View>
@@ -549,12 +550,12 @@ export default function Rewards() {
                           className="bg-white/20 px-2 py-0.5 self-start"
                           style={{ borderRadius: 8 }}
                         >
-                          <Text className="text-[10px] text-white font-poppins-medium uppercase">{store.type || "Store"}</Text>
+                          <Text className="text-[10px] text-white font-poppins-medium uppercase">{store.type || translate("rewards.store")}</Text>
                         </View>
                         <View className="flex-row items-center gap-x-1">
                           <MaterialIcons name="place" size={14} color="#FFFFFF" />
                           <Text className="text-white/90 font-poppins text-xs flex-1" numberOfLines={1}>
-                            {store.address || "Unknown Location"} • {store.distanceMeters?.toLocaleString(undefined, { maximumFractionDigits: 2 }) ?? "0"} meters away
+                            {store.address || translate("rewards.unknownLocation")} • {translate("rewards.distanceMeters", { meters: store.distanceMeters?.toLocaleString(undefined, { maximumFractionDigits: 2 }) ?? "0" })}
                           </Text>
                         </View>
                       </View>
@@ -566,7 +567,7 @@ export default function Rewards() {
               <>
                 <View className="absolute top-15 left-6 z-20">
                   <View className="bg-primary/90 self-start px-2 py-0.5 rounded-sm mb-2">
-                    <Text className="text-[10px] text-white font-poppins-semibold tracking-wider">DISCOVER PARTNERS</Text>
+                    <Text className="text-[10px] text-white font-poppins-semibold tracking-wider">{translate("rewards.discoverPartners")}</Text>
                   </View>
                 </View>
                 <Carousel
@@ -603,7 +604,7 @@ export default function Rewards() {
                             className="bg-white/20 px-2 py-0.5 self-start"
                             style={{ borderRadius: 8 }}
                           >
-                            <Text className="text-[10px] text-white font-poppins-medium uppercase">{store.type || "Store"}</Text>
+                            <Text className="text-[10px] text-white font-poppins-medium uppercase">{store.type || translate("rewards.store")}</Text>
                           </View>
                           <View className="flex-row items-center gap-x-1">
                             <MaterialIcons name="storefront" size={14} color="#FFFFFF" />
@@ -653,15 +654,15 @@ export default function Rewards() {
                     adjustsFontSizeToFit
                   >
                     {nearbyStores.length > 1
-                      ? `${nearbyStores.length} stores are within range!`
+                      ? translate("rewards.range.multiple", { count: nearbyStores.length })
                       : nearbyStores.length === 1
-                        ? "You are within range!"
-                        : "Not in range of any store"}
+                        ? translate("rewards.range.single")
+                        : translate("rewards.range.empty")}
                   </Text>
                   <Text className="text-neutral-500 dark:text-neutral-400 text-[11px] font-poppins mt-1" numberOfLines={1}>
                     {nearbyStores.length > 0
-                      ? "Make a purchase to earn a stamp"
-                      : "Explore other branches"}
+                      ? translate("rewards.range.promptNearby")
+                      : translate("rewards.range.promptFar")}
                   </Text>
                 </View>
                 {nearbyStores.length > 0 && (
@@ -678,7 +679,7 @@ export default function Rewards() {
                   onPress={() => router.push("/")}
                 >
                   <Text className="font-poppins-semibold text-xs text-white">
-                    EXPLORE
+                    {translate("rewards.explore")}
                   </Text>
                 </TouchableOpacity>
               ) : (
@@ -727,7 +728,7 @@ export default function Rewards() {
                           {store.name}
                         </Text>
                         <Text className="text-neutral-500 dark:text-neutral-400 text-xs font-poppins mt-1">
-                          {store.address} • {store.distanceMeters?.toLocaleString(undefined, { maximumFractionDigits: 2 }) ?? "0"} meters
+                          {store.address} • {translate("rewards.distanceMeters", { meters: store.distanceMeters?.toLocaleString(undefined, { maximumFractionDigits: 2 }) ?? "0" })}
                         </Text>
                       </View>
                     </View>
@@ -742,7 +743,7 @@ export default function Rewards() {
                           <ActivityIndicator size="small" color="#FF6600" />
                         ) : (
                           <Text className={`text-[10px] font-poppins-semibold ${hasStampedToday(store.id) ? "text-neutral-500" : "text-white"}`}>
-                            {hasStampedToday(store.id) ? "STAMPED" : "STAMP"}
+                            {hasStampedToday(store.id) ? translate("rewards.buttons.stamped") : translate("rewards.buttons.stamp")}
                           </Text>
                         )}
                       </TouchableOpacity>
@@ -764,10 +765,10 @@ export default function Rewards() {
             >
               <MaterialIcons name="event-note" size={40} color="#FF6600" />
               <Text className="text-neutral-900 dark:text-white font-poppins-bold text-lg mt-3 text-center">
-                Watch out for upcoming events!
+                {translate("rewards.upcomingEvents.title")}
               </Text>
               <Text className="text-neutral-500 text-center font-poppins text-xs mt-1 px-4">
-                This store doesn't have active rewards right now. Check back soon for stamps and streaks!
+                {translate("rewards.upcomingEvents.subtitle")}
               </Text>
             </AnimatedView>
           )}
@@ -787,15 +788,23 @@ export default function Rewards() {
                 onSnapToItem={(index) => setCarouselIndex(index)}
                 renderItem={({ item: streak }) => {
                   const storeStr = streak.stores as any;
-                  const storeName = storeStr?.name ?? "Store";
-                  const storeAddress = storeStr?.address ?? "Unknown Location";
+                  const storeName = storeStr?.name ?? translate("rewards.store");
+                  const storeAddress = storeStr?.address ?? translate("rewards.unknownLocation");
                   const nearby = nearbyStores.some((s) => Number(s.id) === Number(streak.store_id)) ||
                     isStoreNearby(storeStr?.latitude, storeStr?.longitude);
 
                   // Mocking streak progress for UI: use 3 days completed for now
                   const clampedCount = 3;
                   const targetCount = 7;
-                  const streakDays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+                  const streakDays = [
+                    translate("rewards.days.mon"),
+                    translate("rewards.days.tue"),
+                    translate("rewards.days.wed"),
+                    translate("rewards.days.thu"),
+                    translate("rewards.days.fri"),
+                    translate("rewards.days.sat"),
+                    translate("rewards.days.sun")
+                  ];
 
                   const days = streakDays.map((label, index) => ({
                     label: label,
@@ -817,7 +826,7 @@ export default function Rewards() {
                           <View className="flex-row items-center gap-x-2">
                             <MaterialIcons name="local-fire-department" size={18} color="#FF6600" />
                             <Text className="font-poppins-semibold text-neutral-900 dark:text-white">
-                              Streak Log
+                              {translate("rewards.streakLog")}
                             </Text>
                           </View>
                           <View className="flex-row items-center gap-x-3">
@@ -825,7 +834,7 @@ export default function Rewards() {
                               <View className="bg-green-100 dark:bg-green-900/30 px-2.5 py-1 rounded-full flex-row items-center gap-x-1">
                                 <View className="w-1.5 h-1.5 rounded-full bg-green-500" />
                                 <Text className="text-[10px] font-poppins-semibold text-green-700 dark:text-green-400">
-                                  Nearby
+                                  {translate("rewards.nearby")}
                                 </Text>
                               </View>
                             )}
@@ -834,7 +843,7 @@ export default function Rewards() {
                               className="px-2 py-1 opacity-50"
                             >
                               <Text className="text-primary text-xs font-poppins-semibold">
-                                VIEW ALL
+                                {translate("rewards.viewAll")}
                               </Text>
                             </TouchableOpacity>
                           </View>
@@ -871,7 +880,7 @@ export default function Rewards() {
                         </View>
 
                         <Text className="text-[10px] font-poppins-medium text-neutral-400 mt-1">
-                          {clampedCount}/{targetCount} DAYS THIS WEEK
+                          {translate("rewards.daysThisWeek", { current: clampedCount, target: targetCount })}
                         </Text>
 
                         <View className="flex-row flex-wrap justify-between mt-2.5 gap-y-2 px-1">
@@ -924,8 +933,8 @@ export default function Rewards() {
                 className="bg-white dark:bg-darkBackgroundMuted rounded-2xl p-6 items-center mx-1"
               >
                 <MaterialIcons name="stars" size={32} color="#d1d5db" className="mb-2" />
-                <Text className="text-neutral-500 font-poppins-semibold text-sm mt-2">No Active Stamps</Text>
-                <Text className="text-neutral-400 font-poppins text-xs text-center mt-1">Visit a partner store to start your stamp log!</Text>
+                <Text className="text-neutral-500 font-poppins-semibold text-sm mt-2">{translate("rewards.noActiveStamps")}</Text>
+                <Text className="text-neutral-400 font-poppins text-xs text-center mt-1">{translate("rewards.visitStartStamps")}</Text>
               </View>
             )
           ) : (
@@ -990,7 +999,7 @@ export default function Rewards() {
                           <View className="flex-row items-center gap-x-2">
                             <MaterialIcons name="stars" size={18} color="#FF6600" />
                             <Text className="font-poppins-semibold text-neutral-900 dark:text-white">
-                              Stamp Log
+                              {translate("rewards.stampLog")}
                             </Text>
                           </View>
                           <View className="flex-row items-center gap-x-3">
@@ -1017,7 +1026,7 @@ export default function Rewards() {
                               className="px-2 py-1"
                             >
                               <Text className="text-primary text-xs font-poppins-semibold">
-                                VIEW ALL
+                                {translate("rewards.viewAll")}
                               </Text>
                             </TouchableOpacity>
                           </View>
@@ -1054,7 +1063,7 @@ export default function Rewards() {
                         </View>
 
                         <Text className="text-[10px] font-poppins-medium text-neutral-400 mt-1">
-                          {clampedCount}/{targetCount} COMPLETED
+                          {translate("rewards.completed", { current: clampedCount, target: targetCount })}
                         </Text>
 
                         <View className="flex-row flex-wrap justify-between mt-2.5 gap-y-2">
@@ -1113,18 +1122,18 @@ export default function Rewards() {
                               </View>
                               <View className="flex-1 ml-0.5">
                                 <Text className="text-[10px] font-poppins-bold text-primary uppercase tracking-[1.2px] mb-0.5">
-                                  {clampedCount >= targetCount ? "UNLOCKED!" : "REWARD"}
+                                  {clampedCount >= targetCount ? translate("rewards.unlocked") : translate("rewards.reward")}
                                 </Text>
                                 <Text
                                   className="text-sm text-neutral-800 dark:text-neutral-100 font-poppins-bold"
                                   numberOfLines={1}
                                 >
-                                  500 Points
+                                  500 {translate("rewards.points")}
                                 </Text>
                                 <Text className="text-[10px] text-neutral-400 font-poppins mt-0.5" numberOfLines={1}>
                                   {clampedCount >= targetCount
-                                    ? "Claim your points now!"
-                                    : `${targetCount - clampedCount} stamps more to unlock`}
+                                    ? translate("rewards.claimPointsNow")
+                                    : translate("rewards.stampsMoreToUnlock", { count: targetCount - clampedCount })}
                                 </Text>
                               </View>
                             </View>
@@ -1134,17 +1143,17 @@ export default function Rewards() {
                               disabled={clampedCount < targetCount}
                               onPress={() => {
                                 Alert.alert(
-                                  "Claim Reward",
-                                  `Ready to claim "${activeProgramReward?.reward_title}"? Please present this to the store staff.`,
+                                  translate("rewards.claim"),
+                                  translate("rewards.messages.claimConfirm", { rewardTitle: activeProgramReward?.reward_title }),
                                   [
                                     { text: "Cancel", style: "cancel" },
-                                    { text: "Claim Now", onPress: () => Alert.alert("Success", "Reward claimed! Please check your history.") }
+                                    { text: "Claim Now", onPress: () => Alert.alert(translate("rewards.messages.success"), translate("rewards.messages.claimSuccess")) }
                                   ]
                                 );
                               }}
                             >
                               <Text className={`text-[11px] font-poppins-bold tracking-wider ${clampedCount >= targetCount ? "text-white" : "text-neutral-400"}`}>
-                                CLAIM
+                                {translate("rewards.claim")}
                               </Text>
                             </TouchableOpacity>
                           </View>
@@ -1176,11 +1185,11 @@ export default function Rewards() {
         <View className="gap-y-3">
           <View className="flex-row items-center justify-between">
             <Text className="text-lg font-poppins-semibold text-neutral-900 dark:text-darkTextPrimary">
-              Reward Catalog
+              {translate("rewards.rewardCatalog")}
             </Text>
             <TouchableOpacity className="flex-row items-center gap-x-1">
               <Text className="text-primary text-xs font-poppins-semibold">
-                VIEW ALL
+                {translate("rewards.viewAll")}
               </Text>
               <MaterialIcons name="chevron-right" size={16} color="#FF6600" />
             </TouchableOpacity>
@@ -1196,7 +1205,7 @@ export default function Rewards() {
               return (
                 <SortPill
                   key={option.id}
-                  label={option.label}
+                  label={translate(`rewards.filters.${option.id}`)}
                   active={isActive}
                   rightIcon={
                     isPoints ? (
@@ -1238,7 +1247,7 @@ export default function Rewards() {
 
         <View className="items-center pt-4">
           <Text className="text-[10px] tracking-[2px] text-neutral-300 font-poppins-medium">
-            POWERED BY PUNTOS
+            {translate("rewards.footer")}
           </Text>
         </View>
       </ScrollView>

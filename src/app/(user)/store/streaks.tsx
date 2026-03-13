@@ -4,8 +4,10 @@ import React from "react";
 import { View as RNView } from "react-native";
 import { router } from "expo-router";
 import { useStamps } from "@/hooks/use-stamps";
+import { useTranslation } from "react-i18next";
 
 export default function StoreStreaks() {
+  const { t: translate } = useTranslation();
   const { stamps, isLoading } = useStamps();
 
   const activeStamps = stamps.length;
@@ -15,9 +17,9 @@ export default function StoreStreaks() {
     : 0;
 
   const getTier = (completed: number) => {
-    if (completed >= 5) return { label: "Gold", color: "text-amber-500" };
-    if (completed >= 3) return { label: "Silver", color: "text-slate-400" };
-    return { label: "Bronze", color: "text-amber-700" };
+    if (completed >= 5) return { label: translate("rewards.streaks.tiers.gold"), color: "text-amber-500" };
+    if (completed >= 3) return { label: translate("rewards.streaks.tiers.silver"), color: "text-slate-400" };
+    return { label: translate("rewards.streaks.tiers.bronze"), color: "text-amber-700" };
   };
 
   return (
@@ -34,7 +36,7 @@ export default function StoreStreaks() {
             <MaterialIcons name="chevron-left" size={22} color="#0f172a" />
           </TouchableOpacity>
           <Text className="text-2xl font-poppins-bold text-neutral-900 dark:text-white">
-            All Stamps
+            {translate("rewards.streaks.title")}
           </Text>
         </View>
 
@@ -42,10 +44,10 @@ export default function StoreStreaks() {
           <View className="flex-row items-center justify-between">
             <View>
               <Text className="text-white/80 text-xs font-poppins">
-                Lifetime Stamps
+                {translate("rewards.streaks.lifetime")}
               </Text>
               <Text className="text-white text-xl font-poppins-bold mt-1">
-                Stamp Collector
+                {translate("rewards.streaks.status")}
               </Text>
             </View>
             <View className="w-12 h-12 rounded-full bg-white/20 items-center justify-center">
@@ -56,7 +58,7 @@ export default function StoreStreaks() {
           <View className="flex-row gap-x-3 mt-4">
             <View className="flex-1 bg-white/15 rounded-2xl p-3 items-center">
               <Text className="text-white/70 text-[10px] font-poppins text-center">
-                ACTIVE CARDS
+                {translate("rewards.streaks.activeCards")}
               </Text>
               <Text className="text-white text-lg font-poppins-bold mt-1 text-center">
                 {activeStamps}
@@ -64,10 +66,10 @@ export default function StoreStreaks() {
             </View>
             <View className="flex-1 bg-white/15 rounded-2xl p-3 items-center">
               <Text className="text-white/70 text-[10px] font-poppins text-center">
-                HIGHEST STAMPS
+                {translate("rewards.streaks.highestStamps")}
               </Text>
               <Text className="text-white text-lg font-poppins-bold mt-1 text-center">
-                {highestStampCount} stamps
+                {translate("rewards.streaks.stampsCount", { count: highestStampCount })}
               </Text>
             </View>
           </View>
@@ -79,7 +81,7 @@ export default function StoreStreaks() {
             <View className="flex-row items-center gap-x-1">
               <MaterialIcons name="emoji-events" size={14} color="#FFFFFF" />
               <Text className="text-white text-xs font-poppins-semibold">
-                Weekly Quest
+                {translate("rewards.streaks.weeklyQuest")}
               </Text>
             </View>
           </View>
@@ -88,14 +90,14 @@ export default function StoreStreaks() {
         <View className="gap-y-3">
           {isLoading ? (
             <View className="items-center justify-center p-10 py-16 text-center">
-              <Text className="text-neutral-500 font-poppins">Loading active stamps...</Text>
+              <Text className="text-neutral-500 font-poppins">{translate("rewards.streaks.loading")}</Text>
             </View>
           ) : activeStamps === 0 ? (
             <View className="bg-white dark:bg-neutral-800 rounded-3xl p-8 items-center">
               <MaterialIcons name="stars" size={40} color="#d1d5db" className="mb-2" />
-              <Text className="text-neutral-500 font-poppins-semibold text-base mt-2">No Active Stamps Found</Text>
+              <Text className="text-neutral-500 font-poppins-semibold text-base mt-2">{translate("rewards.streaks.notFound")}</Text>
               <Text className="text-neutral-400 font-poppins text-xs text-center mt-2 px-4">
-                You haven't collected any stamps yet. Visit a partner store and scan to begin!
+                {translate("rewards.streaks.notFoundDetail")}
               </Text>
             </View>
           ) : (
@@ -121,10 +123,10 @@ export default function StoreStreaks() {
                       </View>
                       <View>
                         <Text className="font-poppins-semibold text-neutral-900 dark:text-white">
-                          {stamp.stores?.name ?? "Store"}
+                          {stamp.stores?.name ?? translate("rewards.store")}
                         </Text>
                         <Text className="text-xs text-neutral-500 font-poppins mt-1">
-                          {stamp.stores?.is_active ? "Active Partner Store" : "Inactive"}
+                          {stamp.stores?.is_active ? translate("rewards.streaks.activeStore") : translate("rewards.streaks.inactiveStore")}
                         </Text>
                       </View>
                     </View>
@@ -138,14 +140,14 @@ export default function StoreStreaks() {
                   <View className="flex-row items-center justify-between mt-4">
                     <View className="flex-row items-center gap-x-2">
                       <Text className="text-xs font-poppins-medium text-neutral-400">
-                        {completed}/{targetDays} COMPLETED
+                        {translate("rewards.completed", { current: completed, target: targetDays })}
                       </Text>
                       <Text className={`text-xs font-poppins-semibold ${tier.color}`}>
                         {tier.label}
                       </Text>
                     </View>
                     <Text className="text-xs font-poppins-semibold text-primary">
-                      +{bonus} bonus pts
+                      {translate("rewards.streaks.bonusPts", { count: bonus })}
                     </Text>
                   </View>
 
@@ -163,12 +165,12 @@ export default function StoreStreaks() {
 
                   <View className="flex-row items-center justify-between mt-3">
                     <Text className="text-[11px] text-neutral-400 font-poppins-medium">
-                      {progress}% complete
+                      {translate("rewards.streaks.percentComplete", { percent: progress })}
                     </Text>
                     <View className="flex-row items-center gap-x-1">
                       <MaterialIcons name="bolt" size={14} color="#FF6600" />
                       <Text className="text-[11px] text-neutral-500 font-poppins-medium">
-                        Keep stamping to reach your target!
+                        {translate("rewards.streaks.reachingTarget")}
                       </Text>
                     </View>
                   </View>

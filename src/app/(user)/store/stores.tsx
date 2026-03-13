@@ -9,10 +9,12 @@ import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useRouter } from "expo-router";
 import { FadeInDown, Layout } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useTranslation } from "react-i18next";
 
 export default function StoreListScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { t: translate } = useTranslation();
   const [searchQuery, setSearchQuery] = useState("");
   const [refreshing, setRefreshing] = useState(false);
   const { stores: realStores } = useStoreStore();
@@ -35,7 +37,7 @@ export default function StoreListScreen() {
       return {
         id: s.id.toString(),
         name: s.name,
-        location: s.address || "Unknown location",
+        location: s.address || translate("rewards.unknownLocation"),
         distanceMeters: s.distanceMeters,
         stampsCount: stampData?.stamps_count || 0,
         targetStamps: stampData?.target || 7,
@@ -93,7 +95,7 @@ export default function StoreListScreen() {
             </Text>
             {store.isNearby && (
               <View className="bg-green-100 dark:bg-green-900/30 px-2 py-0.5 rounded-lg">
-                <Text className="text-[9px] font-poppins-bold text-green-700 dark:text-green-400">NEARBY</Text>
+                <Text className="text-[9px] font-poppins-bold text-green-700 dark:text-green-400">{translate("rewards.storesList.nearbyBadge")}</Text>
               </View>
             )}
           </View>
@@ -108,7 +110,7 @@ export default function StoreListScreen() {
           <View>
             <View className="flex-row items-center justify-between mb-1.5">
               <Text className="text-[10px] font-poppins-semibold text-neutral-500 dark:text-neutral-400">
-                STAMP PROGRESS
+                {translate("rewards.storesList.stampProgress")}
               </Text>
               <Text className="text-[10px] font-poppins-bold text-primary">
                 {store.stampsCount}/{store.targetStamps}
@@ -162,7 +164,7 @@ export default function StoreListScreen() {
             <MaterialIcons name="chevron-left" size={36} color="#FF6600" />
           </TouchableOpacity>
           <Text className="text-2xl font-poppins-bold text-neutral-900 dark:text-white">
-            Stores
+            {translate("rewards.storesList.title")}
           </Text>
         </View>
 
@@ -170,7 +172,7 @@ export default function StoreListScreen() {
         <View className="flex-row items-center bg-white dark:bg-darkBackgroundCard rounded-2xl px-4 py-1 border border-neutral-100 dark:border-darkBorder shadow-sm shadow-neutral-100 dark:shadow-none mt-2">
           <MaterialIcons name="search" size={20} color="#9CA3AF" />
           <TextInput
-            placeholder="Search your stores..."
+            placeholder={translate("rewards.storesList.searchPlaceholder")}
             placeholderTextColor="#9CA3AF"
             className="flex-1 ml-3 font-poppins text-sm text-neutral-900 dark:text-white pt-0 pb-0"
             value={searchQuery}
@@ -187,7 +189,7 @@ export default function StoreListScreen() {
         {isLoading ? (
           <View className="items-center justify-center py-20">
             <ActivityIndicator size="large" color="#FF6600" />
-            <Text className="mt-4 font-poppins text-neutral-400">Loading your stores...</Text>
+            <Text className="mt-4 font-poppins text-neutral-400">{translate("rewards.storesList.loading")}</Text>
           </View>
         ) : (
           <View className="mt-6 gap-y-8">
@@ -197,12 +199,12 @@ export default function StoreListScreen() {
                   <MaterialIcons name="storefront" size={48} color="#CBD5E1" />
                 </View>
                 <Text className="text-xl font-poppins-bold text-neutral-900 dark:text-white text-center">
-                  {searchQuery ? "No matching stores" : "No stores joined yet"}
+                  {searchQuery ? translate("rewards.storesList.noMatching") : translate("rewards.storesList.noJoined")}
                 </Text>
                 <Text className="text-sm text-neutral-500 font-poppins text-center px-10 mt-2">
                   {searchQuery
-                    ? `We couldn't find any store matching "${searchQuery}"`
-                    : "Visit a store and get a stamp to see them here and start earning rewards!"}
+                    ? translate("rewards.storesList.noMatchingDetail", { query: searchQuery })
+                    : translate("rewards.storesList.noJoinedDetail")}
                 </Text>
               </View>
             ) : (
@@ -210,7 +212,7 @@ export default function StoreListScreen() {
                 {nearbyStoresSection.length > 0 && (
                   <View className="gap-y-4">
                     <Text className="text-xs font-poppins-bold text-neutral-500 dark:text-neutral-400 uppercase tracking-widest ml-1">
-                      Nearby Stores
+                      {translate("rewards.storesList.nearbySection")}
                     </Text>
                     {nearbyStoresSection.map((store, index) => renderStoreItem(store, index))}
                   </View>
@@ -219,7 +221,7 @@ export default function StoreListScreen() {
                 {joinedStoresSection.length > 0 && (
                   <View className="gap-y-4">
                     <Text className="text-xs font-poppins-bold text-neutral-500 dark:text-neutral-400 uppercase tracking-widest ml-1">
-                      My Stores
+                      {translate("rewards.storesList.myStoresSection")}
                     </Text>
                     {joinedStoresSection.map((store, index) =>
                       renderStoreItem(store, index, nearbyStoresSection.length * 100)

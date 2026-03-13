@@ -40,6 +40,126 @@
             "multiBody": "Visit nearby stores and earn rewards!"
         }
     },
+    "rewards": {
+        "title": "Rewards",
+        "viewStores": "VIEW STORES",
+        "discoverPartners": "DISCOVER PARTNERS",
+        "distanceMeters": "{{meters}} meters away",
+        "store": "Store",
+        "unknownLocation": "Unknown Location",
+        "range": {
+            "multiple": "{{count}} stores are within range!",
+            "single": "You are within range!",
+            "empty": "Not in range of any store",
+            "promptNearby": "Make a purchase to earn a stamp",
+            "promptFar": "Explore other branches"
+        },
+        "explore": "EXPLORE",
+        "stampLog": "Stamp Log",
+        "streakLog": "Streak Log",
+        "nearby": "Nearby",
+        "viewAll": "VIEW ALL",
+        "daysThisWeek": "{{current}}/{{target}} DAYS THIS WEEK",
+        "completed": "{{current}}/{{target}} COMPLETED",
+        "noActiveStamps": "No Active Stamps",
+        "visitStartStamps": "Visit a partner store to start your stamp log!",
+        "upcomingEvents": {
+            "title": "Watch out for upcoming events!",
+            "subtitle": "This store doesn't have active rewards right now. Check back soon for stamps and streaks!"
+        },
+        "rewardCatalog": "Reward Catalog",
+        "points": "Points",
+        "unlocked": "UNLOCKED!",
+        "reward": "REWARD",
+        "claim": "CLAIM",
+        "claimPointsNow": "Claim your points now!",
+        "stampsMoreToUnlock": "{{count}} stamps more to unlock",
+        "filters": {
+            "popular": "Popular",
+            "points": "Points",
+            "newest": "Newest"
+        },
+        "buttons": {
+            "stamp": "STAMP",
+            "stamped": "STAMPED"
+        },
+        "messages": {
+            "signInToStamp": "You must be logged in to stamp.",
+            "stampSuccess": "You have successfully collected a stamp!",
+            "alreadyStamped": "You have already stamped at this store today.",
+            "stampDisabled": "This store currently has stamps disabled.",
+            "stampFailed": "Failed to collect stamp. Please try again.",
+            "error": "Error",
+            "success": "Success",
+            "notice": "Notice",
+            "somethingWentWrong": "Something went wrong.",
+            "claimConfirm": "Ready to claim \"{{rewardTitle}}\"? Please present this to the store staff.",
+            "claimSuccess": "Reward claimed! Please check your history."
+        },
+        "footer": "POWERED BY PUNTOS",
+        "days": {
+            "mon": "Mon",
+            "tue": "Tue",
+            "wed": "Wed",
+            "thu": "Thu",
+            "fri": "Fri",
+            "sat": "Sat",
+            "sun": "Sun"
+        },
+        "storesList": {
+            "title": "Stores",
+            "searchPlaceholder": "Search your stores...",
+            "loading": "Loading your stores...",
+            "noMatching": "No matching stores",
+            "noJoined": "No stores joined yet",
+            "noMatchingDetail": "We couldn't find any store matching \"{{query}}\"",
+            "noJoinedDetail": "Visit a store and get a stamp to see them here and start earning rewards!",
+            "nearbySection": "Nearby Stores",
+            "myStoresSection": "My Stores",
+            "nearbyBadge": "NEARBY",
+            "stampProgress": "STAMP PROGRESS"
+        },
+        "streaks": {
+            "title": "All Stamps",
+            "lifetime": "Lifetime Stamps",
+            "status": "Stamp Collector",
+            "activeCards": "ACTIVE CARDS",
+            "highestStamps": "HIGHEST STAMPS",
+            "stampsCount": "{{count}} stamps",
+            "promoMessage": "Keep stamping to unlock bonus rewards.",
+            "weeklyQuest": "Weekly Quest",
+            "loading": "Loading active stamps...",
+            "notFound": "No Active Stamps Found",
+            "notFoundDetail": "You haven't collected any stamps yet. Visit a partner store and scan to begin!",
+            "activeStore": "Active Partner Store",
+            "inactiveStore": "Inactive",
+            "bonusPts": "+{{count}} bonus pts",
+            "percentComplete": "{{percent}}% complete",
+            "reachingTarget": "Keep stamping to reach your target!",
+            "tiers": {
+                "bronze": "Bronze",
+                "silver": "Silver",
+                "gold": "Gold"
+            }
+        },
+        "storeDetail": {
+            "title": "Store Rewards",
+            "locationFallback": "Location",
+            "nearbyMessage": "You are nearby {{name}}",
+            "stampNowPrompt": "Stamp now to collect another stamp!",
+            "unlockedSection": "Your Unlocked Reward",
+            "freeReward": "Free Reward",
+            "readyToClaim": "Ready to claim!",
+            "redeemableSection": "Redeemable Rewards",
+            "itemsCount": "{{count}} items",
+            "noRewards": "No rewards available yet."
+        },
+        "rewardCard": {
+            "pointsSuffix": "pts",
+            "redeem": "REDEEM",
+            "insufficient": "INSUFFICIENT"
+        }
+    },
     "activity": {
         "title": "Activity",
         "unclaimed": "UNCLAIMED",
