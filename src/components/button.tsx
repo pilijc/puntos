@@ -51,7 +51,7 @@ const config: Record<
     spinnerColor: "#94A3B8"
   },
   ghost: {
-    container: "border-2 border-dashed border-slate-200 dark:border-slate-700",
+    container: "border border-dashed border-slate-200 dark:border-slate-700",
     text: "text-slate-400 dark:text-slate-500",
     iconColor: "#94A3B8",
     spinnerColor: "#94A3B8"
