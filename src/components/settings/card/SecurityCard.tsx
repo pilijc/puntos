@@ -44,7 +44,7 @@ export const SecurityCard = () => {
 
     return (
         <>
-            <View className="bg-background dark:bg-darkBackgroundMuted p-4 border-t border-neutral-200 dark:border-darkBorder overflow-hidden">
+            <View className="bg-background dark:bg-darkBackgroundMuted p-4 overflow-hidden">
                 <TouchableOpacity
                     onPress={toggleOpen}
                     className="flex-row items-center"

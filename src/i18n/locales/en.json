@@ -13,6 +13,55 @@
         "passwordMatch": "New passwords do not match",
         "passwordLimit": "Password should be at least 8 characters"
     },
+    "layout": {
+        "discover": "Discover",
+        "store": "Store",
+        "history": "History",
+        "settings": "Settings"
+    },
+    "index": {
+        "loadingProfile": "Loading profile...",
+        "searchBar": "Search a place",
+        "nearbyStores": "Stores near you",
+        "discoverMore": "Discover more stores",
+        "backToList": "Back to List of Stores",
+        "rewards": "Rewards",
+        "metersAway": "{{meters}} m away",
+        "storeHoursPlaceholder": "Open 10:00 AM - 10:00 PM",
+        "rewardPlaceholder": {
+            "title": "Free Coffee",
+            "description": "Any medium drink of your choice",
+            "points": "{{points}} pts"
+        },
+        "geofence": {
+            "singleTitle": "{{name}} is near you",
+            "singleBody": "Visit {{name}} and earn rewards!",
+            "multiTitle": "There are {{count}} stores nearby",
+            "multiBody": "Visit nearby stores and earn rewards!"
+        }
+    },
+    "activity": {
+        "title": "Activity",
+        "unclaimed": "UNCLAIMED",
+        "searchPlaceholder": "Search history...",
+        "month": "{{month}}",
+        "filter": {
+            "all": "All",
+            "earned": "Earned",
+            "claimed": "Claimed"
+        },
+        "loading": "Loading transaction history...",
+        "empty": "No transactions found",
+        "sections": {
+            "today": "Today",
+            "yesterday": "Yesterday"
+        },
+        "subtitle": {
+            "purchasePoints": "Purchase Points"
+        },
+        "unknownStore": "Unknown Store",
+        "footer": "POWERED BY PUNTOS"
+    },
     "settings": {
         "title": "Settings",
         "logout": {

@@ -22,7 +22,7 @@ export const LanguageCard = () => {
     };
 
     return (
-        <View className="bg-background dark:bg-darkBackgroundMuted p-3 border-t border-neutral-200 dark:border-darkBorder overflow-hidden">
+        <View className="bg-background dark:bg-darkBackgroundMuted p-4 border-t border-neutral-200 dark:border-darkBorder overflow-hidden">
             <TouchableOpacity
                 onPress={toggleOpen}
                 className="flex-row items-center"

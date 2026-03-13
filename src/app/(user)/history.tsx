@@ -12,8 +12,9 @@ import {
 } from "@/tw";
 import { getUserTransactionHistory } from "@/services/qr-service";
 import { supabase } from "@/supabase/supabase";
+import { useTranslation } from "react-i18next";
 
-const TABS = ["All", "Earned", "Claimed"];
+const TABS = ["all", "earned", "claimed"];
 
 export default function History() {
   const [activeTab, setActiveTab] = useState(0);
@@ -22,6 +23,7 @@ export default function History() {
   const [transactionHistory, setTransactionHistory] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const { t: translate, i18n } = useTranslation();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
 
@@ -51,8 +53,8 @@ export default function History() {
       activeTab === 0
         ? true
         : activeTab === 1
-        ? item.type === "earned"
-        : item.type === "claimed";
+          ? item.type === "earned"
+          : item.type === "claimed";
     const matchesSearch = item.title.toLowerCase().includes(searchText.toLowerCase());
     return matchesTab && matchesSearch;
   });
@@ -80,7 +82,7 @@ export default function History() {
               <>
                 <View>
                   <Text className="text-neutral-900 dark:text-darkTextPrimary text-2xl font-poppins-bold">
-                    Activity
+                    {translate("activity.title")}
                   </Text>
                 </View>
                 <View className="flex-row items-center gap-3">
@@ -89,7 +91,7 @@ export default function History() {
                       {formattedTotal}
                     </Text>
                     <Text className="text-orange-400 dark:text-darkPrimarySecondary text-[7px] font-poppins-medium tracking-wide">
-                      UNCLAIMED
+                      {translate("activity.unclaimed")}
                     </Text>
                   </View>
                   <TouchableOpacity
@@ -105,15 +107,15 @@ export default function History() {
                 <View className="flex-1 mx-1">
                   <TextInput
                     autoFocus
-                    placeholder="Search history..."
+                    placeholder={translate("activity.searchPlaceholder")}
                     placeholderTextColor={isDark ? "#9CA3AF" : "#999"}
                     style={{ color: isDark ? "#FFFFFF" : "#000000" }}
-                    className="text-base px-3 py-2" 
+                    className="text-base px-3 py-2"
                     value={searchText}
                     onChangeText={setSearchText}
                   />
                 </View>
-                
+
                 <TouchableOpacity
                   onPress={() => {
                     setSearchOpen(false);
@@ -129,8 +131,8 @@ export default function History() {
                   </Text>
                 </TouchableOpacity>
               </View>
-          )}
-        </View>
+            )}
+          </View>
 
 
           {/* Tabs */}
@@ -144,7 +146,7 @@ export default function History() {
                   className={`flex-1 py-3 rounded-lg items-center ${isActive ? "bg-orange-500" : ""}`}
                 >
                   <Text className={`text-sm font-poppins-semibold ${isActive ? "text-white" : "text-neutral-500 dark:text-darkTextPrimary"}`}>
-                    {tab}
+                    {translate(`activity.filter.${tab}`)}
                   </Text>
                 </TouchableOpacity>
               );
@@ -160,11 +162,11 @@ export default function History() {
       >
         {loading ? (
           <View className="flex-1 items-center justify-center py-20">
-            <Text className="text-neutral-500 dark:text-darkTextSoft">Loading transaction history...</Text>
+            <Text className="text-neutral-500 dark:text-darkTextSoft">{translate("activity.loading")}</Text>
           </View>
         ) : sections.length === 0 ? (
           <View className="flex-1 items-center justify-center py-20">
-            <Text className="text-neutral-500 dark:text-darkTextSoft">No transactions found</Text>
+            <Text className="text-neutral-500 dark:text-darkTextSoft">{translate("activity.empty")}</Text>
           </View>
         ) : (
           sections.map((section) => (
@@ -184,7 +186,7 @@ export default function History() {
         <AnimatedView entering={FadeInUp.delay(200).duration(600)}>
           <View className="items-center pt-6 pb-4">
             <Text className="text-[10px] tracking-[2px] text-neutral-300 font-poppins-medium">
-              POWERED BY PUNTOS
+              {translate("activity.footer")}
             </Text>
           </View>
         </AnimatedView>
@@ -194,16 +196,30 @@ export default function History() {
 }
 
 function SectionLabel({ label }) {
+  const { t: translate, i18n } = useTranslation();
+
+  let displayLabel = label;
+  if (label === 'today') {
+    displayLabel = translate('activity.sections.today');
+  } else if (label === 'yesterday') {
+    displayLabel = translate('activity.sections.yesterday');
+  } else {
+    // Format the date string
+    const date = new Date(label);
+    displayLabel = date.toLocaleDateString(i18n.language === 'ja' ? 'ja-JP' : 'en-US', { month: 'long', day: 'numeric' });
+  }
+
   return (
     <View className="mt-6 mb-3">
       <Text className="text-xs font-poppins-semibold text-neutral-400 tracking-widest">
-        {label.toUpperCase()}
+        {displayLabel.toUpperCase()}
       </Text>
     </View>
   );
 }
 
 function HistoryItem({ title, subtitle, time, points, positive, image, icon }) {
+  const { t: translate, i18n } = useTranslation();
   const isPositive = positive ?? points?.startsWith("+");
   const scaleAnim = useRef(new Animated.Value(1)).current;
 
@@ -230,10 +246,10 @@ function HistoryItem({ title, subtitle, time, points, positive, image, icon }) {
 
             <View className="flex-1">
               <Text numberOfLines={1} className="text-base font-poppins-semibold text-neutral-900 dark:text-darkTextPrimary">
-                {title}
+                {translate(title)}
               </Text>
               <Text className="text-xs font-poppins-regular text-neutral-400">
-                {subtitle} {time ? `• ${time}` : ""}
+                {translate(subtitle)} {time ? `• ${new Date(time).toLocaleTimeString(i18n.language === 'ja' ? 'ja-JP' : 'en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}` : ""}
               </Text>
             </View>
           </View>

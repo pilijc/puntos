@@ -208,9 +208,9 @@ export async function getUserTransactionHistory(userId: string): Promise<any[]> 
       id: transaction.id,
       section: formatDateSection(transaction.created_at),
       type: 'earned',
-      title: transaction.stores?.name || 'Unknown Store',
-      subtitle: 'Purchase Points',
-      time: formatTime(transaction.created_at),
+      title: transaction.stores?.name || 'activity.unknownStore',
+      subtitle: 'activity.subtitle.purchasePoints',
+      time: transaction.created_at,
       points: `+${transaction.points_earned}`,
       positive: true,
     }));
@@ -234,11 +234,11 @@ function formatDateSection(dateString: string): string {
   const transactionDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
 
   if (transactionDate.getTime() === today.getTime()) {
-    return 'Today';
+    return 'today';
   } else if (transactionDate.getTime() === yesterday.getTime()) {
-    return 'Yesterday';
+    return 'yesterday';
   } else {
-    return date.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
+    return dateString;
   }
 }
 

@@ -13,13 +13,64 @@
         "passwordMatch": "新しいパスワードが一致しません",
         "passwordLimit": "パスワードは8文字以上で入力してください"
     },
+    "layout": {
+        "discover": "発見",
+        "store": "ストア",
+        "history": "履歴",
+        "settings": "設定"
+    },
+    "index": {
+        "loadingProfile": "プロフィールを読み込み中...",
+        "searchBar": "場所を検索",
+        "nearbyStores": "近くの店舗",
+        "discoverMore": "他の店舗を探す",
+        "backToList": "店舗一覧に戻る",
+        "rewards": "報酬",
+        "metersAway": "{{meters}}m 先",
+        "storeHoursPlaceholder": "営業時間 10:00 - 22:00",
+        "rewardPlaceholder": {
+            "title": "コーヒー無料券",
+            "description": "お好きなドリンクを1杯無料",
+            "points": "{{points}} pts"
+        },
+        "geofence": {
+            "singleTitle": "{{name}} が近くにあります",
+            "singleBody": "{{name}} に行って報酬をゲットしましょう！",
+            "multiTitle": "近くに {{count}} 件の店舗があります",
+            "multiBody": "近くの店舗に行って報酬をゲットしましょう！"
+        }
+    },
+    "activity": {
+        "title": "アクティビティ",
+        "unclaimed": "未受取",
+        "searchPlaceholder": "履歴を検索...",
+        "month": "{{month}}",
+        "filter": {
+            "all": "すべて",
+            "earned": "獲得",
+            "claimed": "使用済み"
+        },
+        "loading": "取引履歴を読み込み中...",
+        "empty": "取引が見つかりません",
+        "sections": {
+            "today": "今日",
+            "yesterday": "昨日"
+        },
+        "subtitle": {
+            "purchasePoints": "購入ポイント"
+        },
+        "unknownStore": "不明な店舗",
+        "footer": "PUNTOS 提供"
+    },
     "settings": {
         "title": "設定",
-        "logout": "ログアウト",
-        "logoutConfirmTitle": "ログアウト確認",
-        "logoutConfirmMessage": "本当にログアウトしますか？",
+        "logout": {
+            "title": "ログアウト",
+            "confirmTitle": "ログアウト確認",
+            "confirmMessage": "本当にログアウトしますか？"
+        },
         "checking": "確認中…",
-        "Copyright": "著作権",
+        "copyright": "著作権",
         "profile": {
             "title": "プロフィール編集",
             "description": "アカウント情報を更新できます",
