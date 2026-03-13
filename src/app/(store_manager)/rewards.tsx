@@ -15,6 +15,7 @@ import * as ImagePicker from "expo-image-picker";
 import { Image } from "expo-image";
 import { useRewardStore } from "@/store/store-manager/reward-store";
 import { createReward, uploadRewardImage } from "@/services/store-manager/reward-service";
+import { RewardType } from "@/type/store-manager/reward";
 
 export default function Rewards() {
   const router = useRouter();
@@ -33,8 +34,12 @@ export default function Rewards() {
     setPointsCost,
     image_url,
     setImageUrl,
+    type,
+    setType,
     reset,
   } = useRewardStore();
+
+  const isStampReward = type === "stamp";
 
   const pickImage = async () => {
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -71,8 +76,12 @@ export default function Rewards() {
   };
 
   const handleCreate = async () => {
-    if (!title.trim() || !description || !points_cost || !image_url) {
-      Alert.alert('Please fill out all fields and upload an image');
+    if (!title.trim() || !description || !image_url) {
+      Alert.alert("Validation Error", "Please fill out all required fields and upload an image.");
+      return;
+    }
+    if (!isStampReward && (!points_cost || points_cost < 1)) {
+      Alert.alert("Validation Error", "Please enter a valid points cost.");
       return;
     }
     setIsSubmitting(true);
@@ -81,8 +90,9 @@ export default function Rewards() {
         store_id: storeId,
         title,
         description,
-        points_cost,
+        points_cost: isStampReward ? 0 : points_cost,
         image_url,
+        type: isStampReward ? "stamp" : "streak",
       });
       reset();
       Alert.alert("Success", "Reward created successfully");
@@ -125,22 +135,66 @@ export default function Rewards() {
 
        <View className="">
 					<View className="p-4">
-						<Text className="text-2xl font-poppins-bold text-slate-900 dark:text-white">
+						<Text className="text-xl font-poppins-bold text-slate-900 dark:text-white">
 								Reward Details
 						</Text>
 						<Text className="text-sm font-poppins text-slate-500 dark:text-slate-400 mt-1">
 								Provide an overview of your reward. Explain the benefits for customers and specify any important details or terms of use.
 						</Text>
-						</View>
+					</View>
 
-						<View className="px-4 gap-y-4">
-						
+					<View className="px-4 gap-y-4">
+
+						{/* Reward type toggle */}
+						<View className="gap-y-2">
+							<Text className="text-sm font-poppins-semibold text-slate-700 dark:text-slate-300">
+								Reward Type
+							</Text>
+							<View className="flex-row gap-x-2">
+								{[
+									{ key: "streak" as const, label: "Streak Reward", icon: "stars" as const,   desc: "Redeemed using loyalty points" },
+									{ key: "stamp"  as const, label: "Stamp Reward",  icon: "loyalty" as const, desc: "Redeemed by collecting stamps" },
+								].map((opt) => {
+									const selected = type === opt.key as RewardType;
+									return (
+										<TouchableOpacity
+											key={opt.key}
+											activeOpacity={0.8}
+											onPress={() => setType(opt.key as RewardType)}
+											className={`flex-1 rounded-2xl border p-3 gap-y-1 ${
+												selected
+													? "bg-primary/5 dark:bg-primary/10 border-primary/30"
+													: "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700"
+											}`}
+										>
+											<View className="flex-row items-center justify-between">
+												<View className={`w-7 h-7 rounded-lg items-center justify-center ${selected ? "bg-primary/20" : "bg-slate-100 dark:bg-slate-700"}`}>
+													<MaterialIcons name={opt.icon} size={14} color={selected ? "#FF6600" : "#94A3B8"} />
+												</View>
+												<View className={`w-4 h-4 rounded-full border-2 items-center justify-center ${selected ? "border-primary bg-primary" : "border-slate-300 dark:border-slate-600"}`}>
+													{selected && <MaterialIcons name="check" size={9} color="#fff" />}
+												</View>
+											</View>
+											<Text className={`text-xs font-poppins-bold mt-1 ${selected ? "text-primary" : "text-slate-800 dark:text-slate-200"}`}>
+												{opt.label}
+											</Text>
+											<Text className={`text-[10px] font-poppins ${selected ? "text-primary/70" : "text-slate-400 dark:text-slate-500"}`}>
+												{opt.desc}
+											</Text>
+										</TouchableOpacity>
+									);
+								})}
+							</View>
+						</View>
 
 						<View className="flex-row gap-x-3">
 							<View className="flex-1 gap-y-2">
-								<Text className="text-sm font-poppins-semibold text-slate-700 dark:text-slate-300">
-									Title
-								</Text>
+								<View className="flex-row items-center gap-x-0.5">
+									<Text className="text-sm font-poppins-semibold text-slate-700 dark:text-slate-300">
+										Title
+									</Text>
+									<Text className="text-xs font-poppins-bold text-red-500">*</Text>
+								</View>
 							<TextInput
 								className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-4 text-base font-poppins text-slate-900 dark:text-slate-100"
 								placeholder="Free Signature Coffee"
@@ -149,24 +203,32 @@ export default function Rewards() {
 								onChangeText={setTitle}
 							/>
 							</View>
-							<View className="flex-1 gap-y-2">
-								<Text className="text-sm font-poppins-semibold text-slate-700 dark:text-slate-300">
-									Points Cost
-								</Text>
-								<TextInput
-									className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-4 text-base font-poppins text-slate-900 dark:text-slate-100"
-									placeholder="50"
-									placeholderTextColor="#94A3B8"
-									value={points_cost ? String(points_cost) : ""}
-									onChangeText={(v) => setPointsCost(parseInt(v) || 0)}
-								/>
-							</View>
+							{!isStampReward && (
+								<View className="flex-1 gap-y-2">
+									<View className="flex-row items-center gap-x-0.5">
+										<Text className="text-sm font-poppins-semibold text-slate-700 dark:text-slate-300">
+											Points Cost
+										</Text>
+										<Text className="text-xs font-poppins-bold text-red-500">*</Text>
+									</View>
+									<TextInput
+										className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-4 text-base font-poppins text-slate-900 dark:text-slate-100"
+										placeholder="50"
+										placeholderTextColor="#94A3B8"
+										value={points_cost ? String(points_cost) : ""}
+										onChangeText={(v) => setPointsCost(parseInt(v) || 0)}
+									/>
+								</View>
+							)}
 						</View>
 
 						<View className="gap-y-2">
-							<Text className="text-sm font-poppins-semibold text-slate-700 dark:text-slate-300">
-								Description
-							</Text>
+							<View className="flex-row items-center gap-x-0.5">
+								<Text className="text-sm font-poppins-semibold text-slate-700 dark:text-slate-300">
+									Description
+								</Text>
+								<Text className="text-xs font-poppins-bold text-red-500">*</Text>
+							</View>
 							<TextInput
 								className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-4 text-base font-poppins text-slate-900 dark:text-slate-100"
 								placeholder="Describe the benefit to the user..."
@@ -180,36 +242,39 @@ export default function Rewards() {
 						</View>
 
 						<View className="gap-y-2">
-							<Text className="text-sm font-poppins-semibold text-slate-700 dark:text-slate-300">
-								Reward Image
-							</Text>
+							<View className="flex-row items-center gap-x-0.5">
+								<Text className="text-sm font-poppins-semibold text-slate-700 dark:text-slate-300">
+									Reward Image
+								</Text>
+								<Text className="text-xs font-poppins-bold text-red-500">*</Text>
+							</View>
 							<TouchableOpacity
-							onPress={pickImage}
-							activeOpacity={0.7}
-							disabled={isUploadingImage}
-							className="w-full h-55 rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-700 bg-backgroundMuted dark:bg-slate-800 items-center justify-center gap-y-1"
-							>
-							{isUploadingImage ? (
-									<>
-									<ActivityIndicator size="large" color="#94A3B8" />
-									<Text className="text-xs font-poppins text-slate-400 dark:text-slate-500 mt-2">
-											Uploading image...
-									</Text>
-									</>
-							) : image_url ? (
-									<Image
-									source={{ uri: image_url }}
-									style={{ width: "100%", height: "100%", borderRadius: 12 }}
-									contentFit="cover"
-									/>
-							) : (
-									<>
-									<MaterialIcons name="image" size={32} color="#94A3B8" />
-									<Text className="text-xs font-poppins text-slate-400 dark:text-slate-500 mt-1">
-											Upload or tap to choose a photo
-									</Text>
-									</>
-							)}
+								onPress={pickImage}
+								activeOpacity={0.7}
+								disabled={isUploadingImage}
+								className="w-full h-55 rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 items-center justify-center gap-y-1"
+								>
+								{isUploadingImage ? (
+										<>
+										<ActivityIndicator size="large" color="#94A3B8" />
+										<Text className="text-xs font-poppins text-slate-400 dark:text-slate-500 mt-2">
+												Uploading image...
+										</Text>
+										</>
+								) : image_url ? (
+										<Image
+										source={{ uri: image_url }}
+										style={{ width: "100%", height: "100%", borderRadius: 12 }}
+										contentFit="cover"
+										/>
+								) : (
+										<>
+										<MaterialIcons name="image" size={32} color="#94A3B8" />
+										<Text className="text-xs font-poppins text-slate-400 dark:text-slate-500 mt-1">
+												Upload or tap to choose a photo
+										</Text>
+										</>
+								)}
 							</TouchableOpacity>
 						</View>
 

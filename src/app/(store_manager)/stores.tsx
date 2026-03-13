@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { Switch, RefreshControl } from "react-native";
 import {
   View,
@@ -8,11 +8,13 @@ import {
   SafeAreaView,
 } from "@/tw";
 import { Image } from "expo-image";
+import { useRouter, useFocusEffect } from "expo-router";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { router, useFocusEffect } from "expo-router";
+import { StoreRow, getMyStores } from "@/services/store-service";
+import { useManagerStoresStore } from "@/store/manager-stores-store";
 import { supabase } from "@/supabase/supabase";
-import { getMyStores, StoreRow } from "@/services/store-service";
-import StoreDetailModal from "@/components/stores/StoreDetailModal";
+import { getStoreByOwnerId } from "@/services/store-manager/payment-service";
+import PaymentModal from "@/components/payment/paymentBoxModal";
 
 type TabKey = "all" | "active" | "pending" | "inactive";
 
@@ -44,7 +46,7 @@ const STATUS_BADGE: Record<
   },
 };
 
-function StoreCard({ store }: { store: StoreRow }) {
+function StoreCard({ store, router }: { store: StoreRow; router: any }) {
   const status = store.status ?? "inactive";
   const badge = STATUS_BADGE[status] ?? STATUS_BADGE.inactive;
 
@@ -59,7 +61,6 @@ function StoreCard({ store }: { store: StoreRow }) {
         })
       }
     >
-
       <View className="p-4 flex-row gap-3">
         <View className="w-[60px] h-[60px] rounded-xl bg-slate-100 dark:bg-slate-800 items-center justify-center overflow-hidden">
           {store.logo ? (
@@ -114,7 +115,7 @@ function StoreCard({ store }: { store: StoreRow }) {
       <View className="px-4 py-3 border-t border-slate-100 dark:border-slate-800 flex-row items-center justify-between bg-slate-50 dark:bg-slate-800/30">
         <View className="flex-row items-center gap-2">
           <Text className="text-sm font-poppins-medium text-slate-500 dark:text-slate-400">
-            {store?.type ? store.type.charAt(0).toUpperCase() + store.type.slice(1) : ""}
+            {store.type ? store.type.charAt(0).toUpperCase() + store.type.slice(1) : ""}
           </Text>
         </View>
         <TouchableOpacity
@@ -165,53 +166,47 @@ function SkeletonCard() {
 
 export default function StoreManagerStores() {
   const [activeTab, setActiveTab] = useState<TabKey>("all");
-  const [stores, setStores] = useState<StoreRow[]>([]);
-  const [loading, setLoading] = useState(true);
+
+  const router = useRouter();
+
+  const { stores, loading, error, hasFetchedOnce, fetchStores } = useManagerStoresStore();
+
+  const [selectedStore, setSelectedStore] = useState<StoreRow | null>(null);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [user, setUser] = useState<string | null>(null);
+  const [hasPaidStoreFee, setHasPaidStoreFee] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
-  const fetchStores = useCallback(
-    async (silent = false) => {
-      if (!silent) setLoading(true);
-      setError(null);
-      try {
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
-        if (!user) return;
-        const data = await getMyStores(user.id);
-        setStores(data);
-      } catch (e: any) {
-        setError(e?.message ?? "Failed to load stores");
-      } finally {
-        setLoading(false);
-        setRefreshing(false);
-      }
-    },
-    []
-  );
+  const filtered = React.useMemo(() => {
+    if (activeTab === "all") return stores;
+    if (activeTab === "pending") return stores.filter(s => s.status === "pending_review");
+    return stores.filter(s => s.status === activeTab);
+  }, [stores, activeTab]);
 
-  useFocusEffect(
-    useCallback(() => {
+  // Initial fetch — only fires when the tab has never loaded data yet
+  React.useEffect(() => {
+    if (!hasFetchedOnce) {
       fetchStores();
-    }, [fetchStores])
-  );
+    }
+  }, [hasFetchedOnce, fetchStores]);
 
-  const onRefresh = () => {
+  const onRefresh = async () => {
     setRefreshing(true);
-    fetchStores(true);
+    await fetchStores(true);
   };
 
-  const filtered = stores.filter((s) => {
-    if (activeTab === "active") return s.status === "active";
-    if (activeTab === "pending") return s.status === "pending_review";
-    if (activeTab === "inactive") return s.status === "inactive";
-    return true;
-  });
+  // Re-fetch silently when the tab regains focus (skips if already loaded)
+  useFocusEffect(
+    useCallback(() => {
+      if (hasFetchedOnce) {
+        fetchStores();
+      }
+    }, [hasFetchedOnce, fetchStores])
+  );
 
   return (
     <SafeAreaView className="flex-1 bg-backgroundMuted dark:bg-slate-950">
-			
       <View className="bg-white border-b border-slate-100 dark:bg-slate-900 dark:border-slate-800 px-6 py-4 flex-row items-center justify-start">
         <View className="flex-row items-center gap-2 py-1">
           <MaterialIcons name="storefront" size={22} color="black" className="mt-1" />
@@ -228,10 +223,10 @@ export default function StoreManagerStores() {
             tab.key === "all"
               ? stores.length
               : stores.filter((s) =>
-                  tab.key === "pending"
-                    ? s.status === "pending_review"
-                    : s.status === tab.key
-                ).length;
+                tab.key === "pending"
+                  ? s.status === "pending_review"
+                  : s.status === tab.key
+              ).length;
 
           return (
             <TouchableOpacity
@@ -255,18 +250,16 @@ export default function StoreManagerStores() {
               </Text>
               {count > 0 && (
                 <View
-                  className={`rounded-full px-1.5 min-w-[18px] items-center ${
-                    active
+                  className={`rounded-full px-1.5 min-w-[18px] items-center ${active
                       ? "bg-primary/10"
                       : "bg-neutral-100 dark:bg-neutral-700"
-                  }`}
+                    }`}
                 >
                   <Text
-                    className={`text-[9px] font-poppins-bold ${
-                      active
+                    className={`text-[9px] font-poppins-bold ${active
                         ? "text-primary"
                         : "text-neutral-500 dark:text-neutral-400"
-                    }`}
+                      }`}
                   >
                     {count}
                   </Text>
@@ -312,7 +305,7 @@ export default function StoreManagerStores() {
           )}
           {!loading &&
             filtered.map((store) => (
-              <StoreCard key={store.id} store={store} />
+              <StoreCard key={store.id} store={store} router={router} />
             ))}
           {!loading && filtered.length === 0 && !error && (
             <View className="items-center pt-16 gap-3">
@@ -337,10 +330,24 @@ export default function StoreManagerStores() {
 
         <TouchableOpacity
           className="absolute bottom-5 right-6 w-14 h-14 rounded-full bg-primary items-center justify-center"
-          onPress={() => router.push("/(store_manager)/create-store")}
+          onPress={() => {
+            // if (!hasPaidStoreFee) {
+            //   setShowPaymentModal(true);
+            //   console.log("Payment required to create store");
+            //   return;
+            // }
+            router.push("/(store_manager)/create-store");
+          }}
         >
           <MaterialIcons name="add" size={28} color="#fff" />
         </TouchableOpacity>
+        {/* {showPaymentModal && (
+          <PaymentModal
+            setShowPaymentModal={setShowPaymentModal}
+            userId={user}
+            amount={199}
+          />
+        )} */}
       </View>
     </SafeAreaView>
   );

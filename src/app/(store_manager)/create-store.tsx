@@ -1,555 +1,842 @@
-import React, { useState, useCallback } from "react";
-import {
-    View,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    ScrollView,
-    Alert,
-    StyleSheet,
-    ActivityIndicator,
-    Image,
-} from "react-native";
+import React, { useState } from "react";
+import { View, Text, SafeAreaView, TouchableOpacity, TextInput, ScrollView } from "@/tw";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { router, useFocusEffect } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
+import { Button } from "@/components/button";
 import * as ImagePicker from "expo-image-picker";
-import { Stepper } from "@/components/stepper";
-import { supabase } from "@/supabase/supabase";
+import { Modal, type ModalButton } from "@/components/modal";
 import { createStore } from "@/services/store-service";
+import { supabase } from "@/supabase/supabase";
+import Mapbox, { MapView, Camera, PointAnnotation } from "@rnmapbox/maps";
+import { useColorScheme, Platform, Modal as RNModal } from "react-native";
+import DateTimePicker from "@react-native-community/datetimepicker";
+import { Image } from "expo-image";
+import { useCreateStoreStore } from "@/store/store-manager/create-store-store";
+import { aspect_ratios, type PickImageType, STEPS, store_types_options } from "@/type/store-manager/store";
+import * as Location from "expo-location";
+import Slider from "@react-native-community/slider";
+import * as turf from "@turf/turf";
+import { uploadStoreImage } from "@/services/store-service";
 
-// ── Constants ──────────────────────────────────────────────────────────────
-const TOTAL_STEPS = 4;
+Mapbox.setAccessToken(process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN);
 
-const STORE_TYPES = [
-    "Coffee", "Restaurant", "Bar", "Salon & Beauty",
-    "Bakery", "Pharmacy", "Grocery", "Clothing", "Electronics", "Other",
-];
-
-// ── Step 1: Store Basics ──────────────────────────────────────────────────
-function StoreBasicsStep({
-    storeName, onStoreName, storeType, onStoreType,
-    logoUri, onPickLogo, isUploadingLogo, errors,
-}: {
-    storeName: string; onStoreName: (v: string) => void;
-    storeType: string; onStoreType: (v: string) => void;
-    logoUri: string | null; onPickLogo: () => void;
-    isUploadingLogo: boolean;
-    errors: { storeName?: string; storeType?: string };
-}) {
-    return (
-        <View style={{ gap: 24 }}>
-            <View style={{ alignItems: "center" }}>
-                <TouchableOpacity onPress={onPickLogo} style={styles.logoPicker} disabled={isUploadingLogo}>
-                    <View style={styles.logoPlaceholder}>
-                        {isUploadingLogo ? (
-                            <ActivityIndicator color="#FF6600" size="small" />
-                        ) : logoUri ? (
-                            <Image source={{ uri: logoUri }} style={{ width: 96, height: 96, borderRadius: 24 }} resizeMode="cover" />
-                        ) : (
-                            <>
-                                <MaterialIcons name="add-a-photo" size={28} color="#94A3B8" />
-                                <Text style={styles.logoHint}>Add Logo</Text>
-                            </>
-                        )}
-                    </View>
-                </TouchableOpacity>
-                <Text style={styles.logoSubtext}>{logoUri ? "Tap to change logo" : "Store logo (optional)"}</Text>
-            </View>
-
-            <View>
-                <Text style={styles.label}>Store Name <Text style={{ color: "#EF4444" }}>*</Text></Text>
-                <TextInput
-                    value={storeName} onChangeText={onStoreName}
-                    placeholder="e.g. The Coffee Foundry" placeholderTextColor="#94A3B8"
-                    style={[styles.input, errors.storeName ? styles.inputError : null]} autoFocus
-                />
-                {errors.storeName ? <Text style={styles.errorText}>{errors.storeName}</Text> : null}
-            </View>
-
-            <View>
-                <Text style={styles.label}>Store Type <Text style={{ color: "#EF4444" }}>*</Text></Text>
-                <View style={styles.pillGrid}>
-                    {STORE_TYPES.map((type) => {
-                        const active = storeType === type;
-                        return (
-                            <TouchableOpacity key={type} onPress={() => onStoreType(type)}
-                                style={[styles.pill, active && styles.pillActive]}>
-                                <Text style={[styles.pillText, active && styles.pillTextActive]}>{type}</Text>
-                            </TouchableOpacity>
-                        );
-                    })}
-                </View>
-                {errors.storeType ? <Text style={styles.errorText}>{errors.storeType}</Text> : null}
-            </View>
-        </View>
-    );
+function timeStringToDate(s: string, fallbackHour = 9, fallbackMin = 0): Date {
+  const match = s.trim().match(/^(\d{1,2}):(\d{2})$/);
+  if (!match) return new Date(2000, 0, 1, fallbackHour, fallbackMin);
+  const h = Math.min(23, Math.max(0, parseInt(match[1], 10)));
+  const m = Math.min(59, Math.max(0, parseInt(match[2], 10)));
+  return new Date(2000, 0, 1, h, m);
 }
 
-// ── Step 2: Location ──────────────────────────────────────────────────────
-function LocationStep({
-    address, onAddress, latitude, onLatitude, longitude, onLongitude, errors,
-}: {
-    address: string; onAddress: (v: string) => void;
-    latitude: string; onLatitude: (v: string) => void;
-    longitude: string; onLongitude: (v: string) => void;
-    errors: { address?: string };
-}) {
-    return (
-        <View style={{ gap: 20 }}>
-            <View style={styles.infoBox}>
-                <MaterialIcons name="info-outline" size={16} color="#3B82F6" />
-                <Text style={styles.infoText}>
-                    Enter your store's full address. Coordinates are optional — they enable the nearby store feature for customers.
-                </Text>
-            </View>
-            <View>
-                <Text style={styles.label}>Address <Text style={{ color: "#EF4444" }}>*</Text></Text>
-                <TextInput
-                    value={address} onChangeText={onAddress}
-                    placeholder="e.g. 123 Main St, Brooklyn, NY 11201" placeholderTextColor="#94A3B8"
-                    style={[styles.input, styles.inputMultiline, errors.address ? styles.inputError : null]}
-                    multiline numberOfLines={3}
-                />
-                {errors.address ? <Text style={styles.errorText}>{errors.address}</Text> : null}
-            </View>
-            <Text style={[styles.label, { marginBottom: 0 }]}>Coordinates (optional)</Text>
-            <View style={{ flexDirection: "row", gap: 12 }}>
-                <View style={{ flex: 1 }}>
-                    <Text style={styles.sublabel}>Latitude</Text>
-                    <TextInput value={latitude} onChangeText={onLatitude} placeholder="e.g. 40.6782"
-                        placeholderTextColor="#94A3B8" style={styles.input} keyboardType="decimal-pad" />
-                </View>
-                <View style={{ flex: 1 }}>
-                    <Text style={styles.sublabel}>Longitude</Text>
-                    <TextInput value={longitude} onChangeText={onLongitude} placeholder="e.g. -73.9442"
-                        placeholderTextColor="#94A3B8" style={styles.input} keyboardType="decimal-pad" />
-                </View>
-            </View>
-        </View>
-    );
+function dateToTimeString(d: Date): string {
+  return `${d.getHours().toString().padStart(2, "0")}:${d.getMinutes().toString().padStart(2, "0")}`;
 }
 
-// ── Step 3: Business Verification ─────────────────────────────────────────
-function BusinessVerificationStep({
-    phone, onPhone, registrationNumber, onRegistrationNumber,
-}: {
-    phone: string; onPhone: (v: string) => void;
-    registrationNumber: string; onRegistrationNumber: (v: string) => void;
-}) {
-    return (
-        <View style={{ gap: 20 }}>
-            <View style={styles.infoBox}>
-                <MaterialIcons name="hourglass-empty" size={16} color="#D97706" />
-                <Text style={styles.infoText}>
-                    All fields below are optional. Our team will verify your business details within 1–2 business days before activating your store.
-                </Text>
-            </View>
-            <View>
-                <Text style={styles.label}>Contact Phone</Text>
-                <TextInput value={phone} onChangeText={onPhone} placeholder="e.g. +1 555 000 1234"
-                    placeholderTextColor="#94A3B8" style={styles.input} keyboardType="phone-pad" />
-            </View>
-            <View>
-                <Text style={styles.label}>Business Registration Number</Text>
-                <TextInput value={registrationNumber} onChangeText={onRegistrationNumber}
-                    placeholder="e.g. BR-12345678" placeholderTextColor="#94A3B8"
-                    style={styles.input} autoCapitalize="characters" />
-                <Text style={styles.fieldHint}>DTI, SEC, or equivalent national registration number</Text>
-            </View>
-        </View>
-    );
-}
-
-// ── Step 4: Review & Submit ────────────────────────────────────────────────
-function ReviewRow({ icon, label, value, muted = false }: {
-    icon: React.ComponentProps<typeof MaterialIcons>["name"];
-    label: string; value: string; muted?: boolean;
-}) {
-    return (
-        <View style={styles.reviewRow}>
-            <MaterialIcons name={icon} size={16} color="#94A3B8" style={{ marginTop: 1 }} />
-            <View style={{ flex: 1, marginLeft: 8 }}>
-                <Text style={styles.reviewLabel}>{label}</Text>
-                <Text style={[styles.reviewValue, muted && { color: "#94A3B8", fontFamily: "Poppins-Regular" }]}>{value}</Text>
-            </View>
-        </View>
-    );
-}
-
-function ReviewStep({ storeName, storeType, address, latitude, longitude, phone, registrationNumber, logoUri }: {
-    storeName: string; storeType: string; address: string;
-    latitude: string; longitude: string; phone: string;
-    registrationNumber: string; logoUri: string | null;
-}) {
-    return (
-        <View style={{ gap: 16 }}>
-            <View style={styles.reviewCard}>
-                <Text style={styles.reviewSection}>Store Basics</Text>
-                {logoUri ? (
-                    <View style={{ flexDirection: "row", alignItems: "center", gap: 12, marginBottom: 4 }}>
-                        <Image source={{ uri: logoUri }} style={{ width: 48, height: 48, borderRadius: 12 }} resizeMode="cover" />
-                        <Text style={styles.reviewValue}>Logo uploaded ✓</Text>
-                    </View>
-                ) : null}
-                <ReviewRow icon="store" label="Name" value={storeName} />
-                <ReviewRow icon="category" label="Type" value={storeType} />
-            </View>
-            <View style={styles.reviewCard}>
-                <Text style={styles.reviewSection}>Location</Text>
-                <ReviewRow icon="location-on" label="Address" value={address} />
-                {(latitude || longitude) ? (
-                    <ReviewRow icon="my-location" label="Coordinates" value={`${latitude || "—"}, ${longitude || "—"}`} />
-                ) : null}
-            </View>
-            <View style={styles.reviewCard}>
-                <Text style={styles.reviewSection}>Business Verification</Text>
-                <ReviewRow icon="phone" label="Phone" value={phone || "Not provided"} muted={!phone} />
-                <ReviewRow icon="business" label="Reg. No." value={registrationNumber || "Not provided"} muted={!registrationNumber} />
-            </View>
-            <View style={styles.pendingNotice}>
-                <MaterialIcons name="info-outline" size={16} color="#D97706" />
-                <Text style={styles.pendingNoticeText}>
-                    Your store will be set to <Text style={{ fontFamily: "Poppins-Bold" }}>Pending Review</Text> until our team verifies it.
-                </Text>
-            </View>
-        </View>
-    );
-}
-
-// ── Screen ─────────────────────────────────────────────────────────────────
 export default function CreateStore() {
-    const insets = useSafeAreaInsets();
+  const isDark = useColorScheme() === "dark";
+  const [activeStep, setActiveStep] = useState<(typeof STEPS)[number]["key"]>("store");
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [scrollEnabled, setScrollEnabled] = useState(true);
+  const [showOpenTimePicker, setShowOpenTimePicker] = useState(false);
+  const [showCloseTimePicker, setShowCloseTimePicker] = useState(false);
+  const { storeId } = useLocalSearchParams<{ storeId?: string }>();
+  const {
+    storeName,
+    storeType,
+    latitude,
+    longitude,
+    radius,
+    logo,
+    pictures,
+    address,
+    phone,
+    registrationNumber,
+    businessDocumentImage,
+    storeOpen,
+    storeClose,
+    setStoreName,
+    setStoreType,
+    setLogo,
+    setPictures,
+    setAddress,
+    setLatitude,
+    setLongitude,
+    setPhone,
+    setRegistrationNumber,
+    setBusinessDocumentImage,
+    setStoreOpen,
+    setStoreClose,
+    setRadius,
+    resetForm,
+  } = useCreateStoreStore();
+  const [modal, setModal] = useState<{
+    title: string;
+    message: string;
+    buttons: ModalButton[];
+  } | null>(null);
 
-    const [currentStep, setCurrentStep] = useState(1);
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const [isUploadingLogo, setIsUploadingLogo] = useState(false);
+  const showError = (message: string) =>
+    setModal({
+      title: "Error",
+      message,
+      buttons: [{ label: "OK", onPress: () => setModal(null), variant: "secondary" }],
+    });
 
-    // Step 1
-    const [storeName, setStoreName] = useState("");
-    const [storeType, setStoreType] = useState("");
-    const [logoUri, setLogoUri] = useState<string | null>(null);
-    const [logoPublicUrl, setLogoPublicUrl] = useState<string | null>(null);
-    const [step1Errors, setStep1Errors] = useState<{ storeName?: string; storeType?: string }>({});
+  const pickImage = async (type: PickImageType, pictureIndex?: number) => {
+    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permissionResult.granted) {
+      setModal({
+        title: "Permission Required",
+        message: "We need access to your photos to upload images.",
+        buttons: [{ label: "OK", onPress: () => setModal(null), variant: "secondary" }],
+      });
+      return;
+    }
 
-    // Step 2
-    const [address, setAddress] = useState("");
-    const [latitude, setLatitude] = useState("");
-    const [longitude, setLongitude] = useState("");
-    const [step2Errors, setStep2Errors] = useState<{ address?: string }>({});
+    const aspect = aspect_ratios[type];
+    const pickerResult = await ImagePicker.launchImageLibraryAsync({
+      allowsEditing: true,
+      aspect,
+      quality: 0.9,
+      base64: true,
+    });
 
-    // Step 3
-    const [phone, setPhone] = useState("");
-    const [registrationNumber, setRegistrationNumber] = useState("");
+    if (pickerResult.canceled || !pickerResult.assets?.[0]) return;
 
-    // ── Reset all state every time this screen comes into focus ───────────
-    useFocusEffect(
-        useCallback(() => {
-            setCurrentStep(1);
-            setIsSubmitting(false);
-            setIsUploadingLogo(false);
-            setStoreName("");
-            setStoreType("");
-            setLogoUri(null);
-            setLogoPublicUrl(null);
-            setStep1Errors({});
-            setAddress("");
-            setLatitude("");
-            setLongitude("");
-            setStep2Errors({});
-            setPhone("");
-            setRegistrationNumber("");
-        }, [])
-    );
+    const asset = pickerResult.assets[0];
+    if (!asset.base64) {
+      showError("Could not read image data. Please try again.");
+      return;
+    }
 
-    // ── Logo picker + Supabase Storage upload ─────────────────────────────
-    const handlePickLogo = async () => {
-        try {
-            const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-            if (status !== "granted") {
-                Alert.alert("Permission Required", "Please allow access to your photo library to upload a logo.");
-                return;
-            }
+    const mimeType = asset.mimeType ?? "image/jpeg";
 
-            const result = await ImagePicker.launchImageLibraryAsync({
-                mediaTypes: ['images'],
-                allowsEditing: true,
-                aspect: [1, 1],
-                quality: 0.8,
-                base64: true,  // get base64 directly — avoids all content:// URI issues on Android
-            });
-
-            if (result.canceled || !result.assets?.[0]) return;
-
-            const asset = result.assets[0];
-            if (!asset.base64) {
-                Alert.alert("Error", "Could not read image data. Please try again.");
-                return;
-            }
-
-            setLogoUri(asset.uri);
-            setIsUploadingLogo(true);
-
-            try {
-                const { data: { user } } = await supabase.auth.getUser();
-                if (!user) throw new Error("Not authenticated");
-
-                // Convert base64 → Uint8Array (no local file reading needed)
-                const binaryString = atob(asset.base64);
-                const bytes = new Uint8Array(binaryString.length);
-                for (let i = 0; i < binaryString.length; i++) {
-                    bytes[i] = binaryString.charCodeAt(i);
-                }
-
-                const mimeType = asset.mimeType ?? "image/jpeg";
-                const ext = mimeType.split("/")[1] ?? "jpg";
-                const fileName = `store-logos/${user.id}/${Date.now()}.${ext}`;
-
-                const { error: uploadError } = await supabase.storage
-                    .from("puntos-public")
-                    .upload(fileName, bytes, { contentType: mimeType, upsert: true });
-
-                if (uploadError) throw new Error(uploadError.message);
-
-                const { data: urlData } = supabase.storage.from("puntos-public").getPublicUrl(fileName);
-                setLogoPublicUrl(urlData.publicUrl);
-            } catch (err: any) {
-                Alert.alert("Upload Failed", err?.message ?? "Could not upload logo. You can still submit without it.");
-                setLogoUri(null);
-                setLogoPublicUrl(null);
-            } finally {
-                setIsUploadingLogo(false);
-            }
-        } catch {
-            Alert.alert("Not Available", "Image picker is not available. Please rebuild the app after installing expo-image-picker.");
-
-        }
+    const maybeUpload = async () => {
+      if (!storeId) return `data:${mimeType};base64,${asset.base64}`;
+      const id = String(storeId);
+      const kind = type === "picture" ? "picture" : type;
+      return await uploadStoreImage(id, kind, asset.base64, mimeType);
     };
 
-    // ── Validation ────────────────────────────────────────────────────────
-    const validateStep1 = () => {
-        const errs: { storeName?: string; storeType?: string } = {};
-        if (!storeName.trim()) errs.storeName = "Store name is required";
-        if (!storeType) errs.storeType = "Please select a store type";
-        setStep1Errors(errs);
-        return Object.keys(errs).length === 0;
-    };
+    if (type === "logo") {
+      setIsUploadingImage(true);
+      try {
+        const url = await maybeUpload();
+        setLogo(url);
+      } catch (e: any) {
+        showError(e?.message ?? "Upload failed. Please try again.");
+      } finally {
+        setIsUploadingImage(false);
+      }
+      return;
+    }
 
-    const validateStep2 = () => {
-        const errs: { address?: string } = {};
-        if (!address.trim()) errs.address = "Address is required";
-        setStep2Errors(errs);
-        return Object.keys(errs).length === 0;
-    };
+    if (type === "business_document") {
+      setIsUploadingImage(true);
+      try {
+        const url = await maybeUpload();
+        setBusinessDocumentImage(url);
+      } catch (e: any) {
+        showError(e?.message ?? "Upload failed. Please try again.");
+      } finally {
+        setIsUploadingImage(false);
+      }
+      return;
+    }
 
-    // ── Navigation ────────────────────────────────────────────────────────
-    const goNext = () => {
-        if (currentStep === 1 && !validateStep1()) return;
-        if (currentStep === 2 && !validateStep2()) return;
-        if (currentStep < TOTAL_STEPS) setCurrentStep((s) => s + 1);
-    };
+    if (type === "picture") {
+      const current = useCreateStoreStore.getState().pictures ?? [];
+      if (current.length >= 6 && (pictureIndex == null || pictureIndex >= current.length)) return;
 
-    const goBack = () => {
-        if (currentStep > 1) setCurrentStep((s) => s - 1);
-        else router.back();
-    };
+      setIsUploadingImage(true);
+      try {
+        const url = await maybeUpload();
+        const next = [...current];
+        const index =
+          pictureIndex !== undefined && pictureIndex >= 0 && pictureIndex < next.length
+            ? pictureIndex
+            : next.length;
+        if (index < next.length) next[index] = url;
+        else next.push(url);
+        setPictures(next);
+      } catch (e: any) {
+        showError(e?.message ?? "Upload failed. Please try again.");
+      } finally {
+        setIsUploadingImage(false);
+      }
+    }
+  };
 
-    // ── Submit ────────────────────────────────────────────────────────────
-    const handleSubmit = async () => {
+  const parsedLat = latitude ? Number(latitude) : NaN;
+  const parsedLng = longitude ? Number(longitude) : NaN;
+  const hasPin = Number.isFinite(parsedLat) && Number.isFinite(parsedLng);
+
+  const picturesCount = pictures?.length ?? 0;
+  const effectiveRadius = radius || 50;
+
+  const getStoreStepMissing = () => {
+    const missing: string[] = [];
+    if (!storeName.trim()) missing.push("Store Name");
+    if (!storeType.trim()) missing.push("Store Type");
+    if (!logo) missing.push("Store Logo");
+    if (picturesCount < 3) missing.push("At least 3 Store Pictures");
+    if (picturesCount > 6) missing.push("Maximum 6 Store Pictures");
+    return missing;
+  };
+
+  const getBusinessStepMissing = () => {
+    const missing: string[] = [];
+    if (!registrationNumber.trim()) missing.push("Registration Number");
+    if (!businessDocumentImage) missing.push("Business Document Image");
+    return missing;
+  };
+
+  const getLocationStepMissing = () => {
+    const missing: string[] = [];
+    if (!address.trim()) missing.push("Address");
+    if (!hasPin) missing.push("Pin location on the map");
+    if (effectiveRadius < 50 || effectiveRadius > 500) missing.push("Radius (50–500m)");
+    return missing;
+  };
+
+  const isStoreStepValid = getStoreStepMissing().length === 0;
+  const isBusinessStepValid = getBusinessStepMissing().length === 0;
+  const isLocationStepValid = getLocationStepMissing().length === 0;
+
+  const isFormValid = isStoreStepValid && isBusinessStepValid && isLocationStepValid;
+
+  const radiusCircleFeature = React.useMemo(() => {
+    if (!hasPin) return null;
+    const km = (radius || 50) / 1000;
+    const circle = turf.circle([parsedLng, parsedLat], km, {
+      steps: 64,
+      units: "kilometers",
+    });
+    return circle;
+  }, [hasPin, parsedLat, parsedLng, radius]);
+
+  const setPin = (lat: number, lng: number) => {
+    setLatitude(String(lat));
+    setLongitude(String(lng));
+  };
+
+  const handleGetCurrent = async () => {
+    const { status } = await Location.requestForegroundPermissionsAsync();
+    if (status !== "granted") {
+      setModal({
+        title: "Permission Required",
+        message: "Location permission is required to get your current location.",
+        buttons: [{ label: "OK", onPress: () => setModal(null), variant: "secondary" }],
+      });
+      return;
+    }
+
+    const loc =
+      (await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Balanced,
+      }).catch(() => null)) ??
+      (await Location.getLastKnownPositionAsync({}).catch(() => null));
+
+    if (!loc) {
+      showError("Could not get current location. Please try again.");
+      return;
+    }
+
+    setPin(loc.coords.latitude, loc.coords.longitude);
+  };
+
+  const goBack = () => {
+    if (activeStep === "business") setActiveStep("store");
+    else if (activeStep === "location") setActiveStep("business");
+  };
+
+  const goNext = () => {
+    if (activeStep === "store") {
+      const missing = getStoreStepMissing();
+      if (missing.length > 0) {
+        setModal({
+          title: "Store details required",
+          message: `Please complete: ${missing.join(", ")}.`,
+          buttons: [{ label: "OK", onPress: () => setModal(null), variant: "secondary" }],
+        });
+        return;
+      }
+      setActiveStep("business");
+      return;
+    }
+
+    if (activeStep === "business") {
+      const missing = getBusinessStepMissing();
+      if (missing.length > 0) {
+        setModal({
+          title: "Business details required",
+          message: `Please complete: ${missing.join(", ")}.`,
+          buttons: [{ label: "OK", onPress: () => setModal(null), variant: "secondary" }],
+        });
+        return;
+      }
+      setActiveStep("location");
+      return;
+    }
+
+    if (!isFormValid) {
+      const missing = getLocationStepMissing();
+
+      setModal({
+        title: "Missing details",
+        message:
+          missing.length > 0
+            ? `Please complete: ${missing.join(", ")}.`
+            : "Please complete all required fields before creating the store.",
+        buttons: [{ label: "OK", onPress: () => setModal(null), variant: "secondary" }],
+      });
+      return;
+    }
+
+    const create = async () => {
+      try {
         setIsSubmitting(true);
-        try {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) { Alert.alert("Error", "You must be logged in to create a store."); return; }
+        const {  data: { user }, } = await supabase.auth.getUser();
+        const newStore = await createStore({
+          name: storeName.trim(),
+          type: storeType,
+          address: address.trim(),
+          latitude: hasPin ? parsedLat : null,
+          longitude: hasPin ? parsedLng : null,
+          phone: phone.trim() || undefined,
+          registrationNumber: registrationNumber.trim() || undefined,
+          businessDocumentImage: businessDocumentImage ?? null,
+          storeOpen: storeOpen.trim() || null,
+          storeClose: storeClose.trim() || null,
+          ownerId: user.id,
+          storeLogo: logo ?? null,
+          storePictures: pictures ?? null,
+          radius: radius,
+        });
 
-            await createStore({
-                name: storeName.trim(),
-                type: storeType,
-                address: address.trim(),
-                latitude: latitude ? parseFloat(latitude) : null,
-                longitude: longitude ? parseFloat(longitude) : null,
-                phone: phone.trim() || undefined,
-                registrationNumber: registrationNumber.trim() || undefined,
-                ownerId: user.id,
-                storeImageUrl: logoPublicUrl ?? undefined,
-            });
-
-            Alert.alert(
-                "Store Submitted! 🎉",
-                "Your store is now pending review. Our team will verify it within 1–2 business days.",
-                [{ text: "Got it", onPress: () => router.replace("/(store_manager)/stores") }]
-            );
-        } catch (error: any) {
-            Alert.alert("Submission Failed", error?.message ?? "Something went wrong. Please try again.");
-        } finally {
-            setIsSubmitting(false);
-        }
+        setModal({
+          title: "Store created",
+          message: "Your store has been submitted for review.",
+          buttons: [
+            {
+              label: "View store",
+              variant: "primary",
+              onPress: () => {
+                setModal(null);
+                router.replace(`/(store_manager)/view-store/${newStore.id}`);
+              },
+            },
+          ],
+        });
+        resetForm();
+      } catch (e: any) {
+        showError(e?.message ?? "Failed to create store. Please try again.");
+      } finally {
+        setIsSubmitting(false);
+      }
     };
 
-    const STEP_META = [
-        { title: "Store Basics", desc: "Tell us about your store" },
-        { title: "Location", desc: "Where is your store located?" },
-        { title: "Business Verification", desc: "Provide your business details" },
-        { title: "Review & Submit", desc: "Review your details before submitting" },
-    ];
+    void create();
+  };
 
-    return (
-        <View style={{ flex: 1, backgroundColor: "#F3F4F6" }}>
-            {/* Header */}
-            <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
-                <TouchableOpacity onPress={goBack} style={styles.backBtn}>
-                    <MaterialIcons name="arrow-back" size={22} color="#0F172A" />
-                </TouchableOpacity>
-                <Text style={styles.headerTitle}>Create Store</Text>
-                <View style={{ width: 36 }} />
-            </View>
+	return (
+		<SafeAreaView edges={["top", "left", "right"]} className="flex-1 bg-backgroundMuted dark:bg-[#111921]">
+      <Modal
+        visible={!!modal}
+        onClose={() => setModal(null)}
+        title={modal?.title ?? ""}
+        message={modal?.message}
+        buttons={modal?.buttons}
+      />
+      <View
+				className="bg-background dark:bg-[#111921] border-b border-slate-200 dark:border-slate-800 flex-row items-center h-15 px-2"
+			>
+				<TouchableOpacity
+					className="w-10 h-10 rounded-full items-center justify-center"
+					activeOpacity={0.7}
+					onPress={() => router.push("/(store_manager)/stores")}
+				>
+					<MaterialIcons name="chevron-left" size={22} color="#0F172A" />
+				</TouchableOpacity>
+	
+				<Text className="flex-1 text-center text-[17px] font-poppins-bold text-slate-900 dark:text-slate-100 pr-10">
+					Create Store
+				</Text>
+			</View>
 
-            {/* Stepper */}
-            <Stepper currentStep={currentStep} totalSteps={TOTAL_STEPS} />
+      <ScrollView
+        className="flex-1"
+        contentContainerStyle={{ padding: 16, paddingBottom: 24 }}
+        showsVerticalScrollIndicator={false}
+        scrollEnabled={scrollEnabled}
+      >
+        {activeStep === "store" && (
+          <View className="gap-2">
+            <Text className="text-slate-900 dark:text-slate-100 text-md font-poppins-bold">
+              Store Details
+            </Text>
+            <View className="gap-4">
+              <View className="flex flex-col gap-2">
+                <Text className="text-slate-700 dark:text-slate-300 text-sm font-poppins-medium">
+                  Store Name <Text className="text-red-500 dark:text-red-400">*</Text>
+                </Text>
+                <TextInput
+                  className="w-full rounded-xl bg-white dark:bg-slate-800/50 text-slate-900 dark:text-slate-100 h-12 px-4 font-poppins"
+                  placeholder="e.g. Blue Bottle Coffee"
+                  placeholderTextColor="#94A3B8"
+                  value={storeName}
+                  onChangeText={setStoreName}
+                />
+              </View>
 
-            {/* Step label */}
-            <View style={styles.stepLabel}>
-                <Text style={styles.stepTitle}>{STEP_META[currentStep - 1].title}</Text>
-                <Text style={styles.stepDesc}>{STEP_META[currentStep - 1].desc}</Text>
-            </View>
+              <View className="flex-1 flex-col gap-2 justify-start">
+                <Text className="text-slate-700 dark:text-slate-300 text-sm font-poppins-medium px-1">
+                  Store Type <Text className="text-red-500 dark:text-red-400">*</Text>
+                </Text>
+                <View className="flex-row flex-wrap gap-2 mt-1">
+                  {store_types_options.map((type) => {
+                    const selected = storeType === type.value;
+                    return (
+                      <TouchableOpacity
+                        key={type.value}
+                        activeOpacity={0.8}
+                        onPress={() => setStoreType(type.value)}
+                        className={`px-3 py-1.5 rounded-full border ${
+                          selected
+                            ? "bg-primary/10 dark:bg-primary/10 border-primary/10 dark:border-primary/10"
+                            : "bg-slate-200 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800/50"
+                        }`}
+                      >
+                        <Text
+                          className={`text-xs font-poppins-medium ${
+                            selected
+                              ? "text-primary dark:text-slate-100"
+                              : "text-slate-600 dark:text-slate-300"
+                          }`}
+                        >
+                          {type.label}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </View>
 
-            {/* Step content */}
-            <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
-                {currentStep === 1 && (
-                    <StoreBasicsStep
-                        storeName={storeName} onStoreName={setStoreName}
-                        storeType={storeType} onStoreType={setStoreType}
-                        logoUri={logoUri} onPickLogo={handlePickLogo}
-                        isUploadingLogo={isUploadingLogo} errors={step1Errors}
-                    />
-                )}
-                {currentStep === 2 && (
-                    <LocationStep
-                        address={address} onAddress={setAddress}
-                        latitude={latitude} onLatitude={setLatitude}
-                        longitude={longitude} onLongitude={setLongitude}
-                        errors={step2Errors}
-                    />
-                )}
-                {currentStep === 3 && (
-                    <BusinessVerificationStep
-                        phone={phone} onPhone={setPhone}
-                        registrationNumber={registrationNumber} onRegistrationNumber={setRegistrationNumber}
-                    />
-                )}
-                {currentStep === 4 && (
-                    <ReviewStep
-                        storeName={storeName} storeType={storeType}
-                        address={address} latitude={latitude} longitude={longitude}
-                        phone={phone} registrationNumber={registrationNumber} logoUri={logoUri}
-                    />
-                )}
-            </ScrollView>
-
-            {/* Footer CTA */}
-            <View style={[styles.footer, { paddingBottom: insets.bottom + 16 }]}>
-                <TouchableOpacity
-                    onPress={currentStep === TOTAL_STEPS ? handleSubmit : goNext}
-                    style={[styles.nextBtn, isSubmitting && { opacity: 0.7 }]}
-                    disabled={isSubmitting}
-                >
-                    {isSubmitting ? (
-                        <ActivityIndicator color="#FFFFFF" size="small" />
+              <View className="flex-row gap-4 gap-y-2">
+                <View className="flex-1 flex-col gap-2">
+                  <Text className="text-slate-700 dark:text-slate-300 text-sm font-poppins-medium px-1">
+                    Store Logo <Text className="text-red-500 dark:text-red-400">*</Text>
+                  </Text>
+                  <TouchableOpacity
+                    onPress={() => pickImage("logo")}
+                    disabled={isUploadingImage}
+                    className="relative w-32 h-32 rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/30 flex flex-col items-center justify-center gap-1 overflow-hidden"
+                  >
+                    {logo ? (
+                      <>
+                        <Image
+                          source={{ uri: logo }}
+                          style={{ width: "100%", height: "100%" }}
+                          contentFit="cover"
+                        />
+                        <TouchableOpacity
+                          onPress={() => setLogo(null)}
+                          className="absolute top-1 right-1 w-6 h-6 rounded-full bg-black/60 items-center justify-center"
+                          activeOpacity={0.8}
+                        >
+                          <MaterialIcons name="close" size={14} color="#fff" />
+                        </TouchableOpacity>
+                      </>
                     ) : (
-                        <>
-                            <Text style={styles.nextBtnText}>{currentStep === TOTAL_STEPS ? "Submit for Review" : "Continue"}</Text>
-                            <MaterialIcons name="arrow-forward" size={18} color="#FFFFFF" />
-                        </>
+                      <>
+                        <MaterialIcons name="add-a-photo" size={18} color="#94A3B8" />
+                        <Text className="text-[10px] text-slate-500 font-poppins">Logo</Text>
+                      </>
                     )}
-                </TouchableOpacity>
+                  </TouchableOpacity>
+                </View>
+              </View>
+              
+              <View className="flex-1 flex-col gap-2">
+                <Text className="text-slate-700 dark:text-slate-300 text-sm font-poppins-medium px-1">
+                  Store Pictures <Text className="text-red-500 dark:text-red-400">*</Text>
+                </Text>
+                <Text className="text-slate-600 dark:text-slate-400 text-xs font-poppins mb-3 px-1">
+                  You must add at least 3, and up to 6, store pictures. Tap any box to add or replace a photo.
+                </Text>
+                <View className="flex-row flex-wrap gap-2">
+                  {[0, 1, 2, 3, 4, 5].map((index) => {
+                    const uri = pictures?.[index];
+                    return (
+                      <View key={index} className="w-[31%] aspect-square">
+                        {uri ? (
+                          <View className="flex-1 rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 relative">
+                            <Image
+                              source={{ uri }}
+                              style={{ width: "100%", height: "100%" }}
+                              contentFit="cover"
+                            />
+                            <TouchableOpacity
+                              onPress={() => {
+                                const next = (pictures ?? []).filter((_, i) => i !== index);
+                                setPictures(next.length > 0 ? next : null);
+                              }}
+                              className="absolute top-1 right-1 w-6 h-6 rounded-full bg-black/50 items-center justify-center"
+                            >
+                              <MaterialIcons name="close" size={14} color="#fff" />
+                            </TouchableOpacity>
+                          </View>
+                        ) : (
+                          <TouchableOpacity
+                            onPress={() => pickImage("picture", index)}
+                            disabled={isUploadingImage || (pictures?.length ?? 0) >= 6}
+                            className="flex-1 rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/30 items-center justify-center min-h-[80px]"
+                          >
+                            <MaterialIcons name="add-a-photo" size={20} color="#94A3B8" />
+                            <Text className="text-[10px] text-slate-500 font-poppins mt-0.5">Add</Text>
+                          </TouchableOpacity>
+                        )}
+                      </View>
+                    );
+                  })}
+                </View>
+              </View>
             </View>
-        </View>
-    );
-}
+          </View>
+        )}
 
-// ── Styles ─────────────────────────────────────────────────────────────────
-const styles = StyleSheet.create({
-    header: {
-        flexDirection: "row", alignItems: "center", justifyContent: "space-between",
-        paddingHorizontal: 20, paddingBottom: 12,
-        backgroundColor: "#FFFFFF", borderBottomWidth: 1, borderBottomColor: "#F1F5F9",
-    },
-    backBtn: {
-        width: 36, height: 36, borderRadius: 10,
-        backgroundColor: "#F3F4F6", alignItems: "center", justifyContent: "center",
-    },
-    headerTitle: { fontSize: 16, fontFamily: "Poppins-Bold", color: "#0F172A" },
-    stepLabel: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 4 },
-    stepTitle: { fontSize: 22, fontFamily: "Poppins-Bold", color: "#0F172A" },
-    stepDesc: { fontSize: 13, fontFamily: "Poppins-Regular", color: "#94A3B8", marginTop: 2 },
-    scrollContent: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 40 },
-    // Logo
-    logoPicker: { marginBottom: 6 },
-    logoPlaceholder: {
-        width: 96, height: 96, borderRadius: 24,
-        backgroundColor: "#F1F5F9", borderWidth: 2, borderColor: "#E2E8F0",
-        borderStyle: "dashed", alignItems: "center", justifyContent: "center",
-        gap: 4, overflow: "hidden",
-    },
-    logoHint: { fontSize: 11, fontFamily: "Poppins-Medium", color: "#94A3B8" },
-    logoSubtext: { fontSize: 11, fontFamily: "Poppins-Regular", color: "#CBD5E1" },
-    // Form
-    label: { fontSize: 13, fontFamily: "Poppins-Medium", color: "#475569", marginBottom: 8 },
-    sublabel: { fontSize: 12, fontFamily: "Poppins-Regular", color: "#94A3B8", marginBottom: 6 },
-    input: {
-        backgroundColor: "#FFFFFF", borderWidth: 1, borderColor: "#E2E8F0",
-        borderRadius: 14, paddingHorizontal: 16, paddingVertical: 14,
-        fontSize: 14, fontFamily: "Poppins-Regular", color: "#0F172A",
-    },
-    inputMultiline: { minHeight: 80, textAlignVertical: "top" },
-    inputError: { borderColor: "#EF4444" },
-    errorText: {
-        fontSize: 12, fontFamily: "Poppins-Regular", color: "#EF4444",
-        marginTop: 6, backgroundColor: "#FEF2F2", borderRadius: 8,
-        paddingHorizontal: 12, paddingVertical: 6, textAlign: "center",
-    },
-    fieldHint: { fontSize: 11, fontFamily: "Poppins-Regular", color: "#CBD5E1", marginTop: 6 },
-    // Pills
-    pillGrid: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
-    pill: {
-        paddingHorizontal: 14, paddingVertical: 8, borderRadius: 9999,
-        backgroundColor: "#FFFFFF", borderWidth: 1, borderColor: "#E2E8F0",
-    },
-    pillActive: { backgroundColor: "#FF6600", borderColor: "#FF6600" },
-    pillText: { fontSize: 13, fontFamily: "Poppins-Medium", color: "#64748B" },
-    pillTextActive: { color: "#FFFFFF" },
-    // Info box
-    infoBox: {
-        flexDirection: "row", alignItems: "flex-start", gap: 8,
-        backgroundColor: "#EFF6FF", borderRadius: 12, padding: 12,
-    },
-    infoText: { flex: 1, fontSize: 12, fontFamily: "Poppins-Regular", color: "#1E40AF", lineHeight: 18 },
-    // Review
-    reviewCard: {
-        backgroundColor: "#FFFFFF", borderRadius: 16, padding: 16, gap: 12,
-        shadowColor: "#0F172A", shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.05, shadowRadius: 8, elevation: 2,
-    },
-    reviewSection: {
-        fontSize: 11, fontFamily: "Poppins-Bold", color: "#FF6600",
-        textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 4,
-    },
-    reviewRow: { flexDirection: "row", alignItems: "flex-start" },
-    reviewLabel: { fontSize: 11, fontFamily: "Poppins-Regular", color: "#94A3B8" },
-    reviewValue: { fontSize: 14, fontFamily: "Poppins-Medium", color: "#0F172A" },
-    pendingNotice: {
-        flexDirection: "row", alignItems: "flex-start", gap: 8,
-        backgroundColor: "#FFFBEB", borderRadius: 12, padding: 12,
-        borderLeftWidth: 3, borderLeftColor: "#F59E0B",
-    },
-    pendingNoticeText: { flex: 1, fontSize: 12, fontFamily: "Poppins-Regular", color: "#92400E", lineHeight: 18 },
-    // Footer
-    footer: {
-        paddingHorizontal: 24, paddingTop: 16,
-        backgroundColor: "#FFFFFF", borderTopWidth: 1, borderTopColor: "#F1F5F9",
-    },
-    nextBtn: {
-        backgroundColor: "#FF6600", borderRadius: 14, paddingVertical: 15,
-        flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8,
-    },
-    nextBtnText: { fontSize: 15, fontFamily: "Poppins-Bold", color: "#FFFFFF" },
-});
+        {activeStep === "business" && (
+          <View className="gap-5">
+            <Text className="text-slate-900 dark:text-slate-100 text-base font-poppins-bold">
+              Business Details
+            </Text>
+
+            <View className="gap-4">
+              <View className="flex flex-col gap-1.5">
+                <Text className="text-slate-700 dark:text-slate-300 text-sm font-poppins-medium px-1">
+                  Phone Number
+                </Text>
+                <View className="relative">
+                  <TextInput
+                    className="w-full rounded-xl bg-white dark:bg-slate-800/50 text-slate-900 dark:text-slate-100 h-12 pl-4 pr-4 font-poppins"
+                    placeholder="0912 - 234 - 5678"
+                    placeholderTextColor="#94A3B8"
+                    keyboardType="phone-pad"
+                    value={phone}
+                    onChangeText={setPhone}
+                  />
+                </View>
+              </View>
+
+              <View className="flex flex-col gap-1.5">
+                <Text className="text-slate-700 dark:text-slate-300 text-sm font-poppins-medium px-1">
+                  Business Registration Number <Text className="text-red-500 dark:text-red-400">*</Text>
+                </Text>
+                <TextInput
+                  className="w-full rounded-xl bg-white dark:bg-slate-800/50 text-slate-900 dark:text-slate-100 h-12 px-4 font-poppins"
+                  placeholder="e.g. TAX-ID-123456"
+                  placeholderTextColor="#94A3B8"
+                  value={registrationNumber}
+                  onChangeText={setRegistrationNumber}
+                />
+              </View>
+
+              <View className="flex flex-col gap-2">
+                <Text className="text-slate-700 dark:text-slate-300 text-sm font-poppins-medium px-1">
+                  Business Document <Text className="text-red-500 dark:text-red-400">*</Text>
+                </Text>
+                <TouchableOpacity
+                  onPress={() => {
+                    if (!businessDocumentImage) pickImage("business_document");
+                  }}
+                  disabled={isUploadingImage || !!businessDocumentImage}
+                  className="w-full rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/30 items-center justify-center overflow-hidden"
+                  style={{ height: 220 }}
+                >
+                  {businessDocumentImage ? (
+                    <>
+                      <Image
+                        source={{ uri: businessDocumentImage }}
+                        style={{ width: "100%", height: "100%", resizeMode: "cover" }}
+                        contentFit="contain"
+                      />
+                      <TouchableOpacity
+                        onPress={() => setBusinessDocumentImage(null)}
+                        className="absolute top-2 right-2 w-7 h-7 rounded-full bg-black/65 items-center justify-center"
+                        activeOpacity={0.8}
+                      >
+                        <MaterialIcons name="close" size={16} color="gray" />
+                      </TouchableOpacity>
+                    </>
+                  ) : (
+                    <>
+                      <MaterialIcons name="description" size={24} color="#94A3B8" />
+                      <Text className="text-xs text-slate-500 font-poppins mt-1">
+                        Upload document image
+                      </Text>
+                    </>
+                  )}
+                </TouchableOpacity>
+              </View>
+
+              <View className="flex-row gap-3">
+                <View className="flex-1 flex-col gap-1.5">
+                  <Text className="text-slate-700 dark:text-slate-300 text-sm font-poppins-medium px-1">
+                    Opening time
+                  </Text>
+                  <TouchableOpacity
+                    onPress={() => setShowOpenTimePicker(true)}
+                    className="w-full rounded-xl bg-white dark:bg-slate-800/50 h-12 px-4 justify-center"
+                    activeOpacity={0.8}
+                  >
+                    <Text className="text-slate-900 dark:text-slate-100 font-poppins">
+                      {storeOpen || "09:00"}
+                    </Text>
+                  </TouchableOpacity>
+                  {showOpenTimePicker && (
+                    Platform.OS === "android" ? (
+                      <DateTimePicker
+                        value={timeStringToDate(storeOpen || "09:00", 9, 0)}
+                        mode="time"
+                        onChange={(_, d) => {
+                          if (d) setStoreOpen(dateToTimeString(d));
+                          setShowOpenTimePicker(false);
+                        }}
+                      />
+                    ) : (
+                      <RNModal visible transparent animationType="slide">
+                        <TouchableOpacity
+                          className="flex-1 bg-black/40 justify-end"
+                          activeOpacity={1}
+                          onPress={() => setShowOpenTimePicker(false)}
+                        >
+                          <TouchableOpacity
+                            activeOpacity={1}
+                            onPress={(e) => e.stopPropagation()}
+                            className="bg-white dark:bg-slate-800 rounded-t-2xl pb-8 pt-2"
+                          >
+                            <DateTimePicker
+                              value={timeStringToDate(storeOpen || "09:00", 9, 0)}
+                              mode="time"
+                              onChange={(_, d) => {
+                                if (d) setStoreOpen(dateToTimeString(d));
+                              }}
+                            />
+                            <View className="px-4">
+                              <Button
+                                label="Done"
+                                onPress={() => setShowOpenTimePicker(false)}
+                                variant="primary"
+                                fullWidth
+                              />
+                            </View>
+                          </TouchableOpacity>
+                        </TouchableOpacity>
+                      </RNModal>
+                    )
+                  )}
+                </View>
+                <View className="flex-1 flex-col gap-1.5">
+                  <Text className="text-slate-700 dark:text-slate-300 text-sm font-poppins-medium px-1">
+                    Closing time
+                  </Text>
+                  <TouchableOpacity
+                    onPress={() => setShowCloseTimePicker(true)}
+                    className="w-full rounded-xl bg-white dark:bg-slate-800/50 h-12 px-4 justify-center"
+                    activeOpacity={0.8}
+                  >
+                    <Text className="text-slate-900 dark:text-slate-100 font-poppins">
+                      {storeClose || "21:00"}
+                    </Text>
+                  </TouchableOpacity>
+                  {showCloseTimePicker && (
+                    Platform.OS === "android" ? (
+                      <DateTimePicker
+                        value={timeStringToDate(storeClose || "21:00", 21, 0)}
+                        mode="time"
+                        onChange={(_, d) => {
+                          if (d) setStoreClose(dateToTimeString(d));
+                          setShowCloseTimePicker(false);
+                        }}
+                      />
+                    ) : (
+                      <RNModal visible transparent animationType="slide">
+                        <TouchableOpacity
+                          className="flex-1 bg-black/40 justify-end"
+                          activeOpacity={1}
+                          onPress={() => setShowCloseTimePicker(false)}
+                        >
+                          <TouchableOpacity
+                            activeOpacity={1}
+                            onPress={(e) => e.stopPropagation()}
+                            className="bg-white dark:bg-slate-800 rounded-t-2xl pb-8 pt-2"
+                          >
+                            <DateTimePicker
+                              value={timeStringToDate(storeClose || "21:00", 21, 0)}
+                              mode="time"
+                              onChange={(_, d) => {
+                                if (d) setStoreClose(dateToTimeString(d));
+                              }}
+                            />
+                            <Button
+                              label="Done"
+                              onPress={() => setShowCloseTimePicker(false)}
+                              variant="primary"
+                              fullWidth
+                            />
+                          </TouchableOpacity>
+                        </TouchableOpacity>
+                      </RNModal>
+                    )
+                  )}
+                </View>
+              </View>
+            </View>
+          </View>
+        )}
+
+        {activeStep === "location" && (
+          <View className="gap-5">
+            <Text className="text-slate-900 dark:text-slate-100 text-base font-poppins-bold">
+              Location Details
+            </Text>
+            <View className="flex-row items-center justify-between">
+              <Text className="text-xs font-poppins text-slate-500 dark:text-slate-400">
+                Tap the map to drop a pin.
+              </Text>
+              <TouchableOpacity
+                className="flex-row items-center gap-1"
+                activeOpacity={0.8}
+                onPress={handleGetCurrent}
+              >
+                <MaterialIcons name="my-location" size={16} color="#FF6600" />
+                <Text className="text-primary text-xs font-poppins-bold">
+                  Get Current
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            <View className="rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900">
+              <View pointerEvents="box-none">
+                <MapView
+                  style={{ height: 400, width: "100%" }}
+                  styleURL={
+                    isDark
+                      ? "mapbox://styles/mapbox/navigation-night-v1"
+                      : "mapbox://styles/mapbox/streets-v12"
+                  }
+                  onPress={(e) => {
+                    const coords = (e as any)?.geometry?.coordinates as [number, number] | undefined;
+                    if (!coords) return;
+                    const [lng, lat] = coords;
+                    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+                    setPin(lat, lng);
+                  }}
+                  onTouchStart={() => setScrollEnabled(false)}
+                  onTouchEnd={() => setScrollEnabled(true)}
+                  onTouchCancel={() => setScrollEnabled(true)}
+                >
+                  <Camera
+                    zoomLevel={hasPin ? 14 : 12}
+                    centerCoordinate={hasPin ? [parsedLng, parsedLat] : [123.8854, 10.3157]}
+                  />
+                {hasPin && (
+                  <PointAnnotation
+                    id="storeLocation"
+                    coordinate={[parsedLng, parsedLat]}
+                  >
+                    <View className="w-4 h-4 bg-orange-500 rounded-full border-2 border-white" />
+                  </PointAnnotation>
+                )}
+
+                {radiusCircleFeature && (
+                  <Mapbox.ShapeSource id="storeRadius" shape={radiusCircleFeature}>
+                    <Mapbox.FillLayer
+                      id="storeRadiusFill"
+                      style={{
+                        fillColor: "#FF6600",
+                        fillOpacity: 0.14,
+                      }}
+                    />
+                  </Mapbox.ShapeSource>
+                )}
+                </MapView>
+              </View>
+            </View>
+
+            <View className="flex flex-col gap-1.5">
+              <Text className="text-slate-700 dark:text-slate-300 text-sm font-poppins-medium px-1">
+                Landmark / Address <Text className="text-red-500 dark:text-red-400">*</Text>
+              </Text>
+              <TextInput
+                className="w-full rounded-xl bg-white dark:bg-slate-800/50 text-slate-900 dark:text-slate-100 px-4 py-3 font-poppins"
+                placeholder="Enter full physical address"
+                placeholderTextColor="#94A3B8"
+                multiline
+                textAlignVertical="top"
+                value={address}
+                onChangeText={setAddress}
+              />
+            </View>
+
+            <View className="mt-2">
+              <View className="flex-row justify-between items-center mb-2">
+                <Text className="text-slate-700 dark:text-slate-300 text-sm font-poppins-medium">
+                 Store Radius <Text className="text-red-500 dark:text-red-400">*</Text>
+                </Text>
+                <Text className="text-primary text-sm font-poppins-bold">{radius || 50}m</Text>
+              </View>
+              <Slider
+                minimumValue={50}
+                maximumValue={500}
+                step={1}
+                value={radius || 50}
+                onValueChange={(v) => setRadius(Math.round(v))}
+                minimumTrackTintColor="#FF6600"
+                maximumTrackTintColor={isDark ? "#334155" : "#E2E8F0"}
+                thumbTintColor="#FF6600"
+              />
+              <View className="flex-row justify-between mt-1">
+                <Text className="text-xs text-slate-500 font-poppins">50m</Text>
+                <Text className="text-xs text-slate-500 font-poppins">500m</Text>
+              </View>
+            </View>
+          </View>
+        )}
+      </ScrollView>
+
+      <View className="px-4 py-4">
+        <View className="flex-row gap-3">
+          {activeStep !== "store" && (
+            <View className="flex-1">
+              <Button
+                label="Back"
+                onPress={goBack}
+                variant="secondary"
+                loading={false}
+                fullWidth={true}
+              />
+            </View>
+          )}
+          <View className="flex-1">
+            <Button
+              label={activeStep === "location" ? "Create Store" : "Continue"}
+              onPress={goNext}
+              variant="primary"
+              loading={isSubmitting}
+              fullWidth={true}
+              disabled={
+                isUploadingImage ||
+                isSubmitting ||
+                (activeStep === "store" && !isStoreStepValid) ||
+                (activeStep === "business" && !isBusinessStepValid) ||
+                (activeStep === "location" && !isFormValid)
+              }
+            />
+          </View>
+        </View>
+      </View>
+    </SafeAreaView>
+  );
+}

@@ -2,10 +2,11 @@ export type StoreItem = {
   id: string;
   name: string;
   location: string;
-  distanceMiles: number;
+  distanceMeters: number;
   points: number;
   isNearby?: boolean;
   isCheckedInToday?: boolean;
+  logo?: string | null;
 };
 
 export type RewardStatus = "redeem" | "insufficient";
@@ -27,7 +28,7 @@ export const stores: StoreItem[] = [
     id: "coffee-foundry",
     name: "The Coffee Foundry",
     location: "Brooklyn, NY",
-    distanceMiles: 0.2,
+    distanceMeters: 322,
     points: 860,
     isNearby: true,
     isCheckedInToday: false,
@@ -36,7 +37,7 @@ export const stores: StoreItem[] = [
     id: "bean-lab",
     name: "Bean Lab",
     location: "Williamsburg, NY",
-    distanceMiles: 1.1,
+    distanceMeters: 1770,
     points: 420,
     isNearby: true,
     isCheckedInToday: true,
@@ -45,7 +46,7 @@ export const stores: StoreItem[] = [
     id: "harbor-roast",
     name: "Harbor Roast",
     location: "DUMBO, NY",
-    distanceMiles: 2.4,
+    distanceMeters: 3862,
     points: 140,
     isNearby: true,
     isCheckedInToday: true,

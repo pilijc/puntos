@@ -49,7 +49,7 @@ export default function StoreStreaks() {
               </Text>
             </View>
             <View className="w-12 h-12 rounded-full bg-white/20 items-center justify-center">
-              <MaterialIcons name="local-fire-department" size={22} color="#FFFFFF" />
+              <MaterialIcons name="stars" size={22} color="#FFFFFF" />
             </View>
           </View>
 
@@ -91,8 +91,8 @@ export default function StoreStreaks() {
               <Text className="text-neutral-500 font-poppins">Loading active stamps...</Text>
             </View>
           ) : activeStamps === 0 ? (
-            <View className="bg-white dark:bg-neutral-800 rounded-3xl p-8 border border-neutral-100 dark:border-neutral-700 items-center">
-              <MaterialIcons name="local-fire-department" size={40} color="#d1d5db" className="mb-2" />
+            <View className="bg-white dark:bg-neutral-800 rounded-3xl p-8 items-center">
+              <MaterialIcons name="stars" size={40} color="#d1d5db" className="mb-2" />
               <Text className="text-neutral-500 font-poppins-semibold text-base mt-2">No Active Stamps Found</Text>
               <Text className="text-neutral-400 font-poppins text-xs text-center mt-2 px-4">
                 You haven't collected any stamps yet. Visit a partner store and scan to begin!

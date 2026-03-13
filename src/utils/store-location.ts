@@ -1,4 +1,4 @@
-import { Store } from '@/type/store';
+import { Store } from '@/type/user/store';
 import { calculateDistance, isStoreNearby, UserLocation } from '@/services/location-service';
 
 export interface StoreWithLocation extends Store {
@@ -10,11 +10,11 @@ export interface StoreWithLocation extends Store {
 
 /**
  * Enrich store data with calculated distance and nearby status based on user location
+ * Stores are returned sorted by distance.
  */
 export function enrichStoresWithLocation(
   stores: Store[],
-  userLocation: UserLocation | null,
-  nearbyThresholdMiles: number = 2.0
+  userLocation: UserLocation | null
 ): StoreWithLocation[] {
   if (!userLocation) {
     // If no location, return stores with default distance/isNearby values
@@ -27,7 +27,7 @@ export function enrichStoresWithLocation(
     }));
   }
 
-  return stores.map(store => {
+  const enriched = stores.map(store => {
     // We expect Store to have latitude and longitude
     const storeLat = store.latitude;
     const storeLon = store.longitude;
@@ -44,7 +44,7 @@ export function enrichStoresWithLocation(
         userLocation.longitude,
         storeLat,
         storeLon,
-        nearbyThresholdMiles
+        store.radius ?? 30
       );
 
       return {
@@ -59,10 +59,12 @@ export function enrichStoresWithLocation(
     // Fallback: if somehow a real DB store has no lat/lon
     return {
       ...store,
-      calculatedDistanceMeters: 0,
+      calculatedDistanceMeters: Infinity,
       calculatedIsNearby: false,
-      distanceMeters: 0,
+      distanceMeters: Infinity,
       isNearby: false,
     };
   });
+
+  return enriched.sort((a, b) => a.distanceMeters - b.distanceMeters);
 }
