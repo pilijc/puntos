@@ -16,6 +16,7 @@ import { Image } from "expo-image";
 import { useRewardStore } from "@/store/store-manager/reward-store";
 import { createReward, uploadRewardImage } from "@/services/store-manager/reward-service";
 import { Button } from "@/components/button";
+import { Modal, type ModalButton } from "@/components/modal";
 
 export default function Rewards() {
   const router = useRouter();
@@ -38,12 +39,21 @@ export default function Rewards() {
     setImageUrl,
     reset,
   } = useRewardStore();
+	const [modal, setModal] = useState<{
+		title: string;
+		message: string;
+		buttons: ModalButton[];
+	} | null>(null);
 
 
   const pickImage = async () => {
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (permissionResult.granted === false) {
-      Alert.alert("You've refused to allow this app to access your photos!");
+      setModal({
+        title: "Permission Required",
+        message: "We need access to your photos to upload images.",
+        buttons: [{ label: "OK", onPress: () => setModal(null), variant: "secondary" }],
+      });
       return;
     }
 
@@ -58,7 +68,11 @@ export default function Rewards() {
 
     const asset = pickerResult.assets[0];
     if (!asset.base64) {
-      Alert.alert("Error", "Could not read image data. Please try again.");
+      setModal({
+        title: "Oops!",
+        message: "Could not read image data. Please try again.",
+        buttons: [{ label: "OK", onPress: () => setModal(null), variant: "secondary" }],
+      });
       return;
     }
 
@@ -68,7 +82,11 @@ export default function Rewards() {
       const publicUrl = await uploadRewardImage(storeId, asset.base64, mimeType);
       setImageUrl(publicUrl);
     } catch (err: any) {
-      Alert.alert("Upload Failed", err?.message ?? "Could not upload image.");
+      setModal({
+        title: "Oops!",
+        message: err?.message ?? "Could not upload image.",
+        buttons: [{ label: "OK", onPress: () => setModal(null), variant: "secondary" }],
+      });
     } finally {
       setIsUploadingImage(false);
     }
@@ -76,7 +94,11 @@ export default function Rewards() {
 
   const handleCreate = async () => {
     if (!title.trim() || !description || !image_url) {
-      Alert.alert("Validation Error", "Please fill out all required fields and upload an image.");
+      setModal({
+        title: "Almost there!",
+        message: "Please fill out all required fields and upload an image.",
+        buttons: [{ label: "OK", onPress: () => setModal(null), variant: "secondary" }],
+      });
       return;
     }
     setIsSubmitting(true);
@@ -90,10 +112,18 @@ export default function Rewards() {
         stock,
       });
       reset();
-      Alert.alert("Success", "Reward created successfully");
+      setModal({
+        title: "Success",
+        message: "Reward created successfully",
+        buttons: [{ label: "OK", onPress: () => setModal(null), variant: "secondary" }],
+      });
       router.push({ pathname: "/(store_manager)/view-store/[id]", params: { id: storeId } });
     } catch (error) {
-      Alert.alert("Error", (error as Error).message ?? "Failed to create reward");
+      setModal({
+        title: "Error",
+        message: (error as Error).message ?? "Failed to create reward",
+        buttons: [{ label: "OK", onPress: () => setModal(null), variant: "secondary" }],
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -105,6 +135,13 @@ export default function Rewards() {
       className="bg-background dark:bg-[#111921]"
       behavior={Platform.OS === "android" ? "height" : "padding"}
     >
+			<Modal
+				visible={!!modal}
+				onClose={() => setModal(null)}
+				title={modal?.title ?? ""}
+				message={modal?.message}
+				buttons={modal?.buttons}
+			/>
       <View
         className="bg-background dark:bg-[#111921] border-b border-slate-200 dark:border-slate-800 flex-row items-center px-2"
         style={{ paddingTop: insets.top + 8, paddingBottom: 12 }}
