@@ -126,11 +126,13 @@ export default function ViewStore() {
 
   useEffect(() => {
     (async () => {
-      const [storeData, featureData] = await Promise.all([
+      const [storeData, featureData, rewardsData] = await Promise.all([
         getStoreById(storeId),
         getStoreFeaturesById(String(storeId)),
+        getRewardsByStoreId(String(storeId)),
       ]);
       setStore(storeData);
+      setRewards(rewardsData);
 
       const saved = {
         streak_enabled: featureData?.streak_enabled ?? false,

@@ -431,7 +431,7 @@ export default function CreateStore() {
                   <TouchableOpacity
                     onPress={() => pickImage("logo")}
                     disabled={isUploadingImage}
-                    className="relative w-32 h-32 rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/30 flex flex-col items-center justify-center gap-1 overflow-hidden"
+                    className="relative w-32 h-32 rounded-xl border border-dashed border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/30 flex flex-col items-center justify-center gap-1 overflow-hidden"
                   >
                     {logo ? (
                       <>
@@ -491,7 +491,7 @@ export default function CreateStore() {
                           <TouchableOpacity
                             onPress={() => pickImage("picture", index)}
                             disabled={isUploadingImage || (pictures?.length ?? 0) >= 6}
-                            className="flex-1 rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/30 items-center justify-center min-h-[80px]"
+                            className="flex-1 rounded-xl border border-dashed border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/30 items-center justify-center min-h-[80px]"
                           >
                             <MaterialIcons name="add-a-photo" size={20} color="#94A3B8" />
                             <Text className="text-[10px] text-slate-500 font-poppins mt-0.5">Add</Text>
