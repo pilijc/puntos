@@ -78,6 +78,7 @@ export async function createStore(payload: CreateStorePayload): Promise<StoreRow
         streak_enabled: false,
         stamp_enabled: false,
         reward_enabled: false,
+        qr_enabled: false,
     });
 
     await supabase.from("store_points_rules").insert({
