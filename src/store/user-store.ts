@@ -23,10 +23,15 @@ export type UserRecord = {
   [key: string]: any;
 };
 
+const PAGE_SIZE = 20;
+
 type UserStoreState = {
   users: UserRecord[];
   loading: boolean;
   refreshing: boolean;
+  loadingMore: boolean;
+  page: number;
+  hasMore: boolean;
   updatingUserId: string | null;
 
   activeTab: UserRoleTab;
@@ -37,7 +42,8 @@ type UserStoreState = {
   selectedUser: UserRecord | null;
   showBlockModal: boolean;
 
-  fetchUsers: () => Promise<void>;
+  fetchUsers: (opts?: { reset?: boolean }) => Promise<void>;
+  fetchMoreUsers: () => Promise<void>;
   setRefreshing: (val: boolean) => void;
   setActiveTab: (tab: UserRoleTab) => void;
   setStatusFilter: (status: AccountStatusFilter) => void;
@@ -103,10 +109,45 @@ const groupByFirstLetter = (users: UserRecord[]) => {
   return groups;
 };
 
+function buildUsersQuery(
+  supabaseClient: ReturnType<typeof supabase>,
+  activeTab: UserRoleTab,
+  statusFilter: AccountStatusFilter,
+  search: string,
+  from: number,
+  to: number
+) {
+  let q = supabaseClient
+    .from("users_with_email")
+    .select("*", { count: "exact" })
+    .order("name", { ascending: true });
+
+  if (statusFilter === "Active") q = q.neq("role", 0);
+  if (statusFilter === "Blocked") q = q.eq("role", 0);
+
+  if (activeTab === "Manager") q = q.eq("role_type", "manager");
+  if (activeTab === "Staff") q = q.eq("role_type", "front_desk");
+  if (activeTab === "User") {
+    q = q.not("role_type", "in", "(manager,front_desk,super_admin)");
+  }
+
+  const trimmed = search.trim();
+  if (trimmed.length > 0) {
+    // Escape ilike special chars (%, _, \) to prevent PostgREST errors
+    const escaped = trimmed.replace(/[%_\\]/g, "\\$&");
+    q = q.or(`name.ilike.%${escaped}%,email.ilike.%${escaped}%`);
+  }
+
+  return q.range(from, to);
+}
+
 export const useUserStore = create<UserStoreState>((set, get) => ({
   users: [],
   loading: true,
   refreshing: false,
+  loadingMore: false,
+  page: 1,
+  hasMore: true,
   updatingUserId: null,
 
   activeTab: "All",
@@ -123,20 +164,68 @@ export const useUserStore = create<UserStoreState>((set, get) => ({
   setSearch: (val) => set({ search: val }),
   setShowFilterModal: (val) => set({ showFilterModal: val }),
 
-  fetchUsers: async () => {
+  fetchUsers: async (opts) => {
+    const { activeTab, statusFilter, search } = get();
+    const reset = opts?.reset ?? true;
     try {
-      const { data, error } = await supabase
-        .from("users_with_email")
-        .select("*")
-        .order("name", { ascending: true });
+      if (reset) set({ page: 1, users: [], hasMore: true });
+      const { data, error } = await buildUsersQuery(
+        supabase,
+        activeTab,
+        statusFilter,
+        search,
+        0,
+        PAGE_SIZE - 1
+      );
 
       if (error) throw error;
 
       const processed: UserRecord[] = (data || []).map(normalizeUser);
-      set({ users: processed, loading: false, refreshing: false });
+      const fetched = (data || []).length;
+      set({
+        users: processed,
+        loading: false,
+        refreshing: false,
+        page: 1,
+        hasMore: fetched >= PAGE_SIZE,
+      });
     } catch (err) {
       console.error("Fetch Error:", err);
       set({ loading: false, refreshing: false });
+    }
+  },
+
+  fetchMoreUsers: async () => {
+    const { page, hasMore, loadingMore, activeTab, statusFilter, search, users } = get();
+    if (!hasMore || loadingMore) return;
+    set({ loadingMore: true });
+    try {
+      const from = page * PAGE_SIZE;
+      const to = from + PAGE_SIZE - 1;
+      const { data, error } = await buildUsersQuery(
+        supabase,
+        activeTab,
+        statusFilter,
+        search,
+        from,
+        to
+      );
+
+      if (error) throw error;
+
+      const processed: UserRecord[] = (data || []).map(normalizeUser);
+      const fetched = (data || []).length;
+      set({
+        users: [...users, ...processed],
+        page: page + 1,
+        hasMore: fetched >= PAGE_SIZE,
+        loadingMore: false,
+      });
+    } catch (err: any) {
+      const msg = err?.message ?? String(err);
+      const details = err?.details ?? err?.hint ?? "";
+      console.error("Fetch More Error:", { message: msg, details });
+      set({ loadingMore: false });
     }
   },
 

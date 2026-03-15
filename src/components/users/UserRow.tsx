@@ -20,7 +20,7 @@ const getRoleDetails = (roleType: string, roleLevel?: number) => {
   return { label: "USER", ...orangeRole };
 };
 
-export const UserRow = ({ user, isFirst }: any) => {
+export const UserRow = React.memo(function UserRow({ user, isFirst }: any) {
   const roleInfo = getRoleDetails(user.role_type, user.role);
   return (
     <View 
@@ -40,4 +40,4 @@ export const UserRow = ({ user, isFirst }: any) => {
       </View>
     </View>
   );
-};
+});
