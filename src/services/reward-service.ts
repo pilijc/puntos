@@ -34,7 +34,7 @@ export async function getRewards(options: {
     query = query.eq("store_id", storeId);
   }
 
-  // Backend Sorting Logic (Mentor's Suggestion)
+  // Backend Sorting Logic 
   if (sortBy === "points") {
     query = query.order("points_cost", { ascending: pointsOrder === "asc" });
   } else if (sortBy === "newest") {
