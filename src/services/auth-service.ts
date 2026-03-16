@@ -16,6 +16,16 @@ export class AccountDeletedError extends Error {
 }
 
 /**
+ * Custom error thrown when an account has been blocked by super admin.
+ */
+export class AccountBlockedError extends Error {
+  constructor() {
+    super("Your account has been restricted. Please contact support.");
+    this.name = "AccountBlockedError";
+  }
+}
+
+/**
  * Checks if a user's account has been soft-deleted.
  * If deleted, it signs the user out and throws an AccountDeletedError.
  */
@@ -31,6 +41,25 @@ export async function checkIfAccountDeletedService(userId: string): Promise<void
   if (userSettings?.deleted_at) {
     await supabase.auth.signOut();
     throw new AccountDeletedError();
+  }
+}
+
+/**
+ * Checks if a user is blocked in public.users. If blocked, signs out and throws AccountBlockedError.
+ * Blocked users cannot use their account.
+ */
+export async function checkIfAccountBlockedService(userId: string): Promise<void> {
+  const { data, error } = await supabase
+    .from("users")
+    .select("blocked")
+    .eq("id", userId)
+    .maybeSingle();
+
+  if (error) throw error;
+
+  if (data?.blocked === true) {
+    await supabase.auth.signOut();
+    throw new AccountBlockedError();
   }
 }
 

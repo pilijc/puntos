@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useRouter } from 'expo-router';
 import { supabase } from '@/supabase/supabase';
 import { getHomeRouteForUserId } from '@/services/access-service';
-import { checkIfAccountDeletedService, AccountDeletedError } from '@/services/auth-service';
+import { checkIfAccountDeletedService, checkIfAccountBlockedService, AccountDeletedError, AccountBlockedError } from '@/services/auth-service';
 import { Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { upsertPushId } from '@/services/push-notif';
@@ -36,6 +36,7 @@ export function useAuthListener() {
               }
 
               await checkIfAccountDeletedService(session.user.id);
+              await checkIfAccountBlockedService(session.user.id);
 
               const userId = session.user.id;
               const nextRoute = await getHomeRouteForUserId(userId);
@@ -47,6 +48,9 @@ export function useAuthListener() {
             } catch (err: any) {
               if (err instanceof AccountDeletedError) {
                 Alert.alert("Login Failed", err.message);
+                router.replace("/(auth)/login");
+              } else if (err instanceof AccountBlockedError) {
+                Alert.alert("Account Restricted", err.message);
                 router.replace("/(auth)/login");
               } else {
                 console.error("Auth listener session error:", err);
