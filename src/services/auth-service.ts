@@ -2,9 +2,9 @@ import { supabase } from "@/supabase/supabase";
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
 import { Alert } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { getHomeRouteForUserId } from "./access-service";
+import { getHomeRouteForUserId, getRoleTypeForUser } from "./access-service";
 import { router } from "expo-router";
-
+ 
 export class AccountDeletedError extends Error {
   constructor() {
     super("Invalid login credentials.");
@@ -208,13 +208,40 @@ export async function signUpWithGoogleService() {
 export async function loginService(email: string, password: string) {
   try {
     const res = await supabase.auth.signInWithPassword({ email, password });
-    if (res.data?.session?.access_token) {
-      await AsyncStorage.setItem('sessionToken', res.data.session.access_token);
-    }
+    
     if (res.error) throw res.error;
     const userId = res.data?.user?.id;
-    const homeRoute = userId ? await getHomeRouteForUserId(userId) : "/(user)";
-    return { ...res, homeRoute };
+    if(!userId) throw new Error("Login Failed");
+
+    const roleType = await getRoleTypeForUser(userId);
+
+    if (roleType === "front_desk") {
+        const { data: storeStaff, error } = await supabase
+          .from("store_staff")
+          .select("store_id")
+          .eq("user_id", userId)
+          .single();
+
+        if (error || !storeStaff?.store_id) {
+          await supabase.auth.signOut();   
+          await AsyncStorage.removeItem("sessionToken");
+          
+           return {
+              success: false,
+              homeRoute: null,
+              message:
+                "You are not assigned to any store. Please contact your administrator.",
+            };
+         }     
+      }
+
+    // if (res.data?.session?.access_token) {
+    //   await AsyncStorage.setItem('sessionToken', res.data.session.access_token);
+    // }
+    const homeRoute = userId ? await getHomeRouteForUserId(userId) : null;
+    return { success: true,
+             homeRoute,
+    }; 
   } catch (error: any) {
     console.log("error login service", error);
     throw error;

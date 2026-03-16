@@ -2,6 +2,7 @@ import { supabase } from "@/supabase/supabase";
 import { parseQRCode, createQRTransaction } from "@/services/qr-service";
 import { FrontDeskScanResult, ScanResult } from "@/type/qr-transaction";
 
+
   
 export async function processFrontDeskScan(
   qrData: string,
@@ -47,6 +48,22 @@ export async function getCurrentUserStore(): Promise<{name: string; id: number} 
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return null;
 
+     const { data: profile, error: profileError } = await supabase
+      .from("users")
+      .select("id, role")
+      .eq("id", user.id)
+      .single();
+
+    if (profileError || !profile) {
+      console.error("User not found in public.users:", profileError);
+      return null;
+    }
+
+    if (profile.role !== "front_desk") {
+      console.error("User is not a front desk operator:", profile.role);
+      return null;
+    }
+
     // Get store_id from store_staff table for current user
     const { data: staffData, error: staffError } = await supabase
       .from('store_staff')
@@ -56,7 +73,7 @@ export async function getCurrentUserStore(): Promise<{name: string; id: number} 
       .single();
 
     if (staffError || !staffData) {
-      console.error('No active store staff record found:', staffError);
+     // console.error('No active store staff record found:', staffError);
       return null;
     }
 
@@ -80,6 +97,24 @@ export async function getCurrentUserStore(): Promise<{name: string; id: number} 
   }
 }
 
+export const getCurrentUserIsActive = async (): Promise<boolean> => {
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) return false;
+
+  const { data, error } = await supabase
+    .from("store_staff")
+    .select("is_active")
+    .eq("user_id", user.id)
+    .single();
+
+  if (error || !data) {
+    console.log("Error fetching is_active:", error);
+    return false;
+  }
+
+  return data.is_active ?? false;
+};
 
 
  
