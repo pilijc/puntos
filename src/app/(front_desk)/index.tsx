@@ -113,8 +113,19 @@ export default function FrontDeskScan() {
         setSuccessPoints(pointsAwarded);
         setShowSuccessModal(true);
       } else {
-        setErrorMessage(result.message);
-        setShowErrorModal(true);
+         setModal({
+          title: "QR Code Failed",
+          message: result.message || "Failed to process QR code. Please try again.",
+          buttons: [
+            {
+              label: "OK",
+              variant: "secondary",
+              onPress: () => setModal(null),
+            },
+          ],
+        });
+        // setErrorMessage(result.message);
+        // setShowErrorModal(true);
       }
     } catch (error) {
       console.error("Scan error:", error);
@@ -129,7 +140,18 @@ export default function FrontDeskScan() {
             },
           ],
         });
-      setShowErrorModal(true);
+          setModal({
+          title: "QR Code Failed",
+          message: "Failed to process QR code. Please try again.",
+          buttons: [
+            {
+              label: "OK",
+              variant: "secondary",
+              onPress: () => setModal(null),
+            },
+          ],
+        });
+    //  setShowErrorModal(true);
     }
   };
 
