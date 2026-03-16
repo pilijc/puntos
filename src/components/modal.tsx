@@ -86,7 +86,7 @@ export function Modal({
             styles.card,
             {
               width: MODAL_WIDTH,
-              backgroundColor: isDark ? "#0f172a" : "#ffffff",
+              backgroundColor: isDark ? "#404040" : "#ffffff",
               borderColor: isDark ? "#1e293b" : "#e2e8f0",
             },
           ]}
@@ -108,7 +108,7 @@ export function Modal({
                 <MaterialIcons
                   name="close"
                   size={18}
-                  color={isDark ? "#94A3B8" : "#64748B"}
+                  color={isDark ? "#262626" : "#64748B"}
                 />
               </TouchableOpacity>
             )}

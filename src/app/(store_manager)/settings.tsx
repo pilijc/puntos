@@ -8,14 +8,17 @@ import { Ionicons } from '@expo/vector-icons';
 import { useProfile } from "@/hooks/use-profile";
 
 // Components
-import EditProfileModal from "@/components/settings/EditProfileModal";
+import EditProfileModal from "@/components/settings/modal/EditProfileModal";
 import { LogoutButton } from "@/components/settings/LogoutButton";
-import { UserProfileCard } from "@/components/settings/UserProfileCard";
-import { SecurityCard } from "@/components/settings/SecurityCard";
-import DarkModeToggle from "@/components/ui/dark-mode-toggle";
+import { UserProfileCard } from "@/components/settings/card/UserProfileCard";
+import { SecurityCard } from "@/components/settings/card/SecurityCard";
+import { LanguageCard } from "@/components/settings/card/LanguageCard";
+import { AppearanceCard } from "@/components/settings/card/AppearanceCard";
+import { useTranslation } from "react-i18next";
 
 export default function StoreManagerSettings() {
     const [editModalVisible, setEditModalVisible] = useState(false);
+    const { t: translate } = useTranslation();
 
     const {
         user,
@@ -37,7 +40,7 @@ export default function StoreManagerSettings() {
     if (loading && !user) {
         return (
             <SafeAreaView className="flex-1 bg-background dark:bg-darkBackground justify-center items-center">
-                <Text className="text-neutral-500 font-poppins-regular">Loading profile...</Text>
+                <Text className="text-neutral-500 font-poppins-regular">{translate("index.loadingProfile")}</Text>
             </SafeAreaView>
         );
     }
@@ -47,9 +50,8 @@ export default function StoreManagerSettings() {
             {/* Header */}
             <View className="flex-row justify-between items-center mb-6">
                 <Text className="text-xl font-poppins-bold text-neutral-900 dark:text-darkTextPrimary">
-                    Settings
+                    {translate('settings.title')}
                 </Text>
-                <DarkModeToggle />
             </View>
 
             {user && (
@@ -60,19 +62,17 @@ export default function StoreManagerSettings() {
                 />
             )}
 
-            <View>
-                <Text className="text-sm font-poppins-semibold text-neutral-600 dark:text-darkTextSecondary mb-2">
-                    ACCOUNT SETTINGS
-                </Text>
+            <View className="mx-4 mb-6 overflow-hidden bg-background dark:bg-darkBackgroundMuted rounded-2xl border border-neutral-200 dark:border-darkBorder">
+                <SecurityCard />
+                <LanguageCard />
+                <AppearanceCard />
             </View>
-
-            <SecurityCard />
 
             <LogoutButton />
 
             <View className="mx-8 mt-6 items-center">
                 <Text className="text-sm text-center font-poppins-regular text-neutral-500 dark:text-darkTextSecondary">
-                    Copyright 2026 Store Manager
+                    {translate("settings.copyright")} 2026 Store Manager
                 </Text>
             </View>
 

@@ -2,6 +2,7 @@ import { View, Text, Pressable, Image } from "@/tw";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import React from "react";
 import type { RewardItem } from "@/data/rewards";
+import { useTranslation } from "react-i18next";
 
 type RewardCardProps = {
   reward: RewardItem;
@@ -16,6 +17,7 @@ export default function RewardCard({
   storeLocation,
   onPress,
 }: RewardCardProps) {
+  const { t: translate } = useTranslation();
   const isRedeemable = reward.status === "redeem";
   const badgeClass = isRedeemable ? "bg-primary/10" : "bg-neutral-200";
   const badgeTextClass = isRedeemable ? "text-primary" : "text-neutral-400";
@@ -55,13 +57,13 @@ export default function RewardCard({
         ) : null}
         <View className="flex-row items-center justify-between mt-3">
           <Text className="text-primary font-poppins-semibold">
-            {reward.points.toLocaleString()} pts
+            {reward.points.toLocaleString()} {translate("rewards.rewardCard.pointsSuffix")}
           </Text>
           <View className={`px-3 py-1 rounded-full ${badgeClass}`}>
             <Text
               className={`text-[10px] font-poppins-semibold ${badgeTextClass}`}
             >
-              {isRedeemable ? "REDEEM" : "INSUFFICIENT"}
+              {isRedeemable ? translate("rewards.rewardCard.redeem") : translate("rewards.rewardCard.insufficient")}
             </Text>
           </View>
         </View>

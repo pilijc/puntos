@@ -38,9 +38,9 @@ import { StampProgress } from "@/services/stamp-service";
 const { width: screenWidth } = Dimensions.get("window");
 
 const rewardSortOptions = [
-  { id: "popular", label: "Popular" },
-  { id: "points", label: "Points" },
-  { id: "newest", label: "Newest" },
+  { id: "popular", label: "popular" },
+  { id: "points", label: "points" },
+  { id: "newest", label: "newest" },
 ] as const;
 
 export default function Rewards() {
@@ -313,15 +313,15 @@ export default function Rewards() {
         }
       >
         <View className="flex-row items-center justify-between">
-          <Text className="text-2xl font-poppins-bold text-neutral-900 dark:text-darkTextPrimary">
-            Rewards
+          <Text className="text-xl font-poppins-bold text-neutral-900 dark:text-darkTextPrimary">
+            {translate("rewards.title")}
           </Text>
           <TouchableOpacity
             onPress={() => router.push("/store/stores")}
             className="px-3 py-2 rounded-full border border-neutral-200 dark:border-darkBorder bg-white dark:bg-darkBackgroundMuted"
           >
             <Text className="text-xs font-poppins-semibold text-neutral-700 dark:text-darkTextSoft">
-              VIEW STORES
+              {translate("rewards.viewStores")}
             </Text>
           </TouchableOpacity>
         </View>
@@ -336,7 +336,7 @@ export default function Rewards() {
 
           <AnimatedView
             layout={Layout.duration(260).easing(Easing.out(Easing.cubic))}
-            className="bg-white dark:bg-darkBackgroundCard rounded-2xl p-4 gap-y-3 -mt-6 mx-1"
+            className="bg-white dark:bg-darkBackgroundCard rounded-xl p-4 gap-y-3 -mt-6 mx-1"
           >
             <View className="flex-row items-center justify-between">
               <Pressable
@@ -358,15 +358,15 @@ export default function Rewards() {
                     adjustsFontSizeToFit
                   >
                     {nearbyStores.length > 1
-                      ? `${nearbyStores.length} stores are within range!`
+                      ? translate("rewards.range.multiple", { count: nearbyStores.length })
                       : nearbyStores.length === 1
-                        ? "You are within range!"
-                        : "Not in range of any store"}
+                        ? translate("rewards.range.single")
+                        : translate("rewards.range.empty")}
                   </Text>
                   <Text className="text-neutral-500 dark:text-neutral-400 text-[11px] font-poppins mt-1" numberOfLines={1}>
                     {nearbyStores.length > 0
-                      ? "Make a purchase to earn a stamp"
-                      : "Explore other branches"}
+                      ? translate("rewards.range.promptNearby")
+                      : translate("rewards.range.promptFar")}
                   </Text>
                 </View>
                 {nearbyStores.length > 0 && (
@@ -383,7 +383,7 @@ export default function Rewards() {
                   onPress={() => router.push("/")}
                 >
                   <Text className="font-poppins-semibold text-xs text-white">
-                    EXPLORE
+                    {translate("rewards.explore")}
                   </Text>
                 </TouchableOpacity>
               ) : (
@@ -432,7 +432,7 @@ export default function Rewards() {
                           {store.name}
                         </Text>
                         <Text className="text-neutral-500 dark:text-neutral-400 text-xs font-poppins mt-1">
-                          {store.address} • {store.distanceMeters?.toLocaleString(undefined, { maximumFractionDigits: 2 }) ?? "0"} meters
+                          {store.address} • {translate("rewards.distanceMeters", { meters: store.distanceMeters?.toLocaleString(undefined, { maximumFractionDigits: 2 }) ?? "0" })}
                         </Text>
                       </View>
                     </View>
@@ -465,14 +465,14 @@ export default function Rewards() {
           {nearbyStores.length > 0 && displayStreaks.length === 0 && displayStamps.length === 0 && (
             <AnimatedView
               entering={FadeIn.duration(400)}
-              className="bg-white dark:bg-darkBackgroundMuted rounded-2xl p-8 items-center border border-neutral-100 dark:border-darkBorder mx-1"
+              className="bg-white dark:bg-darkBackgroundMuted rounded-xl p-8 items-center border border-neutral-100 dark:border-darkBorder mx-1"
             >
               <MaterialIcons name="event-note" size={40} color="#FF6600" />
               <Text className="text-neutral-900 dark:text-white font-poppins-bold text-lg mt-3 text-center">
-                Watch out for upcoming events!
+                {translate("rewards.upcomingEvents.title")}
               </Text>
               <Text className="text-neutral-500 text-center font-poppins text-xs mt-1 px-4">
-                This store doesn't have active rewards right now. Check back soon for stamps and streaks!
+                {translate("rewards.upcomingEvents.subtitle")}
               </Text>
             </AnimatedView>
           )}
@@ -492,15 +492,23 @@ export default function Rewards() {
                 onSnapToItem={(index) => setCarouselIndex(index)}
                 renderItem={({ item: streak }) => {
                   const storeStr = streak.stores as any;
-                  const storeName = storeStr?.name ?? "Store";
-                  const storeAddress = storeStr?.address ?? "Unknown Location";
+                  const storeName = storeStr?.name ?? translate("rewards.store");
+                  const storeAddress = storeStr?.address ?? translate("rewards.unknownLocation");
                   const nearby = nearbyStores.some((s) => Number(s.id) === Number(streak.store_id)) ||
                     isStoreNearby(storeStr?.latitude, storeStr?.longitude);
 
                   // Mocking streak progress for UI: use 3 days completed for now
                   const clampedCount = 3;
                   const targetCount = 7;
-                  const streakDays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+                  const streakDays = [
+                    translate("rewards.days.mon"),
+                    translate("rewards.days.tue"),
+                    translate("rewards.days.wed"),
+                    translate("rewards.days.thu"),
+                    translate("rewards.days.fri"),
+                    translate("rewards.days.sat"),
+                    translate("rewards.days.sun")
+                  ];
 
                   const days = streakDays.map((label, index) => ({
                     label: label,
@@ -529,11 +537,11 @@ export default function Rewards() {
             /* Away Mode Placeholder */
             nearbyStores.length === 0 && (
               <View
-                className="bg-white dark:bg-darkBackgroundMuted rounded-2xl p-6 items-center mx-1"
+                className="bg-white dark:bg-darkBackgroundMuted rounded-xl p-6 items-center mx-1"
               >
                 <MaterialIcons name="stars" size={32} color="#d1d5db" className="mb-2" />
-                <Text className="text-neutral-500 font-poppins-semibold text-sm mt-2">No Active Stamps</Text>
-                <Text className="text-neutral-400 font-poppins text-xs text-center mt-1">Visit a partner store to start your stamp log!</Text>
+                <Text className="text-neutral-500 font-poppins-semibold text-sm mt-2">{translate("rewards.noActiveStamps")}</Text>
+                <Text className="text-neutral-400 font-poppins text-xs text-center mt-1">{translate("rewards.visitStartStamps")}</Text>
               </View>
             )
           ) : (
@@ -584,11 +592,11 @@ export default function Rewards() {
         <View className="gap-y-3">
           <View className="flex-row items-center justify-between">
             <Text className="text-lg font-poppins-semibold text-neutral-900 dark:text-darkTextPrimary">
-              Reward Catalog
+              {translate("rewards.rewardCatalog")}
             </Text>
             <TouchableOpacity className="flex-row items-center gap-x-1">
               <Text className="text-primary text-xs font-poppins-semibold">
-                VIEW ALL
+                {translate("rewards.viewAll")}
               </Text>
               <MaterialIcons name="chevron-right" size={16} color="#FF6600" />
             </TouchableOpacity>
@@ -604,7 +612,7 @@ export default function Rewards() {
               return (
                 <SortPill
                   key={option.id}
-                  label={option.label}
+                  label={translate(`rewards.filters.${option.id}`)}
                   active={isActive}
                   rightIcon={
                     isPoints ? (
@@ -646,7 +654,7 @@ export default function Rewards() {
 
         <View className="items-center pt-4">
           <Text className="text-[10px] tracking-[2px] text-neutral-300 font-poppins-medium">
-            POWERED BY PUNTOS
+            {translate("rewards.footer")}
           </Text>
         </View>
       </ScrollView>
