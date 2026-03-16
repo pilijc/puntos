@@ -8,6 +8,7 @@ import {
 	Alert,
 	RefreshControl,
 	ActivityIndicator,
+	Modal,
 } from "react-native";
 import { Image } from "expo-image";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
@@ -44,9 +45,12 @@ function StoreCard({
 	const status = store.status ?? "inactive";
 	const cfg = STATUS_CONFIG[status] ?? STATUS_CONFIG["inactive"];
 	const isPending = status === "pending_review";
+	const [modalVisible, setModalVisible] = useState(false);
+	const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
 	return (
-		<View style={styles.card}>
+		<>
+			<TouchableOpacity style={styles.card} onPress={() => setModalVisible(true)} activeOpacity={0.7}>
 			{/* ── Top row: logo + info + status badge ── */}
 			<View style={{ flexDirection: "row", alignItems: "flex-start" }}>
 				<View style={styles.logoBox}>
@@ -78,91 +82,154 @@ function StoreCard({
 				</View>
 			</View>
 
-			{/* ── Details section ── */}
+			{/* ── Visual Indicator for Tap ── */}
 			<View style={styles.divider} />
-			<View style={{ gap: 6 }}>
-				{store.owner_name ? (
-					<View style={styles.detailRow}>
-						<MaterialIcons name="person" size={13} color="#94A3B8" />
-						<Text style={styles.detailText}>{store.owner_name}</Text>
-					</View>
-				) : null}
-				{store.phone ? (
-					<View style={styles.detailRow}>
-						<MaterialIcons name="phone" size={13} color="#94A3B8" />
-						<Text style={styles.detailText}>{store.phone}</Text>
-					</View>
-				) : null}
-				{store.registration_number ? (
-					<View style={styles.detailRow}>
-						<MaterialIcons name="business" size={13} color="#94A3B8" />
-						<Text style={styles.detailText}>{store.registration_number}</Text>
-					</View>
-				) : null}
-				<View style={styles.detailRow}>
-					<MaterialIcons name="calendar-today" size={13} color="#94A3B8" />
-					<Text style={styles.detailText}>
-						{new Date(store.created_at).toLocaleDateString("en-US", {
-							month: "short", day: "numeric", year: "numeric",
-						})}
-					</Text>
-				</View>
+			<View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+				<Text style={{ fontSize: 12, fontFamily: "Poppins-Medium", color: "#94A3B8" }}>
+					Tap to view details
+				</Text>
+				<MaterialIcons name="chevron-right" size={18} color="#94A3B8" />
 			</View>
 
-			{/* ── Documents + Action buttons (only for pending) ── */}
-			{isPending && (
-				<>
-					{/* Documents preview */}
-					{(store.business_document_image || (store as any).store_pictures?.length) && (
-						<>
-							<View style={styles.divider} />
-							<View style={{ gap: 8 }}>
-								<Text style={styles.docsTitle}>Submitted documents</Text>
-								<View style={{ flexDirection: "row", gap: 10 }}>
-									{store.business_document_image && (
-										<View style={styles.docThumb}>
-											<Image
-												source={{ uri: store.business_document_image }}
-												style={{ width: "100%", height: "100%", borderRadius: 12 }}
-												contentFit="cover"
-											/>
-										</View>
+			{/* ── Hidden by Default ── */}
+			<Modal visible={modalVisible} transparent={true} onRequestClose={() => setModalVisible(false)} animationType="slide">
+				<View style={styles.detailsModalOverlay}>
+					<View style={styles.detailsModalContainer}>
+						{/* Header */}
+						<View style={styles.detailsModalHeader}>
+							<Text style={styles.detailsModalTitle}>Store Details</Text>
+							<TouchableOpacity onPress={() => setModalVisible(false)} style={styles.detailsModalCloseBtn}>
+								<MaterialIcons name="close" size={24} color="#64748B" />
+							</TouchableOpacity>
+						</View>
+
+						<ScrollView
+							style={{ flex: 1 }}
+							contentContainerStyle={{ padding: 20 }}
+							showsVerticalScrollIndicator={false}
+						>
+							{/* Top row again inside modal for context */}
+							<View style={{ flexDirection: "row", alignItems: "flex-start", marginBottom: 20 }}>
+								<View style={styles.logoBox}>
+									{store.logo ? (
+										<Image source={{ uri: store.logo }} style={{ width: 56, height: 56, borderRadius: 14 }} contentFit="cover" />
+									) : (
+										<MaterialIcons name="storefront" size={24} color="#CBD5E1" />
 									)}
-									{(store as any).store_pictures?.slice(0, 3).map((uri: string, idx: number) => (
-										<View key={idx} style={styles.docThumb}>
-											<Image
-												source={{ uri }}
-												style={{ width: "100%", height: "100%", borderRadius: 12 }}
-												contentFit="cover"
-											/>
+								</View>
+								<View style={{ flex: 1, marginLeft: 12 }}>
+									<Text style={styles.storeName}>{store.name}</Text>
+									{store.type ? <Text style={styles.storeType}>{store.type}</Text> : null}
+									{store.address ? (
+										<View style={{ flexDirection: "row", alignItems: "center", marginTop: 3 }}>
+											<MaterialIcons name="location-on" size={12} color="#94A3B8" />
+											<Text style={styles.storeAddress}>{store.address}</Text>
 										</View>
-									))}
+									) : null}
+								</View>
+								<View style={[styles.statusBadge, { backgroundColor: cfg.bg }]}>
+									<View style={[styles.statusDot, { backgroundColor: cfg.dot }]} />
+									<Text style={[styles.statusText, { color: cfg.color }]}>{cfg.label}</Text>
 								</View>
 							</View>
-						</>
-					)}
 
-					{/* Approve / Reject */}
-					<View style={styles.divider} />
-					<View style={{ flexDirection: "row", gap: 10 }}>
-						<TouchableOpacity
-							style={[styles.actionBtn, styles.approveBtn]}
-							onPress={() => onApprove(store)}
-						>
-							<MaterialIcons name="check-circle" size={16} color="#16A34A" />
-							<Text style={[styles.actionBtnText, { color: "#16A34A" }]}>Approve</Text>
-						</TouchableOpacity>
-						<TouchableOpacity
-							style={[styles.actionBtn, styles.rejectBtn]}
-							onPress={() => onReject(store)}
-						>
-							<MaterialIcons name="cancel" size={16} color="#DC2626" />
-							<Text style={[styles.actionBtnText, { color: "#DC2626" }]}>Reject</Text>
-						</TouchableOpacity>
+							{/* Details section */}
+							<View style={{ gap: 12 }}>
+								<Text style={styles.docsTitle}>Information</Text>
+								<View style={styles.detailsBox}>
+									{store.owner_name ? (
+										<View style={styles.detailRow}>
+											<MaterialIcons name="person" size={16} color="#94A3B8" />
+											<Text style={styles.detailText}>{store.owner_name}</Text>
+										</View>
+									) : null}
+									{store.phone ? (
+										<View style={[styles.detailRow, { marginTop: 10 }]}>
+											<MaterialIcons name="phone" size={16} color="#94A3B8" />
+											<Text style={styles.detailText}>{store.phone}</Text>
+										</View>
+									) : null}
+									{store.registration_number ? (
+										<View style={[styles.detailRow, { marginTop: 10 }]}>
+											<MaterialIcons name="business" size={16} color="#94A3B8" />
+											<Text style={styles.detailText}>{store.registration_number}</Text>
+										</View>
+									) : null}
+									<View style={[styles.detailRow, { marginTop: 10 }]}>
+										<MaterialIcons name="calendar-today" size={16} color="#94A3B8" />
+										<Text style={styles.detailText}>
+											Registered on {new Date(store.created_at).toLocaleDateString("en-US", {
+												month: "short", day: "numeric", year: "numeric",
+											})}
+										</Text>
+									</View>
+								</View>
+							</View>
+
+							{/* Documents preview */}
+							{(!!store.business_document_image || ((store as any).store_pictures?.length ?? 0) > 0) && (
+								<View style={{ gap: 12, marginTop: 24 }}>
+									<Text style={styles.docsTitle}>Submitted documents</Text>
+									<View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10 }}>
+										{store.business_document_image && (
+											<TouchableOpacity style={styles.docThumbLarge} onPress={() => setSelectedImage(store.business_document_image!)}>
+												<Image source={{ uri: store.business_document_image }} style={{ width: "100%", height: "100%", borderRadius: 12 }} contentFit="cover" />
+											</TouchableOpacity>
+										)}
+										{(store as any).store_pictures?.map((uri: string, idx: number) => (
+											<TouchableOpacity key={idx} style={styles.docThumbLarge} onPress={() => setSelectedImage(uri)}>
+												<Image source={{ uri }} style={{ width: "100%", height: "100%", borderRadius: 12 }} contentFit="cover" />
+											</TouchableOpacity>
+										))}
+									</View>
+								</View>
+							)}
+
+							{/* Approve / Reject */}
+							{isPending && (
+								<View style={{ marginTop: 32, paddingBottom: 20 }}>
+									<View style={{ flexDirection: "row", gap: 12 }}>
+										<TouchableOpacity
+											style={[styles.actionBtn, styles.approveBtn]}
+											onPress={() => {
+												setModalVisible(false);
+												setTimeout(() => onApprove(store), 300);
+											}}
+										>
+											<MaterialIcons name="check-circle" size={18} color="#16A34A" />
+											<Text style={[styles.actionBtnText, { color: "#16A34A", fontSize: 14 }]}>Approve Store</Text>
+										</TouchableOpacity>
+										<TouchableOpacity
+											style={[styles.actionBtn, styles.rejectBtn]}
+											onPress={() => {
+												setModalVisible(false);
+												setTimeout(() => onReject(store), 300);
+											}}
+										>
+											<MaterialIcons name="cancel" size={18} color="#DC2626" />
+											<Text style={[styles.actionBtnText, { color: "#DC2626", fontSize: 14 }]}>Reject</Text>
+										</TouchableOpacity>
+									</View>
+								</View>
+							)}
+						</ScrollView>
 					</View>
-				</>
-			)}
-		</View>
+				</View>
+			</Modal>
+			</TouchableOpacity>
+
+			{/* Full Screen Image Viewer Modal */}
+			<Modal visible={!!selectedImage} transparent={true} onRequestClose={() => setSelectedImage(null)} animationType="fade">
+				<View style={styles.modalOverlay}>
+					<TouchableOpacity style={styles.modalCloseButton} onPress={() => setSelectedImage(null)}>
+						<MaterialIcons name="close" size={30} color="#FFFFFF" />
+					</TouchableOpacity>
+					{selectedImage ? (
+						<Image source={{ uri: selectedImage }} style={styles.fullScreenImage} contentFit="contain" />
+					) : null}
+				</View>
+			</Modal>
+		</>
 	);
 }
 
@@ -447,13 +514,20 @@ const styles = StyleSheet.create({
 	rejectBtn: { backgroundColor: "#FEF2F2", borderColor: "#FECACA" },
 	actionBtnText: { fontSize: 13, fontFamily: "Poppins-Bold" },
 	docsTitle: {
-		fontSize: 12,
-		fontFamily: "Poppins-Medium",
-		color: "#64748B",
+		fontSize: 14,
+		fontFamily: "Poppins-Bold",
+		color: "#0F172A",
 	},
 	docThumb: {
 		width: 72,
 		height: 72,
+		borderRadius: 12,
+		backgroundColor: "#F1F5F9",
+		overflow: "hidden",
+	},
+	docThumbLarge: {
+		width: 100,
+		height: 100,
 		borderRadius: 12,
 		backgroundColor: "#F1F5F9",
 		overflow: "hidden",
@@ -467,4 +541,64 @@ const styles = StyleSheet.create({
 	emptyState: { flex: 1, alignItems: "center", justifyContent: "center", gap: 8, paddingBottom: 60 },
 	emptyTitle: { fontSize: 16, fontFamily: "Poppins-Bold", color: "#0F172A" },
 	emptySub: { fontSize: 13, fontFamily: "Poppins-Regular", color: "#94A3B8" },
+	modalOverlay: {
+		flex: 1,
+		backgroundColor: "rgba(0,0,0,0.9)",
+		justifyContent: "center",
+		alignItems: "center",
+	},
+	modalCloseButton: {
+		position: "absolute",
+		top: 60,
+		right: 24,
+		zIndex: 10,
+		padding: 8,
+	},
+	fullScreenImage: {
+		width: "100%",
+		height: "80%",
+	},
+	detailsModalOverlay: {
+		flex: 1,
+		backgroundColor: "rgba(15, 23, 42, 0.4)",
+		justifyContent: "flex-end",
+	},
+	detailsModalContainer: {
+		backgroundColor: "#FFFFFF",
+		borderTopLeftRadius: 24,
+		borderTopRightRadius: 24,
+		height: "85%",
+		width: "100%",
+		shadowColor: "#000",
+		shadowOffset: { width: 0, height: -2 },
+		shadowOpacity: 0.1,
+		shadowRadius: 10,
+		elevation: 20,
+	},
+	detailsModalHeader: {
+		flexDirection: "row",
+		alignItems: "center",
+		justifyContent: "center",
+		paddingVertical: 16,
+		borderBottomWidth: 1,
+		borderBottomColor: "#F1F5F9",
+		position: "relative",
+	},
+	detailsModalTitle: {
+		fontSize: 16,
+		fontFamily: "Poppins-Bold",
+		color: "#0F172A",
+	},
+	detailsModalCloseBtn: {
+		position: "absolute",
+		right: 16,
+		padding: 8,
+	},
+	detailsBox: {
+		backgroundColor: "#F8FAFC",
+		borderRadius: 16,
+		padding: 16,
+		borderWidth: 1,
+		borderColor: "#F1F5F9",
+	},
 });
