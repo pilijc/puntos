@@ -795,80 +795,42 @@ export default function Discover() {
                         </Text>
                       </View>
 
-                <View className="flex-col items-center gap-y-2">
-                  <View className="w-full flex-row items-center justify-between py-3 rounded-xl">
-                    <Image
-                      source={{
-                        uri: "https://images.pexels.com/photos/414630/pexels-photo-414630.jpeg",
-                      }}
-                      className="w-24 h-24 rounded-xl bg-slate-100"
-                    />
-                    <View className="flex-1 flex-col justify-between ml-3 py-1">
-                      <View className="flex-1 flex-col items-start justify-start">
-                        <Text className="text-base font-poppins-semibold text-neutral-900">
-                          Free Coffee
-                        </Text>
-                        <Text className="text-xs font-poppins text-neutral-500" numberOfLines={2}>
-                          Any medium drink of your choice
-                        </Text>
-                      </View>
-
-                      <View className="flex-row justify-start items-center mt-2">
-                        <View className="flex-row items-center gap-x-2 flex-shrink">
-                          <FontAwesome6 name="coins" size={12} color="#FB8500" />
-                          <Text className="text-sm font-poppins-bold text-primary">
-                            1,200 pts
-                          </Text>
+                      <View className="flex-col items-center gap-y-2">
+                        <View className="w-full flex-row items-center justify-between py-3 rounded-xl">
+                          <Image
+                            source={{
+                              uri: "https://images.pexels.com/photos/414630/pexels-photo-414630.jpeg",
+                            }}
+                            className="w-24 h-24 rounded-xl bg-slate-100"
+                          />
+                          <View className="flex-1 flex-col justify-between ml-3 py-1">
+                            <View className="flex-1 flex-col items-start justify-start">
+                              <Text className="text-base font-poppins-semibold text-neutral-900 dark:text-darkTextPrimary">
+                                {translate("index.rewardPlaceholder.title")}
+                              </Text>
+                              <Text className="text-xs font-poppins text-neutral-500 dark:text-darkTextSecondary" numberOfLines={2}>
+                                {translate("index.rewardPlaceholder.description")}
+                              </Text>
+                            </View>
+                            <View className="flex-row justify-start items-center mt-2">
+                              <View className="flex-row items-center gap-x-2 flex-shrink">
+                                <FontAwesome6 name="coins" size={12} color="#FB8500" />
+                                <Text className="text-sm font-poppins-bold text-primary">
+                                  {translate("index.rewardPlaceholder.points", { points: "1,200" })}
+                                </Text>
+                              </View>
+                            </View>
+                          </View>
                         </View>
                       </View>
-
                     </View>
                   </View>
-                </View>
-              </View>
-            </View>
-          </ScrollView>
-        </BottomSheetView>
-      </BottomSheet>
-
-      { routeGeoJSON && (
-        <TouchableOpacity style={{
-          position: "absolute",
-          right: 16,
-          bottom: 215,
-          zIndex: 999,
-          elevation: 20, 
-        }} className="bg-white rounded-full p-2" onPress={() => setRouteGeoJSON(null)}>
-          <MaterialIcons name="clear" size={35} color="#FB8500" />
-        </TouchableOpacity>
+                </>
+              )}
+            </ScrollView>
+          </BottomSheetView>
+        </BottomSheet>
       )}
-
-      {location && (
-        <TouchableOpacity
-          style={{
-            position: "absolute",
-            right: 16,
-            bottom: 170,
-            zIndex: 999,
-            elevation: 20, 
-          }}
-          className="bg-white rounded-full p-2"
-          onPress={() => {
-            cameraRef.current?.setCamera({
-              centerCoordinate: [
-                location.coords.longitude,
-                location.coords.latitude,
-              ],
-              zoomLevel: 14,
-              animationDuration: 600,
-              animationMode: "flyTo",
-            });
-          }}
-        >
-          <MaterialIcons name="filter-center-focus" size={35} color="#FB8500" />
-        </TouchableOpacity>
-      )}
-      <Text>Testing</Text>
-    </SafeAreaView>
+    </View>
   );
 }
