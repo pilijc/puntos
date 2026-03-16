@@ -150,10 +150,11 @@ function buildUsersQuery(
 /** Load blocked from public.users only (users_with_email has no blocked column). */
 async function fetchBlockedMap(ids: string[]): Promise<Map<string, boolean>> {
   if (ids.length === 0) return new Map();
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("users")
     .select("id, blocked")
     .in("id", ids);
+  if (error) throw error;
   const map = new Map<string, boolean>();
   (data || []).forEach((row: { id: string; blocked?: boolean }) => {
     map.set(row.id, row.blocked === true);

@@ -1,11 +1,12 @@
 import { useCallback } from "react";
 import { Alert } from "react-native";
-import { useRewardsUiStore } from "@/store/rewards-ui-store";
-import { useRewardsDataStore } from "@/store/rewards-data-store";
+import { useRewardsUiStore } from "@/store/user/rewards-ui-store";
+import { useRewardsDataStore } from "@/store/user/rewards-data-store";
 import { useStamps } from "@/hooks/use-stamps";
 import { useStampRewards } from "@/hooks/use-stamp-rewards";
 import { addStamp } from "@/services/stamp-service";
 import { supabase } from "@/supabase/supabase";
+import { getHasStampedToday } from "@/utils/store-helpers";
 
 export function useRewardsActions() {
   const { 
@@ -13,8 +14,6 @@ export function useRewardsActions() {
     setRefreshing, 
     rewardSort, 
     rewardPointsOrder,
-    storeSort,
-    storePointsOrder
   } = useRewardsUiStore();
   
   const { fetchBackendRewards } = useRewardsDataStore();
@@ -74,16 +73,7 @@ export function useRewardsActions() {
 
   const hasStampedToday = useCallback((storeId: number) => {
     const stampProgress = stamps.find(s => Number(s.store_id) === storeId);
-    if (!stampProgress?.last_stamp_at) return false;
-
-    const lastStampDate = new Date(stampProgress.last_stamp_at);
-    const today = new Date();
-
-    return (
-      lastStampDate.getFullYear() === today.getFullYear() &&
-      lastStampDate.getMonth() === today.getMonth() &&
-      lastStampDate.getDate() === today.getDate()
-    );
+    return getHasStampedToday(stampProgress?.last_stamp_at);
   }, [stamps]);
 
   return {
