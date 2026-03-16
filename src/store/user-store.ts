@@ -111,7 +111,7 @@ const groupByFirstLetter = (users: UserRecord[]) => {
 };
 
 function buildUsersQuery(
-  supabaseClient: ReturnType<typeof supabase>,
+  supabaseClient: typeof supabase,
   activeTab: UserRoleTab,
   statusFilter: AccountStatusFilter,
   search: string,
@@ -133,9 +133,11 @@ function buildUsersQuery(
 
   const trimmed = search.trim();
   if (trimmed.length > 0) {
-    // Escape ilike special chars (%, _, \) to prevent PostgREST errors
-    const escaped = trimmed.replace(/[%_\\]/g, "\\$&");
-    q = q.or(`name.ilike.%${escaped}%,email.ilike.%${escaped}%`);
+    // Escape SQL pattern characters (_, %, \)
+    const sqlSafe = trimmed.replace(/[\\%_]/g, "\\$&");
+    // Escape PostgREST double quotes by doubling them, and wrap the whole value in quotes
+    const postgrestSafe = sqlSafe.replace(/"/g, '""');
+    q = q.or(`name.ilike."%${postgrestSafe}%",email.ilike."%${postgrestSafe}%"`);
   }
 
   return q.range(from, to);
@@ -144,10 +146,11 @@ function buildUsersQuery(
 /** Load blocked from public.users only (users_with_email has no blocked column). */
 async function fetchBlockedMap(ids: string[]): Promise<Map<string, boolean>> {
   if (ids.length === 0) return new Map();
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("users")
     .select("id, blocked")
     .in("id", ids);
+  if (error) throw error;
   const map = new Map<string, boolean>();
   (data || []).forEach((row: { id: string; blocked?: boolean }) => {
     map.set(row.id, row.blocked === true);
@@ -293,8 +296,6 @@ export const useUserStore = create<UserStoreState>((set, get) => ({
       });
     } catch (err: any) {
       const msg = err?.message ?? String(err);
-      const details = err?.details ?? err?.hint ?? "";
-      console.error("Fetch More Error:", { message: msg, details });
       set({ loadingMore: false, hasMore: false });
     }
   },
