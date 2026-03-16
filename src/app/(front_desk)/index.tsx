@@ -124,8 +124,6 @@ export default function FrontDeskScan() {
             },
           ],
         });
-        // setErrorMessage(result.message);
-        // setShowErrorModal(true);
       }
     } catch (error) {
       console.error("Scan error:", error);
@@ -151,7 +149,7 @@ export default function FrontDeskScan() {
             },
           ],
         });
-    //  setShowErrorModal(true);
+     
     }
   };
 
@@ -168,15 +166,15 @@ export default function FrontDeskScan() {
   };
 
   const handleModalClose = () => {
-    // Add this scan to recent scans before resetting
+    
     const amount = parseFloat(purchaseAmount);
     setRecentScans(prev => [{
       points: successPoints,
       timestamp: new Date(),
       amount: amount
-    }, ...prev.slice(0, 4)]); // Keep only last 5 scans
+    }, ...prev.slice(0, 4)]); 
     
-    // Reset scan state
+     
     setScanned(false);
     setIsProcessing(false);
     setShowCamera(false);
