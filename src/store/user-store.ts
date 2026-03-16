@@ -192,7 +192,7 @@ export const useUserStore = create<UserStoreState>((set, get) => ({
     const reset = opts?.reset ?? true;
     try {
       // Set loading: true to prevent empty List from triggering onEndReached -> fetchMoreUsers immediately
-      if (reset) set({ page: 1, users: [], hasMore: true, loading: true });
+      if (reset) set({ page: 1, hasMore: true, loading: true });
 
       if (statusFilter === "Blocked" || statusFilter === "Active") {
         const { data, error } = await buildUsersQuery(
@@ -302,7 +302,6 @@ export const useUserStore = create<UserStoreState>((set, get) => ({
     } catch (err: any) {
       const msg = err?.message ?? String(err);
       const details = err?.details ?? err?.hint ?? "";
-      console.error("Fetch More Error:", { message: msg, details });
       set({ loadingMore: false, hasMore: false });
     }
   },
