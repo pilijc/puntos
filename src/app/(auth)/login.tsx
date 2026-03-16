@@ -31,12 +31,12 @@ export default function Login() {
 
     const trimmedEmail = email.trim();
     if (!trimmedEmail) {
-      nextErrors.email = "Email is required.";
+      nextErrors.email = translate("error.emailRequired");
     } else if (!/^\S+@\S+\.\S+$/.test(trimmedEmail)) {
-      nextErrors.email = "Please enter a valid email address.";
+      nextErrors.email = translate("error.emailValid");
     }
     if (!password) {
-      nextErrors.password = "Password is required.";
+      nextErrors.password = translate("error.passwordRequired");
     }
     if (nextErrors.email || nextErrors.password) {
       setErrors(nextErrors);
@@ -53,7 +53,7 @@ export default function Login() {
       console.log("error login component", error);
       const message =
         error?.msg ??
-        (typeof error?.message === "string" ? error.message : "Invalid login credentials");
+        (typeof error?.message === "string" ? error.message : translate("error.invalidLogin"));
       setErrors({ email: "", password: message });
     } finally {
       setLoading(false);

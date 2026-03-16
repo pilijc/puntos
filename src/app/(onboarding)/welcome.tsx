@@ -142,13 +142,13 @@ export default function OnboardingWelcome() {
                 tos: (
                   <Text
                     className="text-orange-500"
-                    onPress={() => navigation.navigate("Terms")}
+                  // onPress={() => navigation.navigate("Terms")}
                   />
                 ),
                 privacy: (
                   <Text
                     className="text-orange-500"
-                    onPress={() => navigation.navigate("Privacy")}
+                  // onPress={() => navigation.navigate("Privacy")}
                   />
                 )
               }}
