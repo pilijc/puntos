@@ -109,9 +109,40 @@ function StoreCard({
 				</View>
 			</View>
 
-			{/* ── Action buttons (only for pending) ── */}
+			{/* ── Documents + Action buttons (only for pending) ── */}
 			{isPending && (
 				<>
+					{/* Documents preview */}
+					{(store.business_document_image || (store as any).store_pictures?.length) && (
+						<>
+							<View style={styles.divider} />
+							<View style={{ gap: 8 }}>
+								<Text style={styles.docsTitle}>Submitted documents</Text>
+								<View style={{ flexDirection: "row", gap: 10 }}>
+									{store.business_document_image && (
+										<View style={styles.docThumb}>
+											<Image
+												source={{ uri: store.business_document_image }}
+												style={{ width: "100%", height: "100%", borderRadius: 12 }}
+												contentFit="cover"
+											/>
+										</View>
+									)}
+									{(store as any).store_pictures?.slice(0, 3).map((uri: string, idx: number) => (
+										<View key={idx} style={styles.docThumb}>
+											<Image
+												source={{ uri }}
+												style={{ width: "100%", height: "100%", borderRadius: 12 }}
+												contentFit="cover"
+											/>
+										</View>
+									))}
+								</View>
+							</View>
+						</>
+					)}
+
+					{/* Approve / Reject */}
 					<View style={styles.divider} />
 					<View style={{ flexDirection: "row", gap: 10 }}>
 						<TouchableOpacity
@@ -382,11 +413,6 @@ const styles = StyleSheet.create({
 		borderRadius: 20,
 		padding: 16,
 		marginBottom: 14,
-		shadowColor: "#0F172A",
-		shadowOffset: { width: 0, height: 4 },
-		shadowOpacity: 0.07,
-		shadowRadius: 12,
-		elevation: 4,
 	},
 	logoBox: {
 		width: 56,
@@ -418,6 +444,18 @@ const styles = StyleSheet.create({
 	approveBtn: { backgroundColor: "#F0FDF4", borderColor: "#BBF7D0" },
 	rejectBtn: { backgroundColor: "#FEF2F2", borderColor: "#FECACA" },
 	actionBtnText: { fontSize: 13, fontFamily: "Poppins-Bold" },
+	docsTitle: {
+		fontSize: 12,
+		fontFamily: "Poppins-Medium",
+		color: "#64748B",
+	},
+	docThumb: {
+		width: 72,
+		height: 72,
+		borderRadius: 12,
+		backgroundColor: "#F1F5F9",
+		overflow: "hidden",
+	},
 	errorBanner: {
 		flexDirection: "row", alignItems: "center", gap: 8,
 		backgroundColor: "#FEF2F2", borderRadius: 12, padding: 12,

@@ -23,10 +23,15 @@ export type UserRecord = {
   [key: string]: any;
 };
 
+const PAGE_SIZE = 20;
+
 type UserStoreState = {
   users: UserRecord[];
   loading: boolean;
   refreshing: boolean;
+  loadingMore: boolean;
+  page: number;
+  hasMore: boolean;
   updatingUserId: string | null;
 
   activeTab: UserRoleTab;
@@ -37,7 +42,8 @@ type UserStoreState = {
   selectedUser: UserRecord | null;
   showBlockModal: boolean;
 
-  fetchUsers: () => Promise<void>;
+  fetchUsers: (opts?: { reset?: boolean }) => Promise<void>;
+  fetchMoreUsers: () => Promise<void>;
   setRefreshing: (val: boolean) => void;
   setActiveTab: (tab: UserRoleTab) => void;
   setStatusFilter: (status: AccountStatusFilter) => void;
@@ -75,7 +81,8 @@ const normalizeUser = (u: any): UserRecord => {
           name || u?.id || "user"
         )}`;
 
-  const status: UserRecord["status"] = u?.role === 0 ? "Blocked" : "Active";
+  const status: UserRecord["status"] =
+    u?.blocked === true || u?.role === 0 ? "Blocked" : "Active";
 
   return {
     ...u,
@@ -103,10 +110,61 @@ const groupByFirstLetter = (users: UserRecord[]) => {
   return groups;
 };
 
+function buildUsersQuery(
+  supabaseClient: ReturnType<typeof supabase>,
+  activeTab: UserRoleTab,
+  statusFilter: AccountStatusFilter,
+  search: string,
+  from: number,
+  to: number
+) {
+  let q = supabaseClient
+    .from("users_with_email")
+    .select("*", { count: "exact" })
+    .order("name", { ascending: true });
+
+  // Active/Blocked: do NOT filter on users_with_email (view has no blocked column).
+  // We load blocked from public.users and filter client-side.
+  if (activeTab === "Manager") q = q.eq("role_type", "manager");
+  if (activeTab === "Staff") q = q.eq("role_type", "front_desk");
+  if (activeTab === "User") {
+    q = q.not("role_type", "in", "(manager,front_desk,super_admin)");
+  }
+
+  const trimmed = search.trim();
+  if (trimmed.length > 0) {
+    // Escape ilike special chars (%, _, \) to prevent PostgREST errors
+    const escaped = trimmed.replace(/[%_\\]/g, "\\$&");
+    q = q.or(`name.ilike.%${escaped}%,email.ilike.%${escaped}%`);
+  }
+
+  return q.range(from, to);
+}
+
+/** Load blocked from public.users only (users_with_email has no blocked column). */
+async function fetchBlockedMap(ids: string[]): Promise<Map<string, boolean>> {
+  if (ids.length === 0) return new Map();
+  const { data } = await supabase
+    .from("users")
+    .select("id, blocked")
+    .in("id", ids);
+  const map = new Map<string, boolean>();
+  (data || []).forEach((row: { id: string; blocked?: boolean }) => {
+    map.set(row.id, row.blocked === true);
+  });
+  return map;
+}
+
+/** When "Blocked Only" or "Active Only": fetch a larger window from view + blocked from users, filter client-side. Avoids querying users table for ids (which was causing Fetch More Error). */
+const STATUS_FILTER_WINDOW = 100;
+
 export const useUserStore = create<UserStoreState>((set, get) => ({
   users: [],
   loading: true,
   refreshing: false,
+  loadingMore: false,
+  page: 1,
+  hasMore: true,
   updatingUserId: null,
 
   activeTab: "All",
@@ -123,20 +181,121 @@ export const useUserStore = create<UserStoreState>((set, get) => ({
   setSearch: (val) => set({ search: val }),
   setShowFilterModal: (val) => set({ showFilterModal: val }),
 
-  fetchUsers: async () => {
+  fetchUsers: async (opts) => {
+    const { activeTab, statusFilter, search } = get();
+    const reset = opts?.reset ?? true;
     try {
-      const { data, error } = await supabase
-        .from("users_with_email")
-        .select("*")
-        .order("name", { ascending: true });
+      if (reset) set({ page: 1, users: [], hasMore: true });
+
+      if (statusFilter === "Blocked" || statusFilter === "Active") {
+        const { data, error } = await buildUsersQuery(
+          supabase,
+          activeTab,
+          "All",
+          search,
+          0,
+          STATUS_FILTER_WINDOW - 1
+        );
+        if (error) throw error;
+        const rows = data || [];
+        const ids = rows.map((r: any) => r.id).filter(Boolean);
+        const blockedMap = await fetchBlockedMap(ids);
+        const withBlocked = rows.map((r: any) => ({
+          ...r,
+          blocked: blockedMap.get(r.id) ?? false,
+        }));
+        const processed: UserRecord[] = withBlocked.map(normalizeUser);
+        const filtered =
+          statusFilter === "Blocked"
+            ? processed.filter((u) => u.status === "Blocked")
+            : processed.filter((u) => u.status !== "Blocked");
+        set({
+          users: filtered,
+          loading: false,
+          refreshing: false,
+          page: 1,
+          hasMore: false,
+        });
+        return;
+      }
+
+      const { data, error } = await buildUsersQuery(
+        supabase,
+        activeTab,
+        statusFilter,
+        search,
+        0,
+        PAGE_SIZE - 1
+      );
 
       if (error) throw error;
 
-      const processed: UserRecord[] = (data || []).map(normalizeUser);
-      set({ users: processed, loading: false, refreshing: false });
+      const rows = data || [];
+      const ids = rows.map((r: any) => r.id).filter(Boolean);
+      const blockedMap = await fetchBlockedMap(ids);
+      const withBlocked = rows.map((r: any) => ({
+        ...r,
+        blocked: blockedMap.get(r.id) ?? false,
+      }));
+      const processed: UserRecord[] = withBlocked.map(normalizeUser);
+      const fetched = rows.length;
+      set({
+        users: processed,
+        loading: false,
+        refreshing: false,
+        page: 1,
+        hasMore: fetched >= PAGE_SIZE,
+      });
     } catch (err) {
       console.error("Fetch Error:", err);
       set({ loading: false, refreshing: false });
+    }
+  },
+
+  fetchMoreUsers: async () => {
+    const { page, hasMore, loadingMore, activeTab, statusFilter, search, users } = get();
+    if (!hasMore || loadingMore) return;
+    set({ loadingMore: true });
+    try {
+      const from = page * PAGE_SIZE;
+      const to = from + PAGE_SIZE - 1;
+
+      if (statusFilter === "Blocked" || statusFilter === "Active") {
+        set({ loadingMore: false });
+        return;
+      }
+
+      const { data, error } = await buildUsersQuery(
+        supabase,
+        activeTab,
+        statusFilter,
+        search,
+        from,
+        to
+      );
+
+      if (error) throw error;
+
+      const rows = data || [];
+      const ids = rows.map((r: any) => r.id).filter(Boolean);
+      const blockedMap = await fetchBlockedMap(ids);
+      const withBlocked = rows.map((r: any) => ({
+        ...r,
+        blocked: blockedMap.get(r.id) ?? false,
+      }));
+      const processed: UserRecord[] = withBlocked.map(normalizeUser);
+      const fetched = rows.length;
+      set({
+        users: [...users, ...processed],
+        page: page + 1,
+        hasMore: fetched >= PAGE_SIZE,
+        loadingMore: false,
+      });
+    } catch (err: any) {
+      const msg = err?.message ?? String(err);
+      const details = err?.details ?? err?.hint ?? "";
+      console.error("Fetch More Error:", { message: msg, details });
+      set({ loadingMore: false, hasMore: false });
     }
   },
 
@@ -156,12 +315,12 @@ export const useUserStore = create<UserStoreState>((set, get) => ({
 
   toggleBlockStatus: async (userId, currentStatus) => {
     set({ updatingUserId: userId });
-    const newRoleValue = currentStatus === "Blocked" ? 1 : 0;
+    const willBeBlocked = currentStatus !== "Blocked";
 
     try {
       const { error } = await supabase
         .from("users")
-        .update({ role: newRoleValue })
+        .update({ blocked: willBeBlocked })
         .eq("id", userId);
 
       if (error) throw error;
