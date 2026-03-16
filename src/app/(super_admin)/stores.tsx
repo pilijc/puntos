@@ -95,6 +95,7 @@ function StoreCard({
 					<MaterialIcons name="chevron-right" size={18} color="#94A3B8" />
 				</View>
 
+<<<<<<< HEAD
 				{/* ── Hidden by Default ── */}
 			{/* ── Details Modal ── */}
 			<Modal
@@ -140,6 +141,58 @@ function StoreCard({
 								</View>
 							) : null}
 						</View>
+=======
+			{/* ── Documents + Action buttons (only for pending) ── */}
+			{isPending && (
+				<>
+					{/* Documents preview */}
+					{(store.business_document_image || (store as any).store_pictures?.length) && (
+						<>
+							<View style={styles.divider} />
+							<View style={{ gap: 8 }}>
+								<Text style={styles.docsTitle}>Submitted documents</Text>
+								<View style={{ flexDirection: "row", gap: 10 }}>
+									{store.business_document_image && (
+										<View style={styles.docThumb}>
+											<Image
+												source={{ uri: store.business_document_image }}
+												style={{ width: "100%", height: "100%", borderRadius: 12 }}
+												contentFit="cover"
+											/>
+										</View>
+									)}
+									{(store as any).store_pictures?.slice(0, 3).map((uri: string, idx: number) => (
+										<View key={idx} style={styles.docThumb}>
+											<Image
+												source={{ uri }}
+												style={{ width: "100%", height: "100%", borderRadius: 12 }}
+												contentFit="cover"
+											/>
+										</View>
+									))}
+								</View>
+							</View>
+						</>
+					)}
+
+					{/* Approve / Reject */}
+					<View style={styles.divider} />
+					<View style={{ flexDirection: "row", gap: 10 }}>
+						<TouchableOpacity
+							style={[styles.actionBtn, styles.approveBtn]}
+							onPress={() => onApprove(store)}
+						>
+							<MaterialIcons name="check-circle" size={16} color="#16A34A" />
+							<Text style={[styles.actionBtnText, { color: "#16A34A" }]}>Approve</Text>
+						</TouchableOpacity>
+						<TouchableOpacity
+							style={[styles.actionBtn, styles.rejectBtn]}
+							onPress={() => onReject(store)}
+						>
+							<MaterialIcons name="cancel" size={16} color="#DC2626" />
+							<Text style={[styles.actionBtnText, { color: "#DC2626" }]}>Reject</Text>
+						</TouchableOpacity>
+>>>>>>> 5fc07198c2b26464b00bf2848d3ca29d901b685e
 					</View>
 
 					{/* Details section */}
@@ -425,4 +478,118 @@ export default function SuperAdminStores() {
 	);
 }
 
+<<<<<<< HEAD
 
+=======
+// ── Styles ──────────────────────────────────────────────────────────────────
+const styles = StyleSheet.create({
+	header: {
+		flexDirection: "row",
+		alignItems: "center",
+		justifyContent: "space-between",
+		paddingHorizontal: 24,
+		paddingTop: 70,
+		paddingBottom: 16,
+		backgroundColor: "#FFFFFF",
+		borderBottomWidth: 1,
+		borderBottomColor: "#F1F5F9",
+	},
+	headerTitle: { fontSize: 20, fontFamily: "Poppins-Bold", color: "#0F172A" },
+	headerSub: { fontSize: 12, fontFamily: "Poppins-Regular", color: "#94A3B8", marginTop: 2 },
+	pendingBadge: {
+		backgroundColor: "#FF6600",
+		borderRadius: 12,
+		minWidth: 28,
+		height: 28,
+		alignItems: "center",
+		justifyContent: "center",
+		paddingHorizontal: 8,
+	},
+	pendingBadgeText: { fontSize: 13, fontFamily: "Poppins-Bold", color: "#FFFFFF" },
+	filterBar: { flex: 0, backgroundColor: "#FFFFFF", borderBottomWidth: 1, borderBottomColor: "#F1F5F9", height: 56 },
+	filterContent: { paddingHorizontal: 20, alignItems: "center", flexDirection: "row", height: 56 },
+	filterPill: {
+		flexDirection: "row",
+		alignItems: "center",
+		paddingHorizontal: 14,
+		paddingVertical: 7,
+		borderRadius: 9999,
+		backgroundColor: "#F3F4F6",
+		borderWidth: 1,
+		borderColor: "#E2E8F0",
+		marginRight: 8,
+	},
+	filterPillActive: { backgroundColor: "#FF6600", borderColor: "#FF6600" },
+	filterText: { fontSize: 12, fontFamily: "Poppins-Medium", color: "#64748B" },
+	filterTextActive: { color: "#FFFFFF" },
+	filterCount: {
+		backgroundColor: "#E2E8F0",
+		borderRadius: 9999,
+		minWidth: 18,
+		height: 18,
+		alignItems: "center",
+		justifyContent: "center",
+		paddingHorizontal: 4,
+	},
+	filterCountActive: { backgroundColor: "#FFFFFF" },
+	filterCountText: { fontSize: 10, fontFamily: "Poppins-Bold", color: "#64748B" },
+	listContent: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 40, flexGrow: 1 },
+	card: {
+		backgroundColor: "#FFFFFF",
+		borderRadius: 20,
+		padding: 16,
+		marginBottom: 14,
+	},
+	logoBox: {
+		width: 56,
+		height: 56,
+		borderRadius: 14,
+		backgroundColor: "#F1F5F9",
+		alignItems: "center",
+		justifyContent: "center",
+	},
+	storeName: { fontSize: 15, fontFamily: "Poppins-Bold", color: "#0F172A" },
+	storeType: { fontSize: 11, fontFamily: "Poppins-Medium", color: "#FF6600", marginTop: 2 },
+	storeAddress: {
+		fontSize: 12, fontFamily: "Poppins-Regular", color: "#94A3B8",
+		marginLeft: 2, flex: 1,
+	},
+	statusBadge: {
+		flexDirection: "row", alignItems: "center",
+		borderRadius: 8, paddingHorizontal: 8, paddingVertical: 4, gap: 4,
+	},
+	statusDot: { width: 6, height: 6, borderRadius: 3 },
+	statusText: { fontSize: 11, fontFamily: "Poppins-Bold" },
+	divider: { height: 1, backgroundColor: "#F1F5F9", marginVertical: 12 },
+	detailRow: { flexDirection: "row", alignItems: "center", gap: 6 },
+	detailText: { fontSize: 12, fontFamily: "Poppins-Regular", color: "#475569", flex: 1 },
+	actionBtn: {
+		flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center",
+		gap: 6, paddingVertical: 10, borderRadius: 12, borderWidth: 1.5,
+	},
+	approveBtn: { backgroundColor: "#F0FDF4", borderColor: "#BBF7D0" },
+	rejectBtn: { backgroundColor: "#FEF2F2", borderColor: "#FECACA" },
+	actionBtnText: { fontSize: 13, fontFamily: "Poppins-Bold" },
+	docsTitle: {
+		fontSize: 12,
+		fontFamily: "Poppins-Medium",
+		color: "#64748B",
+	},
+	docThumb: {
+		width: 72,
+		height: 72,
+		borderRadius: 12,
+		backgroundColor: "#F1F5F9",
+		overflow: "hidden",
+	},
+	errorBanner: {
+		flexDirection: "row", alignItems: "center", gap: 8,
+		backgroundColor: "#FEF2F2", borderRadius: 12, padding: 12,
+		borderLeftWidth: 3, borderLeftColor: "#DC2626",
+	},
+	errorText: { flex: 1, fontSize: 13, fontFamily: "Poppins-Regular", color: "#DC2626" },
+	emptyState: { flex: 1, alignItems: "center", justifyContent: "center", gap: 8, paddingBottom: 60 },
+	emptyTitle: { fontSize: 16, fontFamily: "Poppins-Bold", color: "#0F172A" },
+	emptySub: { fontSize: 13, fontFamily: "Poppins-Regular", color: "#94A3B8" },
+});
+>>>>>>> 5fc07198c2b26464b00bf2848d3ca29d901b685e
