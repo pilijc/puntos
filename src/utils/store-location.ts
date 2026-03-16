@@ -1,7 +1,7 @@
 import { Store } from '@/type/user/store';
 import { calculateDistance, isStoreNearby, UserLocation } from '@/services/location-service';
 
-export interface StoreWithLocation extends Store {
+export interface EnrichedStore extends Store {
   calculatedDistanceMeters?: number;
   calculatedIsNearby?: boolean;
   distanceMeters: number; // For UI display
@@ -14,9 +14,9 @@ export interface StoreWithLocation extends Store {
  */
 export function enrichStoresWithLocation(
   stores: Store[],
-  userLocation: UserLocation | null
-): StoreWithLocation[] {
-  if (!userLocation) {
+  location: UserLocation | null
+): EnrichedStore[] {
+  if (!location) {
     // If no location, return stores with default distance/isNearby values
     return stores.map(store => ({
       ...store,
@@ -34,14 +34,14 @@ export function enrichStoresWithLocation(
 
     if (storeLat != null && storeLon != null) {
       const distance = calculateDistance(
-        userLocation.latitude,
-        userLocation.longitude,
+        location.latitude,
+        location.longitude,
         storeLat,
         storeLon
       );
       const nearby = isStoreNearby(
-        userLocation.latitude,
-        userLocation.longitude,
+        location.latitude,
+        location.longitude,
         storeLat,
         storeLon,
         store.radius ?? 30

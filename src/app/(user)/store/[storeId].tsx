@@ -1,6 +1,6 @@
 import { View, Text, SafeAreaView, ScrollView, TouchableOpacity } from "@/tw";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import React, { useMemo, useState } from "react";
+import React, { useMemo } from "react";
 import { Modal, View as RNView } from "react-native";
 import { Image } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
@@ -9,6 +9,7 @@ import RewardCard from "@/components/rewards/RewardCard";
 import { useStamps } from "@/hooks/use-stamps";
 import { rewards } from "@/data/rewards";
 import { useStoreStore } from "@/store/store-store";
+import { useRewardsUiStore } from "@/store/rewards-ui-store";
 import { useLocation } from "@/hooks/use-location";
 import { enrichStoresWithLocation } from "@/utils/store-location";
 import { supabase } from "@/supabase/supabase";
@@ -17,6 +18,7 @@ import { addStamp } from "@/services/stamp-service";
 import { useAuthStore } from "@/store/auth-store";
 import { useStampRewards } from "@/hooks/use-stamp-rewards";
 import { useTranslation } from "react-i18next";
+import StoreHeader from "@/components/ui/StoreHeader";
 
 const rewardSortOptions = [
   { id: "popular", label: "Popular" },
@@ -24,15 +26,24 @@ const rewardSortOptions = [
   { id: "newest", label: "Newest" },
 ] as const;
 
-type RewardSort = (typeof rewardSortOptions)[number]["id"];
-type PointsOrder = "desc" | "asc";
-
 export default function StoreRewards() {
   const { t: translate } = useTranslation();
   const params = useLocalSearchParams<{ storeId?: string | string[] }>();
   const storeId = Array.isArray(params.storeId)
     ? params.storeId[0]
     : params.storeId;
+
+  const {
+    rewardSort,
+    rewardPointsOrder: pointsOrder,
+    setRewardSort,
+    setRewardPointsOrder: setPointsOrder,
+    isStamping,
+    setIsStamping,
+    refreshing,
+    setRefreshing
+  } = useRewardsUiStore();
+
   const { location } = useLocation();
   const { stores } = useStoreStore();
 
@@ -42,16 +53,10 @@ export default function StoreRewards() {
   }, [stores, location]);
 
   const store = storesWithLocation.find((item) => item.id.toString() === storeId);
-  const [rewardSort, setRewardSort] = useState<RewardSort>("popular");
-  const [pointsOrder, setPointsOrder] = useState<PointsOrder>("desc");
-  const [selectedReward, setSelectedReward] = useState<typeof rewards[0] | null>(null);
+  const [selectedReward, setSelectedReward] = React.useState<typeof rewards[0] | null>(null);
 
-  const { sessionToken } = useAuthStore();
-  const { stamps, isLoading: isStampsLoading, refetch: refetchStamps } = useStamps();
+  const { isLoading: isStampsLoading, refetch: refetchStamps } = useStamps();
   const { refetch: refetchStampRewards } = useStampRewards();
-
-  const [isStamping, setIsStamping] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -92,6 +97,7 @@ export default function StoreRewards() {
     }
   };
 
+  const { stamps } = useStamps();
   const storeStampData = useMemo(() => {
     return stamps.find((s) => s.store_id?.toString() === storeId);
   }, [stamps, storeId]);

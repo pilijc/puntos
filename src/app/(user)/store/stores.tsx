@@ -1,22 +1,28 @@
 import { ScrollView, SafeAreaView, TextInput, ActivityIndicator, RefreshControl } from "react-native";
-import { View, Text, TouchableOpacity, Image, AnimatedView } from "@/tw";
-import React, { useMemo, useState, useCallback } from "react";
+import { View, Text, TouchableOpacity } from "@/tw";
+import React, { useMemo, useCallback } from "react";
 import { useStoreStore } from "@/store/store-store";
+import { useRewardsUiStore } from "@/store/rewards-ui-store";
 import { useStamps } from "@/hooks/use-stamps";
 import { useLocation } from "@/hooks/use-location";
 import { enrichStoresWithLocation } from "@/utils/store-location";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useRouter } from "expo-router";
-import { FadeInDown, Layout } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useTranslation } from "react-i18next";
+import StoreHeader from "@/components/ui/StoreHeader";
+import UserStoreListItem from "@/components/stores/UserStoreListItem";
 
 export default function StoreListScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { t: translate } = useTranslation();
-  const [searchQuery, setSearchQuery] = useState("");
-  const [refreshing, setRefreshing] = useState(false);
+
+  const {
+    storeSearchQuery: searchQuery,
+    setStoreSearchQuery: setSearchQuery,
+    refreshing,
+    setRefreshing
+  } = useRewardsUiStore();
+
   const { stores: realStores } = useStoreStore();
   const { stamps, isLoading: stampsLoading, refetch: refetchStamps } = useStamps();
   const { location } = useLocation();
@@ -25,7 +31,7 @@ export default function StoreListScreen() {
     setRefreshing(true);
     await refetchStamps();
     setRefreshing(false);
-  }, [refetchStamps]);
+  }, [refetchStamps, setRefreshing]);
 
   const allStores = useMemo(() => {
     const stampedIds = new Set(stamps.map((s) => s.store_id.toString()));
@@ -62,77 +68,7 @@ export default function StoreListScreen() {
     };
   }, [filteredStores]);
 
-  const totalStamps = allStores.reduce((sum, store) => sum + store.stampsCount, 0);
   const isLoading = stampsLoading && !refreshing;
-
-  const renderStoreItem = (store: any, index: number, sectionDelay: number = 0) => (
-    <AnimatedView
-      key={store.id}
-      entering={FadeInDown.delay(sectionDelay + index * 100).duration(400)}
-      layout={Layout.springify()}
-    >
-      <TouchableOpacity
-        onPress={() => router.push(`/store/${store.id}`)}
-        activeOpacity={0.7}
-        className="bg-white dark:bg-darkBackgroundCard rounded-3xl p-4 flex-row items-center border border-neutral-100 dark:border-darkBorder shadow-sm shadow-neutral-100 dark:shadow-none"
-      >
-        <View className="w-16 h-16 rounded-2xl bg-neutral-50 dark:bg-white/5 items-center justify-center overflow-hidden border border-neutral-100 dark:border-darkBorder">
-          {store.logo ? (
-            <Image
-              source={{ uri: store.logo }}
-              className="w-full h-full"
-              contentFit="cover"
-            />
-          ) : (
-            <MaterialIcons name="storefront" size={32} color="#FF6600" />
-          )}
-        </View>
-
-        <View className="flex-1 ml-4 justify-center">
-          <View className="flex-row items-center justify-between mb-0.5">
-            <Text className="text-lg font-poppins-bold text-neutral-900 dark:text-white flex-1" numberOfLines={1}>
-              {store.name}
-            </Text>
-            {store.isNearby && (
-              <View className="bg-green-100 dark:bg-green-900/30 px-2 py-0.5 rounded-lg">
-                <Text className="text-[9px] font-poppins-bold text-green-700 dark:text-green-400">{translate("rewards.storesList.nearbyBadge")}</Text>
-              </View>
-            )}
-          </View>
-
-          <View className="flex-row items-center mb-2">
-            <MaterialIcons name="place" size={14} color="#9CA3AF" />
-            <Text className="text-xs text-neutral-400 font-poppins ml-1 flex-1" numberOfLines={1}>
-              {store.location}
-            </Text>
-          </View>
-
-          <View>
-            <View className="flex-row items-center justify-between mb-1.5">
-              <Text className="text-[10px] font-poppins-semibold text-neutral-500 dark:text-neutral-400">
-                {translate("rewards.storesList.stampProgress")}
-              </Text>
-              <Text className="text-[10px] font-poppins-bold text-primary">
-                {store.stampsCount}/{store.targetStamps}
-              </Text>
-            </View>
-            <View className="h-1.5 w-full bg-neutral-100 dark:bg-white/10 rounded-full overflow-hidden">
-              <View
-                className="h-full bg-primary rounded-full"
-                style={{ width: `${Math.min((store.stampsCount / store.targetStamps) * 100, 100)}%` }}
-              />
-            </View>
-          </View>
-        </View>
-
-        <View className="ml-3">
-          <View className="w-8 h-8 rounded-full bg-neutral-50 dark:bg-white/5 items-center justify-center">
-            <MaterialIcons name="chevron-right" size={24} color="#CBD5E1" />
-          </View>
-        </View>
-      </TouchableOpacity>
-    </AnimatedView>
-  );
 
   return (
     <SafeAreaView className="flex-1 bg-backgroundMuted dark:bg-darkBackground">
@@ -153,22 +89,8 @@ export default function StoreListScreen() {
           />
         }
       >
-        {/* Header - Aligned to match main Rewards title */}
-        {/* EDIT mt-4.5 BELOW TO MANUALLY ADJUST VERTICAL POSITION */}
-        <View className="flex-row items-center mb-2 mt-4.5">
-          <TouchableOpacity
-            onPress={() => router.back()}
-            activeOpacity={0.7}
-            className="-ml-3 mr-1"
-          >
-            <MaterialIcons name="chevron-left" size={36} color="#FF6600" />
-          </TouchableOpacity>
-          <Text className="text-2xl font-poppins-bold text-neutral-900 dark:text-white">
-            {translate("rewards.storesList.title")}
-          </Text>
-        </View>
+        <StoreHeader title="Stores" />
 
-        {/* Search Bar */}
         <View className="flex-row items-center bg-white dark:bg-darkBackgroundCard rounded-2xl px-4 py-1 border border-neutral-100 dark:border-darkBorder shadow-sm shadow-neutral-100 dark:shadow-none mt-2">
           <MaterialIcons name="search" size={20} color="#9CA3AF" />
           <TextInput
@@ -214,7 +136,9 @@ export default function StoreListScreen() {
                     <Text className="text-xs font-poppins-bold text-neutral-500 dark:text-neutral-400 uppercase tracking-widest ml-1">
                       {translate("rewards.storesList.nearbySection")}
                     </Text>
-                    {nearbyStoresSection.map((store, index) => renderStoreItem(store, index))}
+                    {nearbyStoresSection.map((store, index) => (
+                      <UserStoreListItem key={store.id} store={store} index={index} />
+                    ))}
                   </View>
                 )}
 
@@ -223,9 +147,14 @@ export default function StoreListScreen() {
                     <Text className="text-xs font-poppins-bold text-neutral-500 dark:text-neutral-400 uppercase tracking-widest ml-1">
                       {translate("rewards.storesList.myStoresSection")}
                     </Text>
-                    {joinedStoresSection.map((store, index) =>
-                      renderStoreItem(store, index, nearbyStoresSection.length * 100)
-                    )}
+                    {joinedStoresSection.map((store, index) => (
+                      <UserStoreListItem
+                        key={store.id}
+                        store={store}
+                        index={index}
+                        sectionDelay={nearbyStoresSection.length * 100}
+                      />
+                    ))}
                   </View>
                 )}
               </>
