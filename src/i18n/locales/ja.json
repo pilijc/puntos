@@ -8,10 +8,106 @@
         "disabled": "無効"
     },
     "error": {
-        "title": "エラー",
-        "missingFields": "入力されていない項目があります",
-        "passwordMatch": "新しいパスワードが一致しません",
-        "passwordLimit": "パスワードは8文字以上で入力してください"
+        "title": "エラー"
+    },
+    "onboarding": {
+        "welcome": "<brand>{{appName}}</brand>へようこそ",
+        "subhead": "今すぐポイントを貯め始めましょう",
+        "footer": "続行することで、<tos>利用規約</tos>および<privacy>プライバシーポリシー</privacy>に同意したものとみなされます",
+        "slide": {
+            "title1": "歩くたびにポイントが貯まる",
+            "subtitle1": "歩き始めるだけで、ワクワクする報酬や近くのお店にどんどん近づきます。",
+            "title2": "ポイントを特典に交換",
+            "subtitle2": "貯めたポイントを限定オファーに交換して、いつでも自分へのご褒美に。",
+            "title3": "近くのお得情報をチェック",
+            "subtitle3": "提携パートナーの限定割引を見つけて、ポイントですぐに利用可能。",
+            "button": "始める"
+        },
+        "login": {
+            "button": "ログイン",
+            "welcome": "おかえりなさい！",
+            "subhead": "アカウントにサインインして続行してください。",
+            "signup": "アカウントをお持ちでないですか？ <signup>新規登録</signup>",
+            "forgotPassword": "パスワードをお忘れですか？",
+            "label": {
+                "email": "メールアドレス",
+                "password": "パスワード"
+            },
+            "input": {
+                "email": "example@domain.com",
+                "password": "パスワードを入力"
+            },
+            "error": {
+                "emailRequired": "メールアドレスは必須です。",
+                "passwordRequired": "パスワードは必須です。",
+                "emailValid": "有効なメールアドレスを入力してください。",
+                "invalidLogin": "ログイン情報が正しくありません"
+            }
+        },
+        "signup": {
+            "title": "新規登録",
+            "titleManager": "ストアマネージャーとして登録",
+            "button": "新規登録",
+            "divider": "または次の方法で続ける",
+            "google": "Googleで続ける",
+            "creating": "アカウントを作成中...",
+            "continue": "次へ",
+            "ownerPrompt": "店舗オーナーとして登録しますか？",
+            "alreadyHaveAccount": "既にアカウントをお持ちですか？",
+            "login": "ログイン",
+            "success": "アカウントが作成されました！",
+            "successManager": "ストアマネージャーアカウントが作成されました！",
+            "footer": "続行することで、<tos>利用規約</tos>および<privacy>プライバシーポリシー</privacy>に同意したものとみなされます",
+            "error": {
+                "nameRequired": "名前は必須です",
+                "nameInvalid": "名前には文字、スペース、ハイフン、アポストロフィのみ使用できます",
+                "emailRequired": "メールアドレスは必須です",
+                "emailInvalid": "有効なメールアドレスを入力してください",
+                "emailRegistered": "このメールアドレスは既に登録されています。ログインしてください。",
+                "passwordRequired": "パスワードは必須です",
+                "passwordConfirm": "パスワードを確認してください",
+                "passwordMatch": "パスワードが一致しません",
+                "passwordLimit": "パスワードは8文字以上である必要があります",
+                "termsRequired": "規約に同意する必要があります",
+                "failed": "登録に失敗しました",
+                "failedManager": "ストアマネージャーの登録に失敗しました",
+                "googleFailed": "Googleでの登録に失敗しました",
+                "tryDifferentEmail": "別のメールアドレスを試す",
+                "goToLogin": "ログイン画面へ"
+            },
+            "stepper": {
+                "step1": {
+                    "title": "お名前を教えてください",
+                    "description": "あなたについてもっと教えてください"
+                },
+                "step2": {
+                    "title": "メールアドレスを教えてください",
+                    "description": "アカウントの作成に使用します"
+                },
+                "step3": {
+                    "title": "パスワードを作成",
+                    "description": "8文字以上である必要があります"
+                },
+                "step4": {
+                    "title": "あと少しです！",
+                    "description": "利用規約を確認し、同意してください"
+                },
+                "label": {
+                    "name": "お名前",
+                    "email": "メールアドレス",
+                    "password": "パスワード",
+                    "confirmPassword": "パスワードの確認",
+                    "terms": "利用規約",
+                    "termsAgree": "利用規約に同意します"
+                },
+                "placeholder": {
+                    "name": "山田 太郎",
+                    "email": "example@domain.com",
+                    "password": "パスワードを入力",
+                    "confirmPassword": "パスワードを再入力"
+                }
+            }
+        }
     },
     "layout": {
         "discover": "発見",
@@ -203,6 +299,10 @@
             "input": {
                 "name": "ユーザー名を入力",
                 "email": "メールアドレスを入力"
+            },
+            "success": "プロフィールを更新しました。",
+            "error": {
+                "failed": "プロフィールの保存に失敗しました。もう一度お試しください。"
             }
         },
         "account": {
@@ -221,6 +321,14 @@
                         "current": "現在のパスワードを入力",
                         "new": "新しいパスワードを入力",
                         "repeat": "新しいパスワードを再入力"
+                    },
+                    "success": "パスワードが正常に変更されました。",
+                    "error": {
+                        "missingFields": "入力されていない項目があります",
+                        "passwordMatch": "新しいパスワードが一致しません",
+                        "passwordLimit": "パスワードは8文字以上で入力してください",
+                        "incorrect": "現在のパスワードが正しくありません",
+                        "failed": "パスワードの更新に失敗しました"
                     }
                 },
                 "deleteAccount": {

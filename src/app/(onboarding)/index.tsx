@@ -4,24 +4,25 @@ import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import { useWindowDimensions } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useTranslation } from "react-i18next";
 
 const slides = [
   {
-    title: "Get rewarded for every step.",
-    subtitle:
-      "Start walking and let every step bring you closer to exciting rewards and nearby stores.",
+    titleKey: "onboarding.slide.title1",
+    subtitleKey:
+      "onboarding.slide.subtitle1",
     image: require("../../assets/images/1.png"),
   },
   {
-    title: "Redeem points for perks.",
-    subtitle:
-      "Exchange your collected points for exclusive offers and treat yourself anytime.",
+    titleKey: "onboarding.slide.title2",
+    subtitleKey:
+      "onboarding.slide.subtitle2",
     image: require("../../assets/images/2.png"),
   },
   {
-    title: "Discover nearby deals.",
-    subtitle:
-      "Find exclusive partner discounts around you and redeem instantly with your points.",
+    titleKey: "onboarding.slide.title3",
+    subtitleKey:
+      "onboarding.slide.subtitle3",
     image: require("../../assets/images/3.png"),
   },
 ];
@@ -35,10 +36,10 @@ function Slide({ title, subtitle, width, image }: SlideProps) {
         resizeMode="contain"
       />
       <View className="gap-y-2 px-4">
-        <Text className="text-center text-2xl font-poppins-bold text-textPrimary mt-4">
+        <Text className="text-center text-2xl font-poppins-bold text-neutral-900 dark:text-darkTextPrimary mt-4">
           {title}
         </Text>
-        <Text className="text-center text-base font-poppins text-md text-neutral-600">
+        <Text className="text-center text-base font-poppins text-md text-neutral-600 dark:text-darkTextSecondary">
           {subtitle}
         </Text>
       </View>
@@ -51,9 +52,10 @@ export default function Welcome() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const { width: windowWidth } = useWindowDimensions();
   const slideWidth = windowWidth - 32;
+  const { t: translate } = useTranslation();
 
   return (
-    <SafeAreaView className="flex-1 bg-background p-4 justify-between" >
+    <SafeAreaView className="flex-1 bg-background dark:bg-darkBackground p-4 justify-between" >
       <View className="flex-1" style={{ width: slideWidth }}>
         <ScrollView
           horizontal
@@ -70,8 +72,8 @@ export default function Welcome() {
           {slides.map((slide, index) => (
             <Slide
               key={index}
-              title={slide.title}
-              subtitle={slide.subtitle}
+              title={translate(slide.titleKey)}
+              subtitle={translate(slide.subtitleKey)}
               image={slide.image}
               width={slideWidth}
             />
@@ -82,9 +84,8 @@ export default function Welcome() {
           {slides.map((_, index) => (
             <View
               key={index}
-              className={`h-2 rounded-full ${
-                index === currentIndex ? "w-4 bg-primary" : "w-2 bg-neutral-300"
-              }`}
+              className={`h-2 rounded-full ${index === currentIndex ? "w-4 bg-primary" : "w-2 bg-neutral-300 dark:bg-neutral-700"
+                }`}
             />
           ))}
         </View>
@@ -101,7 +102,7 @@ export default function Welcome() {
               className="bg-primary py-4 rounded-xl items-center"
             >
               <Text className="text-white text-base font-poppins-semibold">
-                Get Started
+                {translate("onboarding.slide.button")}
               </Text>
             </TouchableOpacity>
           </View>
