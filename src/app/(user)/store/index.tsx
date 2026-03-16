@@ -20,7 +20,7 @@ import UserStampLogCard from "@/components/rewards/user-stamp-log-card";
 import RewardCard from "@/components/rewards/reward-card";
 import SortPill from "@/components/rewards/sort-pill";
 import { storeLogos } from "@/data/rewards";
-import { useRewardsUiStore } from "@/store/rewards-ui-store";
+import { useRewardsUiStore } from "@/store/user/rewards-ui-store";
 import { useStoreOverviewData } from "@/hooks/use-store-overview-data";
 import StoreScreenContainer from "@/components/ui/store-screen-container";
 

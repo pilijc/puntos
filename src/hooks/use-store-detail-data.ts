@@ -1,8 +1,8 @@
 import { rewards } from "@/data/rewards";
 import { useLocation } from "@/hooks/use-location";
 import { useStamps } from "@/hooks/use-stamps";
-import { useStoreStore } from "@/store/store-store";
-import { useRewardsUiStore } from "@/store/rewards-ui-store";
+import { useStoreStore } from "@/store/user/store-store";
+import { useRewardsUiStore } from "@/store/user/rewards-ui-store";
 import {
   findStampByStoreId,
   getClaimableRewardState,

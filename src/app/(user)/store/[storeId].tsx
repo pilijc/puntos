@@ -7,7 +7,7 @@ import { ActivityIndicator, RefreshControl } from "react-native";
 import { useTranslation } from "react-i18next";
 import SortPill from "@/components/rewards/sort-pill";
 import RewardCard from "@/components/rewards/reward-card";
-import { useRewardsUiStore } from "@/store/rewards-ui-store";
+import { useRewardsUiStore } from "@/store/user/rewards-ui-store";
 import StoreHeader from "@/components/ui/store-header";
 import StoreScreenContainer from "@/components/ui/store-screen-container";
 import { useStoreDetailActions } from "@/hooks/use-store-detail-actions";

@@ -1,6 +1,6 @@
 import { addStamp } from "@/services/stamp-service";
 import { supabase } from "@/supabase/supabase";
-import { useRewardsUiStore } from "@/store/rewards-ui-store";
+import { useRewardsUiStore } from "@/store/user/rewards-ui-store";
 import { useStampRewards } from "@/hooks/use-stamp-rewards";
 import { useStamps } from "@/hooks/use-stamps";
 import { useCallback } from "react";

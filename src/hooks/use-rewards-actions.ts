@@ -1,7 +1,7 @@
 import { useCallback } from "react";
 import { Alert } from "react-native";
-import { useRewardsUiStore } from "@/store/rewards-ui-store";
-import { useRewardsDataStore } from "@/store/rewards-data-store";
+import { useRewardsUiStore } from "@/store/user/rewards-ui-store";
+import { useRewardsDataStore } from "@/store/user/rewards-data-store";
 import { useStamps } from "@/hooks/use-stamps";
 import { useStampRewards } from "@/hooks/use-stamp-rewards";
 import { addStamp } from "@/services/stamp-service";
