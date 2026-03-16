@@ -233,6 +233,7 @@ export default function AddStaff() {
             loading={isSubmitting}
             fullWidth={true}
             variant="primary"
+						keyboardDismiss={true}
           />
           <Button
             label="Cancel"
@@ -300,7 +301,6 @@ export default function AddStaff() {
 								className="flex-1 h-11 rounded-xl bg-primary items-center justify-center"
 								activeOpacity={0.85}
 								onPress={async () => {
-									Keyboard.dismiss();
 									setShowConfirm(false);
 									await handleCreateStaff();
 								}}

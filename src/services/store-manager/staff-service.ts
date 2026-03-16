@@ -5,6 +5,30 @@ const supabase = createClient(
   process.env.EXPO_PUBLIC_SERVICE_ROLE_KEY!
 );
 
+export const getStoreStaff = async (storeId: string) => {
+  try {
+		const { data, error } = await supabase
+			.from("store_staff")
+			.select(`
+				id,
+				store_id,
+				role_id,
+				created_at,
+				user: users (
+					id,
+					name,
+					email
+				)
+			`)
+			.eq("store_id", storeId);
+
+		if (error) throw error;
+		return data;
+	} catch (error) {
+		throw error;
+	}
+};
+
 export const createStoreStaff = async ( storeId: string, name: string, email: string, password: string ) => {
   try {
 		const { data, error } = await supabase.auth.admin.createUser({
@@ -20,29 +44,49 @@ export const createStoreStaff = async ( storeId: string, name: string, email: st
 	
 		const { data: existingUser, error: existingUserError } = await supabase
 			.from("users")
+			.upsert(
+				{
+					id: userId,
+					email,
+					name,
+					role: "front_desk",
+				},
+				{ onConflict: "id" }
+			)
 			.select("id, email, name")
-			.eq("id", userId)
 			.single();
-	
+
 		if (existingUserError) throw existingUserError;
 	
 		const { data: roleData, error: roleError } = await supabase
-		.from("roles")
-		.select("id")
-		.eq("role_type", "front_desk")
-		.limit(1)
-		.maybeSingle();
-	
+			.from("roles")
+			.select("id")
+			.eq("role_type", "front_desk")
+			.limit(1)
+			.maybeSingle();
+
 		if (roleError || !roleData) {
 			throw roleError ?? new Error("Could not find frontdesk role.");
 		}
-	
+
+		const { error: userRoleError } = await supabase
+			.from("user_roles")
+			.insert({
+				user_id: userId,
+				role_id: roleData.id,
+				store_id: storeId,
+			});
+
+		if (userRoleError) throw userRoleError;
+
 		const { data: storeStaffData, error: storeStaffError } = await supabase
 			.from("store_staff")
 			.insert({
 				store_id: storeId,
 				user_id: userId,
 				role_id: roleData.id,
+				is_active: true,
+				created_at: new Date().toISOString(),
 			})
 			.select()
 			.single();
