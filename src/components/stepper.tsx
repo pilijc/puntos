@@ -236,25 +236,46 @@ export function RoleStep({ value, onChange, error }: RoleStepProps) {
 
 export function TermsStep({ accepted, onToggle, error }: TermsStepProps) {
   return (
-    <View className="gap-y-2">
-      <Text className="text-sm font-poppins-medium text-neutral-700">
-        Terms and Conditions
-      </Text>
+    <View className="gap-y-4">
+      <View className="bg-background rounded-xl p-4 border border-neutral-200 max-h-64">
+        <Text className="font-poppins-semibold text-neutral-900 mb-2">
+          Terms of Service & Privacy Policy
+        </Text>
+        <ScrollView showsVerticalScrollIndicator={true}>
+          <Text className="font-poppins text-neutral-600 text-sm">
+            By creating an account, you agree to our Terms of Service and Privacy Policy.
+            {'\n\n'}
+            We collect and process your data to provide our services. Your information will be stored securely and used only for the purposes described in our Privacy Policy.
+            {'\n\n'}
+            You can delete your account at any time from the settings menu.
+          </Text>
+        </ScrollView>
+      </View>
+
       <Pressable
         onPress={onToggle}
-        className="flex-row items-center gap-x-3 p-4 rounded-xl border border-neutral-200"
+        className="flex-row items-start gap-x-3"
       >
         <View
-          className={`w-5 h-5 rounded border-2 ${accepted ? 'border-primary bg-primary' : 'border-neutral-300'}`}
+          className={`w-4 h-4 rounded border-1 items-center justify-center mt-0.5 ${accepted ? 'bg-primary border-primary' : 'border-neutral-300'
+            }`}
         >
           {accepted && (
-            <Ionicons name="checkmark" size={16} color="white" />
+            <Ionicons name="checkmark" size={12} color="white" />
           )}
         </View>
-        <Text className="font-poppins text-neutral-700 flex-1">
-          I agree to the Terms and Conditions
+        <Text className="flex-1 font-poppins text-neutral-700">
+          I agree to the{' '}
+          <Text className="font-poppins-semibold text-primary">
+            Terms of Service
+          </Text>
+          {' '}and{' '}
+          <Text className="font-poppins-semibold text-primary">
+            Privacy Policy
+          </Text>
         </Text>
       </Pressable>
+
       {error && (
         <Text className="text-red-500 text-sm font-poppins rounded-xl p-4 text-center bg-red-50">
           {error}
