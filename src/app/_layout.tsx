@@ -14,7 +14,7 @@ import { useAuthListener } from "@/hooks/auth-listener";
 import { useAnimatedStyle, useSharedValue, withRepeat, withSequence, withTiming } from "react-native-reanimated";
 import { Image } from "@/tw";
 import { getHomeRouteForUserId } from "@/services/access-service";
-import { checkIfAccountDeletedService, AccountDeletedError } from "@/services/auth-service";
+import { checkIfAccountDeletedService, checkIfAccountBlockedService, AccountDeletedError, AccountBlockedError } from "@/services/auth-service";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { useAuthStore } from "@/store/auth-store";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -69,11 +69,15 @@ export default function Layout() {
           fetchStamps();
 
           await checkIfAccountDeletedService(userId);
+          await checkIfAccountBlockedService(userId);
           const nextRoute = await getHomeRouteForUserId(userId);
           router.replace(nextRoute as any);
         } catch (err: any) {
           if (err instanceof AccountDeletedError) {
             Alert.alert("Login Failed", err.message);
+            router.replace("/(auth)/login");
+          } else if (err instanceof AccountBlockedError) {
+            Alert.alert("Account Restricted", err.message);
             router.replace("/(auth)/login");
           } else {
             console.error("Session restoration error:", err);
