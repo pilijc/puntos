@@ -2,9 +2,9 @@ import { supabase } from "@/supabase/supabase";
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
 import { Alert } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { getHomeRouteForUserId } from "./access-service";
+import { getHomeRouteForUserId, getRoleTypeForUser } from "./access-service";
 import { router } from "expo-router";
-
+ 
 export class AccountDeletedError extends Error {
   constructor() {
     super("Invalid login credentials.");
@@ -12,6 +12,20 @@ export class AccountDeletedError extends Error {
   }
 }
 
+/**
+ * Custom error thrown when an account has been blocked by super admin.
+ */
+export class AccountBlockedError extends Error {
+  constructor() {
+    super("Your account has been restricted. Please contact support.");
+    this.name = "AccountBlockedError";
+  }
+}
+
+/**
+ * Checks if a user's account has been soft-deleted.
+ * If deleted, it signs the user out and throws an AccountDeletedError.
+ */
 export async function checkIfAccountDeletedService(userId: string): Promise<void> {
   const { data: userSettings, error } = await supabase
     .from("user_settings")
@@ -27,6 +41,28 @@ export async function checkIfAccountDeletedService(userId: string): Promise<void
   }
 }
 
+/**
+ * Checks if a user is blocked in public.users. If blocked, signs out and throws AccountBlockedError.
+ * Blocked users cannot use their account.
+ */
+export async function checkIfAccountBlockedService(userId: string): Promise<void> {
+  const { data, error } = await supabase
+    .from("users")
+    .select("blocked")
+    .eq("id", userId)
+    .maybeSingle();
+
+  if (error) throw error;
+
+  if (data?.blocked === true) {
+    await supabase.auth.signOut();
+    throw new AccountBlockedError();
+  }
+}
+
+/**
+ * Soft-deletes a user account by setting the deleted_at timestamp.
+ */
 export async function softDeleteUserService(userId: string): Promise<void> {
   const { error } = await supabase
     .from("user_settings")
@@ -172,13 +208,40 @@ export async function signUpWithGoogleService() {
 export async function loginService(email: string, password: string) {
   try {
     const res = await supabase.auth.signInWithPassword({ email, password });
-    if (res.data?.session?.access_token) {
-      await AsyncStorage.setItem('sessionToken', res.data.session.access_token);
-    }
+    
     if (res.error) throw res.error;
     const userId = res.data?.user?.id;
-    const homeRoute = userId ? await getHomeRouteForUserId(userId) : "/(user)";
-    return { ...res, homeRoute };
+    if(!userId) throw new Error("Login Failed");
+
+    const roleType = await getRoleTypeForUser(userId);
+
+    if (roleType === "front_desk") {
+        const { data: storeStaff, error } = await supabase
+          .from("store_staff")
+          .select("store_id")
+          .eq("user_id", userId)
+          .single();
+
+        if (error || !storeStaff?.store_id) {
+          await supabase.auth.signOut();   
+          await AsyncStorage.removeItem("sessionToken");
+          
+           return {
+              success: false,
+              homeRoute: null,
+              message:
+                "You are not assigned to any store. Please contact your administrator.",
+            };
+         }     
+      }
+
+    // if (res.data?.session?.access_token) {
+    //   await AsyncStorage.setItem('sessionToken', res.data.session.access_token);
+    // }
+    const homeRoute = userId ? await getHomeRouteForUserId(userId) : null;
+    return { success: true,
+             homeRoute,
+    }; 
   } catch (error: any) {
     console.log("error login service", error);
     throw error;
