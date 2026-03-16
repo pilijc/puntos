@@ -12,6 +12,20 @@ export class AccountDeletedError extends Error {
   }
 }
 
+/**
+ * Custom error thrown when an account has been blocked by super admin.
+ */
+export class AccountBlockedError extends Error {
+  constructor() {
+    super("Your account has been restricted. Please contact support.");
+    this.name = "AccountBlockedError";
+  }
+}
+
+/**
+ * Checks if a user's account has been soft-deleted.
+ * If deleted, it signs the user out and throws an AccountDeletedError.
+ */
 export async function checkIfAccountDeletedService(userId: string): Promise<void> {
   const { data: userSettings, error } = await supabase
     .from("user_settings")
@@ -27,6 +41,28 @@ export async function checkIfAccountDeletedService(userId: string): Promise<void
   }
 }
 
+/**
+ * Checks if a user is blocked in public.users. If blocked, signs out and throws AccountBlockedError.
+ * Blocked users cannot use their account.
+ */
+export async function checkIfAccountBlockedService(userId: string): Promise<void> {
+  const { data, error } = await supabase
+    .from("users")
+    .select("blocked")
+    .eq("id", userId)
+    .maybeSingle();
+
+  if (error) throw error;
+
+  if (data?.blocked === true) {
+    await supabase.auth.signOut();
+    throw new AccountBlockedError();
+  }
+}
+
+/**
+ * Soft-deletes a user account by setting the deleted_at timestamp.
+ */
 export async function softDeleteUserService(userId: string): Promise<void> {
   const { error } = await supabase
     .from("user_settings")
