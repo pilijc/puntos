@@ -4,7 +4,7 @@ import React, { useState, useCallback } from "react";
 
 import { getCurrentLocation } from "@/services/location-service";
 import { useProfile } from "@/hooks/use-profile";
-
+ 
 // Components
 import EditProfileModal from "@/components/settings/modal/EditProfileModal";
 import { LogoutButton } from "@/components/settings/LogoutButton";
@@ -14,6 +14,7 @@ import { LanguageCard } from "@/components/settings/card/LanguageCard";
 import { AppearanceCard } from "@/components/settings/card/AppearanceCard";
 import { NotificationCard } from "@/components/settings/card/NotificationCard";
 import { LocationCard } from "@/components/settings/card/LocationCard";
+import {CustomTabBarButton} from "@/components/qr/qr-button";
 import { useTranslation } from "react-i18next";
 
 // Services
@@ -81,6 +82,7 @@ export default function UserSettings() {
       <View className="flex-row justify-between items-center mb-6">
         <Text className="text-xl font-poppins-bold text-neutral-900 dark:text-darkTextPrimary">
           {translate('settings.title')}
+          <CustomTabBarButton onPress={() => {}} bottomInset={0} />
         </Text>
       </View>
 

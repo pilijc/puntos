@@ -34,6 +34,8 @@ import { getStores } from "@/services/store-service";
 import { supabase } from "@/supabase/supabase";
 import { Alert, ActivityIndicator, RefreshControl } from "react-native";
 import { StampProgress } from "@/services/stamp-service";
+import { useTranslation } from "react-i18next";
+
 
 const { width: screenWidth } = Dimensions.get("window");
 
@@ -78,6 +80,7 @@ export default function Rewards() {
   const { location, permissionStatus, startWatching, stopWatching, refreshLocation } = useLocation();
   const { handleRefresh, handleStamp, hasStampedToday } = useRewardsActions();
   const autoPlayTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const { t: translate } = useTranslation();
 
   const fetchActiveStores = useCallback(async () => {
     try {
