@@ -8,7 +8,7 @@ import * as Location from 'expo-location'
 import { Ionicons, MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
 import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
 import { getRouteService, getSearchResultsService } from "@/services/discover-service";
-import { useStoreStore } from "@/store/store-store";
+import { useStoreStore } from "@/store/user/store-store";
 import { Store } from "@/type/user/store";
 import type * as GeoJSON from "geojson";
 import { getOneSignalId, sendPushNotification } from "@/services/push-notif";
