@@ -3,9 +3,9 @@ import { ScrollView, ActivityIndicator, RefreshControl, Image, StyleSheet, Press
 import { SafeAreaView, Text, View } from "@/tw";
 import { useRouter } from "expo-router";
 import { useDashboardStore } from "@/store/dashboard-store";
-import { SectionHeader } from "@/components/ui/SectionHeader";
+import { SectionHeader } from "@/components/ui/section-header";
 import { UserRow } from "@/components/users/UserRow";
-import { StatCard } from "@/components/ui/StatCard";
+import { StatCard } from "@/components/ui/stat-card";
 import { Modal } from "@/components/modal";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 
