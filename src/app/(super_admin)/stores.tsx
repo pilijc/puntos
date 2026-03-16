@@ -1,18 +1,15 @@
 import React, { useState, useCallback } from "react";
 import {
-	View,
-	Text,
-	TouchableOpacity,
 	ScrollView,
-	StyleSheet,
 	Alert,
 	RefreshControl,
-	ActivityIndicator,
-	Modal,
 } from "react-native";
+import { View, Text, TouchableOpacity, SafeAreaView } from "@/tw";
 import { Image } from "expo-image";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useFocusEffect } from "expo-router";
+import { Button } from "@/components/button";
+import { Modal } from "@/components/modal";
 import { getAllStores, updateStoreStatus, AdminStoreRow } from "@/services/store-service";
 
 // ── Constants ───────────────────────────────────────────────────────────────
@@ -21,15 +18,15 @@ type Filter = typeof FILTERS[number];
 
 const FILTER_LABELS: Record<Filter, string> = {
 	All: "All",
-	pending_review: "Pending Review",
+	pending_review: "Pending",
 	active: "Active",
 	inactive: "Inactive",
 };
 
-const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; dot: string }> = {
-	active: { label: "Active", color: "#16A34A", bg: "#F0FDF4", dot: "#22C55E" },
-	pending_review: { label: "Pending Review", color: "#D97706", bg: "#FFFBEB", dot: "#F59E0B" },
-	inactive: { label: "Inactive", color: "#64748B", bg: "#F1F5F9", dot: "#94A3B8" },
+const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; dot: string; text?: string }> = {
+	active: { label: "Active", color: "#16A34A", bg: "bg-green-100", dot: "#22C55E", text: "text-green-700" },
+	pending_review: { label: "Pending", color: "#D97706", bg: "bg-amber-100", dot: "#F59E0B", text: "text-amber-700" },
+	inactive: { label: "Inactive", color: "#64748B", bg: "bg-slate-100", dot: "#94A3B8", text: "text-slate-500" },
 };
 
 // ── Store Card ──────────────────────────────────────────────────────────────
@@ -50,185 +47,164 @@ function StoreCard({
 
 	return (
 		<>
-			<TouchableOpacity style={styles.card} onPress={() => setModalVisible(true)} activeOpacity={0.7}>
-				{/* ── Top row: logo + info + status badge ── */}
-				<View style={{ flexDirection: "row", alignItems: "flex-start" }}>
-					<View style={styles.logoBox}>
+			<TouchableOpacity
+				className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl overflow-hidden mb-3"
+				onPress={() => setModalVisible(true)}
+				activeOpacity={0.95}
+			>
+				<View className="p-4 flex-row gap-3">
+					<View className="w-[60px] h-[60px] rounded-xl bg-slate-100 dark:bg-slate-800 items-center justify-center overflow-hidden">
 						{store.logo ? (
 							<Image
 								source={{ uri: store.logo }}
-								style={{ width: 56, height: 56, borderRadius: 14 }}
+								style={{ width: 60, height: 60 }}
 								contentFit="cover"
 							/>
 						) : (
-							<MaterialIcons name="storefront" size={24} color="#CBD5E1" />
+							<MaterialIcons name="storefront" size={26} color="#94A3B8" />
 						)}
 					</View>
 
-					<View style={{ flex: 1, marginLeft: 12 }}>
-						<Text style={styles.storeName} numberOfLines={1}>{store.name}</Text>
-						{store.type ? <Text style={styles.storeType}>{store.type}</Text> : null}
-						{store.address ? (
-							<View style={{ flexDirection: "row", alignItems: "center", marginTop: 3 }}>
-								<MaterialIcons name="location-on" size={12} color="#94A3B8" />
-								<Text style={styles.storeAddress} numberOfLines={1}>{store.address}</Text>
+					<View className="flex-1 justify-center gap-y-1">
+						<View className="flex-row items-center justify-between">
+							<Text className="font-poppins-bold text-[15px] text-slate-900 dark:text-slate-100 flex-1 mr-2" numberOfLines={1}>{store.name}</Text>
+							<View className={`px-2 py-0.5 rounded-full ${cfg.bg}`}>
+								<Text className={`text-[9px] font-poppins-bold uppercase tracking-wider ${cfg.text}`}>
+									{cfg.label}
+								</Text>
+							</View>
+						</View>
+						<View className="flex-row items-center gap-1">
+							<MaterialIcons name="location-on" size={12} color="#94A3B8" />
+							<Text className="text-xs font-poppins text-slate-400 dark:text-slate-500 flex-1" numberOfLines={1}>{store.address ?? "No address provided"}</Text>
+						</View>
+						{store.type ? (
+							<View className="flex-row items-center gap-1">
+								<MaterialIcons name="category" size={12} color="#94A3B8" />
+								<Text className="text-xs font-poppins text-slate-400 dark:text-slate-500 flex-1" numberOfLines={1}>{store.type}</Text>
 							</View>
 						) : null}
-					</View>
-
-					<View style={[styles.statusBadge, { backgroundColor: cfg.bg }]}>
-						<View style={[styles.statusDot, { backgroundColor: cfg.dot }]} />
-						<Text style={[styles.statusText, { color: cfg.color }]}>{cfg.label}</Text>
 					</View>
 				</View>
 
 				{/* ── Visual Indicator for Tap ── */}
-				<View style={styles.divider} />
-				<View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-					<Text style={{ fontSize: 12, fontFamily: "Poppins-Medium", color: "#94A3B8" }}>
+				<View className="px-4 py-3 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/30 flex-row justify-between items-center">
+					<Text className="text-xs font-poppins-medium text-slate-500 dark:text-slate-400">
 						Tap to view details
 					</Text>
 					<MaterialIcons name="chevron-right" size={18} color="#94A3B8" />
 				</View>
 
 				{/* ── Hidden by Default ── */}
-				<Modal visible={modalVisible} transparent={true} onRequestClose={() => setModalVisible(false)} animationType="slide">
-					<View style={styles.detailsModalOverlay}>
-						<View style={styles.detailsModalContainer}>
-							{/* Header */}
-							<View style={styles.detailsModalHeader}>
-								<Text style={styles.detailsModalTitle}>Store Details</Text>
-								<TouchableOpacity onPress={() => setModalVisible(false)} style={styles.detailsModalCloseBtn}>
-									<MaterialIcons name="close" size={24} color="#64748B" />
-								</TouchableOpacity>
-							</View>
-
-							<ScrollView
-								style={{ flex: 1 }}
-								contentContainerStyle={{ padding: 20 }}
-								showsVerticalScrollIndicator={false}
-							>
-								{/* Top row again inside modal for context */}
-								<View style={{ flexDirection: "row", alignItems: "flex-start", marginBottom: 20 }}>
-									<View style={styles.logoBox}>
-										{store.logo ? (
-											<Image source={{ uri: store.logo }} style={{ width: 56, height: 56, borderRadius: 14 }} contentFit="cover" />
-										) : (
-											<MaterialIcons name="storefront" size={24} color="#CBD5E1" />
-										)}
-									</View>
-									<View style={{ flex: 1, marginLeft: 12 }}>
-										<Text style={styles.storeName}>{store.name}</Text>
-										{store.type ? <Text style={styles.storeType}>{store.type}</Text> : null}
-										{store.address ? (
-											<View style={{ flexDirection: "row", alignItems: "center", marginTop: 3 }}>
-												<MaterialIcons name="location-on" size={12} color="#94A3B8" />
-												<Text style={styles.storeAddress}>{store.address}</Text>
-											</View>
-										) : null}
-									</View>
-									<View style={[styles.statusBadge, { backgroundColor: cfg.bg }]}>
-										<View style={[styles.statusDot, { backgroundColor: cfg.dot }]} />
-										<Text style={[styles.statusText, { color: cfg.color }]}>{cfg.label}</Text>
-									</View>
+			{/* ── Details Modal ── */}
+			<Modal
+				visible={modalVisible}
+				onClose={() => setModalVisible(false)}
+				title="Store Details"
+				buttons={isPending ? [
+					{
+						label: "Reject",
+						variant: "danger",
+						onPress: () => {
+							setModalVisible(false);
+							setTimeout(() => onReject(store), 300);
+						}
+					},
+					{
+						label: "Approve Store",
+						variant: "success",
+						onPress: () => {
+							setModalVisible(false);
+							setTimeout(() => onApprove(store), 300);
+						}
+					}
+				] : []}
+			>
+				<ScrollView showsVerticalScrollIndicator={false} style={{ maxHeight: 500 }}>
+					{/* Top row again inside modal for context */}
+					<View className="flex-row items-start mb-5 bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-100 dark:border-slate-800">
+						<View className="w-14 h-14 rounded-xl bg-slate-100 dark:bg-slate-800 items-center justify-center overflow-hidden">
+							{store.logo ? (
+								<Image source={{ uri: store.logo }} style={{ width: 56, height: 56 }} contentFit="cover" />
+							) : (
+								<MaterialIcons name="storefront" size={24} color="#94A3B8" />
+							)}
+						</View>
+						<View className="flex-1 ml-3">
+							<Text className="text-[15px] font-poppins-bold text-slate-900 dark:text-slate-100">{store.name}</Text>
+							{store.type ? <Text className="text-[11px] font-poppins-medium text-primary mt-0.5">{store.type}</Text> : null}
+							{store.address ? (
+								<View className="flex-row items-center mt-1">
+									<MaterialIcons name="location-on" size={12} color="#94A3B8" />
+									<Text className="text-xs font-poppins text-slate-400 dark:text-slate-500 ml-0.5">{store.address}</Text>
 								</View>
-
-								{/* Details section */}
-								<View style={{ gap: 12 }}>
-									<Text style={styles.docsTitle}>Information</Text>
-									<View style={styles.detailsBox}>
-										{store.owner_name ? (
-											<View style={styles.detailRow}>
-												<MaterialIcons name="person" size={16} color="#94A3B8" />
-												<Text style={styles.detailText}>{store.owner_name}</Text>
-											</View>
-										) : null}
-										{store.phone ? (
-											<View style={[styles.detailRow, { marginTop: 10 }]}>
-												<MaterialIcons name="phone" size={16} color="#94A3B8" />
-												<Text style={styles.detailText}>{store.phone}</Text>
-											</View>
-										) : null}
-										{store.registration_number ? (
-											<View style={[styles.detailRow, { marginTop: 10 }]}>
-												<MaterialIcons name="business" size={16} color="#94A3B8" />
-												<Text style={styles.detailText}>{store.registration_number}</Text>
-											</View>
-										) : null}
-										<View style={[styles.detailRow, { marginTop: 10 }]}>
-											<MaterialIcons name="calendar-today" size={16} color="#94A3B8" />
-											<Text style={styles.detailText}>
-												Registered on {new Date(store.created_at).toLocaleDateString("en-US", {
-													month: "short", day: "numeric", year: "numeric",
-												})}
-											</Text>
-										</View>
-									</View>
-								</View>
-
-								{/* Documents preview */}
-								{(!!store.business_document_image || ((store as any).store_pictures?.length ?? 0) > 0) && (
-									<View style={{ gap: 12, marginTop: 24 }}>
-										<Text style={styles.docsTitle}>Submitted documents</Text>
-										<View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10 }}>
-											{store.business_document_image && (
-												<TouchableOpacity style={styles.docThumbLarge} onPress={() => setSelectedImage(store.business_document_image!)}>
-													<Image source={{ uri: store.business_document_image }} style={{ width: "100%", height: "100%", borderRadius: 12 }} contentFit="cover" />
-												</TouchableOpacity>
-											)}
-											{(store as any).store_pictures?.map((uri: string, idx: number) => (
-												<TouchableOpacity key={idx} style={styles.docThumbLarge} onPress={() => setSelectedImage(uri)}>
-													<Image source={{ uri }} style={{ width: "100%", height: "100%", borderRadius: 12 }} contentFit="cover" />
-												</TouchableOpacity>
-											))}
-										</View>
-									</View>
-								)}
-
-								{/* Approve / Reject */}
-								{isPending && (
-									<View style={{ marginTop: 32, paddingBottom: 20 }}>
-										<View style={{ flexDirection: "row", gap: 12 }}>
-											<TouchableOpacity
-												style={[styles.actionBtn, styles.approveBtn]}
-												onPress={() => {
-													setModalVisible(false);
-													setTimeout(() => onApprove(store), 300);
-												}}
-											>
-												<MaterialIcons name="check-circle" size={18} color="#16A34A" />
-												<Text style={[styles.actionBtnText, { color: "#16A34A", fontSize: 14 }]}>Approve Store</Text>
-											</TouchableOpacity>
-											<TouchableOpacity
-												style={[styles.actionBtn, styles.rejectBtn]}
-												onPress={() => {
-													setModalVisible(false);
-													setTimeout(() => onReject(store), 300);
-												}}
-											>
-												<MaterialIcons name="cancel" size={18} color="#DC2626" />
-												<Text style={[styles.actionBtnText, { color: "#DC2626", fontSize: 14 }]}>Reject</Text>
-											</TouchableOpacity>
-										</View>
-									</View>
-								)}
-							</ScrollView>
+							) : null}
 						</View>
 					</View>
-				</Modal>
+
+					{/* Details section */}
+					<View className="gap-y-3 mb-6">
+						<Text className="text-sm font-poppins-bold text-slate-900 dark:text-slate-100 px-1">Information</Text>
+						<View className="bg-slate-50 dark:bg-slate-800/30 rounded-2xl p-4 border border-slate-100 dark:border-slate-800 gap-y-3">
+							{store.owner_name ? (
+								<View className="flex-row items-center gap-x-2.5">
+									<MaterialIcons name="person" size={16} color="#94A3B8" />
+									<Text className="text-sm font-poppins text-slate-600 dark:text-slate-400 flex-1">{store.owner_name}</Text>
+								</View>
+							) : null}
+							{store.phone ? (
+								<View className="flex-row items-center gap-x-2.5">
+									<MaterialIcons name="phone" size={16} color="#94A3B8" />
+									<Text className="text-sm font-poppins text-slate-600 dark:text-slate-400 flex-1">{store.phone}</Text>
+								</View>
+							) : null}
+							{store.registration_number ? (
+								<View className="flex-row items-center gap-x-2.5">
+									<MaterialIcons name="business" size={16} color="#94A3B8" />
+									<Text className="text-sm font-poppins text-slate-600 dark:text-slate-400 flex-1">{store.registration_number}</Text>
+								</View>
+							) : null}
+							<View className="flex-row items-center gap-x-2.5">
+								<MaterialIcons name="calendar-today" size={16} color="#94A3B8" />
+								<Text className="text-sm font-poppins text-slate-600 dark:text-slate-400 flex-1">
+									Registered on {new Date(store.created_at).toLocaleDateString("en-US", {
+										month: "short", day: "numeric", year: "numeric",
+									})}
+								</Text>
+							</View>
+						</View>
+					</View>
+
+					{/* Documents preview */}
+					{(!!store.business_document_image || ((store as any).store_pictures?.length ?? 0) > 0) && (
+						<View className="gap-y-3">
+							<Text className="text-sm font-poppins-bold text-slate-900 dark:text-slate-100 px-1">Submitted documents</Text>
+							<View className="flex-row flex-wrap gap-2.5">
+								{store.business_document_image && (
+									<TouchableOpacity className="w-[100px] h-[100px] rounded-xl bg-slate-100 dark:bg-slate-800 overflow-hidden" onPress={() => setSelectedImage(store.business_document_image!)}>
+										<Image source={{ uri: store.business_document_image }} style={{ width: "100%", height: "100%" }} contentFit="cover" />
+									</TouchableOpacity>
+								)}
+								{(store as any).store_pictures?.map((uri: string, idx: number) => (
+									<TouchableOpacity key={idx} className="w-[100px] h-[100px] rounded-xl bg-slate-100 dark:bg-slate-800 overflow-hidden" onPress={() => setSelectedImage(uri)}>
+										<Image source={{ uri }} style={{ width: "100%", height: "100%" }} contentFit="cover" />
+									</TouchableOpacity>
+								))}
+							</View>
+						</View>
+					)}
+				</ScrollView>
+			</Modal>
 			</TouchableOpacity>
 
 			{/* Full Screen Image Viewer Modal */}
-			<Modal visible={!!selectedImage} transparent={true} onRequestClose={() => setSelectedImage(null)} animationType="fade">
-				<View style={styles.modalOverlay}>
-					<TouchableOpacity style={styles.modalCloseButton} onPress={() => setSelectedImage(null)}>
-						<MaterialIcons name="close" size={30} color="#FFFFFF" />
-					</TouchableOpacity>
-					{selectedImage ? (
-						<Image source={{ uri: selectedImage }} style={styles.fullScreenImage} contentFit="contain" />
-					) : null}
-				</View>
-			</Modal>
+			{!!selectedImage && (
+				<Modal visible={true} onClose={() => setSelectedImage(null)} title="Document" dismissOnBackdrop={true}>
+					<View className="items-center justify-center p-4">
+						<Image source={{ uri: selectedImage }} style={{ width: "100%", height: 350 }} contentFit="contain" />
+					</View>
+				</Modal>
+			)}
 		</>
 	);
 }
@@ -236,16 +212,19 @@ function StoreCard({
 // ── Skeleton card ───────────────────────────────────────────────────────────
 function SkeletonCard() {
 	return (
-		<View style={[styles.card, { gap: 12 }]}>
-			<View style={{ flexDirection: "row", gap: 12 }}>
-				<View style={[styles.logoBox, { backgroundColor: "#F1F5F9" }]} />
-				<View style={{ flex: 1, gap: 8 }}>
-					<View style={{ height: 14, borderRadius: 7, backgroundColor: "#F1F5F9", width: "60%" }} />
-					<View style={{ height: 11, borderRadius: 6, backgroundColor: "#F8FAFC", width: "80%" }} />
+		<View className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden mb-3">
+			<View className="p-4 flex-row gap-3">
+				<View className="w-[60px] h-[60px] rounded-xl bg-slate-100 dark:bg-slate-800" />
+				<View className="flex-1 justify-center gap-y-2">
+					<View className="h-4 rounded-lg bg-slate-100 dark:bg-slate-800" style={{ width: "55%" }} />
+					<View className="h-3 rounded-lg bg-slate-100 dark:bg-slate-800" style={{ width: "75%" }} />
+					<View className="h-3 rounded-lg bg-slate-100 dark:bg-slate-800" style={{ width: "40%" }} />
 				</View>
 			</View>
-			<View style={{ height: 1, backgroundColor: "#F1F5F9" }} />
-			<View style={{ height: 11, borderRadius: 6, backgroundColor: "#F8FAFC", width: "40%" }} />
+			<View className="px-4 py-3 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/30 flex-row justify-between items-center">
+				<View className="h-5 w-20 rounded-full bg-slate-100 dark:bg-slate-800" />
+				<View className="h-7 w-20 rounded-lg bg-slate-100 dark:bg-slate-800" />
+			</View>
 		</View>
 	);
 }
@@ -328,68 +307,89 @@ export default function SuperAdminStores() {
 	const pendingCount = stores.filter((s) => s.status === "pending_review").length;
 
 	return (
-		<View style={{ flex: 1, backgroundColor: "#F3F4F6" }}>
+		<SafeAreaView className="flex-1 bg-backgroundMuted dark:bg-slate-950">
 
 			{/* ── Header ── */}
-			<View style={styles.header}>
-				<View>
-					<Text style={styles.headerTitle}>Store Approvals</Text>
-					<Text style={styles.headerSub}>
-						{loading ? "Loading..." : `${stores.length} total · ${pendingCount} pending`}
+			<View className="bg-white border-b border-slate-100 dark:bg-slate-900 dark:border-slate-800 px-6 py-4 flex-row items-center justify-start">
+				<View className="flex-row items-center gap-2 py-1">
+					<MaterialIcons name="storefront" size={22} color="black" className="mt-1" />
+					<Text className="text-2xl font-poppins-bold text-slate-900 dark:text-slate-100 flex-1">
+						Store Approvals
 					</Text>
 				</View>
-				{pendingCount > 0 && (
-					<View style={styles.pendingBadge}>
-						<Text style={styles.pendingBadgeText}>{pendingCount}</Text>
-					</View>
-				)}
 			</View>
 
 			{/* ── Filter tabs ── */}
-			<View style={styles.filterBar}>
-				<ScrollView
-					horizontal
-					showsHorizontalScrollIndicator={false}
-					contentContainerStyle={styles.filterContent}
-				>
+			<View className="bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800">
+				<ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 20, gap: 28, flexDirection: "row" }}>
 					{FILTERS.map((f) => {
 						const active = activeFilter === f;
 						const count = f === "All" ? stores.length : stores.filter((s) => s.status === f).length;
 						return (
 							<TouchableOpacity
 								key={f}
+								className="py-3 items-center flex-row justify-center gap-1.5"
+								style={{
+									borderBottomWidth: 2,
+									borderBottomColor: active ? "#FF6600" : "transparent",
+								}}
 								onPress={() => setActiveFilter(f)}
-								style={[styles.filterPill, active && styles.filterPillActive]}
+								activeOpacity={0.7}
 							>
-								<Text style={[styles.filterText, active && styles.filterTextActive]}>
-									{FILTER_LABELS[f]}{count > 0 ? ` (${count})` : ""}
-								</Text>
-							</TouchableOpacity>
-						);
-					})}
+							<Text
+								className={
+									active
+										? "text-sm font-poppins-bold text-primary"
+										: "text-sm font-poppins-medium text-slate-400 dark:text-slate-500"
+								}
+								numberOfLines={1}
+							>
+								{FILTER_LABELS[f]}
+							</Text>
+							{count > 0 && (
+								<View
+									className={`rounded-full px-1.5 min-w-[20px] items-center ${active
+										? "bg-primary/10"
+										: "bg-neutral-100 dark:bg-neutral-700"
+										}`}
+								>
+									<Text
+										className={`text-[10px] font-poppins-bold ${active
+											? "text-primary"
+											: "text-neutral-500 dark:text-neutral-400"
+											}`}
+									>
+										{count}
+									</Text>
+								</View>
+							)}
+						</TouchableOpacity>
+					);
+				})}
 				</ScrollView>
 			</View>
 
 			{/* ── Store list ── */}
-			<ScrollView
-				style={{ flex: 1, backgroundColor: "#F3F4F6" }}
-				contentContainerStyle={styles.listContent}
-				showsVerticalScrollIndicator={false}
-				refreshControl={
-					<RefreshControl
-						refreshing={refreshing}
-						onRefresh={onRefresh}
-						tintColor="#FF6600"
-						colors={["#FF6600"]}
-					/>
-				}
-			>
-				{error && !loading && (
-					<View style={styles.errorBanner}>
-						<MaterialIcons name="error-outline" size={16} color="#DC2626" />
-						<Text style={styles.errorText}>{error}</Text>
-					</View>
-				)}
+			<View className="flex-1">
+				<ScrollView
+					className="flex-1"
+					contentContainerStyle={{ padding: 16, paddingBottom: 80 }}
+					showsVerticalScrollIndicator={false}
+					refreshControl={
+						<RefreshControl
+							refreshing={refreshing}
+							onRefresh={onRefresh}
+							tintColor="#FF6600"
+							colors={["#FF6600"]}
+						/>
+					}
+				>
+					{error && !loading && (
+						<View className="flex-row items-center gap-2 bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 rounded-xl p-3 mb-4">
+							<MaterialIcons name="error-outline" size={16} color="#DC2626" />
+							<Text className="flex-1 text-sm font-poppins text-red-600 dark:text-red-400">{error}</Text>
+						</View>
+					)}
 
 				{loading && (
 					<>
@@ -408,197 +408,21 @@ export default function SuperAdminStores() {
 					/>
 				))}
 
-				{!loading && filtered.length === 0 && !error && (
-					<View style={styles.emptyState}>
-						<MaterialIcons name="storefront" size={48} color="#CBD5E1" />
-						<Text style={styles.emptyTitle}>
-							{activeFilter === "All" ? "No stores yet" : `No ${FILTER_LABELS[activeFilter]} stores`}
-						</Text>
-						<Text style={styles.emptySub}>Pull down to refresh.</Text>
-					</View>
-				)}
-			</ScrollView>
-		</View>
+					{!loading && filtered.length === 0 && !error && (
+						<View className="items-center pt-16 gap-3">
+							<MaterialIcons name="storefront" size={52} color="#CBD5E1" />
+							<Text className="text-base font-poppins-bold text-slate-600 dark:text-slate-300">
+								{activeFilter === "All" ? "No stores yet" : `No ${FILTER_LABELS[activeFilter]} stores`}
+							</Text>
+							<Text className="text-sm font-poppins text-slate-400 text-center px-8">
+								Pull down to refresh or try another category.
+							</Text>
+						</View>
+					)}
+				</ScrollView>
+			</View>
+		</SafeAreaView>
 	);
 }
 
-// ── Styles ──────────────────────────────────────────────────────────────────
-const styles = StyleSheet.create({
-	header: {
-		flexDirection: "row",
-		alignItems: "center",
-		justifyContent: "space-between",
-		paddingHorizontal: 24,
-		paddingTop: 70,
-		paddingBottom: 16,
-		backgroundColor: "#FFFFFF",
-		borderBottomWidth: 1,
-		borderBottomColor: "#F1F5F9",
-	},
-	headerTitle: { fontSize: 20, fontFamily: "Poppins-Bold", color: "#0F172A" },
-	headerSub: { fontSize: 12, fontFamily: "Poppins-Regular", color: "#94A3B8", marginTop: 2 },
-	pendingBadge: {
-		backgroundColor: "#FF6600",
-		borderRadius: 12,
-		minWidth: 28,
-		height: 28,
-		alignItems: "center",
-		justifyContent: "center",
-		paddingHorizontal: 8,
-	},
-	pendingBadgeText: { fontSize: 13, fontFamily: "Poppins-Bold", color: "#FFFFFF" },
-	filterBar: { flex: 0, backgroundColor: "#FFFFFF", borderBottomWidth: 1, borderBottomColor: "#F1F5F9", height: 56 },
-	filterContent: { paddingHorizontal: 20, alignItems: "center", flexDirection: "row", height: 56 },
-	filterPill: {
-		flexDirection: "row",
-		alignItems: "center",
-		paddingHorizontal: 14,
-		paddingVertical: 7,
-		borderRadius: 9999,
-		backgroundColor: "#F3F4F6",
-		borderWidth: 1,
-		borderColor: "#E2E8F0",
-		marginRight: 8,
-	},
-	filterPillActive: { backgroundColor: "#FF6600", borderColor: "#FF6600" },
-	filterText: { fontSize: 12, fontFamily: "Poppins-Medium", color: "#64748B" },
-	filterTextActive: { color: "#FFFFFF" },
-	filterCount: {
-		backgroundColor: "#E2E8F0",
-		borderRadius: 9999,
-		minWidth: 18,
-		height: 18,
-		alignItems: "center",
-		justifyContent: "center",
-		paddingHorizontal: 4,
-	},
-	filterCountActive: { backgroundColor: "#FFFFFF" },
-	filterCountText: { fontSize: 10, fontFamily: "Poppins-Bold", color: "#64748B" },
-	listContent: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 40, flexGrow: 1 },
-	card: {
-		backgroundColor: "#FFFFFF",
-		borderRadius: 20,
-		padding: 16,
-		marginBottom: 14,
-		elevation: 0,
-		shadowOpacity: 0,
-	},
-	logoBox: {
-		width: 56,
-		height: 56,
-		borderRadius: 14,
-		backgroundColor: "#F1F5F9",
-		alignItems: "center",
-		justifyContent: "center",
-	},
-	storeName: { fontSize: 15, fontFamily: "Poppins-Bold", color: "#0F172A" },
-	storeType: { fontSize: 11, fontFamily: "Poppins-Medium", color: "#FF6600", marginTop: 2 },
-	storeAddress: {
-		fontSize: 12, fontFamily: "Poppins-Regular", color: "#94A3B8",
-		marginLeft: 2, flex: 1,
-	},
-	statusBadge: {
-		flexDirection: "row", alignItems: "center",
-		borderRadius: 8, paddingHorizontal: 8, paddingVertical: 4, gap: 4,
-	},
-	statusDot: { width: 6, height: 6, borderRadius: 3 },
-	statusText: { fontSize: 11, fontFamily: "Poppins-Bold" },
-	divider: { height: 1, backgroundColor: "#F1F5F9", marginVertical: 12 },
-	detailRow: { flexDirection: "row", alignItems: "center", gap: 6 },
-	detailText: { fontSize: 12, fontFamily: "Poppins-Regular", color: "#475569", flex: 1 },
-	actionBtn: {
-		flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center",
-		gap: 6, paddingVertical: 10, borderRadius: 12, borderWidth: 1.5,
-	},
-	approveBtn: { backgroundColor: "#F0FDF4", borderColor: "#BBF7D0" },
-	rejectBtn: { backgroundColor: "#FEF2F2", borderColor: "#FECACA" },
-	actionBtnText: { fontSize: 13, fontFamily: "Poppins-Bold" },
-	docsTitle: {
-		fontSize: 14,
-		fontFamily: "Poppins-Bold",
-		color: "#0F172A",
-	},
-	docThumb: {
-		width: 72,
-		height: 72,
-		borderRadius: 12,
-		backgroundColor: "#F1F5F9",
-		overflow: "hidden",
-	},
-	docThumbLarge: {
-		width: 100,
-		height: 100,
-		borderRadius: 12,
-		backgroundColor: "#F1F5F9",
-		overflow: "hidden",
-	},
-	errorBanner: {
-		flexDirection: "row", alignItems: "center", gap: 8,
-		backgroundColor: "#FEF2F2", borderRadius: 12, padding: 12,
-		borderLeftWidth: 3, borderLeftColor: "#DC2626",
-	},
-	errorText: { flex: 1, fontSize: 13, fontFamily: "Poppins-Regular", color: "#DC2626" },
-	emptyState: { flex: 1, alignItems: "center", justifyContent: "center", gap: 8, paddingBottom: 60 },
-	emptyTitle: { fontSize: 16, fontFamily: "Poppins-Bold", color: "#0F172A" },
-	emptySub: { fontSize: 13, fontFamily: "Poppins-Regular", color: "#94A3B8" },
-	modalOverlay: {
-		flex: 1,
-		backgroundColor: "rgba(0,0,0,0.9)",
-		justifyContent: "center",
-		alignItems: "center",
-	},
-	modalCloseButton: {
-		position: "absolute",
-		top: 60,
-		right: 24,
-		zIndex: 10,
-		padding: 8,
-	},
-	fullScreenImage: {
-		width: "100%",
-		height: "80%",
-	},
-	detailsModalOverlay: {
-		flex: 1,
-		backgroundColor: "rgba(15, 23, 42, 0.4)",
-		justifyContent: "flex-end",
-	},
-	detailsModalContainer: {
-		backgroundColor: "#FFFFFF",
-		borderTopLeftRadius: 24,
-		borderTopRightRadius: 24,
-		height: "85%",
-		width: "100%",
-		shadowColor: "#000",
-		shadowOffset: { width: 0, height: -2 },
-		shadowOpacity: 0.1,
-		shadowRadius: 10,
-		elevation: 20,
-	},
-	detailsModalHeader: {
-		flexDirection: "row",
-		alignItems: "center",
-		justifyContent: "center",
-		paddingVertical: 16,
-		borderBottomWidth: 1,
-		borderBottomColor: "#F1F5F9",
-		position: "relative",
-	},
-	detailsModalTitle: {
-		fontSize: 16,
-		fontFamily: "Poppins-Bold",
-		color: "#0F172A",
-	},
-	detailsModalCloseBtn: {
-		position: "absolute",
-		right: 16,
-		padding: 8,
-	},
-	detailsBox: {
-		backgroundColor: "#F8FAFC",
-		borderRadius: 16,
-		padding: 16,
-		borderWidth: 1,
-		borderColor: "#F1F5F9",
-	},
-});
+
