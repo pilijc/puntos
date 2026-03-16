@@ -413,6 +413,8 @@ const styles = StyleSheet.create({
 		borderRadius: 20,
 		padding: 16,
 		marginBottom: 14,
+		elevation: 0,
+		shadowOpacity: 0,
 	},
 	logoBox: {
 		width: 56,
