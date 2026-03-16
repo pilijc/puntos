@@ -334,7 +334,7 @@ function StampCard({
   );
 }
 
-export default function ViewStamp() {
+export default function ViewStaff() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const colorScheme = useColorScheme();
