@@ -9,9 +9,46 @@
     },
     "error": {
         "title": "エラー",
-        "missingFields": "入力されていない項目があります",
+        "missingFields": "入力されていなaい項目があります",
         "passwordMatch": "新しいパスワードが一致しません",
-        "passwordLimit": "パスワードは8文字以上で入力してください"
+        "passwordLimit": "パスワードは8文字以上で入力してください",
+        "emailRequired": "メールアドレスは必須です。",
+        "passwordRequired": "パスワードは必須です。",
+        "emailValid": "有効なメールアドレスを入力してください。"
+    },
+    "onboarding": {
+        "welcome": "<brand>{{appName}}</brand>へようこそ",
+        "subhead": "今すぐポイントを貯め始めましょう",
+        "footer": "続行することで、<tos>利用規約</tos>および<privacy>プライバシーポリシー</privacy>に同意したものとみなされます",
+        "gettingStarted": {
+            "header1": "歩くたびにポイントが貯まる",
+            "subheader1": "歩き始めるだけで、ワクワクする報酬や近くのお店にどんどん近づきます。",
+            "header2": "ポイントを特典に交換",
+            "subheader2": "貯めたポイントを限定オファーに交換して、いつでも自分へのご褒美に。",
+            "header3": "近くのお得情報をチェック",
+            "subheader3": "提携パートナーの限定割引を見つけて、ポイントですぐに利用可能。",
+            "button": "始める"
+        },
+        "login": {
+            "button": "ログイン",
+            "welcome": "おかえりなさい！",
+            "subhead": "アカウントにサインインして続行してください。",
+            "signup": "アカウントをお持ちでないですか？ <signup>新規登録</signup>",
+            "forgotPassword": "パスワードをお忘れですか？",
+            "label": {
+                "email": "メールアドレス",
+                "password": "パスワード"
+            },
+            "input": {
+                "email": "example@domain.com",
+                "password": "パスワードを入力"
+            }
+        },
+        "signup": {
+            "button": "新規登録",
+            "divider": "または次の方法で続ける",
+            "google": "Googleで続ける"
+        }
     },
     "layout": {
         "discover": "発見",

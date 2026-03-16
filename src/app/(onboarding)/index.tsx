@@ -4,24 +4,25 @@ import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import { useWindowDimensions } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useTranslation } from "react-i18next";
 
 const slides = [
   {
-    title: "Get rewarded for every step.",
-    subtitle:
-      "Start walking and let every step bring you closer to exciting rewards and nearby stores.",
+    titleKey: "onboarding.slide.title1",
+    subtitleKey:
+      "onboarding.slide.subtitle1",
     image: require("../../assets/images/1.png"),
   },
   {
-    title: "Redeem points for perks.",
-    subtitle:
-      "Exchange your collected points for exclusive offers and treat yourself anytime.",
+    titleKey: "onboarding.slide.title2",
+    subtitleKey:
+      "onboarding.slide.subtitle2",
     image: require("../../assets/images/2.png"),
   },
   {
-    title: "Discover nearby deals.",
-    subtitle:
-      "Find exclusive partner discounts around you and redeem instantly with your points.",
+    titleKey: "onboarding.slide.title3",
+    subtitleKey:
+      "onboarding.slide.title3",
     image: require("../../assets/images/3.png"),
   },
 ];
@@ -51,6 +52,7 @@ export default function Welcome() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const { width: windowWidth } = useWindowDimensions();
   const slideWidth = windowWidth - 32;
+  const { t: translate } = useTranslation();
 
   return (
     <SafeAreaView className="flex-1 bg-background p-4 justify-between" >
@@ -70,8 +72,8 @@ export default function Welcome() {
           {slides.map((slide, index) => (
             <Slide
               key={index}
-              title={slide.title}
-              subtitle={slide.subtitle}
+              title={translate(slide.titleKey)}
+              subtitle={translate(slide.subtitleKey)}
               image={slide.image}
               width={slideWidth}
             />
@@ -82,9 +84,8 @@ export default function Welcome() {
           {slides.map((_, index) => (
             <View
               key={index}
-              className={`h-2 rounded-full ${
-                index === currentIndex ? "w-4 bg-primary" : "w-2 bg-neutral-300"
-              }`}
+              className={`h-2 rounded-full ${index === currentIndex ? "w-4 bg-primary" : "w-2 bg-neutral-300"
+                }`}
             />
           ))}
         </View>

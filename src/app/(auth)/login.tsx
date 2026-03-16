@@ -13,19 +13,22 @@ import { ActivityIndicator, KeyboardAvoidingView, Platform } from "react-native"
 import { useAuthStore } from "../../store/auth-store";
 import { Feather, Ionicons } from "@expo/vector-icons";
 import { loginService, signInWithGoogleLoginService } from "@/services/auth-service";
+import { useTranslation, Trans } from "react-i18next";
+import OnboardingLayout from "../(onboarding)/_layout";
 
 export default function Login() {
   const { name, email, password, setEmail, setPassword, showPassword, setShowPassword } = useAuthStore();
   const [loading, setLoading] = useState(false);
   const [loadingGoogle, setLoadingGoogle] = useState(false);
+  const { t: translate } = useTranslation();
   const [errors, setErrors] = useState({
     email: "",
     password: "",
   });
- 
+
   const handleLogin = async () => {
     const nextErrors = { ...errors };
-  
+
     const trimmedEmail = email.trim();
     if (!trimmedEmail) {
       nextErrors.email = "Email is required.";
@@ -40,7 +43,7 @@ export default function Login() {
       return;
     }
     setErrors({ email: "", password: "" });
-  
+
     try {
       setLoading(true);
       const data = await loginService(trimmedEmail, password);
@@ -103,10 +106,10 @@ export default function Login() {
               <View className="gap-y-4 w-full items-center">
                 <View className="flex-col items-center justify-center gap-y-1">
                   <Text className="text-2xl font-poppins-bold text-neutral-900 text-center">
-                    Welcome back!
+                    {translate("onboarding.login.welcome")}
                   </Text>
                   <Text className="text-neutral-600 font-poppins text-center">
-                    Sign in to your account to continue.
+                    {translate("onboarding.login.subhead")}
                   </Text>
                 </View>
               </View>
@@ -114,10 +117,10 @@ export default function Login() {
               <View className="gap-y-2 w-full items-center">
                 <View className="w-full">
                   <Text className="mb-2 text-sm font-poppins-medium text-neutral-700">
-                    Email
+                    {translate("onboarding.login.label.email")}
                   </Text>
                   <TextInput
-                    placeholder="email@domain.com"
+                    placeholder={translate("onboarding.login.input.email")}
                     placeholderTextColor="#404040"
                     keyboardType="email-address"
                     className="border border-neutral-300 rounded-xl px-4 py-4 font-poppins"
@@ -129,14 +132,14 @@ export default function Login() {
                 <View className="w-full">
                   <View className="flex-row items-center justify-between">
                     <Text className="mb-2 text-sm font-poppins-medium text-textSecondary">
-                      Password
+                      {translate("onboarding.login.label.password")}
                     </Text>
                     <TouchableOpacity
                       className="items-center"
                       onPress={() => router.push("/forgot-pass")}
                     >
                       <Text className="text-primary text-sm font-poppins">
-                        Forgot password?
+                        {translate("onboarding.login.forgotPassword")}
                       </Text>
                     </TouchableOpacity>
                   </View>
@@ -146,7 +149,7 @@ export default function Login() {
                         placeholderTextColor="#404040"
                         value={password}
                         onChangeText={setPassword}
-                        placeholder="Enter your password"
+                        placeholder={translate("onboarding.login.input.password")}
                         secureTextEntry={!showPassword}
                         autoCapitalize="none"
                         className="flex-1 border border-neutral-200 rounded-xl px-4 py-4 font-poppins text-black"
@@ -165,12 +168,12 @@ export default function Login() {
                       </TouchableOpacity>
                     </View>
                   </View>
-                  
+
                 </View>
                 {(errors.password || errors.email) ? (
-                    <Text className="mt-2 text-sm font-poppins text-red-500 text-center bg-red-50 rounded-xl p-4 w-full">
-                      {errors.password || errors.email}
-                    </Text>
+                  <Text className="mt-2 text-sm font-poppins text-red-500 text-center bg-red-50 rounded-xl p-4 w-full">
+                    {errors.password || errors.email}
+                  </Text>
                 ) : null}
               </View>
 
@@ -180,7 +183,7 @@ export default function Login() {
                 ) : (
                   <>
                     <Text className="text-white text-base font-poppins-semibold">
-                      Login
+                      {translate("onboarding.login.button")}
                     </Text>
                   </>
                 )}
@@ -189,11 +192,11 @@ export default function Login() {
               <View className="flex-row items-center gap-x-4 w-full max-w-md">
                 <View className="flex-1 h-px bg-neutral-200" />
                 <Text className="text-neutral-500 font-poppins text-sm text-center">
-                  OR CONTINUE WITH
+                  {translate("onboarding.signup.divider")}
                 </Text>
                 <View className="flex-1 h-px bg-neutral-200" />
               </View>
-              
+
               <TouchableOpacity
                 onPress={handleSignInWithGoogle}
                 className="rounded-xl p-4 border border-neutral-200 flex-row items-center justify-center gap-x-3 w-full max-w-md"
@@ -207,7 +210,7 @@ export default function Login() {
                       className="w-5 h-5"
                     />
                     <Text className="font-poppins-medium text-neutral-700">
-                      Continue with Google
+                      {translate("onboarding.signup.google")}
                     </Text>
                   </>
                 )}
@@ -215,10 +218,17 @@ export default function Login() {
 
               <View className="flex-row justify-center items-center w-full">
                 <Text className="font-poppins text-neutral-600 text-center">
-                  Don’t have an account?
-                </Text>
-                <Text className="ml-1 font-poppins-semibold text-primary text-center" onPress={() => router.replace("/signup")}>
-                  Sign up
+                  <Trans
+                    i18nKey="onboarding.login.signup"
+                    components={{
+                      signup: (
+                        <Text
+                          className="ml-1 font-poppins-semibold text-primary text-center"
+                          onPress={() => router.replace("/signup")}
+                        />
+                      )
+                    }}
+                  />
                 </Text>
               </View>
             </View>

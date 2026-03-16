@@ -9,9 +9,46 @@
     },
     "error": {
         "title": "Error",
-        "missingFields": "Please fill in all fields",
-        "passwordMatch": "New passwords do not match",
-        "passwordLimit": "Password should be at least 8 characters"
+        "missingFields": "Please fill in all fields.",
+        "passwordMatch": "New passwords do not match.",
+        "passwordLimit": "Password should be at least 8 characters.",
+        "emailRequired": "Email is required.",
+        "passwordRequired": "Password is required.",
+        "emailValid": "Please enter a valid email address."
+    },
+    "onboarding": {
+        "welcome": "Welcome to <brand>{{appName}}</brand>",
+        "subhead": "Start earning today",
+        "footer": "By continuing, you agree to <tos>Terms of Service</tos> and <privacy>Privacy Policy</privacy>",
+        "gettingStarted": {
+            "title1": "Get rewarded for every step.",
+            "subtitle1": "Start walking and let every step bring you closer to exciting rewards and nearby stores.",
+            "title2": "Redeem points for perks.",
+            "subtitle2": "Exchange your collected points for exclusive offers and treat yourself anytime.",
+            "title3": "Discover nearby deals.",
+            "subtitle3": "Find exclusive partner discounts around you and redeem instantly with your points.",
+            "button": "Get Started"
+        },
+        "login": {
+            "button": "Login",
+            "welcome": "Welcome back!",
+            "subhead": "Sign in to your account to continue.",
+            "signup": "Don't have an account? <signup> Sign Up </signup>",
+            "forgotPassword": "Forgot Password?",
+            "label": {
+                "email": "Email",
+                "password": "Password"
+            },
+            "input": {
+                "email": "email@domain.com",
+                "password": "Enter your password"
+            }
+        },
+        "signup": {
+            "button": "Sign Up",
+            "divider": "OR CONTINUE WITH",
+            "google": "Continue with Google"
+        }
     },
     "layout": {
         "discover": "Discover",
