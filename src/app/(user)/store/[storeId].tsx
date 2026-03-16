@@ -47,6 +47,7 @@ export default function StoreRewards() {
   return (
     <StoreScreenContainer
       contentContainerClassName="gap-y-4"
+      contentGap={16}
       refreshControl={
         <RefreshControl
           refreshing={refreshing}

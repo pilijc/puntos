@@ -59,6 +59,7 @@ export default function StoreListScreen() {
   return (
     <StoreScreenContainer
       backgroundClassName="bg-backgroundMuted dark:bg-darkBackground"
+      contentGap={24}
       refreshControl={
         <RefreshControl
           refreshing={refreshing}

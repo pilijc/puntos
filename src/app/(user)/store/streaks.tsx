@@ -14,7 +14,7 @@ export default function StoreStreaks() {
   const { activeStamps, highestStampCount } = getStampStats(stamps);
 
   return (
-    <StoreScreenContainer contentContainerClassName="gap-y-5">
+    <StoreScreenContainer contentContainerClassName="gap-y-5" contentGap={20}>
       <StoreHeader
         title={translate("rewards.streaks.title")}
         variant="circular"

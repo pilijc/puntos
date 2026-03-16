@@ -9,6 +9,7 @@ interface StoreScreenContainerProps
   horizontalPadding?: number;
   topPadding?: number;
   bottomPadding?: number;
+  contentGap?: number;
   edges?: Edge[];
 }
 
@@ -21,6 +22,7 @@ export default function StoreScreenContainer({
   horizontalPadding = 24,
   topPadding = 24,
   bottomPadding = 40,
+  contentGap,
   edges = ["left", "right"],
   ...scrollViewProps
 }: StoreScreenContainerProps) {
@@ -37,6 +39,7 @@ export default function StoreScreenContainer({
             paddingHorizontal: horizontalPadding,
             paddingTop: Math.max(insets.top, topPadding),
             paddingBottom: Math.max(insets.bottom, bottomPadding),
+            rowGap: contentGap,
           },
           contentContainerStyle,
         ]}

@@ -70,6 +70,7 @@ export default function Rewards() {
     <StoreScreenContainer
       backgroundClassName="bg-backgroundMuted dark:bg-darkBackground"
       contentContainerClassName="gap-y-6"
+      contentGap={24}
       onTouchStart={handleCarouselInteraction}
       refreshControl={
         <RefreshControl
