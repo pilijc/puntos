@@ -87,14 +87,6 @@ export default function UsersScreen() {
     [stickyHeaderIndices, users, activeTab, statusFilter, search]
   );
 
-  if (loading && !refreshing) {
-    return (
-      <View className="flex-1 justify-center items-center bg-background">
-        <ActivityIndicator size="large" color={COLORS.primary} />
-      </View>
-    );
-  }
-
   const willBlock = selectedUser?.status !== "Blocked";
 
   return (
@@ -109,36 +101,42 @@ export default function UsersScreen() {
         onFilterPress={() => setShowFilterModal(true)}
         tabCounts={counts}
       />
-      <FlatList
-        data={listData}
-        renderItem={renderItem}
-        keyExtractor={(item, index) =>
-          item.isHeader ? `header-${item.title}` : `user-${item.id}-${index}`
-        }
-        stickyHeaderIndices={stickyHeaders}
-        contentContainerStyle={{ paddingBottom: 110 }}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
-        onEndReached={onEndReached}
-        onEndReachedThreshold={0.3}
-        removeClippedSubviews={false}
-        initialNumToRender={10}
-        maxToRenderPerBatch={10}
-        windowSize={5}
-        ListFooterComponent={
-          loadingMore ? (
-            <View className="py-4 items-center">
-              <ActivityIndicator size="small" color={COLORS.primary} />
+      {loading && !refreshing && listData.length === 0 ? (
+        <View className="flex-1 justify-center items-center">
+          <ActivityIndicator size="large" color={COLORS.primary} />
+        </View>
+      ) : (
+        <FlatList
+          data={listData}
+          renderItem={renderItem}
+          keyExtractor={(item, index) =>
+            item.isHeader ? `header-${item.title}` : `user-${item.id}-${index}`
+          }
+          stickyHeaderIndices={stickyHeaders}
+          contentContainerStyle={{ paddingBottom: 110 }}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
+          onEndReached={onEndReached}
+          onEndReachedThreshold={0.3}
+          removeClippedSubviews={false}
+          initialNumToRender={10}
+          maxToRenderPerBatch={10}
+          windowSize={5}
+          ListFooterComponent={
+            loadingMore ? (
+              <View className="py-4 items-center">
+                <ActivityIndicator size="small" color={COLORS.primary} />
+              </View>
+            ) : null
+          }
+          ListEmptyComponent={
+            <View className="items-center justify-center pt-20">
+              <Text className={TYPO.subtitle}>No users found</Text>
             </View>
-          ) : null
-        }
-        ListEmptyComponent={
-          <View className="items-center justify-center pt-20">
-            <Text className={TYPO.subtitle}>No users found</Text>
-          </View>
-        }
-      />
+          }
+        />
+      )}
       <BlockUserModal
         visible={showBlockModal}
         selectedUser={selectedUser}

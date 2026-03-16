@@ -128,16 +128,20 @@ function buildUsersQuery(
   if (activeTab === "Manager") q = q.eq("role_type", "manager");
   if (activeTab === "Staff") q = q.eq("role_type", "front_desk");
   if (activeTab === "User") {
-    q = q.not("role_type", "in", "(manager,front_desk,super_admin)");
+    // Avoid PostgREST `.not('in')` string parsing issues by using `.neq`
+    q = q.neq("role_type", "manager").neq("role_type", "front_desk").neq("role_type", "super_admin");
   }
 
   const trimmed = search.trim();
   if (trimmed.length > 0) {
-    // Escape SQL pattern characters (_, %, \)
-    const sqlSafe = trimmed.replace(/[\\%_]/g, "\\$&");
-    // Escape PostgREST double quotes by doubling them, and wrap the whole value in quotes
-    const postgrestSafe = sqlSafe.replace(/"/g, '""');
-    q = q.or(`name.ilike."%${postgrestSafe}%",email.ilike."%${postgrestSafe}%"`);
+    // Strip out all characters that are known to break PostgREST's `.or` filter syntax.
+    // E.g., double quotes, single quotes, braces, commas, backslashes, percent, underscore, parens.
+    const sanitized = trimmed.replace(/["'{},\\%_()\[\]]/g, '');
+    
+    if (sanitized.trim().length > 0) {
+      // Re-add double quotes so spaces and other characters don't break PostgREST .or() URL parsing
+      q = q.or(`name.ilike."%${sanitized}%",email.ilike."%${sanitized}%"`);
+    }
   }
 
   return q.range(from, to);
@@ -188,7 +192,8 @@ export const useUserStore = create<UserStoreState>((set, get) => ({
     const { activeTab, statusFilter, search } = get();
     const reset = opts?.reset ?? true;
     try {
-      if (reset) set({ page: 1, users: [], hasMore: true });
+      // Set loading: true to prevent empty List from triggering onEndReached -> fetchMoreUsers immediately
+      if (reset) set({ page: 1, hasMore: true, loading: true });
 
       if (statusFilter === "Blocked" || statusFilter === "Active") {
         const { data, error } = await buildUsersQuery(
@@ -256,8 +261,9 @@ export const useUserStore = create<UserStoreState>((set, get) => ({
   },
 
   fetchMoreUsers: async () => {
-    const { page, hasMore, loadingMore, activeTab, statusFilter, search, users } = get();
-    if (!hasMore || loadingMore) return;
+    const { page, hasMore, loadingMore, activeTab, statusFilter, search, users, loading } = get();
+    // Do not run fetchMore if initial load/fetchUsers is currently in progress
+    if (!hasMore || loadingMore || loading) return;
     set({ loadingMore: true });
     try {
       const from = page * PAGE_SIZE;
@@ -296,6 +302,7 @@ export const useUserStore = create<UserStoreState>((set, get) => ({
       });
     } catch (err: any) {
       const msg = err?.message ?? String(err);
+      const details = err?.details ?? err?.hint ?? "";
       set({ loadingMore: false, hasMore: false });
     }
   },
