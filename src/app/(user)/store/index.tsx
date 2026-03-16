@@ -34,6 +34,8 @@ import { getStores } from "@/services/store-service";
 import { supabase } from "@/supabase/supabase";
 import { Alert, ActivityIndicator, RefreshControl } from "react-native";
 import { StampProgress } from "@/services/stamp-service";
+import { useTranslation } from "react-i18next";
+
 
 const { width: screenWidth } = Dimensions.get("window");
 
@@ -44,6 +46,7 @@ const rewardSortOptions = [
 ] as const;
 
 export default function Rewards() {
+  const { t: translate } = useTranslation();
   const {
     rewardSort,
     rewardPointsOrder,
@@ -171,7 +174,7 @@ export default function Rewards() {
   useEffect(() => {
     const nearbyIds = nearbyStores.map((store) => Number(store.id));
     const displayStampStoreIds = sortedStamps.map((stamp) => Number(stamp.store_id));
-    
+
     fetchRewardsData(nearbyIds, displayStampStoreIds);
   }, [nearbyStores, sortedStamps, fetchRewardsData]);
 
@@ -327,11 +330,11 @@ export default function Rewards() {
         </View>
 
         <View className="gap-y-0">
-          <UserStoreHeroCarousel 
-            nearbyStores={nearbyStores} 
-            storesWithLocation={storesWithLocation} 
-            setHeroIndex={setHeroIndex} 
-            swipeIndicatorStyle={swipeIndicatorStyle} 
+          <UserStoreHeroCarousel
+            nearbyStores={nearbyStores}
+            storesWithLocation={storesWithLocation}
+            setHeroIndex={setHeroIndex}
+            swipeIndicatorStyle={swipeIndicatorStyle}
           />
 
           <AnimatedView
@@ -521,7 +524,7 @@ export default function Rewards() {
                   }));
 
                   return (
-                    <UserStreakCard 
+                    <UserStreakCard
                       key={streak.store_id}
                       streak={streak}
                       nearbyStores={nearbyStores}
@@ -558,17 +561,17 @@ export default function Rewards() {
                 onScrollStart={handleCarouselInteraction}
                 onSnapToItem={(index) => setCarouselIndex(index)}
                 renderItem={({ item: stamp }) => (
-                    <UserStampLogCard
-                      key={stamp.store_id}
-                      stamp={stamp}
-                      nearbyStores={nearbyStores}
-                      isStoreNearby={isStoreNearby}
-                      stampRewards={stampRewards}
-                      activeStampProgramRewards={activeStampProgramRewards}
-                      isStampLogOpen={isStampLogOpen}
-                      onToggleExpand={() => setIsStampLogOpen(!isStampLogOpen)}
-                    />
-                  )}
+                  <UserStampLogCard
+                    key={stamp.store_id}
+                    stamp={stamp}
+                    nearbyStores={nearbyStores}
+                    isStoreNearby={isStoreNearby}
+                    stampRewards={stampRewards}
+                    activeStampProgramRewards={activeStampProgramRewards}
+                    isStampLogOpen={isStampLogOpen}
+                    onToggleExpand={() => setIsStampLogOpen(!isStampLogOpen)}
+                  />
+                )}
               />
 
               {/* Pagination Dots */}
