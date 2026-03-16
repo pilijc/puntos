@@ -16,7 +16,10 @@ import { NameStep, EmailStep, PasswordStep, TermsStep, RoleStep, StepHeader } fr
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+import { useTranslation, Trans } from "react-i18next";
+
 export default function SignUp() {
+  const { t: translate } = useTranslation();
   const [currentStep, setCurrentStep] = useState(1);
   const totalSteps = 4;
   const [loading, setLoading] = useState(false);
@@ -37,11 +40,11 @@ export default function SignUp() {
     setShowConfirmPassword,
     reset,
   } = useAuthStore();
-  
+
   const [acceptedTerms, setAcceptedTerms] = useState(false);
-  
+
   const [role, setRole] = useState('user');
-  
+
   const [errors, setErrors] = useState({
     name: '',
     email: '',
@@ -53,118 +56,118 @@ export default function SignUp() {
 
   const validateStep = async (): Promise<boolean> => {
     const newErrors = { ...errors };
-    
+
     if (currentStep === 1) {
       console.log("Validating name:", name);
       if (!name.trim()) {
-         newErrors.name = 'Name is required';
+        newErrors.name = translate("onboarding.signup.error.nameRequired");
         setErrors(newErrors);
         return false;
       }
       // Allow names with letters, spaces, hyphens, and apostrophes
       if (!/^[a-zA-Z\s\-']+$/.test(name.trim())) {
-         newErrors.name = 'Name can only contain letters, spaces, hyphens, and apostrophes';
+        newErrors.name = translate("onboarding.signup.error.nameInvalid");
         setErrors(newErrors);
         return false;
       }
       console.log("Name validation passed");
       newErrors.name = '';
     }
-    
+
     if (currentStep === 2) {
       console.log("Validating email step, email:", email);
       const trimmedEmail = email.trim();
       console.log("Testing email format:", trimmedEmail, "against regex");
-      
+
       if (!trimmedEmail) {
         console.log("Email validation failed: empty");
-        newErrors.email = 'Email is required';
+        newErrors.email = translate("onboarding.signup.error.emailRequired");
         setErrors(newErrors);
         return false;
       }
-      
+
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
         console.log("Email validation failed: invalid format");
-        newErrors.email = 'Please enter a valid email';
+        newErrors.email = translate("onboarding.signup.error.emailInvalid");
         setErrors(newErrors);
         return false;
       }
-      
+
       // Use isEmailTaken function that queries users table
       console.log("Checking if email is taken:", trimmedEmail);
       const emailTaken = await isEmailTaken(trimmedEmail);
       console.log("Email taken check result:", emailTaken);
-      
-      if(emailTaken) {
+
+      if (emailTaken) {
         console.log("Email validation failed: already exists");
-        newErrors.email = 'Email is already registered. Please login instead.';
+        newErrors.email = translate("onboarding.signup.error.emailRegistered");
         setErrors(newErrors);
         return false;
       }
-      
+
       console.log("Email validation passed");
       newErrors.email = '';
     }
-    
+
     if (currentStep === 3) {
-       if (!password) {
-         newErrors.password = 'Password is required';
+      if (!password) {
+        newErrors.password = translate("onboarding.signup.error.passwordRequired");
         setErrors(newErrors);
         return false;
       }
       if (!confirmPassword) {
-         newErrors.confirmPassword = 'Please confirm your password';
+        newErrors.confirmPassword = translate("onboarding.signup.error.passwordConfirm");
         setErrors(newErrors);
         return false;
       }
       if (password !== confirmPassword) {
-         newErrors.confirmPassword = 'Passwords do not match';
+        newErrors.confirmPassword = translate("onboarding.signup.error.passwordMatch");
         setErrors(newErrors);
         return false;
       }
       if (password.length < 8) {
-         newErrors.password = 'Password must be at least 8 characters';
+        newErrors.password = translate("onboarding.signup.error.passwordLimit");
         setErrors(newErrors);
         return false;
       }
-       newErrors.password = '';
+      newErrors.password = '';
       newErrors.confirmPassword = '';
     }
 
     if (currentStep === 4) {
-       if (!acceptedTerms) {
+      if (!acceptedTerms) {
         console.log("Terms validation failed: not accepted");
-        newErrors.terms = 'You must accept the terms';
+        newErrors.terms = translate("onboarding.signup.error.termsRequired");
         setErrors(newErrors);
         return false;
       }
-       newErrors.terms = '';
+      newErrors.terms = '';
     }
-    
+
     setErrors(newErrors);
     return true;
   };
 
   const handleNext = async () => {
-     const isValid = await validateStep();
+    const isValid = await validateStep();
     console.log("Validation result:", isValid);
     if (!isValid) return;
-     
-      if (currentStep < totalSteps) {
-        console.log("Moving to step:", currentStep + 1);
-        setCurrentStep(currentStep + 1);
+
+    if (currentStep < totalSteps) {
+      console.log("Moving to step:", currentStep + 1);
+      setCurrentStep(currentStep + 1);
+    } else {
+      console.log("Final step reached, calling signup");
+      console.log("Current role value:", role);
+      if (role === 'manager') {
+        console.log("Calling handleStoreManagerSignup");
+        handleStoreManagerSignup();
       } else {
-        console.log("Final step reached, calling signup");
-        console.log("Current role value:", role);
-        if (role === 'manager') {
-          console.log("Calling handleStoreManagerSignup");
-          handleStoreManagerSignup();
-        } else {
-          console.log("Calling handleSignup for regular user");
-          handleSignup();
-        }
+        console.log("Calling handleSignup for regular user");
+        handleSignup();
       }
-    
+    }
+
   };
 
   const handleBack = () => {
@@ -174,13 +177,13 @@ export default function SignUp() {
   };
 
   const handleSignup = async () => {
-     if (isSigningUp.current) {
+    if (isSigningUp.current) {
       console.log("Signup already in progress (ref check), ignoring call");
       return;
     }
-    
+
     isSigningUp.current = true;
-    
+
     try {
       setLoading(true);
       console.log("Starting signup with role:", role);
@@ -190,41 +193,41 @@ export default function SignUp() {
       setAcceptedTerms(false);
       setRole('user');
       setCurrentStep(1);
-  
-      Alert.alert("Success", "Account created!");
+
+      Alert.alert(translate("onboarding.login.welcome"), translate("onboarding.signup.success"));
       console.log("About to redirect to:", data.homeRoute ?? "/(user)");
       router.replace(data.homeRoute ?? "/(user)");
     } catch (error: any) {
       // Handle specific error messages
-       if (error?.message?.includes("already registered") || 
-          error?.message?.includes("User already registered") ||
-          error?.message?.includes("user_already_registered")) {
+      if (error?.message?.includes("already registered") ||
+        error?.message?.includes("User already registered") ||
+        error?.message?.includes("user_already_registered")) {
         setErrors((prev) => ({
           ...prev,
-          email: "Email is already registered. Please login instead.",
+          email: translate("onboarding.signup.error.emailRegistered"),
         }));
-        Alert.alert("Signup Failed", "Email is already registered. Please login instead.", [
+        Alert.alert(translate("onboarding.signup.error.failed"), translate("onboarding.signup.error.emailRegistered"), [
           {
-            text: "Try Different Email",
-            onPress: () => setCurrentStep(2) 
+            text: translate("onboarding.signup.error.tryDifferentEmail"),
+            onPress: () => setCurrentStep(2)
           },
           {
-            text: "Go to Login",
+            text: translate("onboarding.signup.error.goToLogin"),
             onPress: () => router.replace("/(auth)/login")
           }
         ]);
       } else {
         setErrors((prev) => ({
           ...prev,
-          password: error?.message ?? "Signup failed",
+          password: error?.message ?? translate("onboarding.signup.error.failed"),
         }));
-        Alert.alert("Signup Failed", error?.message ?? "Signup failed. Please try again.");
-      } 
+        Alert.alert(translate("onboarding.signup.error.failed"), error?.message ?? translate("onboarding.signup.error.failed"));
+      }
       setLoading(false);
       isSigningUp.current = false;
       console.log("Loading set to false after error");
     } finally {
-       
+
       console.log("Signup process completed");
     }
   };
@@ -235,9 +238,9 @@ export default function SignUp() {
       console.log("Store Manager signup already in progress (ref check), ignoring call");
       return;
     }
-    
+
     isSigningUp.current = true;
-    
+
     try {
       setLoading(true);
       console.log("Starting store manager signup with role:", role);
@@ -247,35 +250,35 @@ export default function SignUp() {
       setAcceptedTerms(false);
       setRole('user');
       setCurrentStep(1);
-  
-      Alert.alert("Success", "Store Manager account created!");
+
+      Alert.alert(translate("onboarding.login.welcome"), translate("onboarding.signup.successManager"));
       console.log("About to redirect to:", data.homeRoute ?? "/(store_manager)");
       router.replace(data.homeRoute ?? "/(store_manager)");
     } catch (error: any) {
-      if (error?.message?.includes("already registered") || 
-          error?.message?.includes("User already registered") ||
-          error?.message?.includes("user_already_registered")) {
+      if (error?.message?.includes("already registered") ||
+        error?.message?.includes("User already registered") ||
+        error?.message?.includes("user_already_registered")) {
         setErrors((prev) => ({
           ...prev,
-          email: "Email is already registered. Please login instead.",
+          email: translate("onboarding.signup.error.emailRegistered"),
         }));
-        Alert.alert("Store Manager Signup Failed", "Email is already registered. Please login instead.", [
+        Alert.alert(translate("onboarding.signup.error.failedManager"), translate("onboarding.signup.error.emailRegistered"), [
           {
-            text: "Try Different Email",
-            onPress: () => setCurrentStep(2) 
+            text: translate("onboarding.signup.error.tryDifferentEmail"),
+            onPress: () => setCurrentStep(2)
           },
           {
-            text: "Go to Login",
+            text: translate("onboarding.signup.error.goToLogin"),
             onPress: () => router.replace("/(auth)/login")
           }
         ]);
       } else {
         setErrors((prev) => ({
           ...prev,
-          password: error?.message ?? "Store manager signup failed",
+          password: error?.message ?? translate("onboarding.signup.error.failedManager"),
         }));
-        Alert.alert("Store Manager Signup Failed", error?.message ?? "Store manager signup failed. Please try again.");
-      } 
+        Alert.alert(translate("onboarding.signup.error.failedManager"), error?.message ?? translate("onboarding.signup.error.failedManager"));
+      }
       setLoading(false);
       isSigningUp.current = false;
       console.log("Store manager loading set to false after error");
@@ -290,7 +293,7 @@ export default function SignUp() {
       const data = await signUpWithGoogleService();
       if (!data) { return; }
 
-      Alert.alert("Success", "Account created!");
+      Alert.alert(translate("onboarding.login.welcome"), translate("onboarding.signup.success"));
       router.replace(data.homeRoute ?? "/(user)");
     } catch (error: any) {
       setLoadingGoogle(false);
@@ -298,7 +301,7 @@ export default function SignUp() {
       const message =
         error?.msg ??
         (typeof error?.message === "string" ? error.message : "Something went wrong");
-      Alert.alert("Google Sign-Up Failed", message);
+      Alert.alert(translate("onboarding.signup.error.googleFailed"), message);
     } finally {
       setLoadingGoogle(false);
     }
@@ -319,7 +322,7 @@ export default function SignUp() {
         </TouchableOpacity>
         <View className="flex-1 items-center -ml-10">
           <Text className="text-xl font-poppins-bold text-neutral-900">
-            {role === 'manager' ? "Sign Up as Store Manager" : "Sign Up"}
+            {role === 'manager' ? translate("onboarding.signup.titleManager") : translate("onboarding.signup.title")}
           </Text>
         </View>
       </View>
@@ -382,7 +385,7 @@ export default function SignUp() {
                   className={`bg-primary py-4 rounded-xl items-center ${loading ? 'opacity-50' : ''}`}
                 >
                   <Text className="text-white text-base font-poppins-semibold">
-                    {loading ? "Creating Account..." : (currentStep === totalSteps ? "Create Account" : "Continue")}
+                    {loading ? translate("onboarding.signup.creating") : (currentStep === totalSteps ? translate("onboarding.signup.button") : translate("onboarding.signup.continue"))}
                   </Text>
                 </TouchableOpacity>
 
@@ -391,7 +394,7 @@ export default function SignUp() {
                     <View className="flex-row items-center gap-x-4">
                       <View className="flex-1 h-px bg-neutral-200" />
                       <Text className="text-neutral-500 font-poppins text-sm">
-                        OR CONTINUE WITH
+                        {translate("onboarding.signup.divider")}
                       </Text>
                       <View className="flex-1 h-px bg-neutral-200" />
                     </View>
@@ -405,51 +408,50 @@ export default function SignUp() {
                         className="w-5 h-5"
                       />
                       <Text className="font-poppins-medium text-neutral-700">
-                        Continue with Google
+                        {translate("onboarding.signup.google")}
                       </Text>
                     </TouchableOpacity>
 
                     <View className="flex-row justify-center mt-2">
-                        <Text className="font-poppins text-neutral-600">
-                          Sign up as Store Owner?
+                      <Text className="font-poppins text-neutral-600">
+                        {translate("onboarding.signup.ownerPrompt")}
+                      </Text>
+
+                      <TouchableOpacity
+                        onPress={() => {
+                          console.log("Store Owner button clicked, setting role to manager");
+                          setRole("manager");
+                        }}
+                        className="flex-row items-center ml-1"
+                      >
+                        <Text
+                          className={`font-poppins-semibold ${role === "manager" ? "text-green-600" : "text-primary"
+                            }`}
+                        >
+                          {translate("onboarding.signup.button")}
                         </Text>
 
-                        <TouchableOpacity
-                          onPress={() => {
-                            console.log("Store Owner button clicked, setting role to manager");
-                            setRole("manager");
-                          }}
-                          className="flex-row items-center ml-1"
-                        >
-                          <Text
-                            className={`font-poppins-semibold ${
-                              role === "manager" ? "text-green-600" : "text-primary"
-                            }`}
-                          >
-                            Sign up
-                          </Text>
+                        {role === "manager" && (
+                          <Ionicons
+                            name="checkmark-circle"
+                            size={16}
+                            color="#22C55E"
+                            style={{ marginLeft: 4 }}
+                          />
+                        )}
+                      </TouchableOpacity>
+                    </View>
 
-                          {role === "manager" && (
-                            <Ionicons
-                              name="checkmark-circle"
-                              size={16}
-                              color="#22C55E"
-                              style={{ marginLeft: 4 }}
-                            />
-                          )}
-                        </TouchableOpacity>
-                      </View>
-                     
                   </>
                 )}
 
                 <View className="flex-row justify-center">
                   <Text className="font-poppins text-neutral-600">
-                    Already have an account?
+                    {translate("onboarding.signup.alreadyHaveAccount")}
                   </Text>
                   <TouchableOpacity onPress={() => router.replace("/login")}>
                     <Text className="ml-1 font-poppins-semibold text-primary">
-                      Login
+                      {translate("onboarding.signup.login")}
                     </Text>
                   </TouchableOpacity>
                 </View>

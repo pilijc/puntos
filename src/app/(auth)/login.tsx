@@ -31,12 +31,12 @@ export default function Login() {
 
     const trimmedEmail = email.trim();
     if (!trimmedEmail) {
-      nextErrors.email = translate("error.emailRequired");
+      nextErrors.email = translate("onboarding.login.error.emailRequired");
     } else if (!/^\S+@\S+\.\S+$/.test(trimmedEmail)) {
-      nextErrors.email = translate("error.emailValid");
+      nextErrors.email = translate("onboarding.login.error.emailValid");
     }
     if (!password) {
-      nextErrors.password = translate("error.passwordRequired");
+      nextErrors.password = translate("onboarding.login.error.passwordRequired");
     }
     if (nextErrors.email || nextErrors.password) {
       setErrors(nextErrors);
@@ -51,9 +51,14 @@ export default function Login() {
       router.replace(data.homeRoute ?? "/(user)");
     } catch (error: any) {
       console.log("error login component", error);
-      const message =
-        error?.msg ??
-        (typeof error?.message === "string" ? error.message : translate("error.invalidLogin"));
+      let message = error?.msg ?? error?.message;
+
+      if (message === "Invalid login credentials") {
+        message = translate("onboarding.login.error.invalidLogin");
+      } else if (!message) {
+        message = translate("onboarding.login.error.invalidLogin");
+      }
+
       setErrors({ email: "", password: message });
     } finally {
       setLoading(false);
@@ -84,7 +89,7 @@ export default function Login() {
           <Ionicons name="chevron-back" size={18} color="black" />
         </TouchableOpacity>
         <View className="flex-1 items-center -ml-10">
-          <Text className="text-xl font-poppins-bold text-neutral-900">Login</Text>
+          <Text className="text-xl font-poppins-bold text-neutral-900">{translate("onboarding.login.button")}</Text>
         </View>
       </View>
       <View className="flex-1 justify-start p-4">

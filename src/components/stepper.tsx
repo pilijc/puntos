@@ -2,27 +2,29 @@ import { View, Text, TextInput, Pressable, ScrollView, Image } from "@/tw";
 import { Feather, Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { StepProps, PasswordStepProps, TermsStepProps, StepperProps, StepHeaderProps, RoleStepProps } from "@/type/auth";
+import { useTranslation } from "react-i18next";
 
 export const STEP_DATA = [
   {
-    title: "What's your name?",
-    description: "Let's get to know you better"
+    titleKey: "onboarding.signup.stepper.step1.title",
+    descriptionKey: "onboarding.signup.stepper.step1.description"
   },
   {
-    title: "What's your email?",
-    description: "We'll use this for your account"
+    titleKey: "onboarding.signup.stepper.step2.title",
+    descriptionKey: "onboarding.signup.stepper.step2.description"
   },
   {
-    title: "Create a password",
-    description: "Must be at least 8 characters"
+    titleKey: "onboarding.signup.stepper.step3.title",
+    descriptionKey: "onboarding.signup.stepper.step3.description"
   },
   {
-    title: "Almost there!",
-    description: "Please review and accept our terms"
+    titleKey: "onboarding.signup.stepper.step4.title",
+    descriptionKey: "onboarding.signup.stepper.step4.description"
   }
 ];
 
 export function StepHeader({ currentStep }: StepHeaderProps) {
+  const { t: translate } = useTranslation();
   const stepInfo = STEP_DATA[currentStep - 1];
 
   return (
@@ -38,11 +40,11 @@ export function StepHeader({ currentStep }: StepHeaderProps) {
 
       <View className="gap-y-1">
         <Text className="text-2xl font-poppins-bold text-neutral-900 text-center">
-          {stepInfo.title}
+          {translate(stepInfo.titleKey)}
         </Text>
 
         <Text className="text-neutral-600 font-poppins text-center">
-          {stepInfo.description}
+          {translate(stepInfo.descriptionKey)}
         </Text>
       </View>
     </View>
@@ -70,15 +72,16 @@ export function Stepper({ currentStep, totalSteps }: StepperProps) {
 }
 
 export function NameStep({ value, onChange, error }: StepProps) {
+  const { t: translate } = useTranslation();
   return (
     <View className="gap-y-2">
       <Text className="text-sm font-poppins-medium text-neutral-700">
-        Name
+        {translate("onboarding.signup.stepper.label.name")}
       </Text>
       <TextInput
         value={value}
         onChangeText={onChange}
-        placeholder="John Doe"
+        placeholder={translate("onboarding.signup.stepper.placeholder.name")}
         placeholderTextColor="#9CA3AF"
         className="border border-neutral-200 rounded-xl px-4 py-4 font-poppins text-neutral-700"
         autoFocus
@@ -93,15 +96,16 @@ export function NameStep({ value, onChange, error }: StepProps) {
 }
 
 export function EmailStep({ value, onChange, error }: StepProps) {
+  const { t: translate } = useTranslation();
   return (
     <View className="gap-y-2">
       <Text className="text-sm font-poppins-medium text-neutral-700">
-        Email Address
+        {translate("onboarding.signup.stepper.label.email")}
       </Text>
       <TextInput
         value={value}
         onChangeText={onChange}
-        placeholder="email@domain.com"
+        placeholder={translate("onboarding.signup.stepper.placeholder.email")}
         placeholderTextColor="#9CA3AF"
         keyboardType="email-address"
         autoCapitalize="none"
@@ -128,18 +132,19 @@ export function PasswordStep({
   onToggleConfirmPassword,
   errors,
 }: PasswordStepProps) {
+  const { t: translate } = useTranslation();
   return (
     <View className="gap-y-2">
       <View className="gap-y-2">
         <View className="gap-y-2">
           <Text className="text-sm font-poppins-medium text-neutral-700">
-            Password
+            {translate("onboarding.signup.stepper.label.password")}
           </Text>
           <View className="relative">
             <TextInput
               value={password}
               onChangeText={onPasswordChange}
-              placeholder="Enter your password"
+              placeholder={translate("onboarding.signup.stepper.placeholder.password")}
               secureTextEntry={!showPassword}
               autoCapitalize="none"
               className="border border-neutral-200 rounded-xl px-4 py-4 pr-12 font-poppins"
@@ -157,13 +162,13 @@ export function PasswordStep({
 
         <View className="mt-1 mb-2 gap-y-2">
           <Text className="text-sm font-poppins-medium text-neutral-700">
-            Confirm Password
+            {translate("onboarding.signup.stepper.label.confirmPassword")}
           </Text>
           <View className="relative">
             <TextInput
               value={confirmPassword}
               onChangeText={onConfirmPasswordChange}
-              placeholder="Confirm your password"
+              placeholder={translate("onboarding.signup.stepper.placeholder.confirmPassword")}
               secureTextEntry={!showConfirmPassword}
               autoCapitalize="none"
               className="border border-neutral-200 rounded-xl px-4 py-4 pr-12 font-poppins"
@@ -190,15 +195,16 @@ export function PasswordStep({
 }
 
 export function RoleStep({ value, onChange, error }: RoleStepProps) {
+  const { t: translate } = useTranslation();
   const roles = [
-    { label: "Customer", value: "user", description: "Earn points and redeem rewards" },
-    { label: "Store Manager", value: "manager", description: "Manage your store and staff" },
+    { label: translate("onboarding.signup.title"), value: "user", description: translate("onboarding.slide.subtitle1") },
+    { label: translate("onboarding.signup.titleManager"), value: "manager", description: translate("onboarding.signup.titleManager") },
   ];
 
   return (
     <View className="gap-y-4">
       <Text className="text-sm font-poppins-medium text-neutral-700">
-        Select your role
+        {translate("onboarding.signup.ownerPrompt")}
       </Text>
       {roles.map((role) => (
         <Pressable
@@ -235,10 +241,11 @@ export function RoleStep({ value, onChange, error }: RoleStepProps) {
 }
 
 export function TermsStep({ accepted, onToggle, error }: TermsStepProps) {
+  const { t: translate } = useTranslation();
   return (
     <View className="gap-y-2">
       <Text className="text-sm font-poppins-medium text-neutral-700">
-        Terms and Conditions
+        {translate("onboarding.signup.stepper.label.terms")}
       </Text>
       <Pressable
         onPress={onToggle}
@@ -252,7 +259,7 @@ export function TermsStep({ accepted, onToggle, error }: TermsStepProps) {
           )}
         </View>
         <Text className="font-poppins text-neutral-700 flex-1">
-          I agree to the Terms and Conditions
+          {translate("onboarding.signup.stepper.label.termsAgree")}
         </Text>
       </Pressable>
       {error && (

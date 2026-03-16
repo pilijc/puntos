@@ -8,14 +8,7 @@
         "disabled": "Disabled"
     },
     "error": {
-        "title": "Error",
-        "missingFields": "Please fill in all fields.",
-        "passwordMatch": "New passwords do not match.",
-        "passwordLimit": "Password should be at least 8 characters.",
-        "emailRequired": "Email is required.",
-        "passwordRequired": "Password is required.",
-        "emailValid": "Please enter a valid email address.",
-        "invalidLogin": "Invalid login credentials"
+        "title": "Error"
     },
     "onboarding": {
         "welcome": "Welcome to <brand>{{appName}}</brand>",
@@ -43,12 +36,77 @@
             "input": {
                 "email": "email@domain.com",
                 "password": "Enter your password"
+            },
+            "error": {
+                "emailRequired": "Email is required.",
+                "passwordRequired": "Password is required.",
+                "emailValid": "Please enter a valid email address.",
+                "invalidLogin": "Invalid login credentials"
             }
         },
         "signup": {
+            "title": "Sign Up",
+            "titleManager": "Sign Up as Store Manager",
             "button": "Sign Up",
             "divider": "OR CONTINUE WITH",
-            "google": "Continue with Google"
+            "google": "Continue with Google",
+            "creating": "Creating Account...",
+            "continue": "Continue",
+            "ownerPrompt": "Sign up as Store Owner?",
+            "alreadyHaveAccount": "Already have an account?",
+            "login": "Login",
+            "success": "Account created!",
+            "successManager": "Store Manager account created!",
+            "footer": "By continuing, you agree to <tos>Terms of Service</tos> and <privacy>Privacy Policy</privacy>",
+            "error": {
+                "nameRequired": "Name is required",
+                "nameInvalid": "Name can only contain letters, spaces, hyphens, and apostrophes",
+                "emailRequired": "Email is required",
+                "emailInvalid": "Please enter a valid email",
+                "emailRegistered": "Email is already registered. Please login instead.",
+                "passwordRequired": "Password is required",
+                "passwordConfirm": "Please confirm your password",
+                "passwordMatch": "Passwords do not match",
+                "passwordLimit": "Password must be at least 8 characters",
+                "termsRequired": "You must accept the terms",
+                "failed": "Signup failed",
+                "failedManager": "Store manager signup failed",
+                "googleFailed": "Google Sign-Up Failed",
+                "tryDifferentEmail": "Try Different Email",
+                "goToLogin": "Go to Login"
+            },
+            "stepper": {
+                "step1": {
+                    "title": "What's your name?",
+                    "description": "Let's get to know you better"
+                },
+                "step2": {
+                    "title": "What's your email?",
+                    "description": "We'll use this for your account"
+                },
+                "step3": {
+                    "title": "Create a password",
+                    "description": "Must be at least 8 characters"
+                },
+                "step4": {
+                    "title": "Almost there!",
+                    "description": "Please review and accept our terms"
+                },
+                "label": {
+                    "name": "Name",
+                    "email": "Email Address",
+                    "password": "Password",
+                    "confirmPassword": "Confirm Password",
+                    "terms": "Terms and Conditions",
+                    "termsAgree": "I agree to the Terms and Conditions"
+                },
+                "placeholder": {
+                    "name": "John Doe",
+                    "email": "email@domain.com",
+                    "password": "Enter your password",
+                    "confirmPassword": "Confirm your password"
+                }
+            }
         }
     },
     "layout": {
@@ -241,6 +299,10 @@
             "input": {
                 "name": "Enter Username",
                 "email": "Enter Email Address"
+            },
+            "success": "Profile updated successfully.",
+            "error": {
+                "failed": "Failed to save profile. Please try again."
             }
         },
         "account": {
@@ -259,6 +321,14 @@
                         "current": "Enter Current Password",
                         "new": "Enter New Password",
                         "repeat": "Enter Repeat New Password"
+                    },
+                    "success": "Your password has been changed successfully.",
+                    "error": {
+                        "missingFields": "Please fill in all fields.",
+                        "passwordMatch": "New passwords do not match.",
+                        "passwordLimit": "Password must be at least 8 characters.",
+                        "incorrect": "Current password is incorrect",
+                        "failed": "Failed to update password"
                     }
                 },
                 "deleteAccount": {

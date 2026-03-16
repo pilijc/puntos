@@ -33,15 +33,15 @@ export default function ChangePasswordModal({ visible, onClose }: Props) {
 
     const handleConfirm = async () => {
         if (!currentPassword || !newPassword || !repeatNewPassword) {
-            Alert.alert(translate("error.title"), translate("error.missingFields"));
+            Alert.alert(translate("error.title"), translate("settings.account.security.changePassword.error.missingFields"));
             return;
         }
         if (newPassword !== repeatNewPassword) {
-            Alert.alert(translate("error.title"), translate("error.passwordMatch"));
+            Alert.alert(translate("error.title"), translate("settings.account.security.changePassword.error.passwordMatch"));
             return;
         }
         if (newPassword.length < 8) {
-            Alert.alert(translate("error.title"), translate("error.passwordLimit"));
+            Alert.alert(translate("error.title"), translate("settings.account.security.changePassword.error.passwordLimit"));
             return;
         }
 
@@ -54,15 +54,15 @@ export default function ChangePasswordModal({ visible, onClose }: Props) {
                 email: user.email,
                 password: currentPassword,
             });
-            if (signInError) throw new Error("Current password is incorrect");
+            if (signInError) throw new Error(translate("settings.account.security.changePassword.error.incorrect"));
 
             const { error: updateError } = await supabase.auth.updateUser({ password: newPassword });
             if (updateError) throw updateError;
 
-            Alert.alert(translate("label.confirm"), "Your password has been changed successfully.");
+            Alert.alert(translate("label.confirm"), translate("settings.account.security.changePassword.success"));
             handleClose();
         } catch (error: any) {
-            Alert.alert(translate("error.title"), error.message || "Failed to update password");
+            Alert.alert(translate("error.title"), error.message || translate("settings.account.security.changePassword.error.failed"));
         } finally {
             setLoading(false);
         }

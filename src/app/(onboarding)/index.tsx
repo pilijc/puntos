@@ -22,7 +22,7 @@ const slides = [
   {
     titleKey: "onboarding.slide.title3",
     subtitleKey:
-      "onboarding.slide.title3",
+      "onboarding.slide.subtitle3",
     image: require("../../assets/images/3.png"),
   },
 ];
@@ -102,7 +102,7 @@ export default function Welcome() {
               className="bg-primary py-4 rounded-xl items-center"
             >
               <Text className="text-white text-base font-poppins-semibold">
-                Get Started
+                {translate("onboarding.slide.button")}
               </Text>
             </TouchableOpacity>
           </View>
