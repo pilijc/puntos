@@ -51,7 +51,7 @@ export default function OnboardingWelcome() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-background">
+    <SafeAreaView className="flex-1 bg-background dark:bg-darkBackground">
       {/* Language Toggle */}
       <View className="absolute top-14 right-6 z-10">
         <TouchableOpacity
@@ -59,13 +59,13 @@ export default function OnboardingWelcome() {
           className="flex-row items-center bg-neutral-100 dark:bg-darkBackgroundMuted px-3 py-1.5 rounded-full border border-neutral-200 dark:border-darkBorder"
           activeOpacity={0.7}
         >
-          <Ionicons name="globe-outline" size={16} color="#6b7280" />
+          <Ionicons name="globe-outline" size={16} color={i18n.language === "en" ? "#6b7280" : "#FF6600"} />
           <Text className="ml-1.5 text-xs font-poppins-semibold text-neutral-600 dark:text-darkTextSecondary uppercase">
             {i18n.language === "en" ? "JP" : "EN"}
           </Text>
         </TouchableOpacity>
       </View>
-      <View className="flex-1 w-full self-center bg-background items-center justify-center">
+      <View className="flex-1 w-full self-center bg-background dark:bg-darkBackground items-center justify-center">
         <View className="w-full items-center px-6">
           <Image
             source={require("../../assets/images/puntos-person.png")}
@@ -73,7 +73,7 @@ export default function OnboardingWelcome() {
           />
         </View>
         <View className="w-full items-center px-6 mt-4">
-          <Text className="text-3xl font-poppins-bold text-neutral-900 text-center">
+          <Text className="text-3xl font-poppins-bold text-neutral-900 dark:text-darkTextPrimary text-center">
             <Trans
               i18nKey="onboarding.welcome"
               values={{ appName }}
@@ -82,7 +82,7 @@ export default function OnboardingWelcome() {
               }}
             />
           </Text>
-          <Text className="mt-2 text-base font-poppins text-neutral-600 text-center">
+          <Text className="mt-2 text-base font-poppins text-neutral-600 dark:text-darkTextSecondary text-center">
             {translate("onboarding.subhead")}
           </Text>
         </View>
@@ -98,24 +98,24 @@ export default function OnboardingWelcome() {
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
-              className="h-14 w-full px-5 rounded-xl items-center justify-center border border-neutral-300"
+              className="h-14 w-full px-5 rounded-xl items-center justify-center border border-neutral-300 dark:border-darkBorder"
               activeOpacity={0.9}
               onPress={handleSignup}
             >
-              <Text className="text-neutral-600 text-md font-poppins-medium">
+              <Text className="text-neutral-600 dark:text-darkTextSecondary text-md font-poppins-medium">
                 {translate("onboarding.signup.button")}
               </Text>
             </TouchableOpacity>
             <View className="flex-row items-center gap-x-4 my-3 w-full justify-center">
-              <View className="flex-1 h-px bg-neutral-300" />
-              <Text className="text-neutral-500 font-poppins text-sm">
+              <View className="flex-1 h-px bg-neutral-300 dark:bg-darkBorder" />
+              <Text className="text-neutral-500 dark:text-darkTextMuted font-poppins text-sm">
                 {translate("onboarding.signup.divider")}
               </Text>
-              <View className="flex-1 h-px bg-neutral-300" />
+              <View className="flex-1 h-px bg-neutral-300 dark:bg-darkBorder" />
             </View>
             <TouchableOpacity
               onPress={handleSignInWithGoogle}
-              className="h-14 w-full px-5 rounded-xl border border-neutral-300 bg-transparent flex-row items-center justify-center gap-x-3"
+              className="h-14 w-full px-5 rounded-xl border border-neutral-300 dark:border-darkBorder bg-transparent flex-row items-center justify-center gap-x-3"
               activeOpacity={0.9}
             >
               {loadingGoogle ? (
@@ -126,7 +126,7 @@ export default function OnboardingWelcome() {
                     source={require("../../assets/images/google-icon.png")}
                     className="w-5 h-5"
                   />
-                  <Text className="text-neutral-600 text-md font-poppins-medium mt-1">
+                  <Text className="text-neutral-600 dark:text-darkTextSecondary text-md font-poppins-medium mt-1">
                     {translate("onboarding.signup.google")}
                   </Text>
                 </>
@@ -135,7 +135,7 @@ export default function OnboardingWelcome() {
           </View>
         </View>
         <View className="px-8 pt-6 w-full items-center">
-          <Text className="text-neutral-400 text-sm font-poppins text-center leading-relaxed">
+          <Text className="text-neutral-400 dark:text-darkTextMuted text-sm font-poppins text-center leading-relaxed">
             <Trans
               i18nKey="onboarding.footer"
               components={{

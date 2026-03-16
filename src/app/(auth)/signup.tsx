@@ -308,8 +308,8 @@ export default function SignUp() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-background">
-      <View className="flex-row items-center justify-centershadow-xs p-4">
+    <SafeAreaView className="flex-1 bg-background dark:bg-darkBackground">
+      <View className="flex-row items-center justify-center shadow-xs p-4 bg-background dark:bg-darkBackground">
         <TouchableOpacity
           onPress={
             currentStep === 1
@@ -318,10 +318,10 @@ export default function SignUp() {
           }
           hitSlop={10}
         >
-          <Ionicons name="chevron-back" size={18} color="black" />
+          <Ionicons name="chevron-back" size={18} color="#9ca3af" />
         </TouchableOpacity>
         <View className="flex-1 items-center -ml-10">
-          <Text className="text-xl font-poppins-bold text-neutral-900">
+          <Text className="text-xl font-poppins-bold text-neutral-900 dark:text-darkTextPrimary">
             {role === 'manager' ? translate("onboarding.signup.titleManager") : translate("onboarding.signup.title")}
           </Text>
         </View>
@@ -392,28 +392,28 @@ export default function SignUp() {
                 {currentStep === 1 && (
                   <>
                     <View className="flex-row items-center gap-x-4">
-                      <View className="flex-1 h-px bg-neutral-200" />
-                      <Text className="text-neutral-500 font-poppins text-sm">
+                      <View className="flex-1 h-px bg-neutral-200 dark:bg-darkBorder" />
+                      <Text className="text-neutral-500 dark:text-darkTextMuted font-poppins text-sm">
                         {translate("onboarding.signup.divider")}
                       </Text>
-                      <View className="flex-1 h-px bg-neutral-200" />
+                      <View className="flex-1 h-px bg-neutral-200 dark:bg-darkBorder" />
                     </View>
 
                     <TouchableOpacity
                       onPress={handleSignupWithGoogle}
-                      className="bg-background rounded-xl p-4 border border-neutral-200 flex-row items-center justify-center gap-x-3"
+                      className="bg-transparent rounded-xl p-4 border border-neutral-200 dark:border-darkBorder flex-row items-center justify-center gap-x-3"
                     >
                       <Image
                         source={require("../../assets/images/google-icon.png")}
                         className="w-5 h-5"
                       />
-                      <Text className="font-poppins-medium text-neutral-700">
+                      <Text className="font-poppins-medium text-neutral-700 dark:text-darkTextSecondary">
                         {translate("onboarding.signup.google")}
                       </Text>
                     </TouchableOpacity>
 
                     <View className="flex-row justify-center mt-2">
-                      <Text className="font-poppins text-neutral-600">
+                      <Text className="font-poppins text-neutral-600 dark:text-darkTextSecondary">
                         {translate("onboarding.signup.ownerPrompt")}
                       </Text>
 
@@ -446,7 +446,7 @@ export default function SignUp() {
                 )}
 
                 <View className="flex-row justify-center">
-                  <Text className="font-poppins text-neutral-600">
+                  <Text className="font-poppins text-neutral-600 dark:text-darkTextSecondary">
                     {translate("onboarding.signup.alreadyHaveAccount")}
                   </Text>
                   <TouchableOpacity onPress={() => router.replace("/login")}>

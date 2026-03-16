@@ -39,11 +39,11 @@ export function StepHeader({ currentStep }: StepHeaderProps) {
       </View>
 
       <View className="gap-y-1">
-        <Text className="text-2xl font-poppins-bold text-neutral-900 text-center">
+        <Text className="text-2xl font-poppins-bold text-neutral-900 dark:text-darkTextPrimary text-center">
           {translate(stepInfo.titleKey)}
         </Text>
 
-        <Text className="text-neutral-600 font-poppins text-center">
+        <Text className="text-neutral-600 dark:text-darkTextSecondary font-poppins text-center">
           {translate(stepInfo.descriptionKey)}
         </Text>
       </View>
@@ -62,7 +62,7 @@ export function Stepper({ currentStep, totalSteps }: StepperProps) {
         return (
           <View
             key={stepNumber}
-            className={`h-2 flex-1 rounded-full ${isCompleted || isActive ? 'bg-primary' : 'bg-neutral-200'
+            className={`h-2 flex-1 rounded-full ${isCompleted || isActive ? 'bg-primary' : 'bg-neutral-200 dark:bg-neutral-800'
               }`}
           />
         );
@@ -75,7 +75,7 @@ export function NameStep({ value, onChange, error }: StepProps) {
   const { t: translate } = useTranslation();
   return (
     <View className="gap-y-2">
-      <Text className="text-sm font-poppins-medium text-neutral-700">
+      <Text className="text-sm font-poppins-medium text-neutral-700 dark:text-darkTextSecondary">
         {translate("onboarding.signup.stepper.label.name")}
       </Text>
       <TextInput
@@ -83,11 +83,11 @@ export function NameStep({ value, onChange, error }: StepProps) {
         onChangeText={onChange}
         placeholder={translate("onboarding.signup.stepper.placeholder.name")}
         placeholderTextColor="#9CA3AF"
-        className="border border-neutral-200 rounded-xl px-4 py-4 font-poppins text-neutral-700"
+        className="border border-neutral-200 dark:border-darkBorder bg-neutral-50 dark:bg-darkBackgroundMuted rounded-xl px-4 py-4 font-poppins text-neutral-900 dark:text-darkTextPrimary"
         autoFocus
       />
       {error && (
-        <Text className="text-red-500 text-sm font-poppins rounded-xl p-4 text-center bg-red-50">
+        <Text className="text-red-500 dark:text-red-400 text-sm font-poppins rounded-xl p-4 text-center bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-900/30">
           {error}
         </Text>
       )}
@@ -99,7 +99,7 @@ export function EmailStep({ value, onChange, error }: StepProps) {
   const { t: translate } = useTranslation();
   return (
     <View className="gap-y-2">
-      <Text className="text-sm font-poppins-medium text-neutral-700">
+      <Text className="text-sm font-poppins-medium text-neutral-700 dark:text-darkTextSecondary">
         {translate("onboarding.signup.stepper.label.email")}
       </Text>
       <TextInput
@@ -109,11 +109,11 @@ export function EmailStep({ value, onChange, error }: StepProps) {
         placeholderTextColor="#9CA3AF"
         keyboardType="email-address"
         autoCapitalize="none"
-        className="border border-neutral-200 rounded-xl px-4 py-4 font-poppins"
+        className="border border-neutral-200 dark:border-darkBorder bg-neutral-50 dark:bg-darkBackgroundMuted rounded-xl px-4 py-4 font-poppins text-neutral-900 dark:text-darkTextPrimary"
         autoFocus
       />
       {error && (
-        <Text className="text-red-500 text-sm font-poppins rounded-xl p-4 text-center bg-red-50">
+        <Text className="text-red-500 dark:text-red-400 text-sm font-poppins rounded-xl p-4 text-center bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-900/30">
           {error}
         </Text>
       )}
@@ -137,7 +137,7 @@ export function PasswordStep({
     <View className="gap-y-2">
       <View className="gap-y-2">
         <View className="gap-y-2">
-          <Text className="text-sm font-poppins-medium text-neutral-700">
+          <Text className="text-sm font-poppins-medium text-neutral-700 dark:text-darkTextSecondary">
             {translate("onboarding.signup.stepper.label.password")}
           </Text>
           <View className="relative">
@@ -147,7 +147,7 @@ export function PasswordStep({
               placeholder={translate("onboarding.signup.stepper.placeholder.password")}
               secureTextEntry={!showPassword}
               autoCapitalize="none"
-              className="border border-neutral-200 rounded-xl px-4 py-4 pr-12 font-poppins"
+              className="border border-neutral-200 dark:border-darkBorder bg-neutral-50 dark:bg-darkBackgroundMuted rounded-xl px-4 py-4 pr-12 font-poppins text-neutral-900 dark:text-darkTextPrimary"
               autoFocus={false}
               placeholderTextColor="#9CA3AF"
             />
@@ -155,13 +155,13 @@ export function PasswordStep({
               onPress={onTogglePassword}
               className="absolute right-4 top-4"
             >
-              <Feather name={showPassword ? "eye" : "eye-off"} size={18} color="gray" />
+              <Feather name={showPassword ? "eye" : "eye-off"} size={18} color="#9CA3AF" />
             </Pressable>
           </View>
         </View>
 
         <View className="mt-1 mb-2 gap-y-2">
-          <Text className="text-sm font-poppins-medium text-neutral-700">
+          <Text className="text-sm font-poppins-medium text-neutral-700 dark:text-darkTextSecondary">
             {translate("onboarding.signup.stepper.label.confirmPassword")}
           </Text>
           <View className="relative">
@@ -171,21 +171,21 @@ export function PasswordStep({
               placeholder={translate("onboarding.signup.stepper.placeholder.confirmPassword")}
               secureTextEntry={!showConfirmPassword}
               autoCapitalize="none"
-              className="border border-neutral-200 rounded-xl px-4 py-4 pr-12 font-poppins"
+              className="border border-neutral-200 dark:border-darkBorder bg-neutral-50 dark:bg-darkBackgroundMuted rounded-xl px-4 py-4 pr-12 font-poppins text-neutral-900 dark:text-darkTextPrimary"
               placeholderTextColor="#9CA3AF"
             />
             <Pressable
               onPress={onToggleConfirmPassword}
               className="absolute right-4 top-4"
             >
-              <Feather name={showConfirmPassword ? "eye" : "eye-off"} size={18} color="gray" />
+              <Feather name={showConfirmPassword ? "eye" : "eye-off"} size={18} color="#9CA3AF" />
             </Pressable>
           </View>
         </View>
       </View>
       <View className="justify-center">
         {(errors.confirmPassword || errors.password) && (
-          <Text className="text-red-500 text-sm font-poppins rounded-xl p-4 text-center bg-red-50">
+          <Text className="text-red-500 dark:text-red-400 text-sm font-poppins rounded-xl p-4 text-center bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-900/30">
             {errors.confirmPassword || errors.password}
           </Text>
         )}
@@ -203,28 +203,28 @@ export function RoleStep({ value, onChange, error }: RoleStepProps) {
 
   return (
     <View className="gap-y-4">
-      <Text className="text-sm font-poppins-medium text-neutral-700">
+      <Text className="text-sm font-poppins-medium text-neutral-700 dark:text-darkTextSecondary">
         {translate("onboarding.signup.ownerPrompt")}
       </Text>
       {roles.map((role) => (
         <Pressable
           key={role.value}
           onPress={() => onChange(role.value)}
-          className={`p-4 rounded-xl border ${value === role.value ? 'border-primary bg-primary/5' : 'border-neutral-200'}`}
+          className={`p-4 rounded-xl border ${value === role.value ? 'border-primary bg-primary/5 dark:bg-primary/10' : 'border-neutral-200 dark:border-darkBorder bg-neutral-50 dark:bg-darkBackgroundMuted'}`}
         >
           <View className="flex-row items-center gap-x-3">
             <View
-              className={`w-4 h-4 rounded-full border-2 ${value === role.value ? 'border-primary bg-primary' : 'border-neutral-300'}`}
+              className={`w-4 h-4 rounded-full border-2 ${value === role.value ? 'border-primary bg-primary' : 'border-neutral-300 dark:border-neutral-600'}`}
             >
               {value === role.value && (
-                <View className="w-2 h-2 rounded-full bg-white m-0.5" />
+                <View className="w-2 h-2 rounded-full bg-white dark:bg-darkTextPrimary m-0.5" />
               )}
             </View>
             <View className="flex-1">
-              <Text className="font-poppins-semibold text-neutral-900">
+              <Text className="font-poppins-semibold text-neutral-900 dark:text-darkTextPrimary">
                 {role.label}
               </Text>
-              <Text className="font-poppins text-neutral-600 text-sm">
+              <Text className="font-poppins text-neutral-600 dark:text-darkTextSecondary text-sm">
                 {role.description}
               </Text>
             </View>
@@ -232,7 +232,7 @@ export function RoleStep({ value, onChange, error }: RoleStepProps) {
         </Pressable>
       ))}
       {error && (
-        <Text className="text-red-500 text-sm font-poppins rounded-xl p-4 text-center bg-red-50">
+        <Text className="text-red-500 dark:text-red-400 text-sm font-poppins rounded-xl p-4 text-center bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-900/30">
           {error}
         </Text>
       )}
@@ -244,26 +244,26 @@ export function TermsStep({ accepted, onToggle, error }: TermsStepProps) {
   const { t: translate } = useTranslation();
   return (
     <View className="gap-y-2">
-      <Text className="text-sm font-poppins-medium text-neutral-700">
+      <Text className="text-sm font-poppins-medium text-neutral-700 dark:text-darkTextSecondary">
         {translate("onboarding.signup.stepper.label.terms")}
       </Text>
       <Pressable
         onPress={onToggle}
-        className="flex-row items-center gap-x-3 p-4 rounded-xl border border-neutral-200"
+        className="flex-row items-center gap-x-3 p-4 rounded-xl border border-neutral-200 dark:border-darkBorder bg-neutral-50 dark:bg-darkBackgroundMuted"
       >
         <View
-          className={`w-5 h-5 rounded border-2 ${accepted ? 'border-primary bg-primary' : 'border-neutral-300'}`}
+          className={`w-5 h-5 rounded border-2 ${accepted ? 'border-primary bg-primary' : 'border-neutral-300 dark:border-neutral-600'}`}
         >
           {accepted && (
             <Ionicons name="checkmark" size={16} color="white" />
           )}
         </View>
-        <Text className="font-poppins text-neutral-700 flex-1">
+        <Text className="font-poppins text-neutral-700 dark:text-darkTextSecondary flex-1">
           {translate("onboarding.signup.stepper.label.termsAgree")}
         </Text>
       </Pressable>
       {error && (
-        <Text className="text-red-500 text-sm font-poppins rounded-xl p-4 text-center bg-red-50">
+        <Text className="text-red-500 dark:text-red-400 text-sm font-poppins rounded-xl p-4 text-center bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-900/30">
           {error}
         </Text>
       )}

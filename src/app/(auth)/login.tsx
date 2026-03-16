@@ -80,22 +80,22 @@ export default function Login() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-background">
-      <View className="flex-row items-center justify-center shadow-xs p-4 bg">
+    <SafeAreaView className="flex-1 bg-background dark:bg-darkBackground">
+      <View className="flex-row items-center justify-center shadow-xs p-4 bg-background dark:bg-darkBackground">
         <TouchableOpacity
           onPress={() => router.replace("/welcome")}
           hitSlop={10}
         >
-          <Ionicons name="chevron-back" size={18} color="black" />
+          <Ionicons name="chevron-back" size={18} color="#9ca3af" />
         </TouchableOpacity>
         <View className="flex-1 items-center -ml-10">
-          <Text className="text-xl font-poppins-bold text-neutral-900">{translate("onboarding.login.button")}</Text>
+          <Text className="text-xl font-poppins-bold text-neutral-900 dark:text-darkTextPrimary">{translate("onboarding.login.button")}</Text>
         </View>
       </View>
       <View className="flex-1 justify-start p-4">
         <KeyboardAvoidingView
           behavior={Platform.OS === "android" ? "padding" : "height"}
-          className="bg-blue-50"
+          className="flex-1"
         >
           <ScrollView
             contentContainerStyle={{ flexGrow: 1 }}
@@ -110,10 +110,10 @@ export default function Login() {
               </View>
               <View className="gap-y-4 w-full items-center">
                 <View className="flex-col items-center justify-center gap-y-1">
-                  <Text className="text-2xl font-poppins-bold text-neutral-900 text-center">
+                  <Text className="text-2xl font-poppins-bold text-neutral-900 dark:text-darkTextPrimary text-center">
                     {translate("onboarding.login.welcome")}
                   </Text>
-                  <Text className="text-neutral-600 font-poppins text-center">
+                  <Text className="text-neutral-600 dark:text-darkTextSecondary font-poppins text-center">
                     {translate("onboarding.login.subhead")}
                   </Text>
                 </View>
@@ -121,14 +121,14 @@ export default function Login() {
 
               <View className="gap-y-2 w-full items-center">
                 <View className="w-full">
-                  <Text className="mb-2 text-sm font-poppins-medium text-neutral-700">
+                  <Text className="mb-2 text-sm font-poppins-medium text-neutral-700 dark:text-darkTextSecondary">
                     {translate("onboarding.login.label.email")}
                   </Text>
                   <TextInput
                     placeholder={translate("onboarding.login.input.email")}
-                    placeholderTextColor="#404040"
+                    placeholderTextColor="#9ca3af"
                     keyboardType="email-address"
-                    className="border border-neutral-300 rounded-xl px-4 py-4 font-poppins"
+                    className="border border-neutral-300 dark:border-darkBorder bg-neutral-50 dark:bg-darkBackgroundMuted rounded-xl px-4 py-4 font-poppins text-neutral-900 dark:text-darkTextPrimary"
                     onChangeText={setEmail}
                     value={email}
                   />
@@ -136,7 +136,7 @@ export default function Login() {
 
                 <View className="w-full">
                   <View className="flex-row items-center justify-between">
-                    <Text className="mb-2 text-sm font-poppins-medium text-textSecondary">
+                    <Text className="mb-2 text-sm font-poppins-medium text-neutral-700 dark:text-darkTextSecondary">
                       {translate("onboarding.login.label.password")}
                     </Text>
                     <TouchableOpacity
@@ -151,14 +151,13 @@ export default function Login() {
                   <View className="relative">
                     <View className="flex-row items-center">
                       <TextInput
-                        placeholderTextColor="#404040"
+                        placeholderTextColor="#9ca3af"
                         value={password}
                         onChangeText={setPassword}
                         placeholder={translate("onboarding.login.input.password")}
                         secureTextEntry={!showPassword}
                         autoCapitalize="none"
-                        className="flex-1 border border-neutral-200 rounded-xl px-4 py-4 font-poppins text-black"
-                        autoFocus
+                        className="flex-1 border border-neutral-300 dark:border-darkBorder bg-neutral-50 dark:bg-darkBackgroundMuted rounded-xl px-4 py-4 font-poppins text-neutral-900 dark:text-darkTextPrimary"
                       />
                       <TouchableOpacity
                         onPress={() => setShowPassword(!showPassword)}
@@ -168,7 +167,7 @@ export default function Login() {
                         <Feather
                           name={showPassword ? "eye" : "eye-off"}
                           size={18}
-                          color="gray"
+                          color="#9ca3af"
                         />
                       </TouchableOpacity>
                     </View>
@@ -176,7 +175,7 @@ export default function Login() {
 
                 </View>
                 {(errors.password || errors.email) ? (
-                  <Text className="mt-2 text-sm font-poppins text-red-500 text-center bg-red-50 rounded-xl p-4 w-full">
+                  <Text className="mt-2 text-sm font-poppins text-red-500 dark:text-red-400 text-center bg-red-50 dark:bg-red-900/20 rounded-xl p-4 w-full border border-red-100 dark:border-red-900/30">
                     {errors.password || errors.email}
                   </Text>
                 ) : null}
@@ -195,26 +194,26 @@ export default function Login() {
               </TouchableOpacity>
 
               <View className="flex-row items-center gap-x-4 w-full max-w-md">
-                <View className="flex-1 h-px bg-neutral-200" />
-                <Text className="text-neutral-500 font-poppins text-sm text-center">
+                <View className="flex-1 h-px bg-neutral-200 dark:bg-darkBorder" />
+                <Text className="text-neutral-500 dark:text-darkTextMuted font-poppins text-sm text-center">
                   {translate("onboarding.signup.divider")}
                 </Text>
-                <View className="flex-1 h-px bg-neutral-200" />
+                <View className="flex-1 h-px bg-neutral-200 dark:bg-darkBorder" />
               </View>
 
               <TouchableOpacity
                 onPress={handleSignInWithGoogle}
-                className="rounded-xl p-4 border border-neutral-200 flex-row items-center justify-center gap-x-3 w-full max-w-md"
+                className="rounded-xl p-4 border border-neutral-200 dark:border-darkBorder bg-transparent flex-row items-center justify-center gap-x-3 w-full max-w-md"
               >
                 {loadingGoogle ? (
-                  <ActivityIndicator size="small" color="gray" />
+                  <ActivityIndicator size="small" color="#9ca3af" />
                 ) : (
                   <>
                     <Image
                       source={require("../../assets/images/google-icon.png")}
                       className="w-5 h-5"
                     />
-                    <Text className="font-poppins-medium text-neutral-700">
+                    <Text className="font-poppins-medium text-neutral-700 dark:text-darkTextSecondary">
                       {translate("onboarding.signup.google")}
                     </Text>
                   </>
@@ -222,7 +221,7 @@ export default function Login() {
               </TouchableOpacity>
 
               <View className="flex-row justify-center items-center w-full">
-                <Text className="font-poppins text-neutral-600 text-center">
+                <Text className="font-poppins text-neutral-600 dark:text-darkTextSecondary text-center">
                   <Trans
                     i18nKey="onboarding.login.signup"
                     components={{

@@ -36,10 +36,10 @@ function Slide({ title, subtitle, width, image }: SlideProps) {
         resizeMode="contain"
       />
       <View className="gap-y-2 px-4">
-        <Text className="text-center text-2xl font-poppins-bold text-textPrimary mt-4">
+        <Text className="text-center text-2xl font-poppins-bold text-neutral-900 dark:text-darkTextPrimary mt-4">
           {title}
         </Text>
-        <Text className="text-center text-base font-poppins text-md text-neutral-600">
+        <Text className="text-center text-base font-poppins text-md text-neutral-600 dark:text-darkTextSecondary">
           {subtitle}
         </Text>
       </View>
@@ -55,7 +55,7 @@ export default function Welcome() {
   const { t: translate } = useTranslation();
 
   return (
-    <SafeAreaView className="flex-1 bg-background p-4 justify-between" >
+    <SafeAreaView className="flex-1 bg-background dark:bg-darkBackground p-4 justify-between" >
       <View className="flex-1" style={{ width: slideWidth }}>
         <ScrollView
           horizontal
@@ -84,7 +84,7 @@ export default function Welcome() {
           {slides.map((_, index) => (
             <View
               key={index}
-              className={`h-2 rounded-full ${index === currentIndex ? "w-4 bg-primary" : "w-2 bg-neutral-300"
+              className={`h-2 rounded-full ${index === currentIndex ? "w-4 bg-primary" : "w-2 bg-neutral-300 dark:bg-neutral-700"
                 }`}
             />
           ))}
