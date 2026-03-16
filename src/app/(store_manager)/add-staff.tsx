@@ -292,20 +292,20 @@ export default function AddStaff() {
 								activeOpacity={0.8}
 								onPress={() => setShowConfirm(false)}
 							>
-								<Text className="text-sm font-poppins-semibold text-slate-600 dark:text-slate-200">
+								<Text className="text-xs font-poppins-semibold text-slate-600 dark:text-slate-200">
 									Cancel
 								</Text>
 							</TouchableOpacity>
 
 							<TouchableOpacity
-								className="flex-1 h-11 rounded-xl bg-primary items-center justify-center"
+								className="flex-1 h-11 rounded-xl bg-primary items-center justify-center px-2"
 								activeOpacity={0.85}
 								onPress={async () => {
 									setShowConfirm(false);
 									await handleCreateStaff();
 								}}
 							>
-								<Text className="text-sm font-poppins-semibold text-white">
+								<Text className="text-xs font-poppins-semibold text-white">
 								 Create Frontdesk Staff
 								</Text>
 							</TouchableOpacity>

@@ -109,9 +109,9 @@ export default function OnboardingWelcome() {
             <Text className="underline text-primary">Terms of Service</Text> and{" "}
             <Text className="underline text-primary">Privacy Policy</Text>
           </Text>
-					<TouchableOpacity onPress={async () => await AsyncStorage.removeItem("hasSeenOnboarding")}>
+					{/* <TouchableOpacity onPress={async () => await AsyncStorage.removeItem("hasSeenOnboarding")}>
 						<Text className="text-primary text-sm font-poppins">Testing here</Text>
-					</TouchableOpacity>
+					</TouchableOpacity> */}
         </View>
       </View>
     </SafeAreaView>
