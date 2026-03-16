@@ -5,9 +5,6 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { getHomeRouteForUserId } from "./access-service";
 import { router } from "expo-router";
 
-/**
- * Custom error thrown when an account has been marked as deleted.
- */
 export class AccountDeletedError extends Error {
   constructor() {
     super("Invalid login credentials.");
@@ -82,40 +79,54 @@ GoogleSignin.configure({
 
 export default async function signUpService(email: string, password: string, name: string, role: string) {
   try {
-    const { data, error } = await supabase.auth.signUp({ email, password });
 
-    if (data?.session?.access_token) {
-      await AsyncStorage.setItem('sessionToken', data.session.access_token);
-    }
-    let homeRoute = "/(user)";
-    if (data.user) {
-      const { data: existingProfile } = await supabase
-        .from("users")
-        .select("id")
-        .eq("id", data.user.id)
-        .single();
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { data: { name } }
+    });
 
-      if (!existingProfile) {
-        //add new user from table users /auth
-        //add new user from table users
-        await supabase.from("users").insert({ id: data.user.id, name });
-      }
-      // Assign role for user or manager/owner
-      const roleToId: Record<string, number> = { user: 4, manager: 2 };
-      const roleId = roleToId[role];
-      await supabase.from("user_roles").insert({ user_id: data.user.id, role_id: roleId, store_id: null });
+    if (error) throw error;
 
-      homeRoute = await getHomeRouteForUserId(data.user.id);
+    if (!data.user) throw new Error("User not created");
+
+    const userId = data.user.id;
+
+    const { data: existingProfile } = await supabase
+      .from("users")
+      .select("id")
+      .eq("id", userId)
+      .maybeSingle();
+
+    if (!existingProfile) {
+      await supabase.from("users").insert({
+        id: userId,
+        name,
+        email
+      });
+    } 
+    const roleToId: Record<string, number> = { user: 4, manager: 2 };
+    const roleId = roleToId[role] || 4;  
+
+
+
+    const { data: roleInsertData, error: roleError } = await supabase.from("user_roles").insert({ 
+      user_id: data.user.id, 
+      role_id: roleId, 
+      store_id: null 
+    });
+
+    if (roleError) {
+      //console.error("Role insertion failed:", roleError);
+      throw roleError;
     }
-    if (error) {
-      throw error;
-    }
+    //console.log("Role insertion successful:", roleInsertData);
+    const homeRoute = await getHomeRouteForUserId(userId);
     return { ...data, homeRoute};
   } catch (error) {
     throw error;
   }
 }
-
 
 export class GoogleSignInCancelledError extends Error {
   constructor() {
@@ -168,12 +179,18 @@ export async function signUpWithGoogleService() {
           if (insertError) {
             throw insertError;
           }
-
-          // Assign default role 'user'
+         
           await supabase.from("user_roles").insert({ user_id: data.user.id, role_id: 4, store_id: null });
-
-          // Assign default role 'user'
-          await supabase.from("user_roles").insert({ user_id: data.user.id, role_id: 4, store_id: null });
+        } else {
+          const { data: existingRole } = await supabase
+            .from("user_roles")
+            .select("role_id")
+            .eq("user_id", data.user.id)
+            .maybeSingle();
+          
+          if (!existingRole) {
+            await supabase.from("user_roles").insert({ user_id: data.user.id, role_id: 4, store_id: null });
+          }
         }
       } else if (error) {
         throw error;
@@ -260,10 +277,25 @@ export async function signInWithGoogleLoginService() {
       } else if (error) {
         throw error;
       }
-
       return { ...data, homeRoute };
     }
   } catch (error: any) {
     throw error;
   }
 }
+
+export async function isEmailTaken(email: string): Promise<boolean> {
+  const { data, error } = await supabase
+    .from("users")       
+    .select("id")
+    .eq("email", email)
+    .maybeSingle();
+
+  if (error) {
+    return false;  
+  }
+  return !!data;  
+}
+
+
+ 

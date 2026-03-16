@@ -14,6 +14,8 @@ import { Button } from "@/components/button";
 import { Modal, ModalButton, ModalProps } from "@/components/modal";
 import { FEATURES, StoreFeature, TABS } from "@/type/store-manager/features";
 import { useFeaturesStore } from "@/store/store-manager/features-store";
+import { useStaffStore } from "@/store/store-manager/staff-store";
+import { getStoreStaff } from "@/services/store-manager/staff-service";
 
 export default function ViewStore() {
   const { id } = useLocalSearchParams();
@@ -30,12 +32,14 @@ export default function ViewStore() {
   const [refreshing, setRefreshing] = useState(false);
   const { feature, setFeature, resetFeatures } = useFeaturesStore();
   const [savedFeature, setSavedFeature] = useState<StoreFeature | null>(null);
+  const [staff, setStaff] = useState<any[]>([]);
   const [modal, setModal] = useState<{
     title: string;
     message: string;
     buttons: ModalButton[];
     timer?: boolean;
   } | null>(null);
+
 
   const navigateToView = (featureId: string) => {
     if (featureId === "streaks") {
@@ -54,12 +58,14 @@ export default function ViewStore() {
   };
 
   const fetchDynamicData = useCallback(async () => {
-    const [rewardsData, stampData] = await Promise.all([
+    const [rewardsData, stampData, staffData] = await Promise.all([
       getRewardsByStoreId(String(storeId)),
       getActiveStampProgram(String(storeId)),
+      getStoreStaff(String(storeId)),
     ]);
     setRewards(rewardsData);
     setActiveStamp(stampData);
+    setStaff(staffData);
   }, [storeId]);
 
   const handleRefresh = useCallback(async () => {
@@ -74,7 +80,6 @@ export default function ViewStore() {
   useEffect(() => {
     let cancelled = false;
 
-    // Clear previous store state immediately to avoid stale flash
     setStore(null);
     setRewards([]);
     setActiveStamp(null);
@@ -144,6 +149,8 @@ export default function ViewStore() {
       setIsSubmitting(false);
     }
   };
+
+  console.log(staff);
 
   return (
     <View className="flex-1 bg-backgroundMuted dark:bg-neutral-900">
@@ -252,6 +259,40 @@ export default function ViewStore() {
           })}
         </View>
 
+        {activeTab === 0 && (
+          staff.length === 0 ? (
+            <View className="flex-1 items-center gap-y-3 py-2 px-4">
+            <View className="flex-1 justify-center items-center w-full gap-y-3">
+              <MaterialIcons name="people-alt" size={40} color="#94A3B8" />
+              <Text className="text-sm font-poppins text-slate-400 dark:text-slate-500 text-center">
+                No staff yet. Add your first one!
+              </Text>
+            </View>
+          </View>
+          ) : (
+            <View className="px-4 elevation-0.5 mt-4 gap-y-2">
+              {staff.map((staffItem) => (
+                <View
+                  key={staffItem.id}
+                  className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-xl p-2 flex-row items-center gap-x-3"
+                >
+                  <View className="w-16 h-16 rounded-xl items-center justify-center">
+                    <MaterialIcons name="person" size={24} color="#FF6600" />
+                  </View>
+                  <View className="flex-1 justify-center">
+                    <Text className="text-lg font-poppins-bold text-textPrimary dark:text-textPrimary">
+                      {staffItem.user.name}
+                    </Text>
+                    <Text className="text-sm font-poppins text-slate-500 dark:text-slate-500">
+                      {staffItem.user.email}
+                    </Text>
+                  </View>
+                </View>
+              ))}
+            </View>
+          )
+        )}
+
         {activeTab === 1 && (
           <View className="px-4 elevation-0.5 mt-4">
             {FEATURES.map((featureItem) => {
@@ -356,15 +397,6 @@ export default function ViewStore() {
           </View>
         )}
 
-        {activeTab === 0 && (
-          <View className="pt-16 items-center gap-y-3">
-            <MaterialIcons name="construction" size={40} color="#64748B" />
-            <Text className="text-sm font-poppins text-slate-500 dark:text-slate-500">
-              Coming soon
-            </Text>
-          </View>
-        )}
-
         {activeTab === 2 && (
           <View className="px-4 mt-4 gap-y-3">
             {rewards.length === 0 ? (
@@ -425,6 +457,16 @@ export default function ViewStore() {
           className="absolute bottom-8 right-6 w-14 h-14 rounded-full bg-primary items-center justify-center shadow-lg"
           activeOpacity={0.85}
           onPress={() => router.push({ pathname: "/(store_manager)/rewards", params: { storeId } })}
+        >
+          <MaterialIcons name="add" size={28} color="#fff" />
+        </TouchableOpacity>
+      )}
+
+      {activeTab === 0 && (
+        <TouchableOpacity
+          className="absolute bottom-8 right-6 w-14 h-14 rounded-full bg-primary items-center justify-center shadow-lg"
+          activeOpacity={0.85}
+          onPress={() => router.push({ pathname: "/(store_manager)/add-staff", params: { storeId } })}
         >
           <MaterialIcons name="add" size={28} color="#fff" />
         </TouchableOpacity>

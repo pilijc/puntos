@@ -1,6 +1,6 @@
 import { View, Text, SafeAreaView, ScrollView, TouchableOpacity } from "@/tw";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import React, { useMemo, useState } from "react";
+import React, { useMemo } from "react";
 import { Modal, View as RNView } from "react-native";
 import { Image } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
@@ -9,6 +9,7 @@ import RewardCard from "@/components/rewards/RewardCard";
 import { useStamps } from "@/hooks/use-stamps";
 import { rewards } from "@/data/rewards";
 import { useStoreStore } from "@/store/store-store";
+import { useRewardsUiStore } from "@/store/rewards-ui-store";
 import { useLocation } from "@/hooks/use-location";
 import { enrichStoresWithLocation } from "@/utils/store-location";
 import { supabase } from "@/supabase/supabase";
@@ -16,6 +17,8 @@ import { Alert, ActivityIndicator, RefreshControl } from "react-native";
 import { addStamp } from "@/services/stamp-service";
 import { useAuthStore } from "@/store/auth-store";
 import { useStampRewards } from "@/hooks/use-stamp-rewards";
+import { useTranslation } from "react-i18next";
+import StoreHeader from "@/components/ui/StoreHeader";
 
 const rewardSortOptions = [
   { id: "popular", label: "Popular" },
@@ -23,14 +26,24 @@ const rewardSortOptions = [
   { id: "newest", label: "Newest" },
 ] as const;
 
-type RewardSort = (typeof rewardSortOptions)[number]["id"];
-type PointsOrder = "desc" | "asc";
-
 export default function StoreRewards() {
+  const { t: translate } = useTranslation();
   const params = useLocalSearchParams<{ storeId?: string | string[] }>();
   const storeId = Array.isArray(params.storeId)
     ? params.storeId[0]
     : params.storeId;
+
+  const {
+    rewardSort,
+    rewardPointsOrder: pointsOrder,
+    setRewardSort,
+    setRewardPointsOrder: setPointsOrder,
+    isStamping,
+    setIsStamping,
+    refreshing,
+    setRefreshing
+  } = useRewardsUiStore();
+
   const { location } = useLocation();
   const { stores } = useStoreStore();
 
@@ -40,16 +53,10 @@ export default function StoreRewards() {
   }, [stores, location]);
 
   const store = storesWithLocation.find((item) => item.id.toString() === storeId);
-  const [rewardSort, setRewardSort] = useState<RewardSort>("popular");
-  const [pointsOrder, setPointsOrder] = useState<PointsOrder>("desc");
-  const [selectedReward, setSelectedReward] = useState<typeof rewards[0] | null>(null);
+  const [selectedReward, setSelectedReward] = React.useState<typeof rewards[0] | null>(null);
 
-  const { sessionToken } = useAuthStore();
-  const { stamps, isLoading: isStampsLoading, refetch: refetchStamps } = useStamps();
+  const { isLoading: isStampsLoading, refetch: refetchStamps } = useStamps();
   const { refetch: refetchStampRewards } = useStampRewards();
-
-  const [isStamping, setIsStamping] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -64,32 +71,33 @@ export default function StoreRewards() {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user?.id) {
-        Alert.alert("Error", "You must be logged in to stamp.");
+        Alert.alert(translate("rewards.messages.error"), translate("rewards.messages.signInToStamp"));
         setIsStamping(false);
         return;
       }
       const result = await addStamp(user.id, storeId.toString());
       if (result.success) {
-        Alert.alert("Success!", "You have successfully collected a stamp!");
+        Alert.alert(translate("rewards.messages.success"), translate("rewards.messages.stampSuccess"));
         refetchStamps();
         refetchStampRewards();
       } else {
         if (result.reason === "already_stamped_today") {
-          Alert.alert("Notice", "You have already stamped at this store today.");
+          Alert.alert(translate("rewards.messages.notice"), translate("rewards.messages.alreadyStamped"));
         } else if (result.reason === "stamp_not_enabled") {
-          Alert.alert("Notice", "This store currently has stamps disabled.");
+          Alert.alert(translate("rewards.messages.notice"), translate("rewards.messages.stampDisabled"));
         } else {
-          Alert.alert("Error", "Failed to collect stamp. Please try again.");
+          Alert.alert(translate("rewards.messages.error"), translate("rewards.messages.stampFailed"));
         }
       }
     } catch (e) {
       console.error(e);
-      Alert.alert("Error", "Something went wrong.");
+      Alert.alert(translate("rewards.messages.error"), translate("rewards.messages.error"));
     } finally {
       setIsStamping(false);
     }
   };
 
+  const { stamps } = useStamps();
   const storeStampData = useMemo(() => {
     return stamps.find((s) => s.store_id?.toString() === storeId);
   }, [stamps, storeId]);
@@ -154,11 +162,11 @@ export default function StoreRewards() {
           </TouchableOpacity>
           <View>
             <Text className="text-2xl font-poppins-bold text-neutral-900 dark:text-darkTextPrimary">
-              {store?.name ?? "Store Rewards"}
+              {store?.name ?? translate("rewards.storeDetail.title")}
             </Text>
             <Text className="text-xs text-neutral-500 font-poppins mt-1">
-              {store?.address ?? "Location"} •{" "}
-              {store ? store.distanceMeters?.toLocaleString(undefined, { maximumFractionDigits: 2 }) : "0"} meters away
+              {store?.address ?? translate("rewards.storeDetail.locationFallback")} •{" "}
+              {store ? store.distanceMeters?.toLocaleString(undefined, { maximumFractionDigits: 2 }) : "0"} {translate("rewards.distanceMeters", { meters: "" }).replace(" meters away", "").replace(" m 先", "").trim()} {translate("rewards.distanceMeters", { meters: "" }).includes("m 先") ? "m 先" : "meters away"}
             </Text>
           </View>
         </View>
@@ -171,10 +179,10 @@ export default function StoreRewards() {
               </View>
               <View className="flex-1">
                 <Text className="text-primary font-poppins-semibold">
-                  You are nearby {store.name}
+                  {translate("rewards.storeDetail.nearbyMessage", { name: store.name })}
                 </Text>
                 <Text className="text-xs text-primary/80 font-poppins mt-1">
-                  Stamp now to collect another stamp!
+                  {translate("rewards.storeDetail.stampNowPrompt")}
                 </Text>
               </View>
             </View>
@@ -187,7 +195,7 @@ export default function StoreRewards() {
                 <ActivityIndicator size="small" color="#FFFFFF" />
               ) : (
                 <Text className="text-white text-[10px] font-poppins-semibold">
-                  {hasStampedToday ? "STAMPED" : "STAMP"}
+                  {hasStampedToday ? translate("rewards.buttons.stamped") : translate("rewards.buttons.stamp")}
                 </Text>
               )}
             </TouchableOpacity>
@@ -197,7 +205,7 @@ export default function StoreRewards() {
         {hasClaimableReward && (
           <View className="mb-4">
             <Text className="text-lg font-poppins-semibold text-neutral-900 mb-3">
-              Your Unlocked Reward
+              {translate("rewards.storeDetail.unlockedSection")}
             </Text>
             <View className="bg-primary/5 rounded-2xl p-4 border border-primary/20 flex-row items-center justify-between">
               <View className="flex-row items-center gap-x-3 flex-1">
@@ -212,10 +220,10 @@ export default function StoreRewards() {
                 </View>
                 <View className="flex-1 pr-2">
                   <Text className="text-primary font-poppins-semibold leading-tight">
-                    {claimableRewardItem?.title || "Free Reward"}
+                    {claimableRewardItem?.title || translate("rewards.storeDetail.freeReward")}
                   </Text>
                   <Text className="text-xs text-neutral-500 font-poppins mt-0.5">
-                    Ready to claim!
+                    {translate("rewards.storeDetail.readyToClaim")}
                   </Text>
                 </View>
               </View>
@@ -224,7 +232,7 @@ export default function StoreRewards() {
                 onPress={() => setSelectedReward(claimableRewardItem)}
               >
                 <Text className="text-white text-xs font-poppins-bold tracking-wide">
-                  CLAIM
+                  {translate("rewards.claim")}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -233,10 +241,10 @@ export default function StoreRewards() {
 
         <View className="flex-row items-center justify-between">
           <Text className="text-lg font-poppins-semibold text-neutral-900">
-            Redeemable Rewards
+            {translate("rewards.storeDetail.redeemableSection")}
           </Text>
           <Text className="text-xs text-neutral-400 font-poppins-medium">
-            {storeRewards.length} items
+            {translate("rewards.storeDetail.itemsCount", { count: storeRewards.length })}
           </Text>
         </View>
 
@@ -250,7 +258,7 @@ export default function StoreRewards() {
             return (
               <SortPill
                 key={option.id}
-                label={option.label}
+                label={translate(`rewards.filters.${option.id.toLowerCase()}`)}
                 active={isActive}
                 rightIcon={
                   isPoints ? (
@@ -278,7 +286,7 @@ export default function StoreRewards() {
           {storeRewards.length === 0 ? (
             <View className="bg-white dark:bg-darkBackgroundMuted rounded-2xl p-6 border border-neutral-100 dark:border-darkBorder items-center">
               <Text className="text-neutral-500 font-poppins">
-                No rewards available yet.
+                {translate("rewards.storeDetail.noRewards")}
               </Text>
             </View>
           ) : (

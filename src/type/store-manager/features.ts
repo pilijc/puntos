@@ -36,4 +36,4 @@ export const FEATURES = [
 	},
 ];
   
-export const TABS = ["Overview", "Features", "Rewards"];
+export const TABS = ["Staff", "Features", "Rewards"];

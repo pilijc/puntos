@@ -1,8 +1,9 @@
 import React from 'react';
 import { Alert } from 'react-native';
 import { Text, TouchableOpacity, View } from "@/tw";
-import { useAuthActions } from '@/hooks/use-authActions';
+import { useAuthActions } from '@/hooks/use-auth-actions';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from "react-i18next";
 
 interface LogoutButtonProps {
     showIcon?: boolean;
@@ -10,14 +11,15 @@ interface LogoutButtonProps {
 
 export const LogoutButton = ({ showIcon = true }: LogoutButtonProps) => {
     const { handleLogout } = useAuthActions();
+    const { t: translate } = useTranslation();
 
     const confirmLogout = () => {
         Alert.alert(
-            "Log Out",
-            "Are you sure you want to log out?",
+            translate("settings.logout.confirmTitle"),
+            translate("settings.logout.confirmMessage"),
             [
-                { text: "Cancel", style: "cancel" },
-                { text: "Log out", style: "destructive", onPress: handleLogout },
+                { text: translate("label.cancel"), style: "cancel" },
+                { text: translate("settings.logout.title"), style: "destructive", onPress: handleLogout },
             ]);
     };
 
@@ -33,7 +35,7 @@ export const LogoutButton = ({ showIcon = true }: LogoutButtonProps) => {
                 </View>
             )}
             <Text className="text-white text-base font-poppins-semibold">
-                Logout
+                {translate("settings.logout.title")}
             </Text>
         </TouchableOpacity>
     );
