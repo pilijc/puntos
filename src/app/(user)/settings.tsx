@@ -1,6 +1,7 @@
 import { View, Text, SafeAreaView, TouchableOpacity } from "@/tw";
-import { useFocusEffect } from "expo-router";
+import { useFocusEffect, router } from "expo-router";
 import React, { useState, useCallback } from "react";
+import { Ionicons } from "@expo/vector-icons";
 
 import { getCurrentLocation } from "@/services/location-service";
 import { useProfile } from "@/hooks/use-profile";
@@ -82,8 +83,17 @@ export default function UserSettings() {
       <View className="flex-row justify-between items-center mb-6">
         <Text className="text-xl font-poppins-bold text-neutral-900 dark:text-darkTextPrimary">
           {translate('settings.title')}
-          <CustomTabBarButton onPress={() => {}} bottomInset={0} />
         </Text>
+          <TouchableOpacity
+            onPress={() => router.push("/qr")}
+            className="p-2"
+          >
+            <Ionicons
+              name="qr-code-outline"
+              size={20}
+              color="#FF6600"
+            />
+          </TouchableOpacity>
       </View>
 
       {user && (

@@ -46,16 +46,6 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="qr"
-        options={{
-          title: 'Qr',
-          tabBarIcon: ({ color }) => <MaterialCommunityIcons size={22} name="qrcode-scan" color={color} />,
-          tabBarButton: (props: any) => (
-            <CustomTabBarButton onPress={props.onPress} bottomInset={insets.bottom} />
-          ),
-        }}
-      />
-      <Tabs.Screen
         name="history"
         options={{
           title: translate("layout.history"),

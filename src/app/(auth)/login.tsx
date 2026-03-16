@@ -55,7 +55,7 @@ export default function Login() {
       const data = await loginService(trimmedEmail, password);
       console.log("login component", data);
        if (!data.success) {
-        //Alert.alert("Login Failed", data.message);
+      //  Alert.alert("Login Failed", data.message);
         setModal({
         title: "You are not assigned to a store",
         message: data.message,
