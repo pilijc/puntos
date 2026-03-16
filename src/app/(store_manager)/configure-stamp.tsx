@@ -81,7 +81,7 @@ export default function ConfigureStamp() {
     useCallback(() => {
       if (!storeId) return;
       getRewardsByStoreId(storeId)
-        .then((all) => setRewards(all.filter((r) => r.type === "stamp")))
+        .then((all) => setRewards(all))
         .catch(() => setRewards([]));
     }, [storeId])
   );

@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, Alert, RefreshControl, Switch, useColorScheme } from "react-native";
+import { RefreshControl, Switch, useColorScheme } from "react-native";
 import { View, Text, TouchableOpacity, ScrollView, Image } from "@/tw";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
@@ -12,38 +12,10 @@ import { getActiveStampProgram } from "@/services/store-manager/stamp-service";
 import { Stamp } from "@/type/store-manager/stamp";
 import { Button } from "@/components/button";
 import { Modal, ModalButton, ModalProps } from "@/components/modal";
-
-const FEATURES = [
-  {
-    id: "streaks",
-    title: "Streaks",
-    description: "Reward daily consecutive visits.",
-    icon: "local-fire-department" as const,
-    iconColor: "#F97316",
-    iconBg: "rgba(249,115,22,0.10)",
-    badge: "5 points/day • 7-day streak",
-  },
-  {
-    id: "stamps",
-    title: "Stamps",
-    description: "Digital punch cards for purchases.",
-    icon: "loyalty" as const,
-    iconColor: "#F97316",
-    iconBg: "rgba(249,115,22,0.10)",
-    badge: null,
-  },
-  {
-    id: "purchased",
-    title: "QR Purchase Rewards",
-    description: "Scan at checkout to earn.",
-    icon: "qr-code-2" as const,
-    iconColor: "#F97316",
-    iconBg: "rgba(249,115,22,0.10)",
-    badge: null,
-  },
-];
-
-const TABS = ["Overview", "Features", "Rewards"];
+import { FEATURES, StoreFeature, TABS } from "@/type/store-manager/features";
+import { useFeaturesStore } from "@/store/store-manager/features-store";
+import { useStaffStore } from "@/store/store-manager/staff-store";
+import { getStoreStaff } from "@/services/store-manager/staff-service";
 
 export default function ViewStore() {
   const { id } = useLocalSearchParams();
@@ -58,6 +30,9 @@ export default function ViewStore() {
   const [rewards, setRewards] = useState<Reward[]>([]);
   const [activeStamp, setActiveStamp] = useState<Stamp | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const { feature, setFeature, resetFeatures } = useFeaturesStore();
+  const [savedFeature, setSavedFeature] = useState<StoreFeature | null>(null);
+  const [staff, setStaff] = useState<any[]>([]);
   const [modal, setModal] = useState<{
     title: string;
     message: string;
@@ -65,54 +40,32 @@ export default function ViewStore() {
     timer?: boolean;
   } | null>(null);
 
-  const [savedFeatures, setSavedFeatures] = useState({
-    streak_enabled: false,
-    stamp_enabled: false,
-    reward_enabled: false,
-  });
 
-  const [streakEnabled, setStreakEnabled] = useState(false);
-  const [stampEnabled, setStampEnabled] = useState(false);
-  const [rewardEnabled, setRewardEnabled] = useState(false);
-
-  const toggleStreak = () => setStreakEnabled(prev => !prev);
-  const toggleStamp  = () => setStampEnabled(prev => !prev);
-  const toggleReward = () => setRewardEnabled(prev => !prev);
-
-  const featureToggles: Record<string, { enabled: boolean; toggle: () => void }> = {
-    streaks:   { enabled: streakEnabled, toggle: toggleStreak },
-    stamps:    { enabled: stampEnabled,  toggle: toggleStamp  },
-    purchased: { enabled: rewardEnabled, toggle: toggleReward },
+  const navigateToView = (featureId: string) => {
+    if (featureId === "streaks") {
+      router.push({ pathname: "/(store_manager)/view-streak", params: { storeId } });
+    } else if (featureId === "stamps") {
+      router.push({ pathname: "/(store_manager)/view-stamp", params: { storeId } });
+    }
+  };
+  
+  const navigateToConfigure = (featureId: string) => {
+    if (featureId === "streaks") {
+      router.push({ pathname: "/(store_manager)/configure-streaks", params: { storeId } });
+    } else if (featureId === "stamps") {
+      router.push({ pathname: "/(store_manager)/configure-stamp", params: { storeId } });
+    }
   };
 
-  const hasChanges =
-    streakEnabled !== savedFeatures.streak_enabled ||
-    stampEnabled  !== savedFeatures.stamp_enabled  ||
-    rewardEnabled !== savedFeatures.reward_enabled;
-
-    const navigateToView = (featureId: string) => {
-      if (featureId === "streaks") {
-        router.push({ pathname: "/(store_manager)/view-streak", params: { storeId } });
-      } else if (featureId === "stamps") {
-        router.push({ pathname: "/(store_manager)/view-stamp", params: { storeId } });
-      }
-    };
-    
-    const navigateToConfigure = (featureId: string) => {
-      if (featureId === "streaks") {
-        router.push({ pathname: "/(store_manager)/configure-streaks", params: { storeId } });
-      } else if (featureId === "stamps") {
-        router.push({ pathname: "/(store_manager)/configure-stamp", params: { storeId } });
-      }
-    };
-
   const fetchDynamicData = useCallback(async () => {
-    const [rewardsData, stampData] = await Promise.all([
+    const [rewardsData, stampData, staffData] = await Promise.all([
       getRewardsByStoreId(String(storeId)),
       getActiveStampProgram(String(storeId)),
+      getStoreStaff(String(storeId)),
     ]);
     setRewards(rewardsData);
     setActiveStamp(stampData);
+    setStaff(staffData);
   }, [storeId]);
 
   const handleRefresh = useCallback(async () => {
@@ -125,44 +78,66 @@ export default function ViewStore() {
   }, [fetchDynamicData]);
 
   useEffect(() => {
+    let cancelled = false;
+
+    setStore(null);
+    setRewards([]);
+    setActiveStamp(null);
+    setSavedFeature(null);
+    resetFeatures();
+
     (async () => {
       const [storeData, featureData, rewardsData] = await Promise.all([
         getStoreById(storeId),
         getStoreFeaturesById(String(storeId)),
         getRewardsByStoreId(String(storeId)),
       ]);
-      setStore(storeData);
-      setRewards(rewardsData);
 
-      const saved = {
-        streak_enabled: featureData?.streak_enabled ?? false,
-        stamp_enabled:  featureData?.stamp_enabled  ?? false,
-        reward_enabled: featureData?.reward_enabled ?? false,
+      if (cancelled) return;
+
+      setStore(storeData);
+      const nextFeature: StoreFeature = featureData ?? {
+        store_id: storeId,
+        streak_enabled: false,
+        stamp_enabled: false,
+        reward_enabled: false,
+        qr_enabled: false,
       };
-      setSavedFeatures(saved);
-      setStreakEnabled(saved.streak_enabled);
-      setStampEnabled(saved.stamp_enabled);
-      setRewardEnabled(saved.reward_enabled);
+      setFeature(nextFeature);
+      setSavedFeature(nextFeature);
+      setRewards(rewardsData);
 
       await fetchDynamicData();
     })();
-  }, [storeId]);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [storeId, fetchDynamicData, resetFeatures, setFeature]);
+
+  const hasChanges = !!(feature && savedFeature) && (
+    feature.streak_enabled !== savedFeature.streak_enabled ||
+    feature.stamp_enabled !== savedFeature.stamp_enabled ||
+    feature.reward_enabled !== savedFeature.reward_enabled ||
+    feature.qr_enabled !== savedFeature.qr_enabled
+  );
 
   const handleSaveChanges = async () => {
     try {
       setIsSubmitting(true);
       await updateStoreFeatures({
         store_id: storeId,
-        streak_enabled: streakEnabled,
-        stamp_enabled: stampEnabled,
-        reward_enabled: rewardEnabled,
+        streak_enabled: feature?.streak_enabled ?? false,
+        stamp_enabled: feature?.stamp_enabled ?? false,
+        reward_enabled: feature?.reward_enabled ?? false,
+        qr_enabled: feature?.qr_enabled ?? false,
       });
-      setSavedFeatures({ streak_enabled: streakEnabled, stamp_enabled: stampEnabled, reward_enabled: rewardEnabled });
+      if (feature) setSavedFeature(feature);
       setModal({
         title: "Success",
         message: "Changes saved successfully",
         buttons: [{ label: "OK", onPress: () => setModal(null) }],
-        timer: 3000,
+        timer: true,
       });
     } catch (error) {
       setModal({
@@ -175,6 +150,8 @@ export default function ViewStore() {
     }
   };
 
+  console.log(staff);
+
   return (
     <View className="flex-1 bg-backgroundMuted dark:bg-neutral-900">
       <Modal
@@ -183,7 +160,7 @@ export default function ViewStore() {
         title={modal?.title ?? ""}
         message={modal?.message}
         buttons={modal?.buttons}
-        timer={modal?.timer}
+        timer={modal?.timer ? 3000 : undefined}
       />
       <View
         className="border-b border-neutral-100 dark:border-neutral-700 bg-background dark:bg-neutral-800"
@@ -282,48 +259,99 @@ export default function ViewStore() {
           })}
         </View>
 
+        {activeTab === 0 && (
+          staff.length === 0 ? (
+            <View className="flex-1 items-center gap-y-3 py-2 px-4">
+            <View className="flex-1 justify-center items-center w-full gap-y-3">
+              <MaterialIcons name="people-alt" size={40} color="#94A3B8" />
+              <Text className="text-sm font-poppins text-slate-400 dark:text-slate-500 text-center">
+                No staff yet. Add your first one!
+              </Text>
+            </View>
+          </View>
+          ) : (
+            <View className="px-4 elevation-0.5 mt-4 gap-y-2">
+              {staff.map((staffItem) => (
+                <View
+                  key={staffItem.id}
+                  className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-xl p-2 flex-row items-center gap-x-3"
+                >
+                  <View className="w-16 h-16 rounded-xl items-center justify-center">
+                    <MaterialIcons name="person" size={24} color="#FF6600" />
+                  </View>
+                  <View className="flex-1 justify-center">
+                    <Text className="text-lg font-poppins-bold text-textPrimary dark:text-textPrimary">
+                      {staffItem.user.name}
+                    </Text>
+                    <Text className="text-sm font-poppins text-slate-500 dark:text-slate-500">
+                      {staffItem.user.email}
+                    </Text>
+                  </View>
+                </View>
+              ))}
+            </View>
+          )
+        )}
+
         {activeTab === 1 && (
           <View className="px-4 elevation-0.5 mt-4">
-            {FEATURES.map((feature) => {
-              const { enabled, toggle } = featureToggles[feature.id];
+            {FEATURES.map((featureItem) => {
+              const isEnabled =
+                featureItem.id === "streaks"
+                  ? feature?.streak_enabled ?? false
+                  : featureItem.id === "stamps"
+                    ? feature?.stamp_enabled ?? false
+                    : feature?.qr_enabled ?? false;
+
+              const toggle = () => {
+                if (!feature) return;
+                if (featureItem.id === "streaks") {
+                  setFeature({ ...feature, streak_enabled: !feature.streak_enabled });
+                } else if (featureItem.id === "stamps") {
+                  setFeature({ ...feature, stamp_enabled: !feature.stamp_enabled });
+                } else {
+                  setFeature({ ...feature, qr_enabled: !feature.qr_enabled });
+                }
+              };
+
               return (
                 <View
-                  key={feature.id}
+                  key={featureItem.id}
                   className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl overflow-hidden mb-3"
                 >
                   <View className="p-4 flex-row items-start justify-between">
                     <TouchableOpacity
                       className="flex-row gap-x-3 flex-1"
                       activeOpacity={0.7}
-                      onPress={() => navigateToView(feature.id)}
+                      onPress={() => navigateToView(featureItem.id)}
                     >
                       <View
                         className="w-12 h-12 rounded-xl items-center justify-center"
                       >
-                        <MaterialIcons name={feature.icon} size={24} color={feature.iconColor} />
+                        <MaterialIcons name={featureItem.icon} size={24} color={featureItem.iconColor} />
                       </View>
                       <View className="flex-1 justify-center">
                         <Text className="text-base font-poppins-bold text-[#0F172A] dark:text-[#F1F5F9]">
-                          {feature.title}
+                          {featureItem.title}
                         </Text>
                         <Text className="text-xs font-poppins text-slate-500 dark:text-slate-500 mt-0.5">
-                          {feature.description}
+                          {featureItem.description}
                         </Text>
                       </View>
                     </TouchableOpacity>
                     <Switch
-                      value={enabled}
+                      value={isEnabled}
                       onValueChange={toggle}
                       trackColor={{ false: "#E2E8F0", true: "#FF6600" }}
                       thumbColor="#FFFFFF"
                     />
                   </View>
-                  {enabled && (feature.badge || feature.id === "stamps") && (() => {
-                    const badgeText = feature.id === "stamps"
+                  {isEnabled && (featureItem.badge || featureItem.id === "stamps") && (() => {
+                    const badgeText = featureItem.id === "stamps"
                       ? activeStamp
                         ? `${activeStamp.total_stamps} stamps • ${rewards.find(r => r.id === activeStamp.reward_id)?.title ?? "Reward"}`
                         : "No active program"
-                      : feature.badge;
+                      : featureItem.badge;
                     return (
                       <View className="px-4 py-3 border-t border-slate-100 dark:border-slate-800 flex-row items-center justify-between bg-slate-50 dark:bg-slate-900">
                         <View
@@ -343,7 +371,7 @@ export default function ViewStore() {
                         <TouchableOpacity
                           className="flex-row items-center gap-x-1"
                           activeOpacity={0.7}
-                          onPress={() => navigateToConfigure(feature.id)}
+                          onPress={() => navigateToConfigure(featureItem.id)}
                         >
                           <Text className="text-sm font-poppins-semibold text-primary">
                             Configure
@@ -356,25 +384,16 @@ export default function ViewStore() {
               );
             })}
 
-            {hasChanges && (
+            {feature && hasChanges && (
               <Button
                 label="Save Changes"
                 onPress={handleSaveChanges}
                 variant="primary"
                 loading={isSubmitting}
-                disabled={!hasChanges || isSubmitting}
+                disabled={isSubmitting}
                 fullWidth={true}
               />
             )}
-          </View>
-        )}
-
-        {activeTab === 0 && (
-          <View className="pt-16 items-center gap-y-3">
-            <MaterialIcons name="construction" size={40} color="#64748B" />
-            <Text className="text-sm font-poppins text-slate-500 dark:text-slate-500">
-              Coming soon
-            </Text>
           </View>
         )}
 
@@ -411,10 +430,10 @@ export default function ViewStore() {
                       >
                         {reward.title}
                       </Text>
-                      {reward.type === "stamp" ? (
+                      {reward.stock > 0 ? (
                         <View className="ml-2 flex-row items-center gap-x-1 px-2 py-0.5 rounded-lg bg-primary/10">
                           <MaterialIcons name="loyalty" size={11} color="#FF6600" />
-                          <Text className="text-xs font-poppins-semibold text-primary">Stamp</Text>
+                          <Text className="text-xs font-poppins-semibold text-primary">{reward.stock} in stock</Text>
                         </View>
                       ) : (
                         <Text className="text-sm font-poppins-bold text-primary ml-2 whitespace-nowrap">
@@ -438,6 +457,16 @@ export default function ViewStore() {
           className="absolute bottom-8 right-6 w-14 h-14 rounded-full bg-primary items-center justify-center shadow-lg"
           activeOpacity={0.85}
           onPress={() => router.push({ pathname: "/(store_manager)/rewards", params: { storeId } })}
+        >
+          <MaterialIcons name="add" size={28} color="#fff" />
+        </TouchableOpacity>
+      )}
+
+      {activeTab === 0 && (
+        <TouchableOpacity
+          className="absolute bottom-8 right-6 w-14 h-14 rounded-full bg-primary items-center justify-center shadow-lg"
+          activeOpacity={0.85}
+          onPress={() => router.push({ pathname: "/(store_manager)/add-staff", params: { storeId } })}
         >
           <MaterialIcons name="add" size={28} color="#fff" />
         </TouchableOpacity>

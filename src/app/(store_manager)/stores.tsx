@@ -111,27 +111,6 @@ function StoreCard({ store, router }: { store: StoreRow; router: any }) {
           ) : null}
         </View>
       </View>
-
-      <View className="px-4 py-3 border-t border-slate-100 dark:border-slate-800 flex-row items-center justify-between bg-slate-50 dark:bg-slate-800/30">
-        <View className="flex-row items-center gap-2">
-          <Text className="text-sm font-poppins-medium text-slate-500 dark:text-slate-400">
-            {store.type ? store.type.charAt(0).toUpperCase() + store.type.slice(1) : ""}
-          </Text>
-        </View>
-        <TouchableOpacity
-          className="bg-primary/10 py-2 px-3 rounded-lg flex-row items-center gap-1"
-          activeOpacity={0.8}
-          onPress={() =>
-            router.push({
-              pathname: `/(store_manager)/view-store/${store.id}`,
-              params: { storeId: store.id },
-            })
-          }
-        >
-          <Text className="text-primary text-xs font-poppins-bold">Manage</Text>
-          <MaterialIcons name="chevron-right" size={14} color="#FF6600" />
-        </TouchableOpacity>
-      </View>
     </TouchableOpacity>
   );
 }
