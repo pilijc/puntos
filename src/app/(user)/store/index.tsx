@@ -241,7 +241,7 @@ export default function Rewards() {
             className="bg-white dark:bg-darkBackgroundMuted rounded-xl p-8 items-center border border-neutral-100 dark:border-darkBorder mx-1"
           >
             <MaterialIcons name="event-note" size={40} color="#FF6600" />
-            <Text className="text-neutral-900 dark:text-white font-poppins-bold text-lg mt-3 text-center">
+            <Text className="text-lg font-poppins-semibold text-neutral-900 dark:text-darkTextPrimary mt-3 text-center">
               {translate("rewards.upcomingEvents.title")}
             </Text>
             <Text className="text-neutral-500 text-center font-poppins text-xs mt-1 px-4">
