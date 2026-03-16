@@ -14,7 +14,8 @@
         "passwordLimit": "Password should be at least 8 characters.",
         "emailRequired": "Email is required.",
         "passwordRequired": "Password is required.",
-        "emailValid": "Please enter a valid email address."
+        "emailValid": "Please enter a valid email address.",
+        "invalidLogin": "Invalid login credentials"
     },
     "onboarding": {
         "welcome": "Welcome to <brand>{{appName}}</brand>",
