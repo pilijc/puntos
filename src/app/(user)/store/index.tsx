@@ -14,15 +14,15 @@ import Carousel from "react-native-reanimated-carousel";
 import { Dimensions } from "react-native";
 import { ActivityIndicator, RefreshControl } from "react-native";
 import { useTranslation } from "react-i18next";
-import UserStoreHeroCarousel from "@/components/stores/UserStoreHeroCarousel";
-import UserStreakCard from "@/components/rewards/UserStreakCard";
-import UserStampLogCard from "@/components/rewards/UserStampLogCard";
-import RewardCard from "@/components/rewards/RewardCard";
-import SortPill from "@/components/rewards/SortPill";
+import UserStoreHeroCarousel from "@/components/stores/user-store-hero-carousel";
+import UserStreakCard from "@/components/rewards/user-streak-card";
+import UserStampLogCard from "@/components/rewards/user-stamp-log-card";
+import RewardCard from "@/components/rewards/reward-card";
+import SortPill from "@/components/rewards/sort-pill";
 import { storeLogos } from "@/data/rewards";
 import { useRewardsUiStore } from "@/store/rewards-ui-store";
 import { useStoreOverviewData } from "@/hooks/use-store-overview-data";
-import StoreScreenContainer from "@/components/ui/StoreScreenContainer";
+import StoreScreenContainer from "@/components/ui/store-screen-container";
 
 const { width: screenWidth } = Dimensions.get("window");
 

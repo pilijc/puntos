@@ -3,9 +3,9 @@ import React from "react";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useTranslation } from "react-i18next";
 import { useStamps } from "@/hooks/use-stamps";
-import StoreHeader from "@/components/ui/StoreHeader";
-import UserStreakListItem from "@/components/rewards/UserStreakListItem";
-import StoreScreenContainer from "@/components/ui/StoreScreenContainer";
+import StoreHeader from "@/components/ui/store-header";
+import UserStreakListItem from "@/components/rewards/user-streak-list-item";
+import StoreScreenContainer from "@/components/ui/store-screen-container";
 import { getStampStats } from "@/utils/store-helpers";
 
 export default function StoreStreaks() {

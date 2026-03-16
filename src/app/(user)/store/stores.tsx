@@ -7,9 +7,9 @@ import { useStoreStore } from "@/store/store-store";
 import { useRewardsUiStore } from "@/store/rewards-ui-store";
 import { useStamps } from "@/hooks/use-stamps";
 import { useLocation } from "@/hooks/use-location";
-import StoreHeader from "@/components/ui/StoreHeader";
-import UserStoreListItem from "@/components/stores/UserStoreListItem";
-import StoreScreenContainer from "@/components/ui/StoreScreenContainer";
+import StoreHeader from "@/components/ui/store-header";
+import UserStoreListItem from "@/components/stores/user-store-list-item";
+import StoreScreenContainer from "@/components/ui/store-screen-container";
 import { buildStampedStoreList } from "@/utils/store-helpers";
 
 export default function StoreListScreen() {
