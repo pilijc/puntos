@@ -10,7 +10,7 @@ import { softDeleteUserAccountService } from "@/services/settings-service";
 
 // Components
 import { Modal } from "@/components/modal";
-import ChangePasswordModal from "@/components/settings/modal/ChangePasswordModal";
+import ChangePasswordModal from "@/components/settings/modal/change-password-modal";
 import { useTranslation } from "react-i18next";
 
 
