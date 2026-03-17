@@ -5,7 +5,7 @@ import { Ionicons } from "@expo/vector-icons";
 
 import { getCurrentLocation } from "@/services/location-service";
 import { useProfile } from "@/hooks/use-profile";
-
+ 
 // Components
 import EditProfileModal from "@/components/settings/modal/edit-profile-modal";
 import { LogoutButton } from "@/components/settings/logout-button";
