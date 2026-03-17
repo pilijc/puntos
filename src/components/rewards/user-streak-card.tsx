@@ -3,6 +3,7 @@ import { View, Text, AnimatedView, TouchableOpacity, Image } from "@/tw";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { Layout } from "react-native-reanimated";
 import { storeLogos } from "@/data/rewards";
+import { useTranslation } from "react-i18next";
 
 interface UserStreakCardProps {
   streak: any;
@@ -15,9 +16,10 @@ export default function UserStreakCard({
   nearbyStores,
   isStoreNearby,
 }: UserStreakCardProps) {
+  const { t: translate } = useTranslation();
   const storeStr = streak.stores as any;
-  const storeName = storeStr?.name ?? "Store";
-  const storeAddress = storeStr?.address ?? "Unknown Location";
+  const storeName = storeStr?.name ?? translate("rewards.store");
+  const storeAddress = storeStr?.address ?? translate("rewards.unknownLocation");
   const nearby =
     nearbyStores.some((s) => Number(s.id) === Number(streak.store_id)) ||
     isStoreNearby(storeStr?.latitude, storeStr?.longitude);
@@ -25,7 +27,15 @@ export default function UserStreakCard({
   // Mocking streak progress for UI: use 3 days completed for now
   const clampedCount = 3;
   const targetCount = 7;
-  const streakDays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+  const streakDays = [
+    translate("rewards.days.mon"),
+    translate("rewards.days.tue"),
+    translate("rewards.days.wed"),
+    translate("rewards.days.thu"),
+    translate("rewards.days.fri"),
+    translate("rewards.days.sat"),
+    translate("rewards.days.sun")
+  ];
 
   const days = streakDays.map((label, index) => ({
     label: label,
@@ -61,7 +71,7 @@ export default function UserStreakCard({
               color="#FF6600"
             />
             <Text className="font-poppins-semibold text-neutral-900 dark:text-white">
-              Streak Log
+              {translate("rewards.streakLog")}
             </Text>
           </View>
           <View className="flex-row items-center gap-x-3">
@@ -69,13 +79,13 @@ export default function UserStreakCard({
               <View className="bg-green-100 dark:bg-green-900/30 px-2.5 py-1 rounded-full flex-row items-center gap-x-1">
                 <View className="w-1.5 h-1.5 rounded-full bg-green-500" />
                 <Text className="text-[10px] font-poppins-semibold text-green-700 dark:text-green-400">
-                  Nearby
+                  {translate("rewards.nearby")}
                 </Text>
               </View>
             )}
             <TouchableOpacity disabled={true} className="px-2 py-1 opacity-50">
               <Text className="text-primary text-xs font-poppins-semibold">
-                VIEW ALL
+                {translate("rewards.viewAll")}
               </Text>
             </TouchableOpacity>
           </View>
@@ -112,7 +122,7 @@ export default function UserStreakCard({
         </View>
 
         <Text className="text-[10px] font-poppins-medium text-neutral-400 mt-1">
-          {clampedCount}/{targetCount} DAYS THIS WEEK
+          {translate("rewards.daysThisWeek", { current: clampedCount, target: targetCount })}
         </Text>
 
         <View className="flex-row flex-wrap justify-between mt-2.5 gap-y-2 px-1">
@@ -138,10 +148,10 @@ export default function UserStreakCard({
                   style={
                     isCurrent
                       ? {
-                          borderWidth: 1.5,
-                          borderColor: "#FF6600",
-                          borderStyle: "dashed",
-                        }
+                        borderWidth: 1.5,
+                        borderColor: "#FF6600",
+                        borderStyle: "dashed",
+                      }
                       : undefined
                   }
                 >
