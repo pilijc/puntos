@@ -15,9 +15,9 @@ import { Feather, Ionicons } from "@expo/vector-icons";
 import { loginService, signInWithGoogleLoginService } from "@/services/auth-service";
 import { useTranslation, Trans } from "react-i18next";
 import OnboardingLayout from "../(onboarding)/_layout";
-import { Modal, type ModalButton} from "@/components/modal";
+import { Modal, type ModalButton } from "@/components/modal";
 import { supabase } from "@/supabase/supabase";
- 
+
 
 
 export default function Login() {
@@ -29,11 +29,11 @@ export default function Login() {
     email: "",
     password: "",
   });
-    const [modal, setModal] = useState<{
-      title: string;
-      message: string;
-      buttons: ModalButton[];
-    } | null>(null);
+  const [modal, setModal] = useState<{
+    title: string;
+    message: string;
+    buttons: ModalButton[];
+  } | null>(null);
 
   const handleLogin = async () => {
     const nextErrors = { ...errors };
@@ -57,27 +57,27 @@ export default function Login() {
       setLoading(true);
       const data = await loginService(trimmedEmail, password);
       console.log("login component", data);
-       if (!data.success) {
-      //  Alert.alert("Login Failed", data.message);
+      if (!data.success) {
+        //  Alert.alert("Login Failed", data.message);
         setModal({
-        title: "You are not assigned to a store",
-        message: data.message,
-        buttons: [
-          {
-            label: "OK",
-            variant: "secondary",
-            onPress: async () => {
-               await supabase.auth.signOut();
-              setModal(null);
-              
-             }
-          },
-        ],
-      });
-        return; 
-  }
+          title: "You are not assigned to a store",
+          message: data.message,
+          buttons: [
+            {
+              label: "OK",
+              variant: "secondary",
+              onPress: async () => {
+                await supabase.auth.signOut();
+                setModal(null);
+
+              }
+            },
+          ],
+        });
+        return;
+      }
       router.replace(data.homeRoute);
-    } catch (error: any) {  
+    } catch (error: any) {
       console.log("error login component", error);
       let message = error?.msg ?? error?.message;
 
@@ -109,13 +109,13 @@ export default function Login() {
 
   return (
     <SafeAreaView className="flex-1 bg-background dark:bg-darkBackground">
-        <Modal
-      visible={!!modal}
-      onClose={() => setModal(null)}
-      title={modal?.title ?? ""}
-      message={modal?.message}
-      buttons={modal?.buttons}
-    />
+      <Modal
+        visible={!!modal}
+        onClose={() => setModal(null)}
+        title={modal?.title ?? ""}
+        message={modal?.message}
+        buttons={modal?.buttons}
+      />
       <View className="flex-row items-center justify-center shadow-xs p-4 bg">
         <TouchableOpacity
           onPress={() => router.replace("/welcome")}

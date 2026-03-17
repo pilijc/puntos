@@ -190,7 +190,7 @@ export default function Rewards() {
                         />
                       ) : (
                         <Text className="text-[10px] text-primary/80 font-poppins">
-                          LOGO
+                          {translate("rewards.store").toUpperCase()}
                         </Text>
                       )}
                     </View>
