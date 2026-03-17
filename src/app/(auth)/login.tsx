@@ -9,12 +9,16 @@ import {
 } from "@/tw";
 import { router } from "expo-router";
 import React, { useState } from "react";
-import { ActivityIndicator, KeyboardAvoidingView, Platform } from "react-native";
+import { ActivityIndicator, Alert, KeyboardAvoidingView, Platform } from "react-native";
 import { useAuthStore } from "../../store/auth-store";
 import { Feather, Ionicons } from "@expo/vector-icons";
 import { loginService, signInWithGoogleLoginService } from "@/services/auth-service";
 import { useTranslation, Trans } from "react-i18next";
 import OnboardingLayout from "../(onboarding)/_layout";
+import { Modal, type ModalButton } from "@/components/modal";
+import { supabase } from "@/supabase/supabase";
+
+
 
 export default function Login() {
   const { name, email, password, setEmail, setPassword, showPassword, setShowPassword } = useAuthStore();
@@ -25,6 +29,11 @@ export default function Login() {
     email: "",
     password: "",
   });
+  const [modal, setModal] = useState<{
+    title: string;
+    message: string;
+    buttons: ModalButton[];
+  } | null>(null);
 
   const handleLogin = async () => {
     const nextErrors = { ...errors };
@@ -48,7 +57,26 @@ export default function Login() {
       setLoading(true);
       const data = await loginService(trimmedEmail, password);
       console.log("login component", data);
-      router.replace(data.homeRoute ?? "/(user)");
+      if (!data.success) {
+        //  Alert.alert("Login Failed", data.message);
+        setModal({
+          title: "You are not assigned to a store",
+          message: data.message,
+          buttons: [
+            {
+              label: "OK",
+              variant: "secondary",
+              onPress: async () => {
+                await supabase.auth.signOut();
+                setModal(null);
+
+              }
+            },
+          ],
+        });
+        return;
+      }
+      router.replace(data.homeRoute);
     } catch (error: any) {
       console.log("error login component", error);
       let message = error?.msg ?? error?.message;
@@ -81,7 +109,14 @@ export default function Login() {
 
   return (
     <SafeAreaView className="flex-1 bg-background dark:bg-darkBackground">
-      <View className="flex-row items-center justify-center shadow-xs p-4 bg-background dark:bg-darkBackground">
+      <Modal
+        visible={!!modal}
+        onClose={() => setModal(null)}
+        title={modal?.title ?? ""}
+        message={modal?.message}
+        buttons={modal?.buttons}
+      />
+      <View className="flex-row items-center justify-center shadow-xs p-4 bg">
         <TouchableOpacity
           onPress={() => router.replace("/welcome")}
           hitSlop={10}
@@ -131,6 +166,7 @@ export default function Login() {
                     className="border border-neutral-300 dark:border-darkBorder bg-neutral-50 dark:bg-darkBackgroundMuted rounded-xl px-4 py-4 font-poppins text-neutral-900 dark:text-darkTextPrimary"
                     onChangeText={setEmail}
                     value={email}
+                    autoFocus
                   />
                 </View>
 

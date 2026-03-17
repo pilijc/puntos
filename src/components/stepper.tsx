@@ -255,13 +255,14 @@ export function TermsStep({ accepted, onToggle, error }: TermsStepProps) {
           className={`w-5 h-5 rounded border-2 ${accepted ? 'border-primary bg-primary' : 'border-neutral-300 dark:border-neutral-600'}`}
         >
           {accepted && (
-            <Ionicons name="checkmark" size={16} color="white" />
+            <Ionicons name="checkmark" size={12} color="white" />
           )}
         </View>
         <Text className="font-poppins text-neutral-700 dark:text-darkTextSecondary flex-1">
           {translate("onboarding.signup.stepper.label.termsAgree")}
         </Text>
       </Pressable>
+
       {error && (
         <Text className="text-red-500 dark:text-red-400 text-sm font-poppins rounded-xl p-4 text-center bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-900/30">
           {error}

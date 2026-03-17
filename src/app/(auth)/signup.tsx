@@ -14,7 +14,8 @@ import signUpService, { GoogleSignInCancelledError } from "../../services/auth-s
 import { signUpWithGoogleService, isEmailTaken } from "@/services/auth-service";
 import { NameStep, EmailStep, PasswordStep, TermsStep, RoleStep, StepHeader } from "../../components/stepper";
 import { Ionicons } from "@expo/vector-icons";
-import AsyncStorage from '@react-native-async-storage/async-storage';
+
+import { useTranslation, Trans } from "react-i18next";
 
 import { useTranslation, Trans } from "react-i18next";
 

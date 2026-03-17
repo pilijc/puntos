@@ -7,17 +7,50 @@ import { supabase } from "@/supabase/supabase";
 import { getRoleTypeForUser } from "@/services/access-service";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import QRRoundedButton from "@/components/qr/qr-rounded";
+import {getCurrentUserIsActive} from "@/services/operator-service";
 
 export default function FrontDeskLayout() {
     const router = useRouter();
     const insets = useSafeAreaInsets();
+    const [isActive, setIsActive] = React.useState<boolean>(false);
 
     useEffect(() => {
+        const { data: { subscription } } =
+        supabase.auth.onAuthStateChange(async (event, session) => {
+                if (!session) {
+                    router.replace("/(auth)/login");
+                    return;
+                }
+
+                const user = session.user;
+                if (!user) return;
+
+                try {
+                    const activeStatus = await getCurrentUserIsActive();
+                    setIsActive(activeStatus);
+
+                    const roleType = await getRoleTypeForUser(user.id);
+
+                    if (roleType !== "front_desk") {
+                    if (roleType === "super_admin") {
+                        router.replace("/(super_admin)");
+                    } else {
+                        router.replace("/(user)");
+                    }
+                    }
+                } catch {
+                    router.replace("/(user)");
+                }
+                }
+            );
+
+
         const verifyAccess = async () => {
             try {
                 const { data: { user } } = await supabase.auth.getUser();
                 if (!user) return;
-
+                const activeStatus = await getCurrentUserIsActive();
+                setIsActive(activeStatus);
                 const roleType = await getRoleTypeForUser(user.id);
                 if (roleType !== "front_desk") {
                     if (roleType === "super_admin") {
@@ -31,7 +64,10 @@ export default function FrontDeskLayout() {
             }
         };
         verifyAccess();
-    }, [router]);
+         return () => {
+            subscription?.unsubscribe();
+        };
+        }, []);
 
     return (
         <Tabs
@@ -68,9 +104,9 @@ export default function FrontDeskLayout() {
                 options={{
                     title: "",
                     tabBarIcon: () => null,
-                    tabBarButton: (props: any) => (
+                    tabBarButton: (props: any) => isActive ?(
                         <QRRoundedButton onPress={props.onPress} bottomInset={insets.bottom} />
-                    ),
+                    ): null,
                 }}
             />
             <Tabs.Screen
