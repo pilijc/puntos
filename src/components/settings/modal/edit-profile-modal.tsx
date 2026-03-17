@@ -225,10 +225,10 @@ export default function EditProfileModal({ visible, onClose }: Props) {
                 visible={errorVisible}
                 onClose={() => setErrorVisible(false)}
                 title={translate("error.title")}
-                message="Failed to save profile. Please try again."
+                message={translate("settings.profile.error.failed")}
                 buttons={[
                     {
-                        label: "OK",
+                        label: translate("label.confirm"),
                         variant: "danger",
                         onPress: () => setErrorVisible(false),
                     }

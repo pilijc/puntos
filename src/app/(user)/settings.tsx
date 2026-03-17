@@ -7,15 +7,15 @@ import { getCurrentLocation } from "@/services/location-service";
 import { useProfile } from "@/hooks/use-profile";
  
 // Components
-import EditProfileModal from "@/components/settings/modal/EditProfileModal";
-import { LogoutButton } from "@/components/settings/LogoutButton";
-import { UserProfileCard } from "@/components/settings/card/UserProfileCard";
-import { SecurityCard } from "@/components/settings/card/SecurityCard";
-import { LanguageCard } from "@/components/settings/card/LanguageCard";
-import { AppearanceCard } from "@/components/settings/card/AppearanceCard";
-import { NotificationCard } from "@/components/settings/card/NotificationCard";
-import { LocationCard } from "@/components/settings/card/LocationCard";
-import {CustomTabBarButton} from "@/components/qr/qr-button";
+import EditProfileModal from "@/components/settings/modal/edit-profile-modal";
+import { LogoutButton } from "@/components/settings/logout-button";
+import { UserProfileCard } from "@/components/settings/card/user-profile-card";
+import { SecurityCard } from "@/components/settings/card/security-card";
+import { LanguageCard } from "@/components/settings/card/language-card";
+import { AppearanceCard } from "@/components/settings/card/appearance-card";
+import { NotificationCard } from "@/components/settings/card/notification-card";
+import { LocationCard } from "@/components/settings/card/location-card";
+import { CustomTabBarButton } from "@/components/qr/qr-button";
 import { useTranslation } from "react-i18next";
 
 // Services
@@ -84,16 +84,16 @@ export default function UserSettings() {
         <Text className="text-xl font-poppins-bold text-neutral-900 dark:text-darkTextPrimary">
           {translate('settings.title')}
         </Text>
-          <TouchableOpacity
-            onPress={() => router.push("/qr")}
-            className="p-2"
-          >
-            <Ionicons
-              name="qr-code-outline"
-              size={20}
-              color="#FF6600"
-            />
-          </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => router.push("/qr")}
+          className="p-2"
+        >
+          <Ionicons
+            name="qr-code-outline"
+            size={20}
+            color="#FF6600"
+          />
+        </TouchableOpacity>
       </View>
 
       {user && (

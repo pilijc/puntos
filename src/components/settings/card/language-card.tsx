@@ -37,7 +37,7 @@ export const LanguageCard = () => {
                         {translate('settings.account.language.title')}
                     </Text>
                     <Text className="text-xs font-poppins-regular text-neutral-400 dark:text-darkTextMuted">
-                        {language === 'ja' ? translate('settings.account.language.jp') : translate('settings.account.language.en')}
+                        {language === 'ja' ? "日本語" : "English"}
                     </Text>
                 </View>
 
@@ -60,7 +60,7 @@ export const LanguageCard = () => {
                         activeOpacity={0.6}
                     >
                         <Text className={`text-sm font-poppins-medium ${language === 'en' ? 'text-primary' : 'text-neutral-600 dark:text-darkTextSecondary'}`}>
-                            {translate('settings.account.language.en')}
+                            English
                         </Text>
                         {language === 'en' && (
                             <Ionicons name="checkmark" size={18} color="#FF6600" />
@@ -77,7 +77,7 @@ export const LanguageCard = () => {
                         activeOpacity={0.6}
                     >
                         <Text className={`text-sm font-poppins-medium ${language === 'ja' ? 'text-primary' : 'text-neutral-600 dark:text-darkTextSecondary'}`}>
-                            {translate('settings.account.language.jp')}
+                            日本語
                         </Text>
                         {language === 'ja' && (
                             <Ionicons name="checkmark" size={18} color="#FF6600" />

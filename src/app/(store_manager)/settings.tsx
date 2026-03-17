@@ -8,12 +8,12 @@ import { Ionicons } from '@expo/vector-icons';
 import { useProfile } from "@/hooks/use-profile";
 
 // Components
-import EditProfileModal from "@/components/settings/modal/EditProfileModal";
-import { LogoutButton } from "@/components/settings/LogoutButton";
-import { UserProfileCard } from "@/components/settings/card/UserProfileCard";
-import { SecurityCard } from "@/components/settings/card/SecurityCard";
-import { LanguageCard } from "@/components/settings/card/LanguageCard";
-import { AppearanceCard } from "@/components/settings/card/AppearanceCard";
+import EditProfileModal from "@/components/settings/modal/edit-profile-modal";
+import { LogoutButton } from "@/components/settings/logout-button";
+import { UserProfileCard } from "@/components/settings/card/user-profile-card";
+import { SecurityCard } from "@/components/settings/card/security-card";
+import { LanguageCard } from "@/components/settings/card/language-card";
+import { AppearanceCard } from "@/components/settings/card/appearance-card";
 import { useTranslation } from "react-i18next";
 
 export default function StoreManagerSettings() {

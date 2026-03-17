@@ -5,6 +5,7 @@ import { FadeIn, FadeOut, Layout, useAnimatedStyle, withTiming, interpolate } fr
 import { storeLogos } from "@/data/rewards";
 import { Alert } from "react-native";
 import { router } from "expo-router";
+import { useTranslation } from "react-i18next";
 
 interface UserStampLogCardProps {
   stamp: any;
@@ -25,12 +26,13 @@ export default function UserStampLogCard({
   isStampLogOpen,
   onToggleExpand,
 }: UserStampLogCardProps) {
+  const { t: translate } = useTranslation();
 
   const stampReward = stampRewards.find((s) => s.store_id === stamp.store_id);
   const activeProgramReward = activeStampProgramRewards.find(
     (program) => program.store_id === Number(stamp.store_id),
   );
-  
+
   const count = stamp.stamps_count ?? stampReward?.current_stamp_count ?? 0;
   const targetCount = Math.max(
     activeProgramReward?.total_stamps ?? stampReward?.target_stamps ?? stamp.target ?? 7,
@@ -40,8 +42,8 @@ export default function UserStampLogCard({
 
   // Compute Nearby Status
   const storeStr = stamp.stores as unknown as { latitude?: number; longitude?: number; name?: string; is_active?: boolean; logo?: string; banner?: string; address?: string };
-  const storeName = storeStr?.name ?? "Store";
-  const storeAddress = storeStr?.address ?? "Unknown Location";
+  const storeName = storeStr?.name ?? translate("rewards.store");
+  const storeAddress = storeStr?.address ?? translate("rewards.unknownLocation");
   const nearby = nearbyStores.some((s) => Number(s.id) === Number(stamp.store_id)) ||
     isStoreNearby(storeStr?.latitude, storeStr?.longitude);
 
@@ -91,7 +93,7 @@ export default function UserStampLogCard({
           <View className="flex-row items-center gap-x-2">
             <MaterialIcons name="stars" size={18} color="#FF6600" />
             <Text className="font-poppins-semibold text-neutral-900 dark:text-white">
-              Stamp Log
+              {translate("rewards.stampLog")}
             </Text>
           </View>
           <View className="flex-row items-center gap-x-3">
@@ -99,7 +101,7 @@ export default function UserStampLogCard({
               <View className="bg-green-100 dark:bg-green-900/30 px-2.5 py-1 rounded-full flex-row items-center gap-x-1">
                 <View className="w-1.5 h-1.5 rounded-full bg-green-500" />
                 <Text className="text-[10px] font-poppins-semibold text-green-700 dark:text-green-400">
-                  Nearby
+                  {translate("rewards.nearby")}
                 </Text>
               </View>
             )}
@@ -118,7 +120,7 @@ export default function UserStampLogCard({
               className="px-2 py-1"
             >
               <Text className="text-primary text-xs font-poppins-semibold">
-                VIEW ALL
+                {translate("rewards.viewAll")}
               </Text>
             </TouchableOpacity>
           </View>
@@ -149,7 +151,7 @@ export default function UserStampLogCard({
         </View>
 
         <Text className="text-[10px] font-poppins-medium text-neutral-400 mt-1">
-          {clampedCount}/{targetCount} COMPLETED
+          {translate("rewards.completed", { current: clampedCount, target: targetCount })}
         </Text>
 
         <View className="flex-row flex-wrap justify-between mt-2.5 gap-y-2">
@@ -208,18 +210,18 @@ export default function UserStampLogCard({
               </View>
               <View className="flex-1 ml-0.5">
                 <Text className="text-[10px] font-poppins-bold text-primary uppercase tracking-[1.2px] mb-0.5">
-                  {clampedCount >= targetCount ? "UNLOCKED!" : "REWARD"}
+                  {clampedCount >= targetCount ? translate("rewards.unlocked") : translate("rewards.reward")}
                 </Text>
                 <Text
                   className="text-sm text-neutral-800 dark:text-neutral-100 font-poppins-bold"
                   numberOfLines={1}
                 >
-                  {activeProgramReward?.reward_title ?? "500 Points"}
+                  {activeProgramReward?.reward_title ?? translate("index.rewardPlaceholder.title")}
                 </Text>
                 <Text className="text-[10px] text-neutral-400 font-poppins mt-0.5" numberOfLines={1}>
                   {clampedCount >= targetCount
-                    ? "Claim your points now!"
-                    : `${targetCount - clampedCount} stamps more to unlock`}
+                    ? translate("rewards.claimPointsNow")
+                    : translate("rewards.stampsMoreToUnlock", { count: targetCount - clampedCount })}
                 </Text>
               </View>
             </View>
@@ -229,17 +231,17 @@ export default function UserStampLogCard({
               disabled={clampedCount < targetCount}
               onPress={() => {
                 Alert.alert(
-                  "Claim Reward",
-                  `Ready to claim "${activeProgramReward?.reward_title ?? 'Points'}"? Please present this to the store staff.`,
+                  translate("rewards.messages.notice"),
+                  translate("rewards.messages.claimConfirm", { rewardTitle: activeProgramReward?.reward_title ?? translate("rewards.points") }),
                   [
-                    { text: "Cancel", style: "cancel" },
-                    { text: "Claim Now", onPress: () => Alert.alert("Success", "Reward claimed! Please check your history.") }
+                    { text: translate("label.cancel"), style: "cancel" },
+                    { text: translate("rewards.claim"), onPress: () => Alert.alert(translate("rewards.messages.success"), translate("rewards.messages.claimSuccess")) }
                   ]
                 );
               }}
             >
               <Text className={`text-[11px] font-poppins-bold tracking-wider ${clampedCount >= targetCount ? "text-white" : "text-neutral-400"}`}>
-                CLAIM
+                {translate("rewards.claim")}
               </Text>
             </TouchableOpacity>
           </View>
