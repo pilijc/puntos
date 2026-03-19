@@ -10,7 +10,7 @@ import { getStampStats } from "@/utils/store-helpers";
 
 export default function StoreStreaks() {
   const { t: translate } = useTranslation();
-  const { stamps, isLoading } = useStamps();
+  const { stamps } = useStamps();
   const { activeStamps, highestStampCount } = getStampStats(stamps);
 
   return (
@@ -69,13 +69,7 @@ export default function StoreStreaks() {
       </View>
 
       <View className="gap-y-3">
-        {isLoading ? (
-          <View className="items-center justify-center p-10 py-16 text-center">
-            <Text className="text-neutral-500 font-poppins">
-              {translate("rewards.streaks.loading")}
-            </Text>
-          </View>
-        ) : activeStamps === 0 ? (
+        {activeStamps === 0 ? (
           <View className="bg-white dark:bg-neutral-800 rounded-3xl p-8 items-center">
             <MaterialIcons name="stars" size={40} color="#d1d5db" className="mb-2" />
             <Text className="text-neutral-500 font-poppins-semibold text-base mt-2">
