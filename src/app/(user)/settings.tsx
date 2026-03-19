@@ -79,7 +79,7 @@ export default function UserSettings() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-background dark:bg-darkBackground p-4">
+    <SafeAreaView className="flex-1 bg-muted-white dark:bg-darkBackground p-4">
       <View className="flex-row justify-between items-center mb-6">
         <Text className="text-xl font-poppins-bold text-neutral-900 dark:text-darkTextPrimary">
           {translate('settings.title')}

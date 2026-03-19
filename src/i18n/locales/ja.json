@@ -5,10 +5,11 @@
         "save": "保存",
         "delete": "削除",
         "enabled": "有効",
-        "disabled": "無効"
-    },
-    "error": {
-        "title": "エラー"
+        "disabled": "無効",
+        "error": "エラー",
+        "allow": "許可",
+        "ok": "OK",
+        "tryAgain": "再試行"
     },
     "onboarding": {
         "welcome": "<brand>{{appName}}</brand>へようこそ",
@@ -42,6 +43,59 @@
                 "passwordRequired": "パスワードは必須です。",
                 "emailValid": "有効なメールアドレスを入力してください。",
                 "invalidLogin": "ログイン情報が正しくありません"
+            }
+        },
+        "forgotPassword": {
+            "title": "パスワードをお忘れですか",
+            "subtitle": "メールアドレスを入力してください。パスワードリセット用のリンクをお送りします。",
+            "label": {
+                "email": "メールアドレス"
+            },
+            "input": {
+                "email": "example@domain.com"
+            },
+            "button": "リセットリンクを送信",
+            "sending": "送信中...",
+            "remembered": "パスワードを思い出しましたか？",
+            "backToLogin": "ログインに戻る",
+            "error": {
+                "emailRequired": "メールアドレスが必要です",
+                "emailRequiredDetail": "登録に使用したメールアドレスを入力してください。",
+                "resetFailed": "リセット失敗",
+                "somethingWentWrong": "エラーが発生しました"
+            },
+            "success": {
+                "checkEmail": "メールを確認してください",
+                "checkEmailDetail": "そのメールアドレスにアカウントが存在する場合、パスワードリセットリンクをお送りしました。"
+            }
+        },
+        "resetPassword": {
+            "title": "パスワードをリセット",
+            "subtitle": "アカウントの新しいパスワードを設定してください。",
+            "label": {
+                "newPassword": "新しいパスワード",
+                "confirmPassword": "新しいパスワード（確認用）"
+            },
+            "input": {
+                "newPassword": "新しいパスワードを入力",
+                "confirmPassword": "新しいパスワードを再入力"
+            },
+            "button": "パスワードを更新",
+            "saving": "保存中...",
+            "backToLogin": "ログインに戻る",
+            "error": {
+                "missingFields": "入力が不足しています",
+                "missingFieldsDetail": "新しいパスワードを入力して確認してください。",
+                "passwordMismatch": "パスワードが一致しません",
+                "passwordMismatchDetail": "両方のパスワードが一致していることを確認してください。",
+                "weakPassword": "パスワードが短すぎます",
+                "weakPasswordDetail": "パスワードは8文字以上で入力してください。",
+                "resetFailed": "リセット失敗",
+                "somethingWentWrong": "エラーが発生しました"
+            },
+            "success": {
+                "passwordUpdated": "パスワードを更新しました",
+                "passwordUpdatedDetail": "パスワードがリセットされました。再度ログインしてください。"
             }
         },
         "signup": {
@@ -113,170 +167,216 @@
         "discover": "発見",
         "store": "ストア",
         "history": "履歴",
-        "settings": "設定"
+        "settings": "設定",
+        "transactions": "取引履歴"
     },
-    "index": {
-        "loadingProfile": "プロフィールを読み込み中...",
-        "searchBar": "場所を検索",
-        "nearbyStores": "近くの店舗",
-        "discoverMore": "他の店舗を探す",
-        "backToList": "店舗一覧に戻る",
-        "rewards": "報酬",
-        "metersAway": "{{meters}}m 先",
-        "storeHoursPlaceholder": "営業時間 10:00 - 22:00",
-        "rewardPlaceholder": {
-            "title": "コーヒー無料券",
-            "description": "お好きなドリンクを1杯無料",
-            "points": "{{points}} pts"
-        },
-        "geofence": {
-            "singleTitle": "{{name}} が近くにあります",
-            "singleBody": "{{name}} に行って報酬をゲットしましょう！",
-            "multiTitle": "近くに {{count}} 件の店舗があります",
-            "multiBody": "近くの店舗に行って報酬をゲットしましょう！"
-        }
-    },
-    "rewards": {
-        "title": "報酬",
-        "viewStores": "店舗を見る",
-        "discoverPartners": "パートナーを探す",
-        "distanceMeters": "{{meters}} m 先",
-        "store": "店舗",
-        "unknownLocation": "場所不明",
-        "range": {
-            "multiple": "{{count}}件の店舗が近くにあります！",
-            "single": "店舗が近くにあります！",
-            "empty": "近くに店舗がありません",
-            "promptNearby": "購入してスタンプを獲得しましょう",
-            "promptFar": "他の店舗を探す"
-        },
-        "explore": "探す",
-        "stampLog": "スタンプカード",
-        "streakLog": "連続記録",
-        "nearby": "近く",
-        "viewAll": "すべて見る",
-        "daysThisWeek": "今週の記録: {{current}}/{{target}}",
-        "completed": "{{current}}/{{target}} 完了",
-        "noActiveStamps": "有効なスタンプがありません",
-        "visitStartStamps": "パートナーストアを訪れてスタンプを集めましょう！",
-        "upcomingEvents": {
-            "title": "イベントをお見逃しなく！",
-            "subtitle": "現在有効な報酬はありません。スタンプや連続記録を後でもう一度チェックしてください！"
-        },
-        "rewardCatalog": "報酬カタログ",
-        "points": "ポイント",
-        "unlocked": "ロック解除！",
-        "reward": "報酬",
-        "claim": "獲得",
-        "claimPointsNow": "ポイントを獲得しましょう！",
-        "stampsMoreToUnlock": "あと{{count}}スタンプでロック解除",
-        "filters": {
-            "popular": "人気",
-            "points": "ポイント",
-            "newest": "新着"
-        },
-        "buttons": {
-            "stamp": "スタンプ",
-            "stamped": "獲得済"
-        },
-        "messages": {
-            "signInToStamp": "スタンプを押すにはログインが必要です。",
-            "stampSuccess": "スタンプの獲得に成功しました！",
-            "alreadyStamped": "今日は既にこの店舗でスタンプを獲得しています。",
-            "stampDisabled": "現在、この店舗ではスタンプが無効になっています。",
-            "stampFailed": "スタンプの獲得に失敗しました。もう一度お試しください。",
-            "error": "エラー",
-            "success": "成功",
-            "notice": "お知らせ",
-            "somethingWentWrong": "エラーが発生しました。",
-            "claimConfirm": "「{{rewardTitle}}」を獲得しますか？ 店舗スタッフにこの画面を提示してください。",
-            "claimSuccess": "報酬を獲得しました！ 履歴をご確認ください。"
-        },
-        "footer": "PUNTOS 提供",
-        "days": {
-            "mon": "月",
-            "tue": "火",
-            "wed": "水",
-            "thu": "木",
-            "fri": "金",
-            "sat": "土",
-            "sun": "日"
-        },
-        "storesList": {
-            "title": "店舗",
-            "searchPlaceholder": "店舗を検索...",
-            "loading": "店舗情報を読み込み中...",
-            "noMatching": "一致する店舗がありません",
-            "noJoined": "参加している店舗がありません",
-            "noMatchingDetail": "「{{query}}」に一致する店舗は見つかりませんでした",
-            "noJoinedDetail": "店舗を訪れてスタンプを獲得すると、ここに表示され、報酬を獲得できるようになります！",
-            "nearbySection": "近くの店舗",
-            "myStoresSection": "マイストア",
-            "nearbyBadge": "近く",
-            "stampProgress": "スタンプの進捗"
-        },
-        "streaks": {
-            "title": "すべてのスタンプ",
-            "lifetime": "通算スタンプ数",
-            "status": "スタンプコレクター",
-            "activeCards": "アクティブなカード",
-            "highestStamps": "最多スタンプ数",
-            "stampsCount": "{{count}} スタンプ",
-            "promoMessage": "スタンプを貯め続けてボーナス報酬をアンロックしましょう。",
-            "weeklyQuest": "週間クエスト",
-            "loading": "スタンプ情報を読み込み中...",
-            "notFound": "有効なスタンプが見つかりません",
-            "notFoundDetail": "まだスタンプを獲得していません。パートナーストアを訪れてスキャンを始めましょう！",
-            "activeStore": "アクティブパートナーストア",
-            "inactiveStore": "非アクティブ",
-            "bonusPts": "+{{count}} ボーナスポイント",
-            "percentComplete": "{{percent}}% 完了",
-            "reachingTarget": "目標達成までスタンプを貯めましょう！",
-            "tiers": {
-                "bronze": "ブロンズ",
-                "silver": "シルバー",
-                "gold": "ゴールド"
+    "user": {
+        "discover": {
+            "loadingProfile": "プロフィールを読み込み中...",
+            "searchBar": "場所を検索",
+            "nearbyStores": "近くの店舗",
+            "discoverMore": "他の店舗を探す",
+            "backToList": "店舗一覧に戻る",
+            "rewards": "報酬",
+            "metersAway": "{{meters}}m 先",
+            "storeHoursPlaceholder": "営業時間 10:00 - 22:00",
+            "rewardPlaceholder": {
+                "title": "コーヒー無料券",
+                "description": "お好きなドリンクを1杯無料",
+                "points": "{{points}} pts"
+            },
+            "geofence": {
+                "singleTitle": "{{name}} が近くにあります",
+                "singleBody": "{{name}} に行って報酬をゲットしましょう！",
+                "multiTitle": "近くに {{count}} 件の店舗があります",
+                "multiBody": "近くの店舗に行って報酬をゲットしましょう！"
             }
         },
-        "storeDetail": {
-            "title": "店舗の報酬",
-            "locationFallback": "場所",
-            "nearbyMessage": "{{name}} の近くにいます",
-            "stampNowPrompt": "今すぐスキャンしてスタンプを獲得しましょう！",
-            "unlockedSection": "獲得済みの報酬",
-            "freeReward": "無料報酬",
-            "readyToClaim": "獲得可能です！",
-            "redeemableSection": "交換可能な報酬",
-            "itemsCount": "{{count}} アイテム",
-            "noRewards": "まだ利用可能な報酬はありません。"
+        "rewards": {
+            "title": "報酬",
+            "viewStores": "店舗を見る",
+            "discoverPartners": "パートナーを探す",
+            "distanceMeters": "{{meters}} m 先",
+            "store": "店舗",
+            "unknownLocation": "場所不明",
+            "range": {
+                "multiple": "{{count}}件の店舗が近くにあります！",
+                "single": "店舗が近くにあります！",
+                "empty": "近くに店舗がありません",
+                "promptNearby": "購入してスタンプを獲得しましょう",
+                "promptFar": "他の店舗を探す"
+            },
+            "explore": "探す",
+            "stampLog": "スタンプカード",
+            "streakLog": "連続記録",
+            "nearby": "近く",
+            "viewAll": "すべて見る",
+            "daysThisWeek": "今週の記録: {{current}}/{{target}}",
+            "completed": "{{current}}/{{target}} 完了",
+            "noActiveStamps": "有効なスタンプがありません",
+            "visitStartStamps": "パートナーストアを訪れてスタンプを集めましょう！",
+            "upcomingEvents": {
+                "title": "イベントをお見逃しなく！",
+                "subtitle": "現在有効な報酬はありません。スタンプや連続記録を後でもう一度チェックしてください！"
+            },
+            "rewardCatalog": "報酬カタログ",
+            "points": "ポイント",
+            "unlocked": "ロック解除！",
+            "reward": "報酬",
+            "claim": "獲得",
+            "claimPointsNow": "ポイントを獲得しましょう！",
+            "stampsMoreToUnlock": "あと{{count}}スタンプでロック解除",
+            "filters": {
+                "popular": "人気",
+                "points": "ポイント",
+                "newest": "新着"
+            },
+            "buttons": {
+                "stamp": "スタンプ",
+                "stamped": "獲得済"
+            },
+            "messages": {
+                "signInToStamp": "スタンプを押すにはログインが必要です。",
+                "stampSuccess": "スタンプの獲得に成功しました！",
+                "alreadyStamped": "今日は既にこの店舗でスタンプを獲得しています。",
+                "stampDisabled": "現在、この店舗ではスタンプが無効になっています。",
+                "stampFailed": "スタンプの獲得に失敗しました。もう一度お試しください。",
+                "error": "エラー",
+                "success": "成功",
+                "notice": "お知らせ",
+                "somethingWentWrong": "エラーが発生しました。",
+                "claimConfirm": "「{{rewardTitle}}」を獲得しますか？ 店舗スタッフにこの画面を提示してください。",
+                "claimSuccess": "報酬を獲得しました！ 履歴をご確認ください。"
+            },
+            "footer": "PUNTOS 提供",
+            "days": {
+                "mon": "月",
+                "tue": "火",
+                "wed": "水",
+                "thu": "木",
+                "fri": "金",
+                "sat": "土",
+                "sun": "日"
+            },
+            "storesList": {
+                "title": "店舗",
+                "searchPlaceholder": "店舗を検索...",
+                "loading": "店舗情報を読み込み中...",
+                "noMatching": "一致する店舗がありません",
+                "noJoined": "参加している店舗がありません",
+                "noMatchingDetail": "「{{query}}」に一致する店舗は見つかりませんでした",
+                "noJoinedDetail": "店舗を訪れてスタンプを獲得すると、ここに表示され、報酬を獲得できるようになります！",
+                "nearbySection": "近くの店舗",
+                "myStoresSection": "マイストア",
+                "nearbyBadge": "近く",
+                "stampProgress": "スタンプの進捗"
+            },
+            "streaks": {
+                "title": "すべてのスタンプ",
+                "lifetime": "通算スタンプ数",
+                "status": "スタンプコレクター",
+                "activeCards": "アクティブなカード",
+                "highestStamps": "最多スタンプ数",
+                "stampsCount": "{{count}} スタンプ",
+                "promoMessage": "スタンプを貯め続けてボーナス報酬をアンロックしましょう。",
+                "weeklyQuest": "週間クエスト",
+                "loading": "スタンプ情報を読み込み中...",
+                "notFound": "有効なスタンプが見つかりません",
+                "notFoundDetail": "まだスタンプを獲得していません。パートナーストアを訪れてスキャンを始めましょう！",
+                "activeStore": "アクティブパートナーストア",
+                "inactiveStore": "非アクティブ",
+                "bonusPts": "+{{count}} ボーナスポイント",
+                "percentComplete": "{{percent}}% 完了",
+                "reachingTarget": "目標達成までスタンプを貯めましょう！",
+                "tiers": {
+                    "bronze": "ブロンズ",
+                    "silver": "シルバー",
+                    "gold": "ゴールド"
+                }
+            },
+            "storeDetail": {
+                "title": "店舗の報酬",
+                "locationFallback": "場所",
+                "nearbyMessage": "{{name}} の近くにいます",
+                "stampNowPrompt": "今すぐスキャンしてスタンプを獲得しましょう！",
+                "unlockedSection": "獲得済みの報酬",
+                "freeReward": "無料報酬",
+                "readyToClaim": "獲得可能です！",
+                "redeemableSection": "交換可能な報酬",
+                "itemsCount": "{{count}} アイテム",
+                "noRewards": "まだ利用可能な報酬はありません。"
+            },
+            "rewardCard": {
+                "pointsSuffix": "ポイント",
+                "redeem": "交換",
+                "insufficient": "不足"
+            }
         },
-        "rewardCard": {
-            "pointsSuffix": "ポイント",
-            "redeem": "交換",
-            "insufficient": "不足"
+        "activity": {
+            "title": "アクティビティ",
+            "unclaimed": "未受取",
+            "searchPlaceholder": "履歴を検索...",
+            "month": "{{month}}",
+            "filter": {
+                "all": "すべて",
+                "earned": "獲得",
+                "claimed": "使用済み"
+            },
+            "loading": "取引履歴を読み込み中...",
+            "empty": "取引が見つかりません",
+            "sections": {
+                "today": "今日",
+                "yesterday": "昨日"
+            },
+            "subtitle": {
+                "purchasePoints": "購入ポイント"
+            },
+            "unknownStore": "不明な店舗",
+            "footer": "PUNTOS 提供"
         }
     },
-    "activity": {
-        "title": "アクティビティ",
-        "unclaimed": "未受取",
-        "searchPlaceholder": "履歴を検索...",
-        "month": "{{month}}",
-        "filter": {
-            "all": "すべて",
-            "earned": "獲得",
-            "claimed": "使用済み"
+    "frontdesk": {
+        "transactionHistory": {
+            "totalPointsToday": "本日の付与ポイント合計",
+            "viewAllTransactions": "すべての取引を表示",
+            "viewMore": "もっと見る"
         },
-        "loading": "取引履歴を読み込み中...",
-        "empty": "取引が見つかりません",
-        "sections": {
-            "today": "今日",
-            "yesterday": "昨日"
-        },
-        "subtitle": {
-            "purchasePoints": "購入ポイント"
-        },
-        "unknownStore": "不明な店舗",
-        "footer": "PUNTOS 提供"
+        "transaction": {
+            "transactionModal": {
+                "title": "購入金額を入力",
+                "description": "お客様の購入金額を入力すると、付与ポイントが計算されます。"
+            },
+            "title": "QRコードをスキャン",
+            "store": "現在の店舗",
+            "scan": {
+                "title": "スキャン準備完了",
+                "description": "購入金額を入力して、QRコードのスキャンを開始してください"
+            },
+            "recent": {
+                "title": "最近の取引",
+                "view": "すべて表示",
+                "empty": "取引はまだありません"
+            },
+            "camera": {
+                "title": "枠内にQRコードを合わせてください",
+                "description": "スキャナーがQRコードを自動で検出して処理します",
+                "permission": {
+                    "title": "カメラアクセスが必要です",
+                    "description": "QRコードをスキャンしてお客様にポイントを付与するため、カメラの使用を許可してください"
+                }
+            },
+            "error": {
+                "qr": {
+                    "title": "QRコードの読み取りに失敗しました",
+                    "description": "QRコードの処理に失敗しました。もう一度お試しください。"
+                },
+                "amount": {
+                    "invalid": "金額が正しくありません",
+                    "lessThanZero": "購入金額は0より大きい金額を入力してください。"
+                },
+                "unknown": "問題が発生しました。もう一度お試しください。"
+            }
+        }
     },
     "settings": {
         "title": "設定",

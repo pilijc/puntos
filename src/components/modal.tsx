@@ -93,7 +93,7 @@ export function Modal({
         >
           <View className="flex-row items-start justify-between px-5 pt-5 pb-3">
             <View className="flex-1 pr-3">
-              <Text className="text-lg font-poppins-bold text-slate-900 dark:text-slate-100">
+              <Text className="text-lg font-poppins-bold text-textPrimary dark:text-darkTextPrimary">
                 {title}
               </Text>
             </View>

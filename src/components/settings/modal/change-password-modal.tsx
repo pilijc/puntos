@@ -33,15 +33,15 @@ export default function ChangePasswordModal({ visible, onClose }: Props) {
 
     const handleConfirm = async () => {
         if (!currentPassword || !newPassword || !repeatNewPassword) {
-            Alert.alert(translate("error.title"), translate("settings.account.security.changePassword.error.missingFields"));
+            Alert.alert(translate("label.error"), translate("settings.account.security.changePassword.error.missingFields"));
             return;
         }
         if (newPassword !== repeatNewPassword) {
-            Alert.alert(translate("error.title"), translate("settings.account.security.changePassword.error.passwordMatch"));
+            Alert.alert(translate("label.error"), translate("settings.account.security.changePassword.error.passwordMatch"));
             return;
         }
         if (newPassword.length < 8) {
-            Alert.alert(translate("error.title"), translate("settings.account.security.changePassword.error.passwordLimit"));
+            Alert.alert(translate("label.error"), translate("settings.account.security.changePassword.error.passwordLimit"));
             return;
         }
 
@@ -62,7 +62,7 @@ export default function ChangePasswordModal({ visible, onClose }: Props) {
             Alert.alert(translate("label.confirm"), translate("settings.account.security.changePassword.success"));
             handleClose();
         } catch (error: any) {
-            Alert.alert(translate("error.title"), error.message || translate("settings.account.security.changePassword.error.failed"));
+            Alert.alert(translate("label.error"), error.message || translate("settings.account.security.changePassword.error.failed"));
         } finally {
             setLoading(false);
         }
@@ -96,7 +96,9 @@ export default function ChangePasswordModal({ visible, onClose }: Props) {
                 <View className="gap-y-4">
                     {/* Current Password */}
                     <View>
-                        <Text className="text-xs font-poppins-bold text-neutral-600 dark:text-darkTextSecondary mb-1.5 ml-1">{translate("settings.account.security.changePassword.label.current")}</Text>
+                        <Text className="text-xs font-poppins-bold text-neutral-600 dark:text-darkTextSecondary mb-1.5 ml-1">
+                            {translate("settings.account.security.changePassword.label.current")}
+                        </Text>
                         <View className="flex-row items-center bg-neutral-50 dark:bg-darkBackgroundMuted border border-neutral-200 dark:border-darkBorder rounded-xl px-4 py-1">
                             <Ionicons name="lock-closed-outline" size={18} color={isDark ? "#6b7280" : "#9CA3AF"} />
                             <TextInput

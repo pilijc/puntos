@@ -42,8 +42,8 @@ export default function UserStampLogCard({
 
   // Compute Nearby Status
   const storeStr = stamp.stores as unknown as { latitude?: number; longitude?: number; name?: string; is_active?: boolean; logo?: string; banner?: string; address?: string };
-  const storeName = storeStr?.name ?? translate("rewards.store");
-  const storeAddress = storeStr?.address ?? translate("rewards.unknownLocation");
+  const storeName = storeStr?.name ?? translate("user.rewards.store");
+  const storeAddress = storeStr?.address ?? translate("user.rewards.unknownLocation");
   const nearby = nearbyStores.some((s) => Number(s.id) === Number(stamp.store_id)) ||
     isStoreNearby(storeStr?.latitude, storeStr?.longitude);
 
@@ -93,7 +93,7 @@ export default function UserStampLogCard({
           <View className="flex-row items-center gap-x-2">
             <MaterialIcons name="stars" size={18} color="#FF6600" />
             <Text className="font-poppins-semibold text-neutral-900 dark:text-white">
-              {translate("rewards.stampLog")}
+              {translate("user.rewards.stampLog")}
             </Text>
           </View>
           <View className="flex-row items-center gap-x-3">
@@ -101,7 +101,7 @@ export default function UserStampLogCard({
               <View className="bg-green-100 dark:bg-green-900/30 px-2.5 py-1 rounded-full flex-row items-center gap-x-1">
                 <View className="w-1.5 h-1.5 rounded-full bg-green-500" />
                 <Text className="text-[10px] font-poppins-semibold text-green-700 dark:text-green-400">
-                  {translate("rewards.nearby")}
+                  {translate("user.rewards.nearby")}
                 </Text>
               </View>
             )}
@@ -120,7 +120,7 @@ export default function UserStampLogCard({
               className="px-2 py-1"
             >
               <Text className="text-primary text-xs font-poppins-semibold">
-                {translate("rewards.viewAll")}
+                {translate("user.rewards.viewAll")}
               </Text>
             </TouchableOpacity>
           </View>
@@ -151,7 +151,7 @@ export default function UserStampLogCard({
         </View>
 
         <Text className="text-[10px] font-poppins-medium text-neutral-400 mt-1">
-          {translate("rewards.completed", { current: clampedCount, target: targetCount })}
+          {translate("user.rewards.completed", { current: clampedCount, target: targetCount })}
         </Text>
 
         <View className="flex-row flex-wrap justify-between mt-2.5 gap-y-2">
@@ -210,7 +210,7 @@ export default function UserStampLogCard({
               </View>
               <View className="flex-1 ml-0.5">
                 <Text className="text-[10px] font-poppins-bold text-primary uppercase tracking-[1.2px] mb-0.5">
-                  {clampedCount >= targetCount ? translate("rewards.unlocked") : translate("rewards.reward")}
+                  {clampedCount >= targetCount ? translate("user.rewards.unlocked") : translate("user.rewards.reward")}
                 </Text>
                 <Text
                   className="text-sm text-neutral-800 dark:text-neutral-100 font-poppins-bold"
@@ -220,8 +220,8 @@ export default function UserStampLogCard({
                 </Text>
                 <Text className="text-[10px] text-neutral-400 font-poppins mt-0.5" numberOfLines={1}>
                   {clampedCount >= targetCount
-                    ? translate("rewards.claimPointsNow")
-                    : translate("rewards.stampsMoreToUnlock", { count: targetCount - clampedCount })}
+                    ? translate("user.rewards.claimPointsNow")
+                    : translate("user.rewards.stampsMoreToUnlock", { count: targetCount - clampedCount })}
                 </Text>
               </View>
             </View>
@@ -231,17 +231,17 @@ export default function UserStampLogCard({
               disabled={clampedCount < targetCount}
               onPress={() => {
                 Alert.alert(
-                  translate("rewards.messages.notice"),
-                  translate("rewards.messages.claimConfirm", { rewardTitle: activeProgramReward?.reward_title ?? translate("rewards.points") }),
+                  translate("user.rewards.messages.notice"),
+                  translate("user.rewards.messages.claimConfirm", { rewardTitle: activeProgramReward?.reward_title ?? translate("user.rewards.points") }),
                   [
                     { text: translate("label.cancel"), style: "cancel" },
-                    { text: translate("rewards.claim"), onPress: () => Alert.alert(translate("rewards.messages.success"), translate("rewards.messages.claimSuccess")) }
+                    { text: translate("user.rewards.claim"), onPress: () => Alert.alert(translate("user.rewards.messages.success"), translate("user.rewards.messages.claimSuccess")) }
                   ]
                 );
               }}
             >
               <Text className={`text-[11px] font-poppins-bold tracking-wider ${clampedCount >= targetCount ? "text-white" : "text-neutral-400"}`}>
-                {translate("rewards.claim")}
+                {translate("user.rewards.claim")}
               </Text>
             </TouchableOpacity>
           </View>

@@ -18,8 +18,8 @@ export default function UserStreakCard({
 }: UserStreakCardProps) {
   const { t: translate } = useTranslation();
   const storeStr = streak.stores as any;
-  const storeName = storeStr?.name ?? translate("rewards.store");
-  const storeAddress = storeStr?.address ?? translate("rewards.unknownLocation");
+  const storeName = storeStr?.name ?? translate("user.rewards.store");
+  const storeAddress = storeStr?.address ?? translate("user.rewards.unknownLocation");
   const nearby =
     nearbyStores.some((s) => Number(s.id) === Number(streak.store_id)) ||
     isStoreNearby(storeStr?.latitude, storeStr?.longitude);
@@ -28,13 +28,13 @@ export default function UserStreakCard({
   const clampedCount = 3;
   const targetCount = 7;
   const streakDays = [
-    translate("rewards.days.mon"),
-    translate("rewards.days.tue"),
-    translate("rewards.days.wed"),
-    translate("rewards.days.thu"),
-    translate("rewards.days.fri"),
-    translate("rewards.days.sat"),
-    translate("rewards.days.sun")
+    translate("user.rewards.days.mon"),
+    translate("user.rewards.days.tue"),
+    translate("user.rewards.days.wed"),
+    translate("user.rewards.days.thu"),
+    translate("user.rewards.days.fri"),
+    translate("user.rewards.days.sat"),
+    translate("user.rewards.days.sun")
   ];
 
   const days = streakDays.map((label, index) => ({
@@ -71,7 +71,7 @@ export default function UserStreakCard({
               color="#FF6600"
             />
             <Text className="font-poppins-semibold text-neutral-900 dark:text-white">
-              {translate("rewards.streakLog")}
+              {translate("user.rewards.streakLog")}
             </Text>
           </View>
           <View className="flex-row items-center gap-x-3">
@@ -79,13 +79,13 @@ export default function UserStreakCard({
               <View className="bg-green-100 dark:bg-green-900/30 px-2.5 py-1 rounded-full flex-row items-center gap-x-1">
                 <View className="w-1.5 h-1.5 rounded-full bg-green-500" />
                 <Text className="text-[10px] font-poppins-semibold text-green-700 dark:text-green-400">
-                  {translate("rewards.nearby")}
+                  {translate("user.rewards.nearby")}
                 </Text>
               </View>
             )}
             <TouchableOpacity disabled={true} className="px-2 py-1 opacity-50">
               <Text className="text-primary text-xs font-poppins-semibold">
-                {translate("rewards.viewAll")}
+                {translate("user.rewards.viewAll")}
               </Text>
             </TouchableOpacity>
           </View>
@@ -122,7 +122,7 @@ export default function UserStreakCard({
         </View>
 
         <Text className="text-[10px] font-poppins-medium text-neutral-400 mt-1">
-          {translate("rewards.daysThisWeek", { current: clampedCount, target: targetCount })}
+          {translate("user.rewards.daysThisWeek", { current: clampedCount, target: targetCount })}
         </Text>
 
         <View className="flex-row flex-wrap justify-between mt-2.5 gap-y-2 px-1">

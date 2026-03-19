@@ -83,14 +83,14 @@ export default function Rewards() {
     >
       <View className="flex-row items-center justify-between">
         <Text className="text-xl font-poppins-bold text-neutral-900 dark:text-darkTextPrimary">
-          {translate("rewards.title")}
+          {translate("user.rewards.title")}
         </Text>
         <TouchableOpacity
           onPress={() => router.push("/store/stores")}
           className="px-3 py-2 rounded-full border border-neutral-200 dark:border-darkBorder bg-white dark:bg-darkBackgroundMuted"
         >
           <Text className="text-xs font-poppins-semibold text-neutral-700 dark:text-darkTextSoft">
-            {translate("rewards.viewStores")}
+            {translate("user.rewards.viewStores")}
           </Text>
         </TouchableOpacity>
       </View>
@@ -127,18 +127,18 @@ export default function Rewards() {
                   adjustsFontSizeToFit
                 >
                   {nearbyStores.length > 1
-                    ? translate("rewards.range.multiple", { count: nearbyStores.length })
+                    ? translate("user.rewards.range.multiple", { count: nearbyStores.length })
                     : nearbyStores.length === 1
-                      ? translate("rewards.range.single")
-                      : translate("rewards.range.empty")}
+                      ? translate("user.rewards.range.single")
+                      : translate("user.rewards.range.empty")}
                 </Text>
                 <Text
                   className="text-neutral-500 dark:text-neutral-400 text-[11px] font-poppins mt-1"
                   numberOfLines={1}
                 >
                   {nearbyStores.length > 0
-                    ? translate("rewards.range.promptNearby")
-                    : translate("rewards.range.promptFar")}
+                    ? translate("user.rewards.range.promptNearby")
+                    : translate("user.rewards.range.promptFar")}
                 </Text>
               </View>
               {nearbyStores.length > 0 && (
@@ -155,7 +155,7 @@ export default function Rewards() {
                 onPress={() => router.push("/")}
               >
                 <Text className="font-poppins-semibold text-xs text-white">
-                  {translate("rewards.explore")}
+                  {translate("user.rewards.explore")}
                 </Text>
               </TouchableOpacity>
             ) : (
@@ -190,7 +190,7 @@ export default function Rewards() {
                         />
                       ) : (
                         <Text className="text-[10px] text-primary/80 font-poppins">
-                          {translate("rewards.store").toUpperCase()}
+                          {translate("user.rewards.store").toUpperCase()}
                         </Text>
                       )}
                     </View>
@@ -199,7 +199,7 @@ export default function Rewards() {
                         {store.name}
                       </Text>
                       <Text className="text-neutral-500 dark:text-neutral-400 text-xs font-poppins mt-1">
-                        {store.address} - {translate("rewards.distanceMeters", {
+                        {store.address} - {translate("user.rewards.distanceMeters", {
                           meters:
                             store.distanceMeters?.toLocaleString(undefined, {
                               maximumFractionDigits: 2,
@@ -221,8 +221,8 @@ export default function Rewards() {
                           className={`text-[10px] font-poppins-semibold ${hasStampedToday(Number(store.id)) ? "text-neutral-500" : "text-white"}`}
                         >
                           {hasStampedToday(Number(store.id))
-                            ? translate("rewards.buttons.stamped")
-                            : translate("rewards.buttons.stamp")}
+                            ? translate("user.rewards.buttons.stamped")
+                            : translate("user.rewards.buttons.stamp")}
                         </Text>
                       )}
                     </TouchableOpacity>
@@ -242,10 +242,10 @@ export default function Rewards() {
           >
             <MaterialIcons name="event-note" size={40} color="#FF6600" />
             <Text className="text-lg font-poppins-semibold text-neutral-900 dark:text-darkTextPrimary mt-3 text-center">
-              {translate("rewards.upcomingEvents.title")}
+              {translate("user.rewards.upcomingEvents.title")}
             </Text>
             <Text className="text-neutral-500 text-center font-poppins text-xs mt-1 px-4">
-              {translate("rewards.upcomingEvents.subtitle")}
+              {translate("user.rewards.upcomingEvents.subtitle")}
             </Text>
           </AnimatedView>
         )}
@@ -280,10 +280,10 @@ export default function Rewards() {
             <View className="bg-white dark:bg-darkBackgroundMuted rounded-xl p-6 items-center mx-1">
               <MaterialIcons name="stars" size={32} color="#d1d5db" className="mb-2" />
               <Text className="text-neutral-500 font-poppins-semibold text-sm mt-2">
-                {translate("rewards.noActiveStamps")}
+                {translate("user.rewards.noActiveStamps")}
               </Text>
               <Text className="text-neutral-400 font-poppins text-xs text-center mt-1">
-                {translate("rewards.visitStartStamps")}
+                {translate("user.rewards.visitStartStamps")}
               </Text>
             </View>
           )
@@ -334,11 +334,11 @@ export default function Rewards() {
       <View className="gap-y-3">
         <View className="flex-row items-center justify-between">
           <Text className="text-lg font-poppins-semibold text-neutral-900 dark:text-darkTextPrimary">
-            {translate("rewards.rewardCatalog")}
+            {translate("user.rewards.rewardCatalog")}
           </Text>
           <TouchableOpacity className="flex-row items-center gap-x-1">
             <Text className="text-primary text-xs font-poppins-semibold">
-              {translate("rewards.viewAll")}
+              {translate("user.rewards.viewAll")}
             </Text>
             <MaterialIcons name="chevron-right" size={16} color="#FF6600" />
           </TouchableOpacity>
@@ -354,7 +354,7 @@ export default function Rewards() {
             return (
               <SortPill
                 key={option.id}
-                label={translate(`rewards.filters.${option.labelKey}`)}
+                label={translate(`user.rewards.filters.${option.labelKey}`)}
                 active={isActive}
                 rightIcon={
                   isPoints ? (
@@ -398,7 +398,7 @@ export default function Rewards() {
 
       <View className="items-center pt-4">
         <Text className="text-[10px] tracking-[2px] text-neutral-300 font-poppins-medium">
-          {translate("rewards.footer")}
+          {translate("user.rewards.footer")}
         </Text>
       </View>
     </StoreScreenContainer>
