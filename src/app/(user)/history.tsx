@@ -185,7 +185,7 @@ export default function History() {
         <AnimatedView entering={FadeInUp.delay(200).duration(600)}>
           <View className="items-center pt-6 pb-4">
             <Text className="text-[10px] tracking-[2px] text-neutral-400 dark:text-darkTextSoft font-poppins-medium">
-              {translate("user.activity.footer")}
+              {translate("label.poweredBy")}
             </Text>
           </View>
         </AnimatedView>

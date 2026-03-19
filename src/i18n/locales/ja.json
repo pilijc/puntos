@@ -7,9 +7,14 @@
         "enabled": "有効",
         "disabled": "無効",
         "error": "エラー",
+        "notice": "お知らせ",
+        "success": "成功",
         "allow": "許可",
         "ok": "OK",
-        "tryAgain": "再試行"
+        "tryAgain": "再試行",
+        "somethingWentWrong": "問題が発生しました。もう一度お試しください。",
+        "poweredBy": "PUNTOS 提供",
+        "termsAgreement": "続行することで、<tos>利用規約</tos>および<privacy>プライバシーポリシー</privacy>に同意したものとみなされます"
     },
     "onboarding": {
         "welcome": "<brand>{{appName}}</brand>へようこそ",
@@ -61,8 +66,7 @@
             "error": {
                 "emailRequired": "メールアドレスが必要です",
                 "emailRequiredDetail": "登録に使用したメールアドレスを入力してください。",
-                "resetFailed": "リセット失敗",
-                "somethingWentWrong": "エラーが発生しました"
+                "resetFailed": "リセット失敗"
             },
             "success": {
                 "checkEmail": "メールを確認してください",
@@ -90,8 +94,7 @@
                 "passwordMismatchDetail": "両方のパスワードが一致していることを確認してください。",
                 "weakPassword": "パスワードが短すぎます",
                 "weakPasswordDetail": "パスワードは8文字以上で入力してください。",
-                "resetFailed": "リセット失敗",
-                "somethingWentWrong": "エラーが発生しました"
+                "resetFailed": "リセット失敗"
             },
             "success": {
                 "passwordUpdated": "パスワードを更新しました",
@@ -111,7 +114,6 @@
             "login": "ログイン",
             "success": "アカウントが作成されました！",
             "successManager": "ストアマネージャーアカウントが作成されました！",
-            "footer": "続行することで、<tos>利用規約</tos>および<privacy>プライバシーポリシー</privacy>に同意したものとみなされます",
             "error": {
                 "nameRequired": "名前は必須です",
                 "nameInvalid": "名前には文字、スペース、ハイフン、アポストロフィのみ使用できます",
@@ -241,14 +243,9 @@
                 "alreadyStamped": "今日は既にこの店舗でスタンプを獲得しています。",
                 "stampDisabled": "現在、この店舗ではスタンプが無効になっています。",
                 "stampFailed": "スタンプの獲得に失敗しました。もう一度お試しください。",
-                "error": "エラー",
-                "success": "成功",
-                "notice": "お知らせ",
-                "somethingWentWrong": "エラーが発生しました。",
                 "claimConfirm": "「{{rewardTitle}}」を獲得しますか？ 店舗スタッフにこの画面を提示してください。",
                 "claimSuccess": "報酬を獲得しました！ 履歴をご確認ください。"
             },
-            "footer": "PUNTOS 提供",
             "days": {
                 "mon": "月",
                 "tue": "火",
@@ -331,8 +328,7 @@
             "subtitle": {
                 "purchasePoints": "購入ポイント"
             },
-            "unknownStore": "不明な店舗",
-            "footer": "PUNTOS 提供"
+            "unknownStore": "不明な店舗"
         }
     },
     "frontdesk": {
@@ -355,7 +351,22 @@
             "recent": {
                 "title": "最近の取引",
                 "view": "すべて表示",
-                "empty": "取引はまだありません"
+                "empty": "取引はまだありません",
+                "purchase": "の購入",
+                "time": {
+                    "justNow": "たった今",
+                    "minute": "分前",
+                    "minutes": "分前",
+                    "hour": "時間前",
+                    "hours": "時間前",
+                    "day": "日前",
+                    "days": "日前"
+                }
+            },
+            "success": {
+                "title": "成功！",
+                "pointsAwarded": "付与ポイント",
+                "scanAnother": "続けてスキャン"
             },
             "camera": {
                 "title": "枠内にQRコードを合わせてください",
@@ -442,25 +453,35 @@
                 "jp": "日本語"
             },
             "appearance": {
-                "title": "表示設定",
-                "light": "ライトモード",
-                "dark": "ダークモード"
+                "title": "外観",
+                "description": "アプリの表示をカスタマイズします",
+                "light": "ライト",
+                "dark": "ダーク",
+                "system": "システム"
             }
         },
         "notificationsPrivacy": {
             "title": "通知とプライバシー",
             "alerts": {
-                "title": "周辺通知",
-                "description": "近くに報酬があると通知されます"
+                "title": "付近のお知らせ",
+                "description": "特典が近くにあるときに通知を受け取ります",
+                "disableTitle": "付近のお知らせを無効にする"
             },
             "location": {
-                "title": "位置情報",
-                "allow": "許可する",
-                "denied": "許可しない"
+                "title": "位置情報のアクセス",
+                "allow": "アクセスを許可",
+                "denied": "アクセスを拒否",
+                "disableTitle": "位置情報のアクセスを無効にする"
             },
             "email": {
                 "title": "プロモーションメール"
-            }
+            },
+            "permissions": "{{services}}の権限は、デバイスの設定で変更できます。今すぐ設定を開きますか？",
+            "services": {
+                "location": "位置情報",
+                "notifications": "通知"
+            },
+            "openSettings": "設定を開く"
         }
     }
 }

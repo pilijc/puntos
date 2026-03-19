@@ -398,7 +398,7 @@ export default function Rewards() {
 
       <View className="items-center pt-4">
         <Text className="text-[10px] tracking-[2px] text-neutral-300 font-poppins-medium">
-          {translate("user.rewards.footer")}
+          {translate("label.poweredBy")}
         </Text>
       </View>
     </StoreScreenContainer>

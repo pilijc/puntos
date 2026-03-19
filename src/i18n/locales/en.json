@@ -7,14 +7,18 @@
         "enabled": "Enabled",
         "disabled": "Disabled",
         "error": "Error",
+        "notice": "Notice",
+        "success": "Success",
         "allow": "Allow",
         "ok": "OK",
-        "tryAgain": "Try Again"
+        "tryAgain": "Try Again",
+        "somethingWentWrong": "Something went wrong. Please try again.",
+        "poweredBy": "POWERED BY PUNTOS",
+        "termsAgreement": "By continuing, you agree to <tos>Terms of Service</tos> and <privacy>Privacy Policy</privacy>"
     },
     "onboarding": {
         "welcome": "Welcome to <brand>{{appName}}</brand>",
         "subhead": "Start earning today",
-        "footer": "By continuing, you agree to <tos>Terms of Service</tos> and <privacy>Privacy Policy</privacy>",
         "slide": {
             "title1": "Get rewarded for every step.",
             "subtitle1": "Start walking and let every step bring you closer to exciting rewards and nearby stores.",
@@ -61,8 +65,7 @@
             "error": {
                 "emailRequired": "Email required",
                 "emailRequiredDetail": "Please enter the email you used to sign up.",
-                "resetFailed": "Reset failed",
-                "somethingWentWrong": "Something went wrong"
+                "resetFailed": "Reset failed"
             },
             "success": {
                 "checkEmail": "Check your email",
@@ -90,8 +93,7 @@
                 "passwordMismatchDetail": "Please make sure both passwords match.",
                 "weakPassword": "Weak password",
                 "weakPasswordDetail": "Password must be at least 8 characters long.",
-                "resetFailed": "Reset failed",
-                "somethingWentWrong": "Something went wrong"
+                "resetFailed": "Reset failed"
             },
             "success": {
                 "passwordUpdated": "Password updated",
@@ -111,7 +113,6 @@
             "login": "Login",
             "success": "Account created!",
             "successManager": "Store Manager account created!",
-            "footer": "By continuing, you agree to <tos>Terms of Service</tos> and <privacy>Privacy Policy</privacy>",
             "error": {
                 "nameRequired": "Name is required",
                 "nameInvalid": "Name can only contain letters, spaces, hyphens, and apostrophes",
@@ -241,15 +242,8 @@
                 "stampSuccess": "You have successfully collected a stamp!",
                 "alreadyStamped": "You have already stamped at this store today.",
                 "stampDisabled": "This store currently has stamps disabled.",
-                "stampFailed": "Failed to collect stamp. Please try again.",
-                "error": "Error",
-                "success": "Success",
-                "notice": "Notice",
-                "somethingWentWrong": "Something went wrong.",
-                "claimConfirm": "Ready to claim \"{{rewardTitle}}\"? Please present this to the store staff.",
                 "claimSuccess": "Reward claimed! Please check your history."
             },
-            "footer": "POWERED BY PUNTOS",
             "days": {
                 "mon": "Mon",
                 "tue": "Tue",
@@ -332,8 +326,7 @@
             "subtitle": {
                 "purchasePoints": "Purchase Points"
             },
-            "unknownStore": "Unknown Store",
-            "footer": "POWERED BY PUNTOS"
+            "unknownStore": "Unknown Store"
         }
     },
     "frontdesk": {
@@ -356,7 +349,22 @@
             "recent": {
                 "title": "Recent Transactions",
                 "view": "View All",
-                "empty": "No transactions yet"
+                "empty": "No transactions yet",
+                "purchase": "Purchase",
+                "time": {
+                    "justNow": "Just now",
+                    "minute": "minute ago",
+                    "minutes": "minutes ago",
+                    "hour": "hour ago",
+                    "hours": "hours ago",
+                    "day": "day ago",
+                    "days": "days ago"
+                }
+            },
+            "success": {
+                "title": "Success!",
+                "pointsAwarded": "Points Awarded",
+                "scanAnother": "Scan Another"
             },
             "camera": {
                 "title": "Position the QR code within the frame",
@@ -444,24 +452,34 @@
             },
             "appearance": {
                 "title": "Appearance",
-                "light": "Light Mode",
-                "dark": "Dark Mode"
+                "description": "Customize how the app looks",
+                "light": "Light",
+                "dark": "Dark",
+                "system": "System"
             }
         },
         "notificationsPrivacy": {
             "title": "NOTIFICATIONS & PRIVACY",
             "alerts": {
                 "title": "Nearby Alerts",
-                "description": "Get notified when rewards are close"
+                "description": "Get notified when rewards are close",
+                "disableTitle": "Disable Nearby Alerts"
             },
             "location": {
                 "title": "Location Access",
                 "allow": "Access Allowed",
-                "denied": "Access Denied"
+                "denied": "Access Denied",
+                "disableTitle": "Disable Location Access"
             },
             "email": {
                 "title": "Promotional Emails"
-            }
+            },
+            "permissions": "To change {{services}} permissions, please update them in your device’s Settings. Would you like to open it now?",
+            "services": {
+                "location": "location",
+                "notifications": "notification"
+            },
+            "openSettings": "Open Settings"
         }
     }
 }

@@ -35,7 +35,7 @@ export function useStoreDetailActions(storeId?: string) {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user?.id) {
         Alert.alert(
-          translate("user.rewards.messages.error"),
+          translate("label.error"),
           translate("user.rewards.messages.signInToStamp"),
         );
         return;
@@ -44,7 +44,7 @@ export function useStoreDetailActions(storeId?: string) {
       const result = await addStamp(user.id, storeId);
       if (result.success) {
         Alert.alert(
-          translate("user.rewards.messages.success"),
+          translate("label.success"),
           translate("user.rewards.messages.stampSuccess"),
         );
         await Promise.all([refetchStamps(), refetchStampRewards()]);
@@ -53,25 +53,25 @@ export function useStoreDetailActions(storeId?: string) {
 
       if (result.reason === "already_stamped_today") {
         Alert.alert(
-          translate("user.rewards.messages.notice"),
+          translate("label.notice"),
           translate("user.rewards.messages.alreadyStamped"),
         );
       } else if (result.reason === "stamp_not_enabled") {
         Alert.alert(
-          translate("user.rewards.messages.notice"),
+          translate("label.notice"),
           translate("user.rewards.messages.stampDisabled"),
         );
       } else {
         Alert.alert(
-          translate("user.rewards.messages.error"),
+          translate("label.error"),
           translate("user.rewards.messages.stampFailed"),
         );
       }
     } catch (error) {
       console.error(error);
       Alert.alert(
-        translate("user.rewards.messages.error"),
-        translate("user.rewards.messages.error"),
+        translate("label.error"),
+        translate("label.somethingWentWrong"),
       );
     } finally {
       setIsStamping(false);

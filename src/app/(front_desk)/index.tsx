@@ -138,7 +138,7 @@ export default function FrontDeskScan() {
       console.error("Scan error:", error);
       setModal({
         title: translate("frontdesk.transaction.error.qr.title"),
-        message: translate("frontdesk.transaction.error.unknown"),
+        message: translate("label.somethingWentWrong"),
         buttons: [
           {
             label: translate("label.ok"),
@@ -167,11 +167,12 @@ export default function FrontDeskScan() {
     const diff = now.getTime() - timestamp.getTime();
     const minutes = Math.floor(diff / (1000 * 60));
     const hours = Math.floor(diff / (1000 * 60 * 60));
+    const days = Math.floor(hours / 24);
 
-    if (minutes < 1) return 'Just now';
-    if (minutes < 60) return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
-    if (hours < 24) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
-    return `${Math.floor(hours / 24)} day${Math.floor(hours / 24) > 1 ? 's' : ''} ago`;
+    if (minutes < 1) return translate("frontdesk.transaction.recent.time.justNow");
+    if (minutes < 60) return `${minutes} ${translate(minutes === 1 ? "frontdesk.transaction.recent.time.minute" : "frontdesk.transaction.recent.time.minutes")}`;
+    if (hours < 24) return `${hours} ${translate(hours === 1 ? "frontdesk.transaction.recent.time.hour" : "frontdesk.transaction.recent.time.hours")}`;
+    return `${days} ${translate(days === 1 ? "frontdesk.transaction.recent.time.day" : "frontdesk.transaction.recent.time.days")}`;
   };
 
   const handleModalClose = () => {
@@ -224,7 +225,7 @@ export default function FrontDeskScan() {
 
           {/* Store Info */}
           {storeInfo && (
-            <View className="bg-white/95 dark:bg-darkBackgroundMuted/50 p-5 rounded-3xl mb-2 mt-3 items-center border border-white/20 dark:border-darkBorder/50">
+            <View className="bg-white/95 dark:bg-darkBackgroundMuted/50 p-5 rounded-xl mb-2 mt-3 items-center border border-white/20 dark:border-darkBorder/50">
               <View className="flex-row items-center">
                 <View className="w-12 h-12 bg-orange-500 rounded-xl items-center justify-center mr-4">
                   <MaterialIcons name="store" size={24} color="#FFFFFF" />
@@ -244,9 +245,9 @@ export default function FrontDeskScan() {
         </View>
 
         {/* Scanner Card */}
-        <View className="bg-white dark:bg-darkBackgroundCard rounded-3xl p-4 -mt-8 border border-neutral-100 dark:border-darkBorder elevation-10 mx-5 shadow-xl shadow-black/10">
+        <View className="bg-white dark:bg-darkBackgroundCard rounded-xl p-4 -mt-8 border border-neutral-100 dark:border-darkBorder mx-5">
           {showCamera ? (
-            <View className="bg-neutral-900 rounded-2xl h-80 overflow-hidden border border-neutral-200 dark:border-darkBorder/50">
+            <View className="bg-neutral-900 rounded-xl h-80 overflow-hidden border border-neutral-200 dark:border-darkBorder/50">
               {permission?.granted ? (
                 <CameraView
                   style={{ flex: 1 }}
@@ -258,7 +259,6 @@ export default function FrontDeskScan() {
 
                   {/* Scanning Area Frame */}
                   <View className="absolute top-1/2 left-1/2 -mt-28 -ml-28 w-56 h-56 items-center justify-center">
-                    {/* Corners */}
                     <View className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-orange-500 rounded-tl-lg" />
                     <View className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-orange-500 rounded-tr-lg" />
                     <View className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-orange-500 rounded-bl-lg" />
@@ -288,8 +288,8 @@ export default function FrontDeskScan() {
               )}
             </View>
           ) : (
-            <View className="flex-1 h-75 items-center justify-center bg-neutral-50 dark:bg-darkBackgroundMuted rounded-3xl">
-              <View className="w-16 h-16 bg-neutral-100 dark:bg-darkBackground/50 rounded-2xl items-center justify-center mb-6">
+            <View className="flex-1 h-75 items-center justify-center bg-neutral-50 dark:bg-darkBackgroundMuted rounded-xl">
+              <View className="w-16 h-16 bg-neutral-100 dark:bg-darkBackground/50 rounded-xl items-center justify-center mb-6">
                 <MaterialIcons name="qr-code-scanner" size={32} color="#FF6600" />
               </View>
               <Text className="text-xl font-poppins-bold text-textPrimary dark:text-darkTextPrimary mb-3">{translate("frontdesk.transaction.scan.title")}</Text>
@@ -325,14 +325,16 @@ export default function FrontDeskScan() {
 
           {recentScans.length > 0 ? (
             recentScans.map((scan, index) => (
-              <View key={index} className="bg-white dark:bg-darkBackgroundCard p-4 rounded-2xl border border-neutral-100 dark:border-darkBorder mb-3 shadow-sm shadow-black/5">
+              <View key={index} className="bg-white dark:bg-darkBackgroundCard p-4 rounded-xl border border-neutral-100 dark:border-darkBorder mb-3">
                 <View className="flex-row items-center justify-between">
                   <View className="flex-row items-center">
-                    <View className="w-10 h-10 bg-emerald-50 dark:bg-emerald-500/10 rounded-2xl items-center justify-center mr-4">
+                    <View className="w-10 h-10 bg-emerald-50 dark:bg-emerald-500/10 rounded-xl items-center justify-center mr-4">
                       <MaterialIcons name="check" size={18} color="#10B981" />
                     </View>
                     <View>
-                      <Text className="text-sm font-poppins-semibold text-textPrimary dark:text-darkTextPrimary">₱{scan.amount.toFixed(2)} Purchase</Text>
+                      <Text className="text-sm font-poppins-semibold text-textPrimary dark:text-darkTextPrimary">
+                        ₱{scan.amount.toFixed(2)} {translate("frontdesk.transaction.recent.purchase")}
+                      </Text>
                       <Text className="text-xs font-poppins text-neutral-400 dark:text-darkTextSoft">{formatTimeAgo(scan.timestamp)}</Text>
                     </View>
                   </View>
@@ -417,7 +419,7 @@ export default function FrontDeskScan() {
         title=""
         buttons={[
           {
-            label: "Scan Another",
+            label: translate("frontdesk.transaction.success.scanAnother"),
             onPress: handleModalClose,
             variant: "primary"
           }
@@ -425,14 +427,14 @@ export default function FrontDeskScan() {
       >
         {/* Success Icon */}
         <View className="items-center mb-6">
-          <View className="w-20 h-20 bg-emerald-100 dark:bg-emerald-500/10 rounded-3xl items-center justify-center">
+          <View className="w-20 h-20 bg-emerald-100 dark:bg-emerald-500/10 rounded-xl items-center justify-center">
             <MaterialIcons name="check" size={40} color="#10B981" />
           </View>
         </View>
 
         {/* Title */}
         <Text className="text-2xl font-poppins-bold text-center text-textPrimary dark:text-darkTextPrimary mb-2">
-          Success!
+          {translate("frontdesk.transaction.success.title")}
         </Text>
 
         {/* Transaction ID */}
@@ -441,12 +443,12 @@ export default function FrontDeskScan() {
         </Text>
 
         {/* Points Display */}
-        <View className="bg-neutral-50 dark:bg-darkBackgroundMuted rounded-2xl p-6 mb-8 border border-neutral-100 dark:border-darkBorder">
+        <View className="bg-neutral-50 dark:bg-darkBackgroundMuted rounded-xl p-6 mb-8 border border-neutral-100 dark:border-darkBorder">
           <Text className="text-4xl font-poppins-bold text-center text-orange-600 dark:text-darkPrimaryText">
             +{successPoints}
           </Text>
           <Text className="text-sm font-poppins-medium text-center text-orange-500 dark:text-darkPrimarySecondary mt-1">
-            Points Awarded
+            {translate("frontdesk.transaction.success.pointsAwarded")}
           </Text>
         </View>
       </Modal>
@@ -466,7 +468,7 @@ export default function FrontDeskScan() {
       >
         {/* Error Icon */}
         <View className="items-center mb-6">
-          <View className="w-20 h-20 bg-red-100 dark:bg-red-500/10 rounded-3xl items-center justify-center">
+          <View className="w-20 h-20 bg-red-100 dark:bg-red-500/10 rounded-xl items-center justify-center">
             <MaterialIcons name="error" size={40} color="#EF4444" />
           </View>
         </View>

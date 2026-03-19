@@ -61,7 +61,7 @@ export default function ResetPassword() {
         error?.msg ??
         (typeof error?.message === "string"
           ? error.message
-          : translate("onboarding.resetPassword.error.somethingWentWrong"));
+          : translate("label.somethingWentWrong"));
       Alert.alert(translate("onboarding.resetPassword.error.resetFailed"), message);
     } finally {
       setLoading(false);

@@ -120,7 +120,7 @@ export default function OnboardingWelcome() {
         <View className="px-8 pt-6 w-full items-center">
           <Text className="text-neutral-400 dark:text-darkTextMuted text-sm font-poppins text-center leading-relaxed">
             <Trans
-              i18nKey="onboarding.footer"
+              i18nKey="label.termsAgreement"
               components={{
                 tos: (
                   <Text

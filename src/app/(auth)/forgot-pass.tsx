@@ -43,7 +43,7 @@ export default function ForgotPassword() {
         error?.msg ??
         (typeof error?.message === "string"
           ? error.message
-          : translate("onboarding.forgotPassword.error.somethingWentWrong"));
+          : translate("label.somethingWentWrong"));
       Alert.alert(translate("onboarding.forgotPassword.error.resetFailed"), message);
     } finally {
       reset();
