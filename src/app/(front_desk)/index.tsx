@@ -438,9 +438,9 @@ export default function FrontDeskScan() {
         </Text>
 
         {/* Transaction ID */}
-        <Text className="text-sm font-poppins text-center text-textSecondary dark:text-darkTextSecondary mb-6">
+        {/* <Text className="text-base font-poppins-medium text-center text-gray-600 mb-6">
           Transaction ID: {successTransactionId}
-        </Text>
+        </Text> */}
 
         {/* Points Display */}
         <View className="bg-neutral-50 dark:bg-darkBackgroundMuted rounded-xl p-6 mb-8 border border-neutral-100 dark:border-darkBorder">
