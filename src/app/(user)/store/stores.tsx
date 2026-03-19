@@ -1,4 +1,4 @@
-import { TextInput, ActivityIndicator, RefreshControl } from "react-native";
+import { TextInput, RefreshControl } from "react-native";
 import { View, Text, TouchableOpacity } from "@/tw";
 import React, { useMemo, useCallback } from "react";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
@@ -54,7 +54,6 @@ export default function StoreListScreen() {
     };
   }, [filteredStores]);
 
-  const isLoading = stampsLoading && !refreshing;
 
   return (
     <StoreScreenContainer
@@ -144,7 +143,6 @@ export default function StoreListScreen() {
             </>
           )}
         </View>
-      )}
     </StoreScreenContainer>
   );
 }

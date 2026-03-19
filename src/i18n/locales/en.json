@@ -193,6 +193,32 @@
                 "multiTitle": "There are {{count}} stores nearby",
                 "multiBody": "Visit nearby stores and earn rewards!"
             }
+    "rewards": {
+        "title": "Rewards",
+        "viewStores": "VIEW STORES",
+        "discoverPartners": "DISCOVER PARTNERS",
+        "distanceMeters": "{{meters}} meters away",
+        "store": "Store",
+        "unknownLocation": "Unknown Location",
+        "range": {
+            "multiple": "{{count}} stores are within range!",
+            "single": "You are within range!",
+            "empty": "Not in range of any store",
+            "promptNearby": "Make a purchase to earn a stamp",
+            "promptFar": "Explore other branches"
+        },
+        "explore": "EXPLORE",
+        "stampLog": "Stamp Log",
+        "streakLog": "Streak Log",
+        "nearby": "Nearby",
+        "viewAll": "View All",
+        "daysThisWeek": "{{current}}/{{target}} DAYS THIS WEEK",
+        "completed": "{{current}}/{{target}} COMPLETED",
+        "noActiveStamps": "No Active Stamps",
+        "visitStartStamps": "Visit a partner store to start your stamp log!",
+        "upcomingEvents": {
+            "title": "Watch out for upcoming events!",
+            "subtitle": "This store doesn't have active rewards right now. Check back soon for stamps and streaks!"
         },
         "rewards": {
             "title": "Rewards",

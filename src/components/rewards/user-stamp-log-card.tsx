@@ -105,13 +105,6 @@ export default function UserStampLogCard({
                 </Text>
               </View>
             )}
-            <AnimatedView style={chevronStyle}>
-              <MaterialIcons
-                name="expand-more"
-                size={22}
-                color="#FF6600"
-              />
-            </AnimatedView>
             <TouchableOpacity
               onPress={(e) => {
                 e.stopPropagation();
@@ -119,14 +112,20 @@ export default function UserStampLogCard({
               }}
               className="px-2 py-1"
             >
-              <Text className="text-primary text-xs font-poppins-semibold">
-                {translate("user.rewards.viewAll")}
-              </Text>
+              <View className="flex-row items-center gap-x-1">
+                <Text className="text-primary text-xs font-poppins-semibold">
+                  {translate("rewards.viewAll")}
+                </Text>
+                <MaterialIcons name="open-in-new" size={12} color="#FF6600" />
+              </View>
             </TouchableOpacity>
           </View>
         </View>
 
-        <View className="flex-row items-center gap-x-3 mt-1.5">
+        {/* Divider below header */}
+        <View className="h-px bg-neutral-100 dark:bg-darkBorder mt-2.5 mb-2" />
+
+        <View className="flex-row items-center gap-x-3">
           <View className="w-10 h-10 rounded-full bg-neutral-100 dark:bg-darkBackgroundCard items-center justify-center overflow-hidden border border-neutral-100 dark:border-darkBorder">
             {storeStr?.logo || storeLogos[stamp.store_id.toString()] ? (
               <Image
@@ -147,6 +146,14 @@ export default function UserStampLogCard({
                 • {storeAddress}
               </Text>
             </View>
+            {/* Chevron — rightmost, controls expand */}
+            <AnimatedView style={chevronStyle}>
+              <MaterialIcons
+                name="expand-more"
+                size={22}
+                color="#FF6600"
+              />
+            </AnimatedView>
           </View>
         </View>
 

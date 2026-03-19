@@ -10,7 +10,7 @@ import { getStampStats } from "@/utils/store-helpers";
 
 export default function StoreStreaks() {
   const { t: translate } = useTranslation();
-  const { stamps, isLoading } = useStamps();
+  const { stamps } = useStamps();
   const { activeStamps, highestStampCount } = getStampStats(stamps);
 
   return (

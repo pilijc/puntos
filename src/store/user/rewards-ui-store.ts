@@ -11,6 +11,7 @@ type RewardsUiState = {
   storePointsOrder: PointsOrder;
   isNearbyOpen: boolean;
   isStampLogOpen: boolean;
+  isSwitchingStore: boolean;
   carouselIndex: number;
   heroIndex: number;
   isAutoPlayEnabled: boolean;
@@ -23,6 +24,7 @@ type RewardsUiState = {
   setStorePointsOrder: (order: PointsOrder) => void;
   setIsNearbyOpen: (isOpen: boolean) => void;
   setIsStampLogOpen: (isOpen: boolean) => void;
+  setIsSwitchingStore: (switching: boolean) => void;
   setCarouselIndex: (index: number) => void;
   setHeroIndex: (index: number) => void;
   setIsAutoPlayEnabled: (enabled: boolean) => void;
@@ -39,6 +41,7 @@ export const useRewardsUiStore = create<RewardsUiState>((set) => ({
   storePointsOrder: "desc",
   isNearbyOpen: false,
   isStampLogOpen: false,
+  isSwitchingStore: false,
   carouselIndex: 0,
   heroIndex: 0,
   isAutoPlayEnabled: true,
@@ -51,6 +54,7 @@ export const useRewardsUiStore = create<RewardsUiState>((set) => ({
   setStorePointsOrder: (storePointsOrder) => set({ storePointsOrder }),
   setIsNearbyOpen: (isNearbyOpen) => set({ isNearbyOpen }),
   setIsStampLogOpen: (isStampLogOpen) => set({ isStampLogOpen }),
+  setIsSwitchingStore: (isSwitchingStore) => set({ isSwitchingStore }),
   setCarouselIndex: (carouselIndex) => set({ carouselIndex }),
   setHeroIndex: (heroIndex) => set({ heroIndex }),
   setIsAutoPlayEnabled: (isAutoPlayEnabled) => set({ isAutoPlayEnabled }),
@@ -65,6 +69,7 @@ export const useRewardsUiStore = create<RewardsUiState>((set) => ({
       storePointsOrder: "desc",
       isNearbyOpen: false,
       isStampLogOpen: false,
+      isSwitchingStore: false,
       carouselIndex: 0,
       heroIndex: 0,
       isAutoPlayEnabled: true,
