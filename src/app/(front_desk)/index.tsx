@@ -1,6 +1,6 @@
 import { useRouter } from "expo-router";
 import React, { useState, useEffect } from "react";
-import { Alert } from "react-native";
+import { Alert, useColorScheme } from "react-native";
 import { SafeAreaView, ScrollView, View, Text, TouchableOpacity, TextInput } from "@/tw";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { CameraView, useCameraPermissions } from "expo-camera";
@@ -8,6 +8,8 @@ import { processFrontDeskScan, getCurrentUserStore } from "@/services/operator-s
 import { Button } from "@/components/button";
 import { Modal, type ModalButton } from "@/components/modal";
 import { useRecentTransactions } from "@/hooks/use-recent-transactions";
+import { useTranslation } from "react-i18next";
+import { legacy_makeMutableUI } from "react-native-reanimated/lib/typescript/mutables";
 
 export default function FrontDeskScan() {
   const router = useRouter();
@@ -18,19 +20,22 @@ export default function FrontDeskScan() {
   const [purchaseAmount, setPurchaseAmount] = useState("");
   const [showAmountInput, setShowAmountInput] = useState(false);
   const { recentScans, fetchTransactions, addScan } = useRecentTransactions();
-  const [storeInfo, setStoreInfo] = useState<{name: string; id: number} | null>(null);
+  const [storeInfo, setStoreInfo] = useState<{ name: string; id: number } | null>(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [successTransactionId, setSuccessTransactionId] = useState<string>("");
   const [successPoints, setSuccessPoints] = useState(0);
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string>("");
   const [showPriceModal, setShowPriceModal] = useState(false);
+  const { t: translate } = useTranslation();
+  const ColorScheme = useColorScheme();
+  const isDark = ColorScheme === "dark";
   const [activeTab, setActiveTab] = useState<"scanning" | "transactions">("scanning");
   const [modal, setModal] = useState<{
-  title: string;
-  message: string;
-  buttons: ModalButton[];
-} | null>(null);
+    title: string;
+    message: string;
+    buttons: ModalButton[];
+  } | null>(null);
 
   useEffect(() => {
     const fetchStoreInfo = async () => {
@@ -43,18 +48,18 @@ export default function FrontDeskScan() {
 
     fetchStoreInfo();
   }, []);
-  
+
   useEffect(() => {
     const handleQRPress = async () => {
-        setShowPriceModal(true);
-        router.replace("/(front_desk)");
+      setShowPriceModal(true);
+      router.replace("/(front_desk)");
     };
-    
+
     (global as any).handleCenterQRButton = handleQRPress;
-    
+
     // Also set up a backup handler
     (global as any).openPriceModal = handleQRPress;
-    
+
     // Don't clean up the handler to keep it persistent across tabs
     return () => {
       // Keep handlers persistent
@@ -74,11 +79,11 @@ export default function FrontDeskScan() {
     const amount = parseFloat(purchaseAmount);
     if (isNaN(amount) || amount <= 0) {
       setModal({
-        title: "Invalid Amount",
-        message: "Please enter a valid purchase amount greater than 0.",
+        title: translate("frontdesk.transaction.error.amount.invalid"),
+        message: translate("frontdesk.transaction.error.amount.lessThanZero"),
         buttons: [
           {
-            label: "OK",
+            label: translate("label.ok"),
             variant: "secondary",
             onPress: () => setModal(null),
           },
@@ -86,7 +91,7 @@ export default function FrontDeskScan() {
       });
       return;
     }
-    setShowPriceModal(false);    
+    setShowPriceModal(false);
     setTimeout(() => {
       router.replace('/(front_desk)');
       setShowCamera(true);
@@ -109,20 +114,20 @@ export default function FrontDeskScan() {
       const result = await processFrontDeskScan(data, amount);
 
       if (result.success) {
-        
+
         const amount = parseFloat(purchaseAmount);
-        const pointsAwarded = result.pointsEarned || Math.ceil(amount * 0.1); 
-        
+        const pointsAwarded = result.pointsEarned || Math.ceil(amount * 0.1);
+
         setSuccessTransactionId(result.transactionId || "");
         setSuccessPoints(pointsAwarded);
         setShowSuccessModal(true);
       } else {
-         setModal({
-          title: "QR Code Failed",
-          message: result.message || "Failed to process QR code. Please try again.",
+        setModal({
+          title: translate("frontdesk.transaction.error.qr.title"),
+          message: result.message || translate("frontdesk.transaction.error.qr.description"),
           buttons: [
             {
-              label: "OK",
+              label: translate("label.ok"),
               variant: "secondary",
               onPress: () => setModal(null),
             },
@@ -132,28 +137,28 @@ export default function FrontDeskScan() {
     } catch (error) {
       console.error("Scan error:", error);
       setModal({
-          title: "QR Code Failed",
-          message: "Something went wrong. Please try again.",
-          buttons: [
-            {
-              label: "OK",
-              variant: "secondary",
-              onPress: () => setModal(null),
-            },
-          ],
-        });
-          setModal({
-          title: "QR Code Failed",
-          message: "Failed to process QR code. Please try again.",
-          buttons: [
-            {
-              label: "OK",
-              variant: "secondary",
-              onPress: () => setModal(null),
-            },
-          ],
-        });
-     
+        title: translate("frontdesk.transaction.error.qr.title"),
+        message: translate("label.somethingWentWrong"),
+        buttons: [
+          {
+            label: translate("label.ok"),
+            variant: "secondary",
+            onPress: () => setModal(null),
+          },
+        ],
+      });
+      setModal({
+        title: translate("frontdesk.transaction.error.qr.title"),
+        message: translate("frontdesk.transaction.error.qr.description"),
+        buttons: [
+          {
+            label: translate("label.ok"),
+            variant: "secondary",
+            onPress: () => setModal(null),
+          },
+        ],
+      });
+
     }
   };
 
@@ -162,23 +167,24 @@ export default function FrontDeskScan() {
     const diff = now.getTime() - timestamp.getTime();
     const minutes = Math.floor(diff / (1000 * 60));
     const hours = Math.floor(diff / (1000 * 60 * 60));
-    
-    if (minutes < 1) return 'Just now';
-    if (minutes < 60) return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
-    if (hours < 24) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
-    return `${Math.floor(hours / 24)} day${Math.floor(hours / 24) > 1 ? 's' : ''} ago`;
+    const days = Math.floor(hours / 24);
+
+    if (minutes < 1) return translate("frontdesk.transaction.recent.time.justNow");
+    if (minutes < 60) return `${minutes} ${translate(minutes === 1 ? "frontdesk.transaction.recent.time.minute" : "frontdesk.transaction.recent.time.minutes")}`;
+    if (hours < 24) return `${hours} ${translate(hours === 1 ? "frontdesk.transaction.recent.time.hour" : "frontdesk.transaction.recent.time.hours")}`;
+    return `${days} ${translate(days === 1 ? "frontdesk.transaction.recent.time.day" : "frontdesk.transaction.recent.time.days")}`;
   };
 
   const handleModalClose = () => {
-    
+
     const amount = parseFloat(purchaseAmount);
     addScan({
       points: successPoints,
       timestamp: new Date(),
       amount: amount
     });
-    
-     
+
+
     setScanned(false);
     setIsProcessing(false);
     setShowCamera(false);
@@ -194,7 +200,7 @@ export default function FrontDeskScan() {
   };
 
   return (
-    <View className="flex-1 bg-muted-white">
+    <View className="flex-1 bg-background dark:bg-darkBackground">
       <Modal
         visible={!!modal}
         onClose={() => setModal(null)}
@@ -202,9 +208,9 @@ export default function FrontDeskScan() {
         message={modal?.message}
         buttons={modal?.buttons}
       />
-      <ScrollView className="flex-1 bg-muted-white" showsVerticalScrollIndicator={false}>
+      <ScrollView className="flex-1 bg-background dark:bg-darkBackground" showsVerticalScrollIndicator={false}>
         {/* Header */}
-        <View className="bg-orange-500 pt-20 px-5 pb-10 rounded-b-3xl">
+        <View className="bg-orange-500 pt-20 px-5 pb-10 rounded-b-xl">
           <View className="flex-row items-center justify-between">
             {/* <TouchableOpacity
               onPress={() => router.back()}
@@ -212,36 +218,36 @@ export default function FrontDeskScan() {
             >
               <MaterialIcons name="arrow-back" size={24} color="#FFFFFF" />
             </TouchableOpacity> */}
-            <Text className="text-lg font-bold text-white">
-              Scan QR Code
+            <Text className="text-xl font-poppins-bold text-white">
+              {translate("frontdesk.transaction.title")}
             </Text>
           </View>
-          
+
           {/* Store Info */}
           {storeInfo && (
-            <View className="bg-white from-orange-50 to-orange-100 p-5 rounded-3xl mb-6 items-center shadow-sm">
+            <View className="bg-white/95 dark:bg-darkBackgroundMuted/50 p-5 rounded-xl mb-2 mt-3 items-center border border-white/20 dark:border-darkBorder/50">
               <View className="flex-row items-center">
-                <View className="w-12 h-12 bg-orange-500 rounded-2xl items-center justify-center mr-4">
+                <View className="w-12 h-12 bg-orange-500 rounded-xl items-center justify-center mr-4">
                   <MaterialIcons name="store" size={24} color="#FFFFFF" />
                 </View>
                 <View className="flex-1">
-                  <Text className="text-xs font-poppins-medium text-orange-600 uppercase tracking-wider mb-1">
-                    Current Store
+                  <Text className="text-xs font-poppins-medium text-orange-600 dark:text-darkPrimaryText uppercase tracking-wider mb-1">
+                    {translate("frontdesk.transaction.store")}
                   </Text>
-                  <Text className="text-xl font-poppins-bold text-gray-900">
+                  <Text className="text-xl font-poppins-bold text-textPrimary dark:text-darkTextPrimary">
                     {storeInfo.name}
                   </Text>
                 </View>
               </View>
             </View>
           )}
-          
+
         </View>
 
         {/* Scanner Card */}
-        <View className="bg-white rounded-3xl p-6 -mt-6 shadow-lg shadow-black/10 elevation-10 mx-5">
+        <View className="bg-white dark:bg-darkBackgroundCard rounded-xl p-4 -mt-8 border border-neutral-100 dark:border-darkBorder mx-5">
           {showCamera ? (
-            <View className="bg-black rounded-3xl h-75">
+            <View className="bg-neutral-900 rounded-xl h-80 overflow-hidden border border-neutral-200 dark:border-darkBorder/50">
               {permission?.granted ? (
                 <CameraView
                   style={{ flex: 1 }}
@@ -249,13 +255,17 @@ export default function FrontDeskScan() {
                   onBarcodeScanned={scanned ? undefined : handleBarCodeScanned}
                   barcodeScannerSettings={{ barcodeTypes: ["qr"] }}
                 >
-                  <View className="absolute inset-0 bg-black/50" />
-                  <View className="absolute top-5 left-5 w-6 h-6 border-t-4 border-l-4 border-orange-500 border-solid rounded-sm" />
-                  <View className="absolute top-5 right-5 w-6 h-6 border-t-4 border-r-4 border-orange-500 border-solid rounded-sm" />
-                  <View className="absolute bottom-5 left-5 w-6 h-6 border-b-4 border-l-4 border-orange-500 border-solid rounded-sm" />
-                  <View className="absolute bottom-5 right-5 w-6 h-6 border-b-4 border-r-4 border-orange-500 border-solid rounded-sm" />
-                  <View className="absolute top-1/2 left-1/2 -mt-24 -ml-24 w-48 h-48 items-center justify-center">
-                    <View className="w-48 h-48 border-2 border-white/30 rounded-lg" />
+                  <View className="absolute inset-0 bg-black/40" />
+
+                  {/* Scanning Area Frame */}
+                  <View className="absolute top-1/2 left-1/2 -mt-28 -ml-28 w-56 h-56 items-center justify-center">
+                    <View className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-orange-500 rounded-tl-lg" />
+                    <View className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-orange-500 rounded-tr-lg" />
+                    <View className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-orange-500 rounded-bl-lg" />
+                    <View className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-orange-500 rounded-br-lg" />
+
+                    {/* Inner Guide */}
+                    <View className="w-52 h-52 border border-white/20 rounded-xl" />
                   </View>
                 </CameraView>
               ) : (
@@ -264,13 +274,13 @@ export default function FrontDeskScan() {
                     <MaterialIcons name="camera-alt" size={32} color="#FFFFFF" />
                   </View>
                   <Text className="text-base font-poppins-bold text-white mb-3">
-                    Camera Access Required
+                    {translate("frontdesk.transaction.camera.permission.title")}
                   </Text>
                   <Text className="text-sm font-poppins-medium text-gray-400 text-center mb-5">
-                    Allow camera access to scan QR codes and award points to customers
+                    {translate("frontdesk.transaction.camera.permission.description")}
                   </Text>
                   <Button
-                    label="Enable Camera"
+                    label={translate("label.allow")}
                     onPress={() => requestPermission()}
                     fullWidth
                   />
@@ -278,27 +288,27 @@ export default function FrontDeskScan() {
               )}
             </View>
           ) : (
-            <View className="flex-1 h-75 items-center justify-center bg-white-100 rounded-3xl">
-              <View className="w-16 h-16 bg-gray-100 rounded-2xl items-center justify-center mb-6">
+            <View className="flex-1 h-75 items-center justify-center bg-neutral-50 dark:bg-darkBackgroundMuted rounded-xl">
+              <View className="w-16 h-16 bg-neutral-100 dark:bg-darkBackground/50 rounded-xl items-center justify-center mb-6">
                 <MaterialIcons name="qr-code-scanner" size={32} color="#FF6600" />
               </View>
-              <Text className="text-xl font-poppins-bold text-gray-900 mb-3">Ready to Scan</Text>
-              <Text className="text-base font-poppins text-gray-600 text-center mb-8">
-                Enter purchase amount to start scanning QR codes
+              <Text className="text-xl font-poppins-bold text-textPrimary dark:text-darkTextPrimary mb-3">{translate("frontdesk.transaction.scan.title")}</Text>
+              <Text className="text-base font-poppins text-textSecondary dark:text-darkTextSecondary text-center mb-8 px-4">
+                {translate("frontdesk.transaction.scan.description")}
               </Text>
             </View>
-          )}  
+          )}
 
           {showCamera && (
             <View className="mt-5">
               <View className="flex-row items-center justify-center">
-                <View className="w-2 h-2 bg-green-500 rounded-full mr-3" />
-                <Text className="text-sm font-poppins-medium text-gray-700">
-                  Position QR code within the frame
+                <View className="w-2 h-2 bg-emerald-500 rounded-full mr-3" />
+                <Text className="text-sm font-poppins-medium text-textSecondary dark:text-darkTextSecondary">
+                  {translate("frontdesk.transaction.camera.title")}
                 </Text>
               </View>
-              <Text className="text-xs font-poppins-medium text-gray-500 text-center mt-3">
-                The scanner will automatically detect and process the QR code
+              <Text className="text-xs font-poppins-medium text-neutral-400 dark:text-darkTextSoft text-center mt-3">
+                {translate("frontdesk.transaction.camera.description")}
               </Text>
             </View>
           )}
@@ -307,23 +317,25 @@ export default function FrontDeskScan() {
         {/* Recent Transactions */}
         <View className="px-5 py-4">
           <View className="flex-row items-center justify-between mb-4">
-            <Text className="text-xl font-poppins-bold text-gray-900">Recent Transactions</Text>
+            <Text className="text-xl font-poppins-bold text-textPrimary dark:text-darkTextPrimary">{translate("frontdesk.transaction.recent.title")}</Text>
             <TouchableOpacity>
-              <Text className="text-sm font-poppins-medium text-orange-600">See all</Text>
+              <Text className="text-sm font-poppins-medium text-orange-600">{translate("frontdesk.transaction.recent.view")}</Text>
             </TouchableOpacity>
           </View>
 
           {recentScans.length > 0 ? (
             recentScans.map((scan, index) => (
-              <View key={index} className="bg-white p-4 rounded-xl shadow-md shadow-black/5 elevation-5 mb-3">
+              <View key={index} className="bg-white dark:bg-darkBackgroundCard p-4 rounded-xl border border-neutral-100 dark:border-darkBorder mb-3">
                 <View className="flex-row items-center justify-between">
                   <View className="flex-row items-center">
-                    <View className="w-8 h-8 bg-green-100 rounded-2xl items-center justify-center mr-4">
-                      <MaterialIcons name="check" size={16} color="#10B981" />
+                    <View className="w-10 h-10 bg-emerald-50 dark:bg-emerald-500/10 rounded-xl items-center justify-center mr-4">
+                      <MaterialIcons name="check" size={18} color="#10B981" />
                     </View>
                     <View>
-                      <Text className="text-sm font-poppins text-gray-700">₱{scan.amount.toFixed(2)} Purchase</Text>
-                      <Text className="text-xs font-poppins text-gray-500">{formatTimeAgo(scan.timestamp)}</Text>
+                      <Text className="text-sm font-poppins-semibold text-textPrimary dark:text-darkTextPrimary">
+                        ₱{scan.amount.toFixed(2)} {translate("frontdesk.transaction.recent.purchase")}
+                      </Text>
+                      <Text className="text-xs font-poppins text-neutral-400 dark:text-darkTextSoft">{formatTimeAgo(scan.timestamp)}</Text>
                     </View>
                   </View>
                   <Text className="text-sm font-poppins-bold text-orange-500">+{scan.points} pts</Text>
@@ -331,11 +343,11 @@ export default function FrontDeskScan() {
               </View>
             ))
           ) : (
-            <View className="bg-white p-4 rounded-xl shadow-md shadow-black/5 elevation-5">
+            <View className="bg-white dark:bg-darkBackgroundCard p-6 rounded-xl border border-neutral-100 dark:border-darkBorder">
               <View className="flex-row items-center justify-center">
-                <MaterialIcons name="history" size={20} color="#9CA3AF" />
-                <Text className="text-sm font-poppins text-white-500 ml-3">
-                  No transactions yet
+                <MaterialIcons name="history" size={20} color={isDark ? "#9CA3AF" : "#6B7280"} />
+                <Text className="text-sm font-poppins text-textSecondary dark:text-darkTextSecondary ml-3">
+                  {translate("frontdesk.transaction.recent.empty")}
                 </Text>
               </View>
             </View>
@@ -350,40 +362,48 @@ export default function FrontDeskScan() {
         title=""
         buttons={[
           {
-            label: "Cancel",
+            label: translate("label.cancel"),
             onPress: handlePriceModalCancel,
             variant: "secondary"
           },
           {
-            label: "Continue",
+            label: translate("label.confirm"),
             onPress: handleAmountSubmit,
             variant: "primary"
           }
         ]}
       >
         {/* Price Input */}
-        <View className="items-center py-6">
-          <View className="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mb-6">
+        <View className="items-center py-4">
+          {/* Icon */}
+          <View className="w-16 h-16 bg-primary/10 rounded-2xl items-center justify-center mb-4">
             <MaterialIcons name="attach-money" size={32} color="#FF6600" />
           </View>
-          <Text className="text-2xl font-poppins-bold text-gray-900 mb-3">Enter Purchase Amount</Text>
-          <Text className="text-base font-poppins text-gray-600 text-center mb-8">
-            Enter the customer's purchase amount to calculate points
+
+          {/* Heading */}
+          <Text className="text-xl font-poppins-bold text-textPrimary dark:text-darkTextPrimary mb-1.5">
+            {translate("frontdesk.transaction.transactionModal.title")}
           </Text>
-          <View className="flex-row items-center border-2 border-gray-300 rounded-2xl px-6 py-5 mb-8 w-full">
-            <Text className="text-xl font-poppins-bold text-gray-700 mr-3">₱</Text>
+          <Text className="text-sm font-poppins text-textSecondary dark:text-darkTextSecondary text-center mb-6 px-2">
+            {translate("frontdesk.transaction.transactionModal.description")}
+          </Text>
+
+          {/* Amount Input */}
+          <View className="flex-row items-center w-full bg-background dark:bg-darkBackgroundMuted border border-neutral-100 dark:border-darkBorder rounded-xl px-5 py-4">
+            <Text className="text-xl font-poppins-bold text-textSecondary dark:text-darkTextSecondary mr-2">₱</Text>
             <TextInput
-              className="flex-1 text-xl font-poppins-bold text-gray-700"
+              className="flex-1 text-xl font-poppins-bold text-textPrimary dark:text-darkTextPrimary"
               value={purchaseAmount}
               onChangeText={(text) => {
                 const numericText = text.replace(/[^0-9.]/g, '');
                 const parts = numericText.split('.');
-                const filteredText = parts.length > 2 
-                  ? parts[0] + '.' + parts.slice(1).join('') 
+                const filteredText = parts.length > 2
+                  ? parts[0] + '.' + parts.slice(1).join('')
                   : numericText;
                 setPurchaseAmount(filteredText);
               }}
               placeholder="0.00"
+              placeholderTextColor="#9CA3AF"
               keyboardType="numeric"
               autoFocus
               maxLength={7}
@@ -399,7 +419,7 @@ export default function FrontDeskScan() {
         title=""
         buttons={[
           {
-            label: "Scan Another",
+            label: translate("frontdesk.transaction.success.scanAnother"),
             onPress: handleModalClose,
             variant: "primary"
           }
@@ -407,14 +427,14 @@ export default function FrontDeskScan() {
       >
         {/* Success Icon */}
         <View className="items-center mb-6">
-          <View className="w-16 h-16 bg-green-500 rounded-2xl items-center justify-center">
-            <MaterialIcons name="check" size={28} color="#FFFFFF" />
+          <View className="w-20 h-20 bg-emerald-100 dark:bg-emerald-500/10 rounded-xl items-center justify-center">
+            <MaterialIcons name="check" size={40} color="#10B981" />
           </View>
         </View>
 
         {/* Title */}
-        <Text className="text-2xl font-poppins-bold text-center text-gray-900 mb-2">
-          Success!
+        <Text className="text-2xl font-poppins-bold text-center text-textPrimary dark:text-darkTextPrimary mb-2">
+          {translate("frontdesk.transaction.success.title")}
         </Text>
 
         {/* Transaction ID */}
@@ -423,12 +443,12 @@ export default function FrontDeskScan() {
         </Text> */}
 
         {/* Points Display */}
-        <View className="bg-gray-50 rounded-2xl p-6 mb-8 border border-gray-200">
-          <Text className="text-3xl font-poppins-bold text-center text-orange-600">
+        <View className="bg-neutral-50 dark:bg-darkBackgroundMuted rounded-xl p-6 mb-8 border border-neutral-100 dark:border-darkBorder">
+          <Text className="text-4xl font-poppins-bold text-center text-orange-600 dark:text-darkPrimaryText">
             +{successPoints}
           </Text>
-          <Text className="text-sm font-poppins-medium text-center text-orange-500 mt-1">
-            Points Awarded
+          <Text className="text-sm font-poppins-medium text-center text-orange-500 dark:text-darkPrimarySecondary mt-1">
+            {translate("frontdesk.transaction.success.pointsAwarded")}
           </Text>
         </View>
       </Modal>
@@ -440,7 +460,7 @@ export default function FrontDeskScan() {
         title=""
         buttons={[
           {
-            label: "Try Again",
+            label: translate("label.tryAgain"),
             onPress: handleErrorModalClose,
             variant: "primary"
           }
@@ -448,18 +468,18 @@ export default function FrontDeskScan() {
       >
         {/* Error Icon */}
         <View className="items-center mb-6">
-          <View className="w-16 h-16 bg-red-500 rounded-2xl items-center justify-center">
-            <MaterialIcons name="error" size={28} color="#FFFFFF" />
+          <View className="w-20 h-20 bg-red-100 dark:bg-red-500/10 rounded-xl items-center justify-center">
+            <MaterialIcons name="error" size={40} color="#EF4444" />
           </View>
         </View>
 
         {/* Title */}
-        <Text className="text-2xl font-poppins-bold text-center text-gray-900 mb-2">
+        <Text className="text-2xl font-poppins-bold text-center text-textPrimary dark:text-darkTextPrimary mb-2">
           Error
         </Text>
 
         {/* Error Message */}
-        <Text className="text-base font-poppins-medium text-center text-gray-600 mb-8">
+        <Text className="text-base font-poppins text-center text-textSecondary dark:text-darkTextSecondary mb-8 px-4">
           {errorMessage}
         </Text>
       </Modal>

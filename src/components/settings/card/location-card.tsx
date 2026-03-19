@@ -25,12 +25,12 @@ export const LocationCard = () => {
     const handlePress = async () => {
         if (preferences.location_enabled) {
             Alert.alert(
-                "Disable Location Access",
-                "To completely revoke location permissions, you must disable the setting in your device's settings menu. Would you like to open it now?",
+                translate('settings.notificationsPrivacy.location.disableTitle'),
+                translate("settings.notificationsPrivacy.permissions", { services: translate("settings.notificationsPrivacy.services.location") }),
                 [
                     { text: translate("label.cancel"), style: "cancel" },
                     {
-                        text: "Open Settings",
+                        text: translate('settings.notificationsPrivacy.openSettings'),
                         onPress: () => {
                             togglePreference('location_enabled');
                             Linking.openSettings();

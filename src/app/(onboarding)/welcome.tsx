@@ -11,20 +11,12 @@ import { ActivityIndicator, Alert } from "react-native";
 import { signInWithGoogleLoginService } from "@/services/auth-service";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useTranslation, Trans } from "react-i18next";
-
-import { useLanguageStore } from "@/store/language-store";
-import { Ionicons } from "@expo/vector-icons";
+import TranslateButton from "@/components/ui/translate-button";
 
 export default function OnboardingWelcome() {
   const [loadingGoogle, setLoadingGoogle] = useState(false);
-  const { t: translate, i18n } = useTranslation();
-  const { language, setLanguage } = useLanguageStore();
+  const { t: translate } = useTranslation();
   const appName = "Puntos";
-
-  const toggleLanguage = () => {
-    const newLang = i18n.language === "en" ? "ja" : "en";
-    setLanguage(newLang);
-  };
 
   const handleLogin = () => {
     router.push("/login");
@@ -54,16 +46,7 @@ export default function OnboardingWelcome() {
     <SafeAreaView className="flex-1 bg-background dark:bg-darkBackground">
       {/* Language Toggle */}
       <View className="absolute top-14 right-6 z-10">
-        <TouchableOpacity
-          onPress={toggleLanguage}
-          className="flex-row items-center bg-neutral-100 dark:bg-darkBackgroundMuted px-3 py-1.5 rounded-full border border-neutral-200 dark:border-darkBorder"
-          activeOpacity={0.7}
-        >
-          <Ionicons name="globe-outline" size={16} color={i18n.language === "en" ? "#6b7280" : "#FF6600"} />
-          <Text className="ml-1.5 text-xs font-poppins-semibold text-neutral-600 dark:text-darkTextSecondary uppercase">
-            {i18n.language === "en" ? "JP" : "EN"}
-          </Text>
-        </TouchableOpacity>
+        <TranslateButton />
       </View>
       <View className="flex-1 w-full self-center bg-background dark:bg-darkBackground items-center justify-center">
         <View className="w-full items-center px-6">
@@ -137,7 +120,7 @@ export default function OnboardingWelcome() {
         <View className="px-8 pt-6 w-full items-center">
           <Text className="text-neutral-400 dark:text-darkTextMuted text-sm font-poppins text-center leading-relaxed">
             <Trans
-              i18nKey="onboarding.footer"
+              i18nKey="label.termsAgreement"
               components={{
                 tos: (
                   <Text

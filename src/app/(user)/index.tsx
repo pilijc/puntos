@@ -202,11 +202,11 @@ export default function Discover() {
             const onlyStoreId = nearbyStoreIds[0];
             const onlyStore = currentStores.find((s) => s.id === onlyStoreId);
             const storeName = onlyStore?.name ?? "A store";
-            title = translate("index.geofence.singleTitle", { name: storeName });
-            body = translate("index.geofence.singleBody", { name: storeName });
+            title = translate("user.discover.geofence.singleTitle", { name: storeName });
+            body = translate("user.discover.geofence.singleBody", { name: storeName });
           } else {
-            title = translate("index.geofence.multiTitle", { count: nearbyCount });
-            body = translate("index.geofence.multiBody");
+            title = translate("user.discover.geofence.multiTitle", { count: nearbyCount });
+            body = translate("user.discover.geofence.multiBody");
           }
 
           try {
@@ -365,7 +365,7 @@ export default function Discover() {
               className="flex-1 text-base text-black dark:text-darkTextPrimary font-poppins-semibold items-center justify-center"
               style={{ fontFamily: "Poppins-Regular" }}
               placeholderTextColor="gray"
-              placeholder={translate("index.searchBar")}
+              placeholder={translate("user.discover.searchBar")}
               value={searchQuery}
               onChangeText={setSearchQuery}
               onSubmitEditing={searchPlaces}
@@ -564,7 +564,7 @@ export default function Discover() {
               {sheetStores.length > 1 && sheetView === "list" ? (
                 <>
                   <Text className="text-lg font-poppins-bold text-slate-900 dark:text-slate-100">
-                    {translate("index.nearbyStores")}
+                    {translate("user.discover.nearbyStores")}
                   </Text>
                   {sheetStores.map((s) => (
                     <TouchableOpacity
@@ -626,7 +626,7 @@ export default function Discover() {
                     <>
                       <View className="mt-2">
                         <Text className="text-lg font-poppins-bold text-slate-900 dark:text-slate-100">
-                          {translate("index.discoverMore")}
+                          {translate("user.discover.discoverMore")}
                         </Text>
                       </View>
 
@@ -699,7 +699,7 @@ export default function Discover() {
                               }}
                               className="font-poppins-regular text-xs"
                             >
-                              {translate("index.metersAway", { meters: Math.round(meters) })}
+                              {translate("user.discover.metersAway", { meters: Math.round(meters) })}
                             </Text>
                             <MaterialIcons name="chevron-right" size={24} color={isDark ? "#94A3B8" : "#64748B"} />
                           </View>
@@ -717,7 +717,7 @@ export default function Discover() {
                     >
                       <View className="flex-row items-center gap-x-2">
                         <MaterialIcons name="chevron-left" size={20} color={isDark ? "#94A3B8" : "#64748B"} />
-                        <Text className="text-sm font-poppins-semibold text-slate-600 dark:text-slate-400">{translate("index.backToList")}</Text>
+                        <Text className="text-sm font-poppins-semibold text-slate-600 dark:text-slate-400">{translate("user.discover.backToList")}</Text>
                       </View>
                     </TouchableOpacity>
                   )}
@@ -750,7 +750,7 @@ export default function Discover() {
                               <View className="flex-row items-center gap-2">
                                 <FontAwesome6 name="clock" size={12} color="gray" />
                                 <Text className="text-xs text-slate-500 dark:text-slate-400 font-poppins">
-                                  {translate("index.storeHoursPlaceholder")}
+                                  {translate("user.discover.storeHoursPlaceholder")}
                                 </Text>
                               </View>
                             </View>
@@ -791,7 +791,7 @@ export default function Discover() {
                     <View className="flex-1 justify-between">
                       <View className="flex-row items-center gap-x-2">
                         <Text className="text-lg text-neutral-900 dark:text-darkTextPrimary flex-1 font-poppins-semibold">
-                          {translate("index.rewards")}
+                          {translate("user.discover.rewards")}
                         </Text>
                       </View>
 
@@ -806,17 +806,17 @@ export default function Discover() {
                           <View className="flex-1 flex-col justify-between ml-3 py-1">
                             <View className="flex-1 flex-col items-start justify-start">
                               <Text className="text-base font-poppins-semibold text-neutral-900 dark:text-darkTextPrimary">
-                                {translate("index.rewardPlaceholder.title")}
+                                {translate("user.discover.rewardPlaceholder.title")}
                               </Text>
                               <Text className="text-xs font-poppins text-neutral-500 dark:text-darkTextSecondary" numberOfLines={2}>
-                                {translate("index.rewardPlaceholder.description")}
+                                {translate("user.discover.rewardPlaceholder.description")}
                               </Text>
                             </View>
                             <View className="flex-row justify-start items-center mt-2">
                               <View className="flex-row items-center gap-x-2 flex-shrink">
                                 <FontAwesome6 name="coins" size={12} color="#FB8500" />
                                 <Text className="text-sm font-poppins-bold text-primary">
-                                  {translate("index.rewardPlaceholder.points", { points: "1,200" })}
+                                  {translate("user.discover.rewardPlaceholder.points", { points: "1,200" })}
                                 </Text>
                               </View>
                             </View>

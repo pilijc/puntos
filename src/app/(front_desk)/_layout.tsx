@@ -2,21 +2,25 @@ import { Tabs } from "expo-router";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import React, { useEffect } from "react";
 import { useRouter } from "expo-router";
-import { Platform, View, StyleSheet } from "react-native";
+import { Platform, View, StyleSheet, useColorScheme } from "react-native";
 import { supabase } from "@/supabase/supabase";
 import { getRoleTypeForUser } from "@/services/access-service";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import QRRoundedButton from "@/components/qr/qr-rounded";
-import {getCurrentUserIsActive} from "@/services/operator-service";
+import { getCurrentUserIsActive } from "@/services/operator-service";
+import { useTranslation } from "react-i18next";
 
 export default function FrontDeskLayout() {
     const router = useRouter();
     const insets = useSafeAreaInsets();
     const [isActive, setIsActive] = React.useState<boolean>(false);
+    const colorScheme = useColorScheme();
+    const isDark = colorScheme === 'dark';
+    const { t: translate } = useTranslation();
 
     useEffect(() => {
         const { data: { subscription } } =
-        supabase.auth.onAuthStateChange(async (event, session) => {
+            supabase.auth.onAuthStateChange(async (event, session) => {
                 if (!session) {
                     router.replace("/(auth)/login");
                     return;
@@ -32,16 +36,16 @@ export default function FrontDeskLayout() {
                     const roleType = await getRoleTypeForUser(user.id);
 
                     if (roleType !== "front_desk") {
-                    if (roleType === "super_admin") {
-                        router.replace("/(super_admin)");
-                    } else {
-                        router.replace("/(user)");
-                    }
+                        if (roleType === "super_admin") {
+                            router.replace("/(super_admin)");
+                        } else {
+                            router.replace("/(user)");
+                        }
                     }
                 } catch {
                     router.replace("/(user)");
                 }
-                }
+            }
             );
 
 
@@ -64,55 +68,55 @@ export default function FrontDeskLayout() {
             }
         };
         verifyAccess();
-         return () => {
+        return () => {
             subscription?.unsubscribe();
         };
-        }, []);
+    }, []);
 
     return (
         <Tabs
             screenOptions={{
                 headerShown: false,
-                tabBarStyle: { 
-                    backgroundColor: "#FFFFFF", 
-                    height: Platform.OS === 'ios' ? 88 : 60 + insets.bottom, 
+                tabBarStyle: {
+                    backgroundColor: isDark ? '#262626' : '#FFFFFF',
+                    height: Platform.OS === 'ios' ? 88 : 60 + insets.bottom,
                     paddingBottom: insets.bottom > 0 ? insets.bottom : 8,
                     borderTopWidth: 1,
-                    borderTopColor: '#F3F4F6',
+                    borderTopColor: isDark ? '#171717' : '#e5e5e5',
                 },
                 tabBarActiveTintColor: "#FF6600",
-                tabBarInactiveTintColor: "#8B8D98",
-                tabBarLabelStyle: { 
-                    fontSize: 12, 
+                tabBarInactiveTintColor: isDark ? '#737373' : '#8B8D98',
+                tabBarLabelStyle: {
+                    fontSize: 12,
                     fontFamily: "Poppins-Medium",
                     marginBottom: insets.bottom > 0 ? 0 : 4
                 },
             }}
         >
-           
+
             <Tabs.Screen
                 name="history"
                 options={{
-                    title: "Transactions",
+                    title: translate("layout.transactions"),
                     tabBarIcon: ({ color }) => (
                         <MaterialIcons size={24} name="history" color={color} />
                     ),
                 }}
             />
-             <Tabs.Screen
+            <Tabs.Screen
                 name="index"
                 options={{
                     title: "",
                     tabBarIcon: () => null,
-                    tabBarButton: (props: any) => isActive ?(
+                    tabBarButton: (props: any) => isActive ? (
                         <QRRoundedButton onPress={props.onPress} bottomInset={insets.bottom} />
-                    ): null,
+                    ) : null,
                 }}
             />
             <Tabs.Screen
-                name="profile"
+                name="settings"
                 options={{
-                    title: "Profile",
+                    title: translate("layout.settings"),
                     tabBarIcon: ({ color }) => (
                         <MaterialIcons size={24} name="person" color={color} />
                     ),

@@ -17,6 +17,7 @@ import { useTranslation, Trans } from "react-i18next";
 import OnboardingLayout from "../(onboarding)/_layout";
 import { Modal, type ModalButton } from "@/components/modal";
 import { supabase } from "@/supabase/supabase";
+import TranslateButton from "@/components/ui/translate-button";
 
 
 
@@ -123,9 +124,11 @@ export default function Login() {
         >
           <Ionicons name="chevron-back" size={18} color="#9ca3af" />
         </TouchableOpacity>
-        <View className="flex-1 items-center -ml-10">
+        <View className="flex-1 items-center ml-10">
           <Text className="text-xl font-poppins-bold text-neutral-900 dark:text-darkTextPrimary">{translate("onboarding.login.button")}</Text>
         </View>
+
+        <TranslateButton />
       </View>
       <View className="flex-1 justify-start p-4">
         <KeyboardAvoidingView

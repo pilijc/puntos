@@ -57,13 +57,13 @@ export default function RewardCard({
         ) : null}
         <View className="flex-row items-center justify-between mt-3">
           <Text className="text-primary font-poppins-semibold">
-            {reward.points.toLocaleString()} {translate("rewards.rewardCard.pointsSuffix")}
+            {reward.points.toLocaleString()} {translate("user.rewards.rewardCard.pointsSuffix")}
           </Text>
           <View className={`px-3 py-1 rounded-full ${badgeClass}`}>
             <Text
               className={`text-[10px] font-poppins-semibold ${badgeTextClass}`}
             >
-              {isRedeemable ? translate("rewards.rewardCard.redeem") : translate("rewards.rewardCard.insufficient")}
+              {isRedeemable ? translate("user.rewards.rewardCard.redeem") : translate("user.rewards.rewardCard.insufficient")}
             </Text>
           </View>
         </View>
