@@ -122,7 +122,7 @@ export async function addStamp(
     }
 
     // ──────────────────────────────────────────────
-    // 2. Check existing stamp_progress for daily limit
+    // 2. Check existing stamp_progress
     // ──────────────────────────────────────────────
     const { data: existingProgress, error: fetchError } = await supabase
       .from("stamp_progress")
@@ -137,11 +137,6 @@ export async function addStamp(
     }
 
     const now = new Date().toISOString();
-
-    // If user already stamped today for this store → reject
-    if (existingProgress?.last_stamp_at && isSameDay(existingProgress.last_stamp_at, now)) {
-      return { success: false, reason: "already_stamped_today" };
-    }
 
     // ──────────────────────────────────────────────
     // 3. Upsert stamp_progress
@@ -199,27 +194,24 @@ export async function addStamp(
     }
 
     if (existingReward) {
-      // If already logged for today, skip reward update
-      if (existingReward.last_stamp_date !== todayDate) {
-        let newStampCount = existingReward.current_stamp_count + 1;
+      let newStampCount = existingReward.current_stamp_count + 1;
 
-        // If count has reached target (full cycle completed), reset to 1
-        if (existingReward.current_stamp_count >= existingReward.target_stamps) {
-          newStampCount = 1;
-        }
+      // If count has reached target (full cycle completed), reset to 1
+      if (existingReward.current_stamp_count >= existingReward.target_stamps) {
+        newStampCount = 1;
+      }
 
-        const { error: rewardUpdateError } = await supabase
-          .from("stamp_rewards")
-          .update({
-            current_stamp_count: newStampCount,
-            last_stamp_date: todayDate,
-            updated_at: now,
-          })
-          .eq("id", existingReward.id);
+      const { error: rewardUpdateError } = await supabase
+        .from("stamp_rewards")
+        .update({
+          current_stamp_count: newStampCount,
+          last_stamp_date: todayDate,
+          updated_at: now,
+        })
+        .eq("id", existingReward.id);
 
-        if (rewardUpdateError) {
-          console.error("Error updating stamp reward:", rewardUpdateError.message);
-        }
+      if (rewardUpdateError) {
+        console.error("Error updating stamp reward:", rewardUpdateError.message);
       }
     } else {
       // First-ever stamp for this store → create reward row

@@ -7,6 +7,7 @@ import { CameraView, useCameraPermissions } from "expo-camera";
 import { processFrontDeskScan, getCurrentUserStore } from "@/services/operator-service";
 import { Button } from "@/components/button";
 import { Modal, type ModalButton } from "@/components/modal";
+import { useRecentTransactions } from "@/hooks/use-recent-transactions";
 import { useTranslation } from "react-i18next";
 import { legacy_makeMutableUI } from "react-native-reanimated/lib/typescript/mutables";
 
@@ -18,7 +19,7 @@ export default function FrontDeskScan() {
   const [showCamera, setShowCamera] = useState(false);
   const [purchaseAmount, setPurchaseAmount] = useState("");
   const [showAmountInput, setShowAmountInput] = useState(false);
-  const [recentScans, setRecentScans] = useState<Array<{ points: number; timestamp: Date; amount: number }>>([]);
+  const { recentScans, fetchTransactions, addScan } = useRecentTransactions();
   const [storeInfo, setStoreInfo] = useState<{ name: string; id: number } | null>(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [successTransactionId, setSuccessTransactionId] = useState<string>("");
@@ -40,6 +41,9 @@ export default function FrontDeskScan() {
     const fetchStoreInfo = async () => {
       const storeInfo = await getCurrentUserStore();
       setStoreInfo(storeInfo);
+      if (storeInfo) {
+        fetchTransactions(storeInfo.id);
+      }
     };
 
     fetchStoreInfo();
@@ -173,11 +177,11 @@ export default function FrontDeskScan() {
   const handleModalClose = () => {
 
     const amount = parseFloat(purchaseAmount);
-    setRecentScans(prev => [{
+    addScan({
       points: successPoints,
       timestamp: new Date(),
       amount: amount
-    }, ...prev.slice(0, 4)]);
+    });
 
 
     setScanned(false);
