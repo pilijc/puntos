@@ -255,7 +255,7 @@ export default function Discover() {
     const { longitude, latitude } = location.coords;
     cameraRef.current?.setCamera({
       centerCoordinate: [longitude, latitude],
-      zoomLevel: 14,
+      zoomLevel: 10,
       animationDuration: 1000,
     });
     hasCenteredOnUserRef.current = true;
