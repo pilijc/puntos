@@ -88,19 +88,20 @@ export async function createQRTransaction(
   const storeId = staffData.store_id;
 
   // Get points configuration for this store
-  const { data: pointsData, error: pointsError } = await supabase
-    .from('store_qr_rewards')
-    .select('percentage')
-    .eq('store_id', storeId)
-    .single();
+  // const { data: pointsData, error: pointsError } = await supabase
+  //   .from('store_qr_rewards')
+  //   .select('percentage')
+  //   .eq('store_id', storeId)
+  //   .single();
 
-  if (pointsError || !pointsData) {
-    throw new Error('Failed to get points configuration for store');
-  }
+  // if (pointsError || !pointsData) {
+  //   throw new Error('Failed to get points configuration for store');
+  // }
 
   // Calculate points for purchase amount and percentage
-  const pointsToAward = Math.ceil(purchaseAmount * (pointsData.percentage / 100));
+  const pointsToAward = Math.ceil(purchaseAmount * (10 / 100));
    
+  //pointsData.percentage  will back to changes
 
   // Create purchase record first
   const { data: purchaseData, error: purchaseError } = await supabase
