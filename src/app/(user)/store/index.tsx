@@ -7,7 +7,7 @@ import {
   Image,
 } from "@/tw";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import React from "react";
+import React, { useCallback } from "react";
 import { FadeIn, FadeOut, Layout, Easing } from "react-native-reanimated";
 import { useRouter } from "expo-router";
 import Carousel from "react-native-reanimated-carousel";
@@ -39,6 +39,7 @@ export default function Rewards() {
     rewardPointsOrder,
     setRewardSort,
     setRewardPointsOrder,
+    isSwitchingStore,
     isNearbyOpen,
     setIsNearbyOpen,
     isStampLogOpen,
@@ -46,6 +47,7 @@ export default function Rewards() {
     carouselIndex,
     setCarouselIndex,
     setHeroIndex,
+    setIsSwitchingStore,
     isStamping,
     refreshing,
   } = useRewardsUiStore();
@@ -65,6 +67,12 @@ export default function Rewards() {
     displayStreaks,
     swipeIndicatorStyle,
   } = useStoreOverviewData();
+
+  const handleHeroSnap = useCallback((index: number) => {
+    setHeroIndex(index);
+    setIsSwitchingStore(true);
+    setTimeout(() => setIsSwitchingStore(false), 400);
+  }, [setHeroIndex, setIsSwitchingStore]);
 
   return (
     <StoreScreenContainer
@@ -99,7 +107,7 @@ export default function Rewards() {
         <UserStoreHeroCarousel
           nearbyStores={nearbyStores}
           storesWithLocation={storesWithLocation}
-          setHeroIndex={setHeroIndex}
+          setHeroIndex={handleHeroSnap}
           swipeIndicatorStyle={swipeIndicatorStyle}
         />
 
@@ -235,99 +243,156 @@ export default function Rewards() {
       </View>
 
       <View>
-        {nearbyStores.length > 0 && displayStreaks.length === 0 && displayStamps.length === 0 && (
+        {isSwitchingStore ? (
+          // Skeleton shimmer while switching stores
           <AnimatedView
-            entering={FadeIn.duration(400)}
-            className="bg-white dark:bg-darkBackgroundMuted rounded-xl p-8 items-center border border-neutral-100 dark:border-darkBorder mx-1"
+            entering={FadeIn.duration(150)}
+            exiting={FadeOut.duration(150)}
+            className="gap-y-3"
           >
-            <MaterialIcons name="event-note" size={40} color="#FF6600" />
-            <Text className="text-lg font-poppins-semibold text-neutral-900 dark:text-darkTextPrimary mt-3 text-center">
-              {translate("rewards.upcomingEvents.title")}
-            </Text>
-            <Text className="text-neutral-500 text-center font-poppins text-xs mt-1 px-4">
-              {translate("rewards.upcomingEvents.subtitle")}
-            </Text>
-          </AnimatedView>
-        )}
+            {/* Skeleton — mirrors UserStampLogCard layout exactly */}
+            <View className="bg-white dark:bg-darkBackgroundMuted rounded-2xl border border-neutral-100 dark:border-darkBorder overflow-hidden mx-1 p-3">
 
-        {displayStreaks.length > 0 && (
-          <View className="mb-3">
-            <Carousel
-              width={screenWidth - 48}
-              height={150}
-              data={displayStreaks}
-              scrollAnimationDuration={1000}
-              enabled={displayStreaks.length > 1}
-              loop={displayStreaks.length > 1}
-              autoPlay={isAutoPlayEnabled && displayStreaks.length > 1}
-              autoPlayInterval={3500}
-              onScrollStart={handleCarouselInteraction}
-              onSnapToItem={(index) => setCarouselIndex(index)}
-              renderItem={({ item: streak }) => (
-                <UserStreakCard
-                  key={streak.store_id}
-                  streak={streak}
-                  nearbyStores={nearbyStores}
-                  isStoreNearby={isStoreNearby}
-                />
-              )}
-            />
-          </View>
-        )}
+              {/* Header row: icon + title | nearby pill + chevron + view-all */}
+              <View className="flex-row items-center justify-between">
+                <View className="flex-row items-center gap-x-2">
+                  {/* fire / stars icon placeholder */}
+                  <View className="w-5 h-5 rounded-full bg-neutral-200 dark:bg-white/10" />
+                  {/* "Stamp Log" label */}
+                  <View className="h-3.5 w-20 rounded-full bg-neutral-200 dark:bg-white/10" />
+                </View>
+                <View className="flex-row items-center gap-x-3">
+                  {/* Nearby badge */}
+                  <View className="h-5 w-16 rounded-full bg-neutral-100 dark:bg-white/5" />
+                  {/* Chevron */}
+                  <View className="w-5 h-5 rounded-full bg-neutral-200 dark:bg-white/10" />
+                  {/* VIEW ALL */}
+                  <View className="h-3.5 w-12 rounded-full bg-neutral-200 dark:bg-white/10" />
+                </View>
+              </View>
 
-        {displayStamps.length === 0 ? (
-          nearbyStores.length === 0 && (
-            <View className="bg-white dark:bg-darkBackgroundMuted rounded-xl p-6 items-center mx-1">
-              <MaterialIcons name="stars" size={32} color="#d1d5db" className="mb-2" />
-              <Text className="text-neutral-500 font-poppins-semibold text-sm mt-2">
-                {translate("rewards.noActiveStamps")}
-              </Text>
-              <Text className="text-neutral-400 font-poppins text-xs text-center mt-1">
-                {translate("rewards.visitStartStamps")}
-              </Text>
-            </View>
-          )
-        ) : (
-          <View>
-            <Carousel
-              width={screenWidth - 48}
-              height={isStampLogOpen ? 250 : 150}
-              data={displayStamps}
-              scrollAnimationDuration={1000}
-              enabled={displayStamps.length > 1}
-              loop={displayStamps.length > 1}
-              autoPlay={isAutoPlayEnabled && displayStamps.length > 1}
-              autoPlayInterval={3000}
-              onScrollStart={handleCarouselInteraction}
-              onSnapToItem={(index) => setCarouselIndex(index)}
-              renderItem={({ item: stamp }) => (
-                <UserStampLogCard
-                  key={stamp.store_id}
-                  stamp={stamp}
-                  nearbyStores={nearbyStores}
-                  isStoreNearby={isStoreNearby}
-                  stampRewards={stampRewards}
-                  activeStampProgramRewards={activeStampProgramRewards}
-                  isStampLogOpen={isStampLogOpen}
-                  onToggleExpand={() => setIsStampLogOpen(!isStampLogOpen)}
-                />
-              )}
-            />
+              {/* Store row: logo circle + name + address */}
+              <View className="flex-row items-center gap-x-3 mt-2.5">
+                <View className="w-10 h-10 rounded-full bg-neutral-200 dark:bg-white/10" />
+                <View className="gap-y-1.5 flex-1">
+                  <View className="h-3.5 w-1/2 rounded-full bg-neutral-200 dark:bg-white/10" />
+                  <View className="h-2.5 w-1/3 rounded-full bg-neutral-100 dark:bg-white/5" />
+                </View>
+              </View>
 
-            {displayStamps.length > 1 && (
-              <View className="flex-row justify-center items-center gap-x-2 mt-1">
-                {displayStamps.map((_, index) => (
+              {/* Progress label: "3/7 DAYS THIS WEEK" */}
+              <View className="h-2.5 w-28 rounded-full bg-neutral-100 dark:bg-white/5 mt-2" />
+
+              {/* Stamp circles row — 7 circles matching the real card */}
+              <View className="flex-row justify-between mt-3">
+                {[...Array(7)].map((_, i) => (
                   <View
-                    key={index}
-                    className={`h-1.5 rounded-full ${carouselIndex === index
-                      ? "w-5 bg-primary"
-                      : "w-1.5 bg-neutral-300 dark:bg-neutral-600"
-                      }`}
+                    key={i}
+                    className="w-10 h-10 rounded-full bg-neutral-200 dark:bg-white/10"
                   />
                 ))}
               </View>
+
+            </View>
+          </AnimatedView>
+
+        ) : (
+          <>
+            {nearbyStores.length > 0 && displayStreaks.length === 0 && displayStamps.length === 0 && (
+              <AnimatedView
+                entering={FadeIn.duration(400)}
+                className="bg-white dark:bg-darkBackgroundMuted rounded-xl p-8 items-center border border-neutral-100 dark:border-darkBorder mx-1"
+              >
+                <MaterialIcons name="event-note" size={40} color="#FF6600" />
+                <Text className="text-lg font-poppins-semibold text-neutral-900 dark:text-darkTextPrimary mt-3 text-center">
+                  {translate("rewards.upcomingEvents.title")}
+                </Text>
+                <Text className="text-neutral-500 text-center font-poppins text-xs mt-1 px-4">
+                  {translate("rewards.upcomingEvents.subtitle")}
+                </Text>
+              </AnimatedView>
             )}
-          </View>
+
+            {displayStreaks.length > 0 && (
+              <View className="mb-3">
+                <Carousel
+                  width={screenWidth - 48}
+                  height={155}
+                  data={displayStreaks}
+                  scrollAnimationDuration={1000}
+                  enabled={displayStreaks.length > 1}
+                  loop={displayStreaks.length > 1}
+                  autoPlay={isAutoPlayEnabled && displayStreaks.length > 1}
+                  autoPlayInterval={3500}
+                  onScrollStart={handleCarouselInteraction}
+                  onSnapToItem={(index) => setCarouselIndex(index)}
+                  renderItem={({ item: streak }) => (
+                    <UserStreakCard
+                      key={streak.store_id}
+                      streak={streak}
+                      nearbyStores={nearbyStores}
+                      isStoreNearby={isStoreNearby}
+                    />
+                  )}
+                />
+              </View>
+            )}
+
+            {displayStamps.length === 0 ? (
+              nearbyStores.length === 0 && (
+                <View className="bg-white dark:bg-darkBackgroundMuted rounded-xl p-6 items-center mx-1">
+                  <MaterialIcons name="stars" size={32} color="#d1d5db" className="mb-2" />
+                  <Text className="text-neutral-500 font-poppins-semibold text-sm mt-2">
+                    {translate("rewards.noActiveStamps")}
+                  </Text>
+                  <Text className="text-neutral-400 font-poppins text-xs text-center mt-1">
+                    {translate("rewards.visitStartStamps")}
+                  </Text>
+                </View>
+              )
+            ) : (
+              <View>
+                <Carousel
+                  width={screenWidth - 48}
+                  height={isStampLogOpen ? 265 : 165}
+                  data={displayStamps}
+                  scrollAnimationDuration={1000}
+                  enabled={displayStamps.length > 1}
+                  loop={displayStamps.length > 1}
+                  autoPlay={isAutoPlayEnabled && displayStamps.length > 1}
+                  autoPlayInterval={3000}
+                  onScrollStart={handleCarouselInteraction}
+                  onSnapToItem={(index) => setCarouselIndex(index)}
+                  renderItem={({ item: stamp }) => (
+                    <UserStampLogCard
+                      key={stamp.store_id}
+                      stamp={stamp}
+                      nearbyStores={nearbyStores}
+                      isStoreNearby={isStoreNearby}
+                      stampRewards={stampRewards}
+                      activeStampProgramRewards={activeStampProgramRewards}
+                      isStampLogOpen={isStampLogOpen}
+                      onToggleExpand={() => setIsStampLogOpen(!isStampLogOpen)}
+                    />
+                  )}
+                />
+
+                {displayStamps.length > 1 && (
+                  <View className="flex-row justify-center items-center gap-x-2 mt-1">
+                    {displayStamps.map((_, index) => (
+                      <View
+                        key={index}
+                        className={`h-1.5 rounded-full ${carouselIndex === index
+                          ? "w-5 bg-primary"
+                          : "w-1.5 bg-neutral-300 dark:bg-neutral-600"
+                          }`}
+                      />
+                    ))}
+                  </View>
+                )}
+              </View>
+            )}
+          </>
         )}
       </View>
 

@@ -1,4 +1,4 @@
-import { TextInput, ActivityIndicator, RefreshControl } from "react-native";
+import { TextInput, RefreshControl } from "react-native";
 import { View, Text, TouchableOpacity } from "@/tw";
 import React, { useMemo, useCallback } from "react";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
@@ -54,7 +54,6 @@ export default function StoreListScreen() {
     };
   }, [filteredStores]);
 
-  const isLoading = stampsLoading && !refreshing;
 
   return (
     <StoreScreenContainer
@@ -88,15 +87,7 @@ export default function StoreListScreen() {
         )}
       </View>
 
-      {isLoading ? (
-        <View className="items-center justify-center py-20">
-          <ActivityIndicator size="large" color="#FF6600" />
-          <Text className="mt-4 font-poppins text-neutral-400">
-            {translate("rewards.storesList.loading")}
-          </Text>
-        </View>
-      ) : (
-        <View className="mt-6 gap-y-8">
+      <View className="mt-6 gap-y-8">
           {filteredStores.length === 0 ? (
             <View className="items-center justify-center py-20">
               <View className="w-24 h-24 rounded-full bg-neutral-100 dark:bg-white/5 items-center justify-center mb-6">
@@ -144,7 +135,6 @@ export default function StoreListScreen() {
             </>
           )}
         </View>
-      )}
     </StoreScreenContainer>
   );
 }
