@@ -11,6 +11,7 @@ import { useFocusEffect } from "expo-router";
 import { AdminStoreRow } from "@/services/store-service";
 import { useSuperAdminStoresStore } from "@/store/super-admin-stores-store";
 import { AdminStoreCard, AdminStoreSkeletonCard } from "@/components/stores/admin-store-card";
+import { AdminStoreDetails } from "@/components/stores/admin-store-details";
 
 // ── Constants ───────────────────────────────────────────────────────────────
 const FILTERS = ["All", "pending_review", "active", "inactive"] as const;
@@ -28,6 +29,7 @@ export default function SuperAdminStores() {
 	const { stores, loading, error, isFetching, fetchStores, approveStore, rejectStore } = useSuperAdminStoresStore();
 	const [activeFilter, setActiveFilter] = useState<Filter>("pending_review");
 	const [refreshing, setRefreshing] = useState(false);
+	const [selectedStore, setSelectedStore] = useState<AdminStoreRow | null>(null);
 
 	useFocusEffect(useCallback(() => { fetchStores(); }, []));
 
@@ -85,6 +87,23 @@ export default function SuperAdminStores() {
 		: stores.filter((s) => s.status === activeFilter);
 
 	const pendingCount = stores.filter((s) => s.status === "pending_review").length;
+
+	if (selectedStore) {
+		return (
+			<AdminStoreDetails 
+				store={selectedStore} 
+				onBack={() => setSelectedStore(null)} 
+				onApprove={(store) => {
+					handleApprove(store);
+					setSelectedStore(null); // Return to list after action
+				}} 
+				onReject={(store) => {
+					handleReject(store);
+					setSelectedStore(null); // Return to list after action
+				}} 
+			/>
+		);
+	}
 
 	return (
 		<ScreenWrapper className="flex-1 bg-backgroundMuted dark:bg-slate-950">
@@ -181,6 +200,7 @@ export default function SuperAdminStores() {
 						store={store}
 						onApprove={handleApprove}
 						onReject={handleReject}
+						onSelect={(s) => setSelectedStore(s)}
 					/>
 				))}
 
