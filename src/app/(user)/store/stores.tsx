@@ -1,4 +1,4 @@
-import { TextInput, RefreshControl } from "react-native";
+import { TextInput, RefreshControl, ActivityIndicator } from "react-native";
 import { View, Text, TouchableOpacity } from "@/tw";
 import React, { useMemo, useCallback } from "react";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
@@ -87,7 +87,7 @@ export default function StoreListScreen() {
         )}
       </View>
 
-      {isLoading ? (
+      {stampsLoading ? (
         <View className="items-center justify-center py-20">
           <ActivityIndicator size="large" color="#FF6600" />
           <Text className="mt-4 font-poppins text-neutral-400">
@@ -143,6 +143,7 @@ export default function StoreListScreen() {
             </>
           )}
         </View>
+      )}
     </StoreScreenContainer>
   );
 }
