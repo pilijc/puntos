@@ -4,7 +4,8 @@ import {
 	Alert,
 	RefreshControl,
 } from "react-native";
-import { View, Text, TouchableOpacity, SafeAreaView } from "@/tw";
+import { View, Text, TouchableOpacity } from "@/tw";
+import { ScreenWrapper } from "@/components/ui/screen-wrapper";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useFocusEffect } from "expo-router";
 import { AdminStoreRow } from "@/services/store-service";
@@ -86,7 +87,7 @@ export default function SuperAdminStores() {
 	const pendingCount = stores.filter((s) => s.status === "pending_review").length;
 
 	return (
-		<SafeAreaView className="flex-1 bg-backgroundMuted dark:bg-slate-950">
+		<ScreenWrapper className="flex-1 bg-backgroundMuted dark:bg-slate-950">
 
 			{/* ── Header ── */}
 			<View className="bg-white border-b border-slate-100 dark:bg-slate-900 dark:border-slate-800 px-6 py-4 flex-row items-center justify-start">
@@ -148,7 +149,7 @@ export default function SuperAdminStores() {
 			<View className="flex-1">
 				<ScrollView
 					className="flex-1"
-					contentContainerStyle={{ padding: 16, paddingBottom: 80 }}
+					contentContainerStyle={{ padding: 16, paddingBottom: 110 }}
 					showsVerticalScrollIndicator={false}
 					refreshControl={
 						<RefreshControl
@@ -196,6 +197,6 @@ export default function SuperAdminStores() {
 					)}
 				</ScrollView>
 			</View>
-		</SafeAreaView>
+		</ScreenWrapper>
 	);
 }
