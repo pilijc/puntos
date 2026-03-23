@@ -54,6 +54,8 @@ export default function ViewStore() {
       router.push({ pathname: "/(store_manager)/configure-streaks", params: { storeId } });
     } else if (featureId === "stamps") {
       router.push({ pathname: "/(store_manager)/configure-stamp", params: { storeId } });
+    } else if (featureId === "qr") {
+      router.push({ pathname: "/(store_manager)/configure-qr", params: { storeId } });
     }
   };
 
@@ -301,7 +303,9 @@ export default function ViewStore() {
                   ? feature?.streak_enabled ?? false
                   : featureItem.id === "stamps"
                     ? feature?.stamp_enabled ?? false
-                    : feature?.qr_enabled ?? false;
+                    : featureItem.id === "qr"
+                      ? feature?.qr_enabled ?? false
+                      : false;
 
               const toggle = () => {
                 if (!feature) return;
@@ -309,7 +313,7 @@ export default function ViewStore() {
                   setFeature({ ...feature, streak_enabled: !feature.streak_enabled });
                 } else if (featureItem.id === "stamps") {
                   setFeature({ ...feature, stamp_enabled: !feature.stamp_enabled });
-                } else {
+                } else if (featureItem.id === "qr") {
                   setFeature({ ...feature, qr_enabled: !feature.qr_enabled });
                 }
               };
@@ -346,12 +350,15 @@ export default function ViewStore() {
                       thumbColor="#FFFFFF"
                     />
                   </View>
-                  {isEnabled && (featureItem.badge || featureItem.id === "stamps") && (() => {
+
+                  {isEnabled && (featureItem.badge || featureItem.id === "stamps" || featureItem.id === "qr") && (() => {
                     const badgeText = featureItem.id === "stamps"
                       ? activeStamp
                         ? `${activeStamp.total_stamps} stamps • ${rewards.find(r => r.id === activeStamp.reward_id)?.title ?? "Reward"}`
-                        : "No active program"
-                      : featureItem.badge;
+                        : "No active stamps program"
+                      : featureItem.id === "qr"
+                        ? "No active qr configuration"
+                        : featureItem.badge;
                     return (
                       <View className="px-4 py-3 border-t border-slate-100 dark:border-slate-800 flex-row items-center justify-between bg-slate-50 dark:bg-slate-900">
                         <View
