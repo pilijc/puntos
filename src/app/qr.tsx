@@ -8,6 +8,8 @@ import QRCode from 'react-native-qrcode-svg';
 //import { supabase } from '@/supabase/supabase';
 import { getCurrentUser, getStaticQRCode, addAutoUser, listenToQRTransaction } from '@/services/qr-service';
 import { supabase } from 'supabase/supabase';
+import { useStamps } from '@/hooks/use-stamps';
+import { useStampRewards } from '@/hooks/use-stamp-rewards';
 
 export default function Qr() {
   const router = useRouter();
@@ -18,6 +20,8 @@ export default function Qr() {
   const [qrValue, setQrValue] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
+  const { refetch: refetchStamps } = useStamps();
+  const { refetch: refetchStampRewards } = useStampRewards();
 
   // Get static QR code based on userID
   const fetchQRCode = async () => {
@@ -65,6 +69,10 @@ export default function Qr() {
       //vibration for celebration
       Vibration.vibrate(500);
       
+      // Tell the stamp store to fetch updated stamp logs in the background
+      refetchStamps();
+      refetchStampRewards();
+
       // Show custom congratulations modal
       setEarnedPoints(transaction.points_earned);
       setShowCongratsModal(true);

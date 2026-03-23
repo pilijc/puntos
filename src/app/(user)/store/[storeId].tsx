@@ -58,8 +58,8 @@ export default function StoreRewards() {
       }
     >
       <StoreHeader
-        title={store?.name ?? translate("rewards.storeDetail.title")}
-        subtitle={`${store?.address ?? translate("rewards.storeDetail.locationFallback")} - ${translate("rewards.distanceMeters", {
+        title={store?.name ?? translate("user.rewards.storeDetail.title")}
+        subtitle={`${store?.address ?? translate("user.rewards.storeDetail.locationFallback")} - ${translate("user.rewards.distanceMeters", {
           meters: store
             ? (store.distanceMeters ?? 0).toLocaleString(undefined, {
               maximumFractionDigits: 2,
@@ -77,10 +77,10 @@ export default function StoreRewards() {
             </View>
             <View className="flex-1">
               <Text className="text-primary font-poppins-semibold">
-                {translate("rewards.storeDetail.nearbyMessage", { name: store.name })}
+                {translate("user.rewards.storeDetail.nearbyMessage", { name: store.name })}
               </Text>
               <Text className="text-xs text-primary/80 font-poppins mt-1">
-                {translate("rewards.storeDetail.stampNowPrompt")}
+                {translate("user.rewards.storeDetail.stampNowPrompt")}
               </Text>
             </View>
           </View>
@@ -94,8 +94,8 @@ export default function StoreRewards() {
             ) : (
               <Text className="text-white text-[10px] font-poppins-semibold">
                 {hasStampedToday
-                  ? translate("rewards.buttons.stamped")
-                  : translate("rewards.buttons.stamp")}
+                  ? translate("user.rewards.buttons.stamped")
+                  : translate("user.rewards.buttons.stamp")}
               </Text>
             )}
           </TouchableOpacity>
@@ -105,7 +105,7 @@ export default function StoreRewards() {
       {hasClaimableReward && (
         <View className="mb-4">
           <Text className="text-lg font-poppins-semibold text-neutral-900 mb-3">
-            {translate("rewards.storeDetail.unlockedSection")}
+            {translate("user.rewards.storeDetail.unlockedSection")}
           </Text>
           <View className="bg-primary/5 rounded-2xl p-4 border border-primary/20 flex-row items-center justify-between">
             <View className="flex-row items-center gap-x-3 flex-1">
@@ -120,10 +120,10 @@ export default function StoreRewards() {
               </View>
               <View className="flex-1 pr-2">
                 <Text className="text-primary font-poppins-semibold leading-tight">
-                  {claimableRewardItem?.title || translate("rewards.storeDetail.freeReward")}
+                  {claimableRewardItem?.title || translate("user.rewards.storeDetail.freeReward")}
                 </Text>
                 <Text className="text-xs text-neutral-500 font-poppins mt-0.5">
-                  {translate("rewards.storeDetail.readyToClaim")}
+                  {translate("user.rewards.storeDetail.readyToClaim")}
                 </Text>
               </View>
             </View>
@@ -132,7 +132,7 @@ export default function StoreRewards() {
               onPress={() => { }}
             >
               <Text className="text-white text-xs font-poppins-bold tracking-wide">
-                {translate("rewards.claim")}
+                {translate("user.rewards.claim")}
               </Text>
             </TouchableOpacity>
           </View>
@@ -141,10 +141,10 @@ export default function StoreRewards() {
 
       <View className="flex-row items-center justify-between">
         <Text className="text-lg font-poppins-semibold text-neutral-900">
-          {translate("rewards.storeDetail.redeemableSection")}
+          {translate("user.rewards.storeDetail.redeemableSection")}
         </Text>
         <Text className="text-xs text-neutral-400 font-poppins-medium">
-          {translate("rewards.storeDetail.itemsCount", { count: storeRewards.length })}
+          {translate("user.rewards.storeDetail.itemsCount", { count: storeRewards.length })}
         </Text>
       </View>
 
@@ -158,7 +158,7 @@ export default function StoreRewards() {
           return (
             <SortPill
               key={option.id}
-              label={translate(`rewards.filters.${option.labelKey}`)}
+              label={translate(`user.rewards.filters.${option.labelKey}`)}
               active={isActive}
               rightIcon={
                 isPoints ? (
@@ -186,7 +186,7 @@ export default function StoreRewards() {
         {storeRewards.length === 0 ? (
           <View className="bg-white dark:bg-darkBackgroundMuted rounded-2xl p-6 border border-neutral-100 dark:border-darkBorder items-center">
             <Text className="text-neutral-500 font-poppins">
-              {translate("rewards.storeDetail.noRewards")}
+              {translate("user.rewards.storeDetail.noRewards")}
             </Text>
           </View>
         ) : (

@@ -3,6 +3,7 @@
 import { supabase } from "@/supabase/supabase";
 
 import { QRCodeState, QRTransaction } from "@/type/qr";
+import { addStamp } from "@/services/stamp-service";
 
 
 //import { store } from "expo-router/build/global-state/router-store";
@@ -136,6 +137,9 @@ export async function createQRTransaction(
   // Decrease the stored_amount in points table
    
 
+  // Award a stamp if the store has the program enabled (do this BEFORE QR transaction so real-time listeners fetching stamps get the latest data)
+  await addStamp(userId, storeId);
+
   // Create the QR transaction
   const { data, error } = await supabase
     .from('qr_transactions')
@@ -209,8 +213,8 @@ export async function getUserTransactionHistory(userId: string): Promise<any[]> 
       id: transaction.id,
       section: formatDateSection(transaction.created_at),
       type: 'earned',
-      title: transaction.stores?.name || 'activity.unknownStore',
-      subtitle: 'activity.subtitle.purchasePoints',
+      title: transaction.stores?.name || 'user.activity.unknownStore',
+      subtitle: 'user.activity.subtitle.purchasePoints',
       time: transaction.created_at,
       points: `+${transaction.points_earned}`,
       positive: true,

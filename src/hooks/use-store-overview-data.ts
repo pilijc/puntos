@@ -6,7 +6,7 @@ import { useStampRewards } from "@/hooks/use-stamp-rewards";
 import { useStamps } from "@/hooks/use-stamps";
 import { getStores } from "@/services/store-service";
 import { StampProgress } from "@/services/stamp-service";
-import { useRewardsDataStore } from "@/store/user/rewards-data-store";
+import { useRewardsDataStore } from "@/hooks/use-rewards-data";
 import { useRewardsUiStore } from "@/store/user/rewards-ui-store";
 import { useStoreStore } from "@/store/user/store-store";
 import { sortRewards } from "@/utils/store-helpers";

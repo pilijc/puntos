@@ -14,7 +14,8 @@ import signUpService, { GoogleSignInCancelledError } from "../../services/auth-s
 import { signUpWithGoogleService, isEmailTaken } from "@/services/auth-service";
 import { NameStep, EmailStep, PasswordStep, TermsStep, RoleStep, StepHeader } from "../../components/stepper";
 import { Ionicons } from "@expo/vector-icons";
-import { useTranslation, Trans } from "react-i18next";
+import { useTranslation } from "react-i18next";
+import TranslateButton from "@/components/ui/translate-button";
 
 export default function SignUp() {
   const { t: translate } = useTranslation();
@@ -318,11 +319,12 @@ export default function SignUp() {
         >
           <Ionicons name="chevron-back" size={18} color="#9ca3af" />
         </TouchableOpacity>
-        <View className="flex-1 items-center -ml-10">
+        <View className="flex-1 items-center ml-10">
           <Text className="text-xl font-poppins-bold text-neutral-900 dark:text-darkTextPrimary">
             {role === 'manager' ? translate("onboarding.signup.titleManager") : translate("onboarding.signup.title")}
           </Text>
         </View>
+        <TranslateButton />
       </View>
 
       <View className="flex-1 justify-start p-6">

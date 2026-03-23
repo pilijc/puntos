@@ -224,7 +224,7 @@ export default function EditProfileModal({ visible, onClose }: Props) {
             <AppModal
                 visible={errorVisible}
                 onClose={() => setErrorVisible(false)}
-                title={translate("error.title")}
+                title={translate("label.error")}
                 message={translate("settings.profile.error.failed")}
                 buttons={[
                     {

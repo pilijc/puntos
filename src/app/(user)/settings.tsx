@@ -1,4 +1,4 @@
-import { View, Text, SafeAreaView, TouchableOpacity } from "@/tw";
+import { View, Text, SafeAreaView, TouchableOpacity, ScrollView } from "@/tw";
 import { useFocusEffect, router } from "expo-router";
 import React, { useState, useCallback } from "react";
 import { Ionicons } from "@expo/vector-icons";
@@ -30,7 +30,6 @@ export default function UserSettings() {
     profile,
     loading,
     preferences,
-    updatePreferences,
     refreshProfile
   } = useProfile();
 
@@ -73,70 +72,76 @@ export default function UserSettings() {
   if (loading && !user) {
     return (
       <SafeAreaView className="flex-1 bg-background dark:bg-darkBackground justify-center items-center">
-        <Text className="text-neutral-500 font-poppins-regular">{translate("index.loadingProfile")}</Text>
+        <Text className="text-neutral-500 font-poppins-regular">{translate("user.discover.loadingProfile")}</Text>
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-background dark:bg-darkBackground p-4">
-      <View className="flex-row justify-between items-center mb-6">
-        <Text className="text-xl font-poppins-bold text-neutral-900 dark:text-darkTextPrimary">
-          {translate('settings.title')}
-        </Text>
-        <TouchableOpacity
-          onPress={() => router.push("/qr")}
-          className="p-2"
-        >
-          <Ionicons
-            name="qr-code-outline"
-            size={20}
-            color="#FF6600"
+    <SafeAreaView className="flex-1 bg-backgroundMuted dark:bg-darkBackground">
+      <ScrollView
+        className="flex-1"
+        contentContainerStyle={{ padding: 12, paddingBottom: 40 }}
+        showsVerticalScrollIndicator={false}
+      >
+        <View className="flex-row justify-between items-center mb-6 mt-3 mx-4">
+          <Text className="text-xl font-poppins-bold text-neutral-900 dark:text-darkTextPrimary">
+            {translate('settings.title')}
+          </Text>
+          <TouchableOpacity
+            onPress={() => router.push("/qr")}
+            className="p-2"
+          >
+            <Ionicons
+              name="qr-code-outline"
+              size={20}
+              color="#FF6600"
+            />
+          </TouchableOpacity>
+        </View>
+
+        {user && (
+          <UserProfileCard
+            user={user}
+            profile={profile}
+            onPress={handleProfilePress}
           />
-        </TouchableOpacity>
-      </View>
+        )}
 
-      {user && (
-        <UserProfileCard
-          user={user}
-          profile={profile}
-          onPress={handleProfilePress}
-        />
-      )}
+        {/* Account Section */}
+        <View>
+          <Text className="mx-4 text-sm font-poppins-semibold text-neutral-600 dark:text-darkTextSecondary mb-2">
+            {translate('settings.account.title')}
+          </Text>
+        </View>
 
-      {/* Account Section */}
-      <View>
-        <Text className="mx-4 text-sm font-poppins-semibold text-neutral-600 dark:text-darkTextSecondary mb-2">
-          {translate('settings.account.title')}
-        </Text>
-      </View>
+        <View className="mx-4 mb-6 overflow-hidden bg-background dark:bg-darkBackgroundMuted rounded-xl border border-neutral-200 dark:border-darkBorder">
+          <SecurityCard />
+          <LanguageCard />
+          <AppearanceCard />
+        </View>
 
-      <View className="mx-4 mb-6 overflow-hidden bg-background dark:bg-darkBackgroundMuted rounded-xl border border-neutral-200 dark:border-darkBorder">
-        <SecurityCard />
-        <LanguageCard />
-        <AppearanceCard />
-      </View>
+        {/* Preferences Section */}
+        <View>
+          <Text className="mx-4 text-sm font-poppins-semibold text-neutral-600 dark:text-darkTextSecondary mb-2">
+            {translate('settings.notificationsPrivacy.title')}
+          </Text>
+        </View>
 
-      {/* Preferences Section */}
-      <View>
-        <Text className="mx-4 text-sm font-poppins-semibold text-neutral-600 dark:text-darkTextSecondary mb-2">
-          {translate('settings.notificationsPrivacy.title')}
-        </Text>
-      </View>
+        <View className="mx-4 mb-6 overflow-hidden bg-background dark:bg-darkBackgroundMuted rounded-xl border border-neutral-200 dark:border-darkBorder">
+          <NotificationCard />
+          <LocationCard />
+        </View>
 
-      <View className="mx-4 mb-6 overflow-hidden bg-background dark:bg-darkBackgroundMuted rounded-xl border border-neutral-200 dark:border-darkBorder">
-        <NotificationCard />
-        <LocationCard />
-      </View>
+        <LogoutButton />
 
-      <LogoutButton />
-
-      {/* Footer */}
-      <View className="mx-8 mt-6 items-center">
-        <Text className="text-sm text-center font-poppins-regular text-neutral-500 dark:text-darkTextSecondary">
-          {translate("settings.copyright")} 2026
-        </Text>
-      </View>
+        {/* Footer */}
+        <View className="mx-8 mt-6 items-center">
+          <Text className="text-sm text-center font-poppins-regular text-neutral-500 dark:text-darkTextSecondary">
+            {translate("settings.copyright")} 2026
+          </Text>
+        </View>
+      </ScrollView>
 
       {/* Modals */}
       <EditProfileModal

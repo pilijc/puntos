@@ -48,10 +48,10 @@ export async function getRoleTypeForUser(userId: string): Promise<string | null>
     .select("role_id")
     .eq("user_id", userId);
 
-  if (userRolesError) {
-    console.error("Error querying user_roles:", userRolesError);
-    throw userRolesError;
-  }
+  // if (userRolesError) {
+  //   console.error("Error querying user_roles:", userRolesError);
+  //   throw userRolesError;
+  // }
 
   console.log("Found user_roles data:", userRoles);
 
@@ -128,11 +128,11 @@ export async function getHomeRouteForUserId(userId: string): Promise<AppHomeRout
         .from("user_roles")
         .insert({ user_id: userId, role_id: 4, store_id: null });
       
-      if (insertError) {
-        console.error("Failed to insert default role:", insertError);
-      } else {
-        console.log("Default user role inserted successfully");
-      }
+      // if (insertError) {
+      //   console.error("Failed to insert default role:", insertError);
+      // } else {
+      //   console.log("Default user role inserted successfully");
+      // }
       
       return "/(user)";
     }

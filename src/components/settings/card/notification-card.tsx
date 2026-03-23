@@ -25,12 +25,12 @@ export const NotificationCard = () => {
     const handlePress = async () => {
         if (preferences.near_store_notifications) {
             Alert.alert(
-                "Disable Nearby Alerts",
-                "To completely revoke notification permissions, you must disable the setting in your device's settings menu. Would you like to open it now?",
+                translate('settings.notificationsPrivacy.alerts.disableTitle'),
+                translate("settings.notificationsPrivacy.permissions", { services: translate("settings.notificationsPrivacy.services.notifications") }),
                 [
                     { text: translate("label.cancel"), style: "cancel" },
                     {
-                        text: "Open Settings",
+                        text: translate('settings.notificationsPrivacy.openSettings'),
                         onPress: () => {
                             togglePreference('near_store_notifications');
                             Linking.openSettings();

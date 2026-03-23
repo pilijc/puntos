@@ -63,12 +63,12 @@ export default function UserStoreHeroCarousel({
                   <View
                     className="bg-white/20 px-2 py-0.5 self-start rounded-lg"
                   >
-                    <Text className="text-[10px] text-white font-poppins-medium uppercase">{store.type || translate("rewards.store")}</Text>
+                    <Text className="text-[10px] text-white font-poppins-medium uppercase">{store.type || translate("user.rewards.store")}</Text>
                   </View>
                   <View className="flex-row items-center gap-x-1">
                     <MaterialIcons name="place" size={14} color="#FFFFFF" />
                     <Text className="text-white/90 font-poppins text-xs flex-1" numberOfLines={1}>
-                      {store.address || translate("rewards.unknownLocation")} • {translate("rewards.distanceMeters", {
+                      {store.address || translate("user.rewards.unknownLocation")} • {translate("user.rewards.distanceMeters", {
                         meters: store.distanceMeters?.toLocaleString(undefined, { maximumFractionDigits: 2 }) ?? "0"
                       })}
                     </Text>
@@ -82,7 +82,7 @@ export default function UserStoreHeroCarousel({
         <>
           <View className="absolute top-15 left-6 z-20">
             <View className="bg-primary/90 self-start px-2 py-0.5 rounded-sm mb-2">
-              <Text className="text-[10px] text-white font-poppins-semibold tracking-wider">{translate("rewards.discoverPartners")}</Text>
+              <Text className="text-[10px] text-white font-poppins-semibold tracking-wider">{translate("user.rewards.discoverPartners")}</Text>
             </View>
           </View>
           <Carousel
@@ -111,7 +111,7 @@ export default function UserStoreHeroCarousel({
                     <View
                       className="bg-white/20 px-2 py-0.5 self-start rounded-lg"
                     >
-                      <Text className="text-[10px] text-white font-poppins-medium uppercase">{store.type || translate("rewards.store")}</Text>
+                      <Text className="text-[10px] text-white font-poppins-medium uppercase">{store.type || translate("user.rewards.store")}</Text>
                     </View>
                     <View className="flex-row items-center gap-x-1">
                       <MaterialIcons name="storefront" size={14} color="#FFFFFF" />

@@ -1,8 +1,6 @@
 import React, { useState, useCallback } from "react";
-import { Alert } from "react-native";
-import { View, Text, SafeAreaView, TouchableOpacity, ScrollView } from "@/tw";
+import { View, Text, SafeAreaView, ScrollView } from "@/tw";
 import { useFocusEffect } from "expo-router";
-import { Ionicons } from '@expo/vector-icons';
 
 // Hooks
 import { useProfile } from "@/hooks/use-profile";
@@ -16,14 +14,13 @@ import { LanguageCard } from "@/components/settings/card/language-card";
 import { AppearanceCard } from "@/components/settings/card/appearance-card";
 import { useTranslation } from "react-i18next";
 
-export default function StoreManagerSettings() {
+export default function SuperAdminSettings() {
     const [editModalVisible, setEditModalVisible] = useState(false);
     const { t: translate } = useTranslation();
 
     const {
         user,
         profile,
-        loading,
         refreshProfile,
     } = useProfile();
 
@@ -36,14 +33,6 @@ export default function StoreManagerSettings() {
     const handleProfilePress = () => {
         setEditModalVisible(true);
     };
-
-    if (loading && !user) {
-        return (
-            <SafeAreaView className="flex-1 bg-background dark:bg-darkBackground justify-center items-center">
-                <Text className="text-neutral-500 font-poppins-regular">{translate("user.discover.loadingProfile")}</Text>
-            </SafeAreaView>
-        );
-    }
 
     return (
         <SafeAreaView className="flex-1 bg-muted-white dark:bg-darkBackground">
@@ -67,7 +56,7 @@ export default function StoreManagerSettings() {
                     />
                 )}
 
-                <View className="mx-4 mb-6 overflow-hidden bg-background dark:bg-darkBackgroundMuted rounded-2xl border border-neutral-200 dark:border-darkBorder">
+                <View className="mx-4 mb-6 overflow-hidden bg-background dark:bg-darkBackgroundMuted rounded-xl border border-neutral-200 dark:border-darkBorder">
                     <SecurityCard />
                     <LanguageCard />
                     <AppearanceCard />
@@ -75,9 +64,10 @@ export default function StoreManagerSettings() {
 
                 <LogoutButton />
 
+                {/* Footer */}
                 <View className="mx-8 mt-6 items-center">
                     <Text className="text-sm text-center font-poppins-regular text-neutral-500 dark:text-darkTextSecondary">
-                        {translate("settings.copyright")} 2026 Store Manager
+                        {translate("settings.copyright")} 2026 Front Desk
                     </Text>
                 </View>
             </ScrollView>

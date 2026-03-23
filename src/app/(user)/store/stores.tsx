@@ -1,4 +1,4 @@
-import { TextInput, ActivityIndicator, RefreshControl } from "react-native";
+import { TextInput, RefreshControl } from "react-native";
 import { View, Text, TouchableOpacity } from "@/tw";
 import React, { useMemo, useCallback } from "react";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
@@ -35,7 +35,7 @@ export default function StoreListScreen() {
       realStores,
       stamps,
       location,
-      translate("rewards.unknownLocation"),
+      translate("user.rewards.unknownLocation"),
     );
   }, [location, realStores, stamps, translate]);
 
@@ -54,7 +54,6 @@ export default function StoreListScreen() {
     };
   }, [filteredStores]);
 
-  const isLoading = stampsLoading && !refreshing;
 
   return (
     <StoreScreenContainer
@@ -69,12 +68,12 @@ export default function StoreListScreen() {
         />
       }
     >
-      <StoreHeader title={translate("rewards.storesList.title")} />
+      <StoreHeader title={translate("user.rewards.storesList.title")} />
 
       <View className="flex-row items-center bg-white dark:bg-darkBackgroundCard rounded-2xl px-4 py-1 border border-neutral-100 dark:border-darkBorder shadow-sm shadow-neutral-100 dark:shadow-none mt-2">
         <MaterialIcons name="search" size={20} color="#9CA3AF" />
         <TextInput
-          placeholder={translate("rewards.storesList.searchPlaceholder")}
+          placeholder={translate("user.rewards.storesList.searchPlaceholder")}
           placeholderTextColor="#9CA3AF"
           className="flex-1 ml-3 font-poppins text-sm text-neutral-900 dark:text-white pt-0 pb-0"
           value={searchQuery}
@@ -92,7 +91,7 @@ export default function StoreListScreen() {
         <View className="items-center justify-center py-20">
           <ActivityIndicator size="large" color="#FF6600" />
           <Text className="mt-4 font-poppins text-neutral-400">
-            {translate("rewards.storesList.loading")}
+            {translate("user.rewards.storesList.loading")}
           </Text>
         </View>
       ) : (
@@ -104,13 +103,13 @@ export default function StoreListScreen() {
               </View>
               <Text className="text-xl font-poppins-bold text-neutral-900 dark:text-white text-center">
                 {searchQuery
-                  ? translate("rewards.storesList.noMatching")
-                  : translate("rewards.storesList.noJoined")}
+                  ? translate("user.rewards.storesList.noMatching")
+                  : translate("user.rewards.storesList.noJoined")}
               </Text>
               <Text className="text-sm text-neutral-500 font-poppins text-center px-10 mt-2">
                 {searchQuery
-                  ? translate("rewards.storesList.noMatchingDetail", { query: searchQuery })
-                  : translate("rewards.storesList.noJoinedDetail")}
+                  ? translate("user.rewards.storesList.noMatchingDetail", { query: searchQuery })
+                  : translate("user.rewards.storesList.noJoinedDetail")}
               </Text>
             </View>
           ) : (
@@ -118,7 +117,7 @@ export default function StoreListScreen() {
               {nearbyStoresSection.length > 0 && (
                 <View className="gap-y-4">
                   <Text className="text-xs font-poppins-bold text-neutral-500 dark:text-neutral-400 uppercase tracking-widest ml-1">
-                    {translate("rewards.storesList.nearbySection")}
+                    {translate("user.rewards.storesList.nearbySection")}
                   </Text>
                   {nearbyStoresSection.map((store, index) => (
                     <UserStoreListItem key={store.id} store={store} index={index} />
@@ -129,7 +128,7 @@ export default function StoreListScreen() {
               {joinedStoresSection.length > 0 && (
                 <View className="gap-y-4">
                   <Text className="text-xs font-poppins-bold text-neutral-500 dark:text-neutral-400 uppercase tracking-widest ml-1">
-                    {translate("rewards.storesList.myStoresSection")}
+                    {translate("user.rewards.storesList.myStoresSection")}
                   </Text>
                   {joinedStoresSection.map((store, index) => (
                     <UserStoreListItem
@@ -144,7 +143,6 @@ export default function StoreListScreen() {
             </>
           )}
         </View>
-      )}
     </StoreScreenContainer>
   );
 }

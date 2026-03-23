@@ -18,7 +18,7 @@ export const UserProfileCard = ({ profile, user, onPress }: UserProfileCardProps
     return (
         <TouchableOpacity
             onPress={onPress}
-            className="mx-4 mb-6 bg-background dark:bg-darkBackgroundMuted rounded-2xl p-4 border border-neutral-200 dark:border-darkBorder active:bg-neutral-50 dark:active:bg-darkBackgroundCard will-change-pressable shadow-sm"
+            className="mx-4 mb-6 bg-background dark:bg-darkBackgroundMuted rounded-2xl p-4 border border-neutral-200 dark:border-darkBorder active:bg-neutral-50 dark:active:bg-darkBackgroundCard will-change-pressable"
         >
             <View className="flex-row items-center">
                 {/* Avatar */}
