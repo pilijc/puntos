@@ -111,9 +111,6 @@ export function AdminStoreDetails({
           </TouchableOpacity>
           <Text style={s.topbarTitle}>Store Details</Text>
         </View>
-        <TouchableOpacity activeOpacity={0.7} style={s.iconBtn}>
-          <MaterialIcons name="more-vert" size={24} color={T.textPrimary} />
-        </TouchableOpacity>
       </View>
 
       <ScrollView
@@ -255,14 +252,11 @@ const s = StyleSheet.create({
   wrapper: { flex: 1, backgroundColor: T.pageBg },
 
   topbar: { 
-    backgroundColor: "#fff", 
     flexDirection: "row", 
     alignItems: "center", 
     justifyContent: "space-between", 
     paddingHorizontal: 16, 
     height: 60, 
-    borderBottomWidth: 1, 
-    borderBottomColor: T.cardBorder 
   },
   topbarLeft:  { flexDirection: "row", alignItems: "center", gap: 6 },
   topbarTitle: { fontSize: 17, fontWeight: "700", color: T.textPrimary, marginLeft: 4 },
