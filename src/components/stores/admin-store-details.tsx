@@ -30,7 +30,7 @@ const FieldLabel = ({ children }: { children: string }) => (
   <Text className="text-[10px] font-poppins-bold text-textSecondary uppercase tracking-wider mb-1 px-1">{children}</Text>
 );
 const FieldCard = ({ children, noPad }: { children: React.ReactNode; noPad?: boolean }) => (
-  <View className={`bg-white dark:bg-darkBackgroundCard rounded-xl border border-[#e2e8f0] dark:border-darkBorder min-h-[48px] justify-center ${noPad ? 'p-2.5' : 'p-3'}`}>
+  <View className={`bg-white dark:bg-darkBackgroundCard rounded-xl min-h-[48px] justify-center ${noPad ? 'p-2.5' : 'p-3'}`}>
     {children}
   </View>
 );
@@ -184,7 +184,29 @@ export function AdminStoreDetails({
           <SectionHeader title="Business Details" />
           <ReadOnlyField label="OWNER NAME" value={store.owner_name} />
           <ReadOnlyField label="PHONE NUMBER" value={store.phone} />
-          <ReadOnlyField label="OPERATING HOURS" value={`${store.store_open || "09:00"} - ${store.store_close || "21:00"}`} />
+          
+          <View className="mb-2.5">
+            <FieldLabel>OPERATING HOURS</FieldLabel>
+            <FieldCard>
+              <View className="flex-row items-center px-1">
+                <View className="flex-1 flex-row items-center justify-center gap-2">
+                  <MaterialIcons name="wb-sunny" size={16} color="#FF6600" />
+                  <Text className="text-sm font-poppins-medium text-textPrimary dark:text-darkTextPrimary">
+                    {store.store_open || "09:00"}
+                  </Text>
+                </View>
+                
+                <View className="w-[1.5px] h-4 bg-slate-300 dark:bg-slate-700 rounded-full mx-2" />
+                
+                <View className="flex-1 flex-row items-center justify-center gap-2">
+                  <MaterialIcons name="nights-stay" size={16} color="#FF6600" />
+                  <Text className="text-sm font-poppins-medium text-textPrimary dark:text-darkTextPrimary">
+                    {store.store_close || "21:00"}
+                  </Text>
+                </View>
+              </View>
+            </FieldCard>
+          </View>
 
           <View className="flex-row gap-2.5">
             <View className="flex-1">
@@ -260,7 +282,7 @@ export function AdminStoreDetails({
           <SectionHeader title="Location Details" />
           <View className="mb-2.5">
             <FieldLabel>LANDMARK / ADDRESS</FieldLabel>
-            <View className="bg-white dark:bg-darkBackgroundCard rounded-xl border border-[#e2e8f0] dark:border-darkBorder p-3 flex-row items-start gap-2.5">
+            <View className="bg-white dark:bg-darkBackgroundCard rounded-xl p-3 flex-row items-start gap-2.5">
               <View className="mt-0.5"><MaterialIcons name="location-on" size={20} color="#FF6600" /></View>
               <Text className="flex-1 text-[13px] font-poppins-medium text-textPrimary dark:text-darkTextPrimary leading-5">
                 {store.address || "—"}
