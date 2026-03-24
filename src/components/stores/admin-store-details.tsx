@@ -86,7 +86,6 @@ export function AdminStoreDetails({
       >
 
         <View>
-          <SectionHeader title="Store Details" />
           <View className="mb-2.5">
             <FieldLabel>STORE NAME</FieldLabel>
             <FieldCard>

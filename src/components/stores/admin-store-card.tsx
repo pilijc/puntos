@@ -9,7 +9,7 @@ import { AdminStoreRow } from "@/services/store-service";
 const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; dot: string; text?: string }> = {
 	active: { label: "Active", color: "#22C55E", bg: "bg-success/10", dot: "#22C55E", text: "text-success" },
 	pending_review: { label: "Pending", color: "#F59E0B", bg: "bg-amber-100 dark:bg-amber-900/20", dot: "#F59E0B", text: "text-amber-600 dark:text-amber-400" },
-	inactive: { label: "Inactive", color: "#94A3B8", bg: "bg-slate-100 dark:bg-slate-800", dot: "#94A3B8", text: "text-slate-500 dark:text-slate-400" },
+	inactive: { label: "Inactive", color: "#EF4444", bg: "bg-red-100 dark:bg-red-900/20", dot: "#EF4444", text: "text-red-600 dark:text-red-400" },
 };
 
 export function AdminStoreCard({
@@ -50,10 +50,8 @@ export function AdminStoreCard({
 					<View className="flex-1 justify-center gap-y-1">
 						<View className="flex-row items-center justify-between">
 							<Text className="font-poppins-bold text-[15px] text-slate-900 dark:text-slate-100 flex-1 mr-2" numberOfLines={1}>{store.name}</Text>
-							<View className={`px-2 py-0.5 rounded-full ${cfg.bg}`}>
-								<Text className={`text-[9px] font-poppins-bold uppercase tracking-wider ${cfg.text}`}>
-									{cfg.label}
-								</Text>
+							<View className="px-1 py-1">
+								<View style={{ backgroundColor: cfg.dot, width: 10, height: 10, borderRadius: 5 }} />
 							</View>
 						</View>
 						<View className="flex-row items-center gap-1">
