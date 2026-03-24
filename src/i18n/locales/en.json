@@ -196,7 +196,8 @@
         },
         "rewards": {
             "title": "Rewards",
-            "viewStores": "VIEW STORES",
+            "viewStores": "View stores",
+            "viewStore": "View store",
             "discoverPartners": "DISCOVER PARTNERS",
             "distanceMeters": "{{meters}} meters away",
             "store": "Store",
@@ -212,7 +213,7 @@
             "stampLog": "Stamp Log",
             "streakLog": "Streak Log",
             "nearby": "Nearby",
-            "viewAll": "VIEW ALL",
+            "viewAll": "View All",
             "daysThisWeek": "{{current}}/{{target}} DAYS THIS WEEK",
             "completed": "{{current}}/{{target}} COMPLETED",
             "noActiveStamps": "No Active Stamps",
