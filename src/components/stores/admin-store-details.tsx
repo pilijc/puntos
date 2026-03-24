@@ -57,6 +57,7 @@ export function AdminStoreDetails({
   onReject: (store: AdminStoreRow) => void;
 }) {
   const [viewingDoc, setViewingDoc] = useState(false);
+  const [currentPicIndex, setCurrentPicIndex] = useState(0);
 
   const isPending = store.status?.toLowerCase().includes("pending");
   const statusKey = isPending ? "pending" : (store.status as StatusKey);
@@ -126,6 +127,56 @@ export function AdminStoreDetails({
               </View>
             </FieldCard>
           </View>
+
+          <View className="mb-2.5">
+            <FieldLabel>STORE PICTURES</FieldLabel>
+            <FieldCard noPad>
+              {store.store_pictures && store.store_pictures.length > 0 ? (
+                <View className="relative w-full h-[200px] rounded-xl overflow-hidden bg-[#f1f5f9] dark:bg-darkBackgroundCard my-1">
+                  <Image 
+                    source={{ uri: store.store_pictures[currentPicIndex] || store.store_pictures[0] }} 
+                    style={{ width: "100%", height: "100%" }} 
+                    contentFit="cover" 
+                  />
+                  
+                  {store.store_pictures.length > 1 && (
+                    <>
+                      {currentPicIndex > 0 && (
+                        <TouchableOpacity 
+                          activeOpacity={0.8} 
+                          onPress={() => setCurrentPicIndex(p => p - 1)}
+                          className="absolute left-2 top-1/2 -mt-4 w-8 h-8 rounded-full bg-black/50 items-center justify-center z-10"
+                        >
+                          <MaterialIcons name="chevron-left" size={24} color="#fff" />
+                        </TouchableOpacity>
+                      )}
+
+                      {currentPicIndex < store.store_pictures.length - 1 && (
+                        <TouchableOpacity 
+                          activeOpacity={0.8} 
+                          onPress={() => setCurrentPicIndex(p => p + 1)}
+                          className="absolute right-2 top-1/2 -mt-4 w-8 h-8 rounded-full bg-black/50 items-center justify-center z-10"
+                        >
+                          <MaterialIcons name="chevron-right" size={24} color="#fff" />
+                        </TouchableOpacity>
+                      )}
+
+                      <View className="absolute bottom-2 left-0 right-0 flex-row justify-center gap-1.5 z-10">
+                        {store.store_pictures.map((_, idx) => (
+                          <View 
+                            key={idx} 
+                            className={`w-2 h-2 rounded-full ${idx === currentPicIndex ? 'bg-primary' : 'bg-white/60'}`} 
+                          />
+                        ))}
+                      </View>
+                    </>
+                  )}
+                </View>
+              ) : (
+                <Text className="text-sm font-poppins-medium text-textMuted p-1">—</Text>
+              )}
+            </FieldCard>
+          </View>
         </View>
 
         {/* Business Details */}
@@ -133,6 +184,7 @@ export function AdminStoreDetails({
           <SectionHeader title="Business Details" />
           <ReadOnlyField label="OWNER NAME" value={store.owner_name} />
           <ReadOnlyField label="PHONE NUMBER" value={store.phone} />
+          <ReadOnlyField label="OPERATING HOURS" value={`${store.store_open || "09:00"} - ${store.store_close || "21:00"}`} />
 
           <View className="flex-row gap-2.5">
             <View className="flex-1">
