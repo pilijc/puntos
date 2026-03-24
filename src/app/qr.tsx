@@ -6,7 +6,7 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useRouter } from 'expo-router';
 import QRCode from 'react-native-qrcode-svg';
 //import { supabase } from '@/supabase/supabase';
-import { getCurrentUser, getStaticQRCode, addAutoUser, listenToQRTransaction } from '@/services/qr-service';
+import { getCurrentUser, getStaticQRCode, addAutoUser, listenToQRTransaction } from '@/services/users/qr-service';
 import { supabase } from 'supabase/supabase';
 import { useStamps } from '@/hooks/use-stamps';
 import { useStampRewards } from '@/hooks/use-stamp-rewards';

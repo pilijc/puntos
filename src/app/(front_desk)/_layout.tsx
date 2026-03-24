@@ -7,7 +7,7 @@ import { supabase } from "@/supabase/supabase";
 import { getRoleTypeForUser } from "@/services/access-service";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import QRRoundedButton from "@/components/qr/qr-rounded";
-import { getCurrentUserIsActive } from "@/services/operator-service";
+import { getCurrentUserIsActive } from "@/services/frontdesk/scan-service";
 import { useTranslation } from "react-i18next";
 
 export default function FrontDeskLayout() {
@@ -106,11 +106,11 @@ export default function FrontDeskLayout() {
             <Tabs.Screen
                 name="index"
                 options={{
-                    title: "",
-                    tabBarIcon: () => null,
-                    tabBarButton: (props: any) => isActive ? (
-                        <QRRoundedButton onPress={props.onPress} bottomInset={insets.bottom} />
-                    ) : null,
+                    title: "Dashboard",
+                    tabBarIcon: ({color}) => (
+                        <MaterialIcons size={24} name="home" color={color} />
+                    ),
+                    
                 }}
             />
             <Tabs.Screen

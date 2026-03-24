@@ -10,7 +10,7 @@ import {
   ScrollView,
   TouchableOpacity,
 } from "@/tw";
-import { getUserTransactionHistory } from "@/services/qr-service";
+import { getUserTransactionHistory } from "@/services/users/qr-service";
 import { supabase } from "@/supabase/supabase";
 import { useTranslation } from "react-i18next";
 

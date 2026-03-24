@@ -192,7 +192,8 @@
                 "singleBody": "Visit {{name}} and earn rewards!",
                 "multiTitle": "There are {{count}} stores nearby",
                 "multiBody": "Visit nearby stores and earn rewards!"
-            },
+            }
+        },
         "rewards": {
             "title": "Rewards",
             "viewStores": "VIEW STORES",
