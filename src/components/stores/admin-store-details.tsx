@@ -17,9 +17,9 @@ const STATUS_CONFIG: Record<StatusKey, {
   label: string; icon: "schedule" | "check-circle" | "cancel";
   bg: string; border: string; badgeBg: string; text: string;
 }> = {
-  pending:  { label: "PENDING",  icon: "schedule",     bg: "#ffffff", border: "#f5e4a8", badgeBg: "#fef0c0", text: "#7a5c00" },
-  active:   { label: "ACTIVE",   icon: "check-circle", bg: "#ffffff", border: "#d4fce2", badgeBg: "#dcfce7", text: twColors.success },
-  inactive: { label: "INACTIVE", icon: "cancel",       bg: "#ffffff", border: "#fecaca", badgeBg: "#fee2e2", text: twColors.danger },
+  pending: { label: "PENDING", icon: "schedule", bg: "#ffffff", border: "#f5e4a8", badgeBg: "#fef0c0", text: "#7a5c00" },
+  active: { label: "ACTIVE", icon: "check-circle", bg: "#ffffff", border: "#d4fce2", badgeBg: "#dcfce7", text: twColors.success },
+  inactive: { label: "INACTIVE", icon: "cancel", bg: "#ffffff", border: "#fecaca", badgeBg: "#fee2e2", text: twColors.danger },
 };
 
 // ─── Field helpers ────────────────────────────────────────────────────────────

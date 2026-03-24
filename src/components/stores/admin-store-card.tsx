@@ -35,24 +35,27 @@ export function AdminStoreCard({
 				activeOpacity={0.95}
 			>
 				<View className="p-4 flex-row gap-3">
-					<View className="w-[60px] h-[60px] rounded-xl bg-slate-100 dark:bg-slate-800 items-center justify-center overflow-hidden">
-						{store.logo ? (
-							<Image
-								source={{ uri: store.logo }}
-								style={{ width: 60, height: 60 }}
-								contentFit="cover"
-							/>
-						) : (
-							<MaterialIcons name="storefront" size={26} color="#94A3B8" />
-						)}
+					<View className="relative">
+						<View className="w-[60px] h-[60px] rounded-xl bg-slate-100 dark:bg-slate-800 items-center justify-center overflow-hidden">
+							{store.logo ? (
+								<Image
+									source={{ uri: store.logo }}
+									style={{ width: 60, height: 60 }}
+									contentFit="cover"
+								/>
+							) : (
+								<MaterialIcons name="storefront" size={26} color="#94A3B8" />
+							)}
+						</View>
+						<View 
+							style={{ backgroundColor: cfg.dot }} 
+							className="absolute -bottom-1 -right-1 w-[14px] h-[14px] rounded-full border-[2.5px] border-white dark:border-slate-900 z-10" 
+						/>
 					</View>
 
 					<View className="flex-1 justify-center gap-y-1">
 						<View className="flex-row items-center justify-between">
 							<Text className="font-poppins-bold text-[15px] text-slate-900 dark:text-slate-100 flex-1 mr-2" numberOfLines={1}>{store.name}</Text>
-							<View className="px-1 py-1">
-								<View style={{ backgroundColor: cfg.dot, width: 10, height: 10, borderRadius: 5 }} />
-							</View>
 						</View>
 						<View className="flex-row items-center gap-1">
 							<MaterialIcons name="location-on" size={12} color="#94A3B8" />
