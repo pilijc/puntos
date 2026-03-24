@@ -6,12 +6,14 @@ import { Animated, Dimensions } from "react-native";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import { processFrontDeskScan, getCurrentUserStore } from "@/services/frontdesk/scan-service";
+import { getCurrentStaffId } from "@/services/frontdesk/voucher-service";
 import { Button } from "@/components/button";
 import { Modal, type ModalButton } from "@/components/modal";
 import { useRecentTransactions } from "@/hooks/use-recent-transactions";
 import { useTranslation } from "react-i18next";
 import { legacy_makeMutableUI } from "react-native-reanimated/lib/typescript/mutables";
- 
+import VoucherForm from "@/components/front-desk/voucherForm" 
+
 export default function FrontDeskScan() {
   const router = useRouter();
   const [scanned, setScanned] = useState(false);
@@ -38,11 +40,22 @@ export default function FrontDeskScan() {
   } | null>(null);
   const [inputMode, setInputMode] = useState<"qr" | "manual">("qr");
   const [voucherCode, setVoucherCode] = useState("");
+  const [currentStaffId, setCurrentStaffId] = useState<string>("");
   const slideAnim = useRef(new Animated.Value(0)).current;
   const screenWidth = Dimensions.get("window").width;
 
   useEffect(() => {
     const fetchStoreInfo = async () => {
+      // Get current staff ID from service
+      const staffId = await getCurrentStaffId();
+      
+      if (!staffId) {
+        console.error("Staff not authenticated");
+        return;
+      }
+      
+      setCurrentStaffId(staffId);
+      
       const storeInfo = await getCurrentUserStore();
       setStoreInfo(storeInfo);
       if (storeInfo) {
@@ -364,45 +377,125 @@ export default function FrontDeskScan() {
                     }],
                     flexDirection: 'row',
                     width: (screenWidth - 32) * 2,
-                    height: 288,
+                    height: 300,
                   }}
                 >
+                  
                   {/* QR Scan Option */}
-                  <View style={{ width: screenWidth - 60, height: 288, backgroundColor: isDark ? '#1F2937' : '#F9FAFB', borderRadius: 12, marginRight: 16 }}>
-                    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'flex-start', paddingHorizontal: 20, paddingTop: 32 }}>
-                      <View style={{ width: 64, height: 64, backgroundColor: isDark ? '#374151' : '#F3F4F6', borderRadius: 16, alignItems: 'center', justifyContent: 'center', marginBottom: 12 }}>
-                        <MaterialIcons name="qr-code-scanner" size={32} color="#FF6600" />
+                  <View
+                    style={{
+                      width: screenWidth - 60,
+                      height: 380,
+                      backgroundColor: isDark ? '#1F2937' : '#F9FAFB',
+                      borderRadius: 12,
+                      marginLeft: 16
+                    }}
+                  >
+                    <ScrollView
+                      contentContainerStyle={{
+                        paddingHorizontal: 20,
+                        paddingTop: 32,
+                        paddingBottom: 20,
+                      }}
+                      showsVerticalScrollIndicator={false}
+                    >
+                      {/* QR Scan Content */}
+                      <View className="items-center">
+                        <View className="w-20 h-20 bg-orange-100 dark:bg-orange-500/10 rounded-2xl items-center justify-center mb-6">
+                          <MaterialIcons name="qr-code-scanner" size={40} color="#FF6600" />
+                        </View>
+                        <Text className="text-xl font-poppins-bold text-textPrimary dark:text-darkTextPrimary mb-3 text-center">
+                          QR Code Scanning
+                        </Text>
+                        <Text className="text-sm font-poppins-medium text-textSecondary dark:text-darkTextSecondary mb-8 text-center">
+                          Position the QR code within the frame to scan
+                        </Text>
+                        
+                        {/* Scan Now Button */}
+                        <TouchableOpacity
+                          onPress={handleStartScanning}
+                          className="w-full bg-orange-500 border border-orange-500 py-4 rounded-xl"
+                        >
+                          <Text className="text-center font-poppins-bold text-white text-lg">
+                            Scan Now
+                          </Text>
+                        </TouchableOpacity>
                       </View>
-                      <Text style={{ fontSize: 18, fontWeight: '700', color: isDark ? '#F9FAFB' : '#111827', marginBottom: 6, textAlign: 'center' }}>QR Scan</Text>
-                      <Text style={{ fontSize: 14, color: isDark ? '#9CA3AF' : '#6B7280', textAlign: 'center', paddingHorizontal: 16, marginBottom: 16 }}>
-                        Scan customer QR code
-                      </Text>
-                      <TouchableOpacity
-                        onPress={handleStartScanning}
-                        className="bg-orange-500 px-6 py-3 rounded-xl"
-                      >
-                        <Text className="text-white font-poppins-bold">Scan Now</Text>
-                      </TouchableOpacity>
-                    </View>
+                    </ScrollView>
                   </View>
+                  
+               {/* Manual Input Option */}
+                  <View
+                    style={{
+                      width: screenWidth - 60,
+                      height: 380, // slightly taller than before
+                      backgroundColor: isDark ? '#1F2937' : '#F9FAFB',
+                      borderRadius: 12,
+                      marginLeft: 16
+                    }}
+                  >
+                    <ScrollView
+                      contentContainerStyle={{
+                        paddingHorizontal: 20,
+                        paddingTop: 32,
+                        paddingBottom: 20, // ensures submit button isn't cut off
+                      }}
+                      showsVerticalScrollIndicator={false}
+                    >
+                      {/* Voucher Code Input */}
+                      <View className="bg-neutral-50 dark:bg-darkBackgroundMuted rounded-xl p-4 mb-4">
+                        <Text className="text-sm font-poppins-medium text-textSecondary dark:text-darkTextSecondary mb-2">
+                          Enter Voucher Code
+                        </Text>
+                        <View className="flex-row items-center bg-white dark:bg-darkBackgroundCard border border-neutral-100 dark:border-darkBorder rounded-xl px-5 py-4">
+                          <MaterialIcons name="confirmation-number" size={20} color="#FF6600" className="mr-3" />
+                          <TextInput
+                            className="flex-1 text-base font-poppins-medium text-textPrimary dark:text-darkTextPrimary"
+                            value={voucherCode}
+                            onChangeText={setVoucherCode}
+                            placeholder="Enter code"
+                            placeholderTextColor="#9CA3AF"
+                            autoCapitalize="characters"
+                            maxLength={20}
+                          />
+                        </View>
 
-                  {/* Manual Input Option */}
-                  <View style={{ width: screenWidth - 60, height: 288, backgroundColor: isDark ? '#1F2937' : '#F9FAFB', borderRadius: 12, marginLeft: 16 }}>
-                    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'flex-start', paddingHorizontal: 20, paddingTop: 32 }}>
-                      <View style={{ width: 64, height: 64, backgroundColor: isDark ? '#374151' : '#F3F4F6', borderRadius: 16, alignItems: 'center', justifyContent: 'center', marginBottom: 12 }}>
-                        <MaterialIcons name="keyboard" size={32} color="#FF6600" />
+                        {/* VoucherForm Submit */}
+                        <View className="mt-4">
+                          <VoucherForm
+                            voucherCode={voucherCode}
+                            amount={purchaseAmount}
+                            storeStaffId={currentStaffId}
+                            onSuccess={(points) => {
+                              setSuccessPoints(points);
+                              setShowSuccessModal(true);
+
+                              addScan({
+                                points,
+                                timestamp: new Date(),
+                                amount: parseFloat(purchaseAmount),
+                              });
+
+                              setVoucherCode("");
+                              setPurchaseAmount("");
+                            }}
+                            onError={(message) => {
+                              setModal({
+                                title: "Error",
+                                message,
+                                buttons: [
+                                  {
+                                    label: translate("label.ok"),
+                                    variant: "secondary",
+                                    onPress: () => setModal(null),
+                                  },
+                                ],
+                              });
+                            }}
+                          />
+                        </View>
                       </View>
-                      <Text style={{ fontSize: 18, fontWeight: '700', color: isDark ? '#F9FAFB' : '#111827', marginBottom: 6, textAlign: 'center' }}>Manual Input</Text>
-                      <Text style={{ fontSize: 14, color: isDark ? '#9CA3AF' : '#6B7280', textAlign: 'center', paddingHorizontal: 16, marginBottom: 16 }}>
-                        Enter code manually
-                      </Text>
-                      <TouchableOpacity
-                        onPress={handleManualInputSubmit}
-                        className="bg-orange-500 px-6 py-3 rounded-xl"
-                      >
-                        <Text className="text-white font-poppins-bold">Enter Code</Text>
-                      </TouchableOpacity>
-                    </View>
+                    </ScrollView>
                   </View>
                 </Animated.View>
               </View>
@@ -418,7 +511,7 @@ export default function FrontDeskScan() {
               </View>
 
               {/* Voucher Code Input - Only show when manual mode is selected */}
-              {inputMode === 'manual' && (
+              {/* {inputMode === 'manual' && (
                 <View className="bg-neutral-50 dark:bg-darkBackgroundMuted rounded-xl p-4 mb-4">
                   <Text className="text-sm font-poppins-medium text-textSecondary dark:text-darkTextSecondary mb-2">
                     Enter Voucher Code
@@ -435,9 +528,44 @@ export default function FrontDeskScan() {
                       maxLength={20}
                     />
                   </View>
-                </View>
-              )}
+                   <View className="mt-4">
+                        <VoucherForm
+                          voucherCode={voucherCode}
+                          amount={purchaseAmount}
+                          storeStaffId={currentStaffId}
+                          onSuccess={(points) => {
+                            setSuccessPoints(points);
+                            setShowSuccessModal(true);
 
+                            addScan({
+                              points,
+                              timestamp: new Date(),
+                              amount: parseFloat(purchaseAmount),
+                            });
+
+                            setVoucherCode("");
+                            setPurchaseAmount("");
+                          }}
+                          onError={(message) => {
+                            setModal({
+                              title: "Error",
+                              message,
+                              buttons: [
+                                {
+                                  label: translate("label.ok"),
+                                  variant: "secondary",
+                                  onPress: () => setModal(null),
+                                },
+                              ],
+                            });
+                          }}
+                        />
+                      </View>
+
+                    </View>
+                  )} */}
+
+              
               {/* Navigation Buttons */}
               <View className="flex-row justify-between">
                 <TouchableOpacity

@@ -10,6 +10,7 @@ import { getCurrentUser, getStaticQRCode, addAutoUser, listenToQRTransaction } f
 import { supabase } from 'supabase/supabase';
 import { useStamps } from '@/hooks/use-stamps';
 import { useStampRewards } from '@/hooks/use-stamp-rewards';
+import { VoucherGenerator } from '@/components/users/voucher';
 
 export default function Qr() {
   const router = useRouter();
@@ -137,6 +138,7 @@ export default function Qr() {
               Failed to load QR code. Try again.
             </Text>
           )}
+          {user?.id && <VoucherGenerator userId={user.id} />}
         </View>
       </View>
 

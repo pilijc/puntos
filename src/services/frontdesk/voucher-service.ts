@@ -1,0 +1,218 @@
+import { supabase } from "supabase/supabase";
+import { ProcessVoucherCode } from "../../type/frontdesk/voucher";
+import { Voucher } from "../../type/user/voucher";
+
+export async function getCurrentStaffId(): Promise<string | null> {
+    try {
+        const { data: { user }, error: authError } = await supabase.auth.getUser();
+        
+        if (authError || !user) {
+            console.error("Staff not authenticated:", authError);
+            return null;
+        }
+        
+        return user.id;
+    } catch (error) {
+        console.error("Error getting current staff ID:", error);
+        return null;
+    }
+}
+
+export async function processVoucherCode(
+    voucherCode: string,
+    amount: number,
+    storeStaffId: string
+): Promise<ProcessVoucherCode> {
+    try {
+        // Find the voucher by code
+        const { data: voucher, error: voucherError } = await supabase
+            .from("vouchers")
+            .select("*")
+            .eq("code", voucherCode)
+            .single();
+
+        if (voucherError || !voucher) {
+            return {
+                success: false,
+                message: "Invalid voucher code",
+            };
+        }
+
+        // Check if voucher is already used
+        if (voucher.is_used) {
+            return {
+                success: false,
+                message: "Voucher has already been used",
+            };
+        }
+
+        // Check if voucher is expired
+        const now = new Date();
+        const expiresAt = new Date(voucher.expires_at);
+        if (now > expiresAt) {
+            return {
+                success: false,
+                message: "Voucher has expired",
+            };
+        }
+
+        // Mark voucher as used
+        const { error: updateError } = await supabase
+            .from("vouchers")
+            .update({ 
+                is_used: true,
+                used_at: now.toISOString()
+            })
+            .eq("code", voucherCode);
+
+        if (updateError) {
+            return {
+                success: false,
+                message: "Failed to process voucher",
+            };
+        }
+
+        // Calculate points (example: 1 point per peso)
+        const pointsEarned = Math.floor(amount);
+
+        // Create transaction record (optional)
+        const { error: transactionError } = await supabase
+            .from("voucher_transactions")
+            .insert({
+                voucher_id: voucher.id,
+                user_id: voucher.user_id,
+                store_staff_id: storeStaffId,
+                amount: amount,
+                points_earned: pointsEarned,
+                created_at: now.toISOString()
+            });
+
+        if (transactionError) {
+            console.error("Transaction recording error:", transactionError);
+            
+        }
+
+        return {
+            success: true,
+            message: "Voucher processed successfully",
+            transactionId: voucher.id,
+            pointsEarned: pointsEarned,
+        };
+    } catch (error) {
+        console.error("Voucher processing error:", error);
+        return {
+            success: false,
+            message: "An error occurred while processing the voucher",
+        };
+    }
+}
+
+export async function verifyVoucherCode(voucherCode: string): Promise<{
+    valid: boolean;
+    voucher?: Voucher;
+    message: string;
+}> {
+    try {
+        const { data: voucher, error } = await supabase
+            .from("vouchers")
+            .select("*")
+            .eq("code", voucherCode)
+            .single();
+
+        if (error || !voucher) {
+            return {
+                valid: false,
+                message: "Invalid voucher code",
+            };
+        }
+
+        if (voucher.is_used) {
+            return {
+                valid: false,
+                voucher,
+                message: "Voucher has already been used",
+            };
+        }
+
+        const now = new Date();
+        const expiresAt = new Date(voucher.expires_at);
+        if (now > expiresAt) {
+            return {
+                valid: false,
+                voucher,
+                message: "Voucher has expired",
+            };
+        }
+
+        return {
+            valid: true,
+            voucher,
+            message: "Voucher is valid",
+        };
+    } catch (error) {
+        console.error("Voucher verification error:", error);
+        return {
+            valid: false,
+            message: "An error occurred while verifying the voucher",
+        };
+    }
+}
+
+    // // ✅ Create purchase record
+    // const { data: purchaseData, error: purchaseError } = await supabase
+    //   .from("purchases")
+    //   .insert({
+    //     user_id: userId,
+    //     store_id: storeId,
+    //     amount: purchaseAmount,
+    //     created_at: new Date().toISOString(),
+    //   })
+    //   .select()
+    //   .single();
+
+    // if (purchaseError) {
+    //   throw new Error(`Failed to create purchase record: ${purchaseError.message}`);
+    // }
+
+    // // ✅ Update purchase with points
+    // const { error: updatePurchaseError } = await supabase
+    //   .from("purchases")
+    //   .update({
+    //     points_earned: pointsToAward,
+    //   })
+    //   .eq("id", purchaseData.id);
+
+    // if (updatePurchaseError) {
+    //   console.error("Failed to update purchase:", updatePurchaseError);
+    // }
+
+    // export async function getActiveVoucher(userId: string): Promise<Voucher | null> {
+//   const { data, error } = await supabase
+//     .from("vouchers")
+//     .select("*")
+//     .eq("user_id", userId)
+//     .eq("is_used", false)
+//     .gte("expires_at", new Date().toISOString())
+//     .maybeSingle();
+
+//   if (error) {
+//     console.error("Error fetching active voucher:", error);
+//     return null;
+//   }
+
+//   return data ?? null;
+// }
+
+// export async function markVoucherUsed(voucherId: string): Promise<boolean> {
+//   const { error } = await supabase
+//     .from<Voucher>("vouchers")
+//     .update({ used_at: true })
+//     .eq("id", voucherId);
+
+//   if (error) {
+//     console.error("Error marking voucher as used:", error);
+//     return false;
+//   }
+
+//   return true;
+// }
