@@ -176,7 +176,7 @@ export function AdminStoreDetails({
         </View>
 
         {isPending && (
-          <View className="mt-2.5">
+          <View className="-mt-1">
             <View className="flex-row gap-3">
               <View className="flex-1">
                 <Button
