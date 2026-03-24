@@ -121,6 +121,10 @@ export default function StoreManagerLayout() {
                 options={{ href: null }}
             />
              <Tabs.Screen
+                name="configure-qr"
+                options={{ href: null }}
+            />
+            <Tabs.Screen
                 name="view-streak"
                 options={{ href: null }}
             />
