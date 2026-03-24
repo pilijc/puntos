@@ -95,11 +95,11 @@ export default function SuperAdminStores() {
 				onBack={() => setSelectedStore(null)} 
 				onApprove={(store) => {
 					handleApprove(store);
-					setSelectedStore(null); // Return to list after action
+					setSelectedStore(null); 
 				}} 
 				onReject={(store) => {
 					handleReject(store);
-					setSelectedStore(null); // Return to list after action
+					setSelectedStore(null);
 				}} 
 			/>
 		);
