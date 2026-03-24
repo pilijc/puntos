@@ -26,6 +26,7 @@ export async function updateStoreFeatures(payload: StoreFeature): Promise<void> 
 				streak_enabled: payload.streak_enabled,
 				stamp_enabled: payload.stamp_enabled,
 				reward_enabled: payload.reward_enabled,
+				qr_enabled: payload.qr_enabled,
 				updated_at: new Date().toISOString(),
 			},
 			{ onConflict: "store_id" });

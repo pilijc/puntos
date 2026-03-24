@@ -5,7 +5,9 @@
     "jsx": "react",
     "baseUrl": ".",
     "paths": {
-      "@firebase-auth":[""],
+      "@firebase-auth": [
+        ""
+      ],
       "@/*": [
         "./src/*"
       ]

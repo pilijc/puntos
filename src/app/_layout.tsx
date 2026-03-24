@@ -1,7 +1,8 @@
 import "react-native-url-polyfill/auto";
 import "react-native-gesture-handler";
 import "../global.css";
-import { Slot, useRouter } from "expo-router";
+import "@/i18n";
+import { Slot, useRouter, Stack } from "expo-router";
 import { useFonts } from "expo-font";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as SplashScreen from "expo-splash-screen";
@@ -13,11 +14,12 @@ import { useAuthListener } from "@/hooks/auth-listener";
 import { useAnimatedStyle, useSharedValue, withRepeat, withSequence, withTiming } from "react-native-reanimated";
 import { Image } from "@/tw";
 import { getHomeRouteForUserId } from "@/services/access-service";
-import { checkIfAccountDeletedService, AccountDeletedError } from "@/services/auth-service";
+import { checkIfAccountDeletedService, checkIfAccountBlockedService, AccountDeletedError, AccountBlockedError } from "@/services/auth-service";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { useAuthStore } from "@/store/auth-store";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { OneSignal } from "react-native-onesignal";
+import { useStamps } from "@/hooks/use-stamps";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -42,6 +44,7 @@ export default function Layout() {
     "Poppins-Bold": require("../assets/fonts/Poppins-Bold.ttf"),
   });
   const sessionToken = useAuthStore((s) => s.sessionToken);
+  const fetchStamps = useStamps((s) => s.fetchStamps);
 
   useEffect(() => {
     const checkSession = async () => {
@@ -62,12 +65,19 @@ export default function Layout() {
         try {
           const userId = session.user.id;
 
+          // Pre-fetch global state data
+          fetchStamps();
+
           await checkIfAccountDeletedService(userId);
+          await checkIfAccountBlockedService(userId);
           const nextRoute = await getHomeRouteForUserId(userId);
           router.replace(nextRoute as any);
         } catch (err: any) {
           if (err instanceof AccountDeletedError) {
             Alert.alert("Login Failed", err.message);
+            router.replace("/(auth)/login");
+          } else if (err instanceof AccountBlockedError) {
+            Alert.alert("Account Restricted", err.message);
             router.replace("/(auth)/login");
           } else {
             console.error("Session restoration error:", err);
@@ -80,9 +90,6 @@ export default function Layout() {
       checkSession();
     }
   }, [fontsLoaded, sessionToken]);
-
-
-
 
   SplashScreen.setOptions({
     duration: 1000,

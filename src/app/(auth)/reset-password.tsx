@@ -10,25 +10,37 @@ import React, { useState } from "react";
 import { Alert, KeyboardAvoidingView, Platform } from "react-native";
 import { router } from "expo-router";
 import { supabase } from "@/supabase/supabase";
+import { useTranslation } from "react-i18next";
+import TranslateButton from "@/components/ui/translate-button";
 
 export default function ResetPassword() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const { t: translate } = useTranslation();
 
   const handleReset = async () => {
     if (!password || !confirmPassword) {
-      Alert.alert("Missing fields", "Please enter and confirm your new password.");
+      Alert.alert(
+        translate("onboarding.resetPassword.error.missingFields"),
+        translate("onboarding.resetPassword.error.missingFieldsDetail")
+      );
       return;
     }
 
     if (password !== confirmPassword) {
-      Alert.alert("Passwords do not match", "Please make sure both passwords match.");
+      Alert.alert(
+        translate("onboarding.resetPassword.error.passwordMismatch"),
+        translate("onboarding.resetPassword.error.passwordMismatchDetail")
+      );
       return;
     }
 
     if (password.length < 8) {
-      Alert.alert("Weak password", "Password must be at least 8 characters long.");
+      Alert.alert(
+        translate("onboarding.resetPassword.error.weakPassword"),
+        translate("onboarding.resetPassword.error.weakPasswordDetail")
+      );
       return;
     }
 
@@ -39,20 +51,25 @@ export default function ResetPassword() {
         throw error;
       }
 
-      Alert.alert("Password updated", "Your password has been reset. Please log in again.");
+      Alert.alert(
+        translate("onboarding.resetPassword.success.passwordUpdated"),
+        translate("onboarding.resetPassword.success.passwordUpdatedDetail")
+      );
       router.replace("/login");
     } catch (error: any) {
       const message =
         error?.msg ??
-        (typeof error?.message === "string" ? error.message : "Something went wrong");
-      Alert.alert("Reset failed", message);
+        (typeof error?.message === "string"
+          ? error.message
+          : translate("label.somethingWentWrong"));
+      Alert.alert(translate("onboarding.resetPassword.error.resetFailed"), message);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-background p-4">
+    <SafeAreaView className="flex-1 bg-background dark:bg-darkBackground p-4">
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         className="flex-1"
@@ -61,42 +78,47 @@ export default function ResetPassword() {
           contentContainerStyle={{ flexGrow: 1 }}
           keyboardShouldPersistTaps="handled"
         >
+          {/* Language Toggle */}
+          <View className="items-end mb-2">
+            <TranslateButton />
+          </View>
+
           <View className="flex-1 justify-center gap-y-6 p-2">
             <View className="gap-y-2">
-              <Text className="text-2xl font-poppins-bold text-neutral-900 text-center">
-                Reset password
+              <Text className="text-2xl font-poppins-bold text-neutral-900 dark:text-darkTextPrimary text-center">
+                {translate("onboarding.resetPassword.title")}
               </Text>
-              <Text className="text-neutral-600 font-poppins text-center">
-                Choose a new password for your account.
+              <Text className="text-neutral-600 dark:text-darkTextSecondary font-poppins text-center">
+                {translate("onboarding.resetPassword.subtitle")}
               </Text>
             </View>
 
             <View className="gap-y-4">
               <View>
-                <Text className="mb-2 text-sm font-poppins-medium text-neutral-700">
-                  New password
+                <Text className="mb-2 text-sm font-poppins-medium text-neutral-700 dark:text-darkTextSecondary">
+                  {translate("onboarding.resetPassword.label.newPassword")}
                 </Text>
                 <TextInput
-                  placeholder="Enter new password"
-                  placeholderTextColor="#404040"
+                  placeholder={translate("onboarding.resetPassword.input.newPassword")}
+                  placeholderTextColor="#9CA3AF"
                   secureTextEntry
                   autoCapitalize="none"
-                  className="border border-neutral-300 rounded-xl px-4 py-4 font-poppins"
+                  className="border border-neutral-300 dark:border-darkBorder rounded-xl px-4 py-4 font-poppins text-neutral-900 dark:text-darkTextPrimary bg-white dark:bg-darkBackgroundMuted"
                   value={password}
                   onChangeText={setPassword}
                 />
               </View>
 
               <View>
-                <Text className="mb-2 text-sm font-poppins-medium text-neutral-700">
-                  Confirm new password
+                <Text className="mb-2 text-sm font-poppins-medium text-neutral-700 dark:text-darkTextSecondary">
+                  {translate("onboarding.resetPassword.label.confirmPassword")}
                 </Text>
                 <TextInput
-                  placeholder="Re-enter new password"
-                  placeholderTextColor="#404040"
+                  placeholder={translate("onboarding.resetPassword.input.confirmPassword")}
+                  placeholderTextColor="#9CA3AF"
                   secureTextEntry
                   autoCapitalize="none"
-                  className="border border-neutral-300 rounded-xl px-4 py-4 font-poppins"
+                  className="border border-neutral-300 dark:border-darkBorder rounded-xl px-4 py-4 font-poppins text-neutral-900 dark:text-darkTextPrimary bg-white dark:bg-darkBackgroundMuted"
                   value={confirmPassword}
                   onChangeText={setConfirmPassword}
                 />
@@ -109,13 +131,17 @@ export default function ResetPassword() {
               disabled={loading}
             >
               <Text className="text-white text-base font-poppins-semibold">
-                {loading ? "Saving..." : "Update password"}
+                {loading
+                  ? translate("onboarding.resetPassword.saving")
+                  : translate("onboarding.resetPassword.button")}
               </Text>
             </TouchableOpacity>
 
             <View className="flex-row justify-center">
               <TouchableOpacity onPress={() => router.replace("/login")}>
-                <Text className="font-poppins text-primary">Back to login</Text>
+                <Text className="font-poppins text-primary">
+                  {translate("onboarding.resetPassword.backToLogin")}
+                </Text>
               </TouchableOpacity>
             </View>
           </View>

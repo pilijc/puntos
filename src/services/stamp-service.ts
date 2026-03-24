@@ -13,7 +13,18 @@ export interface StampProgress {
     logo?: string;
     status: string;
     is_active: boolean;
+    latitude?: number;
+    longitude?: number;
+    address?: string;
   };
+}
+
+export interface ActiveStampProgramReward {
+  store_id: number;
+  total_stamps: number;
+  reward_id: string;
+  reward_title: string | null;
+  reward_image_url: string | null;
 }
 
 export type StampResult = {
@@ -31,7 +42,10 @@ export async function getUserStamps(userId: string): Promise<StampProgress[]> {
           name,
           logo,
           status,
-          is_active
+          is_active,
+          latitude,
+          longitude,
+          address
         )
       `)
       .eq("user_id", userId);
@@ -108,7 +122,7 @@ export async function addStamp(
     }
 
     // ──────────────────────────────────────────────
-    // 2. Check existing stamp_progress for daily limit
+    // 2. Check existing stamp_progress
     // ──────────────────────────────────────────────
     const { data: existingProgress, error: fetchError } = await supabase
       .from("stamp_progress")
@@ -123,11 +137,6 @@ export async function addStamp(
     }
 
     const now = new Date().toISOString();
-
-    // If user already stamped today for this store → reject
-    if (existingProgress?.last_stamp_at && isSameDay(existingProgress.last_stamp_at, now)) {
-      return { success: false, reason: "already_stamped_today" };
-    }
 
     // ──────────────────────────────────────────────
     // 3. Upsert stamp_progress
@@ -185,27 +194,24 @@ export async function addStamp(
     }
 
     if (existingReward) {
-      // If already logged for today, skip reward update
-      if (existingReward.last_stamp_date !== todayDate) {
-        let newStampCount = existingReward.current_stamp_count + 1;
+      let newStampCount = existingReward.current_stamp_count + 1;
 
-        // If count has reached target (full cycle completed), reset to 1
-        if (existingReward.current_stamp_count >= existingReward.target_stamps) {
-          newStampCount = 1;
-        }
+      // If count has reached target (full cycle completed), reset to 1
+      if (existingReward.current_stamp_count >= existingReward.target_stamps) {
+        newStampCount = 1;
+      }
 
-        const { error: rewardUpdateError } = await supabase
-          .from("stamp_rewards")
-          .update({
-            current_stamp_count: newStampCount,
-            last_stamp_date: todayDate,
-            updated_at: now,
-          })
-          .eq("id", existingReward.id);
+      const { error: rewardUpdateError } = await supabase
+        .from("stamp_rewards")
+        .update({
+          current_stamp_count: newStampCount,
+          last_stamp_date: todayDate,
+          updated_at: now,
+        })
+        .eq("id", existingReward.id);
 
-        if (rewardUpdateError) {
-          console.error("Error updating stamp reward:", rewardUpdateError.message);
-        }
+      if (rewardUpdateError) {
+        console.error("Error updating stamp reward:", rewardUpdateError.message);
       }
     } else {
       // First-ever stamp for this store → create reward row
@@ -243,5 +249,159 @@ export async function addStamp(
   } catch (error) {
     console.error("Exception adding stamp:", error);
     return { success: false, reason: "error" };
+  }
+}
+
+export async function getStoresWithEnabledActiveStampProgram(
+  storeIds: number[],
+): Promise<number[]> {
+  if (storeIds.length === 0) return [];
+
+  try {
+    const { data: stampRows, error: stampError } = await supabase
+      .from("store_stamps")
+      .select("store_id")
+      .in("store_id", storeIds)
+      .eq("is_active", true);
+
+    const activeStoreIds = stampError
+      ? []
+      : Array.from(new Set((stampRows ?? []).map((row: any) => Number(row.store_id))));
+
+    // Prefer strict enforcement (stamp_enabled + active program).
+    // If feature read is blocked by RLS in user context, gracefully fallback to active programs.
+    const { data: featureRows, error: featureError } = await supabase
+      .from("store_feature")
+      .select("store_id, stamp_enabled")
+      .in("store_id", storeIds);
+
+    const featureFlagByStoreId = new Map<number, boolean | null>(
+      (featureRows ?? []).map((row: any) => [
+        Number(row.store_id),
+        row.stamp_enabled as boolean | null,
+      ]),
+    );
+
+    // Match addStamp() behavior: block only when stamp_enabled is explicitly false.
+    // If feature row is missing, treat it as allowed.
+    const isFeatureAllowed = (storeId: number) =>
+      featureFlagByStoreId.get(storeId) !== false;
+
+    // Best case: both queries readable -> strict intersection.
+    if (!stampError && !featureError) {
+      return activeStoreIds.filter((id) => isFeatureAllowed(id));
+    }
+
+    // If one side is blocked by RLS, fallback to the side we can read.
+    if (stampError && !featureError) {
+      console.warn(
+        "store_stamps is not readable in current context; falling back to stamp_enabled stores.",
+      );
+      return storeIds.filter((id) => isFeatureAllowed(id));
+    }
+
+    if (!stampError && featureError) {
+      console.warn(
+        "store_feature is not readable in current context; falling back to active stamp programs.",
+      );
+      return activeStoreIds;
+    }
+
+    // If both are unreadable, avoid emptying the UI; defer strict validation to actual stamp action.
+    console.warn(
+      "store_stamps and store_feature are not readable in current context; falling back to nearby stores.",
+    );
+    return storeIds;
+  } catch (error) {
+    console.error("Exception fetching eligible stamp stores:", error);
+    return storeIds;
+  }
+}
+
+export async function getStoresWithEnabledStreaks(
+  storeIds: number[],
+): Promise<number[]> {
+  if (storeIds.length === 0) return [];
+
+  try {
+    const { data: featureRows, error: featureError } = await supabase
+      .from("store_feature")
+      .select("store_id, streak_enabled")
+      .in("store_id", storeIds);
+
+    if (featureError) {
+      console.warn("[getStoresWithEnabledStreaks] Could not read store_feature:", featureError.message);
+      return [];
+    }
+
+    return (featureRows ?? [])
+      .filter((row: any) => row.streak_enabled === true)
+      .map((row: any) => Number(row.store_id));
+  } catch (error) {
+    console.error("Exception fetching eligible streak stores:", error);
+    return [];
+  }
+}
+
+export async function getActiveStampProgramRewards(
+  storeIds: number[],
+): Promise<ActiveStampProgramReward[]> {
+  if (storeIds.length === 0) return [];
+
+  try {
+    const { data: stampRows, error: stampError } = await supabase
+      .from("store_stamps")
+      .select("store_id, total_stamps, reward_id")
+      .in("store_id", storeIds)
+      .eq("is_active", true);
+
+    if (stampError) {
+      throw new Error(stampError.message);
+    }
+
+    const activePrograms = (stampRows ?? []) as Array<{
+      store_id: number | string;
+      total_stamps: number;
+      reward_id: string;
+    }>;
+
+    if (activePrograms.length === 0) return [];
+
+    const rewardIds = Array.from(
+      new Set(activePrograms.map((row) => row.reward_id).filter(Boolean)),
+    );
+
+    const { data: rewardRows, error: rewardError } = await supabase
+      .from("store_rewards")
+      .select("id, title, image_url")
+      .in("id", rewardIds);
+
+    if (rewardError) {
+      throw new Error(rewardError.message);
+    }
+
+    const rewardById = new Map(
+      (rewardRows ?? []).map((row: any) => [
+        String(row.id),
+        {
+          title: row.title as string | null,
+          image_url: row.image_url as string | null,
+        },
+      ]),
+    );
+
+    return activePrograms.map((program) => {
+      const reward = rewardById.get(String(program.reward_id));
+      return {
+        store_id: Number(program.store_id),
+        total_stamps: program.total_stamps,
+        reward_id: program.reward_id,
+        reward_title: reward?.title ?? null,
+        reward_image_url: reward?.image_url ?? null,
+      };
+    });
+  } catch (error) {
+    console.error("Exception fetching active stamp program rewards:", error);
+    return [];
   }
 }
