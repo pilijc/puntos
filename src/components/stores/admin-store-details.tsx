@@ -23,7 +23,7 @@ const T = {
   cardBg:       "#ffffff",
   cardBorder:   "#e2e8f0",
 
-  amberBg:      "#fef9ec",
+  amberBg:      "#ffffff",
   amberBorder:  "#f5e4a8",
   amberBadge:   "#fef0c0",
   amberText:    "#7a5c00",
@@ -33,7 +33,7 @@ const T = {
   greenBadge:   "#dcfce7",
   greenText:    twColors.success,
 
-  redBg:        "#fef2f2",
+  redBg:        "#ffffff",
   redBorder:    "#fecaca",
   redBadge:     "#fee2e2",
   redText:      twColors.danger,
@@ -47,9 +47,6 @@ const T = {
   dashedBorder: "#cbd5e1",
   dashedBg:     twColors.background,
   dashedIcon:   twColors.textMuted,
-
-  mapBg:        "#e2e8f0",
-  mapBorder:    "#cbd5e1",
 };
 
 type StatusKey = "pending" | "active" | "inactive";
@@ -59,7 +56,7 @@ const STATUS_CONFIG: Record<StatusKey, {
 }> = {
   pending:  { label: "PENDING",  icon: "schedule",      bg: T.amberBg, border: T.amberBorder, badgeBg: T.amberBadge, text: T.amberText },
   active:   { label: "ACTIVE",   icon: "check-circle",  bg: T.greenBg, border: T.greenBorder, badgeBg: T.greenBadge, text: T.greenText },
-  inactive: { label: "INACTIVE", icon: "cancel",        bg: T.redBg,   border: T.redBorder,   badgeBg: T.redBadge,   text: T.redText   },
+  inactive: { label: "INACTIVE", icon: "cancel",         bg: T.redBg,   border: T.redBorder,   badgeBg: T.redBadge,   text: T.redText   },
 };
 
 const SectionHeader = ({ title }: { title: string }) => (
@@ -99,7 +96,6 @@ export function AdminStoreDetails({
   const isPending = store.status?.toLowerCase().includes("pending");
   const statusKey = isPending ? "pending" : (store.status as StatusKey);
   const statusCfg = STATUS_CONFIG[statusKey] ?? STATUS_CONFIG.pending;
-  const storePictures: string[] = (store as any).store_pictures ?? [];
 
   const registeredDate = new Date(store.created_at).toLocaleDateString("en-US", {
     month: "short", day: "numeric", year: "numeric",
@@ -108,7 +104,6 @@ export function AdminStoreDetails({
   return (
     <ScreenWrapper style={s.wrapper}>
 
-      {/* ── Topbar ─────────────────────────────────────────────────────────── */}
       <View style={s.topbar}>
         <View style={s.topbarLeft}>
           <TouchableOpacity onPress={onBack} activeOpacity={0.7} style={s.iconBtn}>
@@ -126,7 +121,6 @@ export function AdminStoreDetails({
         contentContainerStyle={s.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-
         <View style={[s.statusBanner, { backgroundColor: statusCfg.bg, borderColor: statusCfg.border }]}>
           <Text style={[s.statusLabel, { color: statusCfg.text }]}>Application Status</Text>
           <View style={[s.statusBadge, { backgroundColor: statusCfg.badgeBg }]}>
@@ -137,7 +131,6 @@ export function AdminStoreDetails({
 
         <View>
           <SectionHeader title="Store Details" />
-
           <ReadOnlyField label="STORE NAME" value={store.name} />
 
           <View style={s.fieldWrap}>
@@ -175,7 +168,6 @@ export function AdminStoreDetails({
 
         <View>
           <SectionHeader title="Business Details" />
-
           <ReadOnlyField label="OWNER NAME"   value={store.owner_name} />
           <ReadOnlyField label="PHONE NUMBER" value={store.phone} />
 
@@ -215,7 +207,6 @@ export function AdminStoreDetails({
 
         <View>
           <SectionHeader title="Location Details" />
-
           <View style={s.fieldWrap}>
             <FieldLabel>LANDMARK / ADDRESS</FieldLabel>
             <View style={s.addressCard}>
@@ -224,30 +215,33 @@ export function AdminStoreDetails({
             </View>
           </View>
         </View>
-
       </ScrollView>
 
+      
       {isPending && (
-        <View style={s.bottomBar} className="py-4 pb-8 flex-row gap-3 px-5 mb-0">
-          <View className="flex-1 drop-shadow-sm">
-            <Button
-              variant="primary"
-              label="Approve Store"
-              onPress={() => onApprove(store)}
-              fullWidth
-            />
-          </View>
-          <View className="flex-1 drop-shadow-sm">
-            <Button
-              variant="danger"
-              label="Reject Application"
-              onPress={() => onReject(store)}
-              fullWidth
-            />
+        <View style={s.bottomBar}>
+          <View style={s.bottomActions}>
+            <View style={{ flex: 1 }}>
+              <Button
+                variant="primary"
+                label="Approve Store"
+                onPress={() => onApprove(store)}
+                fullWidth
+              />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Button
+                variant="danger"
+                label="Reject Application"
+                onPress={() => onReject(store)}
+                fullWidth
+              />
+            </View>
           </View>
         </View>
       )}
 
+      
       {!!selectedImage && (
         <Modal visible onClose={() => setSelectedImage(null)} title="" dismissOnBackdrop>
           <View style={{ alignItems: "center", justifyContent: "center", padding: 16 }}>
@@ -259,22 +253,36 @@ export function AdminStoreDetails({
   );
 }
 
-// ─── Styles ───────────────────────────────────────────────────────────────────
 const s = StyleSheet.create({
-  wrapper:       { flex: 1, backgroundColor: T.pageBg },
+  wrapper: { flex: 1, backgroundColor: T.pageBg },
 
-  topbar:        { backgroundColor: "#fff", flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 16, height: 60, borderBottomWidth: 1, borderBottomColor: T.cardBorder },
-  topbarLeft:    { flexDirection: "row", alignItems: "center", gap: 6 },
-  topbarTitle:   { fontSize: 17, fontWeight: "700", color: T.textPrimary, marginLeft: 4 },
-  iconBtn:       { width: 36, height: 36, alignItems: "center", justifyContent: "center", borderRadius: 18 },
+  topbar: { 
+    backgroundColor: "#fff", 
+    flexDirection: "row", 
+    alignItems: "center", 
+    justifyContent: "space-between", 
+    paddingHorizontal: 16, 
+    height: 60, 
+    borderBottomWidth: 1, 
+    borderBottomColor: T.cardBorder 
+  },
+  topbarLeft:  { flexDirection: "row", alignItems: "center", gap: 6 },
+  topbarTitle: { fontSize: 17, fontWeight: "700", color: T.textPrimary, marginLeft: 4 },
+  iconBtn:     { width: 36, height: 36, alignItems: "center", justifyContent: "center", borderRadius: 18 },
 
-  scrollContent: { paddingHorizontal: 16, paddingTop: 16, paddingBottom: 140, gap: 20 },
+  
+  scrollContent: { 
+    paddingHorizontal: 16, 
+    paddingTop: 16, 
+    paddingBottom: 160, 
+    gap: 20 
+  },
 
   statusBanner:    { borderRadius: 14, borderWidth: 1, padding: 12, flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   statusLabel:     { fontSize: 13, fontWeight: "600" },
   statusBadge:     { flexDirection: "row", alignItems: "center", gap: 5, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 20 },
   statusBadgeText: { fontSize: 11, fontWeight: "700", letterSpacing: 0.4 },
-  sectionTitle: { fontSize: 16, fontWeight: "700", color: T.textPrimary, marginBottom: 12 },
+  sectionTitle:    { fontSize: 16, fontWeight: "700", color: T.textPrimary, marginBottom: 12 },
 
   fieldWrap:  { marginBottom: 10 },
   fieldLabel: { fontSize: 10, fontWeight: "700", color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 5, paddingHorizontal: 2 },
@@ -284,11 +292,7 @@ const s = StyleSheet.create({
   typePill:     { backgroundColor: T.typePillBg, borderRadius: 20, paddingHorizontal: 14, paddingVertical: 5, alignSelf: "flex-start", margin: 3 },
   typePillText: { fontSize: 12, fontWeight: "700", color: "#fff" },
 
-  logoBox: { width: 60, height: 60, borderRadius: 12, overflow: "hidden", backgroundColor: "#7c684a", alignItems: "center", justifyContent: "center", margin: 3 },
-
-  picsGrid:      { flexDirection: "row", gap: 8, padding: 3 },
-  picCell:       { flex: 1, aspectRatio: 1, borderRadius: 10, overflow: "hidden", backgroundColor: "#e5e5e5" },
-  picPlaceholder:{ flex: 1, aspectRatio: 1, borderRadius: 10, borderWidth: 2, borderStyle: "dashed", borderColor: T.dashedBorder, backgroundColor: T.dashedBg, alignItems: "center", justifyContent: "center" },
+  logoBox: { width: 60, height: 60, borderRadius: 12, overflow: "hidden", backgroundColor: "#f1f5f9", alignItems: "center", justifyContent: "center", margin: 3 },
 
   docWrap:    { width: "100%", height: 150, borderRadius: 10, overflow: "hidden", margin: 3 },
   docOverlay: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.2)", alignItems: "center", justifyContent: "center" },
@@ -298,6 +302,27 @@ const s = StyleSheet.create({
   twoColItem: { flex: 1 },
   addressCard: { backgroundColor: T.cardBg, borderRadius: 12, borderWidth: 1, borderColor: T.cardBorder, padding: 13, flexDirection: "row", alignItems: "flex-start", gap: 10 },
   addressText: { flex: 1, fontSize: 13, fontWeight: "500", color: T.textPrimary, lineHeight: 20 },
-  mapBox: { height: 120, backgroundColor: T.mapBg, borderRadius: 14, borderWidth: 1, borderColor: T.mapBorder, alignItems: "center", justifyContent: "center" },
-  bottomBar:      { position: "absolute", bottom: 0, left: 0, right: 0, backgroundColor: "#fff", borderTopWidth: 1, borderTopColor: T.cardBorder },
+
+  
+  bottomBar: { 
+    position: "absolute", 
+    bottom: 0, 
+    left: 0, 
+    right: 0, 
+    backgroundColor: "#fff", 
+    borderTopWidth: 1, 
+    borderTopColor: T.cardBorder,
+    paddingTop: 16,
+    paddingHorizontal: 20,
+    paddingBottom: Platform.OS === 'ios' ? 34 : 24,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 20,
+  },
+  bottomActions: {
+    flexDirection: "row",
+    gap: 12,
+  }
 });
