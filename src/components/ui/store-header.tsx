@@ -9,6 +9,7 @@ interface StoreHeaderProps {
   onBack?: () => void;
   variant?: "default" | "circular";
   containerClassName?: string;
+  showBackButton?: boolean;
 }
 
 export default function StoreHeader({
@@ -17,19 +18,22 @@ export default function StoreHeader({
   onBack,
   variant = "default",
   containerClassName = "",
+  showBackButton = true,
 }: StoreHeaderProps) {
   const router = useRouter();
 
   if (variant === "circular") {
     return (
       <View className={`flex-row items-center ${containerClassName}`.trim()}>
-        <TouchableOpacity
-          onPress={onBack || (() => router.back())}
-          activeOpacity={0.7}
-          className="-ml-3 mr-1"
-        >
-          <MaterialIcons name="chevron-left" size={36} color="#FF6600" />
-        </TouchableOpacity>
+        {showBackButton && (
+          <TouchableOpacity
+            onPress={onBack || (() => router.back())}
+            activeOpacity={0.7}
+            className="-ml-3 mr-1"
+          >
+            <MaterialIcons name="chevron-left" size={36} color="#FF6600" />
+          </TouchableOpacity>
+        )}
         <View>
           <Text className="text-2xl font-poppins-bold text-neutral-900 dark:text-white">
             {title}
@@ -46,13 +50,15 @@ export default function StoreHeader({
 
   return (
     <View className={`flex-row items-center mb-2 mt-4 ${containerClassName}`.trim()}>
-      <TouchableOpacity
-        onPress={onBack || (() => router.back())}
-        activeOpacity={0.7}
-        className="-ml-3 mr-1"
-      >
-        <MaterialIcons name="chevron-left" size={36} color="#FF6600" />
-      </TouchableOpacity>
+      {showBackButton && (
+        <TouchableOpacity
+          onPress={onBack || (() => router.back())}
+          activeOpacity={0.7}
+          className="-ml-3 mr-1"
+        >
+          <MaterialIcons name="chevron-left" size={36} color="#FF6600" />
+        </TouchableOpacity>
+      )}
       <View>
         <Text className="text-2xl font-poppins-bold text-neutral-900 dark:text-white">
           {title}

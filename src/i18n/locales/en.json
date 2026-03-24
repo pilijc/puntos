@@ -196,7 +196,8 @@
         },
         "rewards": {
             "title": "Rewards",
-            "viewStores": "VIEW STORES",
+            "viewStores": "View stores",
+            "viewStore": "View store",
             "discoverPartners": "DISCOVER PARTNERS",
             "distanceMeters": "{{meters}} meters away",
             "store": "Store",

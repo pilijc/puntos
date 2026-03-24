@@ -41,7 +41,7 @@ function buildVirtualStampEntry(focusedStore: any): StampProgress {
   };
 }
 
-export function useStoreOverviewData() {
+export function useStoreOverviewData(storeId?: string) {
   const {
     rewardSort,
     rewardPointsOrder,
@@ -157,6 +157,21 @@ export function useStoreOverviewData() {
   }, [location]);
 
   const displayStamps = useMemo(() => {
+    // If a specific storeId is requested, we only want to show that one
+    if (storeId) {
+      const targetStore = storesWithLocation.find((s) => s.id.toString() === storeId);
+      if (!targetStore) return [];
+
+      const isEnabled = enabledStampFeatureStoreIds.includes(Number(targetStore.id));
+      if (!isEnabled) return [];
+
+      const existingStamp = sortedStamps.find(
+        (stamp) => Number(stamp.store_id) === Number(targetStore.id),
+      );
+
+      return existingStamp ? [existingStamp] : [buildVirtualStampEntry(targetStore)];
+    }
+
     if (!location) return sortedStamps;
 
     if (nearbyStores.length === 0) return sortedStamps;
@@ -172,9 +187,24 @@ export function useStoreOverviewData() {
     );
 
     return existingStamp ? [existingStamp] : [buildVirtualStampEntry(focusedStore)];
-  }, [enabledStampFeatureStoreIds, heroIndex, location, nearbyStores, sortedStamps]);
+  }, [enabledStampFeatureStoreIds, heroIndex, location, nearbyStores, sortedStamps, storeId, storesWithLocation]);
 
   const displayStreaks = useMemo(() => {
+    // If a specific storeId is requested, focus only on its streak
+    if (storeId) {
+      const isEligible = eligibleStreakStoreIds.includes(Number(storeId));
+      if (!isEligible) return [];
+
+      const existingStamp = sortedStamps.find(
+        (stamp) => Number(stamp.store_id) === Number(storeId),
+      );
+
+      if (existingStamp) return [existingStamp];
+
+      const targetStore = storesWithLocation.find((s) => s.id.toString() === storeId);
+      return targetStore ? [buildVirtualStampEntry(targetStore)] : [];
+    }
+
     if (nearbyStores.length > 0) {
       const focusedStore = nearbyStores[heroIndex];
       if (!focusedStore) return [];
@@ -192,7 +222,7 @@ export function useStoreOverviewData() {
     return displayStamps.filter((stamp) =>
       eligibleStreakStoreIds.includes(Number(stamp.store_id)),
     );
-  }, [displayStamps, eligibleStreakStoreIds, heroIndex, nearbyStores, sortedStamps]);
+  }, [displayStamps, eligibleStreakStoreIds, heroIndex, nearbyStores, sortedStamps, storeId, storesWithLocation]);
 
   useEffect(() => {
     const nearbyIds = nearbyStores.map((store) => Number(store.id));
@@ -201,8 +231,17 @@ export function useStoreOverviewData() {
   }, [fetchRewardsData, nearbyStores, sortedStamps]);
 
   useEffect(() => {
-    setHeroIndex(0);
-  }, [nearbyStores.length, setHeroIndex]);
+    if (storeId) {
+      const index = nearbyStores.findIndex((s) => s.id.toString() === storeId);
+      if (index !== -1) {
+        setHeroIndex(index);
+      } else {
+        setHeroIndex(0);
+      }
+    } else {
+      setHeroIndex(0);
+    }
+  }, [nearbyStores, setHeroIndex, storeId]);
 
   const swipeIndicatorStyle = useAnimatedStyle(() => ({
     opacity: swipeIndicatorOpacity.value,

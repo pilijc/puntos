@@ -100,23 +100,40 @@ export function buildStampedStoreList(
   stamps: StampProgress[],
   location: UserLocation | null,
   locationFallback = "Unknown location",
+  stampRewards: any[] = [],
+  activeStampProgramRewards: any[] = []
 ): StampedStoreListItem[] {
   const stampedIds = new Set(stamps.map((stamp) => stamp.store_id.toString()));
-  const stampedStores = stores.filter((store) => stampedIds.has(store.id.toString()));
-  const enrichedStores = enrichStoresWithLocation(stampedStores, location);
+  const enrichedStores = enrichStoresWithLocation(stores, location);
 
-  return enrichedStores.map((store) => {
+  const visibleStores = enrichedStores.filter((store) => 
+    stampedIds.has(store.id.toString()) || store.isNearby
+  );
+
+  return visibleStores.map((store) => {
     const stampData = stamps.find(
       (stamp) => stamp.store_id.toString() === store.id.toString(),
     );
+
+    const stampReward = stampRewards?.find((s) => s.store_id?.toString() === store.id.toString());
+    const activeProgramReward = activeStampProgramRewards?.find(
+      (program) => program.store_id?.toString() === store.id.toString()
+    );
+
+    const target = Math.max(
+      activeProgramReward?.total_stamps ?? stampReward?.target_stamps ?? stampData?.target ?? 7,
+      1
+    );
+
+    const count = stampData?.stamps_count ?? stampReward?.current_stamp_count ?? 0;
 
     return {
       id: store.id.toString(),
       name: store.name,
       location: store.address || locationFallback,
       distanceMeters: store.distanceMeters,
-      stampsCount: stampData?.stamps_count || 0,
-      targetStamps: stampData?.target || 7,
+      stampsCount: count,
+      targetStamps: target,
       isNearby: store.isNearby,
       logo: store.logo,
     };
