@@ -29,6 +29,19 @@ export const getStoreStaff = async (storeId: string) => {
 	}
 };
 
+export const deleteStoreStaff = async (staffId: string) => {
+  try {
+    const { error } = await supabase
+      .from("store_staff")
+      .delete()
+      .eq("id", staffId);
+
+    if (error) throw error;
+  } catch (error) {
+    throw error;
+  }
+};
+
 export const createStoreStaff = async ( storeId: string, name: string, email: string, password: string ) => {
   try {
 		const { data, error } = await supabase.auth.admin.createUser({
