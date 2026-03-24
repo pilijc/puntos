@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { create } from 'zustand';
 import * as Location from 'expo-location';
 import {
   getCurrentLocation,
@@ -22,11 +23,19 @@ export interface UseLocationReturn {
   stopWatching: () => void;
 }
 
+export const useLocationStore = create<{
+  globalLocation: UserLocation | null;
+  setGlobalLocation: (loc: UserLocation | null) => void;
+}>((set) => ({
+  globalLocation: null,
+  setGlobalLocation: (loc) => set({ globalLocation: loc }),
+}));
+
 /**
  * Hook to manage user location state and permissions
  */
 export function useLocation(): UseLocationReturn {
-  const [location, setLocation] = useState<UserLocation | null>(null);
+  const { globalLocation: location, setGlobalLocation: setLocation } = useLocationStore();
   const [permissionStatus, setPermissionStatus] = useState<LocationPermissionStatus>({
     granted: false,
     canAskAgain: true,

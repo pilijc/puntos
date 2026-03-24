@@ -14,6 +14,7 @@ export type StampedStoreListItem = {
   targetStamps: number;
   isNearby: boolean;
   logo: string | null;
+  isJoined: boolean;
 };
 
 export function sortRewards<T extends {
@@ -106,11 +107,8 @@ export function buildStampedStoreList(
   const stampedIds = new Set(stamps.map((stamp) => stamp.store_id.toString()));
   const enrichedStores = enrichStoresWithLocation(stores, location);
 
-  const visibleStores = enrichedStores.filter((store) => 
-    stampedIds.has(store.id.toString()) || store.isNearby
-  );
-
-  return visibleStores.map((store) => {
+  return enrichedStores.map((store) => {
+    const isJoined = stampedIds.has(store.id.toString());
     const stampData = stamps.find(
       (stamp) => stamp.store_id.toString() === store.id.toString(),
     );
@@ -136,6 +134,7 @@ export function buildStampedStoreList(
       targetStamps: target,
       isNearby: store.isNearby,
       logo: store.logo,
+      isJoined,
     };
   });
 }

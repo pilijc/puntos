@@ -7,7 +7,7 @@ import {
   Image,
 } from "@/tw";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import React, { useCallback, useEffect } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { FadeIn, FadeOut, Layout, Easing } from "react-native-reanimated";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import Carousel from "react-native-reanimated-carousel";
@@ -72,6 +72,8 @@ export default function StoreOverviewDetail() {
     displayStamps,
     displayStreaks,
     swipeIndicatorStyle,
+    isLoadingRewardsFeatures,
+    fetchedStoreIds,
   } = useStoreOverviewData(storeId);
 
   // If a specific store is requested, we don't necessarily need to snap the carousel 
@@ -83,12 +85,20 @@ export default function StoreOverviewDetail() {
     setTimeout(() => setIsSwitchingStore(false), 400);
   }, [setHeroIndex, setIsSwitchingStore]);
 
-  // Trigger skeletal loading when opening the store detail page
+  const isStoreCached = storeId ? fetchedStoreIds.includes(Number(storeId)) : false;
+
+  // Immediately capture the first mounting frame without waiting for useEffect cycles
+  const [isInitialLoading, setIsInitialLoading] = useState(!isStoreCached);
+
   useEffect(() => {
-    setIsSwitchingStore(true);
-    const timer = setTimeout(() => setIsSwitchingStore(false), 400);
-    return () => clearTimeout(timer);
-  }, [setIsSwitchingStore, storeId]);
+    if (!isStoreCached) {
+      setIsInitialLoading(true);
+      const timer = setTimeout(() => setIsInitialLoading(false), 500);
+      return () => clearTimeout(timer);
+    } else {
+      setIsInitialLoading(false);
+    }
+  }, [storeId, isStoreCached]);
 
   return (
     <StoreScreenContainer
@@ -265,7 +275,7 @@ export default function StoreOverviewDetail() {
       </View>
 
       <View>
-        {isSwitchingStore ? (
+        {(isSwitchingStore || isInitialLoading || isLoadingRewardsFeatures) ? (
           // Skeleton shimmer while switching stores
           <AnimatedView
             entering={FadeIn.duration(150)}

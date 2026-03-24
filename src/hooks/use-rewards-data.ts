@@ -11,6 +11,8 @@ interface RewardsDataState {
   eligibleStreakStoreIds: number[];
   activeStampProgramRewards: ActiveStampProgramReward[];
   backendRewards: Reward[];
+  isLoadingRewardsFeatures: boolean;
+  fetchedStoreIds: number[];
   
   setEligibleNearbyStoreIds: (ids: number[]) => void;
   setEnabledStampFeatureStoreIds: (ids: number[]) => void;
@@ -34,6 +36,8 @@ export const useRewardsDataStore = create<RewardsDataState>((set, get) => ({
   eligibleStreakStoreIds: [],
   activeStampProgramRewards: [],
   backendRewards: [],
+  isLoadingRewardsFeatures: false,
+  fetchedStoreIds: [],
 
   setEligibleNearbyStoreIds: (eligibleNearbyStoreIds) => set({ eligibleNearbyStoreIds }),
   setEnabledStampFeatureStoreIds: (enabledStampFeatureStoreIds) => set({ enabledStampFeatureStoreIds }),
@@ -42,12 +46,20 @@ export const useRewardsDataStore = create<RewardsDataState>((set, get) => ({
   setBackendRewards: (backendRewards) => set({ backendRewards }),
 
   fetchRewardsData: async (nearbyStoreIds, displayStampStoreIds) => {
+    const { fetchedStoreIds } = get();
+    // Stale-While-Revalidate constraint: only trigger hard skeleton if new stores haven't been fetched
+    const fetchRequiresSkeletons = !nearbyStoreIds.every((id) => fetchedStoreIds.includes(id));
+    if (fetchRequiresSkeletons) {
+      set({ isLoadingRewardsFeatures: true });
+    }
+
     if (nearbyStoreIds.length === 0 && displayStampStoreIds.length === 0) {
       set({
         eligibleNearbyStoreIds: [],
         enabledStampFeatureStoreIds: [],
         eligibleStreakStoreIds: [],
         activeStampProgramRewards: [],
+        isLoadingRewardsFeatures: false,
       });
       return;
     }
@@ -68,14 +80,36 @@ export const useRewardsDataStore = create<RewardsDataState>((set, get) => ({
         displayStampStoreIds.length > 0 ? getActiveStampProgramRewards(displayStampStoreIds) : Promise.resolve([]),
       ]);
 
+      const newFetchedIds = Array.from(new Set([...fetchedStoreIds, ...nearbyStoreIds]));
+
+      // Merge results without overwriting existing cached store data
+      const { 
+        eligibleNearbyStoreIds: currentNearby,
+        enabledStampFeatureStoreIds: currentFeatures,
+        eligibleStreakStoreIds: currentStreaks,
+        activeStampProgramRewards: currentRewards
+      } = get();
+
+      // Filter out the requested IDs from existing cache to allow new database updates to overwrite them cleanly
+      const safeNearby = currentNearby.filter(id => !nearbyStoreIds.includes(id));
+      const safeFeatures = currentFeatures.filter(id => !nearbyStoreIds.includes(id));
+      
+      const allRequestedIds = [...nearbyStoreIds, ...displayStampStoreIds];
+      const safeStreaks = currentStreaks.filter(id => !allRequestedIds.includes(id));
+      
+      const safeRewards = currentRewards.filter(r => !displayStampStoreIds.includes(r.store_id));
+
       set({
-        eligibleNearbyStoreIds: results[0],
-        enabledStampFeatureStoreIds: results[1],
-        eligibleStreakStoreIds: results[2],
-        activeStampProgramRewards: results[3],
+        eligibleNearbyStoreIds: [...safeNearby, ...results[0]],
+        enabledStampFeatureStoreIds: [...safeFeatures, ...results[1]],
+        eligibleStreakStoreIds: [...safeStreaks, ...results[2]],
+        activeStampProgramRewards: [...safeRewards, ...results[3]],
+        isLoadingRewardsFeatures: false,
+        fetchedStoreIds: newFetchedIds,
       });
     } catch (error) {
       console.error("Failed to fetch rewards data in store:", error);
+      set({ isLoadingRewardsFeatures: false });
     }
   },
 
@@ -107,5 +141,6 @@ export const useRewardsDataStore = create<RewardsDataState>((set, get) => ({
     eligibleStreakStoreIds: [],
     activeStampProgramRewards: [],
     backendRewards: [],
+    fetchedStoreIds: [],
   }),
 }));

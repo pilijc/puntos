@@ -1,6 +1,6 @@
 import { View, Text, TouchableOpacity, Image, AnimatedView, Pressable } from "@/tw";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { FadeInDown, Layout, FadeIn, FadeOut, useSharedValue, useAnimatedStyle, withSpring } from "react-native-reanimated";
+import Animated, { FadeInDown, Layout, FadeIn, FadeOut, useSharedValue, useAnimatedStyle, withSpring } from "react-native-reanimated";
 import React, { useState } from "react";
 import { useRouter } from "expo-router";
 
@@ -14,6 +14,7 @@ interface UserStoreListItemProps {
     targetStamps: number;
     isNearby: boolean;
     logo?: string | null;
+    isJoined?: boolean;
   };
   index: number;
   sectionDelay?: number;
@@ -26,9 +27,12 @@ export default function UserStoreListItem({ store, index, sectionDelay = 0 }: Us
   const clampedCount = Math.min(Math.max(store.stampsCount, 0), Math.max(store.targetStamps, 1));
 
   const scale = useSharedValue(1);
-  const animatedScaleStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
-  }));
+  const animatedScaleStyle = useAnimatedStyle(() => {
+    'worklet';
+    return {
+      transform: [{ scale: scale.value }],
+    };
+  });
 
   const handlePressIn = () => {
     scale.value = withSpring(0.96, { damping: 15, stiffness: 200, mass: 1 });
@@ -38,13 +42,13 @@ export default function UserStoreListItem({ store, index, sectionDelay = 0 }: Us
   };
 
   return (
-    <AnimatedView
-      entering={FadeInDown.delay(sectionDelay + index * 100).duration(400)}
-      layout={Layout.springify()}
-      style={animatedScaleStyle}
-      className="bg-white dark:bg-darkBackgroundCard rounded-3xl p-4 border border-neutral-100 dark:border-darkBorder shadow-sm shadow-neutral-100 dark:shadow-none overflow-hidden"
-    >
-      <View className="flex-row items-center">
+    <Animated.View style={animatedScaleStyle}>
+      <AnimatedView
+        entering={FadeInDown.delay(sectionDelay + index * 100).duration(400)}
+        layout={Layout.springify()}
+        className="bg-white dark:bg-darkBackgroundCard rounded-3xl p-4 border border-neutral-100 dark:border-darkBorder shadow-sm shadow-neutral-100 dark:shadow-none overflow-hidden"
+      >
+        <View className="flex-row items-center">
         {/* Main tappable area for routing */}
         <Pressable
           onPress={() => router.push(`/store/${store.id}`)}
@@ -102,18 +106,18 @@ export default function UserStoreListItem({ store, index, sectionDelay = 0 }: Us
           <View>
             <View className="flex-row items-center justify-between mb-1.5">
               <View className="flex-row items-center gap-x-1">
-                <MaterialIcons name="local-fire-department" size={14} color="#3b82f6" />
+                <MaterialIcons name="local-fire-department" size={14} color="#FF6600" />
                 <Text className="text-[10px] font-poppins-medium text-neutral-500 dark:text-neutral-400">
                   Streak Progress
                 </Text>
               </View>
-              <Text className="text-[10px] font-poppins-bold text-blue-500">
+              <Text className="text-[10px] font-poppins-bold text-primary">
                 1/3
               </Text>
             </View>
             <View className="h-1.5 w-full bg-neutral-100 dark:bg-white/10 rounded-full overflow-hidden">
               <View
-                className="h-full bg-blue-500 rounded-full"
+                className="h-full bg-primary rounded-full"
                 style={{ width: `33%` }}
               />
             </View>
@@ -123,18 +127,18 @@ export default function UserStoreListItem({ store, index, sectionDelay = 0 }: Us
           <View className="mt-3">
             <View className="flex-row items-center justify-between mb-1.5">
               <View className="flex-row items-center gap-x-1">
-                <MaterialIcons name="stars" size={14} color="#FF6600" />
+                <MaterialIcons name="stars" size={14} color="#3b82f6" />
                 <Text className="text-[10px] font-poppins-medium text-neutral-500 dark:text-neutral-400">
                   Stamp Progress
                 </Text>
               </View>
-              <Text className="text-[10px] font-poppins-bold text-primary">
+              <Text className="text-[10px] font-poppins-bold text-blue-500">
                 {clampedCount}/{Math.max(store.targetStamps, 1)}
               </Text>
             </View>
             <View className="h-1.5 w-full bg-neutral-100 dark:bg-white/10 rounded-full overflow-hidden">
               <View
-                className="h-full bg-primary rounded-full"
+                className="h-full bg-blue-500 rounded-full"
                 style={{ width: `${(clampedCount / Math.max(store.targetStamps, 1)) * 100}%` }}
               />
             </View>
@@ -142,5 +146,6 @@ export default function UserStoreListItem({ store, index, sectionDelay = 0 }: Us
         </AnimatedView>
       )}
     </AnimatedView>
+    </Animated.View>
   );
 }

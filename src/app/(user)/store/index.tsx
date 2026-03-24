@@ -53,10 +53,11 @@ export default function StoreListScreen() {
     );
   }, [allStores, searchQuery]);
 
-  const { nearbyStoresSection, joinedStoresSection } = useMemo(() => {
+  const { nearbyStoresSection, joinedStoresSection, discoverSection } = useMemo(() => {
     return {
       nearbyStoresSection: filteredStores.filter((store) => store.isNearby),
-      joinedStoresSection: filteredStores.filter((store) => !store.isNearby),
+      joinedStoresSection: filteredStores.filter((store) => !store.isNearby && store.isJoined),
+      discoverSection: filteredStores.filter((store) => !store.isNearby && !store.isJoined),
     };
   }, [filteredStores]);
 
@@ -134,6 +135,22 @@ export default function StoreListScreen() {
                       store={store}
                       index={index}
                       sectionDelay={nearbyStoresSection.length * 100}
+                    />
+                  ))}
+                </View>
+              )}
+
+              {discoverSection.length > 0 && (
+                <View className="gap-y-4">
+                  <Text className="text-xs font-poppins-bold text-neutral-500 dark:text-neutral-400 uppercase tracking-widest ml-1">
+                    Discover
+                  </Text>
+                  {discoverSection.map((store, index) => (
+                    <UserStoreListItem
+                      key={store.id}
+                      store={store}
+                      index={index}
+                      sectionDelay={(nearbyStoresSection.length + joinedStoresSection.length) * 100}
                     />
                   ))}
                 </View>

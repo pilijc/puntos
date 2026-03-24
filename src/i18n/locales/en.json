@@ -213,7 +213,7 @@
             "stampLog": "Stamp Log",
             "streakLog": "Streak Log",
             "nearby": "Nearby",
-            "viewAll": "VIEW ALL",
+            "viewAll": "View All",
             "daysThisWeek": "{{current}}/{{target}} DAYS THIS WEEK",
             "completed": "{{current}}/{{target}} COMPLETED",
             "noActiveStamps": "No Active Stamps",
