@@ -41,7 +41,7 @@ export default function StoreManagerLayout() {
             screenOptions={{
                 headerShown: false,
                 tabBarStyle: {
-                    backgroundColor: isDark ? "#171717" : "#FFFFFF",
+                    backgroundColor: isDark ? "#262626" : "#FFFFFF",
                     borderTopColor: isDark ? "#404040" : "#e5e5e5",
                     height: Platform.OS === 'ios' ? 88 : 60 + insets.bottom,
                     paddingBottom: insets.bottom > 0 ? insets.bottom : 8,
@@ -49,8 +49,8 @@ export default function StoreManagerLayout() {
                 },
                 tabBarActiveTintColor: "#FF6600",
                 tabBarInactiveTintColor: isDark ? "#737373" : "#8B8D98",
-                tabBarLabelStyle: { 
-                    fontSize: 11, 
+                tabBarLabelStyle: {
+                    fontSize: 11,
                     fontFamily: "Poppins-Medium",
                     marginBottom: insets.bottom > 0 ? 0 : 4
                 },
@@ -120,7 +120,7 @@ export default function StoreManagerLayout() {
                 name="view-stamp"
                 options={{ href: null }}
             />
-             <Tabs.Screen
+            <Tabs.Screen
                 name="view-streak"
                 options={{ href: null }}
             />
@@ -128,7 +128,7 @@ export default function StoreManagerLayout() {
                 name="view-staff"
                 options={{ href: null }}
             />
-             <Tabs.Screen
+            <Tabs.Screen
                 name="add-staff"
                 options={{ href: null }}
             />

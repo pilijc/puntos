@@ -21,13 +21,6 @@ export const LogoutButton = ({ showIcon = true }: LogoutButtonProps) => {
     } | null>(null);
 
     const handlePress = async () => {
-        // Alert.alert(
-        //     translate("settings.logout.confirmTitle"),
-        //     translate("settings.logout.confirmMessage"),
-        //     [
-        //         { text: translate("label.cancel"), style: "cancel" },
-        //         { text: translate("settings.logout.title"), style: "destructive", onPress: handleLogout },
-        //     ]);
         setModal({
             title: translate("settings.logout.title"),
             message: translate("settings.logout.confirmMessage"),

@@ -9,8 +9,7 @@ export async function getStoreMetrics(
 ) {
     let activeUserCount = 0;
     let todayTxCount = 0;
-    let weeklyActivity = [0, 0, 0, 0, 0, 0, 0]; // Last 7 days, index 6 is today
-
+    let weeklyActivity = [0, 0, 0, 0, 0, 0, 0];
     try {
         if (lat !== null && lng !== null) {
             const { data: users, error: userEr } = await supabase
