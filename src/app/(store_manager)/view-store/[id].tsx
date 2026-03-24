@@ -32,7 +32,7 @@ export default function ViewStore() {
       { key: "streak",  label: "Streak",        description: "Daily rewards",      icon: { lib: "mc",  name: "fire" },                route: "/(store_manager)/streak/view-streak" as const },
       { key: "stamp",   label: "Stamp",         description: "Punch cards",        icon: { lib: "mc",  name: "stamper" },               route: "/(store_manager)/stamp/view-stamp"  as const },
       { key: "qr",      label: "QR Purchase",   description: "Scan rewards",       icon: { lib: "mi",  name: "qr-code-scanner" },     route: "/(store_manager)/qr"             as const },
-      { key: "rewards", label: "Rewards",        description: "Redeemable items",   icon: { lib: "mc",  name: "gift-open" },           route: "/(store_manager)/reward/rewards"     as const },
+      { key: "rewards", label: "Rewards",        description: "Redeemable items",   icon: { lib: "mc",  name: "gift-open" },           route: "/(store_manager)/reward"             as const },
       { key: "media",   label: "Media",          description: "Store images",       icon: { lib: "mi",  name: "perm-media" },          route: "/(store_manager)/store/media"       as const },
     ],
     []
