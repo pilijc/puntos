@@ -215,33 +215,31 @@ export function AdminStoreDetails({
             </View>
           </View>
         </View>
-      </ScrollView>
 
-      
-      {isPending && (
-        <View style={s.bottomBar}>
-          <View style={s.bottomActions}>
-            <View style={{ flex: 1 }}>
-              <Button
-                variant="primary"
-                label="Approve Store"
-                onPress={() => onApprove(store)}
-                fullWidth
-              />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Button
-                variant="danger"
-                label="Reject Application"
-                onPress={() => onReject(store)}
-                fullWidth
-              />
+        {isPending && (
+          <View style={{ marginTop: 10 }}>
+            <View style={s.bottomActions}>
+              <View style={{ flex: 1 }}>
+                <Button
+                  variant="primary"
+                  label="Approve Store"
+                  onPress={() => onApprove(store)}
+                  fullWidth
+                />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Button
+                  variant="danger"
+                  label="Reject Application"
+                  onPress={() => onReject(store)}
+                  fullWidth
+                />
+              </View>
             </View>
           </View>
-        </View>
-      )}
+        )}
+      </ScrollView>
 
-      
       {!!selectedImage && (
         <Modal visible onClose={() => setSelectedImage(null)} title="" dismissOnBackdrop>
           <View style={{ alignItems: "center", justifyContent: "center", padding: 16 }}>
@@ -274,7 +272,7 @@ const s = StyleSheet.create({
   scrollContent: { 
     paddingHorizontal: 16, 
     paddingTop: 16, 
-    paddingBottom: 160, 
+    paddingBottom: 40, 
     gap: 20 
   },
 
@@ -304,23 +302,6 @@ const s = StyleSheet.create({
   addressText: { flex: 1, fontSize: 13, fontWeight: "500", color: T.textPrimary, lineHeight: 20 },
 
   
-  bottomBar: { 
-    position: "absolute", 
-    bottom: 0, 
-    left: 0, 
-    right: 0, 
-    backgroundColor: "#fff", 
-    borderTopWidth: 1, 
-    borderTopColor: T.cardBorder,
-    paddingTop: 16,
-    paddingHorizontal: 20,
-    paddingBottom: Platform.OS === 'ios' ? 34 : 24,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 20,
-  },
   bottomActions: {
     flexDirection: "row",
     gap: 12,
