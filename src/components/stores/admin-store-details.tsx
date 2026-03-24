@@ -8,6 +8,9 @@ import { Modal } from "@/components/modal";
 import { Button } from "@/components/button";
 import { AdminStoreRow } from "@/services/store-service";
 
+const twConfig = require("../../../tailwind.config.js");
+const twColors = twConfig.theme.extend.colors;
+
 type StatusKey = "pending" | "active" | "inactive";
 
 const STATUS_CONFIG: Record<StatusKey, {
@@ -15,20 +18,20 @@ const STATUS_CONFIG: Record<StatusKey, {
   bg: string; border: string; badgeBg: string; text: string;
 }> = {
   pending:  { label: "PENDING",  icon: "schedule",      bg: "#ffffff", border: "#f5e4a8", badgeBg: "#fef0c0", text: "#7a5c00" },
-  active:   { label: "ACTIVE",   icon: "check-circle",  bg: "#ffffff", border: "#d4fce2", badgeBg: "#dcfce7", text: "#22C55E" },
-  inactive: { label: "INACTIVE", icon: "cancel",        bg: "#ffffff", border: "#fecaca", badgeBg: "#fee2e2", text: "#EF4444" },
+  active:   { label: "ACTIVE",   icon: "check-circle",  bg: "#ffffff", border: "#d4fce2", badgeBg: "#dcfce7", text: twColors.success },
+  inactive: { label: "INACTIVE", icon: "cancel",        bg: "#ffffff", border: "#fecaca", badgeBg: "#fee2e2", text: twColors.danger },
 };
 
 const SectionHeader = ({ title }: { title: string }) => (
-  <Text className="text-base font-poppins-bold text-slate-900 dark:text-slate-100 mb-3">{title}</Text>
+  <Text className="text-base font-poppins-bold text-textPrimary dark:text-darkTextPrimary mb-3">{title}</Text>
 );
 
 const FieldLabel = ({ children }: { children: string }) => (
-  <Text className="text-[10px] font-poppins-bold text-slate-500 uppercase tracking-wider mb-1 px-1">{children}</Text>
+  <Text className="text-[10px] font-poppins-bold text-textSecondary uppercase tracking-wider mb-1 px-1">{children}</Text>
 );
 
 const FieldCard = ({ children, noPad }: { children: React.ReactNode; noPad?: boolean }) => (
-  <View className={`bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 min-h-[48px] justify-center ${noPad ? 'p-2.5' : 'p-3'}`}>
+  <View className={`bg-white dark:bg-darkBackgroundCard rounded-xl border border-[#e2e8f0] dark:border-darkBorder min-h-[48px] justify-center ${noPad ? 'p-2.5' : 'p-3'}`}>
     {children}
   </View>
 );
@@ -37,7 +40,7 @@ const ReadOnlyField = ({ label, value }: { label: string; value?: string | null 
   <View className="mb-2.5">
     <FieldLabel>{label}</FieldLabel>
     <FieldCard>
-      <Text className="text-sm font-poppins-medium text-slate-900 dark:text-slate-100">{value || "—"}</Text>
+      <Text className="text-sm font-poppins-medium text-textPrimary dark:text-darkTextPrimary">{value || "—"}</Text>
     </FieldCard>
   </View>
 );
@@ -64,19 +67,19 @@ export function AdminStoreDetails({
   });
 
   return (
-    <ScreenWrapper className="flex-1 bg-backgroundMuted dark:bg-slate-950">
+    <ScreenWrapper className="flex-1 bg-backgroundMuted dark:bg-darkBackgroundMuted">
 
       <View className="flex-row items-center justify-between px-4 h-[60px]">
         <View className="flex-row items-center gap-1.5">
           <TouchableOpacity onPress={onBack} activeOpacity={0.7} className="w-9 h-9 items-center justify-center rounded-full">
             <MaterialIcons name="arrow-back" size={24} color="#0F172A" />
           </TouchableOpacity>
-          <Text className="text-[17px] font-poppins-bold text-slate-900 dark:text-slate-100 ml-1">Store Details</Text>
+          <Text className="text-[17px] font-poppins-bold text-textPrimary dark:text-darkTextPrimary ml-1">Store Details</Text>
         </View>
       </View>
 
       <ScrollView
-        className="flex-1 bg-backgroundMuted dark:bg-slate-950"
+        className="flex-1 bg-backgroundMuted dark:bg-darkBackgroundMuted"
         contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 40, gap: 20 }}
         showsVerticalScrollIndicator={false}
       >
@@ -100,7 +103,7 @@ export function AdminStoreDetails({
                   <Text className="text-xs font-poppins-bold text-white">{store.type}</Text>
                 </View>
               ) : (
-                <Text className="text-sm font-poppins-medium text-slate-400 p-1">—</Text>
+                <Text className="text-sm font-poppins-medium text-textMuted p-1">—</Text>
               )}
             </FieldCard>
           </View>
@@ -108,7 +111,7 @@ export function AdminStoreDetails({
           <View className="mb-2.5">
             <FieldLabel>STORE LOGO</FieldLabel>
             <FieldCard noPad>
-              <View className="w-[60px] h-[60px] rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800 items-center justify-center m-1">
+              <View className="w-[60px] h-[60px] rounded-xl overflow-hidden bg-[#f1f5f9] dark:bg-darkBackgroundCard items-center justify-center m-1">
                 {store.logo ? (
                   <TouchableOpacity
                     activeOpacity={0.8}
@@ -133,11 +136,11 @@ export function AdminStoreDetails({
           <View className="flex-row gap-2.5">
             <View className="flex-1">
               <FieldLabel>BUSINESS REGISTRATION #</FieldLabel>
-              <FieldCard><Text className="text-sm font-poppins-medium text-slate-900 dark:text-slate-100" numberOfLines={1}>{store.registration_number || "—"}</Text></FieldCard>
+              <FieldCard><Text className="text-sm font-poppins-medium text-textPrimary dark:text-darkTextPrimary" numberOfLines={1}>{store.registration_number || "—"}</Text></FieldCard>
             </View>
             <View className="flex-1">
               <FieldLabel>REGISTERED ON</FieldLabel>
-              <FieldCard><Text className="text-sm font-poppins-medium text-slate-900 dark:text-slate-100" numberOfLines={1}>{registeredDate}</Text></FieldCard>
+              <FieldCard><Text className="text-sm font-poppins-medium text-textPrimary dark:text-darkTextPrimary" numberOfLines={1}>{registeredDate}</Text></FieldCard>
             </View>
           </View>
 
@@ -158,7 +161,7 @@ export function AdminStoreDetails({
                   </View>
                 </TouchableOpacity>
               ) : (
-                <Text className="text-sm font-poppins-medium text-slate-400 p-1">—</Text>
+                <Text className="text-sm font-poppins-medium text-textMuted p-1">—</Text>
               )}
             </FieldCard>
           </View>
@@ -168,9 +171,9 @@ export function AdminStoreDetails({
           <SectionHeader title="Location Details" />
           <View className="mb-2.5">
             <FieldLabel>LANDMARK / ADDRESS</FieldLabel>
-            <View className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-3 flex-row items-start gap-2.5">
+            <View className="bg-white dark:bg-darkBackgroundCard rounded-xl border border-[#e2e8f0] dark:border-darkBorder p-3 flex-row items-start gap-2.5">
               <View className="mt-0.5"><MaterialIcons name="location-on" size={20} color="#FF6600" /></View>
-              <Text className="flex-1 text-[13px] font-poppins-medium text-slate-900 dark:text-slate-100 leading-5">{store.address || "—"}</Text>
+              <Text className="flex-1 text-[13px] font-poppins-medium text-textPrimary dark:text-darkTextPrimary leading-5">{store.address || "—"}</Text>
             </View>
           </View>
         </View>
