@@ -163,7 +163,7 @@ export function AdminStoreDetails({
                   onPress={() => setViewingDoc(true)}
                   style={{
                     width: "100%", height: 160, borderRadius: 10,
-                    overflow: "hidden", margin: 4,
+                    overflow: "hidden"
                   }}
                 >
                   <Image
