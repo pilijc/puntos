@@ -5,7 +5,7 @@ import { router, useLocalSearchParams } from "expo-router";
 import { Button } from "@/components/button";
 import * as ImagePicker from "expo-image-picker";
 import { Modal, type ModalButton } from "@/components/modal";
-import { createStore } from "@/services/store-service";
+import { createStore, updateStore, uploadStoreImage, StoreImageKind } from "@/services/store-service";
 import { supabase } from "@/supabase/supabase";
 import Mapbox, { MapView, Camera, PointAnnotation } from "@rnmapbox/maps";
 import { useColorScheme, Platform, Modal as RNModal } from "react-native";
@@ -16,7 +16,6 @@ import { aspect_ratios, type PickImageType, STEPS, store_types_options } from "@
 import * as Location from "expo-location";
 import Slider from "@react-native-community/slider";
 import * as turf from "@turf/turf";
-import { uploadStoreImage } from "@/services/store-service";
 
 Mapbox.setAccessToken(process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN);
 
@@ -113,10 +112,7 @@ export default function CreateStore() {
     const mimeType = asset.mimeType ?? "image/jpeg";
 
     const maybeUpload = async () => {
-      if (!storeId) return `data:${mimeType};base64,${asset.base64}`;
-      const id = String(storeId);
-      const kind = type === "picture" ? "picture" : type;
-      return await uploadStoreImage(id, kind, asset.base64, mimeType);
+      return `data:${mimeType};base64,${asset.base64}`;
     };
 
     if (type === "logo") {
@@ -297,7 +293,8 @@ export default function CreateStore() {
     const create = async () => {
       try {
         setIsSubmitting(true);
-        const {  data: { user }, } = await supabase.auth.getUser();
+        const { data: { user } } = await supabase.auth.getUser();
+
         const newStore = await createStore({
           name: storeName.trim(),
           type: storeType,
@@ -306,13 +303,33 @@ export default function CreateStore() {
           longitude: hasPin ? parsedLng : null,
           phone: phone.trim() || undefined,
           registrationNumber: registrationNumber.trim() || undefined,
-          businessDocumentImage: businessDocumentImage ?? null,
           storeOpen: storeOpen.trim() || null,
           storeClose: storeClose.trim() || null,
           ownerId: user.id,
-          storeLogo: logo ?? null,
-          storePictures: pictures ?? null,
           radius: radius,
+        });
+
+        const id = String(newStore.id);
+
+        const uploadDataUri = async (uri: string, kind: StoreImageKind): Promise<string> => {
+          if (!uri.startsWith("data:")) return uri;
+          const [header, b64] = uri.split(",");
+          const mt = header.split(":")[1]?.split(";")[0] ?? "image/jpeg";
+          return await uploadStoreImage(id, kind, b64, mt);
+        };
+
+        const uploadedLogo = logo ? await uploadDataUri(logo, "logo") : null;
+        const uploadedPictures = pictures?.length
+          ? await Promise.all(pictures.map((p) => uploadDataUri(p, "picture")))
+          : null;
+        const uploadedDoc = businessDocumentImage
+          ? await uploadDataUri(businessDocumentImage, "business_document")
+          : null;
+
+        await updateStore(newStore.id, {
+          logo: uploadedLogo,
+          store_pictures: uploadedPictures,
+          business_document_image: uploadedDoc,
         });
 
         setModal({

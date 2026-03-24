@@ -97,7 +97,7 @@ export default function StoreManagerLayout() {
                 options={{ href: null }}
             />
             <Tabs.Screen
-                name="create-store"
+                name="store/create-store"
                 options={{ href: null }}
             />
             <Tabs.Screen
@@ -105,35 +105,43 @@ export default function StoreManagerLayout() {
                 options={{ href: null }}
             />
             <Tabs.Screen
-                name="configure-streaks"
+                name="streak/configure-streaks"
                 options={{ href: null }}
             />
             <Tabs.Screen
-                name="configure-stamp"
+                name="stamp/configure-stamp"
                 options={{ href: null }}
             />
             <Tabs.Screen
-                name="rewards"
+                name="reward/rewards"
                 options={{ href: null }}
             />
             <Tabs.Screen
-                name="view-stamp"
+                name="stamp/view-stamp"
                 options={{ href: null }}
             />
              <Tabs.Screen
-                name="configure-qr"
+                name="qr/index"
                 options={{ href: null }}
             />
             <Tabs.Screen
-                name="view-streak"
+                name="qr/configure-qr"
                 options={{ href: null }}
             />
             <Tabs.Screen
-                name="view-staff"
+                name="streak/view-streak"
+                options={{ href: null }}
+            />
+            <Tabs.Screen
+                name="staff/index"
+                options={{ href: null }}
+            />
+            <Tabs.Screen
+                name="staff/view_staff"
                 options={{ href: null }}
             />
              <Tabs.Screen
-                name="add-staff"
+                name="staff/add-staff"
                 options={{ href: null }}
             />
         </Tabs>

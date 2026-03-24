@@ -1,3 +1,5 @@
+import { getQRConfig } from "@/services/store-manager/qr-service";
+
 export interface QRCodeState {
   id: string;
   user_id: string | null;
@@ -18,3 +20,4 @@ export interface QRTransaction {
   points_earned?: number;
   created_at?: string;
 }
+
