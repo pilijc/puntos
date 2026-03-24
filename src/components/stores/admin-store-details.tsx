@@ -84,19 +84,23 @@ export function AdminStoreDetails({
         contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 40, gap: 20 }}
         showsVerticalScrollIndicator={false}
       >
-        {/* Status banner */}
-        <View style={{ backgroundColor: statusCfg.bg, borderColor: statusCfg.border }} className="rounded-2xl border p-3 flex-row items-center justify-between">
-          <Text style={{ color: statusCfg.text }} className="text-[13px] font-poppins-bold">Application Status</Text>
-          <View style={{ backgroundColor: statusCfg.badgeBg }} className="flex-row items-center gap-1 px-2.5 py-1.5 rounded-full">
-            <MaterialIcons name={statusCfg.icon} size={13} color={statusCfg.text} />
-            <Text style={{ color: statusCfg.text }} className="text-[11px] font-poppins-bold tracking-wider">{statusCfg.label}</Text>
-          </View>
-        </View>
 
-        {/* Store Details */}
         <View>
           <SectionHeader title="Store Details" />
-          <ReadOnlyField label="STORE NAME" value={store.name} />
+          <View className="mb-2.5">
+            <FieldLabel>STORE NAME</FieldLabel>
+            <FieldCard>
+              <View className="flex-row items-center justify-between">
+                <Text className="text-sm font-poppins-medium text-textPrimary dark:text-darkTextPrimary flex-1 mr-2" numberOfLines={1}>
+                  {store.name || "—"}
+                </Text>
+                <View style={{ backgroundColor: statusCfg.badgeBg }} className="flex-row items-center gap-1 px-2 py-1 rounded-full">
+                  <MaterialIcons name={statusCfg.icon} size={12} color={statusCfg.text} />
+                  <Text style={{ color: statusCfg.text }} className="text-[10px] font-poppins-bold tracking-wider">{statusCfg.label}</Text>
+                </View>
+              </View>
+            </FieldCard>
+          </View>
 
           <View className="mb-2.5">
             <FieldLabel>STORE TYPE</FieldLabel>
