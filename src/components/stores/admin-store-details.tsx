@@ -1,13 +1,6 @@
 import React, { useState } from "react";
-import {
-  ScrollView,
-  View,
-  Text,
-  TouchableOpacity,
-  useColorScheme,
-  Platform,
-  StyleSheet,
-} from "react-native";
+import { ScrollView } from "react-native";
+import { View, Text, TouchableOpacity } from "@/tw";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { Image } from "expo-image";
 import { ScreenWrapper } from "@/components/ui/screen-wrapper";
@@ -15,67 +8,36 @@ import { Modal } from "@/components/modal";
 import { Button } from "@/components/button";
 import { AdminStoreRow } from "@/services/store-service";
 
-const twConfig = require("../../../tailwind.config.js");
-const twColors = twConfig.theme.extend.colors;
-
-const T = {
-  pageBg:       twColors.backgroundMuted,
-  cardBg:       "#ffffff",
-  cardBorder:   "#e2e8f0",
-
-  amberBg:      "#ffffff",
-  amberBorder:  "#f5e4a8",
-  amberBadge:   "#fef0c0",
-  amberText:    "#7a5c00",
-
-  greenBg:      "#ffffff",
-  greenBorder:  "#d4fce2",
-  greenBadge:   "#dcfce7",
-  greenText:    twColors.success,
-
-  redBg:        "#ffffff",
-  redBorder:    "#fecaca",
-  redBadge:     "#fee2e2",
-  redText:      twColors.danger,
-
-  textPrimary:  twColors.textPrimary,
-  textMuted:    twColors.textMuted,
-
-  primary:      twColors.primary,
-  typePillBg:   twColors.primary,
-
-  dashedBorder: "#cbd5e1",
-  dashedBg:     twColors.background,
-  dashedIcon:   twColors.textMuted,
-};
-
 type StatusKey = "pending" | "active" | "inactive";
+
 const STATUS_CONFIG: Record<StatusKey, {
   label: string; icon: "schedule" | "check-circle" | "cancel";
   bg: string; border: string; badgeBg: string; text: string;
 }> = {
-  pending:  { label: "PENDING",  icon: "schedule",      bg: T.amberBg, border: T.amberBorder, badgeBg: T.amberBadge, text: T.amberText },
-  active:   { label: "ACTIVE",   icon: "check-circle",  bg: T.greenBg, border: T.greenBorder, badgeBg: T.greenBadge, text: T.greenText },
-  inactive: { label: "INACTIVE", icon: "cancel",         bg: T.redBg,   border: T.redBorder,   badgeBg: T.redBadge,   text: T.redText   },
+  pending:  { label: "PENDING",  icon: "schedule",      bg: "#ffffff", border: "#f5e4a8", badgeBg: "#fef0c0", text: "#7a5c00" },
+  active:   { label: "ACTIVE",   icon: "check-circle",  bg: "#ffffff", border: "#d4fce2", badgeBg: "#dcfce7", text: "#22C55E" },
+  inactive: { label: "INACTIVE", icon: "cancel",        bg: "#ffffff", border: "#fecaca", badgeBg: "#fee2e2", text: "#EF4444" },
 };
 
 const SectionHeader = ({ title }: { title: string }) => (
-  <Text style={s.sectionTitle}>{title}</Text>
+  <Text className="text-base font-poppins-bold text-slate-900 dark:text-slate-100 mb-3">{title}</Text>
 );
 
 const FieldLabel = ({ children }: { children: string }) => (
-  <Text style={s.fieldLabel}>{children}</Text>
+  <Text className="text-[10px] font-poppins-bold text-slate-500 uppercase tracking-wider mb-1 px-1">{children}</Text>
 );
 
 const FieldCard = ({ children, noPad }: { children: React.ReactNode; noPad?: boolean }) => (
-  <View style={[s.fieldCard, noPad && { padding: 10 }]}>{children}</View>
+  <View className={`bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 min-h-[48px] justify-center ${noPad ? 'p-2.5' : 'p-3'}`}>
+    {children}
+  </View>
 );
 
 const ReadOnlyField = ({ label, value }: { label: string; value?: string | null }) => (
-  <View style={s.fieldWrap}>
+  <View className="mb-2.5">
     <FieldLabel>{label}</FieldLabel>
     <FieldCard>
-      <Text style={s.fieldValue}>{value || "—"}</Text>
+      <Text className="text-sm font-poppins-medium text-slate-900 dark:text-slate-100">{value || "—"}</Text>
     </FieldCard>
   </View>
 );
@@ -102,27 +64,27 @@ export function AdminStoreDetails({
   });
 
   return (
-    <ScreenWrapper style={s.wrapper}>
+    <ScreenWrapper className="flex-1 bg-backgroundMuted dark:bg-slate-950">
 
-      <View style={s.topbar}>
-        <View style={s.topbarLeft}>
-          <TouchableOpacity onPress={onBack} activeOpacity={0.7} style={s.iconBtn}>
-            <MaterialIcons name="arrow-back" size={24} color={T.textPrimary} />
+      <View className="flex-row items-center justify-between px-4 h-[60px]">
+        <View className="flex-row items-center gap-1.5">
+          <TouchableOpacity onPress={onBack} activeOpacity={0.7} className="w-9 h-9 items-center justify-center rounded-full">
+            <MaterialIcons name="arrow-back" size={24} color="#0F172A" />
           </TouchableOpacity>
-          <Text style={s.topbarTitle}>Store Details</Text>
+          <Text className="text-[17px] font-poppins-bold text-slate-900 dark:text-slate-100 ml-1">Store Details</Text>
         </View>
       </View>
 
       <ScrollView
-        style={{ flex: 1, backgroundColor: T.pageBg }}
-        contentContainerStyle={s.scrollContent}
+        className="flex-1 bg-backgroundMuted dark:bg-slate-950"
+        contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 40, gap: 20 }}
         showsVerticalScrollIndicator={false}
       >
-        <View style={[s.statusBanner, { backgroundColor: statusCfg.bg, borderColor: statusCfg.border }]}>
-          <Text style={[s.statusLabel, { color: statusCfg.text }]}>Application Status</Text>
-          <View style={[s.statusBadge, { backgroundColor: statusCfg.badgeBg }]}>
+      <View style={{ backgroundColor: statusCfg.bg, borderColor: statusCfg.border }} className="rounded-2xl border p-3 flex-row items-center justify-between">
+          <Text style={{ color: statusCfg.text }} className="text-[13px] font-poppins-bold">Application Status</Text>
+          <View style={{ backgroundColor: statusCfg.badgeBg }} className="flex-row items-center gap-1 px-2.5 py-1.5 rounded-full">
             <MaterialIcons name={statusCfg.icon} size={13} color={statusCfg.text} />
-            <Text style={[s.statusBadgeText, { color: statusCfg.text }]}>{statusCfg.label}</Text>
+            <Text style={{ color: statusCfg.text }} className="text-[11px] font-poppins-bold tracking-wider">{statusCfg.label}</Text>
           </View>
         </View>
 
@@ -130,28 +92,28 @@ export function AdminStoreDetails({
           <SectionHeader title="Store Details" />
           <ReadOnlyField label="STORE NAME" value={store.name} />
 
-          <View style={s.fieldWrap}>
+          <View className="mb-2.5">
             <FieldLabel>STORE TYPE</FieldLabel>
             <FieldCard noPad>
               {store.type ? (
-                <View style={s.typePill}>
-                  <Text style={s.typePillText}>{store.type}</Text>
+                <View className="bg-primary rounded-full px-3.5 py-1.5 self-start m-1">
+                  <Text className="text-xs font-poppins-bold text-white">{store.type}</Text>
                 </View>
               ) : (
-                <Text style={[s.fieldValue, { color: "#aaa", padding: 3 }]}>—</Text>
+                <Text className="text-sm font-poppins-medium text-slate-400 p-1">—</Text>
               )}
             </FieldCard>
           </View>
 
-          <View style={s.fieldWrap}>
+          <View className="mb-2.5">
             <FieldLabel>STORE LOGO</FieldLabel>
             <FieldCard noPad>
-              <View style={s.logoBox}>
+              <View className="w-[60px] h-[60px] rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800 items-center justify-center m-1">
                 {store.logo ? (
                   <TouchableOpacity
                     activeOpacity={0.8}
                     onPress={() => setSelectedImage(store.logo!)}
-                    style={{ width: "100%", height: "100%" }}
+                    className="w-full h-full"
                   >
                     <Image source={{ uri: store.logo }} style={{ width: "100%", height: "100%" }} contentFit="cover" />
                   </TouchableOpacity>
@@ -168,35 +130,35 @@ export function AdminStoreDetails({
           <ReadOnlyField label="OWNER NAME"   value={store.owner_name} />
           <ReadOnlyField label="PHONE NUMBER" value={store.phone} />
 
-          <View style={s.twoCol}>
-            <View style={s.twoColItem}>
+          <View className="flex-row gap-2.5">
+            <View className="flex-1">
               <FieldLabel>BUSINESS REGISTRATION #</FieldLabel>
-              <FieldCard><Text style={s.fieldValue} numberOfLines={1}>{store.registration_number || "—"}</Text></FieldCard>
+              <FieldCard><Text className="text-sm font-poppins-medium text-slate-900 dark:text-slate-100" numberOfLines={1}>{store.registration_number || "—"}</Text></FieldCard>
             </View>
-            <View style={s.twoColItem}>
+            <View className="flex-1">
               <FieldLabel>REGISTERED ON</FieldLabel>
-              <FieldCard><Text style={s.fieldValue} numberOfLines={1}>{registeredDate}</Text></FieldCard>
+              <FieldCard><Text className="text-sm font-poppins-medium text-slate-900 dark:text-slate-100" numberOfLines={1}>{registeredDate}</Text></FieldCard>
             </View>
           </View>
 
-          <View style={[s.fieldWrap, { marginTop: 10 }]}>
+          <View className="mb-2.5 mt-2.5">
             <FieldLabel>BUSINESS DOCUMENT</FieldLabel>
             <FieldCard noPad>
               {store.business_document_image ? (
                 <TouchableOpacity
                   activeOpacity={0.85}
                   onPress={() => setSelectedImage(store.business_document_image!)}
-                  style={s.docWrap}
+                  className="w-full h-[150px] rounded-lg overflow-hidden m-1 relative"
                 >
                   <Image source={{ uri: store.business_document_image }} style={{ width: "100%", height: "100%" }} contentFit="cover" />
-                  <View style={s.docOverlay}>
-                    <View style={s.eyeBtn}>
+                  <View style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.2)", alignItems: "center", justifyContent: "center" }}>
+                    <View style={{ width: 38, height: 38, borderRadius: 19, backgroundColor: "rgba(0,0,0,0.4)", alignItems: "center", justifyContent: "center" }}>
                       <MaterialIcons name="visibility" size={18} color="#fff" />
                     </View>
                   </View>
                 </TouchableOpacity>
               ) : (
-                <Text style={[s.fieldValue, { color: "#aaa", padding: 3 }]}>—</Text>
+                <Text className="text-sm font-poppins-medium text-slate-400 p-1">—</Text>
               )}
             </FieldCard>
           </View>
@@ -204,19 +166,19 @@ export function AdminStoreDetails({
 
         <View>
           <SectionHeader title="Location Details" />
-          <View style={s.fieldWrap}>
+          <View className="mb-2.5">
             <FieldLabel>LANDMARK / ADDRESS</FieldLabel>
-            <View style={s.addressCard}>
-              <MaterialIcons name="location-on" size={20} color={T.primary} style={{ marginTop: 1 }} />
-              <Text style={s.addressText}>{store.address || "—"}</Text>
+            <View className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-3 flex-row items-start gap-2.5">
+              <View className="mt-0.5"><MaterialIcons name="location-on" size={20} color="#FF6600" /></View>
+              <Text className="flex-1 text-[13px] font-poppins-medium text-slate-900 dark:text-slate-100 leading-5">{store.address || "—"}</Text>
             </View>
           </View>
         </View>
 
         {isPending && (
-          <View style={{ marginTop: 10 }}>
-            <View style={s.bottomActions}>
-              <View style={{ flex: 1 }}>
+          <View className="mt-2.5">
+            <View className="flex-row gap-3">
+              <View className="flex-1">
                 <Button
                   variant="primary"
                   label="Approve Store"
@@ -224,7 +186,7 @@ export function AdminStoreDetails({
                   fullWidth
                 />
               </View>
-              <View style={{ flex: 1 }}>
+              <View className="flex-1">
                 <Button
                   variant="danger"
                   label="Reject Application"
@@ -239,7 +201,7 @@ export function AdminStoreDetails({
 
       {!!selectedImage && (
         <Modal visible onClose={() => setSelectedImage(null)} title="" dismissOnBackdrop>
-          <View style={{ alignItems: "center", justifyContent: "center", padding: 16 }}>
+          <View className="items-center justify-center p-4">
             <Image source={{ uri: selectedImage }} style={{ width: "100%", height: 380 }} contentFit="contain" />
           </View>
         </Modal>
@@ -247,57 +209,3 @@ export function AdminStoreDetails({
     </ScreenWrapper>
   );
 }
-
-const s = StyleSheet.create({
-  wrapper: { flex: 1, backgroundColor: T.pageBg },
-
-  topbar: { 
-    flexDirection: "row", 
-    alignItems: "center", 
-    justifyContent: "space-between", 
-    paddingHorizontal: 16, 
-    height: 60, 
-  },
-  topbarLeft:  { flexDirection: "row", alignItems: "center", gap: 6 },
-  topbarTitle: { fontSize: 17, fontWeight: "700", color: T.textPrimary, marginLeft: 4 },
-  iconBtn:     { width: 36, height: 36, alignItems: "center", justifyContent: "center", borderRadius: 18 },
-
-  
-  scrollContent: { 
-    paddingHorizontal: 16, 
-    paddingTop: 16, 
-    paddingBottom: 40, 
-    gap: 20 
-  },
-
-  statusBanner:    { borderRadius: 14, borderWidth: 1, padding: 12, flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
-  statusLabel:     { fontSize: 13, fontWeight: "600" },
-  statusBadge:     { flexDirection: "row", alignItems: "center", gap: 5, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 20 },
-  statusBadgeText: { fontSize: 11, fontWeight: "700", letterSpacing: 0.4 },
-  sectionTitle:    { fontSize: 16, fontWeight: "700", color: T.textPrimary, marginBottom: 12 },
-
-  fieldWrap:  { marginBottom: 10 },
-  fieldLabel: { fontSize: 10, fontWeight: "700", color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 5, paddingHorizontal: 2 },
-  fieldCard:  { backgroundColor: T.cardBg, borderRadius: 12, padding: 13, borderWidth: 1, borderColor: T.cardBorder, minHeight: 48, justifyContent: "center" },
-  fieldValue: { fontSize: 14, fontWeight: "500", color: T.textPrimary },
-
-  typePill:     { backgroundColor: T.typePillBg, borderRadius: 20, paddingHorizontal: 14, paddingVertical: 5, alignSelf: "flex-start", margin: 3 },
-  typePillText: { fontSize: 12, fontWeight: "700", color: "#fff" },
-
-  logoBox: { width: 60, height: 60, borderRadius: 12, overflow: "hidden", backgroundColor: "#f1f5f9", alignItems: "center", justifyContent: "center", margin: 3 },
-
-  docWrap:    { width: "100%", height: 150, borderRadius: 10, overflow: "hidden", margin: 3 },
-  docOverlay: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.2)", alignItems: "center", justifyContent: "center" },
-  eyeBtn:     { width: 38, height: 38, borderRadius: 19, backgroundColor: "rgba(0,0,0,0.4)", alignItems: "center", justifyContent: "center" },
-
-  twoCol:     { flexDirection: "row", gap: 10 },
-  twoColItem: { flex: 1 },
-  addressCard: { backgroundColor: T.cardBg, borderRadius: 12, borderWidth: 1, borderColor: T.cardBorder, padding: 13, flexDirection: "row", alignItems: "flex-start", gap: 10 },
-  addressText: { flex: 1, fontSize: 13, fontWeight: "500", color: T.textPrimary, lineHeight: 20 },
-
-  
-  bottomActions: {
-    flexDirection: "row",
-    gap: 12,
-  }
-});
