@@ -123,14 +123,14 @@ export async function processVoucherCode(
             .update({ points_earned: pointsEarned })
             .eq("id", purchaseData.id);
 
-        // Create transaction record (optional)
+        // Create transaction record
         const { error: transactionError } = await supabase
             .from("voucher_transactions")
             .insert({
                 voucher_id: voucher.id,
                 user_id: voucher.user_id,
                 store_staff_id: storeStaffId,
-                store_id: storeId, // Add store_id like QR transactions
+                store_id: storeId, 
                 amount: amount,
                 points_earned: pointsEarned,
                 created_at: currentTime

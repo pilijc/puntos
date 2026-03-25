@@ -56,50 +56,58 @@ export default function Qr() {
   };
 
   useEffect(() => {
-  const setupQR = async () => {
-    const currentUser = await getCurrentUser();
-    if (!currentUser) return;
+    const setupQR = async () => {
+      const currentUser = await getCurrentUser();
+      if (!currentUser) return;
 
-    setUser(currentUser);
-    const qr = `puntos:user:${currentUser.id}`;
-    setQrValue(qr);
-    setLoading(false);
+      setUser(currentUser);
+      const qr = `puntos:user:${currentUser.id}`;
+      setQrValue(qr);
+      setLoading(false);
 
-    // Listen to QR transactions
-    const qrChannel = listenToQRTransaction(currentUser.id, (transaction) => {
-      console.log('Customer side: QR transaction received!', transaction);
-      Vibration.vibrate(500);
-      refetchStamps();
-      refetchStampRewards();
-      setEarnedPoints(transaction.points_earned);
-      setShowCongratsModal(true);
+      // Listen to QR transactions
+      const qrChannel = listenToQRTransaction(currentUser.id, (transaction) => {
+        console.log('Customer side: QR transaction received!', transaction);
+        Vibration.vibrate(500);
+        refetchStamps();
+        refetchStampRewards();
+        setEarnedPoints(transaction.points_earned);
+        setShowCongratsModal(true);
+      });
+      
+      // Listen to voucher transactions
+      const voucherChannel = listenToVoucherTransaction(currentUser.id, (transaction) => {
+        console.log('Customer side: Voucher transaction received!', transaction);
+        Vibration.vibrate(500);
+        refetchStamps();
+        refetchStampRewards();
+        setEarnedPoints(transaction.points_earned);
+        setShowCongratsModal(true);
+      });
+
+      return { qrChannel, voucherChannel };
+    };
+
+    let channels: { qrChannel: any; voucherChannel: any } | null = null;
+    
+    setupQR().then((result) => {
+      channels = result;
+      return fetchQRCode();
+    }).catch((error) => {
+      console.error('Error setting up QR listeners:', error);
     });
-    // Listen to voucher transactions
-    const voucherChannel = listenToVoucherTransaction(currentUser.id, (transaction) => {
-      console.log('Customer side: Voucher transaction received!', transaction);
-      Vibration.vibrate(500);
-      refetchStamps();
-      refetchStampRewards();
-      setEarnedPoints(transaction.points_earned);
-      setShowCongratsModal(true);
-    });
 
-    return { qrChannel, voucherChannel };
-  };
-
-  let channelRefs: any = {};
-  setupQR().then((channels) => {
-    if (channels) {
-      channelRefs = channels;
-    }
-    return fetchQRCode();
-  });
-
-  return () => {
-    if (channelRefs.qrChannel) supabase.removeChannel(channelRefs.qrChannel);
-    if (channelRefs.voucherChannel) supabase.removeChannel(channelRefs.voucherChannel);
-  };
-}, []);
+    return () => {
+      if (channels?.qrChannel) {
+        supabase.removeChannel(channels.qrChannel);
+        console.log('QR channel cleaned up');
+      }
+      if (channels?.voucherChannel) {
+        supabase.removeChannel(channels.voucherChannel);
+        console.log('Voucher channel cleaned up');
+      }
+    };
+  }, []);
  
 
   return (

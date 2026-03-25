@@ -90,10 +90,31 @@ export async function generateVoucherCode(
 // }
 
 //HISTORY SIDE
-//Get user voucher transaction history with store names
+//Get user voucher transaction history with store names (limited to 5 latest)
 export async function getUserVoucherTransactionHistory(userId: string): Promise<any[]> {
   try {
-    // Fetch voucher transactions with store information
+    // First, test basic access to the table
+    console.log('Testing basic access to voucher_transactions...');
+    const { data: testData, error: testError } = await supabase
+      .from('voucher_transactions')
+      .select('id, user_id')
+      .eq('user_id', userId)
+      .limit(1);
+
+    if (testError) {
+      console.error('Basic access test failed:', testError);
+      console.error('Test error details:', {
+        message: testError.message,
+        details: testError.details,
+        hint: testError.hint,
+        code: testError.code
+      });
+      return [];
+    }
+
+    console.log('Basic access test passed, found records:', testData?.length || 0);
+
+    // Fetch voucher transactions with store information (manual join)
     const { data: transactions, error } = await supabase
       .from('voucher_transactions')
       .select(`
@@ -101,29 +122,50 @@ export async function getUserVoucherTransactionHistory(userId: string): Promise<
         points_earned,
         amount,
         created_at,
-        store_id,
-        stores (
-          name
-        )
+        store_id
       `)
       .eq('user_id', userId)
       .order('created_at', { ascending: false });
 
     if (error) {
       console.error('Error fetching voucher transaction history:', error);
+      console.error('Error details:', {
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code
+      });
       return [];
     }
+
+    // Get store names separately (manual join)
+    const storeIds = [...new Set(transactions.map(t => t.store_id))];
+    const { data: stores, error: storesError } = await supabase
+      .from('stores')
+      .select('id, name')
+      .in('id', storeIds);
+
+    if (storesError) {
+      console.error('Error fetching store names:', storesError);
+    }
+
+    // Create store lookup map
+    const storeMap = (stores || []).reduce((acc, store) => {
+      acc[store.id] = store.name;
+      return acc;
+    }, {});
 
     // Format the data for the UI (matching QR transaction format)
     return transactions.map((transaction: any) => ({
       id: transaction.id,
       section: formatDateSection(transaction.created_at),
       type: 'earned',
-      title: transaction.stores?.name || 'user.activity.unknownStore',
+      title: storeMap[transaction.store_id] || 'user.activity.unknownStore',
       subtitle: 'user.activity.subtitle.voucherPoints',
       time: transaction.created_at,
       points: `+${transaction.points_earned}`,
       positive: true,
+      icon: '🎫', // Add icon for voucher transactions
       transactionType: 'voucher', // Add identifier for voucher transactions
     }));
   } catch (error) {
@@ -154,16 +196,28 @@ export function listenToVoucherTransaction(userId: string, onProcessed: (transac
             event: 'INSERT',
             schema: 'public',
             table: 'voucher_transactions',
+            filter: `user_id=eq.${userId}`
         }, (payload) => {
             console.log("Voucher transaction realtime triggered:", payload);
             const newRow = payload.new as VoucherTransaction;
-            
-            if (newRow.user_id === userId) {
-                onProcessed(newRow);
-            }
+            onProcessed(newRow);
         })
         .subscribe((status) => {
             console.log(`Customer voucher listener status for user ${userId}:`, status);
+            if (status === 'SUBSCRIBED') {
+                //console.log(`Successfully subscribed to voucher transactions for user ${userId}`);
+            } else if (status === 'TIMED_OUT') {
+                //console.error(`Voucher listener subscription timed out for user ${userId}:`, status);
+                // Retry connection after timeout
+                setTimeout(() => {
+                  //  console.log(`Retrying voucher listener connection for user ${userId}`);
+                    channel.subscribe();
+                }, 3000);
+            } else if (status === 'CLOSED') {
+                //console.log(`Voucher listener closed for user ${userId} - this is normal during cleanup`);
+            } else {
+                //console.warn(`Voucher listener unexpected status for user ${userId}:`, status);
+            }
         });
 
     return channel;
