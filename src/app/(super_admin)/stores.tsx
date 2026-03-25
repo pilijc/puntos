@@ -299,9 +299,11 @@ export default function SuperAdminStores() {
 		);
 	};
 
-	const filtered = activeFilter === "All"
+	const filtered = (activeFilter === "All"
 		? stores
-		: stores.filter((s) => s.status === activeFilter);
+		: stores.filter((s) => s.status === activeFilter))
+		.slice()
+		.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
 	const pendingCount = stores.filter((s) => s.status === "pending_review").length;
 

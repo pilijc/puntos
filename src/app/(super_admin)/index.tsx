@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { ScrollView, ActivityIndicator, RefreshControl, Image, StyleSheet, Pressable } from "react-native";
 import { SafeAreaView, Text, View } from "@/tw";
-import { useRouter } from "expo-router";
+import { useRouter, useFocusEffect } from "expo-router";
 import { useDashboardStore } from "@/store/dashboard-store";
+import { useProfile } from "@/hooks/use-profile";
 import { SectionHeader } from "@/components/ui/section-header";
 import { UserRow } from "@/components/users/UserRow";
 import { StatCard } from "@/components/ui/stat-card";
@@ -12,17 +13,23 @@ import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 export default function SuperAdminDashboard() {
   const router = useRouter();
   const { users, stores, adminInfo, loading, fetchDashboardData, fetchAdminSession } = useDashboardStore();
+  const { profile, refreshProfile } = useProfile();
 
   const [refreshing, setRefreshing] = useState(false);
+  const [avatarKey, setAvatarKey] = useState(Date.now());
 
   const activeStoresCount = useMemo(() =>
     (stores || []).filter(s => s.status?.toString().toUpperCase().trim() === "ACTIVE").length,
     [stores]
   );
 
-  useEffect(() => {
-    initData();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      initData();
+      refreshProfile();
+      setAvatarKey(Date.now());
+    }, [])
+  );
 
   const initData = async () => {
     await Promise.all([fetchAdminSession(), fetchDashboardData()]);
@@ -66,18 +73,19 @@ export default function SuperAdminDashboard() {
 
               <Pressable
                 onPress={() => router.push("/(super_admin)/settings")}
-                style={{ width: 44, height: 44, borderRadius: 14, overflow: "hidden" }}
+                className="relative mt-1"
               >
                 <Image
-                  source={{ uri: adminInfo?.avatar }}
+                  source={{ uri: (profile?.avatar_url || profile?.avatarUrl || profile?.logo || adminInfo?.avatar) ? `${(profile?.avatar_url || profile?.avatarUrl || profile?.logo || adminInfo?.avatar)}?t=${avatarKey}` : undefined }}
                   style={{
-                    width: 44,
-                    height: 44,
-                    borderRadius: 14,
+                    width: 48,
+                    height: 48,
+                    borderRadius: 24,
                     borderWidth: 2,
                     borderColor: "#F1F5F9",
                   }}
                 />
+                <View className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-500 border-2 border-white rounded-full z-10" />
               </Pressable>
             </View>
           </View>

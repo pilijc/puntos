@@ -1,10 +1,11 @@
 import React from "react";
-import { View, Text, AnimatedView, Image } from "@/tw";
+import { View, Text, AnimatedView, Image, TouchableOpacity } from "@/tw";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import Carousel from "react-native-reanimated-carousel";
 import { Dimensions } from "react-native";
 import { storeLogos } from "@/data/rewards";
 import { useTranslation } from "react-i18next";
+import { useRouter } from "expo-router";
 
 const { width: screenWidth } = Dimensions.get("window");
 
@@ -12,16 +13,21 @@ interface UserStoreHeroCarouselProps {
   nearbyStores: any[];
   storesWithLocation: any[];
   setHeroIndex: (index: number) => void;
+  heroIndex: number;
   swipeIndicatorStyle: any;
+  hideViewButton?: boolean;
 }
 
 export default function UserStoreHeroCarousel({
   nearbyStores,
   storesWithLocation,
   setHeroIndex,
+  heroIndex,
   swipeIndicatorStyle,
+  hideViewButton = false,
 }: UserStoreHeroCarouselProps) {
   const { t: translate } = useTranslation();
+  const router = useRouter();
   const getHeroImage = (store: any) => {
     if (store.logo) {
       return { uri: store.logo };
@@ -40,6 +46,7 @@ export default function UserStoreHeroCarousel({
           height={256}
           data={nearbyStores}
           scrollAnimationDuration={1000}
+          enabled={nearbyStores.length > 1}
           loop={nearbyStores.length > 1}
           autoPlay={false}
           autoPlayInterval={4000}
@@ -128,13 +135,31 @@ export default function UserStoreHeroCarousel({
       )}
 
       {/* Replaced 'left-97' with standard trailing flex positioning */}
-      <View className="absolute top-4 right-6 items-end z-10">
-        {nearbyStores.length >= 2 && (
-          <AnimatedView style={swipeIndicatorStyle}>
-            <MaterialIcons name="chevron-right" size={28} color="#FFFFFF" />
-          </AnimatedView>
-        )}
-      </View>
+      {!hideViewButton && (
+        <TouchableOpacity
+          onPress={() => {
+            const activeHeroStores = nearbyStores.length > 0 
+              ? nearbyStores 
+              : storesWithLocation.filter(s => s.is_active);
+            const focusedStore = activeHeroStores[heroIndex];
+            if (focusedStore) {
+              router.push(`/store/${focusedStore.id}`);
+            }
+          }}
+          className="absolute top-7 right-6 z-30 px-3 py-1.5 rounded-full border border-white/20 bg-black/30 backdrop-blur-md flex-row items-center justify-center gap-x-1.5"
+        >
+          <Text className="text-[10px] font-poppins-semibold text-white uppercase tracking-wider text-center">
+            {translate("user.rewards.viewStore")}
+          </Text>
+          <MaterialIcons
+            name="local-convenience-store"
+            size={14}
+            color="#FFFFFF"
+            style={{ transform: [{ translateY: -0.5 }] }}
+          />
+        </TouchableOpacity>
+      )}
+
     </View>
   );
 }
