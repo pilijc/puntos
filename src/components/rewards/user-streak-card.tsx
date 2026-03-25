@@ -86,7 +86,7 @@ export default function UserStreakCard({
             <TouchableOpacity disabled={true} className="px-2 py-1 opacity-50">
               <View className="flex-row items-center gap-x-1">
                 <Text className="text-primary text-xs font-poppins-semibold">
-                  {translate("rewards.viewAll")}
+                  {translate("user.rewards.viewAll")}
                 </Text>
                 <MaterialIcons name="open-in-new" size={12} color="#FF6600" />
               </View>

@@ -82,9 +82,9 @@ export default function ConfigureStreaks() {
 			setModal({
 				title: "Success",
 				message: "QR purchase rules saved successfully",
-				buttons: [{ label: "OK", onPress: () => router.push({ pathname: "/(store_manager)/view-qr", params: { storeId } }) }],
+				buttons: [{ label: "OK", onPress: () => router.push({ pathname: "/(store_manager)/qr", params: { storeId } }) }],
 			});
-			router.push({ pathname: "/(store_manager)/view-qr", params: { storeId } });
+			router.push({ pathname: "/(store_manager)/qr", params: { storeId } });
 		} catch (error) {
 			setModal({
 				title: "Error",
@@ -116,7 +116,7 @@ export default function ConfigureStreaks() {
         <TouchableOpacity
           className="w-10 h-10 rounded-full items-center justify-center"
           activeOpacity={0.7}
-          onPress={() => router.push({ pathname: "/(store_manager)/view-store/[id]", params: { id: storeId } })}
+          onPress={() => router.back()}
         >
           <MaterialIcons name="chevron-left" size={22} color={isDark ? "#F1F5F9" : "#0F172A"} />
         </TouchableOpacity>
@@ -294,7 +294,7 @@ export default function ConfigureStreaks() {
           />
           <Button
             label="Cancel"
-            onPress={() => router.push({ pathname: "/(store_manager)/view-store/[id]", params: { id: storeId } })}
+            onPress={() => router.back()}
             fullWidth={true}
             variant="secondary"
           />
