@@ -2,7 +2,7 @@ import React, { useEffect, useCallback, useMemo, useRef } from "react";
 import { ActivityIndicator, RefreshControl, StatusBar, FlatList } from "react-native";
 import { View, Text } from "@/tw";
 import { ScreenWrapper } from "@/components/ui/screen-wrapper";
-import { useUserStore, type UserRoleTab } from "@/store/user-store";
+import { useUserStore, type UserRoleTab } from "@/store/super-admin/user-store";
 import { BlockUserModal } from "@/components/users/BlockUserModal";
 import { FilterBottomSheet } from "@/components/users/FilterBottomSheet";
 import { UsersSearchHeader } from "@/components/users/UsersSearchHeader";

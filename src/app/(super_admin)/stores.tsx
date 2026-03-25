@@ -9,7 +9,7 @@ import { ScreenWrapper } from "@/components/ui/screen-wrapper";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useFocusEffect } from "expo-router";
 import { AdminStoreRow } from "@/services/store-service";
-import { useSuperAdminStoresStore } from "@/store/super-admin-stores-store";
+import { useSuperAdminStoresStore } from "@/store/super-admin/super-admin-stores-store";
 import { AdminStoreCard, AdminStoreSkeletonCard } from "@/components/stores/admin-store-card";
 import { AdminStoreDetails } from "@/components/stores/admin-store-details";
 
