@@ -6,6 +6,7 @@ import { useRouter } from "expo-router";
 import { supabase } from "@/supabase/supabase";
 import { getRoleTypeForUser } from "@/services/access-service";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { LayoutDashboard, Store } from 'lucide-react-native';
 
 export default function StoreManagerLayout() {
     const colorScheme = useColorScheme();
@@ -50,7 +51,7 @@ export default function StoreManagerLayout() {
                 tabBarActiveTintColor: "#FF6600",
                 tabBarInactiveTintColor: isDark ? "#737373" : "#8B8D98",
                 tabBarLabelStyle: { 
-                    fontSize: 11, 
+                    fontSize: 10, 
                     fontFamily: "Poppins-Medium",
                     marginBottom: insets.bottom > 0 ? 0 : 4
                 },
@@ -61,7 +62,7 @@ export default function StoreManagerLayout() {
                 options={{
                     title: "Dashboard",
                     tabBarIcon: ({ color }) => (
-                        <MaterialIcons size={22} name="dashboard" color={color} />
+                        <LayoutDashboard size={22} color={color} />
                     ),
                 }}
             />
@@ -70,7 +71,7 @@ export default function StoreManagerLayout() {
                 options={{
                     title: "Stores",
                     tabBarIcon: ({ color }) => (
-                        <MaterialIcons size={22} name="storefront" color={color} />
+                        <Store size={22} color={color} />
                     ),
                 }}
             />
