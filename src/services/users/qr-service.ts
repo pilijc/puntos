@@ -94,14 +94,14 @@ export async function createQRTransaction(
   
   // Debug: Check what's in store_qr_rewards table
   const { data: allStoreRewards, error: allRewardsError } = await supabase
-    .from('store_qr_rewards')
+    .from('store_qr')
     .select('*')
     .limit(10);
   console.log('QR Service: All store_qr_rewards data:', allStoreRewards);
   console.log('QR Service: All store_qr_rewards error:', allRewardsError);
   
   const { data: pointsData, error: pointsError } = await supabase
-    .from('store_qr_rewards')
+    .from('store_qr')
     .select('percentage')
     .eq('store_id', storeId)
     .single();
