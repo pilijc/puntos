@@ -47,10 +47,9 @@ export async function processVoucherCode(
             };
         }
 
-        // Check if voucher is expired
-        const now = new Date();
-        const expiresAt = new Date(voucher.expires_at);
-        if (now > expiresAt) {
+        // Check if voucher is expired (using UTC time)
+        const now = new Date().toISOString();
+        if (now > voucher.expires_at) {
             return {
                 success: false,
                 message: "Voucher has expired",
@@ -62,7 +61,7 @@ export async function processVoucherCode(
             .from("vouchers")
             .update({ 
                 is_used: true,
-                used_at: now.toISOString()
+                used_at: now
             })
             .eq("code", voucherCode);
 
@@ -106,13 +105,14 @@ export async function processVoucherCode(
         // Calculate points using dynamic percentage
         const pointsEarned = Math.ceil(amount * (percentage / 100));
 
+        const currentTime = new Date().toISOString();
             const { data: purchaseData, error: purchaseError } = await supabase
             .from("purchases")
             .insert({
                 user_id: voucher.user_id,
                 store_id: storeId,
                 amount: amount,
-                created_at: now.toISOString(),
+                created_at: currentTime,
             })
             .select()
             .single();
@@ -132,7 +132,7 @@ export async function processVoucherCode(
                 store_staff_id: storeStaffId,
                 amount: amount,
                 points_earned: pointsEarned,
-                created_at: now.toISOString()
+                created_at: currentTime
             });
 
         if (transactionError) {
@@ -182,9 +182,9 @@ export async function verifyVoucherCode(voucherCode: string): Promise<{
             };
         }
 
-        const now = new Date();
-        const expiresAt = new Date(voucher.expires_at);
-        if (now > expiresAt) {
+        // Check if voucher is expired (using UTC time)
+        const now = new Date().toISOString();
+        if (now > voucher.expires_at) {
             return {
                 valid: false,
                 voucher,

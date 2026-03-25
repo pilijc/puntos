@@ -88,20 +88,6 @@ export async function generateVoucherCode(
 //   return data ?? null;
 // }
 
-// export async function markVoucherUsed(voucherId: string): Promise<boolean> {
-//   const { error } = await supabase
-//     .from<Voucher>("vouchers")
-//     .update({ used_at: true })
-//     .eq("id", voucherId);
-
-//   if (error) {
-//     console.error("Error marking voucher as used:", error);
-//     return false;
-//   }
-
-//   return true;
-// }
-
 export function listenToVoucherTransaction(userId: string, onProcessed: (transaction: VoucherTransaction) => void) {
     const channel = supabase.channel(`voucher_transactions-${userId}`)
         .on('postgres_changes', {
