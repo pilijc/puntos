@@ -7,6 +7,7 @@ import { useRouter } from 'expo-router';
 import QRCode from 'react-native-qrcode-svg';
 //import { supabase } from '@/supabase/supabase';
 import { getCurrentUser, getStaticQRCode, addAutoUser, listenToQRTransaction } from '@/services/users/qr-service';
+import { listenToVoucherTransaction } from '@/services/users/voucher-service';
 import { supabase } from 'supabase/supabase';
 import { useStamps } from '@/hooks/use-stamps';
 import { useStampRewards } from '@/hooks/use-stamp-rewards';
@@ -64,32 +65,39 @@ export default function Qr() {
     setQrValue(qr);
     setLoading(false);
 
-    // Listen to transactions
-    const channel = listenToQRTransaction(currentUser.id, (transaction) => {
+    // Listen to QR transactions
+    const qrChannel = listenToQRTransaction(currentUser.id, (transaction) => {
       console.log('Customer side: QR transaction received!', transaction);
-      //vibration for celebration
       Vibration.vibrate(500);
-      
-      // Tell the stamp store to fetch updated stamp logs in the background
       refetchStamps();
       refetchStampRewards();
-
-      // Show custom congratulations modal
+      setEarnedPoints(transaction.points_earned);
+      setShowCongratsModal(true);
+    });
+    // Listen to voucher transactions
+    const voucherChannel = listenToVoucherTransaction(currentUser.id, (transaction) => {
+      console.log('Customer side: Voucher transaction received!', transaction);
+      Vibration.vibrate(500);
+      refetchStamps();
+      refetchStampRewards();
       setEarnedPoints(transaction.points_earned);
       setShowCongratsModal(true);
     });
 
-    return channel;
+    return { qrChannel, voucherChannel };
   };
 
-  let channelRef: any;
-  setupQR().then((channel) => {
-    channelRef = channel;
+  let channelRefs: any = {};
+  setupQR().then((channels) => {
+    if (channels) {
+      channelRefs = channels;
+    }
     return fetchQRCode();
   });
 
   return () => {
-    if (channelRef) supabase.removeChannel(channelRef);
+    if (channelRefs.qrChannel) supabase.removeChannel(channelRefs.qrChannel);
+    if (channelRefs.voucherChannel) supabase.removeChannel(channelRefs.voucherChannel);
   };
 }, []);
  

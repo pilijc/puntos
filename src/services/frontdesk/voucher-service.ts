@@ -1,6 +1,7 @@
 import { supabase } from "supabase/supabase";
 import { ProcessVoucherCode } from "../../type/frontdesk/voucher";
 import { Voucher } from "../../type/user/voucher";
+import { points } from "@turf/turf";
 
 export async function getCurrentStaffId(): Promise<string | null> {
     try {
@@ -71,9 +72,56 @@ export async function processVoucherCode(
                 message: "Failed to process voucher",
             };
         }
+        // Get store_id from staff
+        const { data: staffData, error: staffError } = await supabase
+            .from('store_staff')
+            .select('store_id')
+            .eq('user_id', storeStaffId)
+            .eq('is_active', true)
+            .single();
 
-        // Calculate points (example: 1 point per peso)
-        const pointsEarned = Math.floor(amount);
+        if (staffError || !staffData) {
+            return {
+                success: false,
+                message: "Failed to get store information for staff member",
+            };
+        }
+
+        const storeId = staffData.store_id;
+
+        // Get points configuration for this store
+        // const { data: pointsData, error: pointsError } = await supabase
+        //     .from('store_qr_rewards')
+        //     .select('percentage')
+        //     .eq('store_id', storeId)
+        //     .single();
+
+        // if (pointsError || !pointsData) {
+        //     return {
+        //         success: false,
+        //         message: "Failed to get points configuration for store",
+        //     };
+        // }
+
+        // Calculate points using dynamic percentage
+        const pointsEarned = Math.ceil(amount * (10 / 100));
+
+            const { data: purchaseData, error: purchaseError } = await supabase
+            .from("purchases")
+            .insert({
+                user_id: voucher.user_id,
+                store_id: storeId,
+                amount: amount,
+                created_at: now.toISOString(),
+            })
+            .select()
+            .single();
+
+        // Update with points earned
+        await supabase
+            .from("purchases")
+            .update({ points_earned: pointsEarned })
+            .eq("id", purchaseData.id);
 
         // Create transaction record (optional)
         const { error: transactionError } = await supabase
@@ -158,7 +206,6 @@ export async function verifyVoucherCode(voucherCode: string): Promise<{
     }
 }
 
-    // // ✅ Create purchase record
     // const { data: purchaseData, error: purchaseError } = await supabase
     //   .from("purchases")
     //   .insert({

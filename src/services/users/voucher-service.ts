@@ -1,6 +1,16 @@
 import { supabase } from "supabase/supabase";
 import { Voucher } from "@/type/user/voucher";
 
+export interface VoucherTransaction {
+    id: string;
+    voucher_id: string;
+    user_id: string;
+    store_staff_id: string;
+    amount: number;
+    points_earned: number;
+    created_at: string;
+}
+
 const limit = 5; 
 
 function generateCode(length: number = limit): string {
@@ -91,3 +101,24 @@ export async function generateVoucherCode(
 
 //   return true;
 // }
+
+export function listenToVoucherTransaction(userId: string, onProcessed: (transaction: VoucherTransaction) => void) {
+    const channel = supabase.channel(`voucher_transactions-${userId}`)
+        .on('postgres_changes', {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'voucher_transactions',
+        }, (payload) => {
+            console.log("Voucher transaction realtime triggered:", payload);
+            const newRow = payload.new as VoucherTransaction;
+            
+            if (newRow.user_id === userId) {
+                onProcessed(newRow);
+            }
+        })
+        .subscribe((status) => {
+            console.log(`Customer voucher listener status for user ${userId}:`, status);
+        });
+
+    return channel;
+}
