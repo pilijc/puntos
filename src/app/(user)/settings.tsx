@@ -89,7 +89,7 @@ export default function UserSettings() {
             {translate('settings.title')}
           </Text>
           <TouchableOpacity
-            onPress={() => router.push("/qr")}
+            onPress={() => router.push("/(user)/qr")}
             className="p-2"
           >
             <Ionicons
