@@ -74,21 +74,34 @@ export function BlockUserModal({
             (selectedUser.storeInfo?.length ?? 0) > 0 && (
               <View>
                 <Text className="text-[10px] font-poppins-bold text-textMuted uppercase tracking-wider mb-2">
-                  Store Managed
+                  Managed Stores
                 </Text>
                 {selectedUser.storeInfo!.map((store: any, i: number) => (
-                  <View
-                    key={i}
-                    className="flex-row items-center bg-white border border-slate-100 rounded-xl px-3 py-2 mb-1.5"
-                  >
-                    <MaterialIcons
-                      name="storefront"
-                      size={14}
-                      color={COLORS.textMuted}
-                    />
-                    <Text className="text-[12px] font-poppins text-textSecondary ml-2">
-                      {store.name}
-                    </Text>
+                  <View key={i} className="bg-white border border-slate-100 rounded-2xl p-3 mb-2">
+                    <View className="flex-row items-center">
+                      <View className="bg-primary/10 p-2 rounded-lg">
+                        <MaterialIcons name="storefront" size={16} color={COLORS.primary} />
+                      </View>
+                      <View className="ml-3 flex-1">
+                        <Text className="text-[13px] font-poppins-bold text-textPrimary">
+                          {store.name}
+                        </Text>
+                        <View className="flex-row items-center mt-0.5">
+                          <MaterialIcons name="location-on" size={10} color={COLORS.primary} />
+                          <Text className="text-[10px] font-poppins text-textMuted ml-1" numberOfLines={1}>
+                            {store.address}
+                          </Text>
+                        </View>
+                        {store.ownerName && (
+                          <View className="flex-row items-center mt-1">
+                            <MaterialIcons name="person" size={10} color={COLORS.primary} />
+                            <Text className="text-[10px] font-poppins text-primary ml-1">
+                              Owner: {store.ownerName}
+                            </Text>
+                          </View>
+                        )}
+                      </View>
+                    </View>
                   </View>
                 ))}
               </View>
@@ -110,18 +123,18 @@ export function BlockUserModal({
                           {store.name}
                         </Text>
                         <View className="flex-row items-center mt-0.5">
-                          <MaterialIcons name="location-on" size={10} color={COLORS.textMuted} />
+                          <MaterialIcons name="location-on" size={10} color={COLORS.primary} />
                           <Text className="text-[10px] font-poppins text-textMuted ml-1" numberOfLines={1}>
                             {store.address}
                           </Text>
                         </View>
                       </View>
                     </View>
-                    {store.managerName && (
+                    {(store.ownerName || store.managerName) && (
                       <View className="flex-row items-center bg-slate-50 rounded-lg px-2.5 py-1.5 mt-1 border border-slate-100/50">
-                        <MaterialIcons name="person" size={12} color={COLORS.textMuted} />
-                        <Text className="text-[10px] font-poppins text-textSecondary ml-1.5 flex-1">
-                          Manager: <Text className="font-poppins-bold">{store.managerName}</Text>
+                        <MaterialIcons name="person" size={12} color={COLORS.primary} />
+                        <Text className="text-[10px] font-poppins-bold text-textSecondary ml-1.5 flex-1">
+                          {store.ownerName || store.managerName}
                         </Text>
                       </View>
                     )}
