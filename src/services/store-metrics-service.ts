@@ -10,6 +10,7 @@ export async function getStoreMetrics(
     let activeUserCount = 0;
     let todayTxCount = 0;
     let weeklyActivity = [0, 0, 0, 0, 0, 0, 0];
+    let weeklyStampsActivity = [0, 0, 0, 0, 0, 0, 0];
     try {
         if (lat !== null && lng !== null) {
             const { data: users, error: userEr } = await supabase
@@ -60,6 +61,27 @@ export async function getStoreMetrics(
             });
             todayTxCount = weeklyActivity[6];
         }
+
+        const { data: stampData, error: stampError } = await supabase
+            .from("stamp_events")
+            .select("created_at")
+            .eq("store_id", storeId)
+            .gte("created_at", sevenDaysAgo.toISOString());
+        
+        if (!stampError && stampData) {
+            stampData.forEach(stamp => {
+                const stampDate = new Date(stamp.created_at);
+                stampDate.setUTCHours(0,0,0,0);
+
+                const diffTime = startOfToday.getTime() - stampDate.getTime();
+                const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+
+                if (diffDays >= 0 && diffDays < 7) {
+                    weeklyStampsActivity[6 - diffDays]++;
+                }
+            });
+        }
+
     } catch (error) {
         console.error("Dashboard metrics error:", error);
     }
@@ -67,6 +89,7 @@ export async function getStoreMetrics(
     return {
         activeUsers: activeUserCount,
         todayTransactions: todayTxCount,
-        weeklyActivity: weeklyActivity
+        weeklyActivity: weeklyActivity,
+        weeklyStampsActivity: weeklyStampsActivity
     }
 }
