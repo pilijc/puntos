@@ -88,6 +88,7 @@ export function AdminStoreDetails({
         showsVerticalScrollIndicator={false}
       >
 
+        {/* Store Details */}
         <View>
           <View className="mb-2.5">
             <FieldLabel>STORE NAME</FieldLabel>
@@ -222,7 +223,7 @@ export function AdminStoreDetails({
                 <View className="flex-1 flex-row items-center justify-center gap-2">
                   <MaterialIcons name="wb-sunny" size={16} color="#FF6600" />
                   <Text className="text-sm font-poppins-medium text-textPrimary dark:text-darkTextPrimary">
-                    {store.store_open || "09:00"}
+                    {store.store_open ? store.store_open.slice(0, 5) : "09:00"}
                   </Text>
                 </View>
                 
@@ -231,7 +232,7 @@ export function AdminStoreDetails({
                 <View className="flex-1 flex-row items-center justify-center gap-2">
                   <MaterialIcons name="nights-stay" size={16} color="#FF6600" />
                   <Text className="text-sm font-poppins-medium text-textPrimary dark:text-darkTextPrimary">
-                    {store.store_close || "21:00"}
+                    {store.store_close ? store.store_close.slice(0, 5) : "21:00"}
                   </Text>
                 </View>
               </View>
