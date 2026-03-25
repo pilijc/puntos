@@ -307,6 +307,23 @@ export default function SuperAdminStores() {
 
 	const pendingCount = stores.filter((s) => s.status === "pending_review").length;
 
+	if (selectedStore) {
+		return (
+			<AdminStoreDetails 
+				store={selectedStore} 
+				onBack={() => setSelectedStore(null)} 
+				onApprove={(store) => {
+					handleApprove(store);
+					setSelectedStore(null); 
+				}} 
+				onReject={(store) => {
+					handleReject(store);
+					setSelectedStore(null);
+				}} 
+			/>
+		);
+	}
+
 	return (
 		<SafeAreaView className="flex-1 bg-backgroundMuted dark:bg-slate-950">
 
