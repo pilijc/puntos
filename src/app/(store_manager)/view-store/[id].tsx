@@ -7,6 +7,7 @@ import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { getStoreById } from "@/services/store-service";
 import { Modal, ModalButton } from "@/components/modal";
+import Ionicons from '@expo/vector-icons/Ionicons';
 
 export default function ViewStore() {
   const { id } = useLocalSearchParams();
@@ -33,7 +34,7 @@ export default function ViewStore() {
       { key: "stamp",   label: "Stamp",         description: "Punch cards",        icon: { lib: "mc",  name: "stamper" },               route: "/(store_manager)/stamp/view-stamp"  as const },
       { key: "qr",      label: "QR Purchase",   description: "Scan rewards",       icon: { lib: "mi",  name: "qr-code-scanner" },     route: "/(store_manager)/qr"             as const },
       { key: "rewards", label: "Rewards",        description: "Redeemable items",   icon: { lib: "mc",  name: "gift-open" },           route: "/(store_manager)/reward"             as const },
-      { key: "media",   label: "Media",          description: "Store images",       icon: { lib: "mi",  name: "perm-media" },          route: "/(store_manager)/store/media"       as const },
+      { key: "media",   label: "Details",          description: "Manage Store",       icon: { lib: "ion",  name: "storefront-sharp" },          route: "/(store_manager)/detail"       as const },
     ],
     []
   );
@@ -95,11 +96,11 @@ export default function ViewStore() {
             <MaterialIcons name="chevron-left" size={22} color={isDark ? "#F1F5F9" : "#0F172A"} />
           </TouchableOpacity>
           <View className="flex-1 items-center justify-center -ml-10">
-            <Text className="text-lg font-poppins-bold text-textPrimary dark:text-textPrimary">
-              {store?.name}
+            <Text className="text-md font-poppins-bold text-textPrimary dark:text-textPrimary">
+              {store?.name || "Store Details"}
             </Text>
-            <Text className="text-xs font-poppins text-textMuted dark:text-textMuted -mt-1">
-              {store?.address}
+            <Text className="text-xs font-poppins text-textMuted dark:text-textMuted -mt-2">
+              {store?.address || "View & manage store info"}
             </Text>
           </View>
 
@@ -168,6 +169,8 @@ export default function ViewStore() {
                 <View className="w-9 h-9 rounded-lg items-center justify-center mb-1 -ml-1">
                   {item.icon.lib === "mc" ? (
                     <MaterialCommunityIcons name={item.icon.name as any} size={18} color="#FF6600" />
+                  ) : item.icon.lib === "ion" ? (
+                    <Ionicons name={item.icon.name as any} size={18} color="#FF6600" />
                   ) : (
                     <MaterialIcons name={item.icon.name as any} size={18} color="#FF6600" />
                   )}

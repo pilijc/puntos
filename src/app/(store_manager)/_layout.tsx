@@ -152,6 +152,14 @@ export default function StoreManagerLayout() {
                 name="staff/add-staff"
                 options={{ href: null }}
             />
+            <Tabs.Screen
+                name="detail/index"
+                options={{ href: null }}
+            />
+            <Tabs.Screen
+                name="detail/edit-details"
+                options={{ href: null }}
+            />
         </Tabs>
     );
 }

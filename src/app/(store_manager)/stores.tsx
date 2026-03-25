@@ -315,7 +315,7 @@ export default function StoreManagerStores() {
             //   console.log("Payment required to create store");
             //   return;
             // }
-            router.push("/(store_manager)/create-store");
+            router.push("/(store_manager)/store/create-store");
           }}
         >
           <MaterialIcons name="add" size={28} color="#fff" />
