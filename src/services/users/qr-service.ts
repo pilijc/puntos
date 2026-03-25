@@ -219,6 +219,7 @@ export async function getUserTransactionHistory(userId: string): Promise<any[]> 
       time: transaction.created_at,
       points: `+${transaction.points_earned}`,
       positive: true,
+      transactionType: 'qr', // Add identifier for QR transactions
     }));
   } catch (error) {
     console.error('Error in getUserTransactionHistory:', error);

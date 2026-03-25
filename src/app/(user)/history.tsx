@@ -11,6 +11,7 @@ import {
   TouchableOpacity,
 } from "@/tw";
 import { getUserTransactionHistory } from "@/services/users/qr-service";
+import { getUserVoucherTransactionHistory } from "@/services/users/voucher-service";
 import { supabase } from "@/supabase/supabase";
 import { useTranslation } from "react-i18next";
 
@@ -36,8 +37,17 @@ export default function History() {
           return;
         }
 
-        const history = await getUserTransactionHistory(user.id);
-        setTransactionHistory(history);
+        // Get both QR and voucher transactions
+        const [qrHistory, voucherHistory] = await Promise.all([
+          getUserTransactionHistory(user.id),
+          getUserVoucherTransactionHistory(user.id)
+        ]);
+
+        // Combine and sort by date (newest first)
+        const combinedHistory = [...qrHistory, ...voucherHistory]
+          .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+        setTransactionHistory(combinedHistory);
       } catch (error) {
         console.error('Error fetching transaction history:', error);
       } finally {

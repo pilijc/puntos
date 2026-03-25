@@ -130,6 +130,7 @@ export async function processVoucherCode(
                 voucher_id: voucher.id,
                 user_id: voucher.user_id,
                 store_staff_id: storeStaffId,
+                store_id: storeId, // Add store_id like QR transactions
                 amount: amount,
                 points_earned: pointsEarned,
                 created_at: currentTime

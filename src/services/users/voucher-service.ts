@@ -6,6 +6,7 @@ export interface VoucherTransaction {
     voucher_id: string;
     user_id: string;
     store_staff_id: string;
+    store_id: number;
     amount: number;
     points_earned: number;
     created_at: string;
@@ -87,6 +88,65 @@ export async function generateVoucherCode(
 
 //   return data ?? null;
 // }
+
+//HISTORY SIDE
+//Get user voucher transaction history with store names
+export async function getUserVoucherTransactionHistory(userId: string): Promise<any[]> {
+  try {
+    // Fetch voucher transactions with store information
+    const { data: transactions, error } = await supabase
+      .from('voucher_transactions')
+      .select(`
+        id,
+        points_earned,
+        amount,
+        created_at,
+        store_id,
+        stores (
+          name
+        )
+      `)
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching voucher transaction history:', error);
+      return [];
+    }
+
+    // Format the data for the UI (matching QR transaction format)
+    return transactions.map((transaction: any) => ({
+      id: transaction.id,
+      section: formatDateSection(transaction.created_at),
+      type: 'earned',
+      title: transaction.stores?.name || 'user.activity.unknownStore',
+      subtitle: 'user.activity.subtitle.voucherPoints',
+      time: transaction.created_at,
+      points: `+${transaction.points_earned}`,
+      positive: true,
+      transactionType: 'voucher', // Add identifier for voucher transactions
+    }));
+  } catch (error) {
+    console.error('Exception fetching voucher transaction history:', error);
+    return [];
+  }
+}
+
+// Helper function to format date section (matching QR service)
+function formatDateSection(dateString: string): string {
+  const date = new Date(dateString);
+  const today = new Date();
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+  
+  if (date.toDateString() === today.toDateString()) {
+    return 'user.activity.today';
+  } else if (date.toDateString() === yesterday.toDateString()) {
+    return 'user.activity.yesterday';
+  } else {
+    return date.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
+  }
+}
 
 export function listenToVoucherTransaction(userId: string, onProcessed: (transaction: VoucherTransaction) => void) {
     const channel = supabase.channel(`voucher_transactions-${userId}`)
