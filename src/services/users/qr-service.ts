@@ -89,21 +89,41 @@ export async function createQRTransaction(
   const storeId = staffData.store_id;
 
   // Get points configuration for this store
+  console.log(`QR Service: Looking up points configuration for store_id: ${storeId}`);
+  console.log('QR Service: Store ID type:', typeof storeId, 'value:', storeId);
+  
+  // Debug: Check what's in store_qr_rewards table
+  const { data: allStoreRewards, error: allRewardsError } = await supabase
+    .from('store_qr_rewards')
+    .select('*')
+    .limit(10);
+  console.log('QR Service: All store_qr_rewards data:', allStoreRewards);
+  console.log('QR Service: All store_qr_rewards error:', allRewardsError);
+  
   const { data: pointsData, error: pointsError } = await supabase
     .from('store_qr_rewards')
     .select('percentage')
     .eq('store_id', storeId)
     .single();
 
+  console.log('QR Service: Raw database response:');
+  console.log('- pointsData:', JSON.stringify(pointsData, null, 2));
+  console.log('- pointsError:', JSON.stringify(pointsError, null, 2));
+  console.log('- pointsData?.percentage:', pointsData?.percentage);
+  console.log('- typeof pointsData?.percentage:', typeof pointsData?.percentage);
+
   // default 10% if no configuration is found
   const percentage = pointsData?.percentage || 10;
   
   if (pointsError) {
-    console.warn(`No points configuration found for store ${storeId}, using default 10%`);
+    console.warn(`QR Service: No points configuration found for store ${storeId}, using default 10%. Error:`, pointsError);
+  } else {
+    console.log(`QR Service: Using percentage ${percentage}% for store ${storeId}`);
   }
 
   //Calculate points for purchase amount and percentage
   const pointsToAward = Math.ceil(purchaseAmount * (percentage / 100));
+  console.log(`QR Service: Calculated points: ${pointsToAward} (amount: ${purchaseAmount}, percentage: ${percentage}%)`);
 
   //Create purchase record first
   const { data: purchaseData, error: purchaseError } = await supabase
@@ -180,10 +200,10 @@ export function listenToQRTransaction(userId: string, onScanned: (transaction: Q
       if (status === 'SUBSCRIBED') {
         //console.log(`Successfully subscribed to QR transactions for user ${userId}`);
       } else if (status === 'TIMED_OUT') {
-        console.error(`QR listener subscription timed out for user ${userId}:`, status);
+        //console.error(`QR listener subscription timed out for user ${userId}:`, status);
         // Retry connection after timeout
         setTimeout(() => {
-          console.log(`Retrying QR listener connection for user ${userId}`);
+          //console.log(`Retrying QR listener connection for user ${userId}`);
           channel.subscribe();
         }, 3000);
       } else if (status === 'CLOSED') {
