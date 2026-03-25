@@ -394,6 +394,7 @@
         "title": "設定",
         "logout": {
             "title": "ログアウト",
+            "confirmTitle": "ログアウト確認",
             "confirmMessage": "本当にログアウトしますか？"
         },
         "checking": "確認中…",
@@ -464,12 +465,17 @@
             "title": "通知とプライバシー",
             "alerts": {
                 "title": "付近のお知らせ",
-                "description": "特典が近くにあるときに通知を受け取ります"
+                "description": "特典が近くにあるときに通知を受け取ります",
+                "disableTitle": "付近のお知らせを無効にする"
             },
             "location": {
                 "title": "位置情報のアクセス",
                 "allow": "アクセスを許可",
-                "denied": "アクセスを拒否"
+                "denied": "アクセスを拒否",
+                "disableTitle": "位置情報のアクセスを無効にする"
+            },
+            "email": {
+                "title": "プロモーションメール"
             },
             "permissions": "{{services}}の権限は、デバイスの設定で変更できます。今すぐ設定を開きますか？",
             "services": {

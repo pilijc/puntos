@@ -115,16 +115,11 @@ export async function getMyStores(ownerId: string): Promise<StoreRow[]> {
             .from("stores")
             .select("*")
             .eq("owner_id", ownerId)
-            .eq("is_active", true)
             .order("created_at", { ascending: false }),
         supabase
             .from("user_roles")
-            .select(`
-                store_id,
-                stores:store_id!inner (*)
-            `)
+            .select(`store_id, stores:store_id ( id )`)
             .eq("user_id", ownerId)
-            .eq("stores.is_active", true)
             .not("store_id", "is", null),
     ]);
 
@@ -218,8 +213,7 @@ export async function getStores() {
 			const { data, error } = await supabase
 				.from("stores")
 				.select("*")
-				.eq("status", "active")
-				.eq("is_active", true);
+				.eq("status", "active");
     if (error) throw new Error(error.message);
     return data;
     } catch (error) {

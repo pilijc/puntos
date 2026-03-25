@@ -393,6 +393,7 @@
         "title": "Settings",
         "logout": {
             "title": "Logout",
+            "confirmTitle": "Logout",
             "confirmMessage": "Are you sure you want to logout?"
         },
         "checking": "Checking...",
@@ -463,12 +464,17 @@
             "title": "NOTIFICATIONS & PRIVACY",
             "alerts": {
                 "title": "Nearby Alerts",
-                "description": "Get notified when rewards are close"
+                "description": "Get notified when rewards are close",
+                "disableTitle": "Disable Nearby Alerts"
             },
             "location": {
                 "title": "Location Access",
                 "allow": "Access Allowed",
-                "denied": "Access Denied"
+                "denied": "Access Denied",
+                "disableTitle": "Disable Location Access"
+            },
+            "email": {
+                "title": "Promotional Emails"
             },
             "permissions": "To change {{services}} permissions, please update them in your device’s Settings. Would you like to open it now?",
             "services": {

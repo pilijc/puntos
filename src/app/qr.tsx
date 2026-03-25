@@ -6,11 +6,10 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useRouter } from 'expo-router';
 import QRCode from 'react-native-qrcode-svg';
 //import { supabase } from '@/supabase/supabase';
-import { getCurrentUser, getStaticQRCode, addAutoUser, listenToQRTransaction } from '@/services/users/qr-service';
+import { getCurrentUser, getStaticQRCode, addAutoUser, listenToQRTransaction } from '@/services/qr-service';
 import { supabase } from 'supabase/supabase';
 import { useStamps } from '@/hooks/use-stamps';
 import { useStampRewards } from '@/hooks/use-stamp-rewards';
-import { VoucherGenerator } from '@/components/users/voucher';
 
 export default function Qr() {
   const router = useRouter();
@@ -138,7 +137,6 @@ export default function Qr() {
               Failed to load QR code. Try again.
             </Text>
           )}
-          {user?.id && <VoucherGenerator userId={user.id} />}
         </View>
       </View>
 

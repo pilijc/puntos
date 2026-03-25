@@ -11,14 +11,14 @@ export default function TabLayout() {
   const isDark = colorScheme === 'dark';
   const { t: translate } = useTranslation();
   const insets = useSafeAreaInsets();
-
+  
 
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: isDark ? '#262626' : '#FFFFFF',
+          backgroundColor: isDark ? '#171717' : '#FFFFFF',
           borderTopColor: isDark ? '#404040' : '#e5e5e5',
           height: Platform.OS === 'ios' ? 88 : 60 + insets.bottom,
           paddingBottom: insets.bottom > 0 ? insets.bottom : 8,
@@ -62,4 +62,4 @@ export default function TabLayout() {
     </Tabs>
   );
 }
-
+  

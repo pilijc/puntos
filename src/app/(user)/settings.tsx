@@ -5,7 +5,7 @@ import { Ionicons } from "@expo/vector-icons";
 
 import { getCurrentLocation } from "@/services/location-service";
 import { useProfile } from "@/hooks/use-profile";
- 
+
 // Components
 import EditProfileModal from "@/components/settings/modal/edit-profile-modal";
 import { LogoutButton } from "@/components/settings/logout-button";
@@ -78,13 +78,10 @@ export default function UserSettings() {
   }
 
   return (
-    <SafeAreaView edges={['top']} className="flex-1 bg-background dark:bg-darkBackgroundMuted">
+    <SafeAreaView className="flex-1 bg-backgroundMuted dark:bg-darkBackground">
       <ScrollView
         className="flex-1"
-        contentContainerStyle={{
-          paddingHorizontal: 16,
-          paddingVertical: 12,
-        }}
+        contentContainerStyle={{ padding: 12, paddingBottom: 40 }}
         showsVerticalScrollIndicator={false}
       >
         <View className="flex-row justify-between items-center mb-6 mt-3 mx-4">

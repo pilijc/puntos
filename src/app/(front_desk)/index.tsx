@@ -1,18 +1,15 @@
 import { useRouter } from "expo-router";
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { Alert, useColorScheme } from "react-native";
 import { SafeAreaView, ScrollView, View, Text, TouchableOpacity, TextInput } from "@/tw";
-import { Animated, Dimensions } from "react-native";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { CameraView, useCameraPermissions } from "expo-camera";
-import { processFrontDeskScan, getCurrentUserStore } from "@/services/frontdesk/scan-service";
-import { getCurrentStaffId } from "@/services/frontdesk/voucher-service";
+import { processFrontDeskScan, getCurrentUserStore } from "@/services/operator-service";
 import { Button } from "@/components/button";
 import { Modal, type ModalButton } from "@/components/modal";
 import { useRecentTransactions } from "@/hooks/use-recent-transactions";
 import { useTranslation } from "react-i18next";
 import { legacy_makeMutableUI } from "react-native-reanimated/lib/typescript/mutables";
-import VoucherForm from "@/components/front-desk/voucherForm" 
 
 export default function FrontDeskScan() {
   const router = useRouter();
@@ -29,6 +26,7 @@ export default function FrontDeskScan() {
   const [successPoints, setSuccessPoints] = useState(0);
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string>("");
+  const [showPriceModal, setShowPriceModal] = useState(false);
   const { t: translate } = useTranslation();
   const ColorScheme = useColorScheme();
   const isDark = ColorScheme === "dark";
@@ -38,24 +36,9 @@ export default function FrontDeskScan() {
     message: string;
     buttons: ModalButton[];
   } | null>(null);
-  const [inputMode, setInputMode] = useState<"qr" | "manual">("qr");
-  const [voucherCode, setVoucherCode] = useState("");
-  const [currentStaffId, setCurrentStaffId] = useState<string>("");
-  const slideAnim = useRef(new Animated.Value(0)).current;
-  const screenWidth = Dimensions.get("window").width;
 
   useEffect(() => {
     const fetchStoreInfo = async () => {
-      // Get current staff ID from service
-      const staffId = await getCurrentStaffId();
-      
-      if (!staffId) {
-        console.error("Staff not authenticated");
-        return;
-      }
-      
-      setCurrentStaffId(staffId);
-      
       const storeInfo = await getCurrentUserStore();
       setStoreInfo(storeInfo);
       if (storeInfo) {
@@ -66,30 +49,35 @@ export default function FrontDeskScan() {
     fetchStoreInfo();
   }, []);
 
-  const handleStartScanning = async () => {
-    if (!purchaseAmount || parseFloat(purchaseAmount) <= 0) {
-      setModal({
-        title: translate("frontdesk.transaction.error.amount.invalid"),
-        message: translate("frontdesk.transaction.error.amount.lessThanZero"),
-        buttons: [
-          {
-            label: translate("label.ok"),
-            variant: "secondary",
-            onPress: () => setModal(null),
-          },
-        ],
-      });
-      return;
-    }
+  useEffect(() => {
+    const handleQRPress = async () => {
+      setShowPriceModal(true);
+      router.replace("/(front_desk)");
+    };
 
+    (global as any).handleCenterQRButton = handleQRPress;
+
+    // Also set up a backup handler
+    (global as any).openPriceModal = handleQRPress;
+
+    // Don't clean up the handler to keep it persistent across tabs
+    return () => {
+      // Keep handlers persistent
+      (global as any).handleCenterQRButton = handleQRPress;
+      (global as any).openPriceModal = handleQRPress;
+    };
+  }, []);
+
+  const handleStartScanning = async () => {
     if (!permission?.granted) {
       await requestPermission();
     }
     setShowCamera(true);
   };
 
-  const handleManualInputSubmit = async () => {
-    if (!purchaseAmount || parseFloat(purchaseAmount) <= 0) {
+  const handleAmountSubmit = async () => {
+    const amount = parseFloat(purchaseAmount);
+    if (isNaN(amount) || amount <= 0) {
       setModal({
         title: translate("frontdesk.transaction.error.amount.invalid"),
         message: translate("frontdesk.transaction.error.amount.lessThanZero"),
@@ -103,53 +91,16 @@ export default function FrontDeskScan() {
       });
       return;
     }
-
-    if (!voucherCode.trim()) {
-      setModal({
-        title: "Voucher Code Required",
-        message: "Please enter a voucher code to proceed.",
-        buttons: [
-          {
-            label: translate("label.ok"),
-            variant: "secondary",
-            onPress: () => setModal(null),
-          },
-        ],
-      });
-      return;
-    }
-
-    // Process the voucher code here
-    // For now, just show a placeholder
-    setModal({
-      title: "Processing Code",
-      message: `Processing code: ${voucherCode} for amount: ₱${purchaseAmount}`,
-      buttons: [
-        {
-          label: translate("label.ok"),
-          variant: "secondary",
-          onPress: () => setModal(null),
-        },
-      ],
-    });
+    setShowPriceModal(false);
+    setTimeout(() => {
+      router.replace('/(front_desk)');
+      setShowCamera(true);
+    }, 300);
   };
 
-  const switchToQR = () => {
-    Animated.timing(slideAnim, {
-      toValue: 0,
-      duration: 300,
-      useNativeDriver: false,
-    }).start();
-    setInputMode("qr");
-  };
-
-  const switchToManual = () => {
-    Animated.timing(slideAnim, {
-      toValue: 1,
-      duration: 300,
-      useNativeDriver: false,
-    }).start();
-    setInputMode("manual");
+  const handlePriceModalCancel = () => {
+    setShowPriceModal(false);
+    setActiveTab("transactions");
   };
 
   const handleBarCodeScanned = async ({ data }: { data: string }) => {
@@ -337,279 +288,19 @@ export default function FrontDeskScan() {
               )}
             </View>
           ) : (
-            <View className="flex-1">
-              {/* Amount Input Section */}
-              <View className="bg-neutral-50 dark:bg-darkBackgroundMuted rounded-xl p-6 mb-4">
-                <Text className="text-sm font-poppins-medium text-textSecondary dark:text-darkTextSecondary mb-3 text-center">
-                  {translate("frontdesk.transaction.transactionModal.title")}
-                </Text>
-                <View className="flex-row items-center bg-white dark:bg-darkBackgroundCard border border-neutral-100 dark:border-darkBorder rounded-xl px-5 py-4">
-                  <Text className="text-xl font-poppins-bold text-textSecondary dark:text-darkTextSecondary mr-2">₱</Text>
-                  <TextInput
-                    className="flex-1 text-xl font-poppins-bold text-textPrimary dark:text-darkTextPrimary"
-                    value={purchaseAmount}
-                    onChangeText={(text) => {
-                      const numericText = text.replace(/[^0-9.]/g, '');
-                      const parts = numericText.split('.');
-                      const filteredText = parts.length > 2
-                        ? parts[0] + '.' + parts.slice(1).join('')
-                        : numericText;
-                      setPurchaseAmount(filteredText);
-                    }}
-                    placeholder="0.00"
-                    placeholderTextColor="#9CA3AF"
-                    keyboardType="numeric"
-                    autoFocus
-                    maxLength={7}
-                  />
-                </View>
+            <View className="flex-1 h-75 items-center justify-center bg-neutral-50 dark:bg-darkBackgroundMuted rounded-xl">
+              <View className="w-16 h-16 bg-neutral-100 dark:bg-darkBackground/50 rounded-xl items-center justify-center mb-6">
+                <MaterialIcons name="qr-code-scanner" size={32} color="#FF6600" />
               </View>
-
-              {/* Carousel Container */}
-              <View className="relative h-72 mb-4 overflow-hidden" style={{ marginLeft: -30, marginRight: -30 }}>
-                <Animated.View
-                  style={{
-                    transform: [{
-                      translateX: slideAnim.interpolate({
-                        inputRange: [0, 1],
-                        outputRange: [30, -(screenWidth - 60)],
-                      }),
-                    }],
-                    flexDirection: 'row',
-                    width: (screenWidth - 32) * 2,
-                    height: 300,
-                  }}
-                >
-                  
-                  {/* QR Scan Option */}
-                  <View
-                    style={{
-                      width: screenWidth - 60,
-                      height: 380,
-                      backgroundColor: isDark ? '#1F2937' : '#F9FAFB',
-                      borderRadius: 12,
-                      marginLeft: 16
-                    }}
-                  >
-                    <ScrollView
-                      contentContainerStyle={{
-                        paddingHorizontal: 20,
-                        paddingTop: 32,
-                        paddingBottom: 20,
-                      }}
-                      showsVerticalScrollIndicator={false}
-                    >
-                      {/* QR Scan Content */}
-                      <View className="items-center">
-                        <View className="w-20 h-20 bg-orange-100 dark:bg-orange-500/10 rounded-2xl items-center justify-center mb-6">
-                          <MaterialIcons name="qr-code-scanner" size={40} color="#FF6600" />
-                        </View>
-                        <Text className="text-xl font-poppins-bold text-textPrimary dark:text-darkTextPrimary mb-3 text-center">
-                          QR Code Scanning
-                        </Text>
-                        <Text className="text-sm font-poppins-medium text-textSecondary dark:text-darkTextSecondary mb-8 text-center">
-                          Position the QR code within the frame to scan
-                        </Text>
-                        
-                        {/* Scan Now Button */}
-                        <TouchableOpacity
-                          onPress={handleStartScanning}
-                          className="w-full bg-orange-500 border border-orange-500 py-4 rounded-xl"
-                        >
-                          <Text className="text-center font-poppins-bold text-white text-lg">
-                            Scan Now
-                          </Text>
-                        </TouchableOpacity>
-                      </View>
-                    </ScrollView>
-                  </View>
-                  
-               {/* Manual Input Option */}
-                  <View
-                    style={{
-                      width: screenWidth - 60,
-                      height: 380, // slightly taller than before
-                      backgroundColor: isDark ? '#1F2937' : '#F9FAFB',
-                      borderRadius: 12,
-                      marginLeft: 16
-                    }}
-                  >
-                    <ScrollView
-                      contentContainerStyle={{
-                        paddingHorizontal: 20,
-                        paddingTop: 32,
-                        paddingBottom: 20, // ensures submit button isn't cut off
-                      }}
-                      showsVerticalScrollIndicator={false}
-                    >
-                      {/* Voucher Code Input */}
-                      <View className="bg-neutral-50 dark:bg-darkBackgroundMuted rounded-xl p-4 mb-4">
-                        <Text className="text-sm font-poppins-medium text-textSecondary dark:text-darkTextSecondary mb-2">
-                          Enter Voucher Code
-                        </Text>
-                        <View className="flex-row items-center bg-white dark:bg-darkBackgroundCard border border-neutral-100 dark:border-darkBorder rounded-xl px-5 py-4">
-                          <MaterialIcons name="confirmation-number" size={20} color="#FF6600" className="mr-3" />
-                          <TextInput
-                            className="flex-1 text-base font-poppins-medium text-textPrimary dark:text-darkTextPrimary"
-                            value={voucherCode}
-                            onChangeText={setVoucherCode}
-                            placeholder="Enter code"
-                            placeholderTextColor="#9CA3AF"
-                            autoCapitalize="characters"
-                            maxLength={20}
-                          />
-                        </View>
-
-                        {/* VoucherForm Submit */}
-                        <View className="mt-4">
-                          <VoucherForm
-                            voucherCode={voucherCode}
-                            amount={purchaseAmount}
-                            storeStaffId={currentStaffId}
-                            onSuccess={(points) => {
-                              setSuccessPoints(points);
-                              setShowSuccessModal(true);
-
-                              addScan({
-                                points,
-                                timestamp: new Date(),
-                                amount: parseFloat(purchaseAmount),
-                              });
-
-                              setVoucherCode("");
-                              setPurchaseAmount("");
-                            }}
-                            onError={(message) => {
-                              setModal({
-                                title: "Error",
-                                message,
-                                buttons: [
-                                  {
-                                    label: translate("label.ok"),
-                                    variant: "secondary",
-                                    onPress: () => setModal(null),
-                                  },
-                                ],
-                              });
-                            }}
-                          />
-                        </View>
-                      </View>
-                    </ScrollView>
-                  </View>
-                </Animated.View>
-              </View>
-
-              {/* Carousel Indicators */}
-              <View className="flex-row justify-center items-center mb-4">
-                <TouchableOpacity onPress={switchToQR} className="mx-2">
-                  <View className={`w-2 h-2 rounded-full ${inputMode === 'qr' ? 'bg-orange-500' : 'bg-neutral-300'}`} />
-                </TouchableOpacity>
-                <TouchableOpacity onPress={switchToManual} className="mx-2">
-                  <View className={`w-2 h-2 rounded-full ${inputMode === 'manual' ? 'bg-orange-500' : 'bg-neutral-300'}`} />
-                </TouchableOpacity>
-              </View>
-
-              {/* Voucher Code Input - Only show when manual mode is selected */}
-              {/* {inputMode === 'manual' && (
-                <View className="bg-neutral-50 dark:bg-darkBackgroundMuted rounded-xl p-4 mb-4">
-                  <Text className="text-sm font-poppins-medium text-textSecondary dark:text-darkTextSecondary mb-2">
-                    Enter Voucher Code
-                  </Text>
-                  <View className="flex-row items-center bg-white dark:bg-darkBackgroundCard border border-neutral-100 dark:border-darkBorder rounded-xl px-5 py-4">
-                    <MaterialIcons name="confirmation-number" size={20} color="#FF6600" className="mr-3" />
-                    <TextInput
-                      className="flex-1 text-base font-poppins-medium text-textPrimary dark:text-darkTextPrimary"
-                      value={voucherCode}
-                      onChangeText={setVoucherCode}
-                      placeholder="Enter code"
-                      placeholderTextColor="#9CA3AF"
-                      autoCapitalize="characters"
-                      maxLength={20}
-                    />
-                  </View>
-                   <View className="mt-4">
-                        <VoucherForm
-                          voucherCode={voucherCode}
-                          amount={purchaseAmount}
-                          storeStaffId={currentStaffId}
-                          onSuccess={(points) => {
-                            setSuccessPoints(points);
-                            setShowSuccessModal(true);
-
-                            addScan({
-                              points,
-                              timestamp: new Date(),
-                              amount: parseFloat(purchaseAmount),
-                            });
-
-                            setVoucherCode("");
-                            setPurchaseAmount("");
-                          }}
-                          onError={(message) => {
-                            setModal({
-                              title: "Error",
-                              message,
-                              buttons: [
-                                {
-                                  label: translate("label.ok"),
-                                  variant: "secondary",
-                                  onPress: () => setModal(null),
-                                },
-                              ],
-                            });
-                          }}
-                        />
-                      </View>
-
-                    </View>
-                  )} */}
-
-              
-              {/* Navigation Buttons */}
-              <View className="flex-row justify-between">
-                <TouchableOpacity
-                  onPress={switchToQR}
-                  className={`flex-1 mr-2 py-3 rounded-xl border ${
-                    inputMode === 'qr'
-                      ? 'bg-orange-500 border-orange-500'
-                      : 'bg-white dark:bg-darkBackgroundCard border-neutral-200 dark:border-darkBorder'
-                  }`}
-                >
-                  <Text className={`text-center font-poppins-medium ${
-                    inputMode === 'qr' ? 'text-white' : 'text-textSecondary dark:text-darkTextSecondary'
-                  }`}>
-                    QR Scan
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={switchToManual}
-                  className={`flex-1 ml-2 py-3 rounded-xl border ${
-                    inputMode === 'manual'
-                      ? 'bg-orange-500 border-orange-500'
-                      : 'bg-white dark:bg-darkBackgroundCard border-neutral-200 dark:border-darkBorder'
-                  }`}
-                >
-                  <Text className={`text-center font-poppins-medium ${
-                    inputMode === 'manual' ? 'text-white' : 'text-textSecondary dark:text-darkTextSecondary'
-                  }`}>
-                   Input Code
-                  </Text>
-                </TouchableOpacity>
-              </View>
+              <Text className="text-xl font-poppins-bold text-textPrimary dark:text-darkTextPrimary mb-3">{translate("frontdesk.transaction.scan.title")}</Text>
+              <Text className="text-base font-poppins text-textSecondary dark:text-darkTextSecondary text-center mb-8 px-4">
+                {translate("frontdesk.transaction.scan.description")}
+              </Text>
             </View>
           )}
 
           {showCamera && (
-            
-            <View className="mt-5 relative">
-              <View className="mt-6 relative">
-                 <TouchableOpacity
-                onPress={() => setShowCamera(false)}
-                className="absolute -top-4 left-0 z-10 w-10 h-10 rounded-full items-center justify-center bg-white/90 dark:bg-darkBackgroundCard/90 border border-white/20 dark:border-darkBorder/50"
-              >
-                <MaterialIcons name="arrow-back" size={24} color="#FF6600" />
-              </TouchableOpacity>  
+            <View className="mt-5">
               <View className="flex-row items-center justify-center">
                 <View className="w-2 h-2 bg-emerald-500 rounded-full mr-3" />
                 <Text className="text-sm font-poppins-medium text-textSecondary dark:text-darkTextSecondary">
@@ -619,7 +310,6 @@ export default function FrontDeskScan() {
               <Text className="text-xs font-poppins-medium text-neutral-400 dark:text-darkTextSoft text-center mt-3">
                 {translate("frontdesk.transaction.camera.description")}
               </Text>
-            </View>
             </View>
           )}
         </View>
@@ -664,6 +354,63 @@ export default function FrontDeskScan() {
           )}
         </View>
       </ScrollView>
+
+      {/* Price Input Modal */}
+      <Modal
+        visible={showPriceModal}
+        onClose={handlePriceModalCancel}
+        title=""
+        buttons={[
+          {
+            label: translate("label.cancel"),
+            onPress: handlePriceModalCancel,
+            variant: "secondary"
+          },
+          {
+            label: translate("label.confirm"),
+            onPress: handleAmountSubmit,
+            variant: "primary"
+          }
+        ]}
+      >
+        {/* Price Input */}
+        <View className="items-center py-4">
+          {/* Icon */}
+          <View className="w-16 h-16 bg-primary/10 rounded-2xl items-center justify-center mb-4">
+            <MaterialIcons name="attach-money" size={32} color="#FF6600" />
+          </View>
+
+          {/* Heading */}
+          <Text className="text-xl font-poppins-bold text-textPrimary dark:text-darkTextPrimary mb-1.5">
+            {translate("frontdesk.transaction.transactionModal.title")}
+          </Text>
+          <Text className="text-sm font-poppins text-textSecondary dark:text-darkTextSecondary text-center mb-6 px-2">
+            {translate("frontdesk.transaction.transactionModal.description")}
+          </Text>
+
+          {/* Amount Input */}
+          <View className="flex-row items-center w-full bg-background dark:bg-darkBackgroundMuted border border-neutral-100 dark:border-darkBorder rounded-xl px-5 py-4">
+            <Text className="text-xl font-poppins-bold text-textSecondary dark:text-darkTextSecondary mr-2">₱</Text>
+            <TextInput
+              className="flex-1 text-xl font-poppins-bold text-textPrimary dark:text-darkTextPrimary"
+              value={purchaseAmount}
+              onChangeText={(text) => {
+                const numericText = text.replace(/[^0-9.]/g, '');
+                const parts = numericText.split('.');
+                const filteredText = parts.length > 2
+                  ? parts[0] + '.' + parts.slice(1).join('')
+                  : numericText;
+                setPurchaseAmount(filteredText);
+              }}
+              placeholder="0.00"
+              placeholderTextColor="#9CA3AF"
+              keyboardType="numeric"
+              autoFocus
+              maxLength={7}
+            />
+          </View>
+        </View>
+      </Modal>
 
       {/* Success Modal */}
       <Modal
