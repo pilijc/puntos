@@ -383,13 +383,7 @@ export default function FrontDeskScan() {
                   
                   {/* QR Scan Option */}
                   <View
-                    style={{
-                      width: screenWidth - 60,
-                      height: 380,
-                      backgroundColor: isDark ? '#1F2937' : '#F9FAFB',
-                      borderRadius: 12,
-                      marginLeft: 16
-                    }}
+                    className="w-[calc(100vw-60px)] h-[380px] bg-gray-50 dark:bg-gray-800 rounded-xl ml-0 self-center"
                   >
                     <ScrollView
                       contentContainerStyle={{
@@ -414,7 +408,7 @@ export default function FrontDeskScan() {
                         {/* Scan Now Button */}
                         <TouchableOpacity
                           onPress={handleStartScanning}
-                          className="w-full bg-orange-500 border border-orange-500 py-4 rounded-xl"
+                          className="w-3/4 bg-orange-500 border border-orange-500 py-2 rounded-xl"
                         >
                           <Text className="text-center font-poppins-bold text-white text-lg">
                             Scan Now
