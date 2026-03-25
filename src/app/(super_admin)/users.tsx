@@ -1,6 +1,7 @@
 import React, { useEffect, useCallback, useMemo, useRef } from "react";
 import { ActivityIndicator, RefreshControl, StatusBar, FlatList } from "react-native";
-import { SafeAreaView, View, Text } from "@/tw";
+import { View, Text } from "@/tw";
+import { ScreenWrapper } from "@/components/ui/screen-wrapper";
 import { useUserStore, type UserRoleTab } from "@/store/user-store";
 import { BlockUserModal } from "@/components/users/BlockUserModal";
 import { FilterBottomSheet } from "@/components/users/FilterBottomSheet";
@@ -90,7 +91,7 @@ export default function UsersScreen() {
   const willBlock = selectedUser?.status !== "Blocked";
 
   return (
-    <SafeAreaView className="flex-1 bg-background" edges={["top", "left", "right"]}>
+    <ScreenWrapper className="flex-1 bg-background">
       <StatusBar barStyle="dark-content" />
       <UsersSearchHeader
         search={search}
@@ -151,6 +152,6 @@ export default function UsersScreen() {
         onClose={() => setShowFilterModal(false)}
         onSelectFilter={setStatusFilter}
       />
-    </SafeAreaView>
+    </ScreenWrapper>
   );
 }

@@ -111,13 +111,13 @@ export default function Rewards() {
         image_url,
         stock,
       });
-      reset();
-      setModal({
+	  setModal({
         title: "Success",
         message: "Reward created successfully",
         buttons: [{ label: "OK", onPress: () => setModal(null), variant: "secondary" }],
       });
-      router.push({ pathname: "/(store_manager)/view-store/[id]", params: { id: storeId } });
+      reset();
+      router.push({ pathname: "/(store_manager)/reward", params: { storeId } });
     } catch (error) {
       setModal({
         title: "Error",

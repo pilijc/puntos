@@ -11,7 +11,7 @@ import { useRewardsUiStore } from "@/store/user/rewards-ui-store";
 import { useStoreStore } from "@/store/user/store-store";
 import { sortRewards } from "@/utils/store-helpers";
 import { distance, point } from "@turf/turf";
-import { useCallback, useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import {
   useAnimatedStyle,
   useSharedValue,
@@ -41,7 +41,7 @@ function buildVirtualStampEntry(focusedStore: any): StampProgress {
   };
 }
 
-export function useStoreOverviewData() {
+export function useStoreOverviewData(storeId?: string) {
   const {
     rewardSort,
     rewardPointsOrder,
@@ -56,6 +56,8 @@ export function useStoreOverviewData() {
     activeStampProgramRewards,
     fetchRewardsData,
     getEnrichedStores,
+    isLoadingRewardsFeatures,
+    fetchedStoreIds,
   } = useRewardsDataStore();
   const { stores, setStores } = useStoreStore();
   const { location, startWatching, stopWatching } = useLocation();
@@ -84,7 +86,8 @@ export function useStoreOverviewData() {
     return () => {
       stopWatching();
     };
-  }, [startWatching, stopWatching]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const storesWithLocation = useMemo(
     () => getEnrichedStores(stores, location),
@@ -157,6 +160,21 @@ export function useStoreOverviewData() {
   }, [location]);
 
   const displayStamps = useMemo(() => {
+    // If a specific storeId is requested, we only want to show that one
+    if (storeId) {
+      const targetStore = storesWithLocation.find((s) => s.id.toString() === storeId);
+      if (!targetStore) return [];
+
+      const isEnabled = enabledStampFeatureStoreIds.includes(Number(targetStore.id));
+      if (!isEnabled) return [];
+
+      const existingStamp = sortedStamps.find(
+        (stamp) => Number(stamp.store_id) === Number(targetStore.id),
+      );
+
+      return existingStamp ? [existingStamp] : [buildVirtualStampEntry(targetStore)];
+    }
+
     if (!location) return sortedStamps;
 
     if (nearbyStores.length === 0) return sortedStamps;
@@ -172,9 +190,24 @@ export function useStoreOverviewData() {
     );
 
     return existingStamp ? [existingStamp] : [buildVirtualStampEntry(focusedStore)];
-  }, [enabledStampFeatureStoreIds, heroIndex, location, nearbyStores, sortedStamps]);
+  }, [enabledStampFeatureStoreIds, heroIndex, location, nearbyStores, sortedStamps, storeId, storesWithLocation]);
 
   const displayStreaks = useMemo(() => {
+    // If a specific storeId is requested, focus only on its streak
+    if (storeId) {
+      const isEligible = eligibleStreakStoreIds.includes(Number(storeId));
+      if (!isEligible) return [];
+
+      const existingStamp = sortedStamps.find(
+        (stamp) => Number(stamp.store_id) === Number(storeId),
+      );
+
+      if (existingStamp) return [existingStamp];
+
+      const targetStore = storesWithLocation.find((s) => s.id.toString() === storeId);
+      return targetStore ? [buildVirtualStampEntry(targetStore)] : [];
+    }
+
     if (nearbyStores.length > 0) {
       const focusedStore = nearbyStores[heroIndex];
       if (!focusedStore) return [];
@@ -192,21 +225,49 @@ export function useStoreOverviewData() {
     return displayStamps.filter((stamp) =>
       eligibleStreakStoreIds.includes(Number(stamp.store_id)),
     );
-  }, [displayStamps, eligibleStreakStoreIds, heroIndex, nearbyStores, sortedStamps]);
+  }, [displayStamps, eligibleStreakStoreIds, heroIndex, nearbyStores, sortedStamps, storeId, storesWithLocation]);
+
+  const prevFetchParams = useRef<string | null>(null);
 
   useEffect(() => {
     const nearbyIds = nearbyStores.map((store) => Number(store.id));
     const displayStampStoreIds = sortedStamps.map((stamp) => Number(stamp.store_id));
-    fetchRewardsData(nearbyIds, displayStampStoreIds);
-  }, [fetchRewardsData, nearbyStores, sortedStamps]);
+    
+    // Ensure we fetch feature flags for out-of-range Discover stores when viewing their details
+    if (storeId && !nearbyIds.includes(Number(storeId))) {
+      nearbyIds.push(Number(storeId));
+    }
+    
+    const currentParams = JSON.stringify({
+      nearbyIds: [...nearbyIds].sort(),
+      displayStampStoreIds: [...displayStampStoreIds].sort(),
+    });
+
+    if (prevFetchParams.current !== currentParams) {
+      prevFetchParams.current = currentParams;
+      fetchRewardsData(nearbyIds, displayStampStoreIds);
+    }
+  }, [fetchRewardsData, nearbyStores, sortedStamps, storeId]);
 
   useEffect(() => {
-    setHeroIndex(0);
-  }, [nearbyStores.length, setHeroIndex]);
+    if (storeId) {
+      const index = nearbyStores.findIndex((s) => s.id.toString() === storeId);
+      if (index !== -1) {
+        setHeroIndex(index);
+      } else {
+        setHeroIndex(0);
+      }
+    } else {
+      setHeroIndex(0);
+    }
+  }, [nearbyStores, setHeroIndex, storeId]);
 
-  const swipeIndicatorStyle = useAnimatedStyle(() => ({
-    opacity: swipeIndicatorOpacity.value,
-  }));
+  const swipeIndicatorStyle = useAnimatedStyle(() => {
+    'worklet';
+    return {
+      opacity: swipeIndicatorOpacity.value,
+    };
+  });
 
   return {
     activeStampProgramRewards,
@@ -222,5 +283,7 @@ export function useStoreOverviewData() {
     displayStamps,
     displayStreaks,
     swipeIndicatorStyle,
+    isLoadingRewardsFeatures,
+    fetchedStoreIds,
   };
 }

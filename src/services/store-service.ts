@@ -259,10 +259,11 @@ export async function uploadStoreImage(
     kind === "logo"
       ? "store/logo"
       : kind === "business_document"
-      ? "store/business-document"
+      ? "store/documents"
       : "store/pictures";
   const filePath = `${folder}/${storeId}/${Date.now()}.${ext}`;
 
+  console.log("filePath", filePath);
   const { error: uploadError } = await supabase.storage
     .from("puntos-public")
     .upload(filePath, bytes, { contentType: mimeType, upsert: true });
