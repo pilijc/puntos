@@ -78,10 +78,13 @@ export default function UserSettings() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-backgroundMuted dark:bg-darkBackground">
+    <SafeAreaView edges={['top']} className="flex-1 bg-background dark:bg-darkBackgroundMuted">
       <ScrollView
         className="flex-1"
-        contentContainerStyle={{ padding: 12, paddingBottom: 40 }}
+        contentContainerStyle={{
+          paddingHorizontal: 16,
+          paddingVertical: 12,
+        }}
         showsVerticalScrollIndicator={false}
       >
         <View className="flex-row justify-between items-center mb-6 mt-3 mx-4">
