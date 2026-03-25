@@ -20,6 +20,11 @@ export type UserRecord = {
   roleLabel?: "s-admin" | "Manager" | "Staff" | "User";
   status?: "Active" | "Blocked";
   stores?: string[];
+  storeInfo?: {
+    name: string;
+    address: string;
+    managerName?: string;
+  }[];
   [key: string]: any;
 };
 
@@ -162,6 +167,51 @@ async function fetchBlockedMap(ids: string[]): Promise<Map<string, boolean>> {
   return map;
 }
 
+async function fetchStoreDetails(userIds: string[]): Promise<Map<string, any[]>> {
+  if (userIds.length === 0) return new Map();
+
+  // 1. Get roles and stores
+  const { data: userRoles, error } = await supabase
+    .from("user_roles")
+    .select(`
+      user_id,
+      store_id,
+      stores:store_id ( id, name, address )
+    `)
+    .in("user_id", userIds);
+
+  if (error) throw error;
+
+  const storeIds = Array.from(new Set(userRoles.map(r => r.store_id).filter(Boolean)));
+  const storeToManager = new Map<number, string>();
+
+  if (storeIds.length > 0) {
+    // 2. Get managers for these stores (ID 2 = Manager)
+    const { data: managers } = await supabase
+      .from("user_roles")
+      .select(`store_id, users:user_id(name)`)
+      .in("store_id", storeIds)
+      .eq("role_id", 2);
+    
+    (managers || []).forEach((m: any) => {
+       if (m.users?.name) storeToManager.set(m.store_id, m.users.name);
+    });
+  }
+
+  const result = new Map<string, any[]>();
+  userRoles.forEach((r: any) => {
+    if (!r.stores) return;
+    if (!result.has(r.user_id)) result.set(r.user_id, []);
+    result.get(r.user_id)!.push({
+      name: r.stores.name,
+      address: r.stores.address,
+      managerName: storeToManager.get(r.store_id)
+    });
+  });
+
+  return result;
+}
+
 /** When "Blocked Only" or "Active Only": fetch a larger window from view + blocked from users, filter client-side. Avoids querying users table for ids (which was causing Fetch More Error). */
 const STATUS_FILTER_WINDOW = 100;
 
@@ -213,10 +263,28 @@ export const useUserStore = create<UserStoreState>((set, get) => ({
           blocked: blockedMap.get(r.id) ?? false,
         }));
         const processed: UserRecord[] = withBlocked.map(normalizeUser);
+        
+        // Deduplicate
+        const uniqueProcessed: UserRecord[] = [];
+        const seen = new Set<string>();
+        for (const u of processed) {
+          if (!seen.has(u.id)) {
+            uniqueProcessed.push(u);
+            seen.add(u.id);
+          }
+        }
+
+        // Fetch store details
+        const storeDetails = await fetchStoreDetails(uniqueProcessed.map(u => u.id));
+        const enriched = uniqueProcessed.map(u => ({
+          ...u,
+          storeInfo: storeDetails.get(u.id) || []
+        }));
+
         const filtered =
           statusFilter === "Blocked"
-            ? processed.filter((u) => u.status === "Blocked")
-            : processed.filter((u) => u.status !== "Blocked");
+            ? enriched.filter((u) => u.status === "Blocked")
+            : enriched.filter((u) => u.status !== "Blocked");
         set({
           users: filtered,
           loading: false,
@@ -246,9 +314,27 @@ export const useUserStore = create<UserStoreState>((set, get) => ({
         blocked: blockedMap.get(r.id) ?? false,
       }));
       const processed: UserRecord[] = withBlocked.map(normalizeUser);
+      
+      // Deduplicate
+      const uniqueProcessed: UserRecord[] = [];
+      const seen = new Set<string>();
+      for (const u of processed) {
+        if (!seen.has(u.id)) {
+          uniqueProcessed.push(u);
+          seen.add(u.id);
+        }
+      }
+
+      // Fetch store details
+      const storeDetails = await fetchStoreDetails(uniqueProcessed.map(u => u.id));
+      const enriched = uniqueProcessed.map(u => ({
+        ...u,
+        storeInfo: storeDetails.get(u.id) || []
+      }));
+
       const fetched = rows.length;
       set({
-        users: processed,
+        users: enriched,
         loading: false,
         refreshing: false,
         page: 1,
@@ -293,9 +379,29 @@ export const useUserStore = create<UserStoreState>((set, get) => ({
         blocked: blockedMap.get(r.id) ?? false,
       }));
       const processed: UserRecord[] = withBlocked.map(normalizeUser);
+      
+      // Deduplicate against already loaded users
+      const existingIds = new Set(users.map(u => u.id));
+      const uniqueNew: UserRecord[] = [];
+      const seenInNew = new Set<string>();
+
+      for (const u of processed) {
+        if (!existingIds.has(u.id) && !seenInNew.has(u.id)) {
+          uniqueNew.push(u);
+          seenInNew.add(u.id);
+        }
+      }
+
+      // Fetch store details for new users
+      const storeDetails = await fetchStoreDetails(uniqueNew.map(u => u.id));
+      const enrichedNew = uniqueNew.map(u => ({
+        ...u,
+        storeInfo: storeDetails.get(u.id) || []
+      }));
+
       const fetched = rows.length;
       set({
-        users: [...users, ...processed],
+        users: [...users, ...enrichedNew],
         page: page + 1,
         hasMore: fetched >= PAGE_SIZE,
         loadingMore: false,

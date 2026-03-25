@@ -110,20 +110,31 @@ export default function UsersScreen() {
         <FlatList
           data={listData}
           renderItem={renderItem}
-          keyExtractor={(item, index) =>
-            item.isHeader ? `header-${item.title}` : `user-${item.id}-${index}`
+          keyExtractor={(item) =>
+            item.isHeader ? `header-${item.title}` : `user-${item.id}`
           }
+          getItemLayout={(_data, index) => {
+            const item = listData[index];
+            if (!item) return { length: 0, offset: 0, index };
+            // Header is 44px, User Item is 88px (approximate but fixed is better than none)
+            const height = item.isHeader ? 44 : 88;
+            let offset = 0;
+            for (let i = 0; i < index; i++) {
+              offset += listData[i]?.isHeader ? 44 : 88;
+            }
+            return { length: height, offset, index };
+          }}
           stickyHeaderIndices={stickyHeaders}
           contentContainerStyle={{ paddingBottom: 110 }}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
           }
           onEndReached={onEndReached}
-          onEndReachedThreshold={0.3}
-          removeClippedSubviews={false}
+          onEndReachedThreshold={0.5}
+          removeClippedSubviews={true}
           initialNumToRender={10}
           maxToRenderPerBatch={10}
-          windowSize={5}
+          windowSize={10}
           ListFooterComponent={
             loadingMore ? (
               <View className="py-4 items-center">
