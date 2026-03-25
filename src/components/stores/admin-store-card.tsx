@@ -23,7 +23,12 @@ export function AdminStoreCard({
 	onReject: (store: AdminStoreRow) => void;
 	onSelect: (store: AdminStoreRow) => void;
 }) {
-	const status = store.status ?? "inactive";
+	const getEffectiveStatus = (s: AdminStoreRow) => {
+		if (s.status === "pending_review" || !s.status) return "pending_review";
+		if (s.status === "inactive") return "inactive";
+		return s.is_active ? "active" : "inactive";
+	};
+	const status = getEffectiveStatus(store);
 	const cfg = STATUS_CONFIG[status] ?? STATUS_CONFIG["inactive"];
 	const isPending = status === "pending_review";
 
