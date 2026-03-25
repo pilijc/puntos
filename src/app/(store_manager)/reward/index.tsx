@@ -200,15 +200,14 @@ export default function RewardIndex() {
                     {/* Points cost */}
                     <View className="flex-row items-center gap-x-1">
                       <MaterialIcons name="stars" size={13} color="#FF6600" />
-                      <Text className="text-xs font-poppins-bold text-primary">
+                      <Text className="text-xs font-poppins-semibold text-primary">
                         {formatPoints(reward.points_cost)} pts
                       </Text>
                     </View>
 
                     {/* Stock */}
-                    <View className={`flex-row items-center gap-x-1 px-2 py-0.5 rounded-full ${reward.stock > 0 ? "bg-green-50 dark:bg-green-950" : "bg-slate-100 dark:bg-neutral-700"}`}>
-                      <View className={`w-1.5 h-1.5 rounded-full ${reward.stock > 0 ? "bg-green-500" : "bg-slate-300"}`} />
-                      <Text className={`text-[10px] font-poppins-semibold ${reward.stock > 0 ? "text-green-600 dark:text-green-400" : "text-slate-400"}`}>
+                    <View className="flex-row items-center gap-x-1 px-2 py-0.5 rounded-full">
+                      <Text className="text-xs font-poppins text-textMuted dark:text-textMuted">
                         {reward.stock > 0 ? `${reward.stock} left` : "Out of stock"}
                       </Text>
                     </View>
