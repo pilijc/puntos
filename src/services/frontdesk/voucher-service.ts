@@ -90,21 +90,21 @@ export async function processVoucherCode(
         const storeId = staffData.store_id;
 
         // Get points configuration for this store
-        // const { data: pointsData, error: pointsError } = await supabase
-        //     .from('store_qr_rewards')
-        //     .select('percentage')
-        //     .eq('store_id', storeId)
-        //     .single();
+        const { data: pointsData, error: pointsError } = await supabase
+            .from('store_qr_rewards')
+            .select('percentage')
+            .eq('store_id', storeId)
+            .single();
 
-        // if (pointsError || !pointsData) {
-        //     return {
-        //         success: false,
-        //         message: "Failed to get points configuration for store",
-        //     };
-        // }
+        // default 10% if no configuration is found
+        const percentage = pointsData?.percentage || 10;
+        
+        if (pointsError) {
+            console.warn(`No points configuration found for store ${storeId}, using default 10%`);
+        }
 
         // Calculate points using dynamic percentage
-        const pointsEarned = Math.ceil(amount * (10 / 100));
+        const pointsEarned = Math.ceil(amount * (percentage / 100));
 
             const { data: purchaseData, error: purchaseError } = await supabase
             .from("purchases")

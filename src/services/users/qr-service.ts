@@ -95,14 +95,17 @@ export async function createQRTransaction(
     .eq('store_id', storeId)
     .single();
 
-  if (pointsError || !pointsData) {
-    throw new Error('Failed to get points configuration for store');
+  // default 10% if no configuration is found
+  const percentage = pointsData?.percentage || 10;
+  
+  if (pointsError) {
+    console.warn(`No points configuration found for store ${storeId}, using default 10%`);
   }
 
-  // Calculate points for purchase amount and percentage
-  const pointsToAward = Math.ceil(purchaseAmount * (pointsData.percentage / 100));
+  //Calculate points for purchase amount and percentage
+  const pointsToAward = Math.ceil(purchaseAmount * (percentage / 100));
 
-  // Create purchase record first
+  //Create purchase record first
   const { data: purchaseData, error: purchaseError } = await supabase
     .from('purchases')
     .insert([
@@ -251,42 +254,4 @@ function formatTime(dateString: string): string {
   return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
 }
 
-
-
-/*
-export async function generateQRCode(userId: string, expiryHours: number = 1) {
-  
-  const expiresAt = new Date();
-  expiresAt.setHours(expiresAt.getHours() + expiryHours);
-
-  const { data, error, status } = await supabase
-    .from('qr_codes')
-    .insert([
-      {
-        user_id: userId,
-        barcode_hash: null,
-        store_staff_id: null,
-        is_used: false,
-         scanned_at: null,
-        transaction_completed_at: null,
-        created_at: new Date().toISOString(),
-        expires_at: expiresAt.toISOString(),
-      },
-    ])
-    .select('*');  
-
-  console.log('Supabase insert result:', { data, error, status });
-
-  if (error) {
-    throw new Error(`Failed to generate QR code: ${error.message}`);
-  }
-
-  if (!data || data.length === 0) {
-    throw new Error(
-      'No QR code returned from Supabase. Check table name, columns, and RLS policies.'
-    );
-  }
-
-  return data[0]; 
-} */
-
+ 
