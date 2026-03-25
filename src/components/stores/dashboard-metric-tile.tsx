@@ -28,7 +28,13 @@ export const DashboardMetricTile: React.FC<DashboardMetricTileProps> = ({
 
                 <View className="flex-row items-center flex-wrap gap-[4px]">
                     <Text className="text-[24px] font-poppins-bold text-[#1E293B]">
-                        {loading ? "—" : value}
+                        {loading ? (
+                            <View className="h-[28px] w-12 bg-background rounded my-[2px] animate-pulse" />
+                        ) : (
+                            <Text className="text-[24px] font-poppins-bold text-textSecondary">
+                                {value}
+                            </Text>
+                        )}
                     </Text>
                 </View>
 

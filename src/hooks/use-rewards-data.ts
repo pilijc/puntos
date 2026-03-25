@@ -3,7 +3,7 @@ import { ActiveStampProgramReward, getActiveStampProgramRewards, getStoresWithEn
 import { supabase } from "@/supabase/supabase";
 import { Reward, getRewards, RewardSortOrder, PointsOrder } from "@/services/reward-service";
 import { enrichStoresWithLocation, EnrichedStore } from "@/utils/store-location";
-import { UserLocation } from "@/services/location-service";
+import { UserLocation } from "@/services/user/location-service";
 
 interface RewardsDataState {
   eligibleNearbyStoreIds: number[];

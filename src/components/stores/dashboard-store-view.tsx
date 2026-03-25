@@ -9,6 +9,7 @@ import { getLast7Labels, getWeekDateRange } from "@/utils/date-helpers";
 
 import { DashboardMetricTile } from "@/components/stores/dashboard-metric-tile";
 import { DashboardActivityChart } from "@/components/stores/dashboard-activity-chart";
+import { DashboardTransactionList } from "@/components/stores/dashboard-transaction-list";
 
 export interface DashboardStoreViewProps {
     store: StoreRow;
@@ -21,6 +22,7 @@ export const DashboardStoreView: React.FC<DashboardStoreViewProps> = ({ store })
         todayTransactions,
         weeklyActivity,
         weeklyStampsActivity,
+        recentTransactions,
         loading: metricsLoading,
     } = useStoreDashboardMetrics(
         store.id,
@@ -74,7 +76,7 @@ export const DashboardStoreView: React.FC<DashboardStoreViewProps> = ({ store })
                     </TouchableOpacity>
                 </View>
 
-                <DashboardActivityChart data={weeklyActivity} labels={dayLabels} />
+                <DashboardActivityChart data={weeklyActivity} labels={dayLabels} loading={metricsLoading} />
             </View>
 
             <View className="bg-white rounded-[20px] p-5 elevation-1 mb-[14px]">
@@ -99,8 +101,10 @@ export const DashboardStoreView: React.FC<DashboardStoreViewProps> = ({ store })
                     </TouchableOpacity>
                 </View>
 
-                <DashboardActivityChart data={weeklyStampsActivity} labels={dayLabels} />
+                <DashboardActivityChart data={weeklyStampsActivity} labels={dayLabels} loading={metricsLoading} />
             </View>
+
+            <DashboardTransactionList transactions={recentTransactions} loading={metricsLoading} />
         </View>
     );
 };

@@ -3,19 +3,23 @@ import { RefreshControl, Modal } from "react-native";
 import { ScrollView, View, Text, SafeAreaView, TouchableOpacity, Pressable } from "@/tw";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useFocusEffect } from "expo-router";
-import { useStores } from "@/hooks/use-stores";
+import { useManagerStoresStore } from "@/store/manager-stores-store";
 import { DashboardStoreView } from "@/components/stores/dashboard-store-view";
 
 export default function StoreManagerDashboard() {
-    const { stores, filteredStores, refreshing, refresh } = useStores();
+    const {
+        stores,
+        isFetching: refreshing,
+        fetchStores: refresh
+    } = useManagerStoresStore();
 
     // Dropdown state
     const [selectedStoreId, setSelectedStoreId] = useState<number | null>(null);
     const [isDropdownVisible, setDropdownVisible] = useState(false);
 
-    useFocusEffect(useCallback(() => { refresh(); }, []));
+    useFocusEffect(useCallback(() => { refresh(true); }, []));
 
-    const displayedStores = filteredStores.length > 0 ? filteredStores : stores;
+    const displayedStores = stores;
 
     // Auto-select first store if none selected
     React.useEffect(() => {
