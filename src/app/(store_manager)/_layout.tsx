@@ -1,12 +1,11 @@
 import { Tabs } from "expo-router";
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { StyleSheet, useColorScheme, Platform } from "react-native";
 import React, { useEffect } from "react";
 import { useRouter } from "expo-router";
 import { supabase } from "@/supabase/supabase";
 import { getRoleTypeForUser } from "@/services/access-service";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { LayoutDashboard, Store } from 'lucide-react-native';
+import { LayoutDashboard, Store, ArrowLeftRight, Settings } from 'lucide-react-native';
 
 export default function StoreManagerLayout() {
     const colorScheme = useColorScheme();
@@ -80,7 +79,7 @@ export default function StoreManagerLayout() {
                 options={{
                     title: "Analytics",
                     tabBarIcon: ({ color }) => (
-                        <MaterialIcons size={22} name="bar-chart" color={color} />
+                        <ArrowLeftRight size={22} color={color} />
                     ),
                 }}
             />
@@ -89,7 +88,7 @@ export default function StoreManagerLayout() {
                 options={{
                     title: "Settings",
                     tabBarIcon: ({ color }) => (
-                        <MaterialIcons size={22} name="settings" color={color} />
+                        <Settings size={22} color={color} />
                     ),
                 }}
             />

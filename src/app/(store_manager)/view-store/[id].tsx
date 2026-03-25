@@ -3,11 +3,10 @@ import { RefreshControl, useColorScheme, NativeSyntheticEvent, NativeScrollEvent
 import { View, Text, TouchableOpacity, ScrollView, Image } from "@/tw";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { getStoreById } from "@/services/store-service";
 import { Modal, ModalButton } from "@/components/modal";
-import Ionicons from '@expo/vector-icons/Ionicons';
+import { Building2, Gift, QrCode, UsersRound, Stamp, Flame } from "lucide-react-native";
 
 export default function ViewStore() {
   const { id } = useLocalSearchParams();
@@ -29,12 +28,12 @@ export default function ViewStore() {
 
   const menuItems = useMemo(
     () => [
-      { key: "staff",   label: "Staff",        description: "Manage team",        icon: { lib: "mc",  name: "account-group" },       route: "/(store_manager)/staff"  as const },
-      { key: "streak",  label: "Streak",        description: "Daily rewards",      icon: { lib: "mc",  name: "fire" },                route: "/(store_manager)/streak/view-streak" as const },
-      { key: "stamp",   label: "Stamp",         description: "Punch cards",        icon: { lib: "mc",  name: "stamper" },               route: "/(store_manager)/stamp/view-stamp"  as const },
-      { key: "qr",      label: "QR Purchase",   description: "Scan rewards",       icon: { lib: "mi",  name: "qr-code-scanner" },     route: "/(store_manager)/qr"             as const },
-      { key: "rewards", label: "Rewards",        description: "Redeemable items",   icon: { lib: "mc",  name: "gift-open" },           route: "/(store_manager)/reward"             as const },
-      { key: "media",   label: "Details",          description: "Manage Store",       icon: { lib: "ion",  name: "storefront-sharp" },          route: "/(store_manager)/detail"       as const },
+      { key: "staff",   label: "Staff",       description: "Manage team",        icon: <UsersRound size={18} color="#FF6600" />, route: "/(store_manager)/staff"              as const },
+      { key: "streak",  label: "Streak",      description: "Daily rewards",      icon: <Flame      size={18} color="#FF6600" />, route: "/(store_manager)/streak/view-streak" as const },
+      { key: "stamp",   label: "Stamp",       description: "Punch cards",        icon: <Stamp      size={18} color="#FF6600" />, route: "/(store_manager)/stamp/view-stamp"   as const },
+      { key: "qr",      label: "QR Purchase", description: "Scan rewards",       icon: <QrCode     size={18} color="#FF6600" />, route: "/(store_manager)/qr"                 as const },
+      { key: "rewards", label: "Rewards",     description: "Redeemable items",   icon: <Gift       size={18} color="#FF6600" />, route: "/(store_manager)/reward"             as const },
+      { key: "media",   label: "Details",     description: "Manage Store",       icon: <Building2  size={18} color="#FF6600" />, route: "/(store_manager)/detail"             as const },
     ],
     []
   );
@@ -167,13 +166,7 @@ export default function ViewStore() {
                 className="bg-white dark:bg-neutral-800 border border-slate-100 dark:border-neutral-700 rounded-xl p-3"
               >
                 <View className="w-9 h-9 rounded-lg items-center justify-center mb-1 -ml-1">
-                  {item.icon.lib === "mc" ? (
-                    <MaterialCommunityIcons name={item.icon.name as any} size={18} color="#FF6600" />
-                  ) : item.icon.lib === "ion" ? (
-                    <Ionicons name={item.icon.name as any} size={18} color="#FF6600" />
-                  ) : (
-                    <MaterialIcons name={item.icon.name as any} size={18} color="#FF6600" />
-                  )}
+                  {item.icon}
                 </View>
                 <Text className="text-[11px] font-poppins-semibold text-slate-800 dark:text-slate-100 leading-4">
                   {item.label}
