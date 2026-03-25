@@ -11,13 +11,13 @@ import { ImageViewerModal } from "@/components/ui/image-viewer-modal";
 const twConfig = require("../../../tailwind.config.js");
 const twColors = twConfig.theme.extend.colors;
 
-type StatusKey = "pending" | "active" | "inactive";
+type StatusKey = "pending_review" | "active" | "inactive";
 
 const STATUS_CONFIG: Record<StatusKey, {
   label: string; icon: "schedule" | "check-circle" | "cancel";
   bg: string; border: string; badgeBg: string; text: string;
 }> = {
-  pending: { label: "PENDING", icon: "schedule", bg: "#ffffff", border: "#f5e4a8", badgeBg: "#fef0c0", text: "#7a5c00" },
+  pending_review: { label: "PENDING", icon: "schedule", bg: "#ffffff", border: "#f5e4a8", badgeBg: "#fef0c0", text: "#7a5c00" },
   active: { label: "ACTIVE", icon: "check-circle", bg: "#ffffff", border: "#d4fce2", badgeBg: "#dcfce7", text: twColors.success },
   inactive: { label: "INACTIVE", icon: "cancel", bg: "#ffffff", border: "#fecaca", badgeBg: "#fee2e2", text: twColors.danger },
 };
@@ -61,9 +61,14 @@ export function AdminStoreDetails({
   const scrollRef = useRef<any>(null);
   const [layoutWidth, setLayoutWidth] = useState(0);
 
-  const isPending = store.status?.toLowerCase().includes("pending");
-  const statusKey = isPending ? "pending" : (store.status as StatusKey);
-  const statusCfg = STATUS_CONFIG[statusKey] ?? STATUS_CONFIG.pending;
+  const getEffectiveStatus = (s: AdminStoreRow): StatusKey => {
+    if (s.status === "pending_review" || !s.status) return "pending_review";
+    if (s.status === "inactive") return "inactive";
+    return s.is_active ? "active" : "inactive";
+  };
+  const statusKey = getEffectiveStatus(store);
+  const statusCfg = STATUS_CONFIG[statusKey] ?? STATUS_CONFIG.pending_review;
+  const isPending = statusKey === "pending_review";
 
   const registeredDate = new Date(store.created_at).toLocaleDateString("en-US", {
     month: "short", day: "numeric", year: "numeric",

@@ -242,7 +242,6 @@ export const useUserStore = create<UserStoreState>((set, get) => ({
     const { activeTab, statusFilter, search } = get();
     const reset = opts?.reset ?? true;
     try {
-      // Set loading: true to prevent empty List from triggering onEndReached -> fetchMoreUsers immediately
       if (reset) set({ page: 1, hasMore: true, loading: true });
 
       if (statusFilter === "Blocked" || statusFilter === "Active") {
@@ -348,7 +347,6 @@ export const useUserStore = create<UserStoreState>((set, get) => ({
 
   fetchMoreUsers: async () => {
     const { page, hasMore, loadingMore, activeTab, statusFilter, search, users, loading } = get();
-    // Do not run fetchMore if initial load/fetchUsers is currently in progress
     if (!hasMore || loadingMore || loading) return;
     set({ loadingMore: true });
     try {
@@ -459,6 +457,8 @@ export const useUserStore = create<UserStoreState>((set, get) => ({
 
   flatListData: () => {
     const { users, activeTab, statusFilter, search } = get();
+    if (users.length === 0) return [];
+    
     const normalizedSearch = search.trim().toLowerCase();
 
     const filtered = users.filter((u) => {
@@ -474,20 +474,24 @@ export const useUserStore = create<UserStoreState>((set, get) => ({
 
     const groups = groupByFirstLetter(filtered);
     const flat: any[] = [];
-    Object.keys(groups)
-      .sort()
-      .forEach((letter) => {
-        flat.push({ isHeader: true, title: letter });
-        groups[letter].forEach((user) => flat.push({ ...user, isHeader: false }));
-      });
+    const sortedKeys = Object.keys(groups).sort();
+    
+    for (const letter of sortedKeys) {
+      flat.push({ isHeader: true, title: letter, id: `header-${letter}` });
+      for (const user of groups[letter]) {
+        flat.push(user);
+      }
+    }
     return flat;
   },
 
   stickyHeaderIndices: () => {
     const data = get().flatListData();
-    return data
-      .map((item, index) => (item.isHeader ? index : -1))
-      .filter((i) => i !== -1);
+    const indices: number[] = [];
+    for (let i = 0; i < data.length; i++) {
+      if (data[i].isHeader) indices.push(i);
+    }
+    return indices;
   },
 }));
 
