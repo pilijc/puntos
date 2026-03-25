@@ -3,7 +3,7 @@ import { TextInput, FlatList } from "react-native";
 import { View, Text, TouchableOpacity } from "@/tw";
 import { Feather } from "@expo/vector-icons";
 import { TYPO, COLORS } from "./constants";
-import type { UserRoleTab } from "@/store/user-store";
+import type { UserRoleTab } from "@/store/super-admin/user-store";
 
 interface UsersSearchHeaderProps {
   search: string;
