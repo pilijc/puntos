@@ -10,3 +10,4 @@ export interface FrontDeskScanResult {
   transactionId?: string;
   pointsEarned?: number;
 }
+
