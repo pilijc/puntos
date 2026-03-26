@@ -100,7 +100,7 @@ export default function UsersScreen() {
   const willBlock = selectedUser?.status !== "Blocked";
 
   return (
-    <ScreenWrapper className="flex-1 bg-background">
+    <SafeAreaView className="flex-1 bg-background" edges={["top", "left", "right"]}>
       <StatusBar barStyle="dark-content" />
       <UsersSearchHeader
         search={search}
@@ -160,6 +160,6 @@ export default function UsersScreen() {
         onClose={() => setShowFilterModal(false)}
         onSelectFilter={setStatusFilter}
       />
-    </ScreenWrapper>
+    </SafeAreaView>
   );
 }

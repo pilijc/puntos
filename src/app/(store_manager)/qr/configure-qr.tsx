@@ -100,7 +100,7 @@ export default function ConfigureStreaks() {
     <KeyboardAvoidingView
       style={{ flex: 1 }}
       className="bg-background dark:bg-[#111921]"
-      behavior={Platform.OS === "android" ? "height" : "padding"}
+      behavior= "height"
     >
       <Modal
         visible={!!modal}
