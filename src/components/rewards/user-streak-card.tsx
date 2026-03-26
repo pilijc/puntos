@@ -1,9 +1,15 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { View, Text, AnimatedView, TouchableOpacity, Image } from "@/tw";
 import { Check, ExternalLink, Flame, Store } from "lucide-react-native";
+<<<<<<< Updated upstream
 import { Layout } from "react-native-reanimated";
+=======
+import Animated, { Layout, useAnimatedStyle, useSharedValue, withSpring, withTiming } from "react-native-reanimated";
+import LottieView from "lottie-react-native";
+>>>>>>> Stashed changes
 import { storeLogos } from "@/data/rewards";
 import { useTranslation } from "react-i18next";
+import { Modal, Pressable, StyleSheet, View as RNView } from "react-native";
 
 interface UserStreakCardProps {
   streak: any;
@@ -17,6 +23,7 @@ export default function UserStreakCard({
   isStoreNearby,
 }: UserStreakCardProps) {
   const { t: translate } = useTranslation();
+  const [showStreakModal, setShowStreakModal] = useState(false);
   const storeStr = streak.stores as any;
   const storeName = storeStr?.name ?? translate("user.rewards.store");
   const storeAddress = storeStr?.address ?? translate("user.rewards.unknownLocation");
@@ -46,6 +53,36 @@ export default function UserStreakCard({
           ? "current"
           : "upcoming",
   }));
+  const pressScale = useSharedValue(1);
+  const modalOpacity = useSharedValue(0);
+  const pressAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: pressScale.value }],
+  }));
+  const modalAnimatedStyle = useAnimatedStyle(() => ({
+    opacity: modalOpacity.value,
+  }));
+
+  useEffect(() => {
+    if (!showStreakModal) {
+      modalOpacity.value = 0;
+      return;
+    }
+
+    modalOpacity.value = withTiming(1, { duration: 180 });
+
+    const fadeTimer = setTimeout(() => {
+      modalOpacity.value = withTiming(0, { duration: 420 });
+    }, 2080);
+
+    const closeTimer = setTimeout(() => {
+      setShowStreakModal(false);
+    }, 2500);
+
+    return () => {
+      clearTimeout(fadeTimer);
+      clearTimeout(closeTimer);
+    };
+  }, [modalOpacity, showStreakModal]);
 
   const getLogoImage = (store: any) => {
     if (store.logo) {
@@ -65,7 +102,11 @@ export default function UserStreakCard({
       <View className="p-3">
         <View className="flex-row items-center justify-between">
           <View className="flex-row items-center gap-x-2">
+<<<<<<< Updated upstream
             <View className="w-4 h-4 items-center justify-center -mt-1">
+=======
+            <View className="w-4 h-4 items-center justify-center -mt-0.5">
+>>>>>>> Stashed changes
               <Flame size={16} color="#FF6600" />
             </View>
             <Text className="font-poppins-semibold text-neutral-900 dark:text-white">
@@ -144,6 +185,7 @@ export default function UserStreakCard({
                 key={`${day.label}-${index}`}
                 className="items-center w-11"
               >
+<<<<<<< Updated upstream
                 <View
                   className={circleClass}
                   style={
@@ -167,11 +209,91 @@ export default function UserStreakCard({
                     <Text className={textClass}>{day.label}</Text>
                   )}
                 </View>
+=======
+                {isCurrent ? (
+                  <TouchableOpacity
+                    activeOpacity={1}
+                    onPressIn={() => {
+                      pressScale.value = withSpring(0.92, { damping: 14, stiffness: 220 });
+                    }}
+                    onPressOut={() => {
+                      pressScale.value = withSpring(1, { damping: 14, stiffness: 220 });
+                    }}
+                    onPress={() => setShowStreakModal(true)}
+                  >
+                    <Animated.View style={pressAnimatedStyle}>
+                      <View
+                        className={circleClass}
+                        style={{
+                          borderWidth: 1.5,
+                          borderColor: "#FF6600",
+                          borderStyle: "dashed",
+                        }}
+                      >
+                        <Text className={textClass}>{day.label}</Text>
+                      </View>
+                    </Animated.View>
+                  </TouchableOpacity>
+                ) : (
+                  <View className={circleClass}>
+                    {isCompleted ? (
+                      <View className="items-center justify-center">
+                        <Check size={12} color="#FFFFFF" />
+                        <Text className="text-white font-poppins-bold text-[8px] uppercase">
+                          {day.label}
+                        </Text>
+                      </View>
+                    ) : (
+                      <Text className={textClass}>{day.label}</Text>
+                    )}
+                  </View>
+                )}
+>>>>>>> Stashed changes
               </View>
             );
           })}
         </View>
       </View>
+
+      <Modal
+        visible={showStreakModal}
+        transparent
+        animationType="none"
+        statusBarTranslucent
+        onRequestClose={() => setShowStreakModal(false)}
+      >
+        <Animated.View style={[styles.modalOverlay, modalAnimatedStyle]}>
+          <Pressable style={StyleSheet.absoluteFill} onPress={() => setShowStreakModal(false)} />
+          <RNView style={styles.modalContent}>
+            <LottieView
+              source={require("../../assets/lottie/streak.json")}
+              autoPlay
+              loop
+              style={{ width: 220, height: 220 }}
+            />
+            <Text className="text-center text-white font-poppins-bold text-3xl mt-4">
+              1+
+            </Text>
+            <Text className="text-center text-white/90 font-poppins-medium text-base mt-2">
+              {`Day ${clampedCount + 1}/Day 8`}
+            </Text>
+          </RNView>
+        </Animated.View>
+      </Modal>
     </AnimatedView>
   );
 }
+
+const styles = StyleSheet.create({
+  modalOverlay: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 32,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+  },
+  modalContent: {
+    alignItems: "center",
+    justifyContent: "center",
+  },
+});

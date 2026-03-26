@@ -100,10 +100,10 @@ export default function UserStampLogCard({
           </View>
           <View className="flex-row items-center gap-x-3">
             {nearby && (
-              <View className="bg-green-100 dark:bg-green-900/30 px-2.5 py-1 rounded-full flex-row items-center gap-x-1">
-                <View className="w-1.5 h-1.5 rounded-full bg-green-500" />
-                <Text className="text-[10px] font-poppins-semibold text-green-700 dark:text-green-400">
-                  {translate("user.rewards.nearby")}
+              <View className="bg-red-100 dark:bg-red-900/30 px-2.5 py-1 rounded-full flex-row items-center gap-x-1">
+                <View className="w-1.5 h-1.5 rounded-full bg-red-500" />
+                <Text className="text-[10px] font-poppins-semibold text-red-600 dark:text-red-400">
+                  {translate("user.rewards.purchase")}
                 </Text>
               </View>
             )}
