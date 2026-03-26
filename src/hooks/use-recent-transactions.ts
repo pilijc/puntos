@@ -35,8 +35,7 @@ export const useRecentTransactions = create<RecentTransactionsState>((set, get) 
         .select("amount, points_earned, created_at")
         .eq("store_id", storeId)
         .gte("created_at", startOfToday.toISOString())
-        .order("created_at", { ascending: false })
-        .limit(5); // Limit to 5 most recent transactions
+        .order("created_at", { ascending: false });
 
       if (error) {
         console.error("Error fetching recent transactions:", error);
@@ -58,11 +57,9 @@ export const useRecentTransactions = create<RecentTransactionsState>((set, get) 
   },
 
   addScan: (scan: RecentScan) => {
-    set((state) => {
-      const updatedScans = [scan, ...state.recentScans];
-      // Keep only the latest 5 transactions
-      return { recentScans: updatedScans.slice(0, 5) };
-    });
+    set((state) => ({
+      recentScans: [scan, ...state.recentScans],
+    }));
   },
 
   clearTransactions: () => {

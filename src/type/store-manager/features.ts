@@ -26,7 +26,7 @@ export const FEATURES = [
 		badge: null,
 	},
 	{
-		id: "purchased",
+		id: "qr",
 		title: "QR Purchase Rewards",
 		description: "Scan at checkout to earn.",
 		icon: "qr-code-2" as const,

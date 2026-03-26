@@ -49,7 +49,7 @@ export async function getRoleTypeForUser(userId: string): Promise<string | null>
     .eq("user_id", userId);
 
   // if (userRolesError) {
-  // //  console.error("Error querying user_roles:", userRolesError);
+  //   console.error("Error querying user_roles:", userRolesError);
   //   throw userRolesError;
   // }
 
