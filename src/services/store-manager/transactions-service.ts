@@ -33,25 +33,17 @@ export async function getQRTransactionsForStore(storeId: number): Promise<Transa
 }
 
 export async function getStampActivityForStore(storeId: number): Promise<TransactionItem[]> {
-  const { data: programs, error: progError } = await supabase
-    .from("store_stamps")
-    .select("id")
-    .eq("store_id", storeId);
-
-  if (progError || !programs || programs.length === 0) return [];
-
-  const programIds = programs.map((p: any) => p.id);
-
   const { data: rows, error } = await supabase
-    .from("stamp_progress")
-    .select("user_id, stamps_count, target, last_stamp_at, stamp_program_id")
-    .in("stamp_program_id", programIds)
-    .order("last_stamp_at", { ascending: false })
+    .from("stamp_events")
+    .select("id, created_at, user_id, store_id")
+    .eq("store_id", storeId)
+    .order("created_at", { ascending: false })
     .limit(100);
 
   if (error || !rows || rows.length === 0) return [];
 
   const userIds = [...new Set(rows.map((r: any) => r.user_id))];
+
   const { data: usersData } = await supabase
     .from("users")
     .select("id, name, avatar_url")
@@ -59,15 +51,30 @@ export async function getStampActivityForStore(storeId: number): Promise<Transac
 
   const usersMap = new Map((usersData ?? []).map((u: any) => [u.id, u]));
 
-  return rows.map((row: any, idx: number) => ({
-    id: `stamp-${row.user_id}-${row.stamp_program_id}-${idx}`,
-    type: "stamp" as TxType,
-    userId: row.user_id,
-    userName: usersMap.get(row.user_id)?.name ?? "Unknown",
-    userAvatar: usersMap.get(row.user_id)?.avatar_url ?? null,
-    date: row.last_stamp_at,
-    detail: `${row.stamps_count}/${row.target} stamps`,
-  }));
+  const { data: progressData } = await supabase
+    .from("stamp_progress")
+    .select("user_id, stamps_count, target")
+    .eq("store_id", storeId)
+    .in("user_id", userIds);
+
+  const progressMap = new Map((progressData ?? []).map((p: any) => [p.user_id, p]));
+
+  return rows.map((row: any) => {
+    const progress = progressMap.get(row.user_id);
+    const detail = progress
+      ? `${progress.stamps_count}/${progress.target} stamps`
+      : "+1 stamp";
+
+    return {
+      id: `stamp-${row.id}`,
+      type: "stamp" as TxType,
+      userId: row.user_id,
+      userName: usersMap.get(row.user_id)?.name ?? "Unknown",
+      userAvatar: usersMap.get(row.user_id)?.avatar_url ?? null,
+      date: row.created_at,
+      detail,
+    };
+  });
 }
 
 export async function getStreakActivityForStore(storeId: number): Promise<TransactionItem[]> {

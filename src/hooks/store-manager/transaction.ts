@@ -43,6 +43,13 @@ export function useTransactions() {
     }, [selectedStoreId, fetchData])
   );
 
+  const selectStore = useCallback((id: number) => {
+    if (id === selectedStoreId) return;
+    setData([], [], []);
+    setSelectedStoreId(id);
+    fetchData(id);
+  }, [selectedStoreId, fetchData]);
+
   const handleRefresh = useCallback(() => {
     if (selectedStoreId !== null) {
       setRefreshing(true);
@@ -60,6 +67,8 @@ export function useTransactions() {
   return {
     stores,
     storesLoading,
+    selectedStoreId,
+    selectStore,
     loading,
     refreshing,
     listItems,
