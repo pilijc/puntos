@@ -1,27 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, AnimatedView, TouchableOpacity, Image } from "@/tw";
 import { Check, ExternalLink, Flame, Store } from "lucide-react-native";
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-import { Layout } from "react-native-reanimated";
-=======
-import Animated, { Layout, useAnimatedStyle, useSharedValue, withSpring, withTiming } from "react-native-reanimated";
+import Animated, { Layout, useAnimatedStyle, useSharedValue, withSpring, withTiming, withRepeat, withSequence } from "react-native-reanimated";
 import LottieView from "lottie-react-native";
->>>>>>> Stashed changes
-=======
-import Animated, { Layout, useAnimatedStyle, useSharedValue, withSpring, withTiming } from "react-native-reanimated";
-import LottieView from "lottie-react-native";
->>>>>>> Stashed changes
-=======
-import Animated, { Layout, useAnimatedStyle, useSharedValue, withSpring, withTiming } from "react-native-reanimated";
-import LottieView from "lottie-react-native";
->>>>>>> Stashed changes
-=======
-import Animated, { Layout, useAnimatedStyle, useSharedValue, withSpring, withTiming } from "react-native-reanimated";
-import LottieView from "lottie-react-native";
->>>>>>> Stashed changes
 import { storeLogos } from "@/data/rewards";
 import { useTranslation } from "react-i18next";
 import { Modal, Pressable, StyleSheet, View as RNView } from "react-native";
@@ -77,6 +58,26 @@ export default function UserStreakCard({
     opacity: modalOpacity.value,
   }));
 
+  const pulseScale = useSharedValue(1);
+  const pulseAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: pulseScale.value }],
+  }));
+
+  useEffect(() => {
+    if (nearby) {
+      pulseScale.value = withRepeat(
+        withSequence(
+          withTiming(1.08, { duration: 800 }),
+          withTiming(1, { duration: 800 })
+        ),
+        -1,
+        true
+      );
+    } else {
+      pulseScale.value = withTiming(1);
+    }
+  }, [nearby]);
+
   useEffect(() => {
     if (!showStreakModal) {
       modalOpacity.value = 0;
@@ -117,23 +118,7 @@ export default function UserStreakCard({
       <View className="p-3">
         <View className="flex-row items-center justify-between">
           <View className="flex-row items-center gap-x-2">
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
             <View className="w-4 h-4 items-center justify-center -mt-1">
-=======
-            <View className="w-4 h-4 items-center justify-center -mt-0.5">
->>>>>>> Stashed changes
-=======
-            <View className="w-4 h-4 items-center justify-center -mt-0.5">
->>>>>>> Stashed changes
-=======
-            <View className="w-4 h-4 items-center justify-center -mt-0.5">
->>>>>>> Stashed changes
-=======
-            <View className="w-4 h-4 items-center justify-center -mt-0.5">
->>>>>>> Stashed changes
               <Flame size={16} color="#FF6600" />
             </View>
             <Text className="font-poppins-semibold text-neutral-900 dark:text-white">
@@ -212,40 +197,7 @@ export default function UserStreakCard({
                 key={`${day.label}-${index}`}
                 className="items-center w-11"
               >
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-                <View
-                  className={circleClass}
-                  style={
-                    isCurrent
-                      ? {
-                        borderWidth: 1.5,
-                        borderColor: "#FF6600",
-                        borderStyle: "dashed",
-                      }
-                      : undefined
-                  }
-                >
-                  {isCompleted ? (
-                    <View className="items-center justify-center">
-                      <Check size={12} color="#FFFFFF" />
-                      <Text className="text-white font-poppins-bold text-[8px] uppercase">
-                        {day.label}
-                      </Text>
-                    </View>
-                  ) : (
-                    <Text className={textClass}>{day.label}</Text>
-                  )}
-                </View>
-=======
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
+
                 {isCurrent ? (
                   <TouchableOpacity
                     activeOpacity={1}
@@ -257,7 +209,7 @@ export default function UserStreakCard({
                     }}
                     onPress={() => setShowStreakModal(true)}
                   >
-                    <Animated.View style={pressAnimatedStyle}>
+                    <Animated.View style={[pressAnimatedStyle, nearby && pulseAnimatedStyle]}>
                       <View
                         className={circleClass}
                         style={{
@@ -284,16 +236,7 @@ export default function UserStreakCard({
                     )}
                   </View>
                 )}
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
+
               </View>
             );
           })}
