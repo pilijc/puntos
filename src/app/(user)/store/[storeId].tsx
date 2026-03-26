@@ -140,7 +140,6 @@ export default function StoreOverviewDetail() {
           setHeroIndex={handleHeroSnap}
           heroIndex={heroIndex}
           swipeIndicatorStyle={swipeIndicatorStyle}
-          hideViewButton={true}
         />
 
         <AnimatedView

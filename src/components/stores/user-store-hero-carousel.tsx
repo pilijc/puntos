@@ -15,7 +15,6 @@ interface UserStoreHeroCarouselProps {
   setHeroIndex: (index: number) => void;
   heroIndex: number;
   swipeIndicatorStyle: any;
-  hideViewButton?: boolean;
 }
 
 export default function UserStoreHeroCarousel({
@@ -24,7 +23,6 @@ export default function UserStoreHeroCarousel({
   setHeroIndex,
   heroIndex,
   swipeIndicatorStyle,
-  hideViewButton = false,
 }: UserStoreHeroCarouselProps) {
   const { t: translate } = useTranslation();
   const router = useRouter();
@@ -132,32 +130,6 @@ export default function UserStoreHeroCarousel({
             )}
           />
         </>
-      )}
-
-      {/* Replaced 'left-97' with standard trailing flex positioning */}
-      {!hideViewButton && (
-        <TouchableOpacity
-          onPress={() => {
-            const activeHeroStores = nearbyStores.length > 0 
-              ? nearbyStores 
-              : storesWithLocation.filter(s => s.is_active);
-            const focusedStore = activeHeroStores[heroIndex];
-            if (focusedStore) {
-              router.push(`/store/${focusedStore.id}`);
-            }
-          }}
-          className="absolute top-7 right-6 z-30 px-3 py-1.5 rounded-full border border-white/20 bg-black/30 backdrop-blur-md flex-row items-center justify-center gap-x-1.5"
-        >
-          <Text className="text-[10px] font-poppins-semibold text-white uppercase tracking-wider text-center">
-            {translate("user.rewards.viewStore")}
-          </Text>
-          <MaterialIcons
-            name="local-convenience-store"
-            size={14}
-            color="#FFFFFF"
-            style={{ transform: [{ translateY: -0.5 }] }}
-          />
-        </TouchableOpacity>
       )}
 
     </View>
