@@ -2,7 +2,17 @@ import React, { useEffect, useState } from "react";
 import { View, Text, AnimatedView, TouchableOpacity, Image } from "@/tw";
 import { Check, ExternalLink, Flame, Store } from "lucide-react-native";
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
 import { Layout } from "react-native-reanimated";
+=======
+import Animated, { Layout, useAnimatedStyle, useSharedValue, withSpring, withTiming } from "react-native-reanimated";
+import LottieView from "lottie-react-native";
+>>>>>>> Stashed changes
+=======
+import Animated, { Layout, useAnimatedStyle, useSharedValue, withSpring, withTiming } from "react-native-reanimated";
+import LottieView from "lottie-react-native";
+>>>>>>> Stashed changes
 =======
 import Animated, { Layout, useAnimatedStyle, useSharedValue, withSpring, withTiming } from "react-native-reanimated";
 import LottieView from "lottie-react-native";
@@ -103,7 +113,15 @@ export default function UserStreakCard({
         <View className="flex-row items-center justify-between">
           <View className="flex-row items-center gap-x-2">
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
             <View className="w-4 h-4 items-center justify-center -mt-1">
+=======
+            <View className="w-4 h-4 items-center justify-center -mt-0.5">
+>>>>>>> Stashed changes
+=======
+            <View className="w-4 h-4 items-center justify-center -mt-0.5">
+>>>>>>> Stashed changes
 =======
             <View className="w-4 h-4 items-center justify-center -mt-0.5">
 >>>>>>> Stashed changes
@@ -186,6 +204,8 @@ export default function UserStreakCard({
                 className="items-center w-11"
               >
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
                 <View
                   className={circleClass}
                   style={
@@ -210,6 +230,10 @@ export default function UserStreakCard({
                   )}
                 </View>
 =======
+=======
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
                 {isCurrent ? (
                   <TouchableOpacity
                     activeOpacity={1}
@@ -248,6 +272,12 @@ export default function UserStreakCard({
                     )}
                   </View>
                 )}
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
               </View>
             );
