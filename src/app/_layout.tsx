@@ -73,12 +73,12 @@ export default function Layout() {
           const nextRoute = await getHomeRouteForUserId(userId);
           router.replace(nextRoute as any);
         } catch (err: any) {
+
           if (err instanceof AccountDeletedError) {
             Alert.alert("Login Failed", err.message);
             router.replace("/(auth)/login");
           } else if (err instanceof AccountBlockedError) {
-            Alert.alert("Account Restricted", err.message);
-            router.replace("/(auth)/login");
+            router.replace("/(auth)/login?restricted=true");
           } else {
             console.error("Session restoration error:", err);
           }

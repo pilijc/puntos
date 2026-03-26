@@ -17,7 +17,7 @@ export class AccountDeletedError extends Error {
  */
 export class AccountBlockedError extends Error {
   constructor() {
-    super("Your account has been restricted. Please contact support.");
+    super("Your account has been restricted. To verify your account status, please contact support.");
     this.name = "AccountBlockedError";
   }
 }
