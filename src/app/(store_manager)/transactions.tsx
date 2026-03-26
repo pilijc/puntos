@@ -1,6 +1,6 @@
 import React, { useCallback, useRef, useState } from "react";
 import { FlatList, ScrollView, Modal, Pressable, StyleSheet, useColorScheme, RefreshControl, ActivityIndicator, ListRenderItemInfo, TouchableOpacity, View as NativeView, Dimensions } from "react-native";
-import { TransactionSkeleton } from "@/components/skeleton/store_manager/transaction-skeleton";
+import { TransactionSkeleton, StoresAndFunnelSkeleton } from "@/components/skeleton/store_manager/transaction-skeleton";
 import { View, Text, SafeAreaView } from "@/tw";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { QrCode, Stamp, Flame, ReceiptText, Funnel, Check } from "lucide-react-native";
@@ -182,14 +182,6 @@ export default function TransactionsScreen() {
     [isDark, listItems, typeFilter]
   );
 
-  if (storesLoading) {
-    return (
-      <SafeAreaView className="flex-1 bg-backgroundMuted dark:bg-darkBackground items-center justify-center">
-        <ActivityIndicator color="#FF6600" />
-      </SafeAreaView>
-    );
-  }
-
   const emptyIcon = <ReceiptText size={40} color={isDark ? "#404040" : "#E2E8F0"} strokeWidth={1.5} />;
   const triggerColor = isDark ? "#737373" : "#94A3B8";
   const triggerIcon =
@@ -207,7 +199,9 @@ export default function TransactionsScreen() {
         <Text className="text-xl font-poppins-bold text-textPrimary dark:text-darkTextPrimary py-1">Transactions</Text>
       </View>
 
-      {stores.length > 1 && (
+      {storesLoading ? (
+        <StoresAndFunnelSkeleton />
+      ) : stores.length > 1 ? (
         <View className="flex-row items-center bg-background dark:bg-darkBackground border-b border-neutral-100 dark:border-darkBorder">
           <ScrollView
             horizontal
@@ -222,7 +216,9 @@ export default function TransactionsScreen() {
                   onPress={() => selectStore(store.id)}
                   activeOpacity={0.75}
                   style={{
-                    paddingHorizontal: 10, paddingVertical: 4, borderRadius: 99,
+                    paddingHorizontal: 10,
+                    paddingVertical: 4,
+                    borderRadius: 99,
                     backgroundColor: active ? "#FF6600" : isDark ? "#262626" : "#F1F5F9",
                   }}
                 >
@@ -255,9 +251,9 @@ export default function TransactionsScreen() {
             </TouchableOpacity>
           </NativeView>
         </View>
-      )}
+      ) : null}
 
-      {loading ? (
+      {loading || storesLoading ? (
         <TransactionSkeleton />
       ) : stores.length === 0 ? (
         <EmptyState icon={emptyIcon} title="No stores found" subtitle="Create a store to start tracking transactions." />
