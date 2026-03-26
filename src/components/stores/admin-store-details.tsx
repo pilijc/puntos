@@ -11,15 +11,15 @@ import { ImageViewerModal } from "@/components/ui/image-viewer-modal";
 const twConfig = require("../../../tailwind.config.js");
 const twColors = twConfig.theme.extend.colors;
 
-type StatusKey = "pending" | "active" | "inactive";
+type StatusKey = "pending_review" | "active" | "inactive";
 
 const STATUS_CONFIG: Record<StatusKey, {
   label: string; icon: "schedule" | "check-circle" | "cancel";
   bg: string; border: string; badgeBg: string; text: string;
 }> = {
-  pending:  { label: "PENDING",  icon: "schedule",     bg: "#ffffff", border: "#f5e4a8", badgeBg: "#fef0c0", text: "#7a5c00" },
-  active:   { label: "ACTIVE",   icon: "check-circle", bg: "#ffffff", border: "#d4fce2", badgeBg: "#dcfce7", text: twColors.success },
-  inactive: { label: "INACTIVE", icon: "cancel",       bg: "#ffffff", border: "#fecaca", badgeBg: "#fee2e2", text: twColors.danger },
+  pending_review: { label: "PENDING", icon: "schedule", bg: "#ffffff", border: "#f5e4a8", badgeBg: "#fef0c0", text: "#7a5c00" },
+  active: { label: "ACTIVE", icon: "check-circle", bg: "#ffffff", border: "#d4fce2", badgeBg: "#dcfce7", text: twColors.success },
+  inactive: { label: "INACTIVE", icon: "cancel", bg: "#ffffff", border: "#fecaca", badgeBg: "#fee2e2", text: twColors.danger },
 };
 
 // ─── Field helpers ────────────────────────────────────────────────────────────
@@ -57,10 +57,18 @@ export function AdminStoreDetails({
   onReject: (store: AdminStoreRow) => void;
 }) {
   const [viewingDoc, setViewingDoc] = useState(false);
+  const [currentPicIndex, setCurrentPicIndex] = useState(0);
+  const scrollRef = useRef<any>(null);
+  const [layoutWidth, setLayoutWidth] = useState(0);
 
-  const isPending = store.status?.toLowerCase().includes("pending");
-  const statusKey = isPending ? "pending" : (store.status as StatusKey);
-  const statusCfg = STATUS_CONFIG[statusKey] ?? STATUS_CONFIG.pending;
+  const getEffectiveStatus = (s: AdminStoreRow): StatusKey => {
+    if (s.status === "pending_review" || !s.status) return "pending_review";
+    if (s.status === "inactive") return "inactive";
+    return s.is_active ? "active" : "inactive";
+  };
+  const statusKey = getEffectiveStatus(store);
+  const statusCfg = STATUS_CONFIG[statusKey] ?? STATUS_CONFIG.pending_review;
+  const isPending = statusKey === "pending_review";
 
   const registeredDate = new Date(store.created_at).toLocaleDateString("en-US", {
     month: "short", day: "numeric", year: "numeric",
@@ -150,7 +158,7 @@ export function AdminStoreDetails({
                 <View className="flex-1 flex-row items-center justify-center gap-2">
                   <MaterialIcons name="wb-sunny" size={16} color="#FF6600" />
                   <Text className="text-sm font-poppins-medium text-textPrimary dark:text-darkTextPrimary">
-                    {store.store_open || "09:00"}
+                    {store.store_open ? store.store_open.slice(0, 5) : "09:00"}
                   </Text>
                 </View>
                 
@@ -159,7 +167,7 @@ export function AdminStoreDetails({
                 <View className="flex-1 flex-row items-center justify-center gap-2">
                   <MaterialIcons name="nights-stay" size={16} color="#FF6600" />
                   <Text className="text-sm font-poppins-medium text-textPrimary dark:text-darkTextPrimary">
-                    {store.store_close || "21:00"}
+                    {store.store_close ? store.store_close.slice(0, 5) : "21:00"}
                   </Text>
                 </View>
               </View>

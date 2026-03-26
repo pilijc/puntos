@@ -1,8 +1,7 @@
-
-
 import { supabase } from "@/supabase/supabase";
 
 import { QRCodeState, QRTransaction } from "@/type/qr";
+import { VoucherTransaction, listenToVoucherTransaction } from "@/services/users/voucher-service";
 import { addStamp } from "@/services/stamp-service";
 
 
@@ -214,6 +213,33 @@ export function listenToQRTransaction(userId: string, onScanned: (transaction: Q
     });
 
   return channel;
+}
+
+export function setupQRListeners(userId: string, onQRTransaction: (transaction: QRTransaction) => void, onVoucherTransaction: (transaction: VoucherTransaction) => void) {
+  // Listen to QR transactions
+  const qrChannel = listenToQRTransaction(userId, (transaction) => {
+    console.log('Customer side: QR transaction received!', transaction);
+    onQRTransaction(transaction);
+  });
+  
+  // Listen to voucher transactions
+  const voucherChannel = listenToVoucherTransaction(userId, (transaction) => {
+    console.log('Customer side: Voucher transaction received!', transaction);
+    onVoucherTransaction(transaction);
+  });
+
+  return { qrChannel, voucherChannel };
+}
+
+export function cleanupQRChannels(channels: { qrChannel: any; voucherChannel: any } | null) {
+  if (channels?.qrChannel) {
+    supabase.removeChannel(channels.qrChannel);
+    console.log('QR channel cleaned up');
+  }
+  if (channels?.voucherChannel) {
+    supabase.removeChannel(channels.voucherChannel);
+    console.log('Voucher channel cleaned up');
+  }
 }
 
 //HISTORY SIDE

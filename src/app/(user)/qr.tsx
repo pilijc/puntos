@@ -5,10 +5,7 @@ import { SafeAreaView, View, Text, TouchableOpacity } from '@/tw';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useRouter } from 'expo-router';
 import QRCode from 'react-native-qrcode-svg';
-//import { supabase } from '@/supabase/supabase';
-import { getCurrentUser, getStaticQRCode, addAutoUser, listenToQRTransaction } from '@/services/users/qr-service';
-import { listenToVoucherTransaction } from '@/services/users/voucher-service';
-import { supabase } from 'supabase/supabase';
+import { getCurrentUser, getStaticQRCode, addAutoUser, setupQRListeners, cleanupQRChannels } from '@/services/users/qr-service';
 import { useStamps } from '@/hooks/use-stamps';
 import { useStampRewards } from '@/hooks/use-stamp-rewards';
 import { VoucherGenerator } from '@/components/users/voucher';
@@ -65,27 +62,28 @@ export default function Qr() {
       setQrValue(qr);
       setLoading(false);
 
-      // Listen to QR transactions
-      const qrChannel = listenToQRTransaction(currentUser.id, (transaction) => {
-        console.log('Customer side: QR transaction received!', transaction);
-        Vibration.vibrate(500);
-        refetchStamps();
-        refetchStampRewards();
-        setEarnedPoints(transaction.points_earned);
-        setShowCongratsModal(true);
-      });
-      
-      // Listen to voucher transactions
-      const voucherChannel = listenToVoucherTransaction(currentUser.id, (transaction) => {
-        console.log('Customer side: Voucher transaction received!', transaction);
-        Vibration.vibrate(500);
-        refetchStamps();
-        refetchStampRewards();
-        setEarnedPoints(transaction.points_earned);
-        setShowCongratsModal(true);
-      });
+      // Setup QR and voucher listeners using service
+      const channels = setupQRListeners(
+        currentUser.id,
+        (transaction) => {
+          console.log('Customer side: QR transaction received!', transaction);
+          Vibration.vibrate(500);
+          refetchStamps();
+          refetchStampRewards();
+          setEarnedPoints(transaction.points_earned);
+          setShowCongratsModal(true);
+        },
+        (transaction) => {
+          console.log('Customer side: Voucher transaction received!', transaction);
+          Vibration.vibrate(500);
+          refetchStamps();
+          refetchStampRewards();
+          setEarnedPoints(transaction.points_earned);
+          setShowCongratsModal(true);
+        }
+      );
 
-      return { qrChannel, voucherChannel };
+      return channels;
     };
 
     let channels: { qrChannel: any; voucherChannel: any } | null = null;
@@ -98,17 +96,11 @@ export default function Qr() {
     });
 
     return () => {
-      if (channels?.qrChannel) {
-        supabase.removeChannel(channels.qrChannel);
-        console.log('QR channel cleaned up');
-      }
-      if (channels?.voucherChannel) {
-        supabase.removeChannel(channels.voucherChannel);
-        console.log('Voucher channel cleaned up');
+      if (channels) {
+        cleanupQRChannels(channels);
       }
     };
   }, []);
- 
 
   return (
     <SafeAreaView className="flex-1 bg-white dark:bg-darkBackground">
