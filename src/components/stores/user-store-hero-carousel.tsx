@@ -1,6 +1,6 @@
 import React from "react";
 import { View, Text, AnimatedView, Image, TouchableOpacity } from "@/tw";
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { MapPin, Store } from "lucide-react-native";
 import Carousel from "react-native-reanimated-carousel";
 import { Dimensions } from "react-native";
 import { storeLogos } from "@/data/rewards";
@@ -71,7 +71,7 @@ export default function UserStoreHeroCarousel({
                     <Text className="text-[10px] text-white font-poppins-medium uppercase">{store.type || translate("user.rewards.store")}</Text>
                   </View>
                   <View className="flex-row items-center gap-x-1">
-                    <MaterialIcons name="place" size={14} color="#FFFFFF" />
+                    <MapPin size={14} color="#FFFFFF" />
                     <Text className="text-white/90 font-poppins text-xs flex-1" numberOfLines={1}>
                       {store.address || translate("user.rewards.unknownLocation")} • {translate("user.rewards.distanceMeters", {
                         meters: store.distanceMeters?.toLocaleString(undefined, { maximumFractionDigits: 2 }) ?? "0"
@@ -119,7 +119,7 @@ export default function UserStoreHeroCarousel({
                       <Text className="text-[10px] text-white font-poppins-medium uppercase">{store.type || translate("user.rewards.store")}</Text>
                     </View>
                     <View className="flex-row items-center gap-x-1">
-                      <MaterialIcons name="storefront" size={14} color="#FFFFFF" />
+                      <Store size={14} color="#FFFFFF" />
                       <Text className="text-white/90 font-poppins text-xs flex-1" numberOfLines={1}>
                         {store.address}
                       </Text>

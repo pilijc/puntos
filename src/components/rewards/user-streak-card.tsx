@@ -1,6 +1,6 @@
 import React from "react";
 import { View, Text, AnimatedView, TouchableOpacity, Image } from "@/tw";
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { Check, ExternalLink, Flame, Store } from "lucide-react-native";
 import { Layout } from "react-native-reanimated";
 import { storeLogos } from "@/data/rewards";
 import { useTranslation } from "react-i18next";
@@ -65,11 +65,9 @@ export default function UserStreakCard({
       <View className="p-3">
         <View className="flex-row items-center justify-between">
           <View className="flex-row items-center gap-x-2">
-            <MaterialIcons
-              name="local-fire-department"
-              size={18}
-              color="#FF6600"
-            />
+            <View className="w-4 h-4 items-center justify-center -mt-1">
+              <Flame size={16} color="#FF6600" />
+            </View>
             <Text className="font-poppins-semibold text-neutral-900 dark:text-white">
               {translate("user.rewards.streakLog")}
             </Text>
@@ -88,7 +86,7 @@ export default function UserStreakCard({
                 <Text className="text-primary text-xs font-poppins-semibold">
                   {translate("user.rewards.viewAll")}
                 </Text>
-                <MaterialIcons name="open-in-new" size={12} color="#FF6600" />
+                <ExternalLink size={12} color="#FF6600" />
               </View>
             </TouchableOpacity>
           </View>
@@ -103,7 +101,7 @@ export default function UserStreakCard({
                 contentFit="cover"
               />
             ) : (
-              <MaterialIcons name="storefront" size={20} color="#FF6600" />
+              <Store size={20} color="#FF6600" />
             )}
           </View>
           <View className="flex-1 flex-row items-center justify-between">
@@ -160,12 +158,7 @@ export default function UserStreakCard({
                 >
                   {isCompleted ? (
                     <View className="items-center justify-center">
-                      <MaterialIcons
-                        name="check"
-                        size={12}
-                        color="#FFFFFF"
-                        className="mb-0.5"
-                      />
+                      <Check size={12} color="#FFFFFF" />
                       <Text className="text-white font-poppins-bold text-[8px] uppercase">
                         {day.label}
                       </Text>

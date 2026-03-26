@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { TextInput } from "react-native";
-import { FadeIn, FadeInDown, FadeInUp } from "react-native-reanimated";
-import { AnimatedView, Text, View, Image, TouchableOpacity } from "@/tw";
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { Text, View, Image, TouchableOpacity } from "@/tw";
+import { CirclePlus, Gift, ReceiptText, TrendingUp } from "lucide-react-native";
 import { RefreshControl } from "react-native";
 import { getUserTransactionHistory } from "@/services/qr-service";
 import { supabase } from "@/supabase/supabase";
@@ -13,8 +11,6 @@ const TABS = ["all", "earned", "claimed"];
 
 export default function History() {
   const [activeTab, setActiveTab] = useState(0);
-  const [searchOpen, setSearchOpen] = useState(false);
-  const [searchText, setSearchText] = useState("");
   const [transactionHistory, setTransactionHistory] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -49,7 +45,7 @@ export default function History() {
       activeTab === 0 ? true
         : activeTab === 1 ? item.type === "earned"
           : item.type === "claimed";
-    return matchesTab && item.title.toLowerCase().includes(searchText.toLowerCase());
+    return matchesTab;
   });
 
   const sections = [...new Set(filteredData.map((item) => item.section))] as string[];
@@ -76,48 +72,25 @@ export default function History() {
       }
     >
       {/* ── Header ── */}
-      <AnimatedView entering={FadeInDown.duration(400)}>
-        {!searchOpen ? (
-          <View className="flex-row justify-between items-center ml-1 mt-7.5">
-            <Text className="text-xl font-poppins-bold text-neutral-900 dark:text-darkTextPrimary">
-              {translate("user.activity.title")}
-            </Text>
-            <TouchableOpacity
-              onPress={() => setSearchOpen(true)}
-              className="w-10 h-10 rounded-xl bg-white dark:bg-darkBackgroundCard items-center justify-center border border-neutral-100 dark:border-darkBorder"
-            >
-              <MaterialIcons name="search" size={20} color="#9CA3AF" />
-            </TouchableOpacity>
-          </View>
-        ) : (
-          <View className="flex-1 flex-row items-center bg-white dark:bg-darkBackgroundCard rounded-2xl px-4 py-1 border border-neutral-100 dark:border-darkBorder mt-7.5">
-            <MaterialIcons name="search" size={20} color="#9CA3AF" />
-            <TextInput
-              autoFocus
-              placeholder={translate("user.activity.searchPlaceholder")}
-              placeholderTextColor="#9CA3AF"
-              className="flex-1 ml-3 font-poppins text-sm text-neutral-900 dark:text-white pt-0 pb-0"
-              style={{ textAlignVertical: "center" }}
-              value={searchText}
-              onChangeText={setSearchText}
-            />
-            <TouchableOpacity onPress={() => { setSearchOpen(false); setSearchText(""); }}>
-              <MaterialIcons name="close" size={18} color="#9CA3AF" />
-            </TouchableOpacity>
-          </View>
-        )}
-      </AnimatedView>
+      <View>
+        <View className="flex-row justify-between items-center w-full ml-1 mt-7.5">
+          <Text className="text-xl font-poppins-bold text-neutral-900 dark:text-darkTextPrimary">
+            {translate("user.activity.title")}
+          </Text>
+          <View className="w-10 h-10 opacity-0" />
+        </View>
+      </View>
 
       {/* ── Summary Card ── */}
-      <AnimatedView entering={FadeInDown.delay(60).duration(400)}>
+      <View>
         <View className="bg-white dark:bg-darkBackgroundCard rounded-2xl border border-neutral-100 dark:border-darkBorder overflow-hidden">
           {/* Top gradient accent strip */}
-          <View className="h-1 bg-primary" />
+          <View className="h-1 bg-neutral-100 dark:bg-darkBorder" />
           <View className="flex-row p-4">
             {/* Earned */}
             <View className="flex-1 items-center py-2">
               <View className="w-9 h-9 rounded-full bg-emerald-50 dark:bg-emerald-500/10 items-center justify-center mb-2">
-                <MaterialIcons name="trending-up" size={18} color="#10b981" />
+                <TrendingUp size={18} color="#10b981" />
               </View>
               <Text className="text-xl font-poppins-bold text-emerald-500">
                 +{totalEarned.toLocaleString()}
@@ -132,10 +105,10 @@ export default function History() {
 
             {/* Spent */}
             <View className="flex-1 items-center py-2">
-              <View className="w-9 h-9 rounded-full bg-orange-50 dark:bg-primary/10 items-center justify-center mb-2">
-                <MaterialIcons name="redeem" size={18} color="#FF6600" />
+              <View className="w-9 h-9 rounded-full bg-neutral-100 dark:bg-white/10 items-center justify-center mb-2">
+                <Gift size={18} color="#64748B" />
               </View>
-              <Text className="text-xl font-poppins-bold text-primary">
+              <Text className="text-xl font-poppins-bold text-neutral-700 dark:text-darkTextPrimary">
                 {totalSpent.toLocaleString()}
               </Text>
               <Text className="text-[10px] font-poppins-medium text-neutral-400 dark:text-darkTextSecondary tracking-wide mt-0.5">
@@ -144,10 +117,10 @@ export default function History() {
             </View>
           </View>
         </View>
-      </AnimatedView>
+      </View>
 
       {/* ── Filter Chips ── */}
-      <AnimatedView entering={FadeInDown.delay(100).duration(400)}>
+      <View>
         <View className="flex-row gap-x-2">
           {TABS.map((tab, i) => {
             const isActive = activeTab === i;
@@ -156,8 +129,8 @@ export default function History() {
                 key={tab}
                 onPress={() => setActiveTab(i)}
                 className={`px-3.5 py-1.5 rounded-full border ${isActive
-                    ? "bg-primary border-primary"
-                    : "bg-white dark:bg-darkBackgroundCard border-neutral-200 dark:border-darkBorder"
+                  ? "bg-primary border-primary"
+                  : "bg-white dark:bg-darkBackgroundCard border-neutral-200 dark:border-darkBorder"
                   }`}
               >
                 <Text
@@ -170,15 +143,15 @@ export default function History() {
             );
           })}
         </View>
-      </AnimatedView>
+      </View>
 
       {/* ── Transaction List ── */}
       {loading ? (
         <HistorySkeleton />
       ) : sections.length === 0 ? (
-        <AnimatedView entering={FadeIn.duration(400)} className="items-center justify-center py-20">
+        <View className="items-center justify-center py-20">
           <View className="w-24 h-24 rounded-full bg-neutral-100 dark:bg-white/5 items-center justify-center mb-6">
-            <MaterialIcons name="receipt-long" size={44} color="#CBD5E1" />
+            <ReceiptText size={44} color="#CBD5E1" />
           </View>
           <Text className="text-xl font-poppins-bold text-neutral-900 dark:text-white text-center">
             {translate("user.activity.empty")}
@@ -186,12 +159,12 @@ export default function History() {
           <Text className="text-sm font-poppins text-neutral-400 text-center mt-2 px-10">
             {translate("user.activity.loading")}
           </Text>
-        </AnimatedView>
+        </View>
       ) : (
-        sections.map((section, sIdx) => {
+        sections.map((section) => {
           const items = filteredData.filter((item) => item.section === section);
           return (
-            <AnimatedView key={section} entering={FadeInUp.delay(sIdx * 60).duration(400)}>
+            <View key={section}>
               {/* Floating uppercase section label */}
               <SectionLabel label={section} />
 
@@ -206,7 +179,7 @@ export default function History() {
                   </View>
                 ))}
               </View>
-            </AnimatedView>
+            </View>
           );
         })
       )}
@@ -310,11 +283,11 @@ function HistoryRow({ title, subtitle, time, points, positive, image, icon }: an
         ) : image ? (
           <Image source={{ uri: image }} className="w-10 h-10 rounded-full" />
         ) : (
-          <MaterialIcons
-            name={isPositive ? "add-circle-outline" : "redeem"}
-            size={18}
-            color={isPositive ? "#10b981" : "#FF6600"}
-          />
+          isPositive ? (
+            <CirclePlus size={18} color="#10b981" />
+          ) : (
+            <Gift size={18} color="#FF6600" />
+          )
         )}
       </View>
 
