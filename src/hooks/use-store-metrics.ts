@@ -1,6 +1,11 @@
 import { useState, useEffect } from "react";
-import { getStoreMetrics, getRecentTransactions } from "@/services/store-manager/store-metrics-service";
-import { StoreTransaction } from "@/type/store-manager/metric";
+import {
+    getStoreMetrics,
+    getRecentTransactions,
+    getRetentionData,
+    getStampDistribution,
+} from "@/services/store-manager/store-metrics-service";
+import { StoreTransaction, RetentionData, StampBucket } from "@/type/store-manager/metric";
 
 export function useStoreDashboardMetrics(
     storeId: number,
@@ -13,7 +18,15 @@ export function useStoreDashboardMetrics(
     const [weeklyActivity, setWeeklyActivity] = useState<number[]>([0, 0, 0, 0, 0, 0, 0]);
     const [weeklyStampsActivity, setWeeklyStampsActivity] = useState<number[]>([0, 0, 0, 0, 0, 0, 0]);
     const [recentTransactions, setRecentTransactions] = useState<StoreTransaction[]>([]);
+    const [retention, setRetention] = useState<RetentionData>({
+        returningCount: 0,
+        newCount: 0,
+        returningPercent: 0,
+        newPercent: 0,
+    });
     const [loading, setLoading] = useState(true);
+    const [stampBuckets, setStampBuckets] = useState<StampBucket[]>([]);
+    const [stampMaxStamps, setStampMaxStamps] = useState(0);
 
     useEffect(() => {
         let isMounted = true;
@@ -23,9 +36,11 @@ export function useStoreDashboardMetrics(
             setLoading(true);
 
             try {
-                const [metricsData, transactionsData] = await Promise.all([
+                const [metricsData, transactionsData, retentionData, stampDistData] = await Promise.all([
                     getStoreMetrics(storeId, lat, lng, radius),
-                    getRecentTransactions(storeId)
+                    getRecentTransactions(storeId),
+                    getRetentionData(storeId),
+                    getStampDistribution(storeId),
                 ]);
 
                 if (isMounted) {
@@ -34,6 +49,9 @@ export function useStoreDashboardMetrics(
                     setWeeklyActivity(metricsData.weeklyActivity);
                     setWeeklyStampsActivity(metricsData.weeklyStampsActivity);
                     setRecentTransactions(transactionsData);
+                    setRetention(retentionData);
+                    setStampBuckets(stampDistData.buckets);
+                    setStampMaxStamps(stampDistData.maxStamps);
                     setLoading(false);
                 }
             } catch (error) {
@@ -47,12 +65,15 @@ export function useStoreDashboardMetrics(
         return () => { isMounted = false; };
     }, [storeId, lat, lng, radius]);
 
-    return { 
-        activeUsers, 
-        todayTransactions, 
-        weeklyActivity, 
-        weeklyStampsActivity, 
+    return {
+        activeUsers,
+        todayTransactions,
+        weeklyActivity,
+        weeklyStampsActivity,
         recentTransactions,
-        loading 
+        retention,
+        stampBuckets,
+        stampMaxStamps,
+        loading,
     };
 }

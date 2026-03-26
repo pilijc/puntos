@@ -12,7 +12,7 @@ export const DashboardMetricTile: React.FC<DashboardMetricTileProps> = ({
     highlight,
 }) => {
     return (
-        <View className="bg-white rounded-[20px] p-3 flex-row items-center gap-[10px] flex-1 elevation-1">
+        <View className="bg-white dark:bg-darkBackgroundCard rounded-[20px] p-3 flex-row items-center gap-[10px] flex-1 elevation-1">
             <View className="w-10 h-10 rounded-full bg-[#F5F5F5] items-center justify-center">
                 <MaterialIcons
                     name={icon as any}

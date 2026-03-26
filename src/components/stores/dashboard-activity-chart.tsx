@@ -1,48 +1,107 @@
 import React from "react";
-import { View, Text } from "@/tw";
+import { View } from "@/tw";
+import Svg, { Polyline, Circle, Path, Defs, LinearGradient, Stop, Text as SvgText } from "react-native-svg";
 import { getTodayIndex } from "@/utils/date-helpers";
 import { DashboardActivityChartProps } from "@/type/store-manager/metric";
+
+// Switched to a wider coordinate system for better precision
+const VIEWBOX_WIDTH = 300;
+const LINE_HEIGHT = 80;   // Height of the actual graph area
+const TOTAL_HEIGHT = 110; // Increased total height for better visibility
 
 export const DashboardActivityChart: React.FC<DashboardActivityChartProps> = ({
     data,
     labels,
-    loading
+    loading,
 }) => {
     const todayIdx = getTodayIndex();
     const maxVal = Math.max(...data, 1);
-    const BAR_HEIGHT = 90;
+    const count = data.length;
+
+    // Pad the sides (in viewBox units) so labels don't clip
+    const paddingX = 20;
+    const chartWidth = VIEWBOX_WIDTH - (paddingX * 2);
+
+    // Calculate coordinates
+    const points = data.map((val, i) => {
+        const x = paddingX + (i / (count - 1)) * chartWidth;
+        const y = LINE_HEIGHT - Math.max((val / maxVal) * LINE_HEIGHT * 0.75, 4);
+        return { x, y };
+    });
+
+    const polylinePoints = points.map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ");
+
+    // Area path for the gradient
+    const areaPath = `
+        M ${points[0].x},${LINE_HEIGHT} 
+        ${points.map(p => `L ${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ")} 
+        L ${points[points.length - 1].x},${LINE_HEIGHT} 
+        Z
+    `;
+
+    if (loading) {
+        return <View style={{ height: 110 }} className="w-full bg-backgroundMuted rounded-[12px] animate-pulse" />;
+    }
 
     return (
-        <View className="flex-row justify-between items-end">
-            {data.map((count, i) => {
-                const isToday = i === todayIdx;
-                const percentage = loading ? 40 : Math.max((count / maxVal) * 100, 5);
+        <View style={{ height: TOTAL_HEIGHT }}>
+            <Svg
+                width="100%"
+                height="100%"
+                viewBox={`0 0 ${VIEWBOX_WIDTH} ${TOTAL_HEIGHT}`}
+                preserveAspectRatio="none"
+            >
+                <Defs>
+                    <LinearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
+                        <Stop offset="0" stopColor="#FF6600" stopOpacity="0.18" />
+                        <Stop offset="1" stopColor="#FF6600" stopOpacity="0" />
+                    </LinearGradient>
+                </Defs>
 
-                return (
-                    <View key={i} className="flex-1 items-center gap-[6px]">
-                        {/* bar */}
-                        <View style={{ height: BAR_HEIGHT }} className="w-full items-center justify-end">
-                            <View
-                                className={`w-[65%] rounded-[6px] ${loading ? 'bg-backgroundMuted animate-pulse' : ''}`}
-                                style={{
-                                    height: `${percentage}%`,
-                                    backgroundColor: isToday ? "#FF6600" : "#E5E5E5",
-                                }}
+                {/* Shaded Area */}
+                <Path d={areaPath} fill="url(#areaGradient)" />
+
+                {/* The Line */}
+                <Polyline
+                    points={polylinePoints}
+                    fill="none"
+                    stroke="#FF6600"
+                    strokeWidth="2.5"
+                    strokeLinejoin="round"
+                    strokeLinecap="round"
+                />
+
+                {/* Dots and Labels */}
+                {points.map((p, i) => {
+                    const isToday = i === todayIdx;
+                    const label = labels[i];
+
+                    return (
+                        <React.Fragment key={i}>
+                            <Circle
+                                cx={p.x}
+                                cy={p.y}
+                                r={isToday ? 5 : 3}
+                                fill={isToday ? "#FF6600" : "#fff"}
+                                stroke="#FF6600"
+                                strokeWidth="2"
                             />
-                        </View>
 
-                        {loading ? (
-                            <View className="h-2 w-full bg-backgroundMuted rounded-full mx-1" />
-                        ) : (
-                            <Text
-                                className={`text-[9px] font-poppins-bold ${isToday ? 'text-[#FF6600]' : 'text-[#BDBDBD]'}`}
+                            <SvgText
+                                x={p.x}
+                                y={TOTAL_HEIGHT - 6}
+                                fill={isToday ? "#EA580C" : "#A3A3A3"}
+                                fontSize="10"
+                                fontWeight="bold"
+                                textAnchor="middle"
+                                fontFamily="Poppins-Bold"
                             >
-                                {labels[i]}
-                            </Text>
-                        )}
-                    </View>
-                );
-            })}
+                                {label}
+                            </SvgText>
+                        </React.Fragment>
+                    );
+                })}
+            </Svg>
         </View>
     );
 };

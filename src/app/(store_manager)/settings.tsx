@@ -1,8 +1,6 @@
 import React, { useState, useCallback } from "react";
-import { Alert } from "react-native";
-import { View, Text, SafeAreaView, TouchableOpacity, ScrollView } from "@/tw";
+import { View, Text, SafeAreaView, ScrollView } from "@/tw";
 import { useFocusEffect } from "expo-router";
-import { Ionicons } from '@expo/vector-icons';
 
 // Hooks
 import { useProfile } from "@/hooks/use-profile";
