@@ -6,6 +6,7 @@ export interface AuthState {
   showPassword: boolean;
   showConfirmPassword: boolean;
   sessionToken?: string | null;
+  isRestricted: boolean;
 
   setName: (v: string) => void;
   setEmail: (v: string) => void;
@@ -14,6 +15,7 @@ export interface AuthState {
   setShowPassword: (v: boolean) => void;
   setShowConfirmPassword: (v: boolean) => void;
   setSessionToken: (t: string | null) => void;
+  setRestricted: (v: boolean) => void;
   reset: () => void;
 };
 

@@ -32,6 +32,11 @@ export default function OnboardingWelcome() {
       const data = await signInWithGoogleLoginService();
       router.replace(data.homeRoute ?? "/(user)");
     } catch (error: any) {
+      if (error.name === "AccountBlockedError") {
+        const { useAuthStore } = require("@/store/auth-store");
+        useAuthStore.getState().setRestricted(true);
+        return;
+      }
       setLoadingGoogle(false);
       const message =
         error?.msg ??

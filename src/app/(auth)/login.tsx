@@ -7,8 +7,8 @@ import {
   ScrollView,
   Image,
 } from "@/tw";
-import { router } from "expo-router";
-import React, { useState } from "react";
+import { router, useLocalSearchParams } from "expo-router";
+import React, { useState, useEffect } from "react";
 import { ActivityIndicator, Alert, KeyboardAvoidingView, Platform } from "react-native";
 import { useAuthStore } from "../../store/auth-store";
 import { Feather, Ionicons } from "@expo/vector-icons";
@@ -23,6 +23,29 @@ import TranslateButton from "@/components/ui/translate-button";
 
 export default function Login() {
   const { name, email, password, setEmail, setPassword, showPassword, setShowPassword } = useAuthStore();
+
+  const { restricted } = useLocalSearchParams();
+
+  const showRestrictedAccountModal = () => {
+    setModal({
+      title: "Account Restricted",
+      message: "Your account has been restricted. To verify your account status, please contact support.",
+      buttons: [
+        {
+          label: "OK",
+          variant: "primary",
+          onPress: () => setModal(null),
+        },
+      ],
+    });
+  };
+
+  useEffect(() => {
+    if (restricted === "true") {
+      showRestrictedAccountModal();
+    }
+  }, [restricted]);
+
   const [loading, setLoading] = useState(false);
   const [loadingGoogle, setLoadingGoogle] = useState(false);
   const { t: translate } = useTranslation();
@@ -35,7 +58,6 @@ export default function Login() {
     message: string;
     buttons: ModalButton[];
   } | null>(null);
-
   const handleLogin = async () => {
     const nextErrors = { ...errors };
 
@@ -80,6 +102,12 @@ export default function Login() {
       router.replace(data.homeRoute);
     } catch (error: any) {
       console.log("error login component", error);
+
+      if (error.name === "AccountBlockedError") {
+        router.replace("/(auth)/login?restricted=true");
+        return;
+      }
+
       let message = error?.msg ?? error?.message;
 
       if (message === "Invalid login credentials") {
@@ -101,6 +129,11 @@ export default function Login() {
       console.log("data", data);
       router.replace(data.homeRoute ?? "/(user)");
     } catch (error: any) {
+      if (error.name === "AccountBlockedError") {
+        router.replace("/(auth)/login?restricted=true");
+        return;
+      }
+
       const message = error?.message ?? "Something went wrong";
       setErrors({ email: "", password: message });
     } finally {

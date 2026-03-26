@@ -32,7 +32,6 @@ export function UsersSearchHeader({
     <View className="px-5 pt-4">
       <View className="mb-4">
         <Text className={TYPO.title}>Users</Text>
-        <Text className={TYPO.subtitle}>{tabCounts.All} members total</Text>
       </View>
 
       <TouchableOpacity
@@ -89,17 +88,6 @@ export function UsersSearchHeader({
             >
               {tab === "All" ? "All" : tab + "s"}
             </Text>
-            <View
-              className={`ml-2 px-1.5 py-0.5 rounded-md ${activeTab === tab ? "bg-white/20" : "bg-slate-100"
-                }`}
-            >
-              <Text
-                className={`text-[9px] font-poppins-bold ${activeTab === tab ? "text-white" : "text-textMuted"
-                  }`}
-              >
-                {tabCounts[tab]}
-              </Text>
-            </View>
           </TouchableOpacity>
         )}
       />
