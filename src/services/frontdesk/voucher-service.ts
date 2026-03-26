@@ -107,7 +107,7 @@ export async function processVoucherCode(
             console.log(`Using percentage ${percentage}% for store ${storeId}`);
         }
 
-        // Calculate points using dynamic percentage
+        // Calculate points using percentage property at store_qr table
         const pointsEarned = Math.ceil(amount * (percentage / 100));
         console.log(`Voucher Service: Calculated points: ${pointsEarned} (amount: ${amount}, percentage: ${percentage}%)`);
 

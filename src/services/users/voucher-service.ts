@@ -1,4 +1,4 @@
-import { supabase } from "supabase/supabase";
+import { supabase } from "@/supabase/supabase";
 import { Voucher } from "@/type/user/voucher";
 
 export interface VoucherTransaction {
