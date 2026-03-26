@@ -1,4 +1,5 @@
 export type TxType = "qr" | "stamp" | "streak";
+export type TypeFilter = TxType | "all";
 
 export interface TransactionItem {
   id: string;
@@ -10,7 +11,23 @@ export interface TransactionItem {
   detail: string;
 }
 
+export interface PaginatedTransactionsResult {
+  items: TransactionItem[];
+  hasMore: boolean;
+  nextPage: number;
+}
+
 export type ListItem =
   | { kind: "header"; key: string; label: string }
   | { kind: "tx"; key: string; tx: TransactionItem };
 
+export const initialState = {
+  selectedStoreId: null as number | null,
+  typeFilter: "all" as TypeFilter,
+  items: [] as TransactionItem[],
+  page: 1,
+  hasMore: false,
+  loading: false,
+  loadingMore: false,
+  refreshing: false,
+};

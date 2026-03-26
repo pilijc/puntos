@@ -1,35 +1,40 @@
 import { create } from "zustand";
-import { TransactionItem } from "@/type/store-manager/transaction";
+import { TransactionItem, TypeFilter, initialState } from "@/type/store-manager/transaction";
 
-interface TransactionStoreState {
+interface TransactionStore {
   selectedStoreId: number | null;
-  qrData: TransactionItem[];
-  stampData: TransactionItem[];
-  streakData: TransactionItem[];
-  loading: boolean;
+  typeFilter: TypeFilter;
+  items: TransactionItem[];
+  page: number;
+  hasMore: boolean;
+  loading: boolean; 
+  loadingMore: boolean;
   refreshing: boolean;
 
   setSelectedStoreId: (id: number) => void;
-  setData: (qr: TransactionItem[], stamp: TransactionItem[], streak: TransactionItem[]) => void;
+  setTypeFilter: (typeFilter: TypeFilter) => void;
+  replaceItems: (items: TransactionItem[], hasMore: boolean, nextPage: number) => void;
+  appendItems: (items: TransactionItem[], hasMore: boolean, nextPage: number) => void;
   setLoading: (loading: boolean) => void;
+  setLoadingMore: (loadingMore: boolean) => void;
   setRefreshing: (refreshing: boolean) => void;
   reset: () => void;
 }
 
-const initialState = {
-  selectedStoreId: null,
-  qrData: [],
-  stampData: [],
-  streakData: [],
-  loading: false,
-  refreshing: false,
-};
-
-export const useTransactionStore = create<TransactionStoreState>((set) => ({
+export const useTransactionStore = create<TransactionStore>((set) => ({
   ...initialState,
   setSelectedStoreId: (id) => set({ selectedStoreId: id }),
-  setData: (qrData, stampData, streakData) => set({ qrData, stampData, streakData }),
+  setTypeFilter: (typeFilter) => set({ typeFilter }),
+  replaceItems: (items, hasMore, nextPage) =>
+    set({ items, hasMore, page: nextPage }),
+  appendItems: (newItems, hasMore, nextPage) =>
+    set((state) => ({
+      items: [...state.items, ...newItems],
+      hasMore,
+      page: nextPage,
+    })),
   setLoading: (loading) => set({ loading }),
+  setLoadingMore: (loadingMore) => set({ loadingMore }),
   setRefreshing: (refreshing) => set({ refreshing }),
   reset: () => set(initialState),
 }));

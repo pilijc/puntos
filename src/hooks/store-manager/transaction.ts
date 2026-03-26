@@ -1,78 +1,116 @@
 import { useCallback, useEffect, useMemo } from "react";
 import { useFocusEffect } from "expo-router";
 import { useStores } from "@/hooks/use-stores";
-import { getAllTransactionsForStore } from "@/services/store-manager/transactions-service";
+import { getTransactionsPageForStore } from "@/services/store-manager/transactions-service";
 import { useTransactionStore } from "@/store/store-manager/transaction";
-import { ListItem } from "@/type/store-manager/transaction";
+import { TypeFilter, ListItem } from "@/type/store-manager/transaction";
 import { buildListData } from "@/utils/store_manager/transaction";
 
 export function useTransactions() {
   const { stores, loading: storesLoading } = useStores();
+
   const {
     selectedStoreId,
-    qrData, stampData, streakData,
-    loading, refreshing,
-    setSelectedStoreId, setData, setLoading, setRefreshing,
+    typeFilter,
+    items,
+    page,
+    hasMore,
+    loading,
+    loadingMore,
+    refreshing,
+    setSelectedStoreId,
+    setTypeFilter,
+    replaceItems,
+    appendItems,
+    setLoading,
+    setLoadingMore,
+    setRefreshing,
   } = useTransactionStore();
 
   useEffect(() => {
     if (stores.length > 0 && selectedStoreId === null) {
       setSelectedStoreId(stores[0].id);
     }
-  }, [stores, selectedStoreId]);
+  }, [stores, selectedStoreId, setSelectedStoreId]);
 
-  const fetchData = useCallback(async (storeId: number, silent = false) => {
-    if (!silent) setLoading(true);
-    try {
-      const { qr, stamp, streak } = await getAllTransactionsForStore(storeId);
-      setData(qr, stamp, streak);
-    } catch (error) {
-      throw error;
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  }, []);
+  const fetchPage = useCallback(
+    async (storeId: number, filter: TypeFilter, pageNum: number, isRefresh = false) => {
+      if (pageNum === 1 || isRefresh) {
+        isRefresh ? setRefreshing(true) : setLoading(true);
+      } else {
+        setLoadingMore(true);
+      }
+
+      try {
+        const result = await getTransactionsPageForStore(storeId, filter, pageNum);
+
+        if (pageNum === 1) {
+          replaceItems(result.items, result.hasMore, pageNum);
+        } else {
+          appendItems(result.items, result.hasMore, pageNum);
+        }
+      } catch (error) {
+        throw error;
+      } finally {
+        setLoading(false);
+        setLoadingMore(false);
+        setRefreshing(false);
+      }
+    },
+    [appendItems, replaceItems, setLoading, setLoadingMore, setRefreshing]
+  );
 
   useFocusEffect(
     useCallback(() => {
       if (selectedStoreId !== null) {
-        setData([], [], []);
-        fetchData(selectedStoreId);
+        fetchPage(selectedStoreId, typeFilter, 1);
       }
-    }, [selectedStoreId, fetchData])
+    }, [selectedStoreId, typeFilter, fetchPage])
   );
 
-  const selectStore = useCallback((id: number) => {
-    if (id === selectedStoreId) return;
-    setData([], [], []);
-    setSelectedStoreId(id);
-    fetchData(id);
-  }, [selectedStoreId, fetchData]);
+  const selectStore = useCallback(
+    (id: number) => {
+      if (id === selectedStoreId) return;
+      setSelectedStoreId(id);
+    },
+    [selectedStoreId, setSelectedStoreId]
+  );
+
+  const changeFilter = useCallback(
+    (filter: TypeFilter) => {
+      if (filter === typeFilter) return;
+      setTypeFilter(filter);
+    },
+    [typeFilter, setTypeFilter]
+  );
+
+  const loadMore = useCallback(() => {
+    if (selectedStoreId === null) return;
+    if (!hasMore) return;
+    if (loadingMore || loading) return;
+    fetchPage(selectedStoreId, typeFilter, page + 1);
+  }, [selectedStoreId, hasMore, loadingMore, loading, typeFilter, page, fetchPage]);
 
   const handleRefresh = useCallback(() => {
-    if (selectedStoreId !== null) {
-      setRefreshing(true);
-      fetchData(selectedStoreId, true);
-    }
-  }, [selectedStoreId, fetchData]);
+    if (selectedStoreId === null) return;
+    fetchPage(selectedStoreId, typeFilter, 1, true);
+  }, [selectedStoreId, typeFilter, fetchPage]);
 
-  const listItems = useMemo<ListItem[]>(
-    () => buildListData([...qrData, ...stampData, ...streakData]),
-    [qrData, stampData, streakData]
-  );
-
-  const totalCount = qrData.length + stampData.length + streakData.length;
+  const listItems = useMemo<ListItem[]>(() => buildListData(items), [items]);
 
   return {
     stores,
     storesLoading,
     selectedStoreId,
     selectStore,
+    typeFilter,
+    setTypeFilter: changeFilter,
     loading,
+    loadingMore,
     refreshing,
     listItems,
-    totalCount,
+    hasMore,
+    loadMore,
     handleRefresh,
   };
 }
