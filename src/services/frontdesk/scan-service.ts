@@ -38,7 +38,11 @@ export async function processFrontDeskScan(
     };
   } catch (error) {
     console.error("Failed to create transaction:", error);
-    return { success: false, message: "Failed to process QR code. Please try again." };
+    console.error("Error details:", error instanceof Error ? error.message : String(error));
+    return { 
+      success: false, 
+      message: `Failed to process QR code: ${error instanceof Error ? error.message : 'Unknown error'}` 
+    };
   }
 }
 
