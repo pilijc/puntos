@@ -103,7 +103,7 @@ export default function UsersScreen() {
   }, [listData]);
 
   return (
-    <ScreenWrapper className="flex-1 bg-background">
+    <SafeAreaView className="flex-1 bg-background" edges={["top", "left", "right"]}>
       <StatusBar barStyle="dark-content" />
       <UsersSearchHeader
         search={search}
