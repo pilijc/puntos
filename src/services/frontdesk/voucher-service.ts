@@ -1,4 +1,4 @@
-import { supabase } from "supabase/supabase";
+import { supabase } from "@/supabase/supabase";
 import { ProcessVoucherCode } from "../../type/frontdesk/voucher";
 import { Voucher } from "../../type/user/voucher";
 import { points } from "@turf/turf";
