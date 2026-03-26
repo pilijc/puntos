@@ -29,7 +29,7 @@ export default function Login() {
   const showRestrictedAccountModal = () => {
     setModal({
       title: "Account Restricted",
-      message: "Your account has been restricted. Please verify your account status with the Super Admin.",
+      message: "Your account has been restricted. To verify your account status, please contact support.",
       buttons: [
         {
           label: "OK",

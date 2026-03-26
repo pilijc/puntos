@@ -45,6 +45,7 @@ export default function Layout() {
     "Poppins-Bold": require("../assets/fonts/Poppins-Bold.ttf"),
   });
   const sessionToken = useAuthStore((s) => s.sessionToken);
+  const isRestricted = useAuthStore((s) => s.isRestricted);
   const fetchStamps = useStamps((s) => s.fetchStamps);
 
   useEffect(() => {
@@ -111,7 +112,7 @@ export default function Layout() {
       <StatusBar barStyle="light-content" backgroundColor="#121212" />
       <Slot />
       <Modal
-        visible={useAuthStore((s) => s.isRestricted)}
+        visible={isRestricted}
         onClose={() => {}} // Block dismissal
         title="Account Restricted"
         message="Your account has been restricted. To verify your account status, please contact support."
