@@ -6,6 +6,7 @@ import { checkIfAccountDeletedService, checkIfAccountBlockedService, AccountDele
 import { Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { upsertPushId } from '@/services/push-notif';
+import { useAuthStore } from '@/store/auth-store';
 import { OneSignal } from 'react-native-onesignal';
 
 export function useAuthListener() {
@@ -54,7 +55,7 @@ export function useAuthListener() {
                 Alert.alert("Login Failed", err.message);
                 router.replace("/(auth)/login");
               } else if (err instanceof AccountBlockedError) {
-                router.replace("/(auth)/login?restricted=true");
+                useAuthStore.getState().setRestricted(true);
               } else {
                 console.error("Auth listener session error:", err);
               }

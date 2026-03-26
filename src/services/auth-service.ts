@@ -55,7 +55,6 @@ export async function checkIfAccountBlockedService(userId: string): Promise<void
   if (error) throw error;
 
   if (data?.blocked === true) {
-    await supabase.auth.signOut();
     throw new AccountBlockedError();
   }
 }

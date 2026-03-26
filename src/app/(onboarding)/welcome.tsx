@@ -33,7 +33,8 @@ export default function OnboardingWelcome() {
       router.replace(data.homeRoute ?? "/(user)");
     } catch (error: any) {
       if (error.name === "AccountBlockedError") {
-        router.replace("/(auth)/login?restricted=true");
+        const { useAuthStore } = require("@/store/auth-store");
+        useAuthStore.getState().setRestricted(true);
         return;
       }
       setLoadingGoogle(false);

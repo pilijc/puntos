@@ -217,7 +217,8 @@ export default function SignUp() {
         ]);
       } else {
         if (error.name === "AccountBlockedError") {
-        router.replace("/(auth)/login?restricted=true");
+        const { useAuthStore } = require("@/store/auth-store");
+        useAuthStore.getState().setRestricted(true);
         return;
       }
       setErrors((prev) => ({
@@ -277,7 +278,8 @@ export default function SignUp() {
         ]);
       } else {
         if (error.name === "AccountBlockedError") {
-        router.replace("/(auth)/login?restricted=true");
+        const { useAuthStore } = require("@/store/auth-store");
+        useAuthStore.getState().setRestricted(true);
         return;
       }
       setErrors((prev) => ({
@@ -306,7 +308,6 @@ export default function SignUp() {
       if (error.name === "AccountBlockedError") {
         const { useAuthStore } = require("@/store/auth-store");
         useAuthStore.getState().setRestricted(true);
-        router.replace("/(auth)/login");
         return;
       }
       setLoadingGoogle(false);
