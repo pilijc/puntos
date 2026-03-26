@@ -177,7 +177,7 @@ async function fetchStoreDetails(userIds: string[]): Promise<Map<string, any[]>>
     .select(`
       user_id,
       store_id,
-      stores:store_id ( id, name, address, users:owner_id ( name ) )
+      stores:store_id ( id, name, address, phone, users:owner_id ( name ) )
     `)
     .in("user_id", userIds);
 
@@ -206,6 +206,7 @@ async function fetchStoreDetails(userIds: string[]): Promise<Map<string, any[]>>
     result.get(r.user_id)!.push({
       name: r.stores.name,
       address: r.stores.address,
+      phone: r.stores.phone,
       ownerName: r.stores.users?.name,
       managerName: storeToManager.get(r.store_id)
     });
