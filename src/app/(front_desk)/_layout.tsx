@@ -5,10 +5,10 @@ import { Platform, View, StyleSheet, useColorScheme } from "react-native";
 import { supabase } from "@/supabase/supabase";
 import { getRoleTypeForUser } from "@/services/access-service";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import QRRoundedButton from "@/components/qr/qr-rounded";
+//import QRRoundedButton from "@/components/qr/qr-rounded";
 import { getCurrentUserIsActive } from "@/services/frontdesk/scan-service";
 import { useTranslation } from "react-i18next";
-import { History, Settings } from 'lucide-react-native';
+import { History, Settings, Home } from 'lucide-react-native';
 
 export default function FrontDeskLayout() {
     const router = useRouter();
@@ -108,7 +108,7 @@ export default function FrontDeskLayout() {
                 options={{
                     title: "Dashboard",
                     tabBarIcon: ({color}) => (
-                        <MaterialIcons size={24} name="home" color={color} />
+                        <Home size={24} color={color} />
                     ),
                     
                 }}
