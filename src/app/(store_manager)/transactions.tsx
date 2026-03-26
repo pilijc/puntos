@@ -202,36 +202,36 @@ export default function TransactionsScreen() {
       {storesLoading ? (
         <StoresAndFunnelSkeleton />
       ) : stores.length > 1 ? (
-        <View className="flex-row items-center bg-background dark:bg-darkBackground border-b border-neutral-100 dark:border-darkBorder">
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 10, gap: 8 }}
-          >
-            {stores.map((store) => {
-              const active = store.id === selectedStoreId;
-              return (
-                <TouchableOpacity
-                  key={store.id}
-                  onPress={() => selectStore(store.id)}
-                  activeOpacity={0.75}
-                  style={{
-                    paddingHorizontal: 10,
-                    paddingVertical: 4,
-                    borderRadius: 99,
-                    backgroundColor: active ? "#FF6600" : isDark ? "#262626" : "#F1F5F9",
-                  }}
-                >
-                  <Text
-                    className={`text-xs font-poppins-semibold ${active ? "text-white" : "text-textMuted dark:text-darkTextMuted"}`}
-                    numberOfLines={1}
+        <View className="flex-row items-center bg-background dark:bg-darkBackground border-b border-neutral-100 dark:border-darkBorder pl-5">
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 10, gap: 8}}
+            >
+              {stores.map((store) => {
+                const active = store.id === selectedStoreId;
+                return (
+                  <TouchableOpacity
+                    key={store.id}
+                    onPress={() => selectStore(store.id)}
+                    activeOpacity={0.75}
+                    style={{
+                      paddingHorizontal: 10,
+                      paddingVertical: 4,
+                      borderRadius: 99,
+                      backgroundColor: active ? "#FF6600" : isDark ? "#262626" : "#F1F5F9",
+                    }}
                   >
-                    {store.name}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </ScrollView>
+                    <Text
+                      className={`text-xs font-poppins-semibold ${active ? "text-white" : "text-textMuted dark:text-darkTextMuted"}`}
+                      numberOfLines={1}
+                    >
+                      {store.name}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
 
           <NativeView ref={funnelRef} collapsable={false}>
             <TouchableOpacity
