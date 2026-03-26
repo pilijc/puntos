@@ -80,6 +80,22 @@ export default function Login() {
       router.replace(data.homeRoute);
     } catch (error: any) {
       console.log("error login component", error);
+      
+      if (error.name === "AccountBlockedError") {
+        setModal({
+          title: "Account Restricted",
+          message: error.message,
+          buttons: [
+            {
+              label: "OK",
+              variant: "primary",
+              onPress: () => setModal(null),
+            },
+          ],
+        });
+        return;
+      }
+
       let message = error?.msg ?? error?.message;
 
       if (message === "Invalid login credentials") {
@@ -101,6 +117,21 @@ export default function Login() {
       console.log("data", data);
       router.replace(data.homeRoute ?? "/(user)");
     } catch (error: any) {
+      if (error.name === "AccountBlockedError") {
+        setModal({
+          title: "Account Restricted",
+          message: error.message,
+          buttons: [
+            {
+              label: "OK",
+              variant: "primary",
+              onPress: () => setModal(null),
+            },
+          ],
+        });
+        return;
+      }
+
       const message = error?.message ?? "Something went wrong";
       setErrors({ email: "", password: message });
     } finally {

@@ -160,6 +160,7 @@ export async function signUpWithGoogleService() {
       const homeRoute = data?.user?.id ? await getHomeRouteForUserId(data.user.id) : "/(user)";
 
       if (data.user) {
+        await checkIfAccountBlockedService(data.user.id);
         const name = data.user.user_metadata.full_name
 
         const { data: existingProfile } = await supabase
@@ -213,6 +214,7 @@ export async function loginService(email: string, password: string) {
     const userId = res.data?.user?.id;
     if(!userId) throw new Error("Login Failed");
 
+    await checkIfAccountBlockedService(userId);
     const roleType = await getRoleTypeForUser(userId);
 
     if (roleType === "front_desk") {
@@ -281,6 +283,7 @@ export async function signInWithGoogleLoginService() {
       });
 
       if (data.user) {
+        await checkIfAccountBlockedService(data.user.id);
         const name = data.user.user_metadata?.full_name ?? data.user.email ?? 'User';
 
         const { data: existingProfile } = await supabase
