@@ -5,7 +5,7 @@ import { Ionicons } from "@expo/vector-icons";
 
 import { getCurrentLocation } from "@/services/location-service";
 import { useProfile } from "@/hooks/use-profile";
-
+ 
 // Components
 import EditProfileModal from "@/components/settings/modal/edit-profile-modal";
 import { LogoutButton } from "@/components/settings/logout-button";
@@ -99,8 +99,8 @@ export default function UserSettings() {
             {translate("settings.title")}
           </Text>
           <TouchableOpacity
-            onPress={() => router.push("/qr")}
-            className="w-10 h-10 rounded-xl bg-white dark:bg-darkBackgroundCard items-center justify-center border border-neutral-100 dark:border-darkBorder shadow-sm shadow-neutral-100 dark:shadow-none"
+            onPress={() => router.push("/(user)/qr")}
+            className="p-2"
           >
             <Ionicons name="qr-code-outline" size={20} color="#FF6600" />
           </TouchableOpacity>
