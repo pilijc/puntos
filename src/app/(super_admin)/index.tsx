@@ -104,26 +104,26 @@ export default function SuperAdminDashboard() {
 
         {/* User Analytics Placeholder Section */}
         <View className="mb-6 px-6">
-            <SectionHeader title="User Analytics" onAction={() => {}} />
-            <View className="bg-white rounded-2xl p-8 border border-slate-100 items-center justify-center min-h-[220px]">
-                <Users size={48} color="#FF6600" />
-                <Text className="text-lg font-[Poppins-Bold] text-[#0F172A] mt-3">User Insights</Text>
-                <Text className="text-sm font-[Poppins-Regular] text-[#94A3B8] text-center mt-2 px-6">
-                    User analytics and behaviors will appear here.
-                </Text>
-            </View>
+          <SectionHeader title="User Analytics" onAction={() => { }} />
+          <View className="bg-white rounded-2xl p-8 border border-slate-100 items-center justify-center min-h-[220px]">
+            <Users size={48} color="#FF6600" />
+            <Text className="text-lg font-[Poppins-Bold] text-[#0F172A] mt-3">User Insights</Text>
+            <Text className="text-sm font-[Poppins-Regular] text-[#94A3B8] text-center mt-2 px-6">
+              User analytics and behaviors will appear here.
+            </Text>
+          </View>
         </View>
 
         {/* Store Analytics Placeholder Section */}
         <View className="mb-8 px-6">
-            <SectionHeader title="Store Analytics" onAction={() => {}} />
-            <View className="bg-white rounded-2xl p-8 border border-slate-100 items-center justify-center min-h-[220px]">
-                <BarChart3 size={48} color="#FF6600" />
-                <Text className="text-lg font-[Poppins-Bold] text-[#0F172A] mt-3">Store Insights</Text>
-                <Text className="text-sm font-[Poppins-Regular] text-[#94A3B8] text-center mt-2 px-6">
-                    Store analytics and insights will appear here.
-                </Text>
-            </View>
+          <SectionHeader title="Store Analytics" onAction={() => { }} />
+          <View className="bg-white rounded-2xl p-8 border border-slate-100 items-center justify-center min-h-[220px]">
+            <BarChart3 size={48} color="#FF6600" />
+            <Text className="text-lg font-[Poppins-Bold] text-[#0F172A] mt-3">Store Insights</Text>
+            <Text className="text-sm font-[Poppins-Regular] text-[#94A3B8] text-center mt-2 px-6">
+              Store analytics and insights will appear here.
+            </Text>
+          </View>
         </View>
       </ScrollView>
     </SafeAreaView>

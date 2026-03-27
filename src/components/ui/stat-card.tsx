@@ -2,13 +2,13 @@ import React from "react";
 import { View, Text } from "@/tw";
 
 export const StatCard = ({ label, val, Icon }: { label: string, val: number | string, Icon: any }) => (
-  <View 
-    style={{ 
-      backgroundColor: "#FFF", 
-      borderRadius: 16, 
-      paddingVertical: 14, 
-      borderWidth: 1, 
-      borderColor: "#F1F5F9" 
+  <View
+    style={{
+      backgroundColor: "#FFF",
+      borderRadius: 16,
+      paddingVertical: 14,
+      borderWidth: 1,
+      borderColor: "#F1F5F9"
     }}
     className="flex-1 px-4 py-3"
   >
@@ -23,4 +23,4 @@ export const StatCard = ({ label, val, Icon }: { label: string, val: number | st
       </View>
     </View>
   </View>
-);
+);
