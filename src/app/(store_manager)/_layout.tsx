@@ -75,9 +75,9 @@ export default function StoreManagerLayout() {
                 }}
             />
             <Tabs.Screen
-                name="analytics"
+                name="transactions"
                 options={{
-                    title: "Analytics",
+                    title: "Transactions",
                     tabBarIcon: ({ color }) => (
                         <ArrowLeftRight size={22} color={color} />
                     ),

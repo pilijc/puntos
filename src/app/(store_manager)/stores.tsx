@@ -187,9 +187,8 @@ export default function StoreManagerStores() {
   return (
     <SafeAreaView className="flex-1 bg-backgroundMuted dark:bg-slate-950">
       <View className="bg-white border-b border-slate-100 dark:bg-slate-900 dark:border-slate-800 px-6 py-4 flex-row items-center justify-start">
-        <View className="flex-row items-center gap-2 py-1">
-          <MaterialIcons name="storefront" size={22} color="black" className="mt-1" />
-          <Text className="text-2xl font-poppins-bold text-slate-900 dark:text-slate-100">
+        <View className="flex-row items-center gap-2">
+          <Text className="text-xl font-poppins-bold text-slate-900 dark:text-slate-100">
             Merchant Stores
           </Text>
         </View>

@@ -1,5 +1,5 @@
 import { View, Text, TouchableOpacity } from "@/tw";
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { ChevronLeft } from "lucide-react-native";
 import { useRouter } from "expo-router";
 import React from "react";
 
@@ -31,7 +31,7 @@ export default function StoreHeader({
             activeOpacity={0.7}
             className="-ml-3 mr-1"
           >
-            <MaterialIcons name="chevron-left" size={36} color="#FF6600" />
+            <ChevronLeft size={36} color="#FF6600" />
           </TouchableOpacity>
         )}
         <View>
@@ -56,7 +56,7 @@ export default function StoreHeader({
           activeOpacity={0.7}
           className="-ml-3 mr-1"
         >
-          <MaterialIcons name="chevron-left" size={36} color="#FF6600" />
+          <ChevronLeft size={36} color="#FF6600" />
         </TouchableOpacity>
       )}
       <View>
