@@ -1,4 +1,4 @@
-import { View, Text, SafeAreaView, TouchableOpacity, ScrollView } from "@/tw";
+import { View, Text, TouchableOpacity } from "@/tw";
 import { useFocusEffect, router } from "expo-router";
 import React, { useState, useCallback } from "react";
 import { Ionicons } from "@expo/vector-icons";
@@ -15,11 +15,20 @@ import { LanguageCard } from "@/components/settings/card/language-card";
 import { AppearanceCard } from "@/components/settings/card/appearance-card";
 import { NotificationCard } from "@/components/settings/card/notification-card";
 import { LocationCard } from "@/components/settings/card/location-card";
-import { CustomTabBarButton } from "@/components/qr/qr-button";
 import { useTranslation } from "react-i18next";
+import StoreScreenContainer from "@/components/ui/store-screen-container";
 
 // Services
 import { syncLocationService } from "@/services/settings-service";
+
+function SettingsSectionLabel({ labelKey }: { labelKey: string }) {
+  const { t: translate } = useTranslation();
+  return (
+    <Text className="text-sm font-poppins-semibold text-neutral-600 dark:text-darkTextSecondary mb-2 ml-1">
+      {translate(labelKey)}
+    </Text>
+  );
+}
 
 export default function UserSettings() {
   const [editModalVisible, setEditModalVisible] = useState(false);
@@ -30,7 +39,7 @@ export default function UserSettings() {
     profile,
     loading,
     preferences,
-    refreshProfile
+    refreshProfile,
   } = useProfile();
 
   useFocusEffect(
@@ -64,42 +73,40 @@ export default function UserSettings() {
     };
   }, [preferences.location_enabled, user?.id]);
 
-
   const handleProfilePress = () => {
     setEditModalVisible(true);
   };
 
   if (loading && !user) {
     return (
-      <SafeAreaView className="flex-1 bg-background dark:bg-darkBackground justify-center items-center">
-        <Text className="text-neutral-500 font-poppins-regular">{translate("user.discover.loadingProfile")}</Text>
-      </SafeAreaView>
+      <StoreScreenContainer backgroundClassName="bg-backgroundMuted dark:bg-darkBackground">
+        <Text className="text-neutral-500 font-poppins-regular mt-20 self-center">
+          {translate("user.discover.loadingProfile")}
+        </Text>
+      </StoreScreenContainer>
     );
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-backgroundMuted dark:bg-darkBackground">
-      <ScrollView
-        className="flex-1"
-        contentContainerStyle={{ padding: 12, paddingBottom: 40 }}
-        showsVerticalScrollIndicator={false}
+    <>
+      <StoreScreenContainer
+        backgroundClassName="bg-backgroundMuted dark:bg-darkBackground"
+        contentGap={16}
       >
-        <View className="flex-row justify-between items-center mb-6 mt-3 mx-4">
+        {/* Header */}
+        <View className="flex-row justify-between items-center ml-1 mt-7.5">
           <Text className="text-xl font-poppins-bold text-neutral-900 dark:text-darkTextPrimary">
-            {translate('settings.title')}
+            {translate("settings.title")}
           </Text>
           <TouchableOpacity
             onPress={() => router.push("/qr")}
-            className="p-2"
+            className="w-10 h-10 rounded-xl bg-white dark:bg-darkBackgroundCard items-center justify-center border border-neutral-100 dark:border-darkBorder shadow-sm shadow-neutral-100 dark:shadow-none"
           >
-            <Ionicons
-              name="qr-code-outline"
-              size={20}
-              color="#FF6600"
-            />
+            <Ionicons name="qr-code-outline" size={20} color="#FF6600" />
           </TouchableOpacity>
         </View>
 
+        {/* Profile card */}
         {user && (
           <UserProfileCard
             user={user}
@@ -110,44 +117,38 @@ export default function UserSettings() {
 
         {/* Account Section */}
         <View>
-          <Text className="mx-4 text-sm font-poppins-semibold text-neutral-600 dark:text-darkTextSecondary mb-2">
-            {translate('settings.account.title')}
-          </Text>
+          <SettingsSectionLabel labelKey="settings.account.title" />
+          <View className="overflow-hidden bg-white dark:bg-darkBackgroundCard rounded-2xl border border-neutral-100 dark:border-darkBorder">
+            <SecurityCard />
+            <LanguageCard />
+            <AppearanceCard />
+          </View>
         </View>
 
-        <View className="mx-4 mb-6 overflow-hidden bg-background dark:bg-darkBackgroundMuted rounded-xl border border-neutral-200 dark:border-darkBorder">
-          <SecurityCard />
-          <LanguageCard />
-          <AppearanceCard />
-        </View>
-
-        {/* Preferences Section */}
+        {/* Notifications & Privacy Section */}
         <View>
-          <Text className="mx-4 text-sm font-poppins-semibold text-neutral-600 dark:text-darkTextSecondary mb-2">
-            {translate('settings.notificationsPrivacy.title')}
-          </Text>
-        </View>
-
-        <View className="mx-4 mb-6 overflow-hidden bg-background dark:bg-darkBackgroundMuted rounded-xl border border-neutral-200 dark:border-darkBorder">
-          <NotificationCard />
-          <LocationCard />
+          <SettingsSectionLabel labelKey="settings.notificationsPrivacy.title" />
+          <View className="overflow-hidden bg-white dark:bg-darkBackgroundCard rounded-2xl border border-neutral-100 dark:border-darkBorder">
+            <NotificationCard />
+            <LocationCard />
+          </View>
         </View>
 
         <LogoutButton />
 
         {/* Footer */}
-        <View className="mx-8 mt-6 items-center">
-          <Text className="text-sm text-center font-poppins-regular text-neutral-500 dark:text-darkTextSecondary">
+        <View className="items-center pt-2 pb-2">
+          <Text className="text-[10px] tracking-[2px] text-neutral-300 font-poppins-medium">
             {translate("settings.copyright")} 2026
           </Text>
         </View>
-      </ScrollView>
+      </StoreScreenContainer>
 
       {/* Modals */}
       <EditProfileModal
         visible={editModalVisible}
         onClose={() => setEditModalVisible(false)}
       />
-    </SafeAreaView>
+    </>
   );
 }

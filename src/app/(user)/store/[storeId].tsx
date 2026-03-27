@@ -6,7 +6,7 @@ import {
   AnimatedView,
   Image,
 } from "@/tw";
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { CalendarDays, ChevronDown, ChevronLeft, ChevronUp, CircleCheck, MapPinOff } from "lucide-react-native";
 import React, { useCallback, useEffect, useState } from "react";
 import { FadeIn, FadeOut, Layout, Easing } from "react-native-reanimated";
 import { useRouter, useLocalSearchParams } from "expo-router";
@@ -120,10 +120,9 @@ export default function StoreOverviewDetail() {
           onPress={() => router.back()}
           className="p-1 -ml-1"
         >
-          <MaterialIcons 
-            name="chevron-left" 
-            size={36} 
-            color="#FFFFFF" 
+          <ChevronLeft
+            size={36}
+            color="#FFFFFF"
             style={{ 
               textShadowColor: 'rgba(0, 0, 0, 0.5)', 
               textShadowOffset: { width: 0, height: 1 }, 
@@ -140,7 +139,6 @@ export default function StoreOverviewDetail() {
           setHeroIndex={handleHeroSnap}
           heroIndex={heroIndex}
           swipeIndicatorStyle={swipeIndicatorStyle}
-          hideViewButton={true}
         />
 
         <AnimatedView
@@ -154,11 +152,11 @@ export default function StoreOverviewDetail() {
               disabled={nearbyStores.length === 0}
             >
               <View className="w-10 h-10 rounded-full bg-primary/10 items-center justify-center">
-                <MaterialIcons
-                  name={nearbyStores.length > 0 ? "check" : "location-off"}
-                  size={20}
-                  color={nearbyStores.length > 0 ? "#FF6600" : "#9ca3af"}
-                />
+                {nearbyStores.length > 0 ? (
+                  <CircleCheck size={20} color="#FF6600" />
+                ) : (
+                  <MapPinOff size={20} color="#9ca3af" />
+                )}
               </View>
               <View className="flex-1 pr-2 justify-center">
                 <Text
@@ -182,11 +180,11 @@ export default function StoreOverviewDetail() {
                 </Text>
               </View>
               {nearbyStores.length > 0 && (
-                <MaterialIcons
-                  name={isNearbyOpen ? "expand-less" : "expand-more"}
-                  size={20}
-                  color="#FF6600"
-                />
+                isNearbyOpen ? (
+                  <ChevronUp size={20} color="#FF6600" />
+                ) : (
+                  <ChevronDown size={20} color="#FF6600" />
+                )
               )}
             </Pressable>
             {nearbyStores.length === 0 ? (
@@ -320,7 +318,7 @@ export default function StoreOverviewDetail() {
                 entering={FadeIn.duration(400)}
                 className="bg-white dark:bg-darkBackgroundMuted rounded-xl p-8 items-center border border-neutral-100 dark:border-darkBorder mx-1 mb-3"
               >
-                <MaterialIcons name="event-note" size={40} color="#FF6600" />
+                <CalendarDays size={40} color="#FF6600" />
                 <Text className="text-lg font-poppins-semibold text-neutral-900 dark:text-darkTextPrimary mt-3 text-center">
                   {translate("user.rewards.upcomingEvents.title")}
                 </Text>
