@@ -1,7 +1,6 @@
 import React, { useState, useCallback } from "react";
 import {
 	ScrollView,
-	Alert,
 	RefreshControl,
 } from "react-native";
 import { View, Text, TouchableOpacity } from "@/tw";
@@ -12,6 +11,7 @@ import { AdminStoreRow } from "@/services/store-service";
 import { useSuperAdminStoresStore } from "@/store/super-admin/super-admin-stores-store";
 import { AdminStoreCard, AdminStoreSkeletonCard } from "@/components/stores/admin-store-card";
 import { AdminStoreDetails } from "@/components/stores/admin-store-details";
+import { Modal } from "@/components/modal";
 
 // ── Constants ───────────────────────────────────────────────────────────────
 const FILTERS = ["All", "pending_review", "active", "inactive"] as const;
@@ -26,10 +26,17 @@ const FILTER_LABELS: Record<Filter, string> = {
 
 // ── Screen ──────────────────────────────────────────────────────────────────
 export default function SuperAdminStores() {
-	const { stores, loading, error, isFetching, fetchStores, approveStore, rejectStore } = useSuperAdminStoresStore();
+	const { stores, loading, error, errorModal, dismissErrorModal, isFetching, fetchStores, approveStore, rejectStore } = useSuperAdminStoresStore();
 	const [activeFilter, setActiveFilter] = useState<Filter>("pending_review");
 	const [refreshing, setRefreshing] = useState(false);
 	const [selectedStore, setSelectedStore] = useState<AdminStoreRow | null>(null);
+	const [confirmModal, setConfirmModal] = useState<{
+		title: string;
+		message: string;
+		onConfirm: () => void;
+		variant: "primary" | "danger";
+		label: string;
+	} | null>(null);
 
 	useFocusEffect(useCallback(() => { fetchStores(); }, []));
 
@@ -41,45 +48,48 @@ export default function SuperAdminStores() {
 
 	// ── Approve handler ────────────────────────────────────────────────────
 	const handleApprove = (store: AdminStoreRow) => {
-		Alert.alert(
-			"Approve Store",
-			`Approve "${store.name}"? It will go live immediately.`,
-			[
-				{ text: "Cancel", style: "cancel" },
-				{
-					text: "Approve",
-					onPress: async () => {
-						try {
-							await approveStore(store);
-						} catch (e: any) {
-							Alert.alert("Error", e?.message ?? "Failed to approve store");
+		setConfirmModal({
+			title: "Approve Store",
+			message: `Approve "${store.name}"? It will go live immediately.`,
+			label: "Approve",
+			variant: "primary",
+			onConfirm: async () => {
+				setConfirmModal(null);
+				const success = await approveStore(store);
+				if (success) {
+					useSuperAdminStoresStore.setState({
+						errorModal: {
+							title: "Store Approved",
+							message: `"${store.name}" is now active and can begin operations.`,
+							type: "success"
 						}
-					},
-				},
-			],
-		);
+					});
+				}
+			}
+		});
 	};
 
 	// ── Reject handler ─────────────────────────────────────────────────────
 	const handleReject = (store: AdminStoreRow) => {
-		Alert.alert(
-			"Reject Store",
-			`Reject "${store.name}"? The store-manager will need to resubmit.`,
-			[
-				{ text: "Cancel", style: "cancel" },
-				{
-					text: "Reject",
-					style: "destructive",
-					onPress: async () => {
-						try {
-							await rejectStore(store);
-						} catch (e: any) {
-							Alert.alert("Error", e?.message ?? "Failed to reject store");
+		setConfirmModal({
+			title: "Reject Store",
+			message: `Reject "${store.name}"? The store-manager will need to resubmit.`,
+			label: "Reject",
+			variant: "danger",
+			onConfirm: async () => {
+				setConfirmModal(null);
+				const success = await rejectStore(store);
+				if (success) {
+					useSuperAdminStoresStore.setState({
+						errorModal: {
+							title: "Application Rejected",
+							message: `The application for "${store.name}" has been rejected.`,
+							type: "error"
 						}
-					},
-				},
-			],
-		);
+					});
+				}
+			}
+		});
 	};
 
 	const getEffectiveStatus = (s: AdminStoreRow) => {
@@ -225,6 +235,43 @@ export default function SuperAdminStores() {
 					)}
 				</ScrollView>
 			</View>
+
+			<Modal
+				visible={!!errorModal}
+				onClose={dismissErrorModal}
+				title={errorModal?.title ?? (errorModal?.type === "success" ? "Success" : "Error")}
+				message={errorModal?.message ?? ""}
+				buttons={[
+					{
+						label: "OK",
+						onPress: dismissErrorModal,
+						variant: errorModal?.type === "success" ? "success" : "primary",
+					},
+				]}
+				showCloseButton={false}
+				dismissOnBackdrop
+			/>
+
+			<Modal
+				visible={!!confirmModal}
+				onClose={() => setConfirmModal(null)}
+				title={confirmModal?.title ?? ""}
+				message={confirmModal?.message ?? ""}
+				buttons={[
+					{
+						label: "Cancel",
+						onPress: () => setConfirmModal(null),
+						variant: "secondary",
+					},
+					{
+						label: confirmModal?.label ?? "Confirm",
+						onPress: confirmModal?.onConfirm ?? (() => {}),
+						variant: confirmModal?.variant ?? "primary",
+					},
+				]}
+				showCloseButton={false}
+				dismissOnBackdrop
+			/>
 		</ScreenWrapper>
 	);
 }

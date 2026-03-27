@@ -1,22 +1,27 @@
 import { create } from "zustand";
 import { AdminStoreRow, getAllStores, updateStoreStatus } from "@/services/store-service";
 
+type AlertModal = { title: string; message: string; type?: "success" | "error" } | null;
+
 interface SuperAdminStoresState {
     stores: AdminStoreRow[];
     loading: boolean;
     error: string | null;
+    errorModal: AlertModal;
     hasFetchedOnce: boolean;
     isFetching: boolean;
 
     fetchStores: (forceRefresh?: boolean) => Promise<void>;
-    approveStore: (store: AdminStoreRow) => Promise<void>;
-    rejectStore: (store: AdminStoreRow) => Promise<void>;
+    approveStore: (store: AdminStoreRow) => Promise<boolean>;
+    rejectStore: (store: AdminStoreRow) => Promise<boolean>;
+    dismissErrorModal: () => void;
 }
 
 export const useSuperAdminStoresStore = create<SuperAdminStoresState>((set, get) => ({
     stores: [],
     loading: false,
     error: null,
+    errorModal: null,
     hasFetchedOnce: false,
     isFetching: false,
 
@@ -54,8 +59,16 @@ export const useSuperAdminStoresStore = create<SuperAdminStoresState>((set, get)
                         : s
                 )
             }));
+            return true;
         } catch (e: any) {
-            throw new Error(e?.message ?? "Failed to approve store");
+            set({ 
+                errorModal: {
+                    title: "Approval Failed",
+                    message: e?.message ?? "Failed to approve store application.",
+                    type: "error"
+                }
+            });
+            return false;
         }
     },
 
@@ -71,8 +84,18 @@ export const useSuperAdminStoresStore = create<SuperAdminStoresState>((set, get)
                         : s
                 )
             }));
+            return true;
         } catch (e: any) {
-             throw new Error(e?.message ?? "Failed to reject store");
+            set({ 
+                errorModal: {
+                    title: "Rejection Failed",
+                    message: e?.message ?? "Failed to reject store application.",
+                    type: "error"
+                }
+            });
+            return false;
         }
-    }
+    },
+
+    dismissErrorModal: () => set({ errorModal: null }),
 }));
