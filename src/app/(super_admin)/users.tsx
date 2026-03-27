@@ -2,6 +2,7 @@ import React, { useEffect, useCallback, useMemo, useRef } from "react";
 import { ActivityIndicator, RefreshControl, StatusBar, FlatList } from "react-native";
 import { View, Text } from "@/tw";
 import { ScreenWrapper } from "@/components/ui/screen-wrapper";
+import { Modal } from "@/components/modal";
 import { useUserStore, type UserRoleTab } from "@/store/super-admin/user-store";
 import { BlockUserModal } from "@/components/users/BlockUserModal";
 import { FilterBottomSheet } from "@/components/users/FilterBottomSheet";
@@ -9,32 +10,38 @@ import { UsersSearchHeader } from "@/components/users/UsersSearchHeader";
 import { UserListItem } from "@/components/users/UserListItem";
 import { TYPO, COLORS } from "@/components/users/constants";
 
+const ITEM_HEIGHT = 88;
+const HEADER_HEIGHT = 44;
+
 export default function UsersScreen() {
-  const users = useUserStore((state) => state.users);
-  const loading = useUserStore((state) => state.loading);
-  const refreshing = useUserStore((state) => state.refreshing);
-  const loadingMore = useUserStore((state) => state.loadingMore);
-  const hasMore = useUserStore((state) => state.hasMore);
-  const updatingUserId = useUserStore((state) => state.updatingUserId);
-  const fetchUsers = useUserStore((state) => state.fetchUsers);
-  const fetchMoreUsers = useUserStore((state) => state.fetchMoreUsers);
-  const setRefreshing = useUserStore((state) => state.setRefreshing);
-  const activeTab = useUserStore((state) => state.activeTab);
-  const statusFilter = useUserStore((state) => state.statusFilter);
-  const search = useUserStore((state) => state.search);
-  const showFilterModal = useUserStore((state) => state.showFilterModal);
-  const setActiveTab = useUserStore((state) => state.setActiveTab);
-  const setStatusFilter = useUserStore((state) => state.setStatusFilter);
-  const setSearch = useUserStore((state) => state.setSearch);
-  const setShowFilterModal = useUserStore((state) => state.setShowFilterModal);
-  const selectedUser = useUserStore((state) => state.selectedUser);
-  const showBlockModal = useUserStore((state) => state.showBlockModal);
-  const openBlockModal = useUserStore((state) => state.openBlockModal);
-  const closeBlockModal = useUserStore((state) => state.closeBlockModal);
-  const confirmToggleBlock = useUserStore((state) => state.confirmToggleBlock);
-  const tabCounts = useUserStore((state) => state.tabCounts);
-  const flatListData = useUserStore((state) => state.flatListData);
-  const stickyHeaderIndices = useUserStore((state) => state.stickyHeaderIndices);
+  const {
+    users,
+    loading,
+    refreshing,
+    loadingMore,
+    hasMore,
+    updatingUserId,
+    activeTab,
+    statusFilter,
+    search,
+    showFilterModal,
+    selectedUser,
+    showBlockModal,
+    errorModal,
+    fetchUsers,
+    fetchMoreUsers,
+    setRefreshing,
+    setActiveTab,
+    setStatusFilter,
+    setSearch,
+    setShowFilterModal,
+    openBlockModal,
+    closeBlockModal,
+    confirmToggleBlock,
+    dismissErrorModal,
+    tabCounts,
+    flatListData,
+  } = useUserStore();
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -83,21 +90,17 @@ export default function UsersScreen() {
     return indices;
   }, [listData]);
 
-  const ITEM_HEIGHT = 88;
-  const HEADER_HEIGHT = 44;
-
-  const getItemLayout = useCallback((data: any, index: number) => {
-    let offset = 0;
-    for (let i = 0; i < index; i++) {
-      const item = data[i];
-      offset += (item && item.isHeader) ? HEADER_HEIGHT : ITEM_HEIGHT;
-    }
-    const currentItem = data[index];
-    const length = (currentItem && currentItem.isHeader) ? HEADER_HEIGHT : ITEM_HEIGHT;
-    return { length, offset, index };
-  }, []);
-
   const willBlock = selectedUser?.status !== "Blocked";
+
+  const getItemLayout = useCallback((_data: any, index: number) => {
+    let offset = 0;
+    const data = listData;
+    for (let i = 0; i < index; i++) {
+      offset += data[i]?.isHeader ? HEADER_HEIGHT : ITEM_HEIGHT;
+    }
+    const length = data[index]?.isHeader ? HEADER_HEIGHT : ITEM_HEIGHT;
+    return { length, offset, index };
+  }, [listData]);
 
   return (
     <ScreenWrapper className="flex-1 bg-background">
@@ -119,7 +122,10 @@ export default function UsersScreen() {
         <FlatList
           data={listData}
           renderItem={renderItem}
-          keyExtractor={(item) => item.id || (item.isHeader ? `header-${item.title}` : `user-${item.name}`)}
+          keyExtractor={(item) =>
+            item.isHeader ? `header-${item.title}` : `user-${item.id}`
+          }
+          getItemLayout={getItemLayout}
           stickyHeaderIndices={stickyHeaders}
           contentContainerStyle={{ paddingBottom: 110 }}
           refreshControl={
@@ -128,10 +134,9 @@ export default function UsersScreen() {
           onEndReached={onEndReached}
           onEndReachedThreshold={0.5}
           removeClippedSubviews={true}
-          getItemLayout={getItemLayout}
-          initialNumToRender={12}
+          initialNumToRender={10}
           maxToRenderPerBatch={10}
-          windowSize={11}
+          windowSize={10}
           ListFooterComponent={
             loadingMore ? (
               <View className="py-4 items-center">
@@ -159,6 +164,16 @@ export default function UsersScreen() {
         statusFilter={statusFilter}
         onClose={() => setShowFilterModal(false)}
         onSelectFilter={setStatusFilter}
+      />
+      {/* Error modal — replaces console.error; surfaces store errors to the user */}
+      <Modal
+        visible={!!errorModal}
+        onClose={dismissErrorModal}
+        title={errorModal?.title ?? "Error"}
+        message={errorModal?.message ?? ""}
+        buttons={[{ label: "OK", onPress: dismissErrorModal, variant: "primary" }]}
+        showCloseButton={false}
+        dismissOnBackdrop
       />
     </ScreenWrapper>
   );
