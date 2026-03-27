@@ -1,6 +1,6 @@
 import { View, Text } from "@/tw";
 import React from "react";
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { Sparkles, Trophy } from "lucide-react-native";
 import { useTranslation } from "react-i18next";
 import { useStamps } from "@/hooks/use-stamps";
 import StoreHeader from "@/components/ui/store-header";
@@ -32,7 +32,7 @@ export default function StoreStreaks() {
             </Text>
           </View>
           <View className="w-12 h-12 rounded-full bg-white/20 items-center justify-center">
-            <MaterialIcons name="stars" size={22} color="#FFFFFF" />
+            <Sparkles size={22} color="#FFFFFF" />
           </View>
         </View>
 
@@ -60,7 +60,7 @@ export default function StoreStreaks() {
             {translate("user.rewards.streaks.promoMessage")}
           </Text>
           <View className="flex-row items-center gap-x-1">
-            <MaterialIcons name="emoji-events" size={14} color="#FFFFFF" />
+            <Trophy size={14} color="#FFFFFF" />
             <Text className="text-white text-xs font-poppins-semibold">
               {translate("user.rewards.streaks.weeklyQuest")}
             </Text>
@@ -77,7 +77,7 @@ export default function StoreStreaks() {
           </View>
         ) : activeStamps === 0 ? (
           <View className="bg-white dark:bg-neutral-800 rounded-3xl p-8 items-center">
-            <MaterialIcons name="stars" size={40} color="#d1d5db" className="mb-2" />
+            <Sparkles size={40} color="#d1d5db" />
             <Text className="text-neutral-500 font-poppins-semibold text-base mt-2">
               {translate("user.rewards.streaks.notFound")}
             </Text>

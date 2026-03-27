@@ -1,7 +1,8 @@
+
+
 import { supabase } from "@/supabase/supabase";
 
 import { QRCodeState, QRTransaction } from "@/type/qr";
-import { VoucherTransaction, listenToVoucherTransaction } from "@/services/users/voucher-service";
 import { addStamp } from "@/services/stamp-service";
 
 
@@ -88,43 +89,22 @@ export async function createQRTransaction(
   const storeId = staffData.store_id;
 
   // Get points configuration for this store
-  console.log(`QR Service: Looking up points configuration for store_id: ${storeId}`);
-  console.log('QR Service: Store ID type:', typeof storeId, 'value:', storeId);
-  
-  // Debug: Check what's in store_qr_rewards table
-  const { data: allStoreRewards, error: allRewardsError } = await supabase
-    .from('store_qr')
-    .select('*')
-    .limit(10);
-  console.log('QR Service: All store_qr_rewards data:', allStoreRewards);
-  console.log('QR Service: All store_qr_rewards error:', allRewardsError);
-  
-  const { data: pointsData, error: pointsError } = await supabase
-    .from('store_qr')
-    .select('percentage')
-    .eq('store_id', storeId)
-    .single();
+  // const { data: pointsData, error: pointsError } = await supabase
+  //   .from('store_qr_rewards')
+  //   .select('percentage')
+  //   .eq('store_id', storeId)
+  //   .single();
 
-  console.log('QR Service: Raw database response:');
-  console.log('- pointsData:', JSON.stringify(pointsData, null, 2));
-  console.log('- pointsError:', JSON.stringify(pointsError, null, 2));
-  console.log('- pointsData?.percentage:', pointsData?.percentage);
-  console.log('- typeof pointsData?.percentage:', typeof pointsData?.percentage);
+  // if (pointsError || !pointsData) {
+  //   throw new Error('Failed to get points configuration for store');
+  // }
 
-  // default 10% if no configuration is found
-  const percentage = pointsData?.percentage || 10;
-  
-  if (pointsError) {
-    console.warn(`QR Service: No points configuration found for store ${storeId}, using default 10%. Error:`, pointsError);
-  } else {
-    console.log(`QR Service: Using percentage ${percentage}% for store ${storeId}`);
-  }
+  // Calculate points for purchase amount and percentage
+  const pointsToAward = Math.ceil(purchaseAmount * (10 / 100));
+   
+  //pointsData.percentage  will back to changes
 
-  //Calculate points for purchase amount and percentage
-  const pointsToAward = Math.ceil(purchaseAmount * (percentage / 100));
-  console.log(`QR Service: Calculated points: ${pointsToAward} (amount: ${purchaseAmount}, percentage: ${percentage}%)`);
-
-  //Create purchase record first
+  // Create purchase record first
   const { data: purchaseData, error: purchaseError } = await supabase
     .from('purchases')
     .insert([
@@ -188,72 +168,37 @@ export function listenToQRTransaction(userId: string, onScanned: (transaction: Q
       event: 'INSERT',  
       schema: 'public',
       table: 'qr_transactions',
-      filter: `user_id=eq.${userId}`   
+      // filter: `user_id=eq.${userId}`   
     }, (payload) => {
       console.log("Realtime triggered:", payload);
       const newRow = payload.new as QRTransaction;
-      onScanned(newRow);
+       
+      if (newRow.user_id === userId) {
+        onScanned(newRow);
+      }
     })
     .subscribe((status) => {
       console.log(`Customer QR listener status for user ${userId}:`, status);
-      if (status === 'SUBSCRIBED') {
-        //console.log(`Successfully subscribed to QR transactions for user ${userId}`);
-      } else if (status === 'TIMED_OUT') {
-        //console.error(`QR listener subscription timed out for user ${userId}:`, status);
-        // Retry connection after timeout
-        setTimeout(() => {
-          //console.log(`Retrying QR listener connection for user ${userId}`);
-          channel.subscribe();
-        }, 3000);
-      } else if (status === 'CLOSED') {
-        //console.log(`QR listener closed for user ${userId} - this is normal during cleanup`);
-      } else {
-        //console.warn(`QR listener unexpected status for user ${userId}:`, status);
-      }
     });
 
   return channel;
-}
-
-export function setupQRListeners(userId: string, onQRTransaction: (transaction: QRTransaction) => void, onVoucherTransaction: (transaction: VoucherTransaction) => void) {
-  // Listen to QR transactions
-  const qrChannel = listenToQRTransaction(userId, (transaction) => {
-    console.log('Customer side: QR transaction received!', transaction);
-    onQRTransaction(transaction);
-  });
-  
-  // Listen to voucher transactions
-  const voucherChannel = listenToVoucherTransaction(userId, (transaction) => {
-    console.log('Customer side: Voucher transaction received!', transaction);
-    onVoucherTransaction(transaction);
-  });
-
-  return { qrChannel, voucherChannel };
-}
-
-export function cleanupQRChannels(channels: { qrChannel: any; voucherChannel: any } | null) {
-  if (channels?.qrChannel) {
-    supabase.removeChannel(channels.qrChannel);
-    console.log('QR channel cleaned up');
-  }
-  if (channels?.voucherChannel) {
-    supabase.removeChannel(channels.voucherChannel);
-    console.log('Voucher channel cleaned up');
-  }
 }
 
 //HISTORY SIDE
 //Get user transaction history with store names
 export async function getUserTransactionHistory(userId: string): Promise<any[]> {
   try {
-    // Fetch transactions with store information (manual join)
+    // Fetch transactions with store information
     const { data: transactions, error } = await supabase
       .from('qr_transactions')
       .select(`
         id,
         points_earned,
         created_at,
-        store_id
+        store_id,
+        stores (
+          name
+        )
       `)
       .eq('user_id', userId)
       .order('created_at', { ascending: false });
@@ -263,53 +208,16 @@ export async function getUserTransactionHistory(userId: string): Promise<any[]> 
       return [];
     }
 
-    // Get store names separately (manual join)
-    const storeIds = [...new Set(transactions.map(t => t.store_id).filter(id => id != null))];
-    
-    if (storeIds.length === 0) {
-      console.log('No store IDs found in transactions');
-      // Return transactions with unknown store names
-      return transactions.map((transaction: any) => ({
-        id: transaction.id,
-        section: formatDateSection(transaction.created_at),
-        type: 'earned',
-        title: 'user.activity.unknownStore',
-        subtitle: 'user.activity.subtitle.purchasePoints',
-        time: transaction.created_at,
-        points: `+${transaction.points_earned}`,
-        positive: true,
-        icon: '🛒',
-        transactionType: 'qr',
-      }));
-    }
-
-    const { data: stores, error: storesError } = await supabase
-      .from('stores')
-      .select('id, name')
-      .in('id', storeIds);
-
-    if (storesError) {
-      console.error('Error fetching store names:', storesError);
-    }
-
-    // Create store lookup map
-    const storeMap = (stores || []).reduce((acc, store) => {
-      acc[store.id] = store.name;
-      return acc;
-    }, {});
-
     // Format the data for the UI
     return transactions.map((transaction: any) => ({
       id: transaction.id,
       section: formatDateSection(transaction.created_at),
       type: 'earned',
-      title: storeMap[transaction.store_id] || 'user.activity.unknownStore',
+      title: transaction.stores?.name || 'user.activity.unknownStore',
       subtitle: 'user.activity.subtitle.purchasePoints',
       time: transaction.created_at,
       points: `+${transaction.points_earned}`,
       positive: true,
-      icon: '🛒', // Add icon for QR transactions
-      transactionType: 'qr', // Add identifier for QR transactions
     }));
   } catch (error) {
     console.error('Error in getUserTransactionHistory:', error);
@@ -345,4 +253,42 @@ function formatTime(dateString: string): string {
   return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
 }
 
- 
+
+
+/*
+export async function generateQRCode(userId: string, expiryHours: number = 1) {
+  
+  const expiresAt = new Date();
+  expiresAt.setHours(expiresAt.getHours() + expiryHours);
+
+  const { data, error, status } = await supabase
+    .from('qr_codes')
+    .insert([
+      {
+        user_id: userId,
+        barcode_hash: null,
+        store_staff_id: null,
+        is_used: false,
+         scanned_at: null,
+        transaction_completed_at: null,
+        created_at: new Date().toISOString(),
+        expires_at: expiresAt.toISOString(),
+      },
+    ])
+    .select('*');  
+
+  console.log('Supabase insert result:', { data, error, status });
+
+  if (error) {
+    throw new Error(`Failed to generate QR code: ${error.message}`);
+  }
+
+  if (!data || data.length === 0) {
+    throw new Error(
+      'No QR code returned from Supabase. Check table name, columns, and RLS policies.'
+    );
+  }
+
+  return data[0]; 
+} */
+

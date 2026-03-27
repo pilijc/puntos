@@ -92,14 +92,6 @@ export function AdminStoreDetails({
         contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 40, gap: 20 }}
         showsVerticalScrollIndicator={false}
       >
-        {/* Status banner */}
-        <View style={{ backgroundColor: statusCfg.bg, borderColor: statusCfg.border }} className="rounded-2xl border p-3 flex-row items-center justify-between">
-          <Text style={{ color: statusCfg.text }} className="text-[13px] font-poppins-bold">Application Status</Text>
-          <View style={{ backgroundColor: statusCfg.badgeBg }} className="flex-row items-center gap-1 px-2.5 py-1.5 rounded-full">
-            <MaterialIcons name={statusCfg.icon} size={13} color={statusCfg.text} />
-            <Text style={{ color: statusCfg.text }} className="text-[11px] font-poppins-bold tracking-wider">{statusCfg.label}</Text>
-          </View>
-        </View>
 
         {/* Store Details */}
         <View>
@@ -141,6 +133,84 @@ export function AdminStoreDetails({
                   : <MaterialIcons name="storefront" size={26} color="#94A3B8" />
                 }
               </View>
+            </FieldCard>
+          </View>
+
+          <View className="mb-2.5">
+            <FieldLabel>STORE PICTURES</FieldLabel>
+            <FieldCard noPad>
+              {store.store_pictures && store.store_pictures.length > 0 ? (
+                <View 
+                  className="relative w-full h-[200px] rounded-xl overflow-hidden bg-[#f1f5f9] dark:bg-darkBackgroundCard my-1"
+                  onLayout={(e) => setLayoutWidth(e.nativeEvent.layout.width)}
+                >
+                  <ScrollView
+                    ref={scrollRef}
+                    horizontal
+                    pagingEnabled
+                    showsHorizontalScrollIndicator={false}
+                    onScroll={(e) => {
+                      if (layoutWidth > 0) {
+                        const idx = Math.round(e.nativeEvent.contentOffset.x / layoutWidth);
+                        if (idx !== currentPicIndex && idx >= 0 && idx < store.store_pictures!.length) {
+                          setCurrentPicIndex(idx);
+                        }
+                      }
+                    }}
+                    scrollEventThrottle={16}
+                    bounces={false}
+                  >
+                    {store.store_pictures.map((uri, idx) => (
+                      <View key={idx} style={{ width: layoutWidth > 0 ? layoutWidth : '100%', height: '100%' }}>
+                        <Image 
+                          source={{ uri }} 
+                          style={{ width: "100%", height: "100%" }} 
+                          contentFit="cover" 
+                        />
+                      </View>
+                    ))}
+                  </ScrollView>
+                  
+                  {store.store_pictures.length > 1 && (
+                    <>
+                      {currentPicIndex > 0 && (
+                        <TouchableOpacity 
+                          activeOpacity={0.8} 
+                          onPress={() => {
+                            scrollRef.current?.scrollTo({ x: (currentPicIndex - 1) * layoutWidth, animated: true });
+                          }}
+                          className="absolute left-2 top-1/2 -mt-4 w-8 h-8 rounded-full bg-black/50 items-center justify-center z-10"
+                        >
+                          <MaterialIcons name="chevron-left" size={24} color="#fff" />
+                        </TouchableOpacity>
+                      )}
+
+                      {currentPicIndex < store.store_pictures.length - 1 && (
+                        <TouchableOpacity 
+                          activeOpacity={0.8} 
+                          onPress={() => {
+                            scrollRef.current?.scrollTo({ x: (currentPicIndex + 1) * layoutWidth, animated: true });
+                          }}
+                          className="absolute right-2 top-1/2 -mt-4 w-8 h-8 rounded-full bg-black/50 items-center justify-center z-10"
+                        >
+                          <MaterialIcons name="chevron-right" size={24} color="#fff" />
+                        </TouchableOpacity>
+                      )}
+
+                      <View className="absolute bottom-2 left-0 right-0 flex-row justify-center gap-1.5 z-10">
+                        {store.store_pictures.map((_, idx) => (
+                          <View 
+                            key={idx} 
+                            className={`h-2 rounded-full transition-all ${idx === currentPicIndex ? 'w-5 bg-primary' : 'w-2 bg-white/60'}`} 
+                          />
+                        ))}
+                      </View>
+                    </>
+                  )}
+                </View>
+              ) : (
+                <Text className="text-sm font-poppins-medium text-textMuted p-1">—</Text>
+              )}
             </FieldCard>
           </View>
         </View>
@@ -203,7 +273,7 @@ export function AdminStoreDetails({
                   onPress={() => setViewingDoc(true)}
                   style={{
                     width: "100%", height: 160, borderRadius: 10,
-                    overflow: "hidden", margin: 4,
+                    overflow: "hidden"
                   }}
                 >
                   <Image

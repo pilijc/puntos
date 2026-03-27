@@ -1,275 +1,321 @@
-import React, { useState, useEffect, useRef } from "react";
-import { Animated, TextInput, useColorScheme } from "react-native";
-import { FadeInDown, FadeInUp } from "react-native-reanimated";
-import {
-  AnimatedView,
-  SafeAreaView,
-  Text,
-  View,
-  Image,
-  ScrollView,
-  TouchableOpacity,
-} from "@/tw";
+import React, { useState, useEffect } from "react";
+import { Text, View, Image, TouchableOpacity } from "@/tw";
+import { CirclePlus, Gift, ReceiptText, TrendingUp } from "lucide-react-native";
+import { RefreshControl } from "react-native";
 import { getUserTransactionHistory } from "@/services/users/qr-service";
-import { getUserVoucherTransactionHistory } from "@/services/users/voucher-service";
 import { supabase } from "@/supabase/supabase";
 import { useTranslation } from "react-i18next";
+import StoreScreenContainer from "@/components/ui/store-screen-container";
 
 const TABS = ["all", "earned", "claimed"];
 
 export default function History() {
   const [activeTab, setActiveTab] = useState(0);
-  const [searchOpen, setSearchOpen] = useState(false);
-  const [searchText, setSearchText] = useState("");
   const [transactionHistory, setTransactionHistory] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
   const { t: translate, i18n } = useTranslation();
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === "dark";
 
-  useEffect(() => {
-    const fetchTransactionHistory = async () => {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) {
-          setLoading(false);
-          return;
-        }
+  const fetchTransactionHistory = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { setLoading(false); return; }
+      const history = await getUserTransactionHistory(user.id);
+      setTransactionHistory(history);
+    } catch (error) {
+      console.error("Error fetching transaction history:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-        // Get both QR and voucher transactions
-        const [qrHistory, voucherHistory] = await Promise.all([
-          getUserTransactionHistory(user.id),
-          getUserVoucherTransactionHistory(user.id)
-        ]);
+  useEffect(() => { fetchTransactionHistory(); }, []);
 
-        // Combine and sort by date (newest first)
-        const combinedHistory = [...qrHistory, ...voucherHistory]
-          .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchTransactionHistory();
+    setRefreshing(false);
+  };
 
-        setTransactionHistory(combinedHistory);
-      } catch (error) {
-        console.error('Error fetching transaction history:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchTransactionHistory();
-  }, []);
+  const parsePoints = (value: string) => Number(value.replace(/[+\-]/g, ""));
 
   const filteredData = transactionHistory.filter((item) => {
     const matchesTab =
-      activeTab === 0
-        ? true
-        : activeTab === 1
-          ? item.type === "earned"
+      activeTab === 0 ? true
+        : activeTab === 1 ? item.type === "earned"
           : item.type === "claimed";
-    const matchesSearch = item.title.toLowerCase().includes(searchText.toLowerCase());
-    return matchesTab && matchesSearch;
+    return matchesTab;
   });
 
-  const sections = [...new Set(filteredData.map((item) => item.section))];
+  const sections = [...new Set(filteredData.map((item) => item.section))] as string[];
 
-  const parsePoints = (value) => Number(value.replace(/[+\-]/g, ''));
+  const totalEarned = transactionHistory
+    .filter((i) => i.type === "earned")
+    .reduce((sum, i) => sum + parsePoints(i.points), 0);
 
-  const totalEarnedPoints = transactionHistory.filter((item) => item.type === "earned").reduce(
-    (sum, item) => sum + parsePoints(item.points),
-    0
-  );
-
-  const formattedTotal =
-    totalEarnedPoints > 0
-      ? `+${totalEarnedPoints.toLocaleString()}`
-      : totalEarnedPoints.toLocaleString();
+  const totalSpent = transactionHistory
+    .filter((i) => i.type === "claimed")
+    .reduce((sum, i) => sum + parsePoints(i.points), 0);
 
   return (
-    <SafeAreaView className="flex-1 bg-background dark:bg-darkBackground">
-      <AnimatedView entering={FadeInDown.duration(500)}>
-        <View className="px-6 pt-6 pb-4">
-          <View className="flex-row justify-between items-center mb-5">
-            {!searchOpen ? (
-              <>
-                <View>
-                  <Text className="text-xl font-poppins-bold text-textPrimary dark:text-darkTextPrimary">
-                    {translate("user.activity.title")}
-                  </Text>
-                </View>
-                <View className="flex-row items-center gap-3">
-                  <View className="bg-orange-50 dark:bg-darkPrimarySecondary/20 px-4 py-2 rounded-xl items-center">
-                    <Text className="text-orange-600 dark:text-darkPrimaryText text-xl font-poppins-bold leading-tight">
-                      {formattedTotal}
-                    </Text>
-                    <Text className="text-orange-400 dark:text-darkPrimarySecondary text-[7px] font-poppins-medium tracking-wide">
-                      {translate("user.activity.unclaimed")}
-                    </Text>
-                  </View>
-                  <TouchableOpacity
-                    onPress={() => setSearchOpen(true)}
-                    className="w-10 h-10 rounded-xl bg-background dark:bg-darkBackgroundMuted items-center justify-center border border-neutral-100 dark:border-darkBorder"
-                  >
-                    <Text className="text-2xl font-bold text-textSecondary dark:text-darkTextSoft">⌕</Text>
-                  </TouchableOpacity>
-                </View>
-              </>
-            ) : (
-              <View className="flex-row items-center bg-neutral-100 dark:bg-darkBackgroundMuted rounded-xl px-1 py-1 w-full">
-                <View className="flex-1 mx-1">
-                  <TextInput
-                    autoFocus
-                    placeholder={translate("user.activity.searchPlaceholder")}
-                    placeholderTextColor={isDark ? "#9CA3AF" : "#999999"}
-                    className="text-base px-3 py-2 text-textPrimary dark:text-darkTextPrimary"
-                    value={searchText}
-                    onChangeText={setSearchText}
-                  />
-                </View>
+    <StoreScreenContainer
+      backgroundClassName="bg-backgroundMuted dark:bg-darkBackground"
+      contentGap={16}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          tintColor="#FF6600"
+          colors={["#FF6600"]}
+        />
+      }
+    >
+      {/* ── Header ── */}
+      <View>
+        <View className="flex-row justify-between items-center w-full ml-1 mt-7.5">
+          <Text className="text-xl font-poppins-bold text-neutral-900 dark:text-darkTextPrimary">
+            {translate("user.activity.title")}
+          </Text>
+          <View className="w-10 h-10 opacity-0" />
+        </View>
+      </View>
 
-                <TouchableOpacity
-                  onPress={() => {
-                    setSearchOpen(false);
-                    setSearchText("");
-                  }}
-                  className="px-3 justify-center items-center"
-                >
-                  <Text
-                    style={{ color: isDark ? "#FFFFFF" : "#FF6600" }}
-                    className="font-bold text-base"
-                  >
-                    ✕
-                  </Text>
-                </TouchableOpacity>
+      {/* ── Summary Card ── */}
+      <View>
+        <View className="bg-white dark:bg-darkBackgroundCard rounded-2xl border border-neutral-100 dark:border-darkBorder overflow-hidden">
+          {/* Top gradient accent strip */}
+          <View className="h-1 bg-neutral-100 dark:bg-darkBorder" />
+          <View className="flex-row p-4">
+            {/* Earned */}
+            <View className="flex-1 items-center py-2">
+              <View className="w-9 h-9 rounded-full bg-emerald-50 dark:bg-emerald-500/10 items-center justify-center mb-2">
+                <TrendingUp size={18} color="#10b981" />
               </View>
-            )}
-          </View>
+              <Text className="text-xl font-poppins-bold text-emerald-500">
+                +{totalEarned.toLocaleString()}
+              </Text>
+              <Text className="text-[10px] font-poppins-medium text-neutral-400 dark:text-darkTextSecondary tracking-wide mt-0.5">
+                {translate("user.activity.filter.earned").toUpperCase()}
+              </Text>
+            </View>
 
+            {/* Divider */}
+            <View className="w-[1px] bg-neutral-100 dark:bg-darkBorder my-2" />
 
-          {/* Tabs */}
-          <View className="flex-row bg-neutral-200/70 dark:bg-darkBackgroundMuted/70 p-1 rounded-xl">
-            {TABS.map((tab, i) => {
-              const isActive = activeTab === i;
-              return (
-                <TouchableOpacity
-                  key={tab}
-                  onPress={() => setActiveTab(i)}
-                  className={`flex-1 py-3 rounded-lg items-center ${isActive ? "bg-orange-500" : ""}`}
-                >
-                  <Text className={`text-sm font-poppins-semibold ${isActive ? "text-white" : "text-textSecondary dark:text-darkTextPrimary"}`}>
-                    {translate(`user.activity.filter.${tab}`)}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
+            {/* Spent */}
+            <View className="flex-1 items-center py-2">
+              <View className="w-9 h-9 rounded-full bg-neutral-100 dark:bg-white/10 items-center justify-center mb-2">
+                <Gift size={18} color="#64748B" />
+              </View>
+              <Text className="text-xl font-poppins-bold text-neutral-700 dark:text-darkTextPrimary">
+                {totalSpent.toLocaleString()}
+              </Text>
+              <Text className="text-[10px] font-poppins-medium text-neutral-400 dark:text-darkTextSecondary tracking-wide mt-0.5">
+                {translate("user.activity.filter.claimed").toUpperCase()}
+              </Text>
+            </View>
           </View>
         </View>
-      </AnimatedView>
+      </View>
 
-      <ScrollView
-        className="flex-1"
-        contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 30, paddingTop: 10 }}
-        showsVerticalScrollIndicator={false}
-      >
-        {loading ? (
-          <View className="flex-1 items-center justify-center py-20">
-            <Text className="text-textSecondary dark:text-darkTextSoft">{translate("user.activity.loading")}</Text>
+      {/* ── Filter Chips ── */}
+      <View>
+        <View className="flex-row gap-x-2">
+          {TABS.map((tab, i) => {
+            const isActive = activeTab === i;
+            return (
+              <TouchableOpacity
+                key={tab}
+                onPress={() => setActiveTab(i)}
+                className={`px-3.5 py-1.5 rounded-full border ${isActive
+                  ? "bg-primary border-primary"
+                  : "bg-white dark:bg-darkBackgroundCard border-neutral-200 dark:border-darkBorder"
+                  }`}
+              >
+                <Text
+                  className={`text-xs font-poppins-semibold ${isActive ? "text-white" : "text-neutral-500 dark:text-darkTextSecondary"
+                    }`}
+                >
+                  {translate(`user.activity.filter.${tab}`)}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      </View>
+
+      {/* ── Transaction List ── */}
+      {loading ? (
+        <HistorySkeleton />
+      ) : sections.length === 0 ? (
+        <View className="items-center justify-center py-20">
+          <View className="w-24 h-24 rounded-full bg-neutral-100 dark:bg-white/5 items-center justify-center mb-6">
+            <ReceiptText size={44} color="#CBD5E1" />
           </View>
-        ) : sections.length === 0 ? (
-          <View className="flex-1 items-center justify-center py-20">
-            <Text className="text-textSecondary dark:text-darkTextSoft">{translate("user.activity.empty")}</Text>
-          </View>
-        ) : (
-          sections.map((section) => (
-            <AnimatedView key={section} entering={FadeInUp.duration(500)}>
+          <Text className="text-xl font-poppins-bold text-neutral-900 dark:text-white text-center">
+            {translate("user.activity.empty")}
+          </Text>
+          <Text className="text-sm font-poppins text-neutral-400 text-center mt-2 px-10">
+            {translate("user.activity.loading")}
+          </Text>
+        </View>
+      ) : (
+        sections.map((section) => {
+          const items = filteredData.filter((item) => item.section === section);
+          return (
+            <View key={section}>
+              {/* Floating uppercase section label */}
               <SectionLabel label={section} />
-              <View className="mt-1">
-                {filteredData
-                  .filter((item) => item.section === section)
-                  .map((item) => (
-                    <HistoryItem key={item.id} {...item} />
-                  ))}
-              </View>
-            </AnimatedView>
-          ))
-        )}
 
-        <AnimatedView entering={FadeInUp.delay(200).duration(600)}>
-          <View className="items-center pt-6 pb-4">
-            <Text className="text-[10px] tracking-[2px] text-neutral-400 dark:text-darkTextSoft font-poppins-medium">
-              {translate("label.poweredBy")}
-            </Text>
-          </View>
-        </AnimatedView>
-      </ScrollView>
-    </SafeAreaView>
+              {/* Grouped card with dividers — mirrors Settings cards */}
+              <View className="bg-white dark:bg-darkBackgroundCard rounded-2xl border border-neutral-100 dark:border-darkBorder overflow-hidden">
+                {items.map((item, idx) => (
+                  <View key={item.id}>
+                    <HistoryRow {...item} />
+                    {idx < items.length - 1 && (
+                      <View className="h-[1px] bg-neutral-100 dark:bg-darkBorder ml-[68px]" />
+                    )}
+                  </View>
+                ))}
+              </View>
+            </View>
+          );
+        })
+      )}
+
+      {/* Footer */}
+      <View className="items-center pt-2">
+        <Text className="text-[10px] tracking-[2px] text-neutral-300 font-poppins-medium">
+          {translate("label.poweredBy")}
+        </Text>
+      </View>
+    </StoreScreenContainer>
   );
 }
 
-function SectionLabel({ label }) {
-  const { t: translate, i18n } = useTranslation();
-
-  let displayLabel = label;
-  if (label === 'today') {
-    displayLabel = translate('user.activity.sections.today');
-  } else if (label === 'yesterday') {
-    displayLabel = translate('user.activity.sections.yesterday');
-  } else {
-    // Format the date string
-    const date = new Date(label);
-    displayLabel = date.toLocaleDateString(i18n.language === 'ja' ? 'ja-JP' : 'en-US', { month: 'long', day: 'numeric' });
-  }
-
+/* ── Skeleton ── */
+function HistorySkeleton() {
   return (
-    <View className="mt-6 mb-3">
-      <Text className="text-xs font-poppins-semibold text-neutral-400 tracking-widest">
-        {displayLabel.toUpperCase()}
-      </Text>
+    <View className="gap-y-5">
+      {/* Summary card skeleton */}
+      <View className="bg-white dark:bg-darkBackgroundCard rounded-2xl border border-neutral-100 dark:border-darkBorder overflow-hidden">
+        <View className="h-1 bg-neutral-100 dark:bg-white/10" />
+        <View className="flex-row p-4">
+          {[0, 1].map((i) => (
+            <View key={i} className="flex-1 items-center gap-y-2 py-2">
+              <View className="w-9 h-9 rounded-full bg-neutral-100 dark:bg-white/10" />
+              <View className="h-5 w-16 rounded-full bg-neutral-100 dark:bg-white/10" />
+              <View className="h-2.5 w-12 rounded-full bg-neutral-50 dark:bg-white/5" />
+            </View>
+          ))}
+        </View>
+      </View>
+
+      {/* Transaction groups */}
+      {[2, 3].map((count, g) => (
+        <View key={g}>
+          <View className="h-3 w-20 rounded-full bg-neutral-200 dark:bg-white/10 mb-2 ml-1" />
+          <View className="bg-white dark:bg-darkBackgroundCard rounded-2xl border border-neutral-100 dark:border-darkBorder overflow-hidden">
+            {[...Array(count)].map((_, i) => (
+              <View key={i}>
+                <View className="flex-row items-center gap-x-3 px-4 py-3.5">
+                  <View className="w-10 h-10 rounded-full bg-neutral-100 dark:bg-white/10" />
+                  <View className="flex-1 gap-y-2">
+                    <View className="h-3.5 w-2/3 rounded-full bg-neutral-100 dark:bg-white/10" />
+                    <View className="h-2.5 w-1/3 rounded-full bg-neutral-50 dark:bg-white/5" />
+                  </View>
+                  <View className="h-5 w-14 rounded-full bg-neutral-100 dark:bg-white/10" />
+                </View>
+                {i < count - 1 && <View className="h-[1px] bg-neutral-100 dark:bg-darkBorder ml-[68px]" />}
+              </View>
+            ))}
+          </View>
+        </View>
+      ))}
     </View>
   );
 }
 
-function HistoryItem({ title, subtitle, time, points, positive, image, icon }) {
+/* ── Section Label ── */
+function SectionLabel({ label }: { label: string }) {
+  const { t: translate, i18n } = useTranslation();
+  let display = label;
+  if (label === "today") display = translate("user.activity.sections.today");
+  else if (label === "yesterday") display = translate("user.activity.sections.yesterday");
+  else {
+    const d = new Date(label);
+    display = d.toLocaleDateString(
+      i18n.language === "ja" ? "ja-JP" : "en-US",
+      { month: "long", day: "numeric" }
+    );
+  }
+  return (
+    <Text className="text-xs font-poppins-semibold text-neutral-400 dark:text-darkTextSecondary tracking-widest uppercase ml-1 mb-2">
+      {display}
+    </Text>
+  );
+}
+
+/* ── History Row ── */
+function HistoryRow({ title, subtitle, time, points, positive, image, icon }: any) {
   const { t: translate, i18n } = useTranslation();
   const isPositive = positive ?? points?.startsWith("+");
-  const scaleAnim = useRef(new Animated.Value(1)).current;
 
-  const handlePressIn = () => {
-    Animated.spring(scaleAnim, { toValue: 0.97, useNativeDriver: true }).start();
-  };
-
-  const handlePressOut = () => {
-    Animated.spring(scaleAnim, { toValue: 1, useNativeDriver: true }).start();
-  };
+  const timeStr = time
+    ? new Date(time).toLocaleTimeString(
+      i18n.language === "ja" ? "ja-JP" : "en-US",
+      { hour: "numeric", minute: "2-digit", hour12: true }
+    )
+    : null;
 
   return (
-    <TouchableOpacity activeOpacity={1} onPressIn={handlePressIn} onPressOut={handlePressOut}>
-      <Animated.View
-        style={{ transform: [{ scale: scaleAnim }] }}
-        className="bg-white dark:bg-darkBackgroundMuted rounded-xl p-4 mb-3 border border-neutral-100 dark:border-darkBorder"
+    <View className="flex-row items-center px-4 py-3.5">
+      {/* Circular icon well */}
+      <View
+        className={`w-10 h-10 rounded-full items-center justify-center flex-shrink-0 ${isPositive ? "bg-emerald-50 dark:bg-emerald-500/10" : "bg-orange-50 dark:bg-primary/10"
+          }`}
       >
-        <View className="flex-row items-center justify-between">
-          <View className="flex-row items-center flex-1">
-            <View className="w-12 h-12 my-3 rounded-xl bg-background dark:bg-darkBackgroundCard items-center justify-center mr-3">
-              {icon && <Text className="text-xl text-orange-500 dark:text-darkPrimaryText">{icon}</Text>}
-              {image && <Image source={{ uri: image }} className="w-12 h-12" />}
-            </View>
+        {icon ? (
+          <Text className={`text-base ${isPositive ? "text-emerald-500" : "text-primary"}`}>
+            {icon}
+          </Text>
+        ) : image ? (
+          <Image source={{ uri: image }} className="w-10 h-10 rounded-full" />
+        ) : (
+          isPositive ? (
+            <CirclePlus size={18} color="#10b981" />
+          ) : (
+            <Gift size={18} color="#FF6600" />
+          )
+        )}
+      </View>
 
-            <View className="flex-1">
-              <Text numberOfLines={1} className="text-base font-poppins-semibold text-textPrimary dark:text-darkTextPrimary">
-                {translate(title)}
-              </Text>
-              <Text className="text-xs font-poppins-regular text-textSecondary dark:text-darkTextSecondary">
-                {translate(subtitle)} {time ? `• ${new Date(time).toLocaleTimeString(i18n.language === 'ja' ? 'ja-JP' : 'en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}` : ""}
-              </Text>
-            </View>
-          </View>
+      {/* Text */}
+      <View className="flex-1 ml-3">
+        <Text
+          numberOfLines={1}
+          className="text-sm font-poppins-semibold text-neutral-800 dark:text-darkTextPrimary"
+        >
+          {translate(title)}
+        </Text>
+        <Text className="text-xs font-poppins text-neutral-400 dark:text-darkTextSecondary mt-0.5">
+          {translate(subtitle)}{timeStr ? ` • ${timeStr}` : ""}
+        </Text>
+      </View>
 
-          <View className={`px-3 py-1 rounded-full ${isPositive ? "bg-emerald-50 dark:bg-emerald-500/10" : "bg-red-50 dark:bg-red-500/10"}`}>
-            <Text className={`text-sm font-poppins-bold ${isPositive ? "text-emerald-500" : "text-red-500"}`}>
-              {points}
-            </Text>
-          </View>
-        </View>
-      </Animated.View>
-    </TouchableOpacity>
+      {/* Points pill */}
+      <View
+        className={`px-2.5 py-1 rounded-full ml-3 ${isPositive ? "bg-emerald-50 dark:bg-emerald-500/10" : "bg-orange-50 dark:bg-primary/10"
+          }`}
+      >
+        <Text
+          className={`text-sm font-poppins-bold ${isPositive ? "text-emerald-500" : "text-primary"
+            }`}
+        >
+          {points}
+        </Text>
+      </View>
+    </View>
   );
 }
