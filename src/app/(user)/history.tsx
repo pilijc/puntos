@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Text, View, Image, TouchableOpacity } from "@/tw";
 import { CirclePlus, Gift, ReceiptText, TrendingUp } from "lucide-react-native";
 import { RefreshControl } from "react-native";
-import { getUserTransactionHistory } from "@/services/users/qr-service";
+import { getUserTransactionHistory } from "@/services/qr-service";
 import { supabase } from "@/supabase/supabase";
 import { useTranslation } from "react-i18next";
 import StoreScreenContainer from "@/components/ui/store-screen-container";
