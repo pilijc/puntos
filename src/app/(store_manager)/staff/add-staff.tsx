@@ -1,44 +1,60 @@
-import React, { useState, useEffect } from "react";
-import { Keyboard, KeyboardAvoidingView, Platform, ScrollView, useColorScheme } from "react-native";
+import React, { useEffect } from "react";
+import { KeyboardAvoidingView, Platform, ScrollView, useColorScheme } from "react-native";
 import { View, Text, TouchableOpacity, TextInput } from "@/tw";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Button } from "@/components/button";
-import { Modal, type ModalButton } from "@/components/modal";
-import { createStoreStaff } from "@/services/store-manager/staff-service";
+import { Modal } from "@/components/modal";
+import { createStoreStaff, getStoreStaffMember, updateStoreStaffMember } from "@/services/store-manager/staff-service";
 import { useStaffStore } from "@/store/store-manager/staff-store";
-
-function generateRandomPassword(length: number = 8): string {
-  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz123456789";
-  let pwd = "";
-  for (let i = 0; i < length; i++) {
-    const idx = Math.floor(Math.random() * chars.length);
-    pwd += chars[idx];
-  }
-  return pwd;
-}
+import { generateRandomPassword } from "@/utils/store_manager/staff";
 
 export default function AddStaff() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { storeId } = useLocalSearchParams<{ storeId: string }>();
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === "dark";
-  const { name, email, password, setName, setEmail, setPassword, resetStaff } = useStaffStore();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-	const [showConfirm, setShowConfirm] = useState(false);
-
-  const [modal, setModal] = useState<{
-    title: string;
-    message: string;
-    buttons: ModalButton[];
-    timer?: boolean;
-  } | null>(null);
+  const { storeId, staffId } = useLocalSearchParams<{ storeId: string; staffId?: string }>();
+  const isEditMode = !!staffId;
+  const isDark = useColorScheme() === "dark";
+  const {
+    name,
+    email,
+    password,
+    isSubmitting,
+    showConfirm,
+    modal,
+    setName,
+    setEmail,
+    setPassword,
+    setIsSubmitting,
+    setShowConfirm,
+    setModal,
+    resetStaff,
+  } = useStaffStore();
 
   useEffect(() => {
-    setPassword(generateRandomPassword(8));
-  }, []);
+    const init = async () => {
+      if (isEditMode && staffId) {
+        const member = await getStoreStaffMember(staffId);
+        const user = member?.user as { name?: string | null; email?: string | null } | null;
+        setName(user?.name ?? "");
+        setEmail(user?.email ?? "");
+        setPassword("");
+      } else {
+        setPassword(generateRandomPassword(8));
+      }
+    };
+
+    init().catch(() => {
+      setModal({
+        title: "Error",
+        message: "Failed to load staff details.",
+        buttons: [{ label: "OK", onPress: () => setModal(null), variant: "secondary" }],
+      });
+    });
+
+    return () => resetStaff();
+  }, [isEditMode, staffId, setName, setEmail, setPassword, setModal, resetStaff]);
 
   const openConfirm = () => {
     const trimmedName = name.trim();
@@ -69,28 +85,36 @@ export default function AddStaff() {
   const handleCreateStaff = async () => {
     setIsSubmitting(true);
     try {
-      await createStoreStaff(storeId, name, email, password);
+      if (isEditMode && staffId) {
+        await updateStoreStaffMember(staffId, name, email);
+      } else {
+        await createStoreStaff(storeId, name, email, password);
+      }
+  
       setModal({
-        title: "Staff Added",
-        message: "The staff member has been added successfully. ",
+        title: isEditMode ? "Staff Updated" : "Staff Added",
+        message: isEditMode
+          ? "The staff member details were updated successfully."
+          : "The staff member has been added successfully.",
         buttons: [
           {
             label: "OK",
-            onPress: () =>
-              router.push({
-                pathname: "/(store_manager)/view-store/[id]",
-                params: { id: storeId },
-              }),
+            onPress: () => {
+              setModal(null);
+            },
             variant: "primary",
           },
         ],
-        timer: true,
       });
       resetStaff();
+      router.replace({
+        pathname: "/(store_manager)/staff",
+        params: { storeId },
+      });
     } catch (error) {
       setModal({
         title: "Error",
-        message: (error as Error).message ?? "Failed to add staff member.",
+        message: (error as Error).message ?? "Failed to save staff member.",
         buttons: [{ label: "OK", onPress: () => setModal(null), variant: "secondary" }],
       });
     } finally {
@@ -122,15 +146,15 @@ export default function AddStaff() {
           activeOpacity={0.7}
           onPress={() =>
             router.push({
-              pathname: "/(store_manager)/view-store/[id]",
-              params: { id: storeId },
+              pathname: "/(store_manager)/staff",
+              params: { storeId },
             })
           }
         >
           <MaterialIcons name="chevron-left" size={22} color={isDark ? "#F1F5F9" : "#0F172A"} />
         </TouchableOpacity>
         <Text className="flex-1 text-center text-[17px] font-poppins-bold text-slate-900 dark:text-slate-100 pr-10">
-          Create Frontdesk Staff
+          {isEditMode ? "Edit Frontdesk Staff" : "Create Frontdesk Staff"}
         </Text>
       </View>
 
@@ -142,14 +166,16 @@ export default function AddStaff() {
       >
         <View>
           <Text className="text-xl font-poppins-bold text-slate-900 dark:text-slate-100">
-            Frontdesk Staff
+            {isEditMode ? "Edit Frontdesk Staff" : "Frontdesk Staff"}
           </Text>
           <Text className="text-sm font-poppins text-slate-500 dark:text-slate-400 mt-1">
-            Add a frontdesk staff member who can help your store, assist customers, and handle daily store tasks.
+            {isEditMode
+              ? "Update the frontdesk staff profile details."
+              : "Add a frontdesk staff member who can help your store, assist customers, and handle daily store tasks."}
           </Text>
         </View>
 
-				<View className="bg-primary/5 dark:bg-primary-800 rounded-xl px-2 py-3 gap-y-2">
+				{!isEditMode && <View className="bg-primary/5 dark:bg-primary-800 rounded-xl px-2 py-3 gap-y-2">
 					<Text className="text-sm font-poppins-semibold text-primary">
 						Staff Login Information
 					</Text>
@@ -167,7 +193,7 @@ export default function AddStaff() {
 							• After logging in, they will be asked to set a new password.
 						</Text>
 					</View>
-        </View>
+        </View>}
 
         <View className="gap-y-2">
           <View className="flex-row items-center gap-x-0.5">
@@ -203,7 +229,7 @@ export default function AddStaff() {
           />
         </View>
 
-        <View className="gap-y-2">
+        {!isEditMode && <View className="gap-y-2">
           <View className="flex-row items-center gap-x-0.5 justify-between">
             <View className="flex-row items-center gap-x-0.5">
               <Text className="text-sm font-poppins-semibold text-slate-700 dark:text-slate-300">
@@ -223,11 +249,11 @@ export default function AddStaff() {
             placeholderTextColor="#94A3B8"
             value={password}
           />
-        </View>
+        </View>}
 
         <View className="gap-y-3">
           <Button
-            label="Confirm"
+            label={isEditMode ? "Save Changes" : "Confirm"}
             onPress={openConfirm}
             disabled={isSubmitting}
             loading={isSubmitting}
@@ -238,9 +264,9 @@ export default function AddStaff() {
           <Button
             label="Cancel"
             onPress={() =>
-              router.push({
-                pathname: "/(store_manager)/view-store/[id]",
-                params: { id: storeId },
+              router.replace({
+                pathname: "/(store_manager)/staff",
+                params: { storeId },
               })
             }
             disabled={isSubmitting}
@@ -257,11 +283,13 @@ export default function AddStaff() {
 				>
 					<View className="w-full max-w-sm rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 p-5 shadow-2xl">
 						<Text className="text-base font-poppins-bold text-slate-900 dark:text-slate-100 mb-2">
-							Confirm Staff Details
+							{isEditMode ? "Confirm Changes" : "Confirm Staff Details"}
 						</Text>
 
 						<Text className="text-sm font-poppins text-slate-500 dark:text-slate-400 mb-4">
-							Please review the login details below. Take a screenshot and share them with your frontdesk staff.
+              {isEditMode
+                ? "Please review the details below before saving."
+                : "Please review the login details below. Take a screenshot and share them with your frontdesk staff."}
 						</Text>
 
 						<View className="mb-3 gap-y-1.5">
@@ -275,7 +303,7 @@ export default function AddStaff() {
 							</View>
 						</View>
 
-						<View className="mb-4 gap-y-1.5">
+						{!isEditMode && <View className="mb-4 gap-y-1.5">
 							<Text className="text-xs font-poppins text-slate-500 dark:text-slate-400">
 								Temporary Password
 							</Text>
@@ -284,7 +312,7 @@ export default function AddStaff() {
 									{password}
 								</Text>
 							</View>
-						</View>
+						</View>}
 
 						<View className="flex-row gap-x-2 mt-2">
 							<TouchableOpacity
@@ -306,7 +334,7 @@ export default function AddStaff() {
 								}}
 							>
 								<Text className="text-xs font-poppins-semibold text-white">
-								 Create Frontdesk Staff
+								 {isEditMode ? "Save Changes" : "Create Frontdesk Staff"}
 								</Text>
 							</TouchableOpacity>
 						</View>

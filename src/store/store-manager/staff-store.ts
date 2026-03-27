@@ -6,12 +6,27 @@ export const useStaffStore = create<StaffFormState>((set) => ({
   email: "",
   password: "",
   storeId: 0,
+  isSubmitting: false,
+  showConfirm: false,
+  modal: null,
 
   setName: (name) => set({ name }),
   setEmail: (email) => set({ email }),
   setPassword: (password) => set({ password }),
   setStoreId: (storeId) => set({ storeId }),
-  resetStaff: () => set({ name: "", email: "", password: "", storeId: 0 }),
+  setIsSubmitting: (isSubmitting) => set({ isSubmitting }),
+  setShowConfirm: (showConfirm) => set({ showConfirm }),
+  setModal: (modal) => set({ modal }),
+  resetStaff: () =>
+    set({
+      name: "",
+      email: "",
+      password: "",
+      storeId: 0,
+      isSubmitting: false,
+      showConfirm: false,
+      modal: null,
+    }),
 }));
 
 const viewInitialState = {

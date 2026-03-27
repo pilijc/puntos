@@ -5,15 +5,17 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { getStoreStaff, deleteStoreStaff } from "@/services/store-manager/staff-service";
 import { Modal, type ModalButton } from "@/components/modal";
-import { useStaffViewStore } from "@/store/store-manager/staff-store";
+import { useStaffStore, useStaffViewStore } from "@/store/store-manager/staff-store";
 import { ChevronLeft, ChevronRight, UsersRound, Pencil, Trash, UserRoundX  } from "lucide-react-native";
 import StaffSkeleton from "@/components/skeleton/store_manager/staff-skeleton";
+import { getInitials } from "@/utils/store_manager/staff";
 
 export default function ViewStaff() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { storeId } = useLocalSearchParams<{ storeId: string }>();
   const isDark = useColorScheme() === "dark";
+  const { modal, setModal } = useStaffStore();
   const {
     staff,
     loading,
@@ -26,11 +28,6 @@ export default function ViewStaff() {
     removeStaff,
     reset,
   } = useStaffViewStore();
-  const [modal, setModal] = useState<{
-    title: string;
-    message: string;
-    buttons: ModalButton[];
-  } | null>(null);
 
   const fetchStaff = useCallback(async () => {
     try {
@@ -71,6 +68,7 @@ export default function ViewStaff() {
         },
         {
           label: "Remove",
+          variant: "primary",
           onPress: async () => {
             setDeleting(staffId);
             setModal({
@@ -106,21 +104,10 @@ export default function ViewStaff() {
               setDeleting(null);
             }
           },
-          variant: "primary",
         },
       ],
     });
   };
-
-  const getInitials = (name: string | null | undefined) => {
-    if (!name) return "?";
-    const parts = name.trim().split(" ");
-    if (parts.length === 1) return parts[0][0].toUpperCase();
-    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-  };
-
-  const avatarColors = [ "#FF6600", "#3B82F6", "#10B981", "#8B5CF6", "#F59E0B", "#EF4444",];
-  const getAvatarColor = (index: number) => avatarColors[index % avatarColors.length];
 
   return (
     <View className="flex-1 bg-backgroundMuted dark:bg-neutral-900">

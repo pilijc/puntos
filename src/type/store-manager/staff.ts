@@ -1,4 +1,5 @@
 import { getStoreStaff } from "@/services/store-manager/staff-service";
+import { ModalButton } from "@/components/modal";
 
 export type StaffMember = Awaited<ReturnType<typeof getStoreStaff>>[number];
 
@@ -7,11 +8,22 @@ export interface StaffFormState {
   email: string;
   password: string;
   storeId: number;
+  isSubmitting: boolean;
+  showConfirm: boolean;
+  modal: {
+    title: string;
+    message: string;
+    buttons: ModalButton[];
+    timer?: boolean;
+  } | null;
 
   setName: (name: string) => void;
   setEmail: (email: string) => void;
   setPassword: (password: string) => void;
   setStoreId: (storeId: number) => void;
+  setIsSubmitting: (isSubmitting: boolean) => void;
+  setShowConfirm: (showConfirm: boolean) => void;
+  setModal: (modal: StaffFormState["modal"]) => void;
   resetStaff: () => void;
 }
 export interface StaffViewState {
