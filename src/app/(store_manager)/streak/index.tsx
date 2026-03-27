@@ -1,5 +1,5 @@
 import React, { useCallback } from "react";
-import { ScrollView, useColorScheme } from "react-native";
+import { FlatList, useColorScheme } from "react-native";
 import { View, Text, TouchableOpacity } from "@/tw";
 import { Button } from "@/components/button";
 import { Modal } from "@/components/modal";
@@ -7,12 +7,13 @@ import { useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { getAllStreaksByStoreId, endStreakProgram, publishStreakProgram, activateStreakProgram, deleteStreakProgram } from "@/services/store-manager/streak-service";
 import { Streak, StreakTabs } from "@/type/store-manager/streak";
-import { ChevronLeft, Flame } from "lucide-react-native";
+import { ChevronLeft, Flame, Plus } from "lucide-react-native";
 import { StreakCard } from "@/components/store_manager/streak/streak-card";
 import { StreakCardSkeleton } from "@/components/skeleton/store_manager/streak-skeleton";
 import { useStreakViewStore } from "@/store/store-manager/streak-store";
 
 export default function ViewStreak() {
+  const PAGE_SIZE = 6;
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const colorScheme = useColorScheme();
@@ -22,11 +23,15 @@ export default function ViewStreak() {
     activeTab,
     streaks,
     loading,
+    upcomingVisible,
+    endedVisible,
     acting,
     modal,
     setActiveTab,
     setStreaks,
     setLoading,
+    setUpcomingVisible,
+    setEndedVisible,
     setActing,
     setModal,
   } = useStreakViewStore();
@@ -35,21 +40,29 @@ export default function ViewStreak() {
     if (!storeId) return;
     setLoading(true);
     getAllStreaksByStoreId(storeId)
-      .then(setStreaks)
+      .then((rows) => {
+        setStreaks(rows);
+        setUpcomingVisible(PAGE_SIZE);
+        setEndedVisible(PAGE_SIZE);
+      })
       .catch(() => setStreaks([]))
       .finally(() => setLoading(false));
-  }, [storeId, setLoading, setStreaks]);
+  }, [storeId, setLoading, setStreaks, setUpcomingVisible, setEndedVisible]);
 
   useFocusEffect(load);
 
   const activeStreaks = streaks.filter((s) => s.status === "active");
   const upcomingStreaks = streaks.filter((s) => s.status === "draft" || s.status === "upcoming");
   const endedStreaks = streaks.filter((s) => s.status === "ended");
+  const visibleUpcomingStreaks = upcomingStreaks.slice(0, upcomingVisible);
+  const visibleEndedStreaks = endedStreaks.slice(0, endedVisible);
+  const hasMoreUpcoming = visibleUpcomingStreaks.length < upcomingStreaks.length;
+  const hasMoreEnded = visibleEndedStreaks.length < endedStreaks.length;
 
   const tabStreaks =
     activeTab === "active" ? activeStreaks
-    : activeTab === "upcoming" ? upcomingStreaks
-    : endedStreaks;
+    : activeTab === "upcoming" ? visibleUpcomingStreaks
+    : visibleEndedStreaks;
 
   const showError = (message: string) =>
     setModal({ title: "Error", message, buttons: [{ label: "OK", onPress: () => setModal(null) }] });
@@ -165,6 +178,16 @@ export default function ViewStreak() {
     }
   };
 
+  const handleLoadMore = () => {
+    if (activeTab === "upcoming" && hasMoreUpcoming) {
+      setUpcomingVisible(Math.min(upcomingVisible + PAGE_SIZE, upcomingStreaks.length));
+      return;
+    }
+    if (activeTab === "ended" && hasMoreEnded) {
+      setEndedVisible(Math.min(endedVisible + PAGE_SIZE, endedStreaks.length));
+    }
+  };
+
   return (
     <View className="flex-1 bg-backgroundMuted dark:bg-[#111921]">
       <Modal
@@ -255,10 +278,15 @@ export default function ViewStreak() {
           )}
         </View>
       ) : (
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 16, gap: 12 }}>
-          {tabStreaks.map((streak) => (
+        <FlatList
+          data={tabStreaks}
+          keyExtractor={(item, index) => `${item.id ?? index}`}
+          contentContainerStyle={{ padding: 16, gap: 12 }}
+          showsVerticalScrollIndicator={false}
+          onEndReached={handleLoadMore}
+          onEndReachedThreshold={0.35}
+          renderItem={({ item: streak }) => (
             <StreakCard
-              key={streak.id}
               streak={streak}
               isDark={isDark}
               onEdit={streak.status === "draft" ? () => handleEdit(streak) : undefined}
@@ -271,17 +299,20 @@ export default function ViewStreak() {
               isEnding={acting?.id === streak.id && acting?.action === "end"}
               isDeleting={acting?.id === streak.id && acting?.action === "delete"}
             />
-          ))}
-
-          {activeTab !== "ended" && (
-            <Button
-              label="Create New Program"
-              onPress={() => router.push({ pathname: "/(store_manager)/streak/configure-streaks", params: { storeId } })}
-              variant="ghost"
-              icon="add-circle-outline"
-            />
           )}
-        </ScrollView>
+        />
+      )}
+
+      {activeTab !== "ended" && (
+        <TouchableOpacity
+          className="absolute bottom-6 right-6 w-14 h-14 rounded-full bg-primary items-center justify-center"
+          activeOpacity={0.85}
+          onPress={() => {
+            router.push({ pathname: "/(store_manager)/streak/configure-streaks", params: { storeId } });
+          }}
+        >
+          <Plus size={28} color="#fff" />
+        </TouchableOpacity>
       )}
     </View>
   );

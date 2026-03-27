@@ -112,6 +112,8 @@ export interface StreakViewState {
   activeTab: StreakTabKey;
   streaks: Streak[];
   loading: boolean;
+  upcomingVisible: number;
+  endedVisible: number;
   acting: { id: number; action: StreakActionType } | null;
   modal: {
     title: string;
@@ -122,6 +124,8 @@ export interface StreakViewState {
   setActiveTab: (value: StreakTabKey) => void;
   setStreaks: (value: Streak[]) => void;
   setLoading: (value: boolean) => void;
+  setUpcomingVisible: (value: number) => void;
+  setEndedVisible: (value: number) => void;
   setActing: (value: { id: number; action: StreakActionType } | null) => void;
   setModal: (value: StreakViewState["modal"]) => void;
   resetView: () => void;
