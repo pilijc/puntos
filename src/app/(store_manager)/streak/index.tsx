@@ -199,17 +199,17 @@ export default function ViewStreak() {
       />
 
       <View
-        className="bg-background dark:bg-[#111921] border-b border-slate-200 dark:border-slate-800 flex-row items-center px-2"
+        className="bg-white dark:bg-[#111921] flex-row items-center px-2"
         style={{ paddingTop: insets.top + 8, paddingBottom: 0 }}
       >
         <TouchableOpacity
-          className="w-10 h-10 rounded-full items-center justify-center mb-3"
+          className="w-10 h-10 rounded-full items-center justify-center"
           activeOpacity={0.7}
           onPress={() => router.push({ pathname: "/(store_manager)/view-store/[id]", params: { id: storeId } })}
         >
-          <ChevronLeft size={22} color={isDark ? "#F1F5F9" : "#0F172A"} />
+          <ChevronLeft size={22} color={isDark ? "#FFFFFF" : "#0F172A"} />
         </TouchableOpacity>
-        <Text className="flex-1 text-center text-[17px] font-poppins-bold text-slate-900 dark:text-slate-100 pr-10 mb-3">
+        <Text className="flex-1 text-center text-md font-poppins-bold text-textPrimary dark:text-darkTextPrimary pr-10 mb-3">
           Streak Programs
         </Text>
       </View>
