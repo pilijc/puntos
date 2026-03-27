@@ -5,10 +5,10 @@ import { Platform, View, StyleSheet, useColorScheme } from "react-native";
 import { supabase } from "@/supabase/supabase";
 import { getRoleTypeForUser } from "@/services/access-service";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-//import QRRoundedButton from "@/components/qr/qr-rounded";
-import { getCurrentUserIsActive } from "@/services/frontdesk/scan-service";
+import QRRoundedButton from "@/components/qr/qr-rounded";
+import { getCurrentUserIsActive } from "@/services/operator-service";
 import { useTranslation } from "react-i18next";
-import { History, Settings, Home } from 'lucide-react-native';
+import { History, Settings } from 'lucide-react-native';
 
 export default function FrontDeskLayout() {
     const router = useRouter();
@@ -106,11 +106,11 @@ export default function FrontDeskLayout() {
             <Tabs.Screen
                 name="index"
                 options={{
-                    title: "Dashboard",
-                    tabBarIcon: ({color}) => (
-                        <Home size={24} color={color} />
-                    ),
-                    
+                    title: "",
+                    tabBarIcon: () => null,
+                    tabBarButton: (props: any) => isActive ? (
+                        <QRRoundedButton onPress={props.onPress} bottomInset={insets.bottom} />
+                    ) : null,
                 }}
             />
             <Tabs.Screen
