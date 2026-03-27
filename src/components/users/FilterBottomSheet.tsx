@@ -9,7 +9,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 import { Button } from "@/components/button";
 import { TYPO, COLORS, FILTER_OPTIONS } from "./constants";
-import type { AccountStatusFilter } from "@/store/user-store";
+import type { AccountStatusFilter } from "@/store/super-admin/user-store";
 
 interface FilterBottomSheetProps {
   visible: boolean;

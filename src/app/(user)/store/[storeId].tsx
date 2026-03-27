@@ -6,7 +6,7 @@ import {
   AnimatedView,
   Image,
 } from "@/tw";
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { CalendarDays, ChevronDown, ChevronLeft, ChevronUp, CircleCheck, MapPinOff } from "lucide-react-native";
 import React, { useCallback, useEffect, useState } from "react";
 import { FadeIn, FadeOut, Layout, Easing } from "react-native-reanimated";
 import { useRouter, useLocalSearchParams } from "expo-router";
@@ -22,6 +22,7 @@ import SortPill from "@/components/rewards/sort-pill";
 import { storeLogos } from "@/data/rewards";
 import { useRewardsUiStore } from "@/store/user/rewards-ui-store";
 import { useStoreOverviewData } from "@/hooks/use-store-overview-data";
+import { ProgramSkeleton } from "@/components/skeleton/user/program-skeleton";
 import StoreScreenContainer from "@/components/ui/store-screen-container";
 
 const { width: screenWidth } = Dimensions.get("window");
@@ -120,10 +121,9 @@ export default function StoreOverviewDetail() {
           onPress={() => router.back()}
           className="p-1 -ml-1"
         >
-          <MaterialIcons 
-            name="chevron-left" 
-            size={36} 
-            color="#FFFFFF" 
+          <ChevronLeft
+            size={36}
+            color="#FFFFFF"
             style={{ 
               textShadowColor: 'rgba(0, 0, 0, 0.5)', 
               textShadowOffset: { width: 0, height: 1 }, 
@@ -140,7 +140,6 @@ export default function StoreOverviewDetail() {
           setHeroIndex={handleHeroSnap}
           heroIndex={heroIndex}
           swipeIndicatorStyle={swipeIndicatorStyle}
-          hideViewButton={true}
         />
 
         <AnimatedView
@@ -154,11 +153,11 @@ export default function StoreOverviewDetail() {
               disabled={nearbyStores.length === 0}
             >
               <View className="w-10 h-10 rounded-full bg-primary/10 items-center justify-center">
-                <MaterialIcons
-                  name={nearbyStores.length > 0 ? "check" : "location-off"}
-                  size={20}
-                  color={nearbyStores.length > 0 ? "#FF6600" : "#9ca3af"}
-                />
+                {nearbyStores.length > 0 ? (
+                  <CircleCheck size={20} color="#FF6600" />
+                ) : (
+                  <MapPinOff size={20} color="#9ca3af" />
+                )}
               </View>
               <View className="flex-1 pr-2 justify-center">
                 <Text
@@ -182,11 +181,11 @@ export default function StoreOverviewDetail() {
                 </Text>
               </View>
               {nearbyStores.length > 0 && (
-                <MaterialIcons
-                  name={isNearbyOpen ? "expand-less" : "expand-more"}
-                  size={20}
-                  color="#FF6600"
-                />
+                isNearbyOpen ? (
+                  <ChevronUp size={20} color="#FF6600" />
+                ) : (
+                  <ChevronDown size={20} color="#FF6600" />
+                )
               )}
             </Pressable>
             {nearbyStores.length === 0 ? (
@@ -277,42 +276,7 @@ export default function StoreOverviewDetail() {
       <View>
         {(isSwitchingStore || isInitialLoading || isLoadingRewardsFeatures) ? (
           // Skeleton shimmer while switching stores
-          <AnimatedView
-            entering={FadeIn.duration(150)}
-            exiting={FadeOut.duration(150)}
-            className="gap-y-3"
-          >
-            {/* Skeleton — mirrors UserStampLogCard layout exactly */}
-            <View className="bg-white dark:bg-darkBackgroundMuted rounded-2xl border border-neutral-100 dark:border-darkBorder overflow-hidden mx-1 p-3">
-              <View className="flex-row items-center justify-between">
-                <View className="flex-row items-center gap-x-2">
-                  <View className="w-5 h-5 rounded-full bg-neutral-200 dark:bg-white/10" />
-                  <View className="h-3.5 w-20 rounded-full bg-neutral-200 dark:bg-white/10" />
-                </View>
-                <View className="flex-row items-center gap-x-3">
-                  <View className="h-5 w-16 rounded-full bg-neutral-100 dark:bg-white/5" />
-                  <View className="w-5 h-5 rounded-full bg-neutral-200 dark:bg-white/10" />
-                  <View className="h-3.5 w-12 rounded-full bg-neutral-200 dark:bg-white/10" />
-                </View>
-              </View>
-              <View className="flex-row items-center gap-x-3 mt-2.5">
-                <View className="w-10 h-10 rounded-full bg-neutral-200 dark:bg-white/10" />
-                <View className="gap-y-1.5 flex-1">
-                  <View className="h-3.5 w-1/2 rounded-full bg-neutral-200 dark:bg-white/10" />
-                  <View className="h-2.5 w-1/3 rounded-full bg-neutral-100 dark:bg-white/5" />
-                </View>
-              </View>
-              <View className="h-2.5 w-28 rounded-full bg-neutral-100 dark:bg-white/5 mt-2" />
-              <View className="flex-row justify-between mt-3">
-                {[...Array(7)].map((_, i) => (
-                  <View
-                    key={i}
-                    className="w-10 h-10 rounded-full bg-neutral-200 dark:bg-white/10"
-                  />
-                ))}
-              </View>
-            </View>
-          </AnimatedView>
+          <ProgramSkeleton />
         ) : (
           <>
             {displayStreaks.length === 0 && displayStamps.length === 0 && (
@@ -320,7 +284,7 @@ export default function StoreOverviewDetail() {
                 entering={FadeIn.duration(400)}
                 className="bg-white dark:bg-darkBackgroundMuted rounded-xl p-8 items-center border border-neutral-100 dark:border-darkBorder mx-1 mb-3"
               >
-                <MaterialIcons name="event-note" size={40} color="#FF6600" />
+                <CalendarDays size={40} color="#FF6600" />
                 <Text className="text-lg font-poppins-semibold text-neutral-900 dark:text-darkTextPrimary mt-3 text-center">
                   {translate("user.rewards.upcomingEvents.title")}
                 </Text>

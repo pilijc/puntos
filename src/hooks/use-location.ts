@@ -104,10 +104,14 @@ export function useLocation(): UseLocationReturn {
     if (subscription) {
       subscription.remove();
     }
-    if (!permissionStatus.granted) {
+    // Fetch live hardware permission status natively to avoid referencing stale React closures on the first mount
+    let liveStatus = await checkLocationPermission();
+    if (!liveStatus.granted) {
       await requestPermission();
+      liveStatus = await checkLocationPermission();
     }
-    if (permissionStatus.granted) {
+
+    if (liveStatus.granted) {
       const sub = await watchLocation((loc) => {
         setLocation(loc);
       });
