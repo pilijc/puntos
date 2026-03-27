@@ -4,7 +4,7 @@ import { View, Text } from "@/tw";
 import { MaterialIcons } from "@expo/vector-icons";
 import { Modal } from "@/components/modal";
 import { TYPO, COLORS, getBadge } from "./constants";
-import type { UserRecord } from "@/store/user-store";
+import type { UserRecord } from "@/store/super-admin/user-store";
 
 interface BlockUserModalProps {
   visible: boolean;
