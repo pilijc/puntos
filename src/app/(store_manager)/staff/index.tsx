@@ -2,25 +2,29 @@ import React, { useCallback, useEffect, useState } from "react";
 import { RefreshControl, useColorScheme, ActivityIndicator } from "react-native";
 import { View, Text, TouchableOpacity, ScrollView } from "@/tw";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { getStoreStaff, deleteStoreStaff } from "@/services/store-manager/staff-service";
 import { Modal, type ModalButton } from "@/components/modal";
-
-type StaffMember = Awaited<ReturnType<typeof getStoreStaff>>[number];
+import { useStaffViewStore } from "@/store/store-manager/staff-store";
+import { ChevronLeft, ChevronRight, UsersRound, Pencil, Trash, UserRoundX  } from "lucide-react-native";
 
 export default function ViewStaff() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { storeId } = useLocalSearchParams<{ storeId: string }>();
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === "dark";
-
-  const [staff, setStaff] = useState<StaffMember[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [deleting, setDeleting] = useState<string | null>(null);
+  const isDark = useColorScheme() === "dark";
+  const {
+    staff,
+    loading,
+    refreshing,
+    deleting,
+    setStaff,
+    setLoading,
+    setRefreshing,
+    setDeleting,
+    removeStaff,
+    reset,
+  } = useStaffViewStore();
   const [modal, setModal] = useState<{
     title: string;
     message: string;
@@ -34,18 +38,19 @@ export default function ViewStaff() {
     } catch {
       setStaff([]);
     }
-  }, [storeId]);
+  }, [storeId, setStaff]);
 
   useEffect(() => {
     setLoading(true);
     fetchStaff().finally(() => setLoading(false));
-  }, [fetchStaff]);
+    return () => reset();
+  }, [fetchStaff, setLoading, reset]);
 
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
     await fetchStaff();
     setRefreshing(false);
-  }, [fetchStaff]);
+  }, [fetchStaff, setRefreshing]);
 
   const confirmDelete = (staffId: string, name: string | null) => {
     setModal({
@@ -56,18 +61,38 @@ export default function ViewStaff() {
           label: "Cancel",
           onPress: () => setModal(null),
           variant: "secondary",
+          disabled: deleting === staffId,
         },
         {
           label: "Remove",
           onPress: async () => {
-            setModal(null);
             setDeleting(staffId);
+            setModal({
+              title: "Remove Staff",
+              message: `Are you sure you want to remove ${name ?? "this staff member"}? This action cannot be undone.`,
+              buttons: [
+                {
+                  label: "Cancel",
+                  onPress: () => setModal(null),
+                  variant: "secondary",
+                  disabled: true,
+                },
+                {
+                  label: "Remove",
+                  onPress: async () => {},
+                  variant: "primary",
+                  loading: true,
+                  disabled: true,
+                },
+              ],
+            });
             try {
               await deleteStoreStaff(staffId);
-              setStaff((prev) => prev.filter((m) => m.id !== staffId));
+              removeStaff(staffId);
+              setModal(null);
             } catch {
               setModal({
-                title: "Error",
+                title: "Unable to Remove Staff",
                 message: "Failed to remove staff member. Please try again.",
                 buttons: [{ label: "OK", onPress: () => setModal(null), variant: "secondary" }],
               });
@@ -88,9 +113,7 @@ export default function ViewStaff() {
     return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
   };
 
-  const avatarColors = [
-    "#FF6600", "#3B82F6", "#10B981", "#8B5CF6", "#F59E0B", "#EF4444",
-  ];
+  const avatarColors = [ "#FF6600", "#3B82F6", "#10B981", "#8B5CF6", "#F59E0B", "#EF4444",];
   const getAvatarColor = (index: number) => avatarColors[index % avatarColors.length];
 
   return (
@@ -112,7 +135,7 @@ export default function ViewStaff() {
             className="w-10 h-10 rounded-full items-center justify-center"
             activeOpacity={0.7}
           >
-            <MaterialIcons name="chevron-left" size={22} color={isDark ? "#F1F5F9" : "#0F172A"} />
+            <ChevronLeft size={22} color={isDark ? "#F1F5F9" : "#0F172A"} />
           </TouchableOpacity>
 
           <View className="flex-1 items-center justify-center -ml-10">
@@ -140,8 +163,8 @@ export default function ViewStaff() {
         }
       >
         <View className="mx-4 mt-2 mb-4 flex-row items-center bg-white dark:bg-neutral-800 rounded-xl border border-slate-100 dark:border-neutral-700 px-4 py-3 gap-x-3">
-          <View className="w-10 h-10 rounded-xl bg-orange-50 dark:bg-orange-950 items-center justify-center">
-            <MaterialCommunityIcons name="account-group" size={20} color="#FF6600" />
+          <View className="w-10 h-10 items-center justify-center">
+            <UsersRound size={20} color="#FF6600" />
           </View>
           <View className="flex-1">
             <Text className="text-sm font-poppins-bold text-slate-800 dark:text-slate-100">
@@ -162,7 +185,7 @@ export default function ViewStaff() {
             activeOpacity={0.7}
           >
             <Text className="text-xs font-poppins-semibold text-primary">Add</Text>
-            <MaterialIcons name="chevron-right" size={14} color="#FF6600" />
+            <ChevronRight size={14} color="#FF6600" />
           </TouchableOpacity>
         </View>
 
@@ -175,7 +198,7 @@ export default function ViewStaff() {
           </View>
         ) : staff.length === 0 ? (
           <View className="mx-4 bg-white dark:bg-neutral-800 rounded-xl border border-slate-100 dark:border-neutral-700 px-4 py-14 items-center gap-y-2">
-            <MaterialCommunityIcons name="account-off-outline" size={36} color="#CBD5E1" />
+            <UserRoundX size={36} color="#CBD5E1" />
             <Text className="text-sm font-poppins-semibold text-slate-400 dark:text-slate-500">
               No staff yet
             </Text>
@@ -204,10 +227,9 @@ export default function ViewStaff() {
                 <View key={member.id}>
                   <View className="flex-row items-center px-4 py-3.5 gap-x-3">
                     <View
-                      style={{ backgroundColor: getAvatarColor(index) }}
-                      className="w-10 h-10 rounded-full items-center justify-center"
+                      className="w-10 h-10 rounded-full items-center justify-center bg-primary/10"
                     >
-                      <Text style={{ color: "#fff", fontSize: 13, fontFamily: "Poppins-SemiBold" }}>
+                      <Text className="text-sm font-poppins-bold text-primary">
                         {getInitials(user?.name)}
                       </Text>
                     </View>
@@ -232,19 +254,15 @@ export default function ViewStaff() {
                         }
                         className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-neutral-700 items-center justify-center"
                       >
-                        <MaterialIcons name="edit" size={15} color={isDark ? "#94A3B8" : "#64748B"} />
+                        <Pencil size={12} color={isDark ? "#94A3B8" : "#64748B"} />
                       </TouchableOpacity>
                       <TouchableOpacity
                         activeOpacity={0.7}
-                        disabled={deleting === member.id}
+                        disabled={!!deleting}
                         onPress={() => confirmDelete(member.id, user?.name ?? null)}
                         className="w-8 h-8 rounded-lg bg-red-50 dark:bg-red-950 items-center justify-center"
                       >
-                        {deleting === member.id ? (
-                          <ActivityIndicator size={13} color="#EF4444" />
-                        ) : (
-                          <MaterialIcons name="delete-outline" size={15} color="#EF4444" />
-                        )}
+                        <Trash size={12} color="#EF4444" />
                       </TouchableOpacity>
                     </View>
                   </View>
