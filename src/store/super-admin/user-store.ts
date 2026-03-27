@@ -156,7 +156,7 @@ function buildUsersQuery(
   if (trimmed.length > 0) {
     const sanitized = trimmed.replace(/["'{},\\%_()\[\]]/g, "");
     if (sanitized.trim().length > 0) {
-      q = q.or(`name.ilike."%${sanitized}%",email.ilike."%${sanitized}%"`);
+      q = q.or(`name.ilike.%${sanitized}%,email.ilike.%${sanitized}%`);
     }
   }
 
@@ -182,11 +182,7 @@ async function fetchStoreDetails(userIds: string[]): Promise<Map<string, any[]>>
 
   const { data: userRoles, error } = await supabase
     .from("user_roles")
-    .select(`
-      user_id,
-      store_id,
-      stores:store_id ( id, name, address, phone, users:owner_id ( name ) )
-    `)
+    .select("user_id, store_id, stores:store_id ( id, name, address, phone, users:owner_id ( name ) )")
     .in("user_id", userIds);
 
   if (error) throw error;
@@ -244,9 +240,9 @@ export const useUserStore = create<UserStoreState>((set, get) => ({
   errorModal: null,
 
   setRefreshing: (val) => set({ refreshing: val }),
-  setActiveTab: (tab) => set({ activeTab: tab }),
-  setStatusFilter: (status) => set({ statusFilter: status }),
-  setSearch: (val) => set({ search: val }),
+  setActiveTab: (tab) => set({ activeTab: tab, page: 1, hasMore: false }),
+  setStatusFilter: (status) => set({ statusFilter: status, page: 1, hasMore: false }),
+  setSearch: (val) => set({ search: val, page: 1, hasMore: false }),
   setShowFilterModal: (val) => set({ showFilterModal: val }),
   dismissErrorModal: () => set({ errorModal: null }),
 
@@ -254,7 +250,7 @@ export const useUserStore = create<UserStoreState>((set, get) => ({
     const { activeTab, statusFilter, search } = get();
     const reset = opts?.reset ?? true;
     try {
-      if (reset) set({ page: 1, hasMore: true, loading: true });
+      if (reset) set({ page: 1, hasMore: false, loading: true, errorModal: null });
 
       if (statusFilter === "Blocked" || statusFilter === "Active") {
         const { data, error } = await buildUsersQuery(
@@ -299,7 +295,7 @@ export const useUserStore = create<UserStoreState>((set, get) => ({
         refreshing: false,
         errorModal: { 
           title: "Failed to Load Users", 
-          message: err?.message ?? "An unexpected error occurred.",
+          message: err?.message || (typeof err === "object" ? JSON.stringify(err) : String(err)),
           type: "error"
         },
       });
@@ -336,7 +332,7 @@ export const useUserStore = create<UserStoreState>((set, get) => ({
         hasMore: false,
         errorModal: { 
           title: "Failed to Load More", 
-          message: err?.message ?? "Could not load more users.",
+          message: err?.message || (typeof err === "object" ? JSON.stringify(err) : String(err)),
           type: "error"
         },
       });

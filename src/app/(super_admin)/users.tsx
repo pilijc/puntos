@@ -49,8 +49,8 @@ export default function UsersScreen() {
   }, [setRefreshing, fetchUsers]);
 
   const onEndReached = useCallback(() => {
-    if (hasMore && !loadingMore) fetchMoreUsers();
-  }, [hasMore, loadingMore, fetchMoreUsers]);
+    if (hasMore && !loadingMore && !loading) fetchMoreUsers();
+  }, [hasMore, loadingMore, loading, fetchMoreUsers]);
 
   const renderItem = useCallback(
     ({ item }: { item: any }) => (
