@@ -182,7 +182,7 @@ async function fetchStoreDetails(userIds: string[]): Promise<Map<string, any[]>>
 
   const { data: userRoles, error } = await supabase
     .from("user_roles")
-    .select("user_id, store_id, stores:store_id ( id, name, address, phone, users:owner_id ( name ) )")
+    .select("user_id, store_id, stores:store_id ( id, name, address, phone, status, is_active, users:owner_id ( name ) )")
     .in("user_id", userIds);
 
   if (error) throw error;
@@ -206,7 +206,7 @@ async function fetchStoreDetails(userIds: string[]): Promise<Map<string, any[]>>
 
   const result = new Map<string, any[]>();
   userRoles.forEach((r: any) => {
-    if (!r.stores) return;
+    if (!r.stores || r.stores.status !== "active") return;
     if (!result.has(r.user_id)) result.set(r.user_id, []);
     result.get(r.user_id)!.push({
       name: r.stores.name,

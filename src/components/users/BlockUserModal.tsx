@@ -58,8 +58,10 @@ export function BlockUserModal({
   const stores = useMemo(() => {
     if (!selectedUser) return [];
 
-    const fromAdmin = allAdminStores.filter(s => s.owner_id === selectedUser.id);
-    const fromUserStore = Array.isArray(selectedUser.storeInfo) ? selectedUser.storeInfo : [];
+    const fromAdmin = allAdminStores.filter(s => s.owner_id === selectedUser.id && s.status === "active");
+    const fromUserStore = Array.isArray(selectedUser.storeInfo) 
+        ? selectedUser.storeInfo.filter((s: any) => s.status === "active") 
+        : [];
 
     const merged = [...fromAdmin];
     fromUserStore.forEach(us => {
