@@ -153,6 +153,10 @@ export default function StoreManagerLayout() {
                 options={{ href: null }}
             />
             <Tabs.Screen
+                name="stamp/index"
+                options={{ href: null }}
+            />
+            <Tabs.Screen
                 name="reward/rewards"
                 options={{ href: null }}
             />
@@ -162,10 +166,6 @@ export default function StoreManagerLayout() {
             />
             <Tabs.Screen
                 name="reward/add-rewards"
-                options={{ href: null }}
-            />
-            <Tabs.Screen
-                name="stamp/view-stamp"
                 options={{ href: null }}
             />
              <Tabs.Screen

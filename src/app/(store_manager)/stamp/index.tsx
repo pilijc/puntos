@@ -17,15 +17,10 @@ import {
 import { ProgramStatus, Stamp, StampCollector, TabKey, Tabs } from "@/type/store-manager/stamp";
 import { Reward } from "@/type/store-manager/reward";
 import { ModalButton } from "@/components/modal";
-
-
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString(undefined, {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-}
+import { formatDate } from "@/utils/store_manager/stamp-utils";
+import { Button } from "@/components/button";
+import { Stamp as StampIcon, } from "lucide-react-native";
+import { AppHeader } from "@/components/header";
 
 function StatusBadge({ status }: { status: ProgramStatus }) {
   const config = {
@@ -172,8 +167,8 @@ function StampCard({
         </View>
       )}
 
-			{/* Ended date */}
-			{status !== "active" && stamp.ended_at && (
+        {/* Ended date */}
+        {status !== "active" && stamp.ended_at && (
         <View className="flex-row items-center justify-between px-4 py-2.5 border-b border-slate-100 dark:border-slate-800">
           <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">Ended on</Text>
           <Text className="text-xs font-poppins-semibold text-slate-600 dark:text-slate-300">
@@ -410,24 +405,12 @@ export default function ViewStamp() {
         buttons={modal?.buttons}
       />
 
-      {/* Header */}
-      <View
-        className="bg-background dark:bg-[#111921] border-b border-slate-200 dark:border-slate-800 flex-row items-center px-2"
-        style={{ paddingTop: insets.top + 8, paddingBottom: 0 }}
-      >
-        <TouchableOpacity
-          className="w-10 h-10 rounded-full items-center justify-center mb-3"
-          activeOpacity={0.7}
-          onPress={() => router.push({ pathname: "/(store_manager)/view-store/[id]", params: { id: storeId } })}
-        >
-          <MaterialIcons name="chevron-left" size={22} color={isDark ? "#F1F5F9" : "#0F172A"} />
-        </TouchableOpacity>
-        <Text className="flex-1 text-center text-[17px] font-poppins-bold text-slate-900 dark:text-slate-100 pr-10 mb-3">
-          Stamp Programs
-        </Text>
-      </View>
+      <AppHeader
+        title="Stamp Program"
+        paddingTop={insets.top + 8}
+        onBackPress={() => router.push({ pathname: "/(store_manager)/view-store/[id]", params: { id: storeId } })}
+      />
 
-      {/* Tabs */}
       <View className="bg-white dark:bg-neutral-800 border-b border-slate-100 dark:border-slate-800 flex-row px-6">
         {Tabs.map((tab) => {
           const isActive = activeTab === tab.key;
@@ -461,30 +444,26 @@ export default function ViewStamp() {
         </View>
       ) : tabStamps.length === 0 ? (
         /* Empty state */
-        <View className="flex-1 items-center justify-center px-8 gap-y-4">
-          <View className="w-20 h-20 rounded-2xl bg-primary/5 dark:bg-primary/10 items-center justify-center">
-            <MaterialIcons name="loyalty" size={36} color="#FF6600" />
+        <View className="flex-1 items-center justify-center px-8 gap-y-4 bg-slate-50 dark:bg-slate-900">
+          <View className="items-center justify-center">
+            <StampIcon size={36} color="gray" />
           </View>
           <View className="items-center gap-y-1">
-            <Text className="text-base font-poppins-bold text-slate-900 dark:text-slate-100">
+            <Text className="text-base font-poppins-bold text-slate-500 dark:text-slate-300">
               {activeTab === "active" ? "No Active Program" : "No Past Programs"}
             </Text>
-            <Text className="text-sm font-poppins text-slate-500 dark:text-slate-400 text-center">
+            <Text className="text-sm font-poppins text-slate-400 dark:text-slate-500 text-center">
               {activeTab === "active"
                 ? "Launch a stamp program to start rewarding your customers."
                 : "Ended stamp programs will appear here."}
             </Text>
           </View>
           {activeTab === "active" && (
-            <TouchableOpacity
-              className="bg-primary rounded-xl px-8 py-2.5 mt-2"
-              activeOpacity={0.85}
-              onPress={() => router.push({ pathname: "/(store_manager)/configure-stamp", params: { storeId } })}
-            >
-              <Text className="text-white font-poppins-bold text-[15px]">
-                Create Program
-              </Text>
-            </TouchableOpacity>
+            <Button
+              label="Create Stamp Program"
+              onPress={() => router.push({ pathname: "/(store_manager)/stamp/configure-stamp", params: { storeId } })}
+              variant="primary"
+            />
           )}
         </View>
       ) : (
