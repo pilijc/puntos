@@ -86,14 +86,14 @@ export function Modal({
             styles.card,
             {
               width: MODAL_WIDTH,
-              backgroundColor: isDark ? "#0f172a" : "#ffffff",
+              backgroundColor: isDark ? "#404040" : "#ffffff",
               borderColor: isDark ? "#1e293b" : "#e2e8f0",
             },
           ]}
         >
           <View className="flex-row items-start justify-between px-5 pt-5 pb-3">
             <View className="flex-1 pr-3">
-              <Text className="text-lg font-poppins-bold text-slate-900 dark:text-slate-100">
+              <Text className="text-lg font-poppins-bold text-textPrimary dark:text-darkTextPrimary">
                 {title}
               </Text>
             </View>
@@ -108,7 +108,7 @@ export function Modal({
                 <MaterialIcons
                   name="close"
                   size={18}
-                  color={isDark ? "#94A3B8" : "#64748B"}
+                  color={isDark ? "#262626" : "#64748B"}
                 />
               </TouchableOpacity>
             )}

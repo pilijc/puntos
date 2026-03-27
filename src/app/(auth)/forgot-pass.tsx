@@ -12,14 +12,20 @@ import { Alert, ActivityIndicator, KeyboardAvoidingView, Platform } from "react-
 import { router } from "expo-router";
 import { resetPasswordService } from "@/services/auth-service";
 import { useAuthStore } from "@/store/auth-store";
+import { useTranslation } from "react-i18next";
+import TranslateButton from "@/components/ui/translate-button";
 
 export default function ForgotPassword() {
   const { email, setEmail, reset } = useAuthStore();
   const [loading, setLoading] = useState(false);
+  const { t: translate } = useTranslation();
 
   const handleResetPassword = async () => {
     if (!email.trim()) {
-      Alert.alert("Email required", "Please enter the email you used to sign up.");
+      Alert.alert(
+        translate("onboarding.forgotPassword.error.emailRequired"),
+        translate("onboarding.forgotPassword.error.emailRequiredDetail")
+      );
       return;
     }
 
@@ -27,16 +33,18 @@ export default function ForgotPassword() {
     try {
       await resetPasswordService(email.trim());
       Alert.alert(
-        "Check your email",
-        "If an account exists with that email, we've sent a password reset link."
+        translate("onboarding.forgotPassword.success.checkEmail"),
+        translate("onboarding.forgotPassword.success.checkEmailDetail")
       );
       reset();
       router.replace("/login");
     } catch (error: any) {
       const message =
         error?.msg ??
-        (typeof error?.message === "string" ? error.message : "Something went wrong");
-      Alert.alert("Reset failed", message);
+        (typeof error?.message === "string"
+          ? error.message
+          : translate("label.somethingWentWrong"));
+      Alert.alert(translate("onboarding.forgotPassword.error.resetFailed"), message);
     } finally {
       reset();
       setLoading(false);
@@ -44,7 +52,7 @@ export default function ForgotPassword() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-background p-4">
+    <SafeAreaView className="flex-1 bg-background dark:bg-darkBackground p-4">
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         className="flex-1"
@@ -53,6 +61,11 @@ export default function ForgotPassword() {
           contentContainerStyle={{ flexGrow: 1 }}
           keyboardShouldPersistTaps="handled"
         >
+          {/* Language Toggle */}
+          <View className="items-end mb-2">
+            <TranslateButton />
+          </View>
+
           <View className="flex-1 justify-center gap-y-6 p-2">
             <View className="gap-y-4">
               <View className="items-center justify-center">
@@ -65,27 +78,26 @@ export default function ForgotPassword() {
               </View>
 
               <View className="flex-col items-center justify-center gap-y-1">
-                <Text className="text-2xl font-poppins-bold text-neutral-900">
-                  Forgot password
+                <Text className="text-2xl font-poppins-bold text-neutral-900 dark:text-darkTextPrimary">
+                  {translate("onboarding.forgotPassword.title")}
                 </Text>
-                <Text className="text-neutral-600 font-poppins text-center">
-                  Enter your email address and we&apos;ll send you a link to reset your
-                  password.
+                <Text className="text-neutral-600 dark:text-darkTextSecondary font-poppins text-center">
+                  {translate("onboarding.forgotPassword.subtitle")}
                 </Text>
               </View>
             </View>
 
             <View className="gap-y-4">
               <View>
-                <Text className="mb-2 text-sm font-poppins-medium text-neutral-700">
-                  Email
+                <Text className="mb-2 text-sm font-poppins-medium text-neutral-700 dark:text-darkTextSecondary">
+                  {translate("onboarding.forgotPassword.label.email")}
                 </Text>
                 <TextInput
-                  placeholder="email@domain.com"
-                  placeholderTextColor="#404040"
+                  placeholder={translate("onboarding.forgotPassword.input.email")}
+                  placeholderTextColor="#9CA3AF"
                   keyboardType="email-address"
                   autoCapitalize="none"
-                  className="border border-neutral-300 rounded-xl px-4 py-4 font-poppins"
+                  className="border border-neutral-300 dark:border-darkBorder rounded-xl px-4 py-4 font-poppins text-neutral-900 dark:text-darkTextPrimary bg-white dark:bg-darkBackgroundMuted"
                   onChangeText={setEmail}
                   value={email}
                 />
@@ -98,17 +110,21 @@ export default function ForgotPassword() {
               disabled={loading}
             >
               <Text className="text-white text-base font-poppins-semibold">
-                {loading ? <ActivityIndicator size="small" color="white" /> : "Send reset link"}
+                {loading ? (
+                  <ActivityIndicator size="small" color="white" />
+                ) : (
+                  translate("onboarding.forgotPassword.button")
+                )}
               </Text>
             </TouchableOpacity>
 
             <View className="flex-row justify-center">
-              <Text className="font-poppins text-neutral-600">
-                Remembered your password?
+              <Text className="font-poppins text-neutral-600 dark:text-darkTextSecondary">
+                {translate("onboarding.forgotPassword.remembered")}
               </Text>
               <TouchableOpacity onPress={() => router.replace("/login")}>
                 <Text className="ml-1 font-poppins-semibold text-primary">
-                  Back to login
+                  {translate("onboarding.forgotPassword.backToLogin")}
                 </Text>
               </TouchableOpacity>
             </View>

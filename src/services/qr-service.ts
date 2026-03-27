@@ -3,6 +3,7 @@
 import { supabase } from "@/supabase/supabase";
 
 import { QRCodeState, QRTransaction } from "@/type/qr";
+import { addStamp } from "@/services/stamp-service";
 
 
 //import { store } from "expo-router/build/global-state/router-store";
@@ -88,19 +89,20 @@ export async function createQRTransaction(
   const storeId = staffData.store_id;
 
   // Get points configuration for this store
-  const { data: pointsData, error: pointsError } = await supabase
-    .from('store_qr_rewards')
-    .select('percentage')
-    .eq('store_id', storeId)
-    .single();
+  // const { data: pointsData, error: pointsError } = await supabase
+  //   .from('store_qr_rewards')
+  //   .select('percentage')
+  //   .eq('store_id', storeId)
+  //   .single();
 
-  if (pointsError || !pointsData) {
-    throw new Error('Failed to get points configuration for store');
-  }
+  // if (pointsError || !pointsData) {
+  //   throw new Error('Failed to get points configuration for store');
+  // }
 
   // Calculate points for purchase amount and percentage
-  const pointsToAward = Math.ceil(purchaseAmount * (pointsData.percentage / 100));
+  const pointsToAward = Math.ceil(purchaseAmount * (10 / 100));
    
+  //pointsData.percentage  will back to changes
 
   // Create purchase record first
   const { data: purchaseData, error: purchaseError } = await supabase
@@ -134,6 +136,9 @@ export async function createQRTransaction(
 
   // Decrease the stored_amount in points table
    
+
+  // Award a stamp if the store has the program enabled (do this BEFORE QR transaction so real-time listeners fetching stamps get the latest data)
+  await addStamp(userId, storeId);
 
   // Create the QR transaction
   const { data, error } = await supabase
@@ -208,9 +213,9 @@ export async function getUserTransactionHistory(userId: string): Promise<any[]> 
       id: transaction.id,
       section: formatDateSection(transaction.created_at),
       type: 'earned',
-      title: transaction.stores?.name || 'Unknown Store',
-      subtitle: 'Purchase Points',
-      time: formatTime(transaction.created_at),
+      title: transaction.stores?.name || 'user.activity.unknownStore',
+      subtitle: 'user.activity.subtitle.purchasePoints',
+      time: transaction.created_at,
       points: `+${transaction.points_earned}`,
       positive: true,
     }));
@@ -234,11 +239,11 @@ function formatDateSection(dateString: string): string {
   const transactionDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
 
   if (transactionDate.getTime() === today.getTime()) {
-    return 'Today';
+    return 'today';
   } else if (transactionDate.getTime() === yesterday.getTime()) {
-    return 'Yesterday';
+    return 'yesterday';
   } else {
-    return date.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
+    return dateString;
   }
 }
 

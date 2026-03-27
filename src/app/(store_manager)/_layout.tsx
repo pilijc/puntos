@@ -1,11 +1,11 @@
 import { Tabs } from "expo-router";
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { StyleSheet, useColorScheme, Platform } from "react-native";
 import React, { useEffect } from "react";
 import { useRouter } from "expo-router";
 import { supabase } from "@/supabase/supabase";
 import { getRoleTypeForUser } from "@/services/access-service";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { LayoutDashboard, Store, ArrowLeftRight, Settings } from 'lucide-react-native';
 
 export default function StoreManagerLayout() {
     const colorScheme = useColorScheme();
@@ -50,7 +50,7 @@ export default function StoreManagerLayout() {
                 tabBarActiveTintColor: "#FF6600",
                 tabBarInactiveTintColor: isDark ? "#737373" : "#8B8D98",
                 tabBarLabelStyle: { 
-                    fontSize: 11, 
+                    fontSize: 10, 
                     fontFamily: "Poppins-Medium",
                     marginBottom: insets.bottom > 0 ? 0 : 4
                 },
@@ -61,7 +61,7 @@ export default function StoreManagerLayout() {
                 options={{
                     title: "Dashboard",
                     tabBarIcon: ({ color }) => (
-                        <MaterialIcons size={22} name="dashboard" color={color} />
+                        <LayoutDashboard size={22} color={color} />
                     ),
                 }}
             />
@@ -70,16 +70,16 @@ export default function StoreManagerLayout() {
                 options={{
                     title: "Stores",
                     tabBarIcon: ({ color }) => (
-                        <MaterialIcons size={22} name="storefront" color={color} />
+                        <Store size={22} color={color} />
                     ),
                 }}
             />
             <Tabs.Screen
-                name="analytics"
+                name="transactions"
                 options={{
-                    title: "Analytics",
+                    title: "Transactions",
                     tabBarIcon: ({ color }) => (
-                        <MaterialIcons size={22} name="bar-chart" color={color} />
+                        <ArrowLeftRight size={22} color={color} />
                     ),
                 }}
             />
@@ -88,7 +88,7 @@ export default function StoreManagerLayout() {
                 options={{
                     title: "Settings",
                     tabBarIcon: ({ color }) => (
-                        <MaterialIcons size={22} name="settings" color={color} />
+                        <Settings size={22} color={color} />
                     ),
                 }}
             />
@@ -97,7 +97,7 @@ export default function StoreManagerLayout() {
                 options={{ href: null }}
             />
             <Tabs.Screen
-                name="create-store"
+                name="store/create-store"
                 options={{ href: null }}
             />
             <Tabs.Screen
@@ -105,31 +105,59 @@ export default function StoreManagerLayout() {
                 options={{ href: null }}
             />
             <Tabs.Screen
-                name="configure-streaks"
+                name="streak/configure-streaks"
                 options={{ href: null }}
             />
             <Tabs.Screen
-                name="configure-stamp"
+                name="stamp/configure-stamp"
                 options={{ href: null }}
             />
             <Tabs.Screen
-                name="rewards"
+                name="reward/rewards"
                 options={{ href: null }}
             />
             <Tabs.Screen
-                name="view-stamp"
+                name="reward/index"
+                options={{ href: null }}
+            />
+            <Tabs.Screen
+                name="reward/add-rewards"
+                options={{ href: null }}
+            />
+            <Tabs.Screen
+                name="stamp/view-stamp"
                 options={{ href: null }}
             />
              <Tabs.Screen
-                name="view-streak"
+                name="qr/index"
                 options={{ href: null }}
             />
             <Tabs.Screen
-                name="view-staff"
+                name="qr/configure-qr"
+                options={{ href: null }}
+            />
+            <Tabs.Screen
+                name="streak/view-streak"
+                options={{ href: null }}
+            />
+            <Tabs.Screen
+                name="staff/index"
+                options={{ href: null }}
+            />
+            <Tabs.Screen
+                name="staff/view_staff"
                 options={{ href: null }}
             />
              <Tabs.Screen
-                name="add-staff"
+                name="staff/add-staff"
+                options={{ href: null }}
+            />
+            <Tabs.Screen
+                name="detail/index"
+                options={{ href: null }}
+            />
+            <Tabs.Screen
+                name="detail/edit-details"
                 options={{ href: null }}
             />
         </Tabs>

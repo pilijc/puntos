@@ -1,0 +1,1480 @@
+commit d090335517e79900dcd639a5c2293073b581d7b8
+Author: joelchandlerr <pili.jc@sprobe.com>
+Date:   Thu Mar 19 17:25:41 2026 +0800
+
+    on dev store tab
+
+diff --git a/src/app/(user)/store/[storeId].tsx b/src/app/(user)/store/[storeId].tsx
+index 55a4879..44d5704 100644
+--- a/src/app/(user)/store/[storeId].tsx
++++ b/src/app/(user)/store/[storeId].tsx
+@@ -1,17 +1,30 @@
+-import { View, Text, TouchableOpacity } from "@/tw";
++import {
++  View,
++  Text,
++  TouchableOpacity,
++  Pressable,
++  AnimatedView,
++  Image,
++} from "@/tw";
+ import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+-import React from "react";
+-import { Image } from "expo-image";
+-import { useLocalSearchParams } from "expo-router";
++import React, { useCallback, useEffect } from "react";
++import { FadeIn, FadeOut, Layout, Easing } from "react-native-reanimated";
++import { useRouter, useLocalSearchParams } from "expo-router";
++import Carousel from "react-native-reanimated-carousel";
++import { Dimensions } from "react-native";
+ import { ActivityIndicator, RefreshControl } from "react-native";
+ import { useTranslation } from "react-i18next";
+-import SortPill from "@/components/rewards/sort-pill";
++import UserStoreHeroCarousel from "@/components/stores/user-store-hero-carousel";
++import UserStreakCard from "@/components/rewards/user-streak-card";
++import UserStampLogCard from "@/components/rewards/user-stamp-log-card";
+ import RewardCard from "@/components/rewards/reward-card";
++import SortPill from "@/components/rewards/sort-pill";
++import { storeLogos } from "@/data/rewards";
+ import { useRewardsUiStore } from "@/store/user/rewards-ui-store";
+-import StoreHeader from "@/components/ui/store-header";
++import { useStoreOverviewData } from "@/hooks/use-store-overview-data";
+ import StoreScreenContainer from "@/components/ui/store-screen-container";
+-import { useStoreDetailActions } from "@/hooks/use-store-detail-actions";
+-import { useStoreDetailData } from "@/hooks/use-store-detail-data";
++
++const { width: screenWidth } = Dimensions.get("window");
+ 
+ const rewardSortOptions = [
+   { id: "popular", labelKey: "popular" },
+@@ -19,182 +32,362 @@ const rewardSortOptions = [
+   { id: "newest", labelKey: "newest" },
+ ] as const;
+ 
+-export default function StoreRewards() {
++export default function StoreOverviewDetail() {
+   const { t: translate } = useTranslation();
+-  const params = useLocalSearchParams<{ storeId?: string | string[] }>();
+-  const storeId = Array.isArray(params.storeId)
+-    ? params.storeId[0]
+-    : params.storeId;
++  const params = useLocalSearchParams<{ storeId?: string }>();
++  const storeId = params.storeId;
+ 
+   const {
+     rewardSort,
+-    rewardPointsOrder: pointsOrder,
++    rewardPointsOrder,
+     setRewardSort,
+-    setRewardPointsOrder: setPointsOrder,
++    setRewardPointsOrder,
++    isSwitchingStore,
++    isNearbyOpen,
++    setIsNearbyOpen,
++    isStampLogOpen,
++    setIsStampLogOpen,
++    carouselIndex,
++    heroIndex,
++    setCarouselIndex,
++    setHeroIndex,
++    setIsSwitchingStore,
+     isStamping,
+     refreshing,
+   } = useRewardsUiStore();
++  
++  const router = useRouter();
++  
+   const {
+-    store,
++    activeStampProgramRewards,
++    handleCarouselInteraction,
++    handleRefresh,
+     hasStampedToday,
+-    hasClaimableReward,
+-    claimableRewardItem,
+-    storeRewards,
+-    isStampsLoading,
+-  } = useStoreDetailData(storeId);
+-  const { onRefresh, handleStamp } = useStoreDetailActions(storeId);
++    isAutoPlayEnabled,
++    isStoreNearby,
++    nearbyStores,
++    sortedRewards,
++    stampRewards,
++    storesWithLocation,
++    displayStamps,
++    displayStreaks,
++    swipeIndicatorStyle,
++  } = useStoreOverviewData(storeId);
++
++  // If a specific store is requested, we don't necessarily need to snap the carousel 
++  // unless we want to show it in context. For now, let's keep it simple.
++  
++  const handleHeroSnap = useCallback((index: number) => {
++    setHeroIndex(index);
++    setIsSwitchingStore(true);
++    setTimeout(() => setIsSwitchingStore(false), 400);
++  }, [setHeroIndex, setIsSwitchingStore]);
+ 
+   return (
+     <StoreScreenContainer
+-      contentContainerClassName="gap-y-4"
+-      contentGap={16}
++      backgroundClassName="bg-backgroundMuted dark:bg-darkBackground"
++      contentContainerClassName="gap-y-6"
++      contentGap={24}
++      onTouchStart={handleCarouselInteraction}
+       refreshControl={
+         <RefreshControl
+           refreshing={refreshing}
+-          onRefresh={onRefresh}
++          onRefresh={() => handleRefresh()}
+           tintColor="#FF6600"
+           colors={["#FF6600"]}
+         />
+       }
+     >
+-      <StoreHeader
+-        title={store?.name ?? translate("rewards.storeDetail.title")}
+-        subtitle={`${store?.address ?? translate("rewards.storeDetail.locationFallback")} - ${translate("rewards.distanceMeters", {
+-          meters: store
+-            ? (store.distanceMeters ?? 0).toLocaleString(undefined, {
+-              maximumFractionDigits: 2,
+-            })
+-            : "0",
+-        })}`}
+-        variant="circular"
+-      />
++      <View className="flex-row items-center gap-x-4 mb-[-12px] z-50">
++        <TouchableOpacity 
++          onPress={() => router.back()}
++          className="w-10 h-10 rounded-full bg-white/20 items-center justify-center backdrop-blur-md border border-white/20"
++        >
++          <MaterialIcons name="arrow-back" size={24} color="#FFFFFF" />
++        </TouchableOpacity>
++      </View>
+ 
+-      {store?.isNearby && (
+-        <View className="bg-primary/10 border border-primary/20 rounded-2xl p-4 flex-row items-center justify-between">
+-          <View className="flex-row items-center gap-x-3 flex-1">
+-            <View className="w-10 h-10 rounded-full bg-primary/15 items-center justify-center">
+-              <MaterialIcons name="near-me" size={18} color="#FF6600" />
+-            </View>
+-            <View className="flex-1">
+-              <Text className="text-primary font-poppins-semibold">
+-                {translate("rewards.storeDetail.nearbyMessage", { name: store.name })}
+-              </Text>
+-              <Text className="text-xs text-primary/80 font-poppins mt-1">
+-                {translate("rewards.storeDetail.stampNowPrompt")}
+-              </Text>
+-            </View>
+-          </View>
+-          <TouchableOpacity
+-            className={`${hasStampedToday ? "bg-primary/50" : "bg-primary"} px-3 py-2 rounded-full`}
+-            onPress={handleStamp}
+-            disabled={isStamping || hasStampedToday || isStampsLoading}
+-          >
+-            {isStamping || isStampsLoading ? (
+-              <ActivityIndicator size="small" color="#FFFFFF" />
+-            ) : (
+-              <Text className="text-white text-[10px] font-poppins-semibold">
+-                {hasStampedToday
+-                  ? translate("rewards.buttons.stamped")
+-                  : translate("rewards.buttons.stamp")}
+-              </Text>
+-            )}
+-          </TouchableOpacity>
+-        </View>
+-      )}
++      <View className="gap-y-0 -mt-16">
++        <UserStoreHeroCarousel
++          nearbyStores={nearbyStores.length > 0 ? nearbyStores : storesWithLocation.filter(s => s.id.toString() === storeId)}
++          storesWithLocation={storesWithLocation}
++          setHeroIndex={handleHeroSnap}
++          heroIndex={heroIndex}
++          swipeIndicatorStyle={swipeIndicatorStyle}
++        />
+ 
+-      {hasClaimableReward && (
+-        <View className="mb-4">
+-          <Text className="text-lg font-poppins-semibold text-neutral-900 mb-3">
+-            {translate("rewards.storeDetail.unlockedSection")}
+-          </Text>
+-          <View className="bg-primary/5 rounded-2xl p-4 border border-primary/20 flex-row items-center justify-between">
+-            <View className="flex-row items-center gap-x-3 flex-1">
+-              <View className="w-12 h-12 rounded-xl bg-white items-center justify-center overflow-hidden border border-neutral-100">
+-                {claimableRewardItem?.imageUrl && (
+-                  <Image
+-                    source={claimableRewardItem.imageUrl}
+-                    className="w-full h-full"
+-                    contentFit="cover"
+-                  />
+-                )}
++        <AnimatedView
++          layout={Layout.duration(260).easing(Easing.out(Easing.cubic))}
++          className="bg-white dark:bg-darkBackgroundCard rounded-xl p-4 gap-y-3 -mt-6 mx-1"
++        >
++          <View className="flex-row items-center justify-between">
++            <Pressable
++              onPress={() => setIsNearbyOpen(!isNearbyOpen)}
++              className="flex-row items-center gap-x-3 flex-1"
++              disabled={nearbyStores.length === 0}
++            >
++              <View className="w-10 h-10 rounded-full bg-primary/10 items-center justify-center">
++                <MaterialIcons
++                  name={nearbyStores.length > 0 ? "check" : "location-off"}
++                  size={20}
++                  color={nearbyStores.length > 0 ? "#FF6600" : "#9ca3af"}
++                />
+               </View>
+-              <View className="flex-1 pr-2">
+-                <Text className="text-primary font-poppins-semibold leading-tight">
+-                  {claimableRewardItem?.title || translate("rewards.storeDetail.freeReward")}
++              <View className="flex-1 pr-2 justify-center">
++                <Text
++                  className="text-primary font-poppins-semibold"
++                  numberOfLines={1}
++                  adjustsFontSizeToFit
++                >
++                  {nearbyStores.length > 1
++                    ? translate("rewards.range.multiple", { count: nearbyStores.length })
++                    : nearbyStores.length === 1
++                      ? translate("rewards.range.single")
++                      : translate("rewards.range.empty")}
+                 </Text>
+-                <Text className="text-xs text-neutral-500 font-poppins mt-0.5">
+-                  {translate("rewards.storeDetail.readyToClaim")}
++                <Text
++                  className="text-neutral-500 dark:text-neutral-400 text-[11px] font-poppins mt-1"
++                  numberOfLines={1}
++                >
++                  {nearbyStores.length > 0
++                    ? translate("rewards.range.promptNearby")
++                    : translate("rewards.range.promptFar")}
+                 </Text>
+               </View>
+-            </View>
+-            <TouchableOpacity
+-              className="bg-primary px-5 py-2.5 rounded-xl shadow-sm"
+-              onPress={() => { }}
+-            >
+-              <Text className="text-white text-xs font-poppins-bold tracking-wide">
+-                {translate("rewards.claim")}
+-              </Text>
+-            </TouchableOpacity>
++              {nearbyStores.length > 0 && (
++                <MaterialIcons
++                  name={isNearbyOpen ? "expand-less" : "expand-more"}
++                  size={20}
++                  color="#FF6600"
++                />
++              )}
++            </Pressable>
++            {nearbyStores.length === 0 ? (
++              <TouchableOpacity
++                className="bg-primary px-4 py-2 rounded-full"
++                onPress={() => router.push("/")}
++              >
++                <Text className="font-poppins-semibold text-xs text-white">
++                  {translate("rewards.explore")}
++                </Text>
++              </TouchableOpacity>
++            ) : (
++              <View />
++            )}
+           </View>
+-        </View>
+-      )}
+ 
+-      <View className="flex-row items-center justify-between">
+-        <Text className="text-lg font-poppins-semibold text-neutral-900">
+-          {translate("rewards.storeDetail.redeemableSection")}
+-        </Text>
+-        <Text className="text-xs text-neutral-400 font-poppins-medium">
+-          {translate("rewards.storeDetail.itemsCount", { count: storeRewards.length })}
+-        </Text>
+-      </View>
+-
+-      <View className="flex-row gap-x-2">
+-        {rewardSortOptions.map((option) => {
+-          const isPoints = option.id === "points";
+-          const isActive = rewardSort === option.id;
+-          const arrowColor = isActive ? "#FF6600" : "#94a3b8";
+-          const arrowName =
+-            pointsOrder === "asc" ? "arrow-upward" : "arrow-downward";
+-          return (
+-            <SortPill
+-              key={option.id}
+-              label={translate(`rewards.filters.${option.labelKey}`)}
+-              active={isActive}
+-              rightIcon={
+-                isPoints ? (
+-                  <MaterialIcons name={arrowName} size={12} color={arrowColor} />
+-                ) : null
+-              }
+-              onPress={() => {
+-                if (isPoints) {
+-                  if (rewardSort === "points") {
+-                    setPointsOrder(pointsOrder === "desc" ? "asc" : "desc");
+-                  } else {
+-                    setRewardSort("points");
+-                    setPointsOrder("desc");
+-                  }
+-                } else {
+-                  setRewardSort(option.id);
+-                }
+-              }}
+-            />
+-          );
+-        })}
++          {isNearbyOpen && nearbyStores.length > 0 && (
++            <AnimatedView
++              entering={FadeIn.duration(200)}
++              exiting={FadeOut.duration(150)}
++              layout={Layout.duration(240).easing(Easing.out(Easing.cubic))}
++              className="bg-neutral-50/80 dark:bg-white/5 rounded-xl p-3 gap-y-3"
++            >
++              {nearbyStores.map((store) => (
++                <View key={store.id} className="flex-row items-center justify-between">
++                  <View className="flex-row items-center gap-x-3 flex-1">
++                    <View className="w-9 h-9 rounded-full bg-primary/10 items-center justify-center overflow-hidden">
++                      {store.logo ? (
++                        <Image
++                          source={{ uri: store.logo }}
++                          className="w-full h-full"
++                          contentFit="cover"
++                          contentPosition="center"
++                        />
++                      ) : storeLogos[store.id.toString()] ? (
++                        <Image
++                          source={storeLogos[store.id.toString()]}
++                          className="w-full h-full"
++                          contentFit="cover"
++                          contentPosition="center"
++                        />
++                      ) : (
++                        <Text className="text-[10px] text-primary/80 font-poppins">
++                          {translate("rewards.store").toUpperCase()}
++                        </Text>
++                      )}
++                    </View>
++                    <View className="flex-1">
++                      <Text className="text-neutral-900 dark:text-neutral-100 font-poppins-semibold">
++                        {store.name}
++                      </Text>
++                      <Text className="text-neutral-500 dark:text-neutral-400 text-xs font-poppins mt-1">
++                        {store.address} - {translate("rewards.distanceMeters", {
++                          meters:
++                            store.distanceMeters?.toLocaleString(undefined, {
++                              maximumFractionDigits: 2,
++                            }) ?? "0",
++                        })}
++                      </Text>
++                    </View>
++                  </View>
++                  <View className="flex-row items-center gap-x-2">
++                    <TouchableOpacity
++                      className={`px-3 py-1 rounded-full ${hasStampedToday(Number(store.id)) ? "bg-neutral-200 dark:bg-white/10" : "bg-primary"}`}
++                      onPress={() => router.push("/qr")}
++                      disabled={isStamping || hasStampedToday(Number(store.id))}
++                    >
++                      {isStamping ? (
++                        <ActivityIndicator size="small" color="#FF6600" />
++                      ) : (
++                        <Text
++                          className={`text-[10px] font-poppins-semibold ${hasStampedToday(Number(store.id)) ? "text-neutral-500" : "text-white"}`}
++                        >
++                          {hasStampedToday(Number(store.id))
++                            ? translate("rewards.buttons.stamped")
++                            : translate("rewards.buttons.stamp")}
++                        </Text>
++                      )}
++                    </TouchableOpacity>
++                  </View>
++                </View>
++              ))}
++            </AnimatedView>
++          )}
++        </AnimatedView>
+       </View>
+ 
+-      <View className="gap-y-4">
+-        {storeRewards.length === 0 ? (
+-          <View className="bg-white dark:bg-darkBackgroundMuted rounded-2xl p-6 border border-neutral-100 dark:border-darkBorder items-center">
+-            <Text className="text-neutral-500 font-poppins">
+-              {translate("rewards.storeDetail.noRewards")}
+-            </Text>
+-          </View>
++      <View>
++        {isSwitchingStore ? (
++          // Skeleton shimmer while switching stores
++          <AnimatedView
++            entering={FadeIn.duration(150)}
++            exiting={FadeOut.duration(150)}
++            className="gap-y-3"
++          >
++            {/* Skeleton — mirrors UserStampLogCard layout exactly */}
++            <View className="bg-white dark:bg-darkBackgroundMuted rounded-2xl border border-neutral-100 dark:border-darkBorder overflow-hidden mx-1 p-3">
++              <View className="flex-row items-center justify-between">
++                <View className="flex-row items-center gap-x-2">
++                  <View className="w-5 h-5 rounded-full bg-neutral-200 dark:bg-white/10" />
++                  <View className="h-3.5 w-20 rounded-full bg-neutral-200 dark:bg-white/10" />
++                </View>
++                <View className="flex-row items-center gap-x-3">
++                  <View className="h-5 w-16 rounded-full bg-neutral-100 dark:bg-white/5" />
++                  <View className="w-5 h-5 rounded-full bg-neutral-200 dark:bg-white/10" />
++                  <View className="h-3.5 w-12 rounded-full bg-neutral-200 dark:bg-white/10" />
++                </View>
++              </View>
++              <View className="flex-row items-center gap-x-3 mt-2.5">
++                <View className="w-10 h-10 rounded-full bg-neutral-200 dark:bg-white/10" />
++                <View className="gap-y-1.5 flex-1">
++                  <View className="h-3.5 w-1/2 rounded-full bg-neutral-200 dark:bg-white/10" />
++                  <View className="h-2.5 w-1/3 rounded-full bg-neutral-100 dark:bg-white/5" />
++                </View>
++              </View>
++              <View className="h-2.5 w-28 rounded-full bg-neutral-100 dark:bg-white/5 mt-2" />
++              <View className="flex-row justify-between mt-3">
++                {[...Array(7)].map((_, i) => (
++                  <View
++                    key={i}
++                    className="w-10 h-10 rounded-full bg-neutral-200 dark:bg-white/10"
++                  />
++                ))}
++              </View>
++            </View>
++          </AnimatedView>
+         ) : (
+-          storeRewards.map((item) => (
+-            <RewardCard key={item.id} reward={item} />
+-          ))
++          <>
++            {displayStreaks.length > 0 && (
++              <View className="mb-3">
++                <Carousel
++                  width={screenWidth - 48}
++                  height={155}
++                  data={displayStreaks}
++                  scrollAnimationDuration={1000}
++                  enabled={displayStreaks.length > 1}
++                  loop={displayStreaks.length > 1}
++                  autoPlay={isAutoPlayEnabled && displayStreaks.length > 1}
++                  autoPlayInterval={3500}
++                  onScrollStart={handleCarouselInteraction}
++                  onSnapToItem={(index) => setCarouselIndex(index)}
++                  renderItem={({ item: streak }) => (
++                    <UserStreakCard
++                      key={streak.store_id}
++                      streak={streak}
++                      nearbyStores={nearbyStores}
++                      isStoreNearby={isStoreNearby}
++                    />
++                  )}
++                />
++              </View>
++            )}
++
++            {displayStamps.length > 0 && (
++              <View>
++                <Carousel
++                  width={screenWidth - 48}
++                  height={isStampLogOpen ? 265 : 165}
++                  data={displayStamps}
++                  scrollAnimationDuration={1000}
++                  enabled={displayStamps.length > 1}
++                  loop={displayStamps.length > 1}
++                  autoPlay={isAutoPlayEnabled && displayStamps.length > 1}
++                  autoPlayInterval={3000}
++                  onScrollStart={handleCarouselInteraction}
++                  onSnapToItem={(index) => setCarouselIndex(index)}
++                  renderItem={({ item: stamp }) => (
++                    <UserStampLogCard
++                      key={stamp.store_id}
++                      stamp={stamp}
++                      nearbyStores={nearbyStores}
++                      isStoreNearby={isStoreNearby}
++                      stampRewards={stampRewards}
++                      activeStampProgramRewards={activeStampProgramRewards}
++                      isStampLogOpen={isStampLogOpen}
++                      onToggleExpand={() => setIsStampLogOpen(!isStampLogOpen)}
++                    />
++                  )}
++                />
++                {displayStamps.length > 1 && (
++                  <View className="flex-row justify-center items-center gap-x-2 mt-1">
++                    {displayStamps.map((_, index) => (
++                      <View
++                        key={index}
++                        className={`h-1.5 rounded-full ${carouselIndex === index
++                          ? "w-5 bg-primary"
++                          : "w-1.5 bg-neutral-300 dark:bg-neutral-600"
++                          }`}
++                      />
++                    ))}
++                  </View>
++                )}
++              </View>
++            )}
++          </>
+         )}
+       </View>
++
++      <View className="gap-y-3">
++        <View className="flex-row items-center justify-between">
++          <Text className="text-lg font-poppins-semibold text-neutral-900 dark:text-darkTextPrimary">
++            {translate("rewards.rewardCatalog")}
++          </Text>
++        </View>
++
++        <View className="gap-y-4">
++          {sortedRewards.map((item) => {
++            const store = storesWithLocation.find(
++              (entry) => entry.id.toString() === item.storeId,
++            );
++            return (
++              <RewardCard
++                key={item.id}
++                reward={item}
++                storeName={store?.name}
++                storeLocation={store?.address}
++              />
++            );
++          })}
++        </View>
++      </View>
++
++      <View className="items-center pt-4">
++        <Text className="text-[10px] tracking-[2px] text-neutral-300 font-poppins-medium">
++          {translate("rewards.footer")}
++        </Text>
++      </View>
+     </StoreScreenContainer>
+   );
+ }
++
+diff --git a/src/app/(user)/store/index.tsx b/src/app/(user)/store/index.tsx
+index 59e49f5..9b1208c 100644
+--- a/src/app/(user)/store/index.tsx
++++ b/src/app/(user)/store/index.tsx
+@@ -1,471 +1,141 @@
+-import {
+-  View,
+-  Text,
+-  TouchableOpacity,
+-  Pressable,
+-  AnimatedView,
+-  Image,
+-} from "@/tw";
++import { TextInput, RefreshControl } from "react-native";
++import { View, Text, TouchableOpacity } from "@/tw";
++import React, { useMemo, useCallback } from "react";
+ import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+-import React, { useCallback } from "react";
+-import { FadeIn, FadeOut, Layout, Easing } from "react-native-reanimated";
+-import { useRouter } from "expo-router";
+-import Carousel from "react-native-reanimated-carousel";
+-import { Dimensions } from "react-native";
+-import { ActivityIndicator, RefreshControl } from "react-native";
+ import { useTranslation } from "react-i18next";
+-import UserStoreHeroCarousel from "@/components/stores/user-store-hero-carousel";
+-import UserStreakCard from "@/components/rewards/user-streak-card";
+-import UserStampLogCard from "@/components/rewards/user-stamp-log-card";
+-import RewardCard from "@/components/rewards/reward-card";
+-import SortPill from "@/components/rewards/sort-pill";
+-import { storeLogos } from "@/data/rewards";
++import { useStoreStore } from "@/store/user/store-store";
+ import { useRewardsUiStore } from "@/store/user/rewards-ui-store";
+-import { useStoreOverviewData } from "@/hooks/use-store-overview-data";
++import { useStamps } from "@/hooks/use-stamps";
++import { useLocation } from "@/hooks/use-location";
++import StoreHeader from "@/components/ui/store-header";
++import UserStoreListItem from "@/components/stores/user-store-list-item";
+ import StoreScreenContainer from "@/components/ui/store-screen-container";
++import { buildStampedStoreList } from "@/utils/store-helpers";
+ 
+-const { width: screenWidth } = Dimensions.get("window");
+-
+-const rewardSortOptions = [
+-  { id: "popular", labelKey: "popular" },
+-  { id: "points", labelKey: "points" },
+-  { id: "newest", labelKey: "newest" },
+-] as const;
+-
+-export default function Rewards() {
++export default function StoreListScreen() {
+   const { t: translate } = useTranslation();
+   const {
+-    rewardSort,
+-    rewardPointsOrder,
+-    setRewardSort,
+-    setRewardPointsOrder,
+-    isSwitchingStore,
+-    isNearbyOpen,
+-    setIsNearbyOpen,
+-    isStampLogOpen,
+-    setIsStampLogOpen,
+-    carouselIndex,
+-    setCarouselIndex,
+-    setHeroIndex,
+-    setIsSwitchingStore,
+-    isStamping,
++    storeSearchQuery: searchQuery,
++    setStoreSearchQuery: setSearchQuery,
+     refreshing,
++    setRefreshing,
+   } = useRewardsUiStore();
+-  const router = useRouter();
+-  const {
+-    activeStampProgramRewards,
+-    handleCarouselInteraction,
+-    handleRefresh,
+-    hasStampedToday,
+-    isAutoPlayEnabled,
+-    isStoreNearby,
+-    nearbyStores,
+-    sortedRewards,
+-    stampRewards,
+-    storesWithLocation,
+-    displayStamps,
+-    displayStreaks,
+-    swipeIndicatorStyle,
+-  } = useStoreOverviewData();
++  const { stores: realStores } = useStoreStore();
++  const { stamps, isLoading: stampsLoading, refetch: refetchStamps } = useStamps();
++  const { location } = useLocation();
++
++  const onRefresh = useCallback(async () => {
++    setRefreshing(true);
++    await refetchStamps();
++    setRefreshing(false);
++  }, [refetchStamps, setRefreshing]);
++
++  const allStores = useMemo(() => {
++    return buildStampedStoreList(
++      realStores,
++      stamps,
++      location,
++      translate("rewards.unknownLocation"),
++    );
++  }, [location, realStores, stamps, translate]);
++
++  const filteredStores = useMemo(() => {
++    if (!searchQuery) return allStores;
++    return allStores.filter((store) =>
++      store.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
++      store.location.toLowerCase().includes(searchQuery.toLowerCase()),
++    );
++  }, [allStores, searchQuery]);
++
++  const { nearbyStoresSection, joinedStoresSection } = useMemo(() => {
++    return {
++      nearbyStoresSection: filteredStores.filter((store) => store.isNearby),
++      joinedStoresSection: filteredStores.filter((store) => !store.isNearby),
++    };
++  }, [filteredStores]);
+ 
+-  const handleHeroSnap = useCallback((index: number) => {
+-    setHeroIndex(index);
+-    setIsSwitchingStore(true);
+-    setTimeout(() => setIsSwitchingStore(false), 400);
+-  }, [setHeroIndex, setIsSwitchingStore]);
+ 
+   return (
+     <StoreScreenContainer
+       backgroundClassName="bg-backgroundMuted dark:bg-darkBackground"
+-      contentContainerClassName="gap-y-6"
+       contentGap={24}
+-      onTouchStart={handleCarouselInteraction}
+       refreshControl={
+         <RefreshControl
+           refreshing={refreshing}
+-          onRefresh={() => handleRefresh()}
++          onRefresh={onRefresh}
+           tintColor="#FF6600"
+           colors={["#FF6600"]}
+         />
+       }
+     >
+-      <View className="flex-row items-center justify-between">
+-        <Text className="text-xl font-poppins-bold text-neutral-900 dark:text-darkTextPrimary">
+-          {translate("rewards.title")}
+-        </Text>
+-        <TouchableOpacity
+-          onPress={() => router.push("/store/stores")}
+-          className="px-3 py-2 rounded-full border border-neutral-200 dark:border-darkBorder bg-white dark:bg-darkBackgroundMuted"
+-        >
+-          <Text className="text-xs font-poppins-semibold text-neutral-700 dark:text-darkTextSoft">
+-            {translate("rewards.viewStores")}
+-          </Text>
+-        </TouchableOpacity>
+-      </View>
+-
+-      <View className="gap-y-0">
+-        <UserStoreHeroCarousel
+-          nearbyStores={nearbyStores}
+-          storesWithLocation={storesWithLocation}
+-          setHeroIndex={handleHeroSnap}
+-          swipeIndicatorStyle={swipeIndicatorStyle}
++      <StoreHeader title={translate("rewards.storesList.title")} />
++
++      <View className="flex-row items-center bg-white dark:bg-darkBackgroundCard rounded-2xl px-4 py-1 border border-neutral-100 dark:border-darkBorder shadow-sm shadow-neutral-100 dark:shadow-none mt-2">
++        <MaterialIcons name="search" size={20} color="#9CA3AF" />
++        <TextInput
++          placeholder={translate("rewards.storesList.searchPlaceholder")}
++          placeholderTextColor="#9CA3AF"
++          className="flex-1 ml-3 font-poppins text-sm text-neutral-900 dark:text-white pt-0 pb-0"
++          value={searchQuery}
++          onChangeText={setSearchQuery}
++          style={{ textAlignVertical: "center" }}
+         />
+-
+-        <AnimatedView
+-          layout={Layout.duration(260).easing(Easing.out(Easing.cubic))}
+-          className="bg-white dark:bg-darkBackgroundCard rounded-xl p-4 gap-y-3 -mt-6 mx-1"
+-        >
+-          <View className="flex-row items-center justify-between">
+-            <Pressable
+-              onPress={() => setIsNearbyOpen(!isNearbyOpen)}
+-              className="flex-row items-center gap-x-3 flex-1"
+-              disabled={nearbyStores.length === 0}
+-            >
+-              <View className="w-10 h-10 rounded-full bg-primary/10 items-center justify-center">
+-                <MaterialIcons
+-                  name={nearbyStores.length > 0 ? "check" : "location-off"}
+-                  size={20}
+-                  color={nearbyStores.length > 0 ? "#FF6600" : "#9ca3af"}
+-                />
+-              </View>
+-              <View className="flex-1 pr-2 justify-center">
+-                <Text
+-                  className="text-primary font-poppins-semibold"
+-                  numberOfLines={1}
+-                  adjustsFontSizeToFit
+-                >
+-                  {nearbyStores.length > 1
+-                    ? translate("rewards.range.multiple", { count: nearbyStores.length })
+-                    : nearbyStores.length === 1
+-                      ? translate("rewards.range.single")
+-                      : translate("rewards.range.empty")}
+-                </Text>
+-                <Text
+-                  className="text-neutral-500 dark:text-neutral-400 text-[11px] font-poppins mt-1"
+-                  numberOfLines={1}
+-                >
+-                  {nearbyStores.length > 0
+-                    ? translate("rewards.range.promptNearby")
+-                    : translate("rewards.range.promptFar")}
+-                </Text>
+-              </View>
+-              {nearbyStores.length > 0 && (
+-                <MaterialIcons
+-                  name={isNearbyOpen ? "expand-less" : "expand-more"}
+-                  size={20}
+-                  color="#FF6600"
+-                />
+-              )}
+-            </Pressable>
+-            {nearbyStores.length === 0 ? (
+-              <TouchableOpacity
+-                className="bg-primary px-4 py-2 rounded-full"
+-                onPress={() => router.push("/")}
+-              >
+-                <Text className="font-poppins-semibold text-xs text-white">
+-                  {translate("rewards.explore")}
+-                </Text>
+-              </TouchableOpacity>
+-            ) : (
+-              <View />
+-            )}
+-          </View>
+-
+-          {isNearbyOpen && nearbyStores.length > 0 && (
+-            <AnimatedView
+-              entering={FadeIn.duration(200)}
+-              exiting={FadeOut.duration(150)}
+-              layout={Layout.duration(240).easing(Easing.out(Easing.cubic))}
+-              className="bg-neutral-50/80 dark:bg-white/5 rounded-xl p-3 gap-y-3"
+-            >
+-              {nearbyStores.map((store) => (
+-                <View key={store.id} className="flex-row items-center justify-between">
+-                  <View className="flex-row items-center gap-x-3 flex-1">
+-                    <View className="w-9 h-9 rounded-full bg-primary/10 items-center justify-center overflow-hidden">
+-                      {store.logo ? (
+-                        <Image
+-                          source={{ uri: store.logo }}
+-                          className="w-full h-full"
+-                          contentFit="cover"
+-                          contentPosition="center"
+-                        />
+-                      ) : storeLogos[store.id.toString()] ? (
+-                        <Image
+-                          source={storeLogos[store.id.toString()]}
+-                          className="w-full h-full"
+-                          contentFit="cover"
+-                          contentPosition="center"
+-                        />
+-                      ) : (
+-                        <Text className="text-[10px] text-primary/80 font-poppins">
+-                          {translate("rewards.store").toUpperCase()}
+-                        </Text>
+-                      )}
+-                    </View>
+-                    <View className="flex-1">
+-                      <Text className="text-neutral-900 dark:text-neutral-100 font-poppins-semibold">
+-                        {store.name}
+-                      </Text>
+-                      <Text className="text-neutral-500 dark:text-neutral-400 text-xs font-poppins mt-1">
+-                        {store.address} - {translate("rewards.distanceMeters", {
+-                          meters:
+-                            store.distanceMeters?.toLocaleString(undefined, {
+-                              maximumFractionDigits: 2,
+-                            }) ?? "0",
+-                        })}
+-                      </Text>
+-                    </View>
+-                  </View>
+-                  <View className="flex-row items-center gap-x-2">
+-                    <TouchableOpacity
+-                      className={`px-3 py-1 rounded-full ${hasStampedToday(Number(store.id)) ? "bg-neutral-200 dark:bg-white/10" : "bg-primary"}`}
+-                      onPress={() => router.push("/qr")}
+-                      disabled={isStamping || hasStampedToday(Number(store.id))}
+-                    >
+-                      {isStamping ? (
+-                        <ActivityIndicator size="small" color="#FF6600" />
+-                      ) : (
+-                        <Text
+-                          className={`text-[10px] font-poppins-semibold ${hasStampedToday(Number(store.id)) ? "text-neutral-500" : "text-white"}`}
+-                        >
+-                          {hasStampedToday(Number(store.id))
+-                            ? translate("rewards.buttons.stamped")
+-                            : translate("rewards.buttons.stamp")}
+-                        </Text>
+-                      )}
+-                    </TouchableOpacity>
+-                  </View>
+-                </View>
+-              ))}
+-            </AnimatedView>
+-          )}
+-        </AnimatedView>
++        {searchQuery.length > 0 && (
++          <TouchableOpacity onPress={() => setSearchQuery("")}>
++            <MaterialIcons name="close" size={18} color="#9CA3AF" />
++          </TouchableOpacity>
++        )}
+       </View>
+ 
+-      <View>
+-        {isSwitchingStore ? (
+-          // Skeleton shimmer while switching stores
+-          <AnimatedView
+-            entering={FadeIn.duration(150)}
+-            exiting={FadeOut.duration(150)}
+-            className="gap-y-3"
+-          >
+-            {/* Skeleton — mirrors UserStampLogCard layout exactly */}
+-            <View className="bg-white dark:bg-darkBackgroundMuted rounded-2xl border border-neutral-100 dark:border-darkBorder overflow-hidden mx-1 p-3">
+-
+-              {/* Header row: icon + title | nearby pill + chevron + view-all */}
+-              <View className="flex-row items-center justify-between">
+-                <View className="flex-row items-center gap-x-2">
+-                  {/* fire / stars icon placeholder */}
+-                  <View className="w-5 h-5 rounded-full bg-neutral-200 dark:bg-white/10" />
+-                  {/* "Stamp Log" label */}
+-                  <View className="h-3.5 w-20 rounded-full bg-neutral-200 dark:bg-white/10" />
+-                </View>
+-                <View className="flex-row items-center gap-x-3">
+-                  {/* Nearby badge */}
+-                  <View className="h-5 w-16 rounded-full bg-neutral-100 dark:bg-white/5" />
+-                  {/* Chevron */}
+-                  <View className="w-5 h-5 rounded-full bg-neutral-200 dark:bg-white/10" />
+-                  {/* VIEW ALL */}
+-                  <View className="h-3.5 w-12 rounded-full bg-neutral-200 dark:bg-white/10" />
+-                </View>
+-              </View>
+-
+-              {/* Store row: logo circle + name + address */}
+-              <View className="flex-row items-center gap-x-3 mt-2.5">
+-                <View className="w-10 h-10 rounded-full bg-neutral-200 dark:bg-white/10" />
+-                <View className="gap-y-1.5 flex-1">
+-                  <View className="h-3.5 w-1/2 rounded-full bg-neutral-200 dark:bg-white/10" />
+-                  <View className="h-2.5 w-1/3 rounded-full bg-neutral-100 dark:bg-white/5" />
+-                </View>
+-              </View>
+-
+-              {/* Progress label: "3/7 DAYS THIS WEEK" */}
+-              <View className="h-2.5 w-28 rounded-full bg-neutral-100 dark:bg-white/5 mt-2" />
+-
+-              {/* Stamp circles row — 7 circles matching the real card */}
+-              <View className="flex-row justify-between mt-3">
+-                {[...Array(7)].map((_, i) => (
+-                  <View
+-                    key={i}
+-                    className="w-10 h-10 rounded-full bg-neutral-200 dark:bg-white/10"
+-                  />
+-                ))}
++      <View className="mt-6 gap-y-8">
++          {filteredStores.length === 0 ? (
++            <View className="items-center justify-center py-20">
++              <View className="w-24 h-24 rounded-full bg-neutral-100 dark:bg-white/5 items-center justify-center mb-6">
++                <MaterialIcons name="storefront" size={48} color="#CBD5E1" />
+               </View>
+-
++              <Text className="text-xl font-poppins-bold text-neutral-900 dark:text-white text-center">
++                {searchQuery
++                  ? translate("rewards.storesList.noMatching")
++                  : translate("rewards.storesList.noJoined")}
++              </Text>
++              <Text className="text-sm text-neutral-500 font-poppins text-center px-10 mt-2">
++                {searchQuery
++                  ? translate("rewards.storesList.noMatchingDetail", { query: searchQuery })
++                  : translate("rewards.storesList.noJoinedDetail")}
++              </Text>
+             </View>
+-          </AnimatedView>
+-
+-        ) : (
+-          <>
+-            {nearbyStores.length > 0 && displayStreaks.length === 0 && displayStamps.length === 0 && (
+-              <AnimatedView
+-                entering={FadeIn.duration(400)}
+-                className="bg-white dark:bg-darkBackgroundMuted rounded-xl p-8 items-center border border-neutral-100 dark:border-darkBorder mx-1"
+-              >
+-                <MaterialIcons name="event-note" size={40} color="#FF6600" />
+-                <Text className="text-lg font-poppins-semibold text-neutral-900 dark:text-darkTextPrimary mt-3 text-center">
+-                  {translate("rewards.upcomingEvents.title")}
+-                </Text>
+-                <Text className="text-neutral-500 text-center font-poppins text-xs mt-1 px-4">
+-                  {translate("rewards.upcomingEvents.subtitle")}
+-                </Text>
+-              </AnimatedView>
+-            )}
+-
+-            {displayStreaks.length > 0 && (
+-              <View className="mb-3">
+-                <Carousel
+-                  width={screenWidth - 48}
+-                  height={155}
+-                  data={displayStreaks}
+-                  scrollAnimationDuration={1000}
+-                  enabled={displayStreaks.length > 1}
+-                  loop={displayStreaks.length > 1}
+-                  autoPlay={isAutoPlayEnabled && displayStreaks.length > 1}
+-                  autoPlayInterval={3500}
+-                  onScrollStart={handleCarouselInteraction}
+-                  onSnapToItem={(index) => setCarouselIndex(index)}
+-                  renderItem={({ item: streak }) => (
+-                    <UserStreakCard
+-                      key={streak.store_id}
+-                      streak={streak}
+-                      nearbyStores={nearbyStores}
+-                      isStoreNearby={isStoreNearby}
+-                    />
+-                  )}
+-                />
+-              </View>
+-            )}
+-
+-            {displayStamps.length === 0 ? (
+-              nearbyStores.length === 0 && (
+-                <View className="bg-white dark:bg-darkBackgroundMuted rounded-xl p-6 items-center mx-1">
+-                  <MaterialIcons name="stars" size={32} color="#d1d5db" className="mb-2" />
+-                  <Text className="text-neutral-500 font-poppins-semibold text-sm mt-2">
+-                    {translate("rewards.noActiveStamps")}
+-                  </Text>
+-                  <Text className="text-neutral-400 font-poppins text-xs text-center mt-1">
+-                    {translate("rewards.visitStartStamps")}
++          ) : (
++            <>
++              {nearbyStoresSection.length > 0 && (
++                <View className="gap-y-4">
++                  <Text className="text-xs font-poppins-bold text-neutral-500 dark:text-neutral-400 uppercase tracking-widest ml-1">
++                    {translate("rewards.storesList.nearbySection")}
+                   </Text>
++                  {nearbyStoresSection.map((store, index) => (
++                    <UserStoreListItem key={store.id} store={store} index={index} />
++                  ))}
+                 </View>
+-              )
+-            ) : (
+-              <View>
+-                <Carousel
+-                  width={screenWidth - 48}
+-                  height={isStampLogOpen ? 265 : 165}
+-                  data={displayStamps}
+-                  scrollAnimationDuration={1000}
+-                  enabled={displayStamps.length > 1}
+-                  loop={displayStamps.length > 1}
+-                  autoPlay={isAutoPlayEnabled && displayStamps.length > 1}
+-                  autoPlayInterval={3000}
+-                  onScrollStart={handleCarouselInteraction}
+-                  onSnapToItem={(index) => setCarouselIndex(index)}
+-                  renderItem={({ item: stamp }) => (
+-                    <UserStampLogCard
+-                      key={stamp.store_id}
+-                      stamp={stamp}
+-                      nearbyStores={nearbyStores}
+-                      isStoreNearby={isStoreNearby}
+-                      stampRewards={stampRewards}
+-                      activeStampProgramRewards={activeStampProgramRewards}
+-                      isStampLogOpen={isStampLogOpen}
+-                      onToggleExpand={() => setIsStampLogOpen(!isStampLogOpen)}
+-                    />
+-                  )}
+-                />
+-
+-                {displayStamps.length > 1 && (
+-                  <View className="flex-row justify-center items-center gap-x-2 mt-1">
+-                    {displayStamps.map((_, index) => (
+-                      <View
+-                        key={index}
+-                        className={`h-1.5 rounded-full ${carouselIndex === index
+-                          ? "w-5 bg-primary"
+-                          : "w-1.5 bg-neutral-300 dark:bg-neutral-600"
+-                          }`}
+-                      />
+-                    ))}
+-                  </View>
+-                )}
+-              </View>
+-            )}
+-          </>
+-        )}
+-      </View>
+-
+-      <View className="gap-y-3">
+-        <View className="flex-row items-center justify-between">
+-          <Text className="text-lg font-poppins-semibold text-neutral-900 dark:text-darkTextPrimary">
+-            {translate("rewards.rewardCatalog")}
+-          </Text>
+-          <TouchableOpacity className="flex-row items-center gap-x-1">
+-            <Text className="text-primary text-xs font-poppins-semibold">
+-              {translate("rewards.viewAll")}
+-            </Text>
+-            <MaterialIcons name="chevron-right" size={16} color="#FF6600" />
+-          </TouchableOpacity>
+-        </View>
+-
+-        <View className="flex-row gap-x-2">
+-          {rewardSortOptions.map((option) => {
+-            const isPoints = option.id === "points";
+-            const isActive = rewardSort === option.id;
+-            const arrowColor = isActive ? "#FF6600" : "#94a3b8";
+-            const arrowName =
+-              rewardPointsOrder === "asc" ? "arrow-upward" : "arrow-downward";
+-            return (
+-              <SortPill
+-                key={option.id}
+-                label={translate(`rewards.filters.${option.labelKey}`)}
+-                active={isActive}
+-                rightIcon={
+-                  isPoints ? (
+-                    <MaterialIcons name={arrowName} size={12} color={arrowColor} />
+-                  ) : null
+-                }
+-                onPress={() => {
+-                  if (isPoints) {
+-                    if (rewardSort === "points") {
+-                      setRewardPointsOrder(
+-                        rewardPointsOrder === "desc" ? "asc" : "desc",
+-                      );
+-                    } else {
+-                      setRewardSort("points");
+-                    }
+-                  } else {
+-                    setRewardSort(option.id);
+-                  }
+-                }}
+-              />
+-            );
+-          })}
+-        </View>
++              )}
+ 
+-        <View className="gap-y-4">
+-          {sortedRewards.map((item) => {
+-            const store = storesWithLocation.find(
+-              (entry) => entry.id.toString() === item.storeId,
+-            );
+-            return (
+-              <RewardCard
+-                key={item.id}
+-                reward={item}
+-                storeName={store?.name}
+-                storeLocation={store?.address}
+-              />
+-            );
+-          })}
++              {joinedStoresSection.length > 0 && (
++                <View className="gap-y-4">
++                  <Text className="text-xs font-poppins-bold text-neutral-500 dark:text-neutral-400 uppercase tracking-widest ml-1">
++                    {translate("rewards.storesList.myStoresSection")}
++                  </Text>
++                  {joinedStoresSection.map((store, index) => (
++                    <UserStoreListItem
++                      key={store.id}
++                      store={store}
++                      index={index}
++                      sectionDelay={nearbyStoresSection.length * 100}
++                    />
++                  ))}
++                </View>
++              )}
++            </>
++          )}
+         </View>
+-      </View>
+-
+-      <View className="items-center pt-4">
+-        <Text className="text-[10px] tracking-[2px] text-neutral-300 font-poppins-medium">
+-          {translate("rewards.footer")}
+-        </Text>
+-      </View>
+     </StoreScreenContainer>
+   );
+ }
++
+diff --git a/src/app/(user)/store/stores.tsx b/src/app/(user)/store/stores.tsx
+deleted file mode 100644
+index b638de7..0000000
+--- a/src/app/(user)/store/stores.tsx
++++ /dev/null
+@@ -1,140 +0,0 @@
+-import { TextInput, RefreshControl } from "react-native";
+-import { View, Text, TouchableOpacity } from "@/tw";
+-import React, { useMemo, useCallback } from "react";
+-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+-import { useTranslation } from "react-i18next";
+-import { useStoreStore } from "@/store/user/store-store";
+-import { useRewardsUiStore } from "@/store/user/rewards-ui-store";
+-import { useStamps } from "@/hooks/use-stamps";
+-import { useLocation } from "@/hooks/use-location";
+-import StoreHeader from "@/components/ui/store-header";
+-import UserStoreListItem from "@/components/stores/user-store-list-item";
+-import StoreScreenContainer from "@/components/ui/store-screen-container";
+-import { buildStampedStoreList } from "@/utils/store-helpers";
+-
+-export default function StoreListScreen() {
+-  const { t: translate } = useTranslation();
+-  const {
+-    storeSearchQuery: searchQuery,
+-    setStoreSearchQuery: setSearchQuery,
+-    refreshing,
+-    setRefreshing,
+-  } = useRewardsUiStore();
+-  const { stores: realStores } = useStoreStore();
+-  const { stamps, isLoading: stampsLoading, refetch: refetchStamps } = useStamps();
+-  const { location } = useLocation();
+-
+-  const onRefresh = useCallback(async () => {
+-    setRefreshing(true);
+-    await refetchStamps();
+-    setRefreshing(false);
+-  }, [refetchStamps, setRefreshing]);
+-
+-  const allStores = useMemo(() => {
+-    return buildStampedStoreList(
+-      realStores,
+-      stamps,
+-      location,
+-      translate("rewards.unknownLocation"),
+-    );
+-  }, [location, realStores, stamps, translate]);
+-
+-  const filteredStores = useMemo(() => {
+-    if (!searchQuery) return allStores;
+-    return allStores.filter((store) =>
+-      store.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+-      store.location.toLowerCase().includes(searchQuery.toLowerCase()),
+-    );
+-  }, [allStores, searchQuery]);
+-
+-  const { nearbyStoresSection, joinedStoresSection } = useMemo(() => {
+-    return {
+-      nearbyStoresSection: filteredStores.filter((store) => store.isNearby),
+-      joinedStoresSection: filteredStores.filter((store) => !store.isNearby),
+-    };
+-  }, [filteredStores]);
+-
+-
+-  return (
+-    <StoreScreenContainer
+-      backgroundClassName="bg-backgroundMuted dark:bg-darkBackground"
+-      contentGap={24}
+-      refreshControl={
+-        <RefreshControl
+-          refreshing={refreshing}
+-          onRefresh={onRefresh}
+-          tintColor="#FF6600"
+-          colors={["#FF6600"]}
+-        />
+-      }
+-    >
+-      <StoreHeader title={translate("rewards.storesList.title")} />
+-
+-      <View className="flex-row items-center bg-white dark:bg-darkBackgroundCard rounded-2xl px-4 py-1 border border-neutral-100 dark:border-darkBorder shadow-sm shadow-neutral-100 dark:shadow-none mt-2">
+-        <MaterialIcons name="search" size={20} color="#9CA3AF" />
+-        <TextInput
+-          placeholder={translate("rewards.storesList.searchPlaceholder")}
+-          placeholderTextColor="#9CA3AF"
+-          className="flex-1 ml-3 font-poppins text-sm text-neutral-900 dark:text-white pt-0 pb-0"
+-          value={searchQuery}
+-          onChangeText={setSearchQuery}
+-          style={{ textAlignVertical: "center" }}
+-        />
+-        {searchQuery.length > 0 && (
+-          <TouchableOpacity onPress={() => setSearchQuery("")}>
+-            <MaterialIcons name="close" size={18} color="#9CA3AF" />
+-          </TouchableOpacity>
+-        )}
+-      </View>
+-
+-      <View className="mt-6 gap-y-8">
+-          {filteredStores.length === 0 ? (
+-            <View className="items-center justify-center py-20">
+-              <View className="w-24 h-24 rounded-full bg-neutral-100 dark:bg-white/5 items-center justify-center mb-6">
+-                <MaterialIcons name="storefront" size={48} color="#CBD5E1" />
+-              </View>
+-              <Text className="text-xl font-poppins-bold text-neutral-900 dark:text-white text-center">
+-                {searchQuery
+-                  ? translate("rewards.storesList.noMatching")
+-                  : translate("rewards.storesList.noJoined")}
+-              </Text>
+-              <Text className="text-sm text-neutral-500 font-poppins text-center px-10 mt-2">
+-                {searchQuery
+-                  ? translate("rewards.storesList.noMatchingDetail", { query: searchQuery })
+-                  : translate("rewards.storesList.noJoinedDetail")}
+-              </Text>
+-            </View>
+-          ) : (
+-            <>
+-              {nearbyStoresSection.length > 0 && (
+-                <View className="gap-y-4">
+-                  <Text className="text-xs font-poppins-bold text-neutral-500 dark:text-neutral-400 uppercase tracking-widest ml-1">
+-                    {translate("rewards.storesList.nearbySection")}
+-                  </Text>
+-                  {nearbyStoresSection.map((store, index) => (
+-                    <UserStoreListItem key={store.id} store={store} index={index} />
+-                  ))}
+-                </View>
+-              )}
+-
+-              {joinedStoresSection.length > 0 && (
+-                <View className="gap-y-4">
+-                  <Text className="text-xs font-poppins-bold text-neutral-500 dark:text-neutral-400 uppercase tracking-widest ml-1">
+-                    {translate("rewards.storesList.myStoresSection")}
+-                  </Text>
+-                  {joinedStoresSection.map((store, index) => (
+-                    <UserStoreListItem
+-                      key={store.id}
+-                      store={store}
+-                      index={index}
+-                      sectionDelay={nearbyStoresSection.length * 100}
+-                    />
+-                  ))}
+-                </View>
+-              )}
+-            </>
+-          )}
+-        </View>
+-    </StoreScreenContainer>
+-  );
+-}
+diff --git a/src/components/stores/user-store-hero-carousel.tsx b/src/components/stores/user-store-hero-carousel.tsx
+index 3cf902d..0da7f24 100644
+--- a/src/components/stores/user-store-hero-carousel.tsx
++++ b/src/components/stores/user-store-hero-carousel.tsx
+@@ -1,10 +1,11 @@
+ import React from "react";
+-import { View, Text, AnimatedView, Image } from "@/tw";
++import { View, Text, AnimatedView, Image, TouchableOpacity } from "@/tw";
+ import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+ import Carousel from "react-native-reanimated-carousel";
+ import { Dimensions } from "react-native";
+ import { storeLogos } from "@/data/rewards";
+ import { useTranslation } from "react-i18next";
++import { useRouter } from "expo-router";
+ 
+ const { width: screenWidth } = Dimensions.get("window");
+ 
+@@ -12,16 +13,21 @@ interface UserStoreHeroCarouselProps {
+   nearbyStores: any[];
+   storesWithLocation: any[];
+   setHeroIndex: (index: number) => void;
++  heroIndex: number;
+   swipeIndicatorStyle: any;
++  hideViewButton?: boolean;
+ }
+ 
+ export default function UserStoreHeroCarousel({
+   nearbyStores,
+   storesWithLocation,
+   setHeroIndex,
++  heroIndex,
+   swipeIndicatorStyle,
++  hideViewButton = false,
+ }: UserStoreHeroCarouselProps) {
+   const { t: translate } = useTranslation();
++  const router = useRouter();
+   const getHeroImage = (store: any) => {
+     if (store.logo) {
+       return { uri: store.logo };
+@@ -128,13 +134,31 @@ export default function UserStoreHeroCarousel({
+       )}
+ 
+       {/* Replaced 'left-97' with standard trailing flex positioning */}
+-      <View className="absolute top-4 right-6 items-end z-10">
+-        {nearbyStores.length >= 2 && (
+-          <AnimatedView style={swipeIndicatorStyle}>
+-            <MaterialIcons name="chevron-right" size={28} color="#FFFFFF" />
+-          </AnimatedView>
+-        )}
+-      </View>
++      {!hideViewButton && (
++        <TouchableOpacity
++          onPress={() => {
++            const activeHeroStores = nearbyStores.length > 0 
++              ? nearbyStores 
++              : storesWithLocation.filter(s => s.is_active);
++            const focusedStore = activeHeroStores[heroIndex];
++            if (focusedStore) {
++              router.push(`/store/${focusedStore.id}`);
++            }
++          }}
++          className="absolute top-7 right-6 z-30 px-3 py-1.5 rounded-full border border-white/20 bg-black/30 backdrop-blur-md flex-row items-center justify-center gap-x-1.5"
++        >
++          <Text className="text-[10px] font-poppins-semibold text-white uppercase tracking-wider text-center">
++            {translate("rewards.viewStore")}
++          </Text>
++          <MaterialIcons
++            name="local-convenience-store"
++            size={14}
++            color="#FFFFFF"
++            style={{ transform: [{ translateY: -0.5 }] }}
++          />
++        </TouchableOpacity>
++      )}
++
+     </View>
+   );
+ }
+diff --git a/src/hooks/use-store-overview-data.ts b/src/hooks/use-store-overview-data.ts
+index 9a30d89..240848d 100644
+--- a/src/hooks/use-store-overview-data.ts
++++ b/src/hooks/use-store-overview-data.ts
+@@ -41,7 +41,7 @@ function buildVirtualStampEntry(focusedStore: any): StampProgress {
+   };
+ }
+ 
+-export function useStoreOverviewData() {
++export function useStoreOverviewData(storeId?: string) {
+   const {
+     rewardSort,
+     rewardPointsOrder,
+@@ -157,8 +157,22 @@ export function useStoreOverviewData() {
+   }, [location]);
+ 
+   const displayStamps = useMemo(() => {
+-    if (!location) return sortedStamps;
++    // If a specific storeId is requested, we only want to show that one
++    if (storeId) {
++      const targetStore = storesWithLocation.find((s) => s.id.toString() === storeId);
++      if (!targetStore) return [];
++
++      const isEnabled = enabledStampFeatureStoreIds.includes(Number(targetStore.id));
++      if (!isEnabled) return [];
++
++      const existingStamp = sortedStamps.find(
++        (stamp) => Number(stamp.store_id) === Number(targetStore.id),
++      );
+ 
++      return existingStamp ? [existingStamp] : [buildVirtualStampEntry(targetStore)];
++    }
++
++    if (!location) return sortedStamps;
+     if (nearbyStores.length === 0) return sortedStamps;
+ 
+     const focusedStore = nearbyStores[heroIndex];
+@@ -172,9 +186,24 @@ export function useStoreOverviewData() {
+     );
+ 
+     return existingStamp ? [existingStamp] : [buildVirtualStampEntry(focusedStore)];
+-  }, [enabledStampFeatureStoreIds, heroIndex, location, nearbyStores, sortedStamps]);
++  }, [enabledStampFeatureStoreIds, heroIndex, location, nearbyStores, sortedStamps, storeId, storesWithLocation]);
+ 
+   const displayStreaks = useMemo(() => {
++    // If a specific storeId is requested, focus only on its streak
++    if (storeId) {
++      const isEligible = eligibleStreakStoreIds.includes(Number(storeId));
++      if (!isEligible) return [];
++
++      const existingStamp = sortedStamps.find(
++        (stamp) => Number(stamp.store_id) === Number(storeId),
++      );
++
++      if (existingStamp) return [existingStamp];
++
++      const targetStore = storesWithLocation.find((s) => s.id.toString() === storeId);
++      return targetStore ? [buildVirtualStampEntry(targetStore)] : [];
++    }
++
+     if (nearbyStores.length > 0) {
+       const focusedStore = nearbyStores[heroIndex];
+       if (!focusedStore) return [];
+@@ -192,7 +221,7 @@ export function useStoreOverviewData() {
+     return displayStamps.filter((stamp) =>
+       eligibleStreakStoreIds.includes(Number(stamp.store_id)),
+     );
+-  }, [displayStamps, eligibleStreakStoreIds, heroIndex, nearbyStores, sortedStamps]);
++  }, [displayStamps, eligibleStreakStoreIds, heroIndex, nearbyStores, sortedStamps, storeId, storesWithLocation]);
+ 
+   useEffect(() => {
+     const nearbyIds = nearbyStores.map((store) => Number(store.id));
+@@ -201,8 +230,17 @@ export function useStoreOverviewData() {
+   }, [fetchRewardsData, nearbyStores, sortedStamps]);
+ 
+   useEffect(() => {
+-    setHeroIndex(0);
+-  }, [nearbyStores.length, setHeroIndex]);
++    if (storeId) {
++      const index = nearbyStores.findIndex((s) => s.id.toString() === storeId);
++      if (index !== -1) {
++        setHeroIndex(index);
++      } else {
++        setHeroIndex(0);
++      }
++    } else {
++      setHeroIndex(0);
++    }
++  }, [nearbyStores, setHeroIndex, storeId]);
+ 
+   const swipeIndicatorStyle = useAnimatedStyle(() => ({
+     opacity: swipeIndicatorOpacity.value,
+diff --git a/src/i18n/locales/en.json b/src/i18n/locales/en.json
+index 77599c4..6506a86 100644
+--- a/src/i18n/locales/en.json
++++ b/src/i18n/locales/en.json
+@@ -138,7 +138,8 @@
+     },
+     "rewards": {
+         "title": "Rewards",
+-        "viewStores": "VIEW STORES",
++        "viewStores": "View stores",
++        "viewStore": "View store",
+         "discoverPartners": "DISCOVER PARTNERS",
+         "distanceMeters": "{{meters}} meters away",
+         "store": "Store",
+diff --git a/src/i18n/locales/ja.json b/src/i18n/locales/ja.json
+index 256335e..d064534 100644
+--- a/src/i18n/locales/ja.json
++++ b/src/i18n/locales/ja.json
+@@ -138,7 +138,8 @@
+     },
+     "rewards": {
+         "title": "報酬",
+-        "viewStores": "店舗を見る",
++        "viewStores": "すべての店舗",
++        "viewStore": "店舗を見る",
+         "discoverPartners": "パートナーを探す",
+         "distanceMeters": "{{meters}} m 先",
+         "store": "店舗",
