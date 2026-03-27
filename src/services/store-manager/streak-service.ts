@@ -1,6 +1,14 @@
 import { supabase } from "@/supabase/supabase";
 import { Streak, StreakParticipant } from "@/type/store-manager/streak";
 
+async function syncAutoActivateStreaks(storeId: string): Promise<void> {
+  const { error } = await supabase.rpc("activate_due_store_streaks", {
+    target_store_id: Number(storeId),
+  });
+
+  if (error) return;
+}
+
 export async function createStreak(payload: Streak): Promise<void> {
   try {
     const { error } = await supabase
@@ -14,6 +22,7 @@ export async function createStreak(payload: Streak): Promise<void> {
 
 export async function getAllStreaksByStoreId(storeId: string): Promise<Streak[]> {
   try {
+    await syncAutoActivateStreaks(storeId);
     const { data, error } = await supabase
       .from("store_streaks")
       .select("*")
