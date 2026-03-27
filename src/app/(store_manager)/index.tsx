@@ -11,7 +11,6 @@ import { getLast7Labels, getWeekDateRange } from "@/utils/date-helpers";
 import { StorePickerDropdown } from "@/components/stores/store-picker-dropdown";
 import { DashboardMetricTile } from "@/components/stores/dashboard-metric-tile";
 import { DashboardActivityChart } from "@/components/stores/dashboard-activity-chart";
-import { DashboardTransactionList } from "@/components/stores/dashboard-transaction-list";
 import { DashboardRetentionChart } from "@/components/stores/dashboard-retention-chart";
 import { DashboardStampDistribution } from "@/components/stores/dashboard-stamp-distribution";
 
@@ -39,7 +38,6 @@ export default function StoreManagerDashboard() {
         activeUsers,
         todayTransactions,
         weeklyActivity,
-        recentTransactions,
         retention,
         stampBuckets,
         stampMaxStamps,
@@ -56,10 +54,10 @@ export default function StoreManagerDashboard() {
     const weekRange = useMemo(() => getWeekDateRange(), []);
 
     return (
-        <SafeAreaView className="flex-1 bg-backgroundMuted dark:bg-darkBackground">
+        <SafeAreaView edges={['top']} className="flex-1 bg-backgroundMuted dark:bg-darkBackground">
             <ScrollView
                 className="flex-1"
-                contentContainerStyle={{ flexGrow: 1, padding: 20, paddingBottom: 100 }}
+                contentContainerStyle={{ padding: 20 }}
                 showsVerticalScrollIndicator={false}
                 refreshControl={
                     <RefreshControl
@@ -88,7 +86,7 @@ export default function StoreManagerDashboard() {
                     {selectedStore?.address && (
                         <View className="flex-row items-center">
                             <MaterialIcons name="location-on" size={14} color="#94a3b8" />
-                            <Text className="text-xs font-poppins text-textMuted ml-[4px]">
+                            <Text className="text-xs font-poppins text-textMuted dark:text-darkTextMuted ml-[4px]">
                                 {selectedStore.address}
                             </Text>
                         </View>
@@ -120,14 +118,13 @@ export default function StoreManagerDashboard() {
                             loading={metricsLoading}
                         />
 
-                        {/* weekly scan activity chart */}
-                        <View className="bg-white rounded-[20px] p-5 elevation-1 mb-[14px]">
+                        <View className="bg-white dark:bg-darkBackgroundCard rounded-[20px] p-5 elevation-1 mb-[14px] border border-transparent dark:border-darkBorder">
                             <View className="flex-row justify-between items-start mb-5">
                                 <View>
-                                    <Text className="text-lg font-poppins-bold text-[#1E293B] leading-6">
+                                    <Text className="text-lg font-poppins-bold text-textPrimary dark:text-darkTextPrimary leading-6">
                                         Weekly Scan Activity
                                     </Text>
-                                    <Text className="text-[12px] font-poppins text-[#94A3B8] mt-0.5">
+                                    <Text className="text-[12px] font-poppins text-textMuted dark:text-darkTextMuted mt-0.5">
                                         {weekRange}
                                     </Text>
                                 </View>
@@ -139,16 +136,9 @@ export default function StoreManagerDashboard() {
                             />
                         </View>
 
-                        {/* stamp progress */}
                         <DashboardStampDistribution
                             buckets={stampBuckets}
                             maxStamps={stampMaxStamps}
-                            loading={metricsLoading}
-                        />
-
-                        {/* transaction list */}
-                        <DashboardTransactionList
-                            transactions={recentTransactions}
                             loading={metricsLoading}
                         />
                     </View>

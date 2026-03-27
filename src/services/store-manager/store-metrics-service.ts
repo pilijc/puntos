@@ -1,6 +1,6 @@
 import { supabase } from "@/supabase/supabase";
 import * as turf from "@turf/turf";
-import { StoreTransaction, RetentionData, StampBucket } from "@/type/store-manager/metric"
+import { RetentionData, StampBucket } from "@/type/store-manager/metric"
 export async function getStoreMetrics(
     storeId: number,
     lat: number | null,
@@ -101,27 +101,6 @@ export async function getStoreMetrics(
     };
 }
 
-export async function getRecentTransactions(storeId: number): Promise<StoreTransaction[]> {
-    const { data, error } = await supabase
-        .from("qr_transactions")
-        .select(`id, points_earned, created_at, user:user_id ( name ), staff:store_staff_id (name )`)
-        .eq("store_id", storeId)
-        .order("created_at", { ascending: false })
-        .limit(5);
-
-    if (error) {
-        console.error("Error fetching transactions:", error);
-        return [];
-    }
-
-    return (data || []).map((t: any) => ({
-        id: t.id,
-        points_earned: t.points_earned,
-        created_at: t.created_at,
-        user_name: t.user?.name || "Unknown User",
-        staff_name: t.staff?.name || "Unknown Staff",
-    }))    
-}
 
 export async function getRetentionData(storeId: number): Promise<RetentionData> {
     const {data, error} = await supabase

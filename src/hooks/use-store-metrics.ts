@@ -1,11 +1,10 @@
 import { useState, useEffect } from "react";
 import {
     getStoreMetrics,
-    getRecentTransactions,
     getRetentionData,
     getStampDistribution,
 } from "@/services/store-manager/store-metrics-service";
-import { StoreTransaction, RetentionData, StampBucket } from "@/type/store-manager/metric";
+import { RetentionData, StampBucket } from "@/type/store-manager/metric";
 
 export function useStoreDashboardMetrics(
     storeId: number,
@@ -17,7 +16,6 @@ export function useStoreDashboardMetrics(
     const [todayTransactions, setTodayTransactions] = useState(0);
     const [weeklyActivity, setWeeklyActivity] = useState<number[]>([0, 0, 0, 0, 0, 0, 0]);
     const [weeklyStampsActivity, setWeeklyStampsActivity] = useState<number[]>([0, 0, 0, 0, 0, 0, 0]);
-    const [recentTransactions, setRecentTransactions] = useState<StoreTransaction[]>([]);
     const [retention, setRetention] = useState<RetentionData>({
         returningCount: 0,
         newCount: 0,
@@ -36,9 +34,8 @@ export function useStoreDashboardMetrics(
             setLoading(true);
 
             try {
-                const [metricsData, transactionsData, retentionData, stampDistData] = await Promise.all([
+                const [metricsData, retentionData, stampDistData] = await Promise.all([
                     getStoreMetrics(storeId, lat, lng, radius),
-                    getRecentTransactions(storeId),
                     getRetentionData(storeId),
                     getStampDistribution(storeId),
                 ]);
@@ -48,7 +45,6 @@ export function useStoreDashboardMetrics(
                     setTodayTransactions(metricsData.todayTransactions);
                     setWeeklyActivity(metricsData.weeklyActivity);
                     setWeeklyStampsActivity(metricsData.weeklyStampsActivity);
-                    setRecentTransactions(transactionsData);
                     setRetention(retentionData);
                     setStampBuckets(stampDistData.buckets);
                     setStampMaxStamps(stampDistData.maxStamps);
@@ -70,7 +66,6 @@ export function useStoreDashboardMetrics(
         todayTransactions,
         weeklyActivity,
         weeklyStampsActivity,
-        recentTransactions,
         retention,
         stampBuckets,
         stampMaxStamps,

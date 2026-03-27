@@ -1,4 +1,5 @@
 import React from "react";
+import { useColorScheme } from "react-native";
 import { View, Text } from "@/tw";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { DashboardMetricTileProps } from "@/type/store-manager/metric";
@@ -9,39 +10,38 @@ export const DashboardMetricTile: React.FC<DashboardMetricTileProps> = ({
     subtitle,
     icon,
     loading,
-    highlight,
 }) => {
+    const isDark = useColorScheme() === "dark";
+
     return (
-        <View className="bg-white dark:bg-darkBackgroundCard rounded-[20px] p-3 flex-row items-center gap-[10px] flex-1 elevation-1">
-            <View className="w-10 h-10 rounded-full bg-[#F5F5F5] items-center justify-center">
+        <View className="bg-white dark:bg-darkBackgroundCard rounded-[20px] p-3 flex-row items-center gap-[10px] flex-1 elevation-1 border border-transparent dark:border-darkBorder">
+            <View className="w-10 h-10 rounded-full bg-[#f8fafc] dark:bg-darkBackgroundMuted items-center justify-center">
                 <MaterialIcons
                     name={icon as any}
-                    size={22}
-                    color={highlight ? "#FF6600" : "#BDBDBD"}
+                    size={20}
+                    color={isDark ? "#A3A3A3" : "#94A3B8"}
                 />
             </View>
 
             <View className="flex-1">
-                <Text className="text-[10px] font-poppins-bold text-[#94A3B8] tracking-[0.4px] uppercase mb-[2px]">
+                <Text className="text-[10px] font-poppins-bold text-textMuted dark:text-darkTextSecondary tracking-[0.4px] uppercase mb-[2px]">
                     {label}
                 </Text>
 
                 <View className="flex-row items-center flex-wrap gap-[4px]">
-                    <Text className="text-[24px] font-poppins-bold text-[#1E293B]">
-                        {loading ? (
-                            <View className="h-[28px] w-12 bg-background rounded my-[2px] animate-pulse" />
-                        ) : (
-                            <Text className="text-[24px] font-poppins-bold text-textSecondary">
-                                {value}
-                            </Text>
-                        )}
-                    </Text>
+                    {loading ? (
+                        <View key="loading-val" className="h-[28px] w-14 bg-background dark:bg-darkBackground rounded my-[2px] animate-pulse will-change-animation" />
+                    ) : (
+                        <Text key="content-val" className="text-[22px] font-poppins-bold text-textPrimary dark:text-darkTextPrimary">
+                            {value}
+                        </Text>
+                    )}
                 </View>
 
                 {!!subtitle && (
                     <View className="flex-row items-center mt-[2px] gap-[4px]">
-                        <View className="w-[5px] h-[5px] rounded-full bg-[#22C55E]" />
-                        <Text className="text-[9px] font-poppins text-[#94A3B8]" numberOfLines={1}>
+                        <View className="w-[5px] h-[5px] rounded-full bg-success" />
+                        <Text className="text-[9px] font-poppins text-textMuted dark:text-darkTextMuted" numberOfLines={1}>
                             {subtitle}
                         </Text>
                     </View>

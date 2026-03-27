@@ -4,10 +4,9 @@ import Svg, { Polyline, Circle, Path, Defs, LinearGradient, Stop, Text as SvgTex
 import { getTodayIndex } from "@/utils/date-helpers";
 import { DashboardActivityChartProps } from "@/type/store-manager/metric";
 
-// Switched to a wider coordinate system for better precision
 const VIEWBOX_WIDTH = 300;
-const LINE_HEIGHT = 80;   // Height of the actual graph area
-const TOTAL_HEIGHT = 110; // Increased total height for better visibility
+const LINE_HEIGHT = 80;
+const TOTAL_HEIGHT = 110;
 
 export const DashboardActivityChart: React.FC<DashboardActivityChartProps> = ({
     data,
@@ -18,11 +17,10 @@ export const DashboardActivityChart: React.FC<DashboardActivityChartProps> = ({
     const maxVal = Math.max(...data, 1);
     const count = data.length;
 
-    // Pad the sides (in viewBox units) so labels don't clip
     const paddingX = 20;
     const chartWidth = VIEWBOX_WIDTH - (paddingX * 2);
 
-    // Calculate coordinates
+    // coordinates
     const points = data.map((val, i) => {
         const x = paddingX + (i / (count - 1)) * chartWidth;
         const y = LINE_HEIGHT - Math.max((val / maxVal) * LINE_HEIGHT * 0.75, 4);
@@ -31,7 +29,7 @@ export const DashboardActivityChart: React.FC<DashboardActivityChartProps> = ({
 
     const polylinePoints = points.map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ");
 
-    // Area path for the gradient
+    // gradient
     const areaPath = `
         M ${points[0].x},${LINE_HEIGHT} 
         ${points.map(p => `L ${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ")} 
@@ -40,7 +38,7 @@ export const DashboardActivityChart: React.FC<DashboardActivityChartProps> = ({
     `;
 
     if (loading) {
-        return <View style={{ height: 110 }} className="w-full bg-backgroundMuted rounded-[12px] animate-pulse" />;
+        return <View key="skeleton-activity" style={{ height: 110 }} className="w-full bg-backgroundMuted dark:bg-darkBackground rounded-[12px] animate-pulse will-change-animation" />;
     }
 
     return (
@@ -58,10 +56,10 @@ export const DashboardActivityChart: React.FC<DashboardActivityChartProps> = ({
                     </LinearGradient>
                 </Defs>
 
-                {/* Shaded Area */}
+                {/* shade */}
                 <Path d={areaPath} fill="url(#areaGradient)" />
 
-                {/* The Line */}
+                {/* line */}
                 <Polyline
                     points={polylinePoints}
                     fill="none"
@@ -71,7 +69,7 @@ export const DashboardActivityChart: React.FC<DashboardActivityChartProps> = ({
                     strokeLinecap="round"
                 />
 
-                {/* Dots and Labels */}
+                {/* dots and labels */}
                 {points.map((p, i) => {
                     const isToday = i === todayIdx;
                     const label = labels[i];
