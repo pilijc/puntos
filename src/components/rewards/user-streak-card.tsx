@@ -1,25 +1,33 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { View, Text, AnimatedView, TouchableOpacity, Image } from "@/tw";
 import { Check, ExternalLink, Flame, Store } from "lucide-react-native";
 import Animated, { Layout, useAnimatedStyle, useSharedValue, withSpring, withTiming, withRepeat, withSequence } from "react-native-reanimated";
 import LottieView from "lottie-react-native";
 import { storeLogos } from "@/data/rewards";
 import { useTranslation } from "react-i18next";
-import { Modal, Pressable, StyleSheet, View as RNView } from "react-native";
+import { Alert, ActivityIndicator, Modal, Pressable, StyleSheet, View as RNView } from "react-native";
+import { useRouter } from "expo-router";
+import { recordUserStreak } from "@/services/streak-service";
+import { supabase } from "@/supabase/supabase";
 
 interface UserStreakCardProps {
   streak: any;
   nearbyStores: any[];
   isStoreNearby: (lat?: number | null, lon?: number | null) => boolean;
+  onStreakRecorded?: () => void;
 }
 
 export default function UserStreakCard({
   streak,
   nearbyStores,
   isStoreNearby,
+  onStreakRecorded,
 }: UserStreakCardProps) {
   const { t: translate } = useTranslation();
+  const router = useRouter();
   const [showStreakModal, setShowStreakModal] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [hasEarnedToday, setHasEarnedToday] = useState(false);
   const storeStr = streak.stores as any;
   const storeName = storeStr?.name ?? translate("user.rewards.store");
   const storeAddress = storeStr?.address ?? translate("user.rewards.unknownLocation");
@@ -27,9 +35,17 @@ export default function UserStreakCard({
     nearbyStores.some((s) => Number(s.id) === Number(streak.store_id)) ||
     isStoreNearby(storeStr?.latitude, storeStr?.longitude);
 
-  // Mocking streak progress for UI: use 3 days completed for now
-  const clampedCount = 3;
-  const targetCount = 7;
+  // Derive if already earned today from last_activity_date
+  const today = new Date().toISOString().split("T")[0];
+  const alreadyEarnedToday = streak.last_activity_date === today || hasEarnedToday;
+
+  // Real data from backend
+  const streakProgram = streak.store_streaks as any;
+  const targetCount = streakProgram?.streak_length ?? 7;
+  // If earned today (optimistic or from DB), bump displayed count
+  const rawCount = streak.streak_days ?? 0;
+  const clampedCount = Math.min(alreadyEarnedToday ? rawCount : rawCount, targetCount);
+
   const streakDays = [
     translate("user.rewards.days.mon"),
     translate("user.rewards.days.tue"),
@@ -37,11 +53,13 @@ export default function UserStreakCard({
     translate("user.rewards.days.thu"),
     translate("user.rewards.days.fri"),
     translate("user.rewards.days.sat"),
-    translate("user.rewards.days.sun")
+    translate("user.rewards.days.sun"),
   ];
 
-  const days = streakDays.map((label, index) => ({
-    label: label,
+  // Build exactly targetCount circles (or 7 if target is > 7 for safety)
+  const displayDayCount = Math.min(targetCount, 7);
+  const days = Array.from({ length: displayDayCount }, (_, index) => ({
+    label: streakDays[index % 7],
     state:
       index < clampedCount
         ? "completed"
@@ -49,6 +67,7 @@ export default function UserStreakCard({
           ? "current"
           : "upcoming",
   }));
+
   const pressScale = useSharedValue(1);
   const modalOpacity = useSharedValue(0);
   const pressAnimatedStyle = useAnimatedStyle(() => ({
@@ -134,7 +153,10 @@ export default function UserStreakCard({
                 </Text>
               </View>
             )}
-            <TouchableOpacity disabled={true} className="px-2 py-1 opacity-50">
+            <TouchableOpacity
+              onPress={() => router.push(`/store/streaks?storeId=${streak.store_id}`)}
+              className="px-2 py-1"
+            >
               <View className="flex-row items-center gap-x-1">
                 <Text className="text-primary text-xs font-poppins-semibold">
                   {translate("user.rewards.viewAll")}
@@ -197,7 +219,6 @@ export default function UserStreakCard({
                 key={`${day.label}-${index}`}
                 className="items-center w-11"
               >
-
                 {isCurrent ? (
                   <TouchableOpacity
                     activeOpacity={1}
@@ -207,7 +228,45 @@ export default function UserStreakCard({
                     onPressOut={() => {
                       pressScale.value = withSpring(1, { damping: 14, stiffness: 220 });
                     }}
-                    onPress={() => setShowStreakModal(true)}
+                    onPress={async () => {
+                      if (alreadyEarnedToday) {
+                        Alert.alert("Already Earned!", "You've already earned your streak for today. Come back tomorrow!");
+                        return;
+                      }
+                      if (!nearby) {
+                        Alert.alert("Not Nearby", "You need to be within range of this store to earn your streak.");
+                        return;
+                      }
+                      // Need a store_streak_id to record. If no program linked yet, show message.
+                      const storeStreakId = streak.store_streak_id;
+                      if (!storeStreakId) {
+                        Alert.alert("No Program", "This store's streak program isn't fully set up yet.");
+                        return;
+                      }
+                      try {
+                        setIsRecording(true);
+                        const { data: { user } } = await supabase.auth.getUser();
+                        if (!user?.id) return;
+                        const result = await recordUserStreak(
+                          user.id,
+                          Number(streak.store_id),
+                          storeStreakId,
+                          streakProgram?.fixed_points_per_day ?? 0,
+                        );
+                        if (result.alreadyRecorded) {
+                          Alert.alert("Already Earned!", "You've already earned your streak for today. Come back tomorrow!");
+                        } else {
+                          setHasEarnedToday(true);
+                          setShowStreakModal(true);
+                          onStreakRecorded?.();
+                        }
+                      } catch (e) {
+                        console.error("Failed to record streak:", e);
+                        Alert.alert("Error", "Something went wrong. Please try again.");
+                      } finally {
+                        setIsRecording(false);
+                      }
+                    }}
                   >
                     <Animated.View style={[pressAnimatedStyle, nearby && pulseAnimatedStyle]}>
                       <View
@@ -236,7 +295,6 @@ export default function UserStreakCard({
                     )}
                   </View>
                 )}
-
               </View>
             );
           })}
@@ -263,7 +321,7 @@ export default function UserStreakCard({
               1+
             </Text>
             <Text className="text-center text-white/90 font-poppins-medium text-base mt-2">
-              {`Day ${clampedCount + 1}/Day 8`}
+              {`Day ${clampedCount} / Day ${targetCount}`}
             </Text>
           </RNView>
         </Animated.View>

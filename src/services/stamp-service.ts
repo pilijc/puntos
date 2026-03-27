@@ -343,6 +343,38 @@ export async function getStoresWithEnabledStreaks(
   }
 }
 
+/**
+ * Returns a map of storeId → active store_streaks.id for the given stores.
+ * Used to populate store_streak_id in virtual (first-time) streak entries.
+ */
+export async function getActiveStreakProgramsByStore(
+  storeIds: number[],
+): Promise<Map<number, number>> {
+  if (storeIds.length === 0) return new Map();
+
+  try {
+    const { data, error } = await supabase
+      .from("store_streaks")
+      .select("id, store_id")
+      .in("store_id", storeIds)
+      .eq("status", "active");
+
+    if (error) {
+      console.warn("[getActiveStreakProgramsByStore] Error:", error.message);
+      return new Map();
+    }
+
+    const map = new Map<number, number>();
+    for (const row of data ?? []) {
+      map.set(Number(row.store_id), Number(row.id));
+    }
+    return map;
+  } catch (error) {
+    console.error("Exception fetching active streak programs:", error);
+    return new Map();
+  }
+}
+
 export async function getActiveStampProgramRewards(
   storeIds: number[],
 ): Promise<ActiveStampProgramReward[]> {
@@ -352,8 +384,7 @@ export async function getActiveStampProgramRewards(
     const { data: stampRows, error: stampError } = await supabase
       .from("store_stamps")
       .select("store_id, total_stamps, reward_id")
-      .in("store_id", storeIds)
-      .eq("is_active", true);
+      .in("store_id", storeIds);
 
     if (stampError) {
       throw new Error(stampError.message);
