@@ -1,138 +1,112 @@
-import React, { useRef } from "react";
+import React from "react";
 import {
   View,
   Text,
   TouchableOpacity,
-  PanResponder,
-  Animated,
   Dimensions,
   Modal as RNModal,
   StatusBar,
 } from "react-native";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { Image } from "expo-image";
+import { Gesture, GestureDetector, GestureHandlerRootView } from "react-native-gesture-handler";
+import Animated, { useAnimatedStyle, useSharedValue, withSpring } from "react-native-reanimated";
 
 const SCREEN = Dimensions.get("window");
 const MIN_ZOOM = 1;
 const MAX_ZOOM = 4;
-const SLIDER_HEIGHT = 220;
 
 export function ImageViewerModal({ uri, onClose }: { uri: string; onClose: () => void }) {
 
-  const zoomAnim  = useRef(new Animated.Value(MIN_ZOOM)).current;
-  const zoomRef   = useRef(MIN_ZOOM);
-  const panX      = useRef(new Animated.Value(0)).current;
-  const panY      = useRef(new Animated.Value(0)).current;
-  const panBase   = useRef({ x: 0, y: 0 });
-  const thumbAnim = useRef(new Animated.Value(SLIDER_HEIGHT)).current;
-  const thumbRef  = useRef(SLIDER_HEIGHT);
+  const scale = useSharedValue(1);
+  const savedScale = useSharedValue(1);
+  const translateX = useSharedValue(0);
+  const translateY = useSharedValue(0);
+  const savedTranslateX = useSharedValue(0);
+  const savedTranslateY = useSharedValue(0);
 
-  const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
-
-  const applyZoom = (next: number, springIt = true) => {
-    const z = clamp(next, MIN_ZOOM, MAX_ZOOM);
-    zoomRef.current = z;
-
-    if (springIt) {
-      Animated.spring(zoomAnim, { toValue: z, useNativeDriver: true, tension: 140, friction: 12 }).start();
-    } else {
-      zoomAnim.setValue(z);
-    }
-
-    if (z <= MIN_ZOOM) {
-      panBase.current = { x: 0, y: 0 };
-      panX.setValue(0);
-      panY.setValue(0);
-    }
-
-    const ratio    = (z - MIN_ZOOM) / (MAX_ZOOM - MIN_ZOOM);
-    const newThumb = (1 - ratio) * SLIDER_HEIGHT;
-    thumbRef.current = newThumb;
-    if (springIt) {
-      Animated.spring(thumbAnim, { toValue: newThumb, useNativeDriver: false, tension: 140, friction: 12 }).start();
-    } else {
-      thumbAnim.setValue(newThumb);
-    }
-  };
-
-  const maxPan = (axis: "x" | "y") => {
-    const z = zoomRef.current;
+  const maxPan = (axis: "x" | "y", z: number) => {
+    'worklet';
     return ((z - 1) / z) * (axis === "x" ? SCREEN.width : SCREEN.height) * 0.55;
   };
 
-  // ── image pan responder ───────────────────────────────────────────────────
-  const imagePanResponder = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => zoomRef.current > MIN_ZOOM,
-      onMoveShouldSetPanResponder:  () => zoomRef.current > MIN_ZOOM,
-      onPanResponderMove: (_, gs) => {
-        panX.setValue(clamp(panBase.current.x + gs.dx, -maxPan("x"), maxPan("x")));
-        panY.setValue(clamp(panBase.current.y + gs.dy, -maxPan("y"), maxPan("y")));
-      },
-      onPanResponderRelease: (_, gs) => {
-        panBase.current = {
-          x: clamp(panBase.current.x + gs.dx, -maxPan("x"), maxPan("x")),
-          y: clamp(panBase.current.y + gs.dy, -maxPan("y"), maxPan("y")),
-        };
-      },
+  const pinchGesture = Gesture.Pinch()
+    .onUpdate((e) => {
+      const nextScale = savedScale.value * e.scale;
+      scale.value = Math.max(0.8, Math.min(6, nextScale));
     })
-  ).current;
+    .onEnd(() => {
+      if (scale.value < MIN_ZOOM) {
+        scale.value = withSpring(MIN_ZOOM);
+        translateX.value = withSpring(0);
+        translateY.value = withSpring(0);
+        savedTranslateX.value = 0;
+        savedTranslateY.value = 0;
+        savedScale.value = MIN_ZOOM;
+      } else if (scale.value > MAX_ZOOM) {
+        scale.value = withSpring(MAX_ZOOM);
+        savedScale.value = MAX_ZOOM;
+      } else {
+        savedScale.value = scale.value;
+      }
+    });
 
-  // ── slider drag responder ─────────────────────────────────────────────────
-  const dragStart = useRef(SLIDER_HEIGHT);
-
-  const sliderResponder = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
-      onMoveShouldSetPanResponder:  () => true,
-      onPanResponderGrant: () => {
-        dragStart.current = thumbRef.current;
-      },
-      onPanResponderMove: (_, gs) => {
-        const newThumb = clamp(dragStart.current + gs.dy, 0, SLIDER_HEIGHT);
-        thumbRef.current = newThumb;
-        thumbAnim.setValue(newThumb);
-
-        const ratio = 1 - newThumb / SLIDER_HEIGHT;
-        const z     = MIN_ZOOM + ratio * (MAX_ZOOM - MIN_ZOOM);
-        zoomRef.current = z;
-        zoomAnim.setValue(z);
-
-        if (z <= MIN_ZOOM) {
-          panBase.current = { x: 0, y: 0 };
-          panX.setValue(0);
-          panY.setValue(0);
-        }
-      },
-      onPanResponderRelease: () => {
-      },
+  const panGesture = Gesture.Pan()
+    .onUpdate((e) => {
+      if (scale.value > MIN_ZOOM) {
+        const maxX = maxPan("x", scale.value);
+        const maxY = maxPan("y", scale.value);
+        const nextX = savedTranslateX.value + e.translationX;
+        const nextY = savedTranslateY.value + e.translationY;
+        
+        translateX.value = Math.max(-maxX, Math.min(maxX, nextX));
+        translateY.value = Math.max(-maxY, Math.min(maxY, nextY));
+      }
     })
-  ).current;
+    .onEnd(() => {
+      savedTranslateX.value = translateX.value;
+      savedTranslateY.value = translateY.value;
+    });
 
-  const stepZoom = (delta: number) => applyZoom(zoomRef.current + delta);
+  const gesture = Gesture.Simultaneous(pinchGesture, panGesture);
+
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: [
+        { scale: scale.value },
+        { translateX: translateX.value },
+        { translateY: translateY.value },
+      ] as any,
+    };
+  });
+
+  const imagePanResponder = {};
 
   return (
     <RNModal visible animationType="fade" transparent statusBarTranslucent onRequestClose={onClose}>
       <StatusBar hidden />
 
-      <View style={{ flex: 1, backgroundColor: "#000" }}>
+      <GestureHandlerRootView style={{ flex: 1, backgroundColor: "#000" }}>
 
-        <Animated.View
-          style={{
-            position: "absolute",
-            top: 0, left: 0, right: 0, bottom: 0,
-            alignItems: "center",
-            justifyContent: "center",
-            transform: [{ scale: zoomAnim }, { translateX: panX }, { translateY: panY }],
-          }}
-          {...imagePanResponder.panHandlers}
-        >
-          <Image
-            source={{ uri }}
-            style={{ width: SCREEN.width, height: SCREEN.height }}
-            contentFit="contain"
-          />
-        </Animated.View>
+        <GestureDetector gesture={gesture}>
+          <Animated.View
+            style={[
+              {
+                position: "absolute",
+                top: 0, left: 0, right: 0, bottom: 0,
+                alignItems: "center",
+                justifyContent: "center",
+              },
+              animatedStyle
+            ]}
+          >
+            <Image
+              source={{ uri }}
+              style={{ width: SCREEN.width, height: SCREEN.height }}
+              contentFit="contain"
+            />
+          </Animated.View>
+        </GestureDetector>
 
         <TouchableOpacity
           onPress={onClose}
@@ -148,94 +122,6 @@ export function ImageViewerModal({ uri, onClose }: { uri: string; onClose: () =>
           <MaterialIcons name="close" size={22} color="#fff" />
         </TouchableOpacity>
 
-        <View
-          style={{
-            position: "absolute",
-            right: 12,
-            top: 0, bottom: 0,
-            zIndex: 60,
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-          pointerEvents="box-none"
-        >
-          <View style={{
-            alignItems: "center",
-            gap: 6,
-            backgroundColor: "rgba(20,20,20,0.65)",
-            borderRadius: 30,
-            borderWidth: 1,
-            borderColor: "rgba(255,255,255,0.12)",
-            paddingVertical: 8,
-            paddingHorizontal: 6,
-            shadowColor: "#000",
-            shadowOpacity: 0.4,
-            shadowRadius: 10,
-            shadowOffset: { width: 0, height: 2 },
-            elevation: 8,
-          }}>
-
-            <TouchableOpacity
-              onPress={() => stepZoom(0.5)}
-              activeOpacity={0.6}
-              style={{ width: 26, height: 26, alignItems: "center", justifyContent: "center" }}
-            >
-              <MaterialIcons name="add" size={18} color="rgba(255,255,255,0.85)" />
-            </TouchableOpacity>
-
-            <View
-              style={{ width: 26, height: SLIDER_HEIGHT, alignItems: "center" }}
-              {...sliderResponder.panHandlers}
-            >
-              <View style={{
-                position: "absolute",
-                top: 0, bottom: 0,
-                width: 3,
-                borderRadius: 2,
-                backgroundColor: "rgba(255,255,255,0.18)",
-              }} />
-
-              <Animated.View style={{
-                position: "absolute",
-                top: 0,
-                width: 3,
-                borderRadius: 2,
-                backgroundColor: "rgba(255,255,255,0.7)",
-                height: thumbAnim,
-              }} />
-
-              <Animated.View style={{
-                position: "absolute",
-                top: thumbAnim,
-                marginTop: -12,
-                width: 24, height: 24,
-                borderRadius: 12,
-                backgroundColor: "#fff",
-                shadowColor: "#000",
-                shadowOpacity: 0.35,
-                shadowRadius: 4,
-                shadowOffset: { width: 0, height: 2 },
-                elevation: 6,
-                alignItems: "center",
-                justifyContent: "center",
-              }}>
-                <View style={{ width: 10, gap: 2.5, alignItems: "center" }}>
-                  <View style={{ width: 10, height: 1.5, borderRadius: 1, backgroundColor: "#555" }} />
-                  <View style={{ width: 10, height: 1.5, borderRadius: 1, backgroundColor: "#555" }} />
-                  <View style={{ width: 10, height: 1.5, borderRadius: 1, backgroundColor: "#555" }} />
-                </View>
-              </Animated.View>
-            </View>
-
-            <TouchableOpacity
-              onPress={() => stepZoom(-0.5)}
-              activeOpacity={0.6}
-              style={{ width: 26, height: 26, alignItems: "center", justifyContent: "center" }}
-            >
-              <MaterialIcons name="remove" size={18} color="rgba(255,255,255,0.85)" />
-            </TouchableOpacity>
-          </View>
-        </View>
 
         <View style={{
           position: "absolute", bottom: 36, left: 0, right: 0,
@@ -248,12 +134,12 @@ export function ImageViewerModal({ uri, onClose }: { uri: string; onClose: () =>
           }}>
             <MaterialIcons name="open-with" size={14} color="rgba(255,255,255,0.6)" />
             <Text style={{ color: "rgba(255,255,255,0.6)", fontSize: 11, fontFamily: "Poppins-Medium" }}>
-              Drag to pan  •  Slide or tap +/− to zoom
+              Pinch to zoom  •  Drag to pan
             </Text>
           </View>
         </View>
 
-      </View>
+      </GestureHandlerRootView>
     </RNModal>
   );
 }

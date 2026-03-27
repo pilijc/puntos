@@ -162,7 +162,6 @@ async function fetchBlockedMap(ids: string[]): Promise<Map<string, boolean>> {
   return map;
 }
 
-/** When "Blocked Only" or "Active Only": fetch a larger window from view + blocked from users, filter client-side. Avoids querying users table for ids (which was causing Fetch More Error). */
 const STATUS_FILTER_WINDOW = 100;
 
 export const useUserStore = create<UserStoreState>((set, get) => ({
@@ -192,7 +191,6 @@ export const useUserStore = create<UserStoreState>((set, get) => ({
     const { activeTab, statusFilter, search } = get();
     const reset = opts?.reset ?? true;
     try {
-      // Set loading: true to prevent empty List from triggering onEndReached -> fetchMoreUsers immediately
       if (reset) set({ page: 1, hasMore: true, loading: true });
 
       if (statusFilter === "Blocked" || statusFilter === "Active") {
@@ -213,10 +211,20 @@ export const useUserStore = create<UserStoreState>((set, get) => ({
           blocked: blockedMap.get(r.id) ?? false,
         }));
         const processed: UserRecord[] = withBlocked.map(normalizeUser);
+        
+        const uniqueProcessed: UserRecord[] = [];
+        const seen = new Set<string>();
+        for (const u of processed) {
+          if (!seen.has(u.id)) {
+            uniqueProcessed.push(u);
+            seen.add(u.id);
+          }
+        }
+
         const filtered =
           statusFilter === "Blocked"
-            ? processed.filter((u) => u.status === "Blocked")
-            : processed.filter((u) => u.status !== "Blocked");
+            ? uniqueProcessed.filter((u) => u.status === "Blocked")
+            : uniqueProcessed.filter((u) => u.status !== "Blocked");
         set({
           users: filtered,
           loading: false,
@@ -246,9 +254,19 @@ export const useUserStore = create<UserStoreState>((set, get) => ({
         blocked: blockedMap.get(r.id) ?? false,
       }));
       const processed: UserRecord[] = withBlocked.map(normalizeUser);
+      
+      const uniqueProcessed: UserRecord[] = [];
+      const seen = new Set<string>();
+      for (const u of processed) {
+        if (!seen.has(u.id)) {
+          uniqueProcessed.push(u);
+          seen.add(u.id);
+        }
+      }
+
       const fetched = rows.length;
       set({
-        users: processed,
+        users: uniqueProcessed,
         loading: false,
         refreshing: false,
         page: 1,
@@ -262,7 +280,6 @@ export const useUserStore = create<UserStoreState>((set, get) => ({
 
   fetchMoreUsers: async () => {
     const { page, hasMore, loadingMore, activeTab, statusFilter, search, users, loading } = get();
-    // Do not run fetchMore if initial load/fetchUsers is currently in progress
     if (!hasMore || loadingMore || loading) return;
     set({ loadingMore: true });
     try {
@@ -294,11 +311,25 @@ export const useUserStore = create<UserStoreState>((set, get) => ({
       }));
       const processed: UserRecord[] = withBlocked.map(normalizeUser);
       const fetched = rows.length;
-      set({
-        users: [...users, ...processed],
-        page: page + 1,
-        hasMore: fetched >= PAGE_SIZE,
-        loadingMore: false,
+
+      set((state) => {
+        const existingIds = new Set(state.users.map(u => u.id));
+        const uniqueNew: UserRecord[] = [];
+        const seenInNew = new Set<string>();
+
+        for (const u of processed) {
+          if (!existingIds.has(u.id) && !seenInNew.has(u.id)) {
+            uniqueNew.push(u);
+            seenInNew.add(u.id);
+          }
+        }
+        
+        return {
+          users: [...state.users, ...uniqueNew],
+          page: state.page + 1,
+          hasMore: fetched >= PAGE_SIZE,
+          loadingMore: false,
+        };
       });
     } catch (err: any) {
       const msg = err?.message ?? String(err);
@@ -353,6 +384,8 @@ export const useUserStore = create<UserStoreState>((set, get) => ({
 
   flatListData: () => {
     const { users, activeTab, statusFilter, search } = get();
+    if (users.length === 0) return [];
+    
     const normalizedSearch = search.trim().toLowerCase();
 
     const filtered = users.filter((u) => {
@@ -368,20 +401,24 @@ export const useUserStore = create<UserStoreState>((set, get) => ({
 
     const groups = groupByFirstLetter(filtered);
     const flat: any[] = [];
-    Object.keys(groups)
-      .sort()
-      .forEach((letter) => {
-        flat.push({ isHeader: true, title: letter });
-        groups[letter].forEach((user) => flat.push({ ...user, isHeader: false }));
-      });
+    const sortedKeys = Object.keys(groups).sort();
+    
+    for (const letter of sortedKeys) {
+      flat.push({ isHeader: true, title: letter, id: `header-${letter}` });
+      for (const user of groups[letter]) {
+        flat.push(user);
+      }
+    }
     return flat;
   },
 
   stickyHeaderIndices: () => {
     const data = get().flatListData();
-    return data
-      .map((item, index) => (item.isHeader ? index : -1))
-      .filter((i) => i !== -1);
+    const indices: number[] = [];
+    for (let i = 0; i < data.length; i++) {
+      if (data[i].isHeader) indices.push(i);
+    }
+    return indices;
   },
 }));
 

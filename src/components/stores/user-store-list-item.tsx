@@ -1,5 +1,5 @@
 import { View, Text, TouchableOpacity, Image, AnimatedView, Pressable } from "@/tw";
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { ChevronDown, ChevronUp, Flame, MapPin, Sparkles, Store } from "lucide-react-native";
 import Animated, { FadeInDown, Layout, FadeIn, FadeOut, useSharedValue, useAnimatedStyle, withSpring } from "react-native-reanimated";
 import React, { useState } from "react";
 import { useRouter } from "expo-router";
@@ -64,7 +64,7 @@ export default function UserStoreListItem({ store, index, sectionDelay = 0 }: Us
                 contentFit="cover"
               />
             ) : (
-              <MaterialIcons name="storefront" size={32} color="#FF6600" />
+              <Store size={32} color="#FF6600" />
             )}
           </View>
 
@@ -81,7 +81,7 @@ export default function UserStoreListItem({ store, index, sectionDelay = 0 }: Us
             </View>
 
             <View className="flex-row items-center">
-              <MaterialIcons name="place" size={14} color="#9CA3AF" />
+              <MapPin size={14} color="#9CA3AF" />
               <Text className="text-xs text-neutral-400 font-poppins ml-1 flex-1" numberOfLines={1}>
                 {store.location}
               </Text>
@@ -95,7 +95,7 @@ export default function UserStoreListItem({ store, index, sectionDelay = 0 }: Us
           activeOpacity={0.7}
           className="ml-2 pl-2 py-2"
         >
-          <MaterialIcons name={isExpanded ? "expand-less" : "expand-more"} size={28} color="#9CA3AF" />
+          {isExpanded ? <ChevronUp size={28} color="#9CA3AF" /> : <ChevronDown size={28} color="#9CA3AF" />}
         </TouchableOpacity>
       </View>
 
@@ -106,7 +106,7 @@ export default function UserStoreListItem({ store, index, sectionDelay = 0 }: Us
           <View>
             <View className="flex-row items-center justify-between mb-1.5">
               <View className="flex-row items-center gap-x-1">
-                <MaterialIcons name="local-fire-department" size={14} color="#FF6600" />
+                <Flame size={14} color="#FF6600" />
                 <Text className="text-[10px] font-poppins-medium text-neutral-500 dark:text-neutral-400">
                   Streak Progress
                 </Text>
@@ -127,7 +127,7 @@ export default function UserStoreListItem({ store, index, sectionDelay = 0 }: Us
           <View className="mt-3">
             <View className="flex-row items-center justify-between mb-1.5">
               <View className="flex-row items-center gap-x-1">
-                <MaterialIcons name="stars" size={14} color="#3b82f6" />
+                <Sparkles size={14} color="#3b82f6" />
                 <Text className="text-[10px] font-poppins-medium text-neutral-500 dark:text-neutral-400">
                   Stamp Progress
                 </Text>

@@ -213,6 +213,7 @@
             "stampLog": "スタンプカード",
             "streakLog": "連続記録",
             "nearby": "近く",
+            "purchase": "購入",
             "viewAll": "すべて見る",
             "daysThisWeek": "今週の記録: {{current}}/{{target}}",
             "completed": "{{current}}/{{target}} 完了",

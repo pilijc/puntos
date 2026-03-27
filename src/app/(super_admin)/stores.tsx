@@ -9,7 +9,7 @@ import { ScreenWrapper } from "@/components/ui/screen-wrapper";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useFocusEffect } from "expo-router";
 import { AdminStoreRow } from "@/services/store-service";
-import { useSuperAdminStoresStore } from "@/store/super-admin-stores-store";
+import { useSuperAdminStoresStore } from "@/store/super-admin/super-admin-stores-store";
 import { AdminStoreCard, AdminStoreSkeletonCard } from "@/components/stores/admin-store-card";
 import { AdminStoreDetails } from "@/components/stores/admin-store-details";
 
@@ -82,9 +82,15 @@ export default function SuperAdminStores() {
 		);
 	};
 
+	const getEffectiveStatus = (s: AdminStoreRow) => {
+		if (s.status === "pending_review" || !s.status) return "pending_review";
+		if (s.status === "inactive") return "inactive";
+		return s.is_active ? "active" : "inactive";
+	};
+
 	const filtered = (activeFilter === "All"
 		? stores
-		: stores.filter((s) => s.status === activeFilter))
+		: stores.filter((s) => getEffectiveStatus(s) === activeFilter))
 		.slice()
 		.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
@@ -125,7 +131,7 @@ export default function SuperAdminStores() {
 				<ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 20, gap: 28, flexDirection: "row" }}>
 					{FILTERS.map((f) => {
 						const active = activeFilter === f;
-						const count = f === "All" ? stores.length : stores.filter((s) => s.status === f).length;
+						const count = f === "All" ? stores.length : stores.filter((s) => getEffectiveStatus(s) === f).length;
 						return (
 							<TouchableOpacity
 								key={f}
