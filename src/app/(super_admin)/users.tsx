@@ -39,7 +39,6 @@ export default function UsersScreen() {
     closeBlockModal,
     confirmToggleBlock,
     dismissErrorModal,
-    tabCounts,
     flatListData,
   } = useUserStore();
 
@@ -80,7 +79,6 @@ export default function UsersScreen() {
     return () => clearTimeout(t);
   }, [search]);
 
-  const counts = useMemo(() => tabCounts(), [tabCounts, users]);
   const listData = useMemo(() => flatListData(), [flatListData, users, activeTab, statusFilter, search]);
   const stickyHeaders = useMemo(() => {
     const indices: number[] = [];
@@ -112,7 +110,6 @@ export default function UsersScreen() {
         onTabChange={setActiveTab}
         statusFilter={statusFilter}
         onFilterPress={() => setShowFilterModal(true)}
-        tabCounts={counts}
       />
       {loading && !refreshing && listData.length === 0 ? (
         <View className="flex-1 justify-center items-center">
