@@ -2,11 +2,12 @@ import React, { useCallback, useEffect, useState } from "react";
 import { RefreshControl, useColorScheme, ActivityIndicator } from "react-native";
 import { View, Text, TouchableOpacity, ScrollView } from "@/tw";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { getStoreStaff, deleteStoreStaff } from "@/services/store-manager/staff-service";
 import { Modal, type ModalButton } from "@/components/modal";
 import { useStaffViewStore } from "@/store/store-manager/staff-store";
 import { ChevronLeft, ChevronRight, UsersRound, Pencil, Trash, UserRoundX  } from "lucide-react-native";
+import StaffSkeleton from "@/components/skeleton/store_manager/staff-skeleton";
 
 export default function ViewStaff() {
   const router = useRouter();
@@ -41,10 +42,15 @@ export default function ViewStaff() {
   }, [storeId, setStaff]);
 
   useEffect(() => {
-    setLoading(true);
-    fetchStaff().finally(() => setLoading(false));
     return () => reset();
-  }, [fetchStaff, setLoading, reset]);
+  }, [reset]);
+
+  useFocusEffect(
+    useCallback(() => {
+      setLoading(true);
+      fetchStaff().finally(() => setLoading(false));
+    }, [fetchStaff, setLoading])
+  );
 
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -190,12 +196,7 @@ export default function ViewStaff() {
         </View>
 
         {loading ? (
-          <View className="flex-1 items-center justify-center py-16">
-            <ActivityIndicator size="large" color="#FF6600" />
-            <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500 mt-3">
-              Loading staff...
-            </Text>
-          </View>
+          <StaffSkeleton />
         ) : staff.length === 0 ? (
           <View className="mx-4 bg-white dark:bg-neutral-800 rounded-xl border border-slate-100 dark:border-neutral-700 px-4 py-14 items-center gap-y-2">
             <UserRoundX size={36} color="#CBD5E1" />
