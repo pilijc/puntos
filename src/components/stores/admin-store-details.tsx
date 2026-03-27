@@ -332,10 +332,10 @@ export function AdminStoreDetails({
           <View className="-mt-1">
             <View className="flex-row gap-3">
               <View className="flex-1">
-                <Button variant="primary" label="Approve Store" onPress={() => onApprove(store)} fullWidth />
+                <Button variant="danger" label="Reject Application" onPress={() => onReject(store)} fullWidth />
               </View>
               <View className="flex-1">
-                <Button variant="danger" label="Reject Application" onPress={() => onReject(store)} fullWidth />
+                <Button variant="primary" label="Approve Store" onPress={() => onApprove(store)} fullWidth />
               </View>
             </View>
           </View>
