@@ -30,7 +30,11 @@ export type UserRecord = {
   [key: string]: any;
 };
 
+<<<<<<< HEAD
 type ErrorModal = { title: string; message: string } | null;
+=======
+type AlertModal = { title: string; message: string; type?: "success" | "error" } | null;
+>>>>>>> origin/develop
 
 type UserStoreState = {
 
@@ -47,7 +51,11 @@ type UserStoreState = {
   showFilterModal: boolean;
   selectedUser: UserRecord | null;
   showBlockModal: boolean;
+<<<<<<< HEAD
   errorModal: ErrorModal;
+=======
+  errorModal: AlertModal;
+>>>>>>> origin/develop
 
   fetchUsers: (opts?: { reset?: boolean }) => Promise<void>;
   fetchMoreUsers: () => Promise<void>;
@@ -59,7 +67,11 @@ type UserStoreState = {
   openBlockModal: (user: UserRecord) => void;
   closeBlockModal: () => void;
   confirmToggleBlock: () => Promise<void>;
+<<<<<<< HEAD
   toggleBlockStatus: (userId: string, currentStatus: string) => Promise<void>;
+=======
+  toggleBlockStatus: (userId: string, currentStatus: string) => Promise<boolean>;
+>>>>>>> origin/develop
   dismissErrorModal: () => void;
   tabCounts: () => Record<UserRoleTab, number>;
   flatListData: () => Array<any>;
@@ -297,7 +309,15 @@ export const useUserStore = create<UserStoreState>((set, get) => ({
       set({
         loading: false,
         refreshing: false,
+<<<<<<< HEAD
         errorModal: { title: "Failed to Load Users", message: err?.message ?? "An unexpected error occurred." },
+=======
+        errorModal: { 
+          title: "Failed to Load Users", 
+          message: err?.message ?? "An unexpected error occurred.",
+          type: "error"
+        },
+>>>>>>> origin/develop
       });
     }
   },
@@ -330,7 +350,15 @@ export const useUserStore = create<UserStoreState>((set, get) => ({
       set({
         loadingMore: false,
         hasMore: false,
+<<<<<<< HEAD
         errorModal: { title: "Failed to Load More", message: err?.message ?? "Could not load more users." },
+=======
+        errorModal: { 
+          title: "Failed to Load More", 
+          message: err?.message ?? "Could not load more users.",
+          type: "error"
+        },
+>>>>>>> origin/develop
       });
     }
   },
@@ -346,8 +374,21 @@ export const useUserStore = create<UserStoreState>((set, get) => ({
   confirmToggleBlock: async () => {
     const { selectedUser, toggleBlockStatus, closeBlockModal } = get();
     if (!selectedUser) return;
-    await toggleBlockStatus(selectedUser.id, selectedUser.status || "Active");
-    closeBlockModal();
+
+    const userName = selectedUser.name || "User";
+    const willBlock = selectedUser.status !== "Blocked";
+    const success = await toggleBlockStatus(selectedUser.id, selectedUser.status || "Active");
+
+    if (success) {
+      closeBlockModal();
+      set({
+        errorModal: {
+          title: "Status Updated",
+          message: `Account for ${userName} has been successfully ${willBlock ? "blocked" : "restored"}.`,
+          type: "success",
+        },
+      });
+    }
   },
 
   toggleBlockStatus: async (userId, currentStatus) => {
@@ -359,10 +400,16 @@ export const useUserStore = create<UserStoreState>((set, get) => ({
         .eq("id", userId);
       if (error) throw error;
       await get().fetchUsers();
+      return true;
     } catch (err: any) {
       set({
-        errorModal: { title: "Update Failed", message: err?.message ?? "Could not update user status." },
+        errorModal: { 
+          title: "Update Failed", 
+          message: err?.message ?? "Could not update user status.",
+          type: "error"
+        },
       });
+      return false;
     } finally {
       set({ updatingUserId: null });
     }

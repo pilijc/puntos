@@ -10,7 +10,7 @@ interface UsersSearchHeaderProps {
   onSearchChange: (text: string) => void;
   activeTab: UserRoleTab;
   onTabChange: (tab: UserRoleTab) => void;
-  statusFilter: string;
+  statusFilter: import("@/store/super-admin/user-store").AccountStatusFilter;
   onFilterPress: () => void;
   tabCounts: Record<UserRoleTab, number>;
 }
@@ -88,6 +88,17 @@ export function UsersSearchHeader({
             >
               {tab === "All" ? "All" : tab + "s"}
             </Text>
+            <View
+              className={`ml-2 px-1.5 py-0.5 rounded-md ${activeTab === tab ? "bg-white/20" : "bg-slate-100"
+                }`}
+            >
+              <Text
+                className={`text-[9px] font-poppins-bold ${activeTab === tab ? "text-white" : "text-textMuted"
+                  }`}
+              >
+                {tabCounts[tab]}
+              </Text>
+            </View>
           </TouchableOpacity>
         )}
       />

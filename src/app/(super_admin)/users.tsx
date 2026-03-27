@@ -156,7 +156,10 @@ export default function UsersScreen() {
         selectedUser={selectedUser}
         willBlock={willBlock}
         updatingUserId={updatingUserId}
-        onClose={closeBlockModal}
+        onClose={() => {
+          if (errorModal) dismissErrorModal();
+          closeBlockModal();
+        }}
         onConfirm={confirmToggleBlock}
       />
       <FilterBottomSheet
@@ -169,9 +172,15 @@ export default function UsersScreen() {
       <Modal
         visible={!!errorModal}
         onClose={dismissErrorModal}
-        title={errorModal?.title ?? "Error"}
+        title={errorModal?.title ?? (errorModal?.type === "success" ? "Success" : "Error")}
         message={errorModal?.message ?? ""}
-        buttons={[{ label: "OK", onPress: dismissErrorModal, variant: "primary" }]}
+        buttons={[
+          {
+            label: "OK",
+            onPress: dismissErrorModal,
+            variant: errorModal?.type === "success" ? "success" : "primary",
+          },
+        ]}
         showCloseButton={false}
         dismissOnBackdrop
       />
