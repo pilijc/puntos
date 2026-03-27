@@ -145,69 +145,69 @@ export function BlockUserModal({
                   if (w > 0) setCardWidth(w);
                 }}
               >
-                  <ScrollView
-                    ref={scrollRef}
-                    horizontal
-                    pagingEnabled
-                    showsHorizontalScrollIndicator={false}
-                    scrollEventThrottle={16}
-                    onScroll={handleScroll}
-                    bounces={false}
-                  >
-                    {stores.map((store: any, i: number) => (
-                      <View
-                        key={store.id ?? store.store_id ?? i}
-                        style={{ width: cardWidth > 0 ? cardWidth : CONTENT_WIDTH }}
-                        className="bg-white border border-slate-100 rounded-2xl p-3"
-                      >
-                        <View className="flex-row items-center">
-                          <View className="bg-primary/10 p-2 rounded-lg">
-                            <MaterialIcons name="storefront" size={16} color={COLORS.primary} />
-                          </View>
-                          <View className="ml-3 flex-1">
-                            <Text className="text-[13px] font-poppins-bold text-textPrimary">
-                              {store.name ?? store.store_name ?? "Unnamed Store"}
-                            </Text>
-                            {(store.phone ?? store.contact_number ?? store.phoneNumber) ? (
-                              <View className="flex-row items-center mt-1">
-                                <MaterialIcons name="phone" size={10} color={COLORS.primary} />
-                                <Text className="text-[10px] font-poppins text-textMuted ml-1">
-                                  {store.phone ?? store.contact_number ?? store.phoneNumber}
-                                </Text>
-                              </View>
-                            ) : null}
-                            {(store.address ?? store.location) ? (
-                              <View className="flex-row items-center mt-0.5">
-                                <MaterialIcons name="location-on" size={10} color={COLORS.primary} />
-                                <Text
-                                  className="text-[10px] font-poppins text-textMuted ml-1 flex-1"
-                                  numberOfLines={1}
-                                >
-                                  {store.address ?? store.location}
-                                </Text>
-                              </View>
-                            ) : null}
-                          </View>
+                <ScrollView
+                  ref={scrollRef}
+                  horizontal
+                  pagingEnabled
+                  showsHorizontalScrollIndicator={false}
+                  scrollEventThrottle={16}
+                  onScroll={handleScroll}
+                  bounces={false}
+                >
+                  {stores.map((store: any, i: number) => (
+                    <View
+                      key={store.id ?? store.store_id ?? i}
+                      style={{ width: cardWidth > 0 ? cardWidth : CONTENT_WIDTH }}
+                      className="bg-white border border-slate-100 rounded-2xl p-3"
+                    >
+                      <View className="flex-row items-center">
+                        <View className="bg-primary/10 p-2 rounded-lg">
+                          <MaterialIcons name="storefront" size={16} color={COLORS.primary} />
+                        </View>
+                        <View className="ml-3 flex-1">
+                          <Text className="text-[13px] font-poppins-bold text-textPrimary">
+                            {store.name ?? store.store_name ?? "Unnamed Store"}
+                          </Text>
+                          {(store.phone ?? store.contact_number ?? store.phoneNumber) ? (
+                            <View className="flex-row items-center mt-1">
+                              <MaterialIcons name="phone" size={10} color={COLORS.primary} />
+                              <Text className="text-[10px] font-poppins text-textMuted ml-1">
+                                {store.phone ?? store.contact_number ?? store.phoneNumber}
+                              </Text>
+                            </View>
+                          ) : null}
+                          {(store.address ?? store.location) ? (
+                            <View className="flex-row items-center mt-0.5">
+                              <MaterialIcons name="location-on" size={10} color={COLORS.primary} />
+                              <Text
+                                className="text-[10px] font-poppins text-textMuted ml-1 flex-1"
+                                numberOfLines={1}
+                              >
+                                {store.address ?? store.location}
+                              </Text>
+                            </View>
+                          ) : null}
                         </View>
                       </View>
-                    ))}
-                  </ScrollView>
-
-                  {/* Dot indicators */}
-                  {hasMore && (
-                    <View className="flex-row items-center justify-center pt-2">
-                      {stores.map((_: any, i: number) => (
-                        <View
-                          key={i}
-                          style={{
-                            width: 6, height: 6, borderRadius: 3,
-                            marginHorizontal: 2,
-                            backgroundColor: i === activeIndex ? COLORS.primary : `${COLORS.primary}33`,
-                          }}
-                        />
-                      ))}
                     </View>
-                  )}
+                  ))}
+                </ScrollView>
+
+                {/* Dot indicators */}
+                {hasMore && (
+                  <View className="flex-row items-center justify-center pt-2">
+                    {stores.map((_: any, i: number) => (
+                      <View
+                        key={i}
+                        style={{
+                          width: 6, height: 6, borderRadius: 3,
+                          marginHorizontal: 2,
+                          backgroundColor: i === activeIndex ? COLORS.primary : `${COLORS.primary}33`,
+                        }}
+                      />
+                    ))}
+                  </View>
+                )}
               </View>
             </View>
           )}

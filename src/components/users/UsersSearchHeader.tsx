@@ -10,7 +10,7 @@ interface UsersSearchHeaderProps {
   onSearchChange: (text: string) => void;
   activeTab: UserRoleTab;
   onTabChange: (tab: UserRoleTab) => void;
-  statusFilter: string;
+  statusFilter: import("@/store/super-admin/user-store").AccountStatusFilter;
   onFilterPress: () => void;
   tabCounts: Record<UserRoleTab, number>;
 }
