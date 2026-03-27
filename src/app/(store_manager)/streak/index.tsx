@@ -77,6 +77,13 @@ export default function ViewStreak() {
     });
   };
 
+  const handleEdit = (streak: Streak) => {
+    router.push({
+      pathname: "/(store_manager)/streak/configure-streaks",
+      params: { storeId, streakId: String(streak.id) },
+    });
+  };
+
   const doPublish = async (programId: number) => {
     setActing({ id: programId, action: "publish" });
     try {
@@ -254,6 +261,7 @@ export default function ViewStreak() {
               key={streak.id}
               streak={streak}
               isDark={isDark}
+              onEdit={streak.status === "draft" ? () => handleEdit(streak) : undefined}
               onPublish={streak.status === "draft" ? () => handlePublish(streak) : undefined}
               onActivate={streak.status === "upcoming" ? () => handleActivate(streak) : undefined}
               onEnd={streak.status === "active" ? () => handleEnd(streak) : undefined}

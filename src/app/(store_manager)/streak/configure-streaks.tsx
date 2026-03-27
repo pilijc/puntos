@@ -5,7 +5,7 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import { useRouter, useLocalSearchParams, useFocusEffect } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useStreakStore } from "@/store/store-manager/streak-store";
-import { createStreak, getAllStreaksByStoreId } from "@/services/store-manager/streak-service";
+import { createStreak, getAllStreaksByStoreId, getStreakProgramById, updateStreakProgram } from "@/services/store-manager/streak-service";
 import { PointsMode, Streak } from "@/type/store-manager/streak";
 import { Button } from "@/components/button";
 import { Modal } from "@/components/modal";
@@ -14,9 +14,10 @@ import { ChevronLeft, Coins, CircleDot, TrendingUp, CalendarDays, Repeat, Flame,
 export default function ConfigureStreaks() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { storeId } = useLocalSearchParams<{ storeId: string }>();
+  const { storeId, streakId } = useLocalSearchParams<{ storeId: string; streakId?: string }>();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
+  const isEditMode = !!streakId;
   const {
     points_mode, setPointsMode,
     fixed_points_per_day, setFixedPointsPerDay,
@@ -80,7 +81,36 @@ export default function ConfigureStreaks() {
           const now = new Date();
           setMinStartAt(now.toISOString());
         });
-    }, [storeId, start_at, setMinStartAt, setStartAt]),
+
+      if (!isEditMode || !streakId) return;
+      getStreakProgramById(Number(streakId))
+        .then((row) => {
+          if (!row) throw new Error("Streak program not found.");
+          if (row.status !== "draft") throw new Error("Only draft streak programs can be edited.");
+
+          setPointsMode((row.points_mode as PointsMode) ?? "fixed");
+          setFixedPointsPerDay(row.fixed_points_per_day ?? null);
+          setStartingPoints(row.starting_points ?? null);
+          setIncrementValue(row.increment_value ?? null);
+          setStreakLength(row.streak_length ?? 0);
+          setMaxDaysCap(row.max_days_cap ?? null);
+          setRewardDescription(row.reward_description ?? "");
+          setStartAt(row.start_at ?? null);
+        })
+        .catch((error) => {
+          setModal({
+            title: "Error",
+            message: (error as Error).message ?? "Failed to load streak program.",
+            buttons: [{
+              label: "OK",
+              onPress: () => {
+                setModal(null);
+                router.push({ pathname: "/(store_manager)/streak", params: { storeId } });
+              },
+            }],
+          });
+        });
+    }, [storeId, streakId, isEditMode, start_at, setMinStartAt, setStartAt, setPointsMode, setFixedPointsPerDay, setStartingPoints, setIncrementValue, setStreakLength, setMaxDaysCap, setRewardDescription, setModal, router]),
   );
 
   const updateStartAtDate = (date: Date) => {
@@ -147,26 +177,39 @@ export default function ConfigureStreaks() {
 
     setIsSubmitting(true);
     try {
-      await createStreak({
-        store_id: storeId,
-        points_mode,
-        status: "draft",
-        start_at,
-        ...(isFixed ? { fixed_points_per_day: fixed_points_per_day ?? 10 } : {}),
-        starting_points: !isFixed ? starting_points : null,
-        increment_value: !isFixed ? increment_value : null,
-        streak_length,
-        max_days_cap,
-        reward_description,
-      });
+      if (isEditMode && streakId) {
+        await updateStreakProgram(Number(streakId), {
+          points_mode,
+          start_at,
+          fixed_points_per_day: isFixed ? (fixed_points_per_day ?? 10) : null,
+          starting_points: !isFixed ? starting_points : null,
+          increment_value: !isFixed ? increment_value : null,
+          streak_length,
+          max_days_cap,
+          reward_description,
+        });
+      } else {
+        await createStreak({
+          store_id: storeId,
+          points_mode,
+          status: "draft",
+          start_at,
+          fixed_points_per_day: isFixed ? (fixed_points_per_day ?? 10) : null,
+          starting_points: !isFixed ? starting_points : null,
+          increment_value: !isFixed ? increment_value : null,
+          streak_length,
+          max_days_cap,
+          reward_description,
+        });
+        reset();
+      }
       setModal({
         title: "Success",
-        message: "Streak configuration saved successfully",
+        message: isEditMode ? "Streak program updated successfully" : "Streak configuration saved successfully",
         buttons: [{
           label: "OK",
           onPress: () => {
             setModal(null);
-            reset();
             router.push({ pathname: "/(store_manager)/streak", params: { storeId } });
           },
         }],
@@ -207,7 +250,7 @@ export default function ConfigureStreaks() {
           <ChevronLeft size={22} color={isDark ? "#F1F5F9" : "#0F172A"} />
         </TouchableOpacity>
         <Text className="flex-1 text-center text-md font-poppins-bold text-slate-900 dark:text-slate-100 pr-10">
-          Configure Streaks
+          {isEditMode ? "Edit Streak Program" : "Configure Streaks"}
         </Text>
       </View>
 
@@ -533,7 +576,7 @@ export default function ConfigureStreaks() {
         {/* Actions */}
         <View className="gap-y-3 border-t border-slate-200 dark:border-slate-800 pt-3">
           <Button
-            label="Save as Draft"
+            label={isEditMode ? "Save Changes" : "Save as Draft"}
             onPress={handleSave}
             disabled={isSubmitting}
             loading={isSubmitting}

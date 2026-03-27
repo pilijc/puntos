@@ -130,10 +130,12 @@ export interface StreakViewState {
 export interface StreakCardProps {
   streak: Streak;
   isDark: boolean;
+  onEdit?: () => void;
   onPublish?: () => void;
   onActivate?: () => void;
   onEnd?: () => void;
   onDelete?: () => void;
+  isEditing?: boolean;
   isPublishing?: boolean;
   isActivating?: boolean;
   isEnding?: boolean;

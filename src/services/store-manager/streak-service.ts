@@ -20,6 +20,32 @@ export async function createStreak(payload: Streak): Promise<void> {
   }
 }
 
+export async function getStreakProgramById(programId: number): Promise<Streak | null> {
+  try {
+    const { data, error } = await supabase
+      .from("store_streaks")
+      .select("*")
+      .eq("id", programId)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    return (data ?? null) as Streak | null;
+  } catch (error) {
+    throw error;
+  }
+}
+
+export async function updateStreakProgram(programId: number, payload: Partial<Streak>): Promise<void> {
+  try {
+    const { error } = await supabase
+      .from("store_streaks")
+      .update(payload)
+      .eq("id", programId);
+    if (error) throw new Error(error.message);
+  } catch (error) {
+    throw error;
+  }
+}
+
 export async function getAllStreaksByStoreId(storeId: string): Promise<Streak[]> {
   try {
     await syncAutoActivateStreaks(storeId);

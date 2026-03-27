@@ -13,10 +13,12 @@ import { ParticipantRow } from "./participant-row";
 export function StreakCard({
   streak,
   isDark,
+  onEdit,
   onPublish,
   onActivate,
   onEnd,
   onDelete,
+  isEditing,
   isPublishing,
   isActivating,
   isEnding,
@@ -68,8 +70,8 @@ export function StreakCard({
     }
   };
 
-  const isActingAny = !!(isPublishing || isActivating || isEnding || isDeleting);
-  const hasActions = !!(onPublish || onActivate || onEnd || onDelete);
+  const isActingAny = !!(isEditing || isPublishing || isActivating || isEnding || isDeleting);
+  const hasActions = !!(onEdit || onPublish || onActivate || onEnd || onDelete);
 
   return (
     <View className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl overflow-hidden">
@@ -315,6 +317,17 @@ export function StreakCard({
               variant="danger"
               icon="delete"
               loading={isDeleting}
+              disabled={isActingAny}
+            />
+          )}
+
+          {onEdit && (
+            <Button
+              label="Edit Program"
+              onPress={onEdit}
+              variant="secondary"
+              icon="edit"
+              loading={isEditing}
               disabled={isActingAny}
             />
           )}
