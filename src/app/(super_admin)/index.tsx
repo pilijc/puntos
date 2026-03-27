@@ -8,7 +8,7 @@ import { SectionHeader } from "@/components/ui/section-header";
 import { UserRow } from "@/components/users/UserRow";
 import { StatCard } from "@/components/ui/stat-card";
 import { Modal } from "@/components/modal";
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { Users, Store, BarChart3 } from "lucide-react-native";
 
 export default function SuperAdminDashboard() {
   const router = useRouter();
@@ -96,9 +96,9 @@ export default function SuperAdminDashboard() {
 
         <View className="px-6 mb-6 mt-4">
           <View className="flex-row gap-2">
-            <StatCard label="Total Users" val={users.length} icon="groups" />
-            <StatCard label="Total Stores" val={stores.length} icon="storefront" />
-            <StatCard label="Active Stores" val={activeStoresCount} icon="storefront" />
+            <StatCard label="Total Users" val={users.length} Icon={Users} />
+            <StatCard label="Total Stores" val={stores.length} Icon={Store} />
+            <StatCard label="Active Stores" val={activeStoresCount} Icon={Store} />
           </View>
         </View>
 
@@ -106,7 +106,7 @@ export default function SuperAdminDashboard() {
         <View className="mb-6 px-6">
             <SectionHeader title="User Analytics" onAction={() => {}} />
             <View className="bg-white rounded-2xl p-8 border border-slate-100 items-center justify-center min-h-[220px]">
-                <MaterialIcons name="groups" size={48} color="#FF6600" />
+                <Users size={48} color="#FF6600" />
                 <Text className="text-lg font-[Poppins-Bold] text-[#0F172A] mt-3">User Insights</Text>
                 <Text className="text-sm font-[Poppins-Regular] text-[#94A3B8] text-center mt-2 px-6">
                     User analytics and behaviors will appear here.
@@ -118,7 +118,7 @@ export default function SuperAdminDashboard() {
         <View className="mb-8 px-6">
             <SectionHeader title="Store Analytics" onAction={() => {}} />
             <View className="bg-white rounded-2xl p-8 border border-slate-100 items-center justify-center min-h-[220px]">
-                <MaterialIcons name="bar-chart" size={48} color="#FF6600" />
+                <BarChart3 size={48} color="#FF6600" />
                 <Text className="text-lg font-[Poppins-Bold] text-[#0F172A] mt-3">Store Insights</Text>
                 <Text className="text-sm font-[Poppins-Regular] text-[#94A3B8] text-center mt-2 px-6">
                     Store analytics and insights will appear here.
