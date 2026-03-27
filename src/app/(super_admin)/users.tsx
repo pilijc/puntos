@@ -8,7 +8,7 @@ import { BlockUserModal } from "@/components/users/BlockUserModal";
 import { FilterBottomSheet } from "@/components/users/FilterBottomSheet";
 import { UsersSearchHeader } from "@/components/users/UsersSearchHeader";
 import { UserListItem } from "@/components/users/UserListItem";
-import { TYPO, COLORS } from "@/components/users/constants";
+import { TYPO, COLORS } from "@/type/super-admin/user";
 
 const ITEM_HEIGHT = 88;
 const HEADER_HEIGHT = 44;

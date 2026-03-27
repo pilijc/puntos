@@ -2,7 +2,7 @@ import "react-native-url-polyfill/auto";
 import "react-native-gesture-handler";
 import "../global.css";
 import "@/i18n";
-import { Slot, useRouter, Stack } from "expo-router";
+import { Slot, useRouter, Stack, usePathname } from "expo-router";
 import { useFonts } from "expo-font";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as SplashScreen from "expo-splash-screen";
@@ -38,6 +38,7 @@ export async function initOneSignal() {
 export default function Layout() {
   useAuthListener();
   const router = useRouter();
+  const pathname = usePathname();
   const [fontsLoaded] = useFonts({
     "Poppins-Regular": require("../assets/fonts/Poppins-Regular.ttf"),
     "Poppins-Medium": require("../assets/fonts/Poppins-Medium.ttf"),
@@ -91,6 +92,30 @@ export default function Layout() {
       checkSession();
     }
   }, [fontsLoaded, sessionToken]);
+
+  // Dedicated navigation guard for account restrictions
+  useEffect(() => {
+    const checkUserStatusOnNav = async () => {
+      // Skip check if already restricted or on public pages
+      const isPublicPage = pathname?.includes("(onboarding)") || pathname?.includes("(auth)");
+      if (isRestricted || isPublicPage) return;
+
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        try {
+          await checkIfAccountBlockedService(session.user.id);
+        } catch (err) {
+          if (err instanceof AccountBlockedError) {
+            useAuthStore.getState().setRestricted(true);
+          }
+        }
+      }
+    };
+
+    if (fontsLoaded) {
+      checkUserStatusOnNav();
+    }
+  }, [pathname, isRestricted, fontsLoaded]);
 
   SplashScreen.setOptions({
     duration: 1000,

@@ -104,7 +104,7 @@ export default function Login() {
       console.log("error login component", error);
 
       if (error.name === "AccountBlockedError") {
-        router.replace("/(auth)/login?restricted=true");
+        useAuthStore.getState().setRestricted(true);
         return;
       }
 
@@ -130,7 +130,7 @@ export default function Login() {
       router.replace(data.homeRoute ?? "/(user)");
     } catch (error: any) {
       if (error.name === "AccountBlockedError") {
-        router.replace("/(auth)/login?restricted=true");
+        useAuthStore.getState().setRestricted(true);
         return;
       }
 
