@@ -206,12 +206,14 @@ async function fetchStoreDetails(userIds: string[]): Promise<Map<string, any[]>>
 
   const result = new Map<string, any[]>();
   userRoles.forEach((r: any) => {
-    if (!r.stores || r.stores.status !== "active") return;
+    if (!r.stores) return;
     if (!result.has(r.user_id)) result.set(r.user_id, []);
     result.get(r.user_id)!.push({
       name: r.stores.name,
       address: r.stores.address,
       phone: r.stores.phone,
+      status: r.stores.status,
+      is_active: r.stores.is_active,
       ownerName: r.stores.users?.name,
       managerName: storeToManager.get(r.store_id),
     });
