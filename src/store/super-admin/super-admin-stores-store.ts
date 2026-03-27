@@ -1,5 +1,6 @@
 import { create } from "zustand";
-import { AdminStoreRow, getAllStores, updateStoreStatus } from "@/services/store-service";
+import { AdminStoreRow } from "@/services/store-service";
+import { getAllStoresForAdmin, updateAdminStoreStatus } from "@/services/super-admin/store-admin-service";
 
 type AlertModal = { title: string; message: string; type?: "success" | "error" } | null;
 
@@ -38,7 +39,7 @@ export const useSuperAdminStoresStore = create<SuperAdminStoresState>((set, get)
         set({ isFetching: true, loading: !state.hasFetchedOnce, error: null });
 
         try {
-            const data = await getAllStores();
+            const data = await getAllStoresForAdmin();
             set({ stores: data, hasFetchedOnce: true });
         } catch (e: any) {
             set({ error: e?.message ?? "Failed to load stores" });
@@ -49,7 +50,7 @@ export const useSuperAdminStoresStore = create<SuperAdminStoresState>((set, get)
 
     approveStore: async (store: AdminStoreRow) => {
         try {
-            await updateStoreStatus(store.id, "active", true);
+            await updateAdminStoreStatus(store.id, "active", true);
             
             // Optimistic update
             set((state) => ({
@@ -74,7 +75,7 @@ export const useSuperAdminStoresStore = create<SuperAdminStoresState>((set, get)
 
     rejectStore: async (store: AdminStoreRow) => {
         try {
-            await updateStoreStatus(store.id, "inactive", false);
+            await updateAdminStoreStatus(store.id, "inactive", false);
             
             // Optimistic update
             set((state) => ({
