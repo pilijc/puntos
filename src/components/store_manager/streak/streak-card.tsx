@@ -16,9 +16,11 @@ export function StreakCard({
   onPublish,
   onActivate,
   onEnd,
+  onDelete,
   isPublishing,
   isActivating,
   isEnding,
+  isDeleting,
 }: StreakCardProps) {
   const PAGE_SIZE = 5;
   const status = streak.status ?? "draft";
@@ -66,8 +68,8 @@ export function StreakCard({
     }
   };
 
-  const isActingAny = !!(isPublishing || isActivating || isEnding);
-  const hasActions = !!(onPublish || onActivate || onEnd);
+  const isActingAny = !!(isPublishing || isActivating || isEnding || isDeleting);
+  const hasActions = !!(onPublish || onActivate || onEnd || onDelete);
 
   return (
     <View className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl overflow-hidden">
@@ -302,6 +304,17 @@ export function StreakCard({
               variant="danger"
               icon="stop-circle"
               loading={isEnding}
+              disabled={isActingAny}
+            />
+          )}
+
+          {onDelete && (
+            <Button
+              label="Delete Program"
+              onPress={onDelete}
+              variant="danger"
+              icon="delete"
+              loading={isDeleting}
               disabled={isActingAny}
             />
           )}

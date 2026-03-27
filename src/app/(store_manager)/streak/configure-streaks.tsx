@@ -150,7 +150,7 @@ export default function ConfigureStreaks() {
       await createStreak({
         store_id: storeId,
         points_mode,
-        status: start_at ? "upcoming" : "draft",
+        status: "draft",
         start_at,
         ...(isFixed ? { fixed_points_per_day: fixed_points_per_day ?? 10 } : {}),
         starting_points: !isFixed ? starting_points : null,

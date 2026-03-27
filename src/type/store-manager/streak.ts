@@ -3,7 +3,7 @@ export type StreakStatus = "draft" | "upcoming" | "active" | "ended";
 export type PointsMode = "fixed" | "incremental";
 
 export type StreakTabKey = "active" | "upcoming" | "ended";
-export type StreakActionType = "publish" | "activate" | "end";
+export type StreakActionType = "publish" | "activate" | "end" | "delete";
 
 export const StatusBadgeProps = {
   draft: {
@@ -133,7 +133,9 @@ export interface StreakCardProps {
   onPublish?: () => void;
   onActivate?: () => void;
   onEnd?: () => void;
+  onDelete?: () => void;
   isPublishing?: boolean;
   isActivating?: boolean;
   isEnding?: boolean;
+  isDeleting?: boolean;
 }

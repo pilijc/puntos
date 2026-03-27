@@ -5,16 +5,8 @@ import { Button } from "@/components/button";
 import { Modal } from "@/components/modal";
 import { useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import {
-  getAllStreaksByStoreId,
-  endStreakProgram,
-  publishStreakProgram,
-  activateStreakProgram,
-} from "@/services/store-manager/streak-service";
-import {
-  Streak,
-  StreakTabs,
-} from "@/type/store-manager/streak";
+import { getAllStreaksByStoreId, endStreakProgram, publishStreakProgram, activateStreakProgram, deleteStreakProgram } from "@/services/store-manager/streak-service";
+import { Streak, StreakTabs } from "@/type/store-manager/streak";
 import { ChevronLeft, Flame } from "lucide-react-native";
 import { StreakCard } from "@/components/store_manager/streak/streak-card";
 import { StreakCardSkeleton } from "@/components/skeleton/store_manager/streak-skeleton";
@@ -63,6 +55,18 @@ export default function ViewStreak() {
     setModal({ title: "Error", message, buttons: [{ label: "OK", onPress: () => setModal(null) }] });
 
   const handlePublish = (streak: Streak) => {
+    const hasOtherUpcoming = streaks.some(
+      (s) => s.status === "upcoming" && s.id !== streak.id,
+    );
+    if (hasOtherUpcoming) {
+      setModal({
+        title: "Upcoming Program Exists",
+        message: "There is already an upcoming streak program for this store. End or activate it first before publishing another one.",
+        buttons: [{ label: "OK", onPress: () => setModal(null) }],
+      });
+      return;
+    }
+
     setModal({
       title: "Publish Streak Program",
       message: "Users will be able to see this program is coming. You can activate it when you're ready.",
@@ -113,8 +117,19 @@ export default function ViewStreak() {
       title: "End Streak Program",
       message: "This will immediately stop earning for all users. This action cannot be undone.",
       buttons: [
-        { label: "End Program", variant: "danger",   onPress: () => { setModal(null); doEnd(streak.id!); } },
         { label: "Cancel",      variant: "secondary", onPress: () => setModal(null) },
+        { label: "End Program", variant: "danger",   onPress: () => { setModal(null); doEnd(streak.id!); } },
+      ],
+    });
+  };
+
+  const handleDelete = (streak: Streak) => {
+    setModal({
+      title: "Delete Streak Program",
+      message: "This will permanently delete this program. This action cannot be undone.",
+      buttons: [
+        { label: "Cancel", variant: "secondary", onPress: () => setModal(null) },
+				{ label: "Delete Program", variant: "danger", onPress: () => { setModal(null); doDelete(streak.id!); } },
       ],
     });
   };
@@ -126,6 +141,18 @@ export default function ViewStreak() {
       load();
     } catch (e) {
       showError((e as Error).message ?? "Failed to end program.");
+    } finally {
+      setActing(null);
+    }
+  };
+
+  const doDelete = async (programId: number) => {
+    setActing({ id: programId, action: "delete" });
+    try {
+      await deleteStreakProgram(programId);
+      load();
+    } catch (e) {
+      showError((e as Error).message ?? "Failed to delete program.");
     } finally {
       setActing(null);
     }
@@ -229,10 +256,12 @@ export default function ViewStreak() {
               isDark={isDark}
               onPublish={streak.status === "draft" ? () => handlePublish(streak) : undefined}
               onActivate={streak.status === "upcoming" ? () => handleActivate(streak) : undefined}
-              onEnd={(streak.status === "upcoming" || streak.status === "active") ? () => handleEnd(streak) : undefined}
+              onEnd={streak.status === "active" ? () => handleEnd(streak) : undefined}
+              onDelete={(streak.status === "draft" || streak.status === "upcoming") ? () => handleDelete(streak) : undefined}
               isPublishing={acting?.id === streak.id && acting?.action === "publish"}
               isActivating={acting?.id === streak.id && acting?.action === "activate"}
               isEnding={acting?.id === streak.id && acting?.action === "end"}
+              isDeleting={acting?.id === streak.id && acting?.action === "delete"}
             />
           ))}
 

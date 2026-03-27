@@ -77,6 +77,18 @@ export async function endStreakProgram(programId: number): Promise<void> {
   }
 }
 
+export async function deleteStreakProgram(programId: number): Promise<void> {
+  try {
+    const { error } = await supabase
+      .from("store_streaks")
+      .delete()
+      .eq("id", programId);
+    if (error) throw new Error(error.message);
+  } catch (error) {
+    throw error;
+  }
+}
+
 export async function getParticipantsCountByProgramId(programId: number): Promise<number> {
   try {
     const { count, error } = await supabase
