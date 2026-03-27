@@ -4,7 +4,7 @@ export interface DashboardMetricTileProps {
     label: string;
     value: number | string;
     subtitle?: string;
-    icon: string;
+    icon: any;
     loading?: boolean;
 }
 

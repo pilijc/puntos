@@ -18,24 +18,24 @@ export default function StoreManagerLayout() {
     const activeColor = "#FF6600";
 
     const isStoresSection =
-      path.startsWith("/(store_manager)/stores/") ||
-      path.startsWith("/(store_manager)/view-store/") ||
-      path.startsWith("/(store_manager)/store/") ||
-      path.startsWith("/(store_manager)/reward/") ||
-      path.startsWith("/(store_manager)/stamp/") ||
-      path.startsWith("/(store_manager)/streak/") ||
-      path.startsWith("/(store_manager)/qr/") ||
-      path.startsWith("/(store_manager)/staff/") ||
-      path.startsWith("/(store_manager)/detail/") ||
-      path.startsWith("/stores/") ||
-      path.startsWith("/view-store/") ||
-      path.startsWith("/store/") ||
-      path.startsWith("/reward/") ||
-      path.startsWith("/stamp/") ||
-      path.startsWith("/streak/") ||
-      path.startsWith("/qr/") ||
-      path.startsWith("/staff/") ||
-      path.startsWith("/detail/");
+        path.startsWith("/(store_manager)/stores/") ||
+        path.startsWith("/(store_manager)/view-store/") ||
+        path.startsWith("/(store_manager)/store/") ||
+        path.startsWith("/(store_manager)/reward/") ||
+        path.startsWith("/(store_manager)/stamp/") ||
+        path.startsWith("/(store_manager)/streak/") ||
+        path.startsWith("/(store_manager)/qr/") ||
+        path.startsWith("/(store_manager)/staff/") ||
+        path.startsWith("/(store_manager)/detail/") ||
+        path.startsWith("/stores/") ||
+        path.startsWith("/view-store/") ||
+        path.startsWith("/store/") ||
+        path.startsWith("/reward/") ||
+        path.startsWith("/stamp/") ||
+        path.startsWith("/streak/") ||
+        path.startsWith("/qr/") ||
+        path.startsWith("/staff/") ||
+        path.startsWith("/detail/");
 
     useEffect(() => {
         const verifyAccess = async () => {
@@ -98,14 +98,14 @@ export default function StoreManagerLayout() {
                     ),
                     tabBarLabel: ({ color }) => (
                         <Text
-                          style={{
-                            fontSize: 10,
-                            fontFamily: "Poppins-Medium",
-                            marginBottom: insets.bottom > 0 ? 0 : 4,
-                            color: isStoresSection ? activeColor : color,
-                          }}
+                            style={{
+                                fontSize: 10,
+                                fontFamily: "Poppins-Medium",
+                                marginBottom: insets.bottom > 0 ? 0 : 4,
+                                color: isStoresSection ? activeColor : color,
+                            }}
                         >
-                          Stores
+                            Stores
                         </Text>
                     ),
                 }}
@@ -148,10 +148,7 @@ export default function StoreManagerLayout() {
                 name="stamp/configure-stamp"
                 options={{ href: null }}
             />
-            <Tabs.Screen
-                name="reward/rewards"
-                options={{ href: null }}
-            />
+
             <Tabs.Screen
                 name="reward/index"
                 options={{ href: null }}
@@ -180,10 +177,7 @@ export default function StoreManagerLayout() {
                 name="staff/index"
                 options={{ href: null }}
             />
-            <Tabs.Screen
-                name="staff/view_staff"
-                options={{ href: null }}
-            />
+
             <Tabs.Screen
                 name="staff/add-staff"
                 options={{ href: null }}

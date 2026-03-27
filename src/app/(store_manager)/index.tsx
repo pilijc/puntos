@@ -1,11 +1,12 @@
 import React, { useState, useCallback, useMemo } from "react";
 import { RefreshControl } from "react-native";
 import { ScrollView, View, Text, SafeAreaView } from "@/tw";
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { MapPin, Users, ScanLine } from "lucide-react-native";
 import { useFocusEffect } from "expo-router";
+import { useTranslation } from "react-i18next";
 
 import { useManagerStoresStore } from "@/store/manager-stores-store";
-import { useStoreDashboardMetrics } from "@/hooks/use-store-metrics";
+import { useStoreDashboardMetrics } from "@/hooks/store-manager/use-store-metrics";
 import { getLast7Labels, getWeekDateRange } from "@/utils/date-helpers";
 
 import { StorePickerDropdown } from "@/components/stores/store-picker-dropdown";
@@ -15,6 +16,7 @@ import { DashboardRetentionChart } from "@/components/stores/dashboard-retention
 import { DashboardStampDistribution } from "@/components/stores/dashboard-stamp-distribution";
 
 export default function StoreManagerDashboard() {
+    const { t: translate } = useTranslation();
     const {
         stores,
         isFetching: refreshing,
@@ -24,7 +26,14 @@ export default function StoreManagerDashboard() {
     const [selectedStoreId, setSelectedStoreId] = useState<number | null>(null);
     const [isDropdownVisible, setDropdownVisible] = useState(false);
 
-    useFocusEffect(useCallback(() => { refresh(true); }, []));
+    useFocusEffect(
+        useCallback(() => {
+            const task = setTimeout(() => {
+                refresh(true);
+            }, 0);
+            return () => clearTimeout(task);
+        }, [refresh])
+    );
 
     React.useEffect(() => {
         if (!selectedStoreId && stores.length > 0) {
@@ -71,7 +80,7 @@ export default function StoreManagerDashboard() {
                 <View className="mb-[24px]">
                     <View className="flex-row justify-between items-center mb-[4px]">
                         <Text className="text-xl font-poppins-bold text-textPrimary dark:text-darkTextPrimary">
-                            Dashboard
+                            {translate("storeManager.dashboard.title")}
                         </Text>
                         <StorePickerDropdown
                             stores={stores}
@@ -85,7 +94,7 @@ export default function StoreManagerDashboard() {
 
                     {selectedStore?.address && (
                         <View className="flex-row items-center">
-                            <MaterialIcons name="location-on" size={14} color="#94a3b8" />
+                            <MapPin size={14} color="#94a3b8" />
                             <Text className="text-xs font-poppins text-textMuted dark:text-darkTextMuted ml-[4px]">
                                 {selectedStore.address}
                             </Text>
@@ -97,17 +106,17 @@ export default function StoreManagerDashboard() {
                     <View className="w-full mb-8">
                         <View className="flex-row gap-[10px] mb-[14px]">
                             <DashboardMetricTile
-                                label="IN-STORE"
+                                label={translate("storeManager.dashboard.metrics.inStore")}
                                 value={activeUsers}
-                                subtitle="real-time users"
-                                icon="people"
+                                subtitle={translate("storeManager.dashboard.metrics.realTimeUsers")}
+                                icon={Users}
                                 loading={metricsLoading}
                             />
                             <DashboardMetricTile
-                                label="TOTAL SCANNED"
+                                label={translate("storeManager.dashboard.metrics.totalScanned")}
                                 value={todayTransactions}
-                                subtitle="Redeemed today"
-                                icon="receipt-long"
+                                subtitle={translate("storeManager.dashboard.metrics.redeemedToday")}
+                                icon={ScanLine}
                                 loading={metricsLoading}
                             />
                         </View>
@@ -122,7 +131,7 @@ export default function StoreManagerDashboard() {
                             <View className="flex-row justify-between items-start mb-5">
                                 <View>
                                     <Text className="text-lg font-poppins-bold text-textPrimary dark:text-darkTextPrimary leading-6">
-                                        Weekly Scan Activity
+                                        {translate("storeManager.dashboard.activity.title")}
                                     </Text>
                                     <Text className="text-[12px] font-poppins text-textMuted dark:text-darkTextMuted mt-0.5">
                                         {weekRange}
@@ -145,7 +154,7 @@ export default function StoreManagerDashboard() {
                 ) : (
                     <View className="py-10 items-center">
                         <Text className="font-poppins text-textPrimary">
-                            No stores available.
+                            {translate("storeManager.dashboard.noStores")}
                         </Text>
                     </View>
                 )}

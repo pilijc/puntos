@@ -44,7 +44,7 @@ export default function StoreManagerSettings() {
     }
 
     return (
-        <SafeAreaView className="flex-1 bg-muted-white dark:bg-darkBackground">
+        <SafeAreaView edges={['top']} className="flex-1 bg-muted-white dark:bg-darkBackground">
             <ScrollView
                 className="flex-1"
                 contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
@@ -58,14 +58,16 @@ export default function StoreManagerSettings() {
                 </View>
 
                 {user && (
-                    <UserProfileCard
-                        user={user}
-                        profile={profile}
-                        onPress={handleProfilePress}
-                    />
+                    <View className="mb-6">
+                        <UserProfileCard
+                            user={user}
+                            profile={profile}
+                            onPress={handleProfilePress}
+                        />
+                    </View>
                 )}
 
-                <View className="mx-4 mb-6 overflow-hidden bg-background dark:bg-darkBackgroundMuted rounded-2xl border border-neutral-200 dark:border-darkBorder">
+                <View className="mb-6 overflow-hidden bg-white dark:bg-darkBackgroundCard rounded-2xl border border-neutral-100 dark:border-darkBorder">
                     <SecurityCard />
                     <LanguageCard />
                     <AppearanceCard />

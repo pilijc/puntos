@@ -1,7 +1,7 @@
 import React from "react";
 import { Modal, useColorScheme } from "react-native";
 import { View, Text, TouchableOpacity, Pressable } from "@/tw";
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { ChevronDown, Check } from "lucide-react-native";
 import { StorePickerDropdownProps } from "@/type/store-manager/metric";
 
 export function StorePickerDropdown({
@@ -28,8 +28,7 @@ export function StorePickerDropdown({
                     >
                         {selectedStore.name}
                     </Text>
-                    <MaterialIcons
-                        name="keyboard-arrow-down"
+                    <ChevronDown
                         size={18}
                         color={isDark ? "#D4D4D4" : "#1e293b"}
                     />
@@ -64,7 +63,7 @@ export function StorePickerDropdown({
                                             </Text>
                                         </View>
                                         {isActive && (
-                                            <MaterialIcons name="check" size={18} color="#FF6600" />
+                                            <Check size={18} color="#FF6600" />
                                         )}
                                     </TouchableOpacity>
                                     {!isLast && (

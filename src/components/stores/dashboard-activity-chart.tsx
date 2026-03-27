@@ -3,6 +3,7 @@ import { View } from "@/tw";
 import Svg, { Polyline, Circle, Path, Defs, LinearGradient, Stop, Text as SvgText } from "react-native-svg";
 import { getTodayIndex } from "@/utils/date-helpers";
 import { DashboardActivityChartProps } from "@/type/store-manager/metric";
+import { DashboardActivityChartSkeleton } from "@/components/skeleton/store_manager/dashboard-activity-chart-skeleton";
 
 const VIEWBOX_WIDTH = 300;
 const LINE_HEIGHT = 80;
@@ -38,7 +39,7 @@ export const DashboardActivityChart: React.FC<DashboardActivityChartProps> = ({
     `;
 
     if (loading) {
-        return <View key="skeleton-activity" style={{ height: 110 }} className="w-full bg-backgroundMuted dark:bg-darkBackground rounded-[12px] animate-pulse will-change-animation" />;
+        return <DashboardActivityChartSkeleton />;
     }
 
     return (

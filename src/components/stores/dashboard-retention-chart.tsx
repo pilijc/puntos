@@ -2,7 +2,9 @@ import React from "react";
 import { useColorScheme } from "react-native";
 import { View, Text } from "@/tw";
 import Svg, { Circle } from "react-native-svg";
+import { useTranslation } from "react-i18next";
 import { RetentionData } from "@/type/store-manager/metric";
+import { DashboardRetentionChartSkeleton } from "@/components/skeleton/store_manager/dashboard-retention-chart-skeleton";
 
 interface Props {
     data: RetentionData;
@@ -10,6 +12,7 @@ interface Props {
 }
 
 export function DashboardRetentionChart({ data, loading }: Props) {
+    const { t: translate } = useTranslation();
     const isDark = useColorScheme() === "dark";
     const { returningPercent, newPercent } = data;
 
@@ -23,16 +26,14 @@ export function DashboardRetentionChart({ data, loading }: Props) {
     return (
         <View className="bg-white dark:bg-darkBackgroundCard rounded-[20px] p-5 elevation-1 mb-[14px] border border-transparent dark:border-darkBorder">
             <Text className="text-lg font-poppins-bold text-textPrimary dark:text-darkTextPrimary leading-6">
-                Retention
+                {translate("storeManager.dashboard.retention.title")}
             </Text>
             <Text className="text-xs font-poppins text-textMuted dark:text-darkTextMuted mt-0.5 mb-5">
-                User loyalty overview
+                {translate("storeManager.dashboard.retention.subtitle")}
             </Text>
 
             {loading ? (
-                <View key="loading-reten" className="items-center justify-center py-4">
-                    <View className="w-[120px] h-[120px] rounded-full bg-backgroundMuted dark:bg-darkBackground animate-pulse will-change-animation" />
-                </View>
+                <DashboardRetentionChartSkeleton />
             ) : (
                 <React.Fragment key="content-reten">
                     <View className="items-center justify-center my-4">
@@ -65,7 +66,7 @@ export function DashboardRetentionChart({ data, loading }: Props) {
                                     {returningPercent}%
                                 </Text>
                                 <Text className="text-[10px] font-poppins text-textMuted dark:text-darkTextMuted tracking-wide uppercase">
-                                    Returning
+                                    {translate("storeManager.dashboard.retention.returning")}
                                 </Text>
                             </View>
                         </View>
@@ -76,7 +77,7 @@ export function DashboardRetentionChart({ data, loading }: Props) {
                             <View className="flex-row items-center gap-[8px]">
                                 <View className="w-[10px] h-[10px] rounded-full bg-primary" />
                                 <Text className="text-[13px] font-poppins text-textSecondary dark:text-darkTextSecondary">
-                                    Returning
+                                    {translate("storeManager.dashboard.retention.returning")}
                                 </Text>
                             </View>
                             <Text className="text-[13px] font-poppins-bold text-textSecondary dark:text-darkTextSecondary">
@@ -87,7 +88,7 @@ export function DashboardRetentionChart({ data, loading }: Props) {
                             <View className="flex-row items-center gap-[8px]">
                                 <View className="w-[10px] h-[10px] rounded-full bg-slate-100 dark:bg-darkBackgroundMuted" />
                                 <Text className="text-[13px] font-poppins text-textSecondary dark:text-darkTextSecondary">
-                                    New
+                                    {translate("storeManager.dashboard.retention.new")}
                                 </Text>
                             </View>
                             <Text className="text-[13px] font-poppins-bold text-textSecondary dark:text-darkTextSecondary">
