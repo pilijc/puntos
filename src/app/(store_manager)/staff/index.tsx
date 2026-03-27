@@ -124,7 +124,7 @@ export default function ViewStaff() {
       >
         <View className="flex-row items-center px-2">
           <TouchableOpacity
-            onPress={() => router.back()}
+            onPress={() => router.replace({ pathname: "/(store_manager)/view-store/[id]", params: { id: storeId } })}
             className="w-10 h-10 rounded-full items-center justify-center"
             activeOpacity={0.7}
           >

@@ -138,7 +138,7 @@ export default function AddStaff() {
       />
 
       <View
-        className="bg-background dark:bg-[#111921] border-b border-slate-200 dark:border-slate-800 flex-row items-center px-2"
+        className="bg-background dark:bg-[#111921] flex-row items-center px-2"
         style={{ paddingTop: insets.top + 8, paddingBottom: 12 }}
       >
         <TouchableOpacity
@@ -153,9 +153,11 @@ export default function AddStaff() {
         >
           <MaterialIcons name="chevron-left" size={22} color={isDark ? "#F1F5F9" : "#0F172A"} />
         </TouchableOpacity>
-        <Text className="flex-1 text-center text-[17px] font-poppins-bold text-slate-900 dark:text-slate-100 pr-10">
-          {isEditMode ? "Edit Frontdesk Staff" : "Create Frontdesk Staff"}
-        </Text>
+        <View className="flex-1 -ml-10">
+          <Text className="text-center text-md font-poppins-bold text-textPrimary dark:text-textPrimary">
+            {isEditMode ? "Update Frontdesk Staff" : "Create Frontdesk Staff"}
+          </Text>
+        </View>
       </View>
 
       <ScrollView
@@ -164,32 +166,33 @@ export default function AddStaff() {
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={{ padding: 16, paddingBottom: 32, gap: 14 }}
       >
-        <View>
-          <Text className="text-xl font-poppins-bold text-slate-900 dark:text-slate-100">
-            {isEditMode ? "Edit Frontdesk Staff" : "Frontdesk Staff"}
-          </Text>
-          <Text className="text-sm font-poppins text-slate-500 dark:text-slate-400 mt-1">
-            {isEditMode
-              ? "Update the frontdesk staff profile details."
-              : "Add a frontdesk staff member who can help your store, assist customers, and handle daily store tasks."}
-          </Text>
-        </View>
+        <View className="bg-white  rounded-xl p-4 gap-y-4">
+          <View>
+            <Text className="text-md font-poppins-bold text-slate-900 dark:text-slate-100">
+              {isEditMode ? "Edit Frontdesk Staff" : "Frontdesk Staff"}
+            </Text>
+            <Text className="text-sm font-poppins text-slate-500 dark:text-slate-400">
+              {isEditMode
+                ? "Update the frontdesk staff profile details"
+                : "Add a frontdesk staff member who can help your store, assist customers, and handle daily store tasks"}
+            </Text>
+          </View>
 
-				{!isEditMode && <View className="bg-primary/5 dark:bg-primary-800 rounded-xl px-2 py-3 gap-y-2">
+				{!isEditMode && <View className="bg-primary/5 dark:bg-primary-800 rounded-xl px-2 py-3 ">
 					<Text className="text-sm font-poppins-semibold text-primary">
 						Staff Login Information
 					</Text>
-					<View className="gap-y-1">
-						<Text className="text-sm text-primary font-poppins">
+					<View className="gap-y-1 mt-1">
+						<Text className="text-xs text-primary font-poppins">
 							• A temporary password will be created automatically.
 						</Text>
-						<Text className="text-sm text-primary font-poppins">
+						<Text className="text-xs text-primary font-poppins">
 							• Please share this password with the front desk staff.
 						</Text>
-						<Text className="text-sm text-primary font-poppins">
+						<Text className="text-xs text-primary font-poppins">
 							• They will use it to log in for the first time.
 						</Text>
-						<Text className="text-sm text-primary font-poppins">
+						<Text className="text-xs text-primary font-poppins">
 							• After logging in, they will be asked to set a new password.
 						</Text>
 					</View>
@@ -273,6 +276,7 @@ export default function AddStaff() {
             fullWidth={true}
             variant="secondary"
           />
+        </View>
         </View>
       </ScrollView>
 
