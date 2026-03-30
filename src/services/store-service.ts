@@ -181,7 +181,7 @@ export async function getAllStores(): Promise<AdminStoreRow[]> {
         .select(`
             id, name, type, address, latitude, longitude, radius,
             status, is_active, logo, owner_id,
-            phone, registration_number, business_document_image, store_pictures, created_at,
+            phone, registration_number, business_document_image, store_pictures, store_open, store_close, created_at,
             users ( name )
         `)
         .order("created_at", { ascending: false });
@@ -253,10 +253,11 @@ export async function uploadStoreImage(
     kind === "logo"
       ? "store/logo"
       : kind === "business_document"
-      ? "store/business-document"
+      ? "store/documents"
       : "store/pictures";
   const filePath = `${folder}/${storeId}/${Date.now()}.${ext}`;
 
+  console.log("filePath", filePath);
   const { error: uploadError } = await supabase.storage
     .from("puntos-public")
     .upload(filePath, bytes, { contentType: mimeType, upsert: true });

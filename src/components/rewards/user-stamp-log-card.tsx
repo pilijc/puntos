@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { View, Text, AnimatedView, TouchableOpacity, Image, Pressable } from "@/tw";
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { Check, ChevronDown, Coins, ExternalLink, Sparkles, Store } from "lucide-react-native";
 import { FadeIn, FadeOut, Layout, useAnimatedStyle, withTiming, interpolate } from "react-native-reanimated";
 import { storeLogos } from "@/data/rewards";
 import { Alert } from "react-native";
@@ -91,32 +91,34 @@ export default function UserStampLogCard({
       >
         <View className="flex-row items-center justify-between">
           <View className="flex-row items-center gap-x-2">
-            <MaterialIcons name="stars" size={18} color="#FF6600" />
+            <View className="w-4 h-4 items-center justify-center -mt-1">
+              <Sparkles size={16} color="#FF6600" />
+            </View>
             <Text className="font-poppins-semibold text-neutral-900 dark:text-white">
               {translate("user.rewards.stampLog")}
             </Text>
           </View>
           <View className="flex-row items-center gap-x-3">
             {nearby && (
-              <View className="bg-green-100 dark:bg-green-900/30 px-2.5 py-1 rounded-full flex-row items-center gap-x-1">
-                <View className="w-1.5 h-1.5 rounded-full bg-green-500" />
-                <Text className="text-[10px] font-poppins-semibold text-green-700 dark:text-green-400">
-                  {translate("user.rewards.nearby")}
+              <View className="bg-red-100 dark:bg-red-900/30 px-2.5 py-1 rounded-full flex-row items-center gap-x-1">
+                <View className="w-1.5 h-1.5 rounded-full bg-red-500" />
+                <Text className="text-[10px] font-poppins-semibold text-red-600 dark:text-red-400">
+                  {translate("user.rewards.purchase")}
                 </Text>
               </View>
             )}
             <TouchableOpacity
               onPress={(e) => {
                 e.stopPropagation();
-                router.push("/store/streaks");
+                router.push("/store/stamps");
               }}
               className="px-2 py-1"
             >
               <View className="flex-row items-center gap-x-1">
                 <Text className="text-primary text-xs font-poppins-semibold">
-                  {translate("rewards.viewAll")}
+                  {translate("user.rewards.viewAll")}
                 </Text>
-                <MaterialIcons name="open-in-new" size={12} color="#FF6600" />
+                <ExternalLink size={12} color="#FF6600" />
               </View>
             </TouchableOpacity>
           </View>
@@ -134,7 +136,7 @@ export default function UserStampLogCard({
                 contentFit="cover"
               />
             ) : (
-              <MaterialIcons name="storefront" size={20} color="#FF6600" />
+              <Store size={20} color="#FF6600" />
             )}
           </View>
           <View className="flex-1 flex-row items-center justify-between">
@@ -148,11 +150,7 @@ export default function UserStampLogCard({
             </View>
             {/* Chevron — rightmost, controls expand */}
             <AnimatedView style={chevronStyle}>
-              <MaterialIcons
-                name="expand-more"
-                size={22}
-                color="#FF6600"
-              />
+              <ChevronDown size={22} color="#FF6600" />
             </AnimatedView>
           </View>
         </View>
@@ -184,7 +182,7 @@ export default function UserStampLogCard({
                   } : undefined}
                 >
                   {isCompleted ? (
-                    <MaterialIcons name="check" size={16} color="#FFFFFF" />
+                    <Check size={16} color="#FFFFFF" />
                   ) : (
                     <Text className={textClass}>{day.number}</Text>
                   )}
@@ -207,11 +205,11 @@ export default function UserStampLogCard({
             <View className="flex-row items-center gap-x-3 flex-1">
               <View className="relative">
                 <View className="w-14 h-14 rounded-2xl bg-white dark:bg-darkBackgroundCard items-center justify-center overflow-hidden border border-primary/5">
-                  <MaterialIcons name="monetization-on" size={28} color="#FF6600" />
+                  <Coins size={28} color="#FF6600" />
                 </View>
                 {clampedCount >= targetCount && (
                   <View className="absolute -top-1.5 -right-1.5 bg-green-500 w-5 h-5 rounded-full items-center justify-center border-2 border-white dark:border-darkBackgroundMuted">
-                    <MaterialIcons name="check" size={12} color="white" />
+                    <Check size={12} color="white" />
                   </View>
                 )}
               </View>

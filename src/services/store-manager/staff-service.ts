@@ -29,6 +29,19 @@ export const getStoreStaff = async (storeId: string) => {
 	}
 };
 
+export const deleteStoreStaff = async (staffId: string) => {
+  try {
+    const { error } = await supabase
+      .from("store_staff")
+      .delete()
+      .eq("id", staffId);
+
+    if (error) throw error;
+  } catch (error) {
+    throw error;
+  }
+};
+
 export const createStoreStaff = async ( storeId: string, name: string, email: string, password: string ) => {
   try {
 		const { data, error } = await supabase.auth.admin.createUser({
@@ -97,4 +110,38 @@ export const createStoreStaff = async ( storeId: string, name: string, email: st
 	} catch (error) {
 		throw error;
 	}
+};
+
+export const getStoreStaffMember = async (staffId: string) => {
+  const { data, error } = await supabase
+    .from("store_staff")
+    .select(`
+      id,
+      store_id,
+      role_id,
+      created_at,
+      user: users (
+        id,
+        name,
+        email
+      )
+    `)
+    .eq("id", staffId)
+    .maybeSingle();
+
+  if (error) throw error;
+  return data;
+};
+
+export const updateStoreStaffMember = async (staffId: string, name: string, email: string) => {
+  const staff = await getStoreStaffMember(staffId);
+  const user = staff?.user as { id?: string } | null;
+  if (!user?.id) throw new Error("Staff user not found.");
+
+  const { error } = await supabase
+    .from("users")
+    .update({ name, email })
+    .eq("id", user.id);
+
+  if (error) throw error;
 };

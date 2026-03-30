@@ -1,22 +1,33 @@
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { View, Text, AnimatedView, TouchableOpacity, Image } from "@/tw";
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { Layout } from "react-native-reanimated";
+import { Check, ExternalLink, Flame, Store } from "lucide-react-native";
+import Animated, { Layout, useAnimatedStyle, useSharedValue, withSpring, withTiming, withRepeat, withSequence } from "react-native-reanimated";
+import LottieView from "lottie-react-native";
 import { storeLogos } from "@/data/rewards";
 import { useTranslation } from "react-i18next";
+import { Alert, ActivityIndicator, Modal, Pressable, StyleSheet, View as RNView } from "react-native";
+import { useRouter } from "expo-router";
+import { recordUserStreak } from "@/services/streak-service";
+import { supabase } from "@/supabase/supabase";
 
 interface UserStreakCardProps {
   streak: any;
   nearbyStores: any[];
   isStoreNearby: (lat?: number | null, lon?: number | null) => boolean;
+  onStreakRecorded?: () => void;
 }
 
 export default function UserStreakCard({
   streak,
   nearbyStores,
   isStoreNearby,
+  onStreakRecorded,
 }: UserStreakCardProps) {
   const { t: translate } = useTranslation();
+  const router = useRouter();
+  const [showStreakModal, setShowStreakModal] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [hasEarnedToday, setHasEarnedToday] = useState(false);
   const storeStr = streak.stores as any;
   const storeName = storeStr?.name ?? translate("user.rewards.store");
   const storeAddress = storeStr?.address ?? translate("user.rewards.unknownLocation");
@@ -24,9 +35,17 @@ export default function UserStreakCard({
     nearbyStores.some((s) => Number(s.id) === Number(streak.store_id)) ||
     isStoreNearby(storeStr?.latitude, storeStr?.longitude);
 
-  // Mocking streak progress for UI: use 3 days completed for now
-  const clampedCount = 3;
-  const targetCount = 7;
+  // Derive if already earned today from last_activity_date
+  const today = new Date().toISOString().split("T")[0];
+  const alreadyEarnedToday = streak.last_activity_date === today || hasEarnedToday;
+
+  // Real data from backend
+  const streakProgram = streak.store_streaks as any;
+  const targetCount = streakProgram?.streak_length ?? 7;
+  // If earned today (optimistic or from DB), bump displayed count
+  const rawCount = streak.streak_days ?? 0;
+  const clampedCount = Math.min(alreadyEarnedToday ? rawCount : rawCount, targetCount);
+
   const streakDays = [
     translate("user.rewards.days.mon"),
     translate("user.rewards.days.tue"),
@@ -34,11 +53,13 @@ export default function UserStreakCard({
     translate("user.rewards.days.thu"),
     translate("user.rewards.days.fri"),
     translate("user.rewards.days.sat"),
-    translate("user.rewards.days.sun")
+    translate("user.rewards.days.sun"),
   ];
 
-  const days = streakDays.map((label, index) => ({
-    label: label,
+  // Build exactly targetCount circles (or 7 if target is > 7 for safety)
+  const displayDayCount = Math.min(targetCount, 7);
+  const days = Array.from({ length: displayDayCount }, (_, index) => ({
+    label: streakDays[index % 7],
     state:
       index < clampedCount
         ? "completed"
@@ -46,6 +67,57 @@ export default function UserStreakCard({
           ? "current"
           : "upcoming",
   }));
+
+  const pressScale = useSharedValue(1);
+  const modalOpacity = useSharedValue(0);
+  const pressAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: pressScale.value }],
+  }));
+  const modalAnimatedStyle = useAnimatedStyle(() => ({
+    opacity: modalOpacity.value,
+  }));
+
+  const pulseScale = useSharedValue(1);
+  const pulseAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: pulseScale.value }],
+  }));
+
+  useEffect(() => {
+    if (nearby) {
+      pulseScale.value = withRepeat(
+        withSequence(
+          withTiming(1.08, { duration: 800 }),
+          withTiming(1, { duration: 800 })
+        ),
+        -1,
+        true
+      );
+    } else {
+      pulseScale.value = withTiming(1);
+    }
+  }, [nearby]);
+
+  useEffect(() => {
+    if (!showStreakModal) {
+      modalOpacity.value = 0;
+      return;
+    }
+
+    modalOpacity.value = withTiming(1, { duration: 180 });
+
+    const fadeTimer = setTimeout(() => {
+      modalOpacity.value = withTiming(0, { duration: 420 });
+    }, 2080);
+
+    const closeTimer = setTimeout(() => {
+      setShowStreakModal(false);
+    }, 2500);
+
+    return () => {
+      clearTimeout(fadeTimer);
+      clearTimeout(closeTimer);
+    };
+  }, [modalOpacity, showStreakModal]);
 
   const getLogoImage = (store: any) => {
     if (store.logo) {
@@ -65,11 +137,9 @@ export default function UserStreakCard({
       <View className="p-3">
         <View className="flex-row items-center justify-between">
           <View className="flex-row items-center gap-x-2">
-            <MaterialIcons
-              name="local-fire-department"
-              size={18}
-              color="#FF6600"
-            />
+            <View className="w-4 h-4 items-center justify-center -mt-1">
+              <Flame size={16} color="#FF6600" />
+            </View>
             <Text className="font-poppins-semibold text-neutral-900 dark:text-white">
               {translate("user.rewards.streakLog")}
             </Text>
@@ -83,12 +153,15 @@ export default function UserStreakCard({
                 </Text>
               </View>
             )}
-            <TouchableOpacity disabled={true} className="px-2 py-1 opacity-50">
+            <TouchableOpacity
+              onPress={() => router.push(`/store/streaks?storeId=${streak.store_id}`)}
+              className="px-2 py-1"
+            >
               <View className="flex-row items-center gap-x-1">
                 <Text className="text-primary text-xs font-poppins-semibold">
-                  {translate("rewards.viewAll")}
+                  {translate("user.rewards.viewAll")}
                 </Text>
-                <MaterialIcons name="open-in-new" size={12} color="#FF6600" />
+                <ExternalLink size={12} color="#FF6600" />
               </View>
             </TouchableOpacity>
           </View>
@@ -103,7 +176,7 @@ export default function UserStreakCard({
                 contentFit="cover"
               />
             ) : (
-              <MaterialIcons name="storefront" size={20} color="#FF6600" />
+              <Store size={20} color="#FF6600" />
             )}
           </View>
           <View className="flex-1 flex-row items-center justify-between">
@@ -146,39 +219,127 @@ export default function UserStreakCard({
                 key={`${day.label}-${index}`}
                 className="items-center w-11"
               >
-                <View
-                  className={circleClass}
-                  style={
-                    isCurrent
-                      ? {
-                        borderWidth: 1.5,
-                        borderColor: "#FF6600",
-                        borderStyle: "dashed",
+                {isCurrent ? (
+                  <TouchableOpacity
+                    activeOpacity={1}
+                    onPressIn={() => {
+                      pressScale.value = withSpring(0.92, { damping: 14, stiffness: 220 });
+                    }}
+                    onPressOut={() => {
+                      pressScale.value = withSpring(1, { damping: 14, stiffness: 220 });
+                    }}
+                    onPress={async () => {
+                      if (alreadyEarnedToday) {
+                        Alert.alert("Already Earned!", "You've already earned your streak for today. Come back tomorrow!");
+                        return;
                       }
-                      : undefined
-                  }
-                >
-                  {isCompleted ? (
-                    <View className="items-center justify-center">
-                      <MaterialIcons
-                        name="check"
-                        size={12}
-                        color="#FFFFFF"
-                        className="mb-0.5"
-                      />
-                      <Text className="text-white font-poppins-bold text-[8px] uppercase">
-                        {day.label}
-                      </Text>
-                    </View>
-                  ) : (
-                    <Text className={textClass}>{day.label}</Text>
-                  )}
-                </View>
+                      if (!nearby) {
+                        Alert.alert("Not Nearby", "You need to be within range of this store to earn your streak.");
+                        return;
+                      }
+                      // Need a store_streak_id to record. If no program linked yet, show message.
+                      const storeStreakId = streak.store_streak_id;
+                      if (!storeStreakId) {
+                        Alert.alert("No Program", "This store's streak program isn't fully set up yet.");
+                        return;
+                      }
+                      try {
+                        setIsRecording(true);
+                        const { data: { user } } = await supabase.auth.getUser();
+                        if (!user?.id) return;
+                        const result = await recordUserStreak(
+                          user.id,
+                          Number(streak.store_id),
+                          storeStreakId,
+                          streakProgram?.fixed_points_per_day ?? 0,
+                        );
+                        if (result.alreadyRecorded) {
+                          Alert.alert("Already Earned!", "You've already earned your streak for today. Come back tomorrow!");
+                        } else {
+                          setHasEarnedToday(true);
+                          setShowStreakModal(true);
+                          onStreakRecorded?.();
+                        }
+                      } catch (e) {
+                        console.error("Failed to record streak:", e);
+                        Alert.alert("Error", "Something went wrong. Please try again.");
+                      } finally {
+                        setIsRecording(false);
+                      }
+                    }}
+                  >
+                    <Animated.View style={[pressAnimatedStyle, nearby && pulseAnimatedStyle]}>
+                      <View
+                        className={circleClass}
+                        style={{
+                          borderWidth: 1.5,
+                          borderColor: "#FF6600",
+                          borderStyle: "dashed",
+                        }}
+                      >
+                        <Text className={textClass}>{day.label}</Text>
+                      </View>
+                    </Animated.View>
+                  </TouchableOpacity>
+                ) : (
+                  <View className={circleClass}>
+                    {isCompleted ? (
+                      <View className="items-center justify-center">
+                        <Check size={12} color="#FFFFFF" />
+                        <Text className="text-white font-poppins-bold text-[8px] uppercase">
+                          {day.label}
+                        </Text>
+                      </View>
+                    ) : (
+                      <Text className={textClass}>{day.label}</Text>
+                    )}
+                  </View>
+                )}
               </View>
             );
           })}
         </View>
       </View>
+
+      <Modal
+        visible={showStreakModal}
+        transparent
+        animationType="none"
+        statusBarTranslucent
+        onRequestClose={() => setShowStreakModal(false)}
+      >
+        <Animated.View style={[styles.modalOverlay, modalAnimatedStyle]}>
+          <Pressable style={StyleSheet.absoluteFill} onPress={() => setShowStreakModal(false)} />
+          <RNView style={styles.modalContent}>
+            <LottieView
+              source={require("../../assets/lottie/streak.json")}
+              autoPlay
+              loop
+              style={{ width: 220, height: 220 }}
+            />
+            <Text className="text-center text-white font-poppins-bold text-3xl mt-4">
+              1+
+            </Text>
+            <Text className="text-center text-white/90 font-poppins-medium text-base mt-2">
+              {`Day ${clampedCount} / Day ${targetCount}`}
+            </Text>
+          </RNView>
+        </Animated.View>
+      </Modal>
     </AnimatedView>
   );
 }
+
+const styles = StyleSheet.create({
+  modalOverlay: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 32,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+  },
+  modalContent: {
+    alignItems: "center",
+    justifyContent: "center",
+  },
+});

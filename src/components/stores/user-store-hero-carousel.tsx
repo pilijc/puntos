@@ -1,10 +1,11 @@
 import React from "react";
-import { View, Text, AnimatedView, Image } from "@/tw";
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { View, Text, AnimatedView, Image, TouchableOpacity } from "@/tw";
+import { MapPin, Store } from "lucide-react-native";
 import Carousel from "react-native-reanimated-carousel";
 import { Dimensions } from "react-native";
 import { storeLogos } from "@/data/rewards";
 import { useTranslation } from "react-i18next";
+import { useRouter } from "expo-router";
 
 const { width: screenWidth } = Dimensions.get("window");
 
@@ -12,6 +13,7 @@ interface UserStoreHeroCarouselProps {
   nearbyStores: any[];
   storesWithLocation: any[];
   setHeroIndex: (index: number) => void;
+  heroIndex: number;
   swipeIndicatorStyle: any;
 }
 
@@ -19,9 +21,11 @@ export default function UserStoreHeroCarousel({
   nearbyStores,
   storesWithLocation,
   setHeroIndex,
+  heroIndex,
   swipeIndicatorStyle,
 }: UserStoreHeroCarouselProps) {
   const { t: translate } = useTranslation();
+  const router = useRouter();
   const getHeroImage = (store: any) => {
     if (store.logo) {
       return { uri: store.logo };
@@ -40,6 +44,7 @@ export default function UserStoreHeroCarousel({
           height={256}
           data={nearbyStores}
           scrollAnimationDuration={1000}
+          enabled={nearbyStores.length > 1}
           loop={nearbyStores.length > 1}
           autoPlay={false}
           autoPlayInterval={4000}
@@ -66,7 +71,7 @@ export default function UserStoreHeroCarousel({
                     <Text className="text-[10px] text-white font-poppins-medium uppercase">{store.type || translate("user.rewards.store")}</Text>
                   </View>
                   <View className="flex-row items-center gap-x-1">
-                    <MaterialIcons name="place" size={14} color="#FFFFFF" />
+                    <MapPin size={14} color="#FFFFFF" />
                     <Text className="text-white/90 font-poppins text-xs flex-1" numberOfLines={1}>
                       {store.address || translate("user.rewards.unknownLocation")} • {translate("user.rewards.distanceMeters", {
                         meters: store.distanceMeters?.toLocaleString(undefined, { maximumFractionDigits: 2 }) ?? "0"
@@ -114,7 +119,7 @@ export default function UserStoreHeroCarousel({
                       <Text className="text-[10px] text-white font-poppins-medium uppercase">{store.type || translate("user.rewards.store")}</Text>
                     </View>
                     <View className="flex-row items-center gap-x-1">
-                      <MaterialIcons name="storefront" size={14} color="#FFFFFF" />
+                      <Store size={14} color="#FFFFFF" />
                       <Text className="text-white/90 font-poppins text-xs flex-1" numberOfLines={1}>
                         {store.address}
                       </Text>
@@ -127,14 +132,6 @@ export default function UserStoreHeroCarousel({
         </>
       )}
 
-      {/* Replaced 'left-97' with standard trailing flex positioning */}
-      <View className="absolute top-4 right-6 items-end z-10">
-        {nearbyStores.length >= 2 && (
-          <AnimatedView style={swipeIndicatorStyle}>
-            <MaterialIcons name="chevron-right" size={28} color="#FFFFFF" />
-          </AnimatedView>
-        )}
-      </View>
     </View>
   );
 }

@@ -1,16 +1,16 @@
-import React from "react";
+import React, { useRef } from "react";
 import { TextInput, FlatList } from "react-native";
 import { View, Text, TouchableOpacity } from "@/tw";
 import { Feather } from "@expo/vector-icons";
 import { TYPO, COLORS } from "./constants";
-import type { UserRoleTab } from "@/store/user-store";
+import type { UserRoleTab } from "@/store/super-admin/user-store";
 
 interface UsersSearchHeaderProps {
   search: string;
   onSearchChange: (text: string) => void;
   activeTab: UserRoleTab;
   onTabChange: (tab: UserRoleTab) => void;
-  statusFilter: string;
+  statusFilter: import("@/store/super-admin/user-store").AccountStatusFilter;
   onFilterPress: () => void;
   tabCounts: Record<UserRoleTab, number>;
 }
@@ -26,6 +26,8 @@ export function UsersSearchHeader({
   onFilterPress,
   tabCounts,
 }: UsersSearchHeaderProps) {
+  const searchInputRef = useRef<import("react-native").TextInput>(null);
+
   return (
     <View className="px-5 pt-4">
       <View className="mb-4">
@@ -33,16 +35,21 @@ export function UsersSearchHeader({
         <Text className={TYPO.subtitle}>{tabCounts.All} members total</Text>
       </View>
 
-      <View className="flex-row items-center bg-backgroundMuted rounded-xl px-3 mb-4 h-10 border border-slate-200/50">
+      <TouchableOpacity
+        activeOpacity={1}
+        onPress={() => searchInputRef.current?.focus()}
+        className="flex-row items-center bg-backgroundMuted rounded-xl px-3 mb-4 h-10 border border-slate-200/50"
+      >
         <Feather name="search" size={14} color={COLORS.textMuted} style={{ marginRight: 8 }} />
         <TextInput
+          ref={searchInputRef}
           className="flex-1 text-[13px] font-poppins text-textPrimary"
           placeholder="Search..."
           placeholderTextColor={COLORS.textMuted}
           value={search}
           onChangeText={onSearchChange}
         />
-      </View>
+      </TouchableOpacity>
 
       <FlatList
         horizontal
@@ -53,9 +60,8 @@ export function UsersSearchHeader({
         ListHeaderComponent={
           <TouchableOpacity
             onPress={onFilterPress}
-            className={`flex-row items-center h-10 px-4 rounded-full mr-2 border ${
-              statusFilter !== "All" ? "bg-primary/5 border-primary/30" : "bg-white border-slate-100"
-            }`}
+            className={`flex-row items-center h-10 px-4 rounded-full mr-2 border ${statusFilter !== "All" ? "bg-primary/5 border-primary/30" : "bg-white border-slate-100"
+              }`}
           >
             <Feather
               name="sliders"
@@ -64,9 +70,8 @@ export function UsersSearchHeader({
               style={{ marginRight: 6 }}
             />
             <Text
-              className={`${TYPO.chip} ${
-                statusFilter !== "All" ? "text-primary" : "text-textMuted"
-              }`}
+              className={`${TYPO.chip} ${statusFilter !== "All" ? "text-primary" : "text-textMuted"
+                }`}
             >
               Filter
             </Text>
@@ -75,26 +80,22 @@ export function UsersSearchHeader({
         renderItem={({ item: tab }) => (
           <TouchableOpacity
             onPress={() => onTabChange(tab)}
-            className={`flex-row items-center h-10 px-4 rounded-full mr-2 ${
-              activeTab === tab ? "bg-primary" : "bg-white border border-slate-100"
-            }`}
+            className={`flex-row items-center h-10 px-4 rounded-full mr-2 ${activeTab === tab ? "bg-primary" : "bg-white border border-slate-100"
+              }`}
           >
             <Text
-              className={`${TYPO.chip} ${
-                activeTab === tab ? "text-white" : "text-textMuted"
-              }`}
+              className={`${TYPO.chip} ${activeTab === tab ? "text-white" : "text-textMuted"
+                }`}
             >
               {tab === "All" ? "All" : tab + "s"}
             </Text>
             <View
-              className={`ml-2 px-1.5 py-0.5 rounded-md ${
-                activeTab === tab ? "bg-white/20" : "bg-slate-100"
-              }`}
+              className={`ml-2 px-1.5 py-0.5 rounded-md ${activeTab === tab ? "bg-white/20" : "bg-slate-100"
+                }`}
             >
               <Text
-                className={`text-[9px] font-poppins-bold ${
-                  activeTab === tab ? "text-white" : "text-textMuted"
-                }`}
+                className={`text-[9px] font-poppins-bold ${activeTab === tab ? "text-white" : "text-textMuted"
+                  }`}
               >
                 {tabCounts[tab]}
               </Text>

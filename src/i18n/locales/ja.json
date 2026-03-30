@@ -196,7 +196,8 @@
         },
         "rewards": {
             "title": "報酬",
-            "viewStores": "店舗を見る",
+            "viewStores": "すべての店舗",
+            "viewStore": "店舗を見る",
             "discoverPartners": "パートナーを探す",
             "distanceMeters": "{{meters}} m 先",
             "store": "店舗",
@@ -212,6 +213,7 @@
             "stampLog": "スタンプカード",
             "streakLog": "連続記録",
             "nearby": "近く",
+            "purchase": "購入",
             "viewAll": "すべて見る",
             "daysThisWeek": "今週の記録: {{current}}/{{target}}",
             "completed": "{{current}}/{{target}} 完了",

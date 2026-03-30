@@ -1,4 +1,4 @@
-import type { AccountStatusFilter } from "@/store/user-store";
+import type { AccountStatusFilter } from "@/store/super-admin/user-store";
 
 export const TYPO = {
   title: "text-[22px] font-poppins-bold text-textPrimary leading-7",

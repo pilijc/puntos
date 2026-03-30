@@ -1,14 +1,14 @@
 import { Tabs } from "expo-router";
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import React, { useEffect } from "react";
 import { useRouter } from "expo-router";
 import { Platform, View, StyleSheet, useColorScheme } from "react-native";
 import { supabase } from "@/supabase/supabase";
 import { getRoleTypeForUser } from "@/services/access-service";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import QRRoundedButton from "@/components/qr/qr-rounded";
-import { getCurrentUserIsActive } from "@/services/operator-service";
+//import QRRoundedButton from "@/components/qr/qr-rounded";
+import { getCurrentUserIsActive } from "@/services/frontdesk/scan-service";
 import { useTranslation } from "react-i18next";
+import { History, Settings, Home } from 'lucide-react-native';
 
 export default function FrontDeskLayout() {
     const router = useRouter();
@@ -87,7 +87,7 @@ export default function FrontDeskLayout() {
                 tabBarActiveTintColor: "#FF6600",
                 tabBarInactiveTintColor: isDark ? '#737373' : '#8B8D98',
                 tabBarLabelStyle: {
-                    fontSize: 12,
+                    fontSize: 10,
                     fontFamily: "Poppins-Medium",
                     marginBottom: insets.bottom > 0 ? 0 : 4
                 },
@@ -99,18 +99,18 @@ export default function FrontDeskLayout() {
                 options={{
                     title: translate("layout.transactions"),
                     tabBarIcon: ({ color }) => (
-                        <MaterialIcons size={24} name="history" color={color} />
+                        <History size={22} color={color} />
                     ),
                 }}
             />
             <Tabs.Screen
                 name="index"
                 options={{
-                    title: "",
-                    tabBarIcon: () => null,
-                    tabBarButton: (props: any) => isActive ? (
-                        <QRRoundedButton onPress={props.onPress} bottomInset={insets.bottom} />
-                    ) : null,
+                    title: "Dashboard",
+                    tabBarIcon: ({color}) => (
+                        <Home size={24} color={color} />
+                    ),
+                    
                 }}
             />
             <Tabs.Screen
@@ -118,7 +118,7 @@ export default function FrontDeskLayout() {
                 options={{
                     title: translate("layout.settings"),
                     tabBarIcon: ({ color }) => (
-                        <MaterialIcons size={24} name="person" color={color} />
+                        <Settings size={22} color={color} />
                     ),
                 }}
             />
