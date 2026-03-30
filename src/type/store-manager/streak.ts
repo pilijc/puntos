@@ -3,6 +3,7 @@ export type StreakStatus = "draft" | "upcoming" | "active" | "ended";
 export type PointsMode = "fixed" | "incremental";
 
 export type StreakTabKey = "active" | "upcoming" | "ended";
+export type StreakActionType = "publish" | "activate" | "end" | "delete";
 
 export const StatusBadgeProps = {
   draft: {
@@ -45,7 +46,7 @@ export interface Streak {
   streak_length: number | null;
   max_days_cap: number | null;
   reward_description: string;
-  start_date?: string | null;
+  start_at?: string | null;
   end_date?: string | null;
   status?: StreakStatus;
   ended_at?: string | null;
@@ -73,29 +74,74 @@ export interface StreakParticipant {
 
 export interface StreakState {
   points_mode: PointsMode;
-  setPointsMode: (value: PointsMode) => void;
   fixed_points_per_day: number | null;
-  setFixedPointsPerDay: (value: number | null) => void;
   starting_points: number | null;
-  setStartingPoints: (value: number | null) => void;
   increment_value: number | null;
-  setIncrementValue: (value: number | null) => void;
   streak_length: number | null;
-  setStreakLength: (value: number) => void;
   max_days_cap: number | null;
-  setMaxDaysCap: (value: number | null) => void;
   reward_description: string;
+  start_at: string | null;
+  min_start_at: string | null;
+  showStartDatePicker: boolean;
+  showStartTimePicker: boolean;
+  isSubmitting: boolean;
+  modal: {
+    title: string;
+    message: string;
+    buttons: { label: string; onPress: () => void; variant?: "primary" | "success" | "danger" | "secondary" | "ghost"; loading?: boolean; disabled?: boolean; timer?: number }[];
+    timer?: boolean;
+  } | null;
+
+  setPointsMode: (value: PointsMode) => void;
+  setFixedPointsPerDay: (value: number | null) => void;
+  setStartingPoints: (value: number | null) => void;
+  setIncrementValue: (value: number | null) => void;
+  setStreakLength: (value: number) => void;
+  setMaxDaysCap: (value: number | null) => void;
   setRewardDescription: (value: string) => void;
+  setStartAt: (value: string | null) => void;
+  setMinStartAt: (value: string | null) => void;
+  setShowStartDatePicker: (value: boolean) => void;
+  setShowStartTimePicker: (value: boolean) => void;
+  setIsSubmitting: (value: boolean) => void;
+  setModal: (value: StreakState["modal"]) => void;
   reset: () => void;
+}
+
+export interface StreakViewState {
+  activeTab: StreakTabKey;
+  streaks: Streak[];
+  loading: boolean;
+  upcomingVisible: number;
+  endedVisible: number;
+  acting: { id: number; action: StreakActionType } | null;
+  modal: {
+    title: string;
+    message: string;
+    buttons: { label: string; onPress: () => void; variant?: "primary" | "success" | "danger" | "secondary" | "ghost"; loading?: boolean; disabled?: boolean; timer?: number }[];
+  } | null;
+
+  setActiveTab: (value: StreakTabKey) => void;
+  setStreaks: (value: Streak[]) => void;
+  setLoading: (value: boolean) => void;
+  setUpcomingVisible: (value: number) => void;
+  setEndedVisible: (value: number) => void;
+  setActing: (value: { id: number; action: StreakActionType } | null) => void;
+  setModal: (value: StreakViewState["modal"]) => void;
+  resetView: () => void;
 }
 
 export interface StreakCardProps {
   streak: Streak;
   isDark: boolean;
+  onEdit?: () => void;
   onPublish?: () => void;
   onActivate?: () => void;
   onEnd?: () => void;
+  onDelete?: () => void;
+  isEditing?: boolean;
   isPublishing?: boolean;
   isActivating?: boolean;
   isEnding?: boolean;
+  isDeleting?: boolean;
 }

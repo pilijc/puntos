@@ -40,13 +40,13 @@ const config: Record<
     spinnerColor: "#fff"
   },
   danger: {
-    container: "border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20",
+    container: "bg-red-100 dark:bg-red-800/20",
     text: "text-red-500",
     iconColor: "#EF4444",
     spinnerColor: "#EF4444"
   },
   secondary: {
-    container: "border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-900",
+    container: "bg-slate-100 dark:bg-slate-800",
     text: "text-slate-500 dark:text-slate-400",
     iconColor: "#94A3B8",
     spinnerColor: "#94A3B8"

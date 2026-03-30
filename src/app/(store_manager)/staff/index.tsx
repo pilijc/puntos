@@ -8,7 +8,7 @@ import { Modal, type ModalButton } from "@/components/modal";
 import { useStaffStore, useStaffViewStore } from "@/store/store-manager/staff-store";
 import { ChevronLeft, ChevronRight, UsersRound, Pencil, Trash, UserRoundX  } from "lucide-react-native";
 import StaffSkeleton from "@/components/skeleton/store_manager/staff-skeleton";
-import { getInitials } from "@/utils/store_manager/staff";
+import { getInitials } from "@/utils/store_manager/staff-utils";
 
 export default function ViewStaff() {
   const router = useRouter();

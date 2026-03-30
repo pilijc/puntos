@@ -1,6 +1,14 @@
 import { supabase } from "@/supabase/supabase";
 import { Streak, StreakParticipant } from "@/type/store-manager/streak";
 
+async function syncAutoActivateStreaks(storeId: string): Promise<void> {
+  const { error } = await supabase.rpc("activate_due_store_streaks", {
+    target_store_id: Number(storeId),
+  });
+
+  if (error) return;
+}
+
 export async function createStreak(payload: Streak): Promise<void> {
   try {
     const { error } = await supabase
@@ -12,8 +20,35 @@ export async function createStreak(payload: Streak): Promise<void> {
   }
 }
 
+export async function getStreakProgramById(programId: number): Promise<Streak | null> {
+  try {
+    const { data, error } = await supabase
+      .from("store_streaks")
+      .select("*")
+      .eq("id", programId)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    return (data ?? null) as Streak | null;
+  } catch (error) {
+    throw error;
+  }
+}
+
+export async function updateStreakProgram(programId: number, payload: Partial<Streak>): Promise<void> {
+  try {
+    const { error } = await supabase
+      .from("store_streaks")
+      .update(payload)
+      .eq("id", programId);
+    if (error) throw new Error(error.message);
+  } catch (error) {
+    throw error;
+  }
+}
+
 export async function getAllStreaksByStoreId(storeId: string): Promise<Streak[]> {
   try {
+    await syncAutoActivateStreaks(storeId);
     const { data, error } = await supabase
       .from("store_streaks")
       .select("*")
@@ -61,6 +96,18 @@ export async function endStreakProgram(programId: number): Promise<void> {
     const { error } = await supabase
       .from("store_streaks")
       .update({ status: "ended", ended_at: now.toISOString() })
+      .eq("id", programId);
+    if (error) throw new Error(error.message);
+  } catch (error) {
+    throw error;
+  }
+}
+
+export async function deleteStreakProgram(programId: number): Promise<void> {
+  try {
+    const { error } = await supabase
+      .from("store_streaks")
+      .delete()
       .eq("id", programId);
     if (error) throw new Error(error.message);
   } catch (error) {

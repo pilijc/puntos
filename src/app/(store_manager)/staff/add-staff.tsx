@@ -8,7 +8,7 @@ import { Button } from "@/components/button";
 import { Modal } from "@/components/modal";
 import { createStoreStaff, getStoreStaffMember, updateStoreStaffMember } from "@/services/store-manager/staff-service";
 import { useStaffStore } from "@/store/store-manager/staff-store";
-import { generateRandomPassword } from "@/utils/store_manager/staff";
+import { generateRandomPassword } from "@/utils/store_manager/staff-utils";
 
 export default function AddStaff() {
   const router = useRouter();
