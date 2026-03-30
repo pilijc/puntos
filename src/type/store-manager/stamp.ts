@@ -1,4 +1,5 @@
 import { Reward } from "@/type/store-manager/reward";
+import { Dispatch, SetStateAction } from "react";
 
 export type ExpirationMode = "none" | "card";
 
@@ -147,3 +148,29 @@ export const emptyCollectorSlice = (): CollectorSlice => ({
   loadingMore: false,
   hasLoadedCollectorsOnce: false,
 });
+
+export type RewardPickerModalProps = {
+  visible: boolean;
+  storeId: string;
+  selectedRewardId: string;
+  onClose: () => void;
+  onSelect: (reward: Reward) => void;
+};
+
+export type StampCardProps = {
+  stamp: Stamp;
+  reward: Reward | null;
+  activeTab: TabKey;
+  isDark: boolean;
+  collector: CollectorSlice;
+  programId: number;
+  setCollectorByProgram: Dispatch<SetStateAction<Record<number, CollectorSlice>>>;
+  loadCollectorsFirstPage: (programId: number) => void;
+  activeProgramCount: number;
+  doActivate: (programId: number) => void | Promise<void>;
+  doEnd: (programId: number, graceDays: number) => void | Promise<void>;
+  doDelete: (programId: number) => void | Promise<void>;
+  onEditDraft?: () => void;
+  setModal: (modal: StampModalState) => void;
+  endingId: number | null;
+};

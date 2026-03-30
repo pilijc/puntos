@@ -12,6 +12,40 @@ export async function getRewardsByStoreId(storeId: string): Promise<Reward[]> {
   return (data ?? []) as Reward[];
 }
 
+export async function getRewardsByStoreIdPage(
+  storeId: string,
+  page: number,
+  pageSize: number = 15,
+): Promise<Reward[]> {
+  try {
+    const from = page * pageSize;
+    const to = from + pageSize - 1;
+    const { data, error } = await supabase
+      .from("store_rewards")
+      .select("*")
+      .eq("store_id", storeId)
+      .order("created_at", { ascending: false })
+      .range(from, to);
+
+    if (error) throw new Error(error.message);
+    return (data ?? []) as Reward[];
+  } catch (error) {
+    throw error;
+  }
+}
+
+export async function getRewardById(storeId: string, rewardId: string): Promise<Reward | null> {
+  const { data, error } = await supabase
+    .from("store_rewards")
+    .select("*")
+    .eq("store_id", storeId)
+    .eq("id", rewardId)
+    .maybeSingle();
+
+  if (error) throw new Error(error.message);
+  return (data ?? null) as Reward | null;
+}
+
 export async function createReward(reward: Reward): Promise<void> {
   const { error } = await supabase
     .from("store_rewards")

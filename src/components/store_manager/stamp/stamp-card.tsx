@@ -1,39 +1,12 @@
-import React, { Dispatch, SetStateAction } from "react";
+import React from "react";
 import { ActivityIndicator } from "react-native";
 import { Image } from "expo-image";
 import { View, Text, TouchableOpacity } from "@/tw";
 import { getCollectorsByProgramId, getProgramStatus } from "@/services/store-manager/stamp-service";
-import {
-  CollectorSlice,
-  emptyCollectorSlice,
-  Stamp,
-  STATUS_BADGE,
-  StampModalState,
-  TabKey,
+import { emptyCollectorSlice, STATUS_BADGE, StampCardProps,
 } from "@/type/store-manager/stamp";
-import { Reward } from "@/type/store-manager/reward";
 import { formatDate } from "@/utils/store_manager/stamp-utils";
 import { ChevronUp, ChevronDown, OctagonMinus, Trash2, Pencil, SendHorizonal, Stamp as StampIcon } from "lucide-react-native";
-
-const PAGE_SIZE = 5;
-
-export type StampCardProps = {
-  stamp: Stamp;
-  reward: Reward | null;
-  activeTab: TabKey;
-  isDark: boolean;
-  collector: CollectorSlice;
-  programId: number;
-  setCollectorByProgram: Dispatch<SetStateAction<Record<number, CollectorSlice>>>;
-  loadCollectorsFirstPage: (programId: number) => void;
-  activeProgramCount: number;
-  doActivate: (programId: number) => void | Promise<void>;
-  doEnd: (programId: number, graceDays: number) => void | Promise<void>;
-  doDelete: (programId: number) => void | Promise<void>;
-  onEditDraft?: () => void;
-  setModal: (modal: StampModalState) => void;
-  endingId: number | null;
-};
 
 export function StampCard({
   stamp,
@@ -55,6 +28,7 @@ export function StampCard({
   const status = getProgramStatus(stamp);
   const badge = STATUS_BADGE[status];
   const hasMore = c.collectors.length < c.collectorsCount;
+  const PAGE_SIZE = 5;
 
   return (
     <View className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl overflow-hidden">
@@ -294,9 +268,9 @@ export function StampCard({
                   ],
                 })
               }
-              className="flex-1 h-10 rounded-xl items-center justify-center bg-red-100"
+              className="flex-1 h-8 rounded-lg items-center justify-center bg-red-100"
             >
-              <Trash2 size={16} color="#ef4444" />
+              <Trash2 size={12} color="#ef4444" />
             </TouchableOpacity>
             <TouchableOpacity
               activeOpacity={0.8}
@@ -309,9 +283,9 @@ export function StampCard({
                     buttons: [{ label: "OK", onPress: () => setModal(null) }],
                   }))
               }
-              className="flex-1 h-10 rounded-xl items-center justify-center bg-gray-200"
+              className="flex-1 h-8 rounded-lg items-center justify-center bg-gray-200"
             >
-              <Pencil size={16} color="#64748b" />
+              <Pencil size={12} color="#64748b" />
             </TouchableOpacity>
             <TouchableOpacity
               activeOpacity={0.8}
@@ -338,9 +312,9 @@ export function StampCard({
                       ],
                     })
               }
-              className="flex-1 h-10 rounded-xl items-center justify-center bg-orange-500"
+              className="flex-1 h-8 rounded-lg items-center justify-center bg-orange-500"
             >
-              <SendHorizonal size={16} color="#fff" />
+              <SendHorizonal size={12} color="#fff" />
             </TouchableOpacity>
           </View>
         </View>

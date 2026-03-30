@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -11,12 +11,14 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Image } from "expo-image";
 import { useStampConfigureViewStore, useStampStore } from "@/store/store-manager/stamp-store";
 import { createStamp, getStampProgramById, updateStampProgram } from "@/services/store-manager/stamp-service";
-import { getRewardsByStoreId } from "@/services/store-manager/reward-service";
+import { getRewardById, getRewardsByStoreIdPage } from "@/services/store-manager/reward-service";
 import { EXPIRATION_OPTIONS } from "@/type/store-manager/stamp";
+import type { Reward } from "@/type/store-manager/reward";
 import { AppHeader } from "@/components/header";
 import { Button } from "@/components/button";
 import { Modal } from "@/components/modal";
-import { Info, Pin, Gift, Check, CheckCircle2, Timer } from "lucide-react-native";
+import { RewardPickerModal } from "@/components/store_manager/stamp/reward-picker-modal";
+import { Info, Pin, Gift, Check, CheckCircle2, Timer, ChevronRight } from "lucide-react-native";
 
 export default function ConfigureStamp() {
   const router = useRouter();
@@ -38,13 +40,15 @@ export default function ConfigureStamp() {
   const {
     isSubmitting,
     checkingActive,
-    rewards,
     modal,
     setIsSubmitting,
     setCheckingActive,
-    setRewards,
     setModal,
   } = useStampConfigureViewStore();
+
+  const [rewardPickerOpen, setRewardPickerOpen] = useState(false);
+  const [selectedReward, setSelectedReward] = useState<Reward | null>(null);
+  const [storeHasRewards, setStoreHasRewards] = useState(true);
 
   useEffect(() => {
     setCheckingActive(false);
@@ -53,11 +57,29 @@ export default function ConfigureStamp() {
   useFocusEffect(
     useCallback(() => {
       if (!storeId) return;
-      getRewardsByStoreId(storeId)
-        .then((all) => setRewards(all))
-        .catch(() => setRewards([]));
-    }, [storeId, setRewards])
+      getRewardsByStoreIdPage(storeId, 0, 1)
+        .then((rows) => setStoreHasRewards(rows.length > 0))
+        .catch(() => setStoreHasRewards(false));
+    }, [storeId])
   );
+
+  useEffect(() => {
+    if (!storeId || !reward_id) {
+      setSelectedReward(null);
+      return;
+    }
+    let cancelled = false;
+    getRewardById(storeId, String(reward_id))
+      .then((r) => {
+        if (!cancelled) setSelectedReward(r);
+      })
+      .catch(() => {
+        if (!cancelled) setSelectedReward(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [storeId, reward_id]);
 
   useFocusEffect(
     useCallback(() => {
@@ -153,6 +175,7 @@ export default function ConfigureStamp() {
         });
       }
       reset();
+      setSelectedReward(null);
       setModal({
         title: "Success",
         message: isEdit ? "Stamp program updated successfully!" : "Stamp program created successfully!",
@@ -219,20 +242,20 @@ export default function ConfigureStamp() {
               </Text>
             </View>
 
-            <View className="rounded-xl bg-amber-50 dark:bg-amber-900/20 p-4 gap-y-3">
+            <View className="rounded-xl bg-amber-50 dark:bg-amber-900/20 py-4 px-3 gap-y-2">
               <View className="flex-row items-center gap-x-2">
-              <Info size={18} color="#D97706" />
+                <Info size={14} color="#D97706" />
                 <Text className="text-sm font-poppins-bold text-amber-700 dark:text-amber-400">
                   Before You Start
                 </Text>
               </View>
-              <View className="gap-y-2">
+              <View className="gap-y-1">
                 {[
                   "Only 1 stamp program can be active per store at a time.",
                   "When you end a program, users cannot earn new stamps, but can still redeem during the grace period.",
                 ].map((rule, i) => (
                   <View key={i} className="flex-row items-start gap-x-2">
-                    <Text className="text-amber-500 text-xs mt-0.5">•</Text>
+                    <Text className="text-amber-500 text-xs mt-0.5 font-poppins-semibold">•</Text>
                     <Text className="text-xs font-poppins text-amber-700 dark:text-amber-400 flex-1">
                       {rule}
                     </Text>
@@ -264,7 +287,7 @@ export default function ConfigureStamp() {
               <Text className="text-sm font-poppins-semibold text-slate-700 dark:text-slate-300">
                 Reward
               </Text>
-              {rewards.length === 0 ? (
+              {!storeHasRewards ? (
                 <View className="rounded-xl border border-dashed border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 px-4 py-5 items-center gap-y-3">
                   <Gift size={26} color="#94A3B8" />
                   <View className="items-center gap-y-1">
@@ -286,56 +309,32 @@ export default function ConfigureStamp() {
                   </TouchableOpacity>
                 </View>
               ) : (
-                <View className="gap-y-2">
-                  {rewards.map((r) => {
-                    const selected = reward_id === r.id;
-                    return (
-                      <TouchableOpacity
-                        key={r.id}
-                        activeOpacity={0.8}
-                        onPress={() => setRewardId(r.id!)}
-                        className={`flex-row items-center gap-x-3 rounded-xl border px-4 py-3 ${
-                          selected
-                            ? "border-primary/10 bg-primary/10"
-                            : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900"
-                        }`}
-                      >
-                        {r.image_url ? (
-                          <Image
-                            source={{ uri: r.image_url }}
-                            style={{ width: 40, height: 40, borderRadius: 10 }}
-                            contentFit="cover"
-                          />
-                        ) : (
-                          <View className="w-10 h-10 rounded-xl bg-primary/10 items-center justify-center">
-                            <Gift size={18} color="#FF6600" />
-                          </View>
-                        )}
-                        <View className="flex-1">
-                          <Text
-                            className={`text-sm font-poppins-semibold ${
-                              selected ? "text-primary" : "text-slate-900 dark:text-slate-100"
-                            }`}
-                          >
-                            {r.title}
-                          </Text>
-                          <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500 mt-0.5">
-                            {r.points_cost} pts
-                          </Text>
-                        </View>
-                        <View
-                          className={`w-5 h-5 rounded-full border-2 items-center justify-center ${
-                            selected
-                              ? "border-primary bg-primary"
-                              : "border-slate-300 dark:border-slate-600"
-                          }`}
-                        >
-                          {selected && <Check size={12} color="#fff" />}
-                        </View>
-                      </TouchableOpacity>
-                    );
-                  })}
-                </View>
+                <TouchableOpacity
+                  activeOpacity={0.85}
+                  onPress={() => setRewardPickerOpen(true)}
+                  className="flex-row items-center gap-x-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-3"
+                >
+                  {selectedReward?.image_url ? (
+                    <Image
+                      source={{ uri: selectedReward.image_url }}
+                      style={{ width: 40, height: 40, borderRadius: 10 }}
+                      contentFit="cover"
+                    />
+                  ) : (
+                    <View className="w-10 h-10 rounded-xl bg-primary/10 items-center justify-center">
+                      <Gift size={18} color="#FF6600" />
+                    </View>
+                  )}
+                  <View className="flex-1">
+                    <Text className="text-sm font-poppins-semibold text-slate-900 dark:text-slate-100">
+                      {selectedReward?.title ?? (reward_id ? "Loading reward…" : "Tap to choose a reward")}
+                    </Text>
+                    <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500 mt-0.5">
+                      {selectedReward ? `${selectedReward.points_cost} pts` : "Opens a searchable list"}
+                    </Text>
+                  </View>
+                  <ChevronRight size={20} color="#94A3B8" />
+                </TouchableOpacity>
               )}
             </View>
           </View>
@@ -378,7 +377,7 @@ export default function ConfigureStamp() {
                         selected ? "border-primary bg-primary" : "border-slate-300 dark:border-slate-600"
                       }`}
                     >
-                      {selected && <Check size={12} color="#fff" />}
+                      {selected && <Check size={12} color="#FFFFFF" />}
                     </View>
                   </View>
                   <Text
@@ -415,31 +414,6 @@ export default function ConfigureStamp() {
                 </View>
               </View>
             )}
-
-            <View className="rounded-xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-700 p-3 gap-y-2">
-              <View className="flex-row items-center gap-x-1.5">
-                {expiration_mode === "none" ? (
-                  <>
-                    <CheckCircle2 size={13} color="#10B981" />
-                    <Text className="text-xs font-poppins-semibold text-emerald-600 dark:text-emerald-400">
-                      No Expiration
-                    </Text>
-                  </>
-                ) : (
-                  <>
-                    <Timer size={13} color="#F59E0B" />
-                    <Text className="text-xs font-poppins-semibold text-amber-600 dark:text-amber-400">
-                      Card Expires
-                    </Text>
-                  </>
-                )}
-              </View>
-              <Text className="text-xs font-poppins text-slate-500 dark:text-slate-400">
-                {expiration_mode === "none"
-                  ? "Users can collect stamps anytime until their card is completed."
-                  : `Card expires in ${expiration_days} day${expiration_days !== 1 ? "s" : ""} after the first stamp.`}
-              </Text>
-            </View>
           </View>
 
           <View className="gap-y-3">
@@ -457,6 +431,17 @@ export default function ConfigureStamp() {
           </View>
         </View>
       </ScrollView>
+
+      <RewardPickerModal
+        visible={rewardPickerOpen}
+        storeId={storeId ?? ""}
+        selectedRewardId={reward_id}
+        onClose={() => setRewardPickerOpen(false)}
+        onSelect={(r) => {
+          setRewardId(r.id != null ? String(r.id) : "");
+          setSelectedReward(r);
+        }}
+      />
     </KeyboardAvoidingView>
   );
 }
