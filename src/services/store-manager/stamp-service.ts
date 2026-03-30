@@ -3,7 +3,7 @@ import { ProgramStatus, Stamp, StampCollector } from "@/type/store-manager/stamp
 
 
 export function getProgramStatus(stamp: Stamp): ProgramStatus {
-  if (stamp.is_active) return "active";
+  if (stamp.status === "active") return "active";
   const now = new Date();
   if (stamp.redemption_deadline && now < new Date(stamp.redemption_deadline)) {
     return "ended_grace";
@@ -17,7 +17,7 @@ export async function getActiveStampProgram(storeId: string): Promise<Stamp | nu
     .from("store_stamps")
     .select("*")
     .eq("store_id", storeId)
-    .eq("is_active", true)
+    .eq("status", "active")
     .maybeSingle();
 
     if (error) throw new Error(error.message);
@@ -44,24 +44,17 @@ export async function getAllStampsByStoreId(storeId: string): Promise<Stamp[]> {
   }
 }
 
-export async function createStamp(payload: Omit<Stamp, "id" | "is_active" | "ended_at" | "redemption_deadline" | "created_at">): Promise<void> {
+export async function createStamp(payload: Omit<Stamp, "id" | "status" | "ended_at" | "redemption_deadline" | "created_at">): Promise<void> {
   try {
-    const active = await getActiveStampProgram(payload.store_id);
-    if (active) {
-      throw new Error("There is already an active stamp program for this store. End the current program before creating a new one.");
-    }
-
     const { error } = await supabase
       .from("store_stamps")
       .insert({
         ...payload,
-        is_active: true,
+        status: "draft",
       });
 
     if (error) throw new Error(error.message);
 
-    // Keep store feature flag aligned with actual stamp program state.
-    // If a store launches a stamp program, stamp feature should be enabled.
     const { data: existingFeature, error: featureReadError } = await supabase
       .from("store_feature")
       .select("streak_enabled, reward_enabled")
@@ -112,6 +105,24 @@ export async function endStampProgram(programId: number, graceDays: number): Pro
     if (error) throw new Error(error.message);
   } catch (error) {
     console.error("Error in endStampProgram:", error);
+    throw error;
+  }
+}
+
+export async function activateStampProgram(programId: number): Promise<void> {
+  try {
+    const { error } = await supabase
+      .from("store_stamps")
+      .update({
+        status: "active",
+        ended_at: null,
+        redemption_deadline: null,
+      })
+      .eq("id", programId);
+
+    if (error) throw new Error(error.message);
+  } catch (error) {
+    console.error("Error in activateStampProgram:", error);
     throw error;
   }
 }
