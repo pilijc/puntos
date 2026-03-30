@@ -10,6 +10,7 @@ import { Toggle } from "@/components/toggle";
 import { ChevronLeft, QrCode, RefreshCcw } from "lucide-react-native";
 import { formatDate } from "@/utils/store_manager/streak-utils";
 import { useQRStore } from "@/store/store-manager/qr-store";
+import { QRSkeleton } from "@/components/skeleton/store_manager/qr-skeleton";
 
 export default function QRIndex() {
   const router = useRouter();
@@ -140,12 +141,7 @@ export default function QRIndex() {
         }
       >
         {loading ? (
-          <View className="flex-1 items-center justify-center py-20">
-            <ActivityIndicator size="large" color="#FF6600" />
-            <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500 mt-3">
-              Loading configuration...
-            </Text>
-          </View>
+          <QRSkeleton />
         ) : !config ? (
           <View className="mx-4 bg-white dark:bg-neutral-800 rounded-xl border border-slate-100 dark:border-neutral-700 px-4 py-14 items-center gap-y-2">
             <View className="w-14 h-14 rounded-2xl items-center justify-center">
