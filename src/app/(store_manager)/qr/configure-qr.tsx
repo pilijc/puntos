@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { KeyboardAvoidingView, Platform, ScrollView, useColorScheme } from "react-native";
 import { View, Text, TouchableOpacity } from "@/tw";
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { Check, ChevronLeft, Coins, Info, Percent} from "lucide-react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Button } from "@/components/button";
@@ -14,7 +14,8 @@ import { createQRService } from "@/services/store-manager/qr-service";
 export default function ConfigureStreaks() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { storeId } = useLocalSearchParams<{ storeId: string }>();
+  const { storeId, id } = useLocalSearchParams<{ storeId?: string; id?: string }>();
+  const storeIdParam = storeId ?? id;
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -65,12 +66,21 @@ export default function ConfigureStreaks() {
 
 	const handleSave = async () => {
 		if (isSubmitting) return;
+    const storeIdForDb = storeIdParam && storeIdParam !== "undefined" ? storeIdParam : null;
+    if (!storeIdForDb) {
+      setModal({
+        title: "Invalid Store",
+        message: "Missing store id. Please go back and try again.",
+        buttons: [{ label: "OK", onPress: () => setModal(null), variant: "secondary" }],
+      });
+      return;
+    }
 		if (!validate()) return;
 
 		setIsSubmitting(true);
 		try {
-			await createQRService(storeId, {
-				store_id: storeId,
+      await createQRService(storeIdForDb, {
+        store_id: storeIdForDb,
 				percentage,
 				base_amount,
 				earning_type,
@@ -82,9 +92,8 @@ export default function ConfigureStreaks() {
 			setModal({
 				title: "Success",
 				message: "QR purchase rules saved successfully",
-				buttons: [{ label: "OK", onPress: () => router.push({ pathname: "/(store_manager)/qr", params: { storeId } }) }],
+        buttons: [{ label: "OK", onPress: () => router.push({ pathname: "/(store_manager)/qr", params: { storeId: storeIdForDb } }) }],
 			});
-			router.push({ pathname: "/(store_manager)/qr", params: { storeId } });
 		} catch (error) {
 			setModal({
 				title: "Error",
@@ -116,9 +125,9 @@ export default function ConfigureStreaks() {
         <TouchableOpacity
           className="w-10 h-10 rounded-full items-center justify-center"
           activeOpacity={0.7}
-          onPress={() => router.back()}
+          onPress={() => router.push({ pathname: "/(store_manager)/qr/index", params: { storeId: storeIdParam } })}
         >
-          <MaterialIcons name="chevron-left" size={22} color={isDark ? "#F1F5F9" : "#0F172A"} />
+          <ChevronLeft size={22} color={isDark ? "#F1F5F9" : "#0F172A"} />
         </TouchableOpacity>
         <Text className="flex-1 text-center text-[17px] font-poppins-bold text-slate-900 dark:text-slate-100 pr-10">
           QR Purchase Rules
@@ -131,14 +140,15 @@ export default function ConfigureStreaks() {
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={{ padding: 16, paddingBottom: 32, gap: 20 }}
       >
-        <View>
-          <Text className="text-xl font-poppins-bold text-slate-900 dark:text-slate-100">
+        <View className="bg-white rounded-xl p-4 flex-col gap-y-5">
+          <View>
+          <Text className="text-md font-poppins-bold text-slate-900 dark:text-slate-100">
             QR Purchase Rules
           </Text>
-          <Text className="text-sm font-poppins text-slate-500 dark:text-slate-400 mt-1">
+          <Text className="text-sm font-poppins text-slate-500 dark:text-slate-400">
             Define how customers earn loyalty points through QR purchases.
           </Text>
-        </View>
+            </View>
 
         {/* Points mode toggle */}
         <View className="gap-y-2">
@@ -164,10 +174,10 @@ export default function ConfigureStreaks() {
                 >
                   <View className="flex-row items-center justify-between">
                     <View className={`w-7 h-7 rounded-lg items-center justify-center ${selected ? "bg-primary/20" : "bg-slate-100 dark:bg-slate-700"}`}>
-                      <MaterialIcons name={opt.icon} size={14} color={selected ? "#FF6600" : "#94A3B8"} />
+                      { opt.key === "percentage" ? <Percent size={14} color={selected ? "#FF6600" : "#94A3B8"} /> : <Coins size={14} color={selected ? "#FF6600" : "#94A3B8"} />}
                     </View>
                     <View className={`w-4 h-4 rounded-full border-2 items-center justify-center ${selected ? "border-primary bg-primary" : "border-slate-300 dark:border-slate-600"}`}>
-                      {selected && <MaterialIcons name="check" size={9} color="#fff" />}
+                      {selected && <Check size={9} color="#fff" />}
                     </View>
                   </View>
                   <Text className={`text-xs font-poppins-bold mt-1 ${selected ? "text-primary" : "text-slate-800 dark:text-slate-200"}`}>
@@ -216,7 +226,7 @@ export default function ConfigureStreaks() {
             </View>
 
             <View className="bg-primary/5 dark:bg-primary/10 rounded-xl border border-primary/10 px-4 py-3 flex-row items-start gap-x-2">
-              <MaterialIcons name="info-outline" size={15} color="#FF6600" style={{ marginTop: 1 }} />
+              <Info size={15} color="#FF6600" style={{ marginTop: 1 }} />
               <Text className="flex-1 text-[11px] font-poppins text-primary/90 dark:text-primary/80">
                 For every <Text className="font-poppins-semibold text-primary">Base Amount</Text> spent, customers earn <Text className="font-poppins-semibold text-primary">Percentage%</Text> in points.
               </Text>
@@ -258,7 +268,7 @@ export default function ConfigureStreaks() {
 						</View>
 
 						<View className="bg-primary/5 dark:bg-primary/10 rounded-xl border border-primary/10 px-4 py-3 flex-row items-start gap-x-2">
-							<MaterialIcons name="info-outline" size={15} color="#FF6600" style={{ marginTop: 1 }} />
+							<Info size={15} color="#FF6600" style={{ marginTop: 1 }} />
 							<View className="flex-1">
 								<Text className="text-[11px] font-poppins text-primary/90 dark:text-primary/80">
 									Customers earn a fixed <Text className="font-poppins-semibold text-primary">Points</Text> amount for each transaction above the <Text className="font-poppins-semibold text-primary">Minimum Spend</Text>.
@@ -283,7 +293,7 @@ export default function ConfigureStreaks() {
         />
 
         {/* Actions */}
-        <View className="gap-y-3 border-t border-slate-200 dark:border-slate-800 pt-3">
+        <View className="gap-y-3">
           <Button
             label="Save Rules"
             onPress={handleSave}
@@ -294,10 +304,11 @@ export default function ConfigureStreaks() {
           />
           <Button
             label="Cancel"
-            onPress={() => router.back()}
+            onPress={() => router.push({ pathname: "/(store_manager)/view-store/[id]", params: { id: storeIdParam } })}
             fullWidth={true}
             variant="secondary"
           />
+        </View>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>

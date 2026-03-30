@@ -168,10 +168,10 @@ export default function StoreManagerLayout() {
                 name="stamp/view-stamp"
                 options={{ href: null }}
             />
-             <Tabs.Screen
+             {/* <Tabs.Screen
                 name="qr/index"
                 options={{ href: null }}
-            />
+            /> */}
             <Tabs.Screen
                 name="qr/configure-qr"
                 options={{ href: null }}
