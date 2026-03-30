@@ -1,9 +1,8 @@
-import React, { useState, useCallback } from "react";
+import React from "react";
 import { View, Text, SafeAreaView, ScrollView } from "@/tw";
-import { useFocusEffect } from "expo-router";
 
 // Hooks
-import { useProfile } from "@/hooks/use-profile";
+import { useSuperAdminSettings } from "@/hooks/super-admin/use-super-admin-settings";
 
 // Components
 import EditProfileModal from "@/components/settings/modal/edit-profile-modal";
@@ -12,27 +11,16 @@ import { UserProfileCard } from "@/components/settings/card/user-profile-card";
 import { SecurityCard } from "@/components/settings/card/security-card";
 import { LanguageCard } from "@/components/settings/card/language-card";
 import { AppearanceCard } from "@/components/settings/card/appearance-card";
-import { useTranslation } from "react-i18next";
 
 export default function SuperAdminSettings() {
-    const [editModalVisible, setEditModalVisible] = useState(false);
-    const { t: translate } = useTranslation();
-
     const {
+        editModalVisible,
+        setEditModalVisible,
+        translate,
         user,
         profile,
-        refreshProfile,
-    } = useProfile();
-
-    useFocusEffect(
-        useCallback(() => {
-            refreshProfile();
-        }, [])
-    );
-
-    const handleProfilePress = () => {
-        setEditModalVisible(true);
-    };
+        handleProfilePress,
+    } = useSuperAdminSettings();
 
     return (
         <SafeAreaView className="flex-1 bg-muted-white dark:bg-darkBackground">

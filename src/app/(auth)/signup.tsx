@@ -216,11 +216,16 @@ export default function SignUp() {
           }
         ]);
       } else {
-        setErrors((prev) => ({
-          ...prev,
-          password: error?.message ?? translate("onboarding.signup.error.failed"),
-        }));
-        Alert.alert(translate("onboarding.signup.error.failed"), error?.message ?? translate("onboarding.signup.error.failed"));
+        if (error.name === "AccountBlockedError") {
+        const { useAuthStore } = require("@/store/auth-store");
+        useAuthStore.getState().setRestricted(true);
+        return;
+      }
+      setErrors((prev) => ({
+        ...prev,
+        password: error?.message ?? translate("onboarding.signup.error.failed"),
+      }));
+      Alert.alert(translate("onboarding.signup.error.failed"), error?.message ?? translate("onboarding.signup.error.failed"));
       }
       setLoading(false);
       isSigningUp.current = false;
@@ -272,11 +277,16 @@ export default function SignUp() {
           }
         ]);
       } else {
-        setErrors((prev) => ({
-          ...prev,
-          password: error?.message ?? translate("onboarding.signup.error.failedManager"),
-        }));
-        Alert.alert(translate("onboarding.signup.error.failedManager"), error?.message ?? translate("onboarding.signup.error.failedManager"));
+        if (error.name === "AccountBlockedError") {
+        const { useAuthStore } = require("@/store/auth-store");
+        useAuthStore.getState().setRestricted(true);
+        return;
+      }
+      setErrors((prev) => ({
+        ...prev,
+        password: error?.message ?? translate("onboarding.signup.error.failedManager"),
+      }));
+      Alert.alert(translate("onboarding.signup.error.failedManager"), error?.message ?? translate("onboarding.signup.error.failedManager"));
       }
       setLoading(false);
       isSigningUp.current = false;
@@ -295,6 +305,11 @@ export default function SignUp() {
       Alert.alert(translate("onboarding.login.welcome"), translate("onboarding.signup.success"));
       router.replace(data.homeRoute ?? "/(user)");
     } catch (error: any) {
+      if (error.name === "AccountBlockedError") {
+        const { useAuthStore } = require("@/store/auth-store");
+        useAuthStore.getState().setRestricted(true);
+        return;
+      }
       setLoadingGoogle(false);
       reset();
       const message =

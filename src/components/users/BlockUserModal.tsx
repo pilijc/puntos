@@ -3,10 +3,9 @@ import { Image, LayoutAnimation, Platform, UIManager, Dimensions, NativeSyntheti
 import { View, Text } from "@/tw";
 import { MaterialIcons } from "@expo/vector-icons";
 import { Modal } from "@/components/modal";
-import { TYPO, COLORS, getBadge } from "./constants";
+import { TYPO, COLORS, getBadge } from "@/type/super-admin/user";
 import { UserRecord } from "@/store/super-admin/user-store";
 import { useSuperAdminStoresStore } from "@/store/super-admin/super-admin-stores-store";
-// ScrollView from RNGH — works now that modal.tsx puts GestureHandlerRootView at the top
 import { ScrollView } from "react-native-gesture-handler";
 
 // Enable LayoutAnimation on Android
@@ -58,8 +57,10 @@ export function BlockUserModal({
   const stores = useMemo(() => {
     if (!selectedUser) return [];
 
-    const fromAdmin = allAdminStores.filter(s => s.owner_id === selectedUser.id);
-    const fromUserStore = Array.isArray(selectedUser.storeInfo) ? selectedUser.storeInfo : [];
+    const fromAdmin = allAdminStores.filter(s => s.owner_id === selectedUser.id && s.status !== "inactive");
+    const fromUserStore = Array.isArray(selectedUser.storeInfo)
+      ? selectedUser.storeInfo.filter((s: any) => s.status && s.status !== "inactive")
+      : [];
 
     const merged = [...fromAdmin];
     fromUserStore.forEach(us => {

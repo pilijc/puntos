@@ -38,3 +38,21 @@ export function getBadge(user: any) {
   if (user.status === "Blocked") return ROLE_CONFIG["Blocked"];
   return ROLE_CONFIG[user.roleLabel] || ROLE_CONFIG["User"];
 }
+
+export const STORE_CATEGORY_CONFIG: Record<string, { bg: string; text: string }> = {
+  "Cafe": { bg: "bg-orange-100 dark:bg-orange-900/30", text: "text-orange-700 dark:text-orange-400" },
+  "Bar & Drinks": { bg: "bg-purple-100 dark:bg-purple-900/30", text: "text-purple-700 dark:text-purple-400" },
+  "Restaurant": { bg: "bg-blue-100 dark:bg-blue-900/30", text: "text-blue-700 dark:text-blue-400" },
+  "Market": { bg: "bg-green-100 dark:bg-green-900/30", text: "text-green-700 dark:text-green-400" },
+  "Shop": { bg: "bg-rose-100 dark:bg-rose-900/30", text: "text-rose-700 dark:text-rose-400" },
+  "Other": { bg: "bg-slate-100 dark:bg-slate-800", text: "text-slate-600 dark:text-slate-400" },
+};
+
+export function getStoreCategoryBadge(type?: string | null) {
+  if (!type) return STORE_CATEGORY_CONFIG["Other"];
+  const normalized = Object.keys(STORE_CATEGORY_CONFIG).find(
+    (k) => k.toLowerCase() === type.toLowerCase()
+  );
+  return STORE_CATEGORY_CONFIG[normalized || "Other"];
+}
+
