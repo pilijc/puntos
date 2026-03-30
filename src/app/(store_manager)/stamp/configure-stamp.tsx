@@ -169,10 +169,7 @@ export default function ConfigureStamp() {
               <View className="gap-y-2">
                 {[
                   "Only 1 stamp program can be active per store at a time.",
-                  "Once created, this program cannot be edited — only ended.",
                   "When you end a program, users cannot earn new stamps, but can still redeem during the grace period.",
-                  "Existing user stamp history is always preserved for reporting.",
-                  "Choose your expiration mode carefully — it cannot be changed after creation.",
                 ].map((rule, i) => (
                   <View key={i} className="flex-row items-start gap-x-2">
                     <Text className="text-amber-500 text-xs mt-0.5">•</Text>
@@ -300,7 +297,7 @@ export default function ConfigureStamp() {
                   key={opt.key}
                   activeOpacity={0.8}
                   onPress={() => setExpirationMode(opt.key)}
-                  className={`rounded-xl border p-4 gap-y-1 ${
+                  className={`rounded-xl border px-4 py-3 gap-y-1 ${
                     selected
                       ? "bg-primary/5 dark:bg-primary/10 border-primary/10"
                       : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700"
