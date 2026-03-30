@@ -44,7 +44,8 @@ export default function UserStreakCard({
   const targetCount = streakProgram?.streak_length ?? 7;
   // If earned today (optimistic or from DB), bump displayed count
   const rawCount = streak.streak_days ?? 0;
-  const clampedCount = Math.min(alreadyEarnedToday ? rawCount : rawCount, targetCount);
+  const displayCount = rawCount + (hasEarnedToday && streak.last_activity_date !== today ? 1 : 0);
+  const clampedCount = Math.min(displayCount, targetCount);
 
   const streakDays = [
     translate("user.rewards.days.mon"),

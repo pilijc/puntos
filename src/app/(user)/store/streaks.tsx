@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { View, Text, Image } from "@/tw";
 import {
   Animated,
@@ -9,70 +9,28 @@ import {
 } from "react-native";
 import Svg, { Circle } from "react-native-svg";
 import { useLocalSearchParams, useRouter } from "expo-router";
-// TODO: Replace mock data with real hook once store manager streak program setup is complete
-// import { useStreaks } from "@/hooks/use-streaks";
 import { useTranslation } from "react-i18next";
 import { storeLogos } from "@/data/rewards";
+import { getUserStreakByStore, UserStreak } from "@/services/streak-service";
+import { supabase } from "@/supabase/supabase";
 import {
   ChevronLeft,
-  ChevronDown,
   Flame,
   Gem,
   Crosshair,
-  Zap,
+  TrendingUp,
   CalendarDays,
   Star,
   Store,
-  TrendingUp,
   CircleCheck,
 } from "lucide-react-native";
 
-// ─── Static mock streak (remove when real data is available) ─────────────────
-// TODO: Remove this mock and use `const { streaks, isLoading } = useStreaks();` instead.
-// The mock simulates a user who is on day 3 of a 7-day streak program.
-const MOCK_STREAKS = [
-  {
-    id: 1,
-    user_id: "mock-user",
-    store_id: 16,
-    streak_days: 3,
-    last_activity_date: new Date(Date.now() - 86400000).toISOString().split("T")[0], // yesterday
-    total_earned_days: 3,
-    points_earned: 30,
-    completion_bonus_awarded: false,
-    completed_at: null,
-    status: "in_progress",
-    store_streak_id: 1,
-    store_streaks: {
-      id: 1,
-      title: "Daily Visit Challenge",
-      streak_length: 7,
-      max_days_cap: 7,
-      fixed_points_per_day: 10,
-      points_mode: "fixed",
-      starting_points: null,
-      increment_value: null,
-      completion_bonus_points: 100,
-      reward_description: "Free coffee after 7 consecutive nearby visits!",
-      status: "active",
-    },
-    stores: {
-      name: "Starbucks",
-      logo: null,
-      address: "SM North EDSA, QC",
-      status: "active",
-      is_active: true,
-    },
-  },
-];
-// ─── Ordinal Suffix Helper ───────────────────────────────────────────────────
 const getOrdinalSuffix = (n: number) => {
   const s = ["th", "st", "nd", "rd"];
   const v = n % 100;
   return s[(v - 20) % 10] || s[v] || s[0];
 };
 
-// ─── Animated Progress Ring ───────────────────────────────────────────────────
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
 function ProgressRing({
@@ -95,9 +53,9 @@ function ProgressRing({
       toValue: progress,
       duration: 1200,
       easing: Easing.out(Easing.cubic),
-      useNativeDriver: false, // SVG props often need non-native driver
+      useNativeDriver: false,
     }).start();
-  }, [progress]);
+  }, [animatedValue, progress]);
 
   const isComplete = progress >= 1;
   const radius = (size - strokeWidth) / 2;
@@ -114,7 +72,6 @@ function ProgressRing({
   return (
     <RNView style={{ width: size, height: size, alignItems: "center", justifyContent: "center" }}>
       <Svg width={size} height={size} style={{ position: "absolute", transform: [{ rotate: "-90deg" }] }}>
-        {/* Background ring */}
         <Circle
           cx={center}
           cy={center}
@@ -123,7 +80,6 @@ function ProgressRing({
           strokeWidth={strokeWidth}
           fill="none"
         />
-        {/* Progress fill */}
         <AnimatedCircle
           cx={center}
           cy={center}
@@ -136,7 +92,6 @@ function ProgressRing({
           fill="none"
         />
       </Svg>
-      {/* Inner content */}
       <View className="items-center">
         <Flame size={24} color={activeColor} />
         <Text className="text-neutral-900 dark:text-white font-poppins-bold text-4xl leading-tight">
@@ -150,7 +105,6 @@ function ProgressRing({
   );
 }
 
-// ─── 14-Day Reconstructed Calendar ───────────────────────────────────────────
 function RecentActivityCalendar({
   streakDays,
   lastActivityDate,
@@ -160,11 +114,7 @@ function RecentActivityCalendar({
 }) {
   const [expanded, setExpanded] = React.useState(false);
   const scrollRef = React.useRef<any>(null);
-
-  // 90 days = ~3 months of scrollable history (good balance: enough history without being overwhelming)
   const STRIP_DAYS = 90;
-  // How many days visible at once in the strip
-  const VISIBLE_DAYS = 14;
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -182,7 +132,6 @@ function RecentActivityCalendar({
   const todayStr = today.toISOString().split("T")[0];
   const dayLabels = ["S", "M", "T", "W", "T", "F", "S"];
 
-  // ── All 90-day strip cells (oldest → today) ──────────────────────────────────
   const allCells = Array.from({ length: STRIP_DAYS }, (_, i) => {
     const d = new Date(today);
     d.setDate(today.getDate() - (STRIP_DAYS - 1 - i));
@@ -197,19 +146,26 @@ function RecentActivityCalendar({
     };
   });
 
-  // ── Full month grid ──────────────────────────────────────────────────────────
   const firstOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
   const startPad = firstOfMonth.getDay();
   const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
   const monthLabel = today.toLocaleString("default", { month: "long", year: "numeric" });
 
-  const Cell = ({ dateStr, day, isToday, earned, isFuture, pad = false }: {
-    dateStr?: string; day?: number; isToday?: boolean; earned?: boolean; isFuture?: boolean; pad?: boolean;
+  const Cell = ({ day, isToday, earned, isFuture, pad = false }: {
+    day?: number;
+    isToday?: boolean;
+    earned?: boolean;
+    isFuture?: boolean;
+    pad?: boolean;
   }) => (
     <RNView
       style={{
-        flex: 1, aspectRatio: 1, margin: 2, borderRadius: 8,
-        alignItems: "center", justifyContent: "center",
+        flex: 1,
+        aspectRatio: 1,
+        margin: 2,
+        borderRadius: 8,
+        alignItems: "center",
+        justifyContent: "center",
         backgroundColor: pad ? "transparent" : earned ? "#FF6600" : isToday && !earned ? "#FFF7ED" : "#f3f4f6",
         borderWidth: !pad && isToday && !earned ? 1.5 : 0,
         borderColor: "#FF6600",
@@ -239,8 +195,13 @@ function RecentActivityCalendar({
       const d = new Date(today.getFullYear(), today.getMonth(), dayNum);
       const dateStr = d.toISOString().split("T")[0];
       cells.push(
-        <Cell key={dateStr} dateStr={dateStr} day={dayNum}
-          isToday={dateStr === todayStr} earned={earnedDates.has(dateStr)} isFuture={d > today} />
+        <Cell
+          key={dateStr}
+          day={dayNum}
+          isToday={dateStr === todayStr}
+          earned={earnedDates.has(dateStr)}
+          isFuture={d > today}
+        />,
       );
     }
     if (cells.length === 7) {
@@ -274,17 +235,14 @@ function RecentActivityCalendar({
     <View>
       {!expanded ? (
         <>
-          {/* Swipeable 90-day compact strip */}
           <ScrollView
             ref={scrollRef}
             horizontal
             showsHorizontalScrollIndicator={false}
-            // Scroll to the end (latest date) on mount
             onLayout={() => scrollRef.current?.scrollToEnd?.({ animated: false })}
             contentContainerStyle={{ paddingBottom: 4 }}
           >
             <View style={{ paddingHorizontal: 2 }}>
-              {/* Day-of-week row */}
               <View className="flex-row mb-1">
                 {allCells.map((cell, i) => (
                   <View key={i} style={{ width: 26, alignItems: "center" }}>
@@ -292,14 +250,17 @@ function RecentActivityCalendar({
                   </View>
                 ))}
               </View>
-              {/* Day cells row */}
               <View className="flex-row">
                 {allCells.map((cell, i) => (
                   <RNView
                     key={i}
                     style={{
-                      width: 22, height: 22, borderRadius: 7, margin: 2,
-                      alignItems: "center", justifyContent: "center",
+                      width: 22,
+                      height: 22,
+                      borderRadius: 7,
+                      margin: 2,
+                      alignItems: "center",
+                      justifyContent: "center",
                       backgroundColor: cell.earned ? "#FF6600" : cell.isToday && !cell.earned ? "#FFF7ED" : "#f3f4f6",
                       borderWidth: cell.isToday && !cell.earned ? 1.5 : 0,
                       borderColor: "#FF6600",
@@ -319,7 +280,6 @@ function RecentActivityCalendar({
             </View>
           </ScrollView>
 
-          {/* Legend + expand button on same row */}
           <View className="flex-row items-center justify-between mt-2">
             <Legend />
             <TouchableOpacity onPress={() => setExpanded(true)}>
@@ -336,8 +296,10 @@ function RecentActivityCalendar({
             </TouchableOpacity>
           </View>
           <View className="flex-row mb-1">
-            {dayLabels.map((l, i) => (
-              <Text key={i} style={{ flex: 1, textAlign: "center", fontSize: 9, color: "#9ca3af", fontWeight: "600" }}>{l}</Text>
+            {dayLabels.map((label, i) => (
+              <Text key={i} style={{ flex: 1, textAlign: "center", fontSize: 9, color: "#9ca3af", fontWeight: "600" }}>
+                {label}
+              </Text>
             ))}
           </View>
           {rows}
@@ -348,60 +310,6 @@ function RecentActivityCalendar({
   );
 }
 
-// ─── Points Breakdown ─────────────────────────────────────────────────────────
-function PointsBreakdown({ streak }: { streak: any }) {
-  const program = streak.store_streaks as any;
-  const streakDays: number = streak.streak_days ?? 0;
-  const totalEarned: number = streak.total_earned_days ?? streakDays;
-  const pointsEarned: number = Number(streak.points_earned ?? 0);
-  const completionBonus: number = Number(program?.completion_bonus_points ?? 0);
-  const bonusAwarded = streak.completion_bonus_awarded;
-
-  const rows: { label: string; value: string; highlight?: boolean; isBold?: boolean }[] = [];
-
-  if (program?.points_mode === "incremental") {
-    const start = Number(program.starting_points ?? 5);
-    const inc = Number(program.increment_value ?? 5);
-    rows.push({ label: "Daily pts (incremental)", value: `${start}→${start + inc * (streakDays - 1)} pts/day` });
-  } else {
-    const daily = Number(program?.fixed_points_per_day ?? 0);
-    if (daily > 0) {
-      rows.push({ label: `${totalEarned} days × ${daily} pts`, value: `${totalEarned * daily} pts` });
-    }
-  }
-
-  if (completionBonus > 0) {
-    rows.push({
-      label: "Completion bonus",
-      value: bonusAwarded ? `+${completionBonus} pts ✓` : `+${completionBonus} pts (on completion)`,
-      highlight: bonusAwarded,
-    });
-  }
-
-  rows.push({ label: "Total earned so far", value: `${pointsEarned} pts`, isBold: true });
-
-  return (
-    <View>
-      {rows.map((row, i) => (
-        <View
-          key={i}
-          className={`flex-row justify-between items-center py-2 ${
-            i < rows.length - 1 ? "border-b border-neutral-100" : "border-t-2 border-neutral-100 mt-1 pt-2.5"
-          }`}
-        >
-          <Text className={`text-xs flex-1 ${row.isBold ? "font-poppins-semibold text-neutral-900 dark:text-white" : "font-poppins text-neutral-500"}`}>
-            {row.label}
-          </Text>
-          <Text className={`text-xs font-poppins-semibold ${row.highlight ? "text-green-600" : row.isBold ? "text-primary" : "text-neutral-700 dark:text-neutral-300"}`}>
-            {row.value}
-          </Text>
-        </View>
-      ))}
-    </View>
-  );
-}
-
-// ─── Program Detail Row ───────────────────────────────────────────────────────
 function DetailRow({
   label,
   value,
@@ -425,7 +333,6 @@ function DetailRow({
   );
 }
 
-// ─── Stat Card ────────────────────────────────────────────────────────────────
 function StatCard({ label, value, icon }: { label: string; value: string; icon: React.ReactNode }) {
   return (
     <View className="flex-1 bg-white dark:bg-darkBackgroundMuted rounded-2xl p-3 items-center border border-neutral-100 dark:border-darkBorder">
@@ -438,7 +345,6 @@ function StatCard({ label, value, icon }: { label: string; value: string; icon: 
   );
 }
 
-// ─── Section Card ────────────────────────────────────────────────────────────
 function SectionCard({ children }: { children: React.ReactNode }) {
   return (
     <View className="bg-white dark:bg-darkBackgroundMuted rounded-3xl p-4 border border-neutral-100 dark:border-darkBorder">
@@ -447,7 +353,6 @@ function SectionCard({ children }: { children: React.ReactNode }) {
   );
 }
 
-// ─── Section Header ───────────────────────────────────────────────────────────
 function SectionHeader({ icon, title, sub }: { icon: React.ReactNode; title: string; sub?: string }) {
   return (
     <View className="flex-row items-center gap-x-2 mb-3">
@@ -458,19 +363,52 @@ function SectionHeader({ icon, title, sub }: { icon: React.ReactNode; title: str
   );
 }
 
-// ─── Main Screen ──────────────────────────────────────────────────────────────
 export default function StoreStreakDetail() {
   const { storeId } = useLocalSearchParams<{ storeId?: string }>();
-  // TODO: Replace MOCK_STREAKS with real hook data:
-  // const { streaks, isLoading } = useStreaks();
-  const streaks = MOCK_STREAKS;
-  const isLoading = false; // TODO: use isLoading from useStreaks()
   const router = useRouter();
   const { t: translate } = useTranslation();
+  const [streak, setStreak] = useState<UserStreak | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const streak = streaks.find((s) => String(s.store_id) === String(storeId)) ?? streaks[0];
-  const program = (streak as any)?.store_streaks;
-  const storeStr = (streak as any)?.stores;
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadStreak = async () => {
+      if (!storeId) {
+        setStreak(null);
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        setIsLoading(true);
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user?.id) {
+          if (!cancelled) {
+            setStreak(null);
+          }
+          return;
+        }
+
+        const data = await getUserStreakByStore(user.id, Number(storeId));
+        if (!cancelled) {
+          setStreak(data);
+        }
+      } finally {
+        if (!cancelled) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    loadStreak();
+    return () => {
+      cancelled = true;
+    };
+  }, [storeId]);
+
+  const program = streak?.store_streaks;
+  const storeStr = streak?.stores;
 
   if (isLoading) {
     return (
@@ -488,6 +426,9 @@ export default function StoreStreakDetail() {
         <Text className="text-base font-poppins-semibold text-neutral-700 dark:text-neutral-300 mt-3">
           No streak found
         </Text>
+        <Text className="text-xs font-poppins text-neutral-500 mt-2 text-center">
+          This store does not have an active streak program available for your account.
+        </Text>
         <TouchableOpacity
           onPress={() => router.back()}
           className="mt-5 px-6 py-2.5 border border-primary rounded-full"
@@ -498,20 +439,25 @@ export default function StoreStreakDetail() {
     );
   }
 
-  const streakDays: number = streak.streak_days ?? 0;
-  const targetDays: number = program?.streak_length ?? 7;
-  const progress = Math.min(streakDays / targetDays, 1);
+  const streakDays = streak.streak_days ?? 0;
+  const targetDays = program?.streak_length ?? 7;
+  const progress = targetDays > 0 ? Math.min(streakDays / targetDays, 1) : 0;
   const daysLeft = Math.max(targetDays - streakDays, 0);
   const isCompleted = streak.status === "completed";
   const storeName = storeStr?.name ?? translate("user.rewards.store");
 
   const getLogoImage = () => {
     if (storeStr?.logo) return { uri: storeStr.logo };
-    if (streak.store_id && storeLogos[String(streak.store_id)])
+    if (streak.store_id && storeLogos[String(streak.store_id)]) {
       return storeLogos[String(streak.store_id)];
+    }
     return null;
   };
+
   const logoImage = getLogoImage();
+  const pointsPerDay = program?.points_mode === "incremental"
+    ? `${Number(program.starting_points ?? 0)} +${Number(program.increment_value ?? 0)}/day`
+    : `${Number(program?.fixed_points_per_day ?? 0)} pts/day`;
 
   return (
     <ScrollView
@@ -519,7 +465,6 @@ export default function StoreStreakDetail() {
       contentContainerStyle={{ paddingBottom: 40 }}
       showsVerticalScrollIndicator={false}
     >
-      {/* ── Header bar (white) ── */}
       <View className="bg-white dark:bg-darkBackgroundMuted flex-row items-center px-4 pt-12 pb-3 border-b border-neutral-100 dark:border-darkBorder">
         <TouchableOpacity onPress={() => router.back()} style={{ padding: 4, marginRight: 8 }}>
           <ChevronLeft size={24} color="#FF6600" />
@@ -529,11 +474,8 @@ export default function StoreStreakDetail() {
         </Text>
       </View>
 
-      {/* ── Store card (white, orange left accent) ── */}
       <View className="bg-white dark:bg-darkBackgroundMuted mx-4 mt-4 rounded-2xl border border-neutral-100 dark:border-darkBorder overflow-hidden">
-        {/* Top Section: Store Info */}
         <View className="flex-row">
-          {/* Orange accent bar on the left */}
           <View className="w-1.5 bg-primary" />
           <View className="flex-row items-center gap-x-3 p-3.5 flex-1">
             <View className="w-11 h-11 rounded-full bg-orange-50 items-center justify-center overflow-hidden border border-orange-100">
@@ -556,7 +498,6 @@ export default function StoreStreakDetail() {
           </View>
         </View>
 
-        {/* Bottom Section: Grand Prize / Completion Bonus Footer */}
         {Number(program?.completion_bonus_points ?? 0) > 0 ? (
           <View className="bg-orange-50/60 dark:bg-darkPrimaryBgMuted/40 px-4 py-2.5 flex-row items-center justify-between border-t border-orange-100/50 dark:border-darkPrimaryBorder/50">
             <Text className="text-[11px] font-poppins text-neutral-600 dark:text-neutral-400">
@@ -565,7 +506,7 @@ export default function StoreStreakDetail() {
             <View className="flex-row items-center gap-x-1.5">
               <Gem size={12} color="#FF6600" />
               <Text className="text-xs font-poppins-bold text-primary">
-                +{program.completion_bonus_points} Bonus
+                +{Number(program.completion_bonus_points)} Bonus
               </Text>
             </View>
           </View>
@@ -576,15 +517,12 @@ export default function StoreStreakDetail() {
             </Text>
             <View className="flex-row items-center gap-x-1.5">
               <Gem size={12} color="#FF6600" />
-              <Text className="text-xs font-poppins-bold text-primary">
-                Reward
-              </Text>
+              <Text className="text-xs font-poppins-bold text-primary">Reward</Text>
             </View>
           </View>
         ) : null}
       </View>
 
-      {/* ── Ring + status (white bg) ── */}
       <View className="bg-white dark:bg-darkBackgroundMuted mx-4 mt-3 rounded-2xl border border-neutral-100 dark:border-darkBorder items-center py-6">
         <ProgressRing
           progress={progress}
@@ -593,30 +531,25 @@ export default function StoreStreakDetail() {
           streakDays={streakDays}
           targetDays={targetDays}
         />
-        {/* Status badge */}
         <View
           className={`flex-row items-center gap-x-1 mt-4 px-4 py-1.5 rounded-full ${
             isCompleted ? "bg-green-50" : "bg-orange-50"
           }`}
         >
-          {isCompleted ? (
-            <CircleCheck size={13} color="#16a34a" />
-          ) : null}
+          {isCompleted ? <CircleCheck size={13} color="#16a34a" /> : null}
           <Text
             className={`text-[11px] font-poppins-semibold ml-0.5 ${
               isCompleted ? "text-green-700" : "text-primary"
             }`}
           >
             {isCompleted
-              ? "Streak Completed! 🎉"
+              ? "Streak Completed!"
               : `${daysLeft} day${daysLeft !== 1 ? "s" : ""} to go`}
           </Text>
         </View>
       </View>
 
       <View className="px-4 pt-3 pb-4 gap-y-3">
-
-        {/* ── Stats Row ── */}
         <View className="flex-row gap-x-2.5">
           <StatCard
             label="Current Streak"
@@ -635,11 +568,8 @@ export default function StoreStreakDetail() {
           />
         </View>
 
-        {/* ── CTA + Completion Bonus (single card, two sections) ── */}
-        {(!isCompleted && daysLeft > 0 || Number(program?.completion_bonus_points ?? 0) > 0) && (
+        {((!isCompleted && daysLeft > 0) || Number(program?.completion_bonus_points ?? 0) > 0) && (
           <View className="bg-white dark:bg-darkBackgroundMuted rounded-3xl border border-neutral-100 dark:border-darkBorder overflow-hidden">
-
-            {/* Section 1: Motivational CTA */}
             {!isCompleted && daysLeft > 0 && (
               <View className="flex-row items-center gap-x-2.5 p-4">
                 <View className="w-10 h-10 rounded-full bg-orange-50 items-center justify-center">
@@ -648,7 +578,7 @@ export default function StoreStreakDetail() {
                 <View className="flex-1">
                   <Text className="text-[13px] font-poppins-semibold text-neutral-900 dark:text-white">
                     {daysLeft === 1
-                      ? "One more visit and you're done! 🏆"
+                      ? "One more visit and you're done!"
                       : `${daysLeft} more visits to complete your streak`}
                   </Text>
                   <Text className="text-[11px] font-poppins text-neutral-500 mt-0.5">
@@ -658,20 +588,17 @@ export default function StoreStreakDetail() {
               </View>
             )}
 
-            {/* Divider */}
             {!isCompleted && daysLeft > 0 && Number(program?.completion_bonus_points ?? 0) > 0 && (
               <View className="h-px bg-neutral-100 dark:bg-darkBorder" />
             )}
 
-            {/* Section 2: Completion Bonus — minimal, persuasive */}
             {Number(program?.completion_bonus_points ?? 0) > 0 && (
               <View className="flex-row items-center justify-end gap-x-3 px-4 py-3">
-                {/* Big icon + stacked text */}
                 <View className="flex-row items-center gap-x-2">
                   <Gem size={28} color="#FF6600" />
                   <View>
                     <Text style={{ fontSize: 13, fontWeight: "700", color: "#FF6600", lineHeight: 17 }}>
-                      {program.completion_bonus_points} bonus pts
+                      {Number(program.completion_bonus_points)} bonus pts
                     </Text>
                     {!isCompleted && (
                       <Text style={{ fontSize: 10, color: "#FF6600", opacity: 0.6, lineHeight: 14 }}>
@@ -681,7 +608,6 @@ export default function StoreStreakDetail() {
                   </View>
                 </View>
 
-                {/* Claim / Locked button */}
                 <TouchableOpacity
                   disabled={!isCompleted}
                   activeOpacity={0.75}
@@ -701,7 +627,6 @@ export default function StoreStreakDetail() {
           </View>
         )}
 
-        {/* ── 14-Day Calendar (expandable) ── */}
         <SectionCard>
           <SectionHeader
             icon={<CalendarDays size={16} color="#FF6600" />}
@@ -711,6 +636,27 @@ export default function StoreStreakDetail() {
           <RecentActivityCalendar
             streakDays={streakDays}
             lastActivityDate={streak.last_activity_date}
+          />
+        </SectionCard>
+
+        <SectionCard>
+          <SectionHeader
+            icon={<Star size={16} color="#FF6600" />}
+            title="Program Details"
+          />
+          <DetailRow label="Points mode" value={program?.points_mode ?? "fixed"} />
+          <DetailRow label="Daily earning" value={pointsPerDay} />
+          <DetailRow
+            label="Bonus reward"
+            value={Number(program?.completion_bonus_points ?? 0) > 0
+              ? `${Number(program?.completion_bonus_points ?? 0)} pts`
+              : (program?.reward_description ?? "None")}
+          />
+          <DetailRow
+            label="Program status"
+            value={program?.status ?? streak.status ?? "in_progress"}
+            isPrimary
+            noBorder
           />
         </SectionCard>
       </View>
