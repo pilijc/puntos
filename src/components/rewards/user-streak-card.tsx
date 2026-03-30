@@ -38,6 +38,7 @@ export default function UserStreakCard({
   // Derive if already earned today from last_activity_date
   const today = new Date().toISOString().split("T")[0];
   const alreadyEarnedToday = streak.last_activity_date === today || hasEarnedToday;
+  const shouldPulseCurrentDay = nearby && !alreadyEarnedToday;
 
   // Real data from backend
   const streakProgram = streak.store_streaks as any;
@@ -84,7 +85,7 @@ export default function UserStreakCard({
   }));
 
   useEffect(() => {
-    if (nearby) {
+    if (shouldPulseCurrentDay) {
       pulseScale.value = withRepeat(
         withSequence(
           withTiming(1.08, { duration: 800 }),
@@ -96,7 +97,7 @@ export default function UserStreakCard({
     } else {
       pulseScale.value = withTiming(1);
     }
-  }, [nearby]);
+  }, [pulseScale, shouldPulseCurrentDay]);
 
   useEffect(() => {
     if (!showStreakModal) {
@@ -269,7 +270,7 @@ export default function UserStreakCard({
                       }
                     }}
                   >
-                    <Animated.View style={[pressAnimatedStyle, nearby && pulseAnimatedStyle]}>
+                    <Animated.View style={[pressAnimatedStyle, shouldPulseCurrentDay && pulseAnimatedStyle]}>
                       <View
                         className={circleClass}
                         style={{

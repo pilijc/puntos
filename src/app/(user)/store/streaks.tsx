@@ -310,29 +310,6 @@ function RecentActivityCalendar({
   );
 }
 
-function DetailRow({
-  label,
-  value,
-  isPrimary,
-  noBorder,
-}: {
-  label: string;
-  value: string;
-  isPrimary?: boolean;
-  noBorder?: boolean;
-}) {
-  return (
-    <View
-      className={`flex-row justify-between items-start py-2 ${noBorder ? "" : "border-b border-neutral-100 dark:border-darkBorder"}`}
-    >
-      <Text className="text-xs font-poppins text-neutral-400 flex-1">{label}</Text>
-      <Text className={`text-xs font-poppins-semibold flex-2 text-right ${isPrimary ? "text-primary" : "text-neutral-900 dark:text-white"}`}>
-        {value}
-      </Text>
-    </View>
-  );
-}
-
 function StatCard({ label, value, icon }: { label: string; value: string; icon: React.ReactNode }) {
   return (
     <View className="flex-1 bg-white dark:bg-darkBackgroundMuted rounded-2xl p-3 items-center border border-neutral-100 dark:border-darkBorder">
@@ -455,9 +432,6 @@ export default function StoreStreakDetail() {
   };
 
   const logoImage = getLogoImage();
-  const pointsPerDay = program?.points_mode === "incremental"
-    ? `${Number(program.starting_points ?? 0)} +${Number(program.increment_value ?? 0)}/day`
-    : `${Number(program?.fixed_points_per_day ?? 0)} pts/day`;
 
   return (
     <ScrollView
@@ -636,27 +610,6 @@ export default function StoreStreakDetail() {
           <RecentActivityCalendar
             streakDays={streakDays}
             lastActivityDate={streak.last_activity_date}
-          />
-        </SectionCard>
-
-        <SectionCard>
-          <SectionHeader
-            icon={<Star size={16} color="#FF6600" />}
-            title="Program Details"
-          />
-          <DetailRow label="Points mode" value={program?.points_mode ?? "fixed"} />
-          <DetailRow label="Daily earning" value={pointsPerDay} />
-          <DetailRow
-            label="Bonus reward"
-            value={Number(program?.completion_bonus_points ?? 0) > 0
-              ? `${Number(program?.completion_bonus_points ?? 0)} pts`
-              : (program?.reward_description ?? "None")}
-          />
-          <DetailRow
-            label="Program status"
-            value={program?.status ?? streak.status ?? "in_progress"}
-            isPrimary
-            noBorder
           />
         </SectionCard>
       </View>
