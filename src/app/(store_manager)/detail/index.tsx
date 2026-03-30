@@ -6,7 +6,7 @@ import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useRouter } from "expo-router";
 import { Image } from "expo-image";
 import Mapbox, { Camera, MapView } from "@rnmapbox/maps";
-import { formatTime } from "@/utils/store_manager/store";
+import { formatTime } from "@/utils/store_manager/store-utils";
 import { useStoreDetail } from "@/hooks/store-manager/use-detail";
 import { FontAwesome, Ionicons } from "@expo/vector-icons";
 import { DetailsSkeleton } from "@/components/skeleton/store_manager/details-skeleton";
