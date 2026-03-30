@@ -30,6 +30,7 @@ export type StampCardProps = {
   doActivate: (programId: number) => void | Promise<void>;
   doEnd: (programId: number, graceDays: number) => void | Promise<void>;
   doDelete: (programId: number) => void | Promise<void>;
+  onEditDraft?: () => void;
   setModal: (modal: StampModalState) => void;
   endingId: number | null;
 };
@@ -48,6 +49,7 @@ export function StampCard({
   doActivate,
   doEnd,
   doDelete,
+  onEditDraft,
   endingId,
 }: StampCardProps) {
   const status = getProgramStatus(stamp);
@@ -298,14 +300,16 @@ export function StampCard({
             </TouchableOpacity>
             <TouchableOpacity
               activeOpacity={0.8}
-              onPress={() =>
-                setModal({
-                  title: "Edit Program",
-                  message: "Edit draft program will be implemented next.",
-                  buttons: [{ label: "OK", onPress: () => setModal(null) }],
-                })
+              onPress={
+                onEditDraft ??
+                (() =>
+                  setModal({
+                    title: "Edit Program",
+                    message: "Edit draft program will be implemented next.",
+                    buttons: [{ label: "OK", onPress: () => setModal(null) }],
+                  }))
               }
-              className="flex-1 h-10 rounded-xl items-center justify-center bg-gray-100"
+              className="flex-1 h-10 rounded-xl items-center justify-center bg-gray-200"
             >
               <Pencil size={16} color="#64748b" />
             </TouchableOpacity>

@@ -51,6 +51,8 @@ export async function createStamp(payload: Omit<Stamp, "id" | "status" | "ended_
       .insert({
         ...payload,
         status: "draft",
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
       });
 
     if (error) throw new Error(error.message);
@@ -87,6 +89,42 @@ export async function createStamp(payload: Omit<Stamp, "id" | "status" | "ended_
   }
 }
 
+export async function getStampProgramById(programId: number): Promise<Stamp | null> {
+  console.log("getStampProgramById", programId);
+  try {
+    const { data, error } = await supabase
+      .from("store_stamps")
+      .select("*")
+      .eq("id", programId)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    return (data ?? null) as Stamp | null;
+  } catch (error) {
+    console.error("Error in getStampProgramById:", error);
+    throw error;
+  }
+}
+
+export async function updateStampProgram(
+  programId: number,
+  payload: Pick<Stamp, "total_stamps" | "reward_id" | "expiration_mode" | "expiration_days">,
+): Promise<void> {
+  try {
+    const { error } = await supabase
+      .from("store_stamps")
+      .update({
+        ...payload,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", programId)
+      .eq("status", "draft");
+    if (error) throw new Error(error.message);
+  } catch (error) {
+    console.error("Error in updateStampProgram:", error);
+    throw error;
+  }
+}
+
 export async function endStampProgram(programId: number, graceDays: number): Promise<void> {
   try {
     const now = new Date();
@@ -96,7 +134,7 @@ export async function endStampProgram(programId: number, graceDays: number): Pro
     const { error } = await supabase
       .from("store_stamps")
       .update({
-        is_active: false,
+        status: "ended",
         ended_at: now.toISOString(),
         redemption_deadline: graceDays > 0 ? redemptionDeadline.toISOString() : null,
       })

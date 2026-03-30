@@ -254,6 +254,12 @@ export default function ViewStamp() {
                 doActivate={doActivate}
                 doEnd={doEnd}
                 doDelete={doDelete}
+                onEditDraft={() =>
+                  router.push({
+                    pathname: "/(store_manager)/stamp/configure-stamp",
+                    params: { storeId, stampId: pid },
+                  })
+                }
                 endingId={endingId}
               />
             );

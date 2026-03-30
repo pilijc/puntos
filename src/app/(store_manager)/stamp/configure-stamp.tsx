@@ -10,7 +10,7 @@ import { useRouter, useLocalSearchParams, useFocusEffect } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Image } from "expo-image";
 import { useStampConfigureViewStore, useStampStore } from "@/store/store-manager/stamp-store";
-import { createStamp } from "@/services/store-manager/stamp-service";
+import { createStamp, getStampProgramById, updateStampProgram } from "@/services/store-manager/stamp-service";
 import { getRewardsByStoreId } from "@/services/store-manager/reward-service";
 import { EXPIRATION_OPTIONS } from "@/type/store-manager/stamp";
 import { AppHeader } from "@/components/header";
@@ -21,7 +21,9 @@ import { Info, Pin, Gift, Check, CheckCircle2, Timer } from "lucide-react-native
 export default function ConfigureStamp() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { storeId } = useLocalSearchParams<{ storeId: string }>();
+  const { storeId, stampId } = useLocalSearchParams<{ storeId: string; stampId?: string }>();
+  const isEdit = !!stampId;
+  const programId = stampId ? Number(stampId) : null;
   const {
     total_stamps,
     reward_id,
@@ -57,6 +59,55 @@ export default function ConfigureStamp() {
     }, [storeId, setRewards])
   );
 
+  useFocusEffect(
+    useCallback(() => {
+      if (!isEdit || !programId) return;
+      let cancelled = false;
+      getStampProgramById(programId)
+        .then((program) => {
+          if (cancelled) return;
+          if (!program) throw new Error("Stamp program not found.");
+          if (String(program.store_id) !== String(storeId)) {
+            throw new Error("Invalid stamp program for this store.");
+          }
+          if (program.status !== "draft") throw new Error("Only draft stamp programs can be edited.");
+
+          setTotalStamps(program.total_stamps ?? 0);
+          setRewardId(program.reward_id != null ? String(program.reward_id) : "");
+          setExpirationMode(program.expiration_mode ?? "none");
+          setExpirationDays(program.expiration_days ?? 30);
+        })
+        .catch((e) => {
+          setModal({
+            title: "Cannot Edit",
+            message: (e as Error).message ?? "This stamp program cannot be edited.",
+            buttons: [
+              {
+                label: "OK",
+                onPress: () => {
+                  setModal(null);
+                  router.push({ pathname: "/(store_manager)/stamp", params: { storeId } });
+                },
+              },
+            ],
+          });
+        });
+      return () => {
+        cancelled = true;
+      };
+    }, [
+      isEdit,
+      programId,
+      storeId,
+      router,
+      setModal,
+      setTotalStamps,
+      setRewardId,
+      setExpirationMode,
+      setExpirationDays,
+    ])
+  );
+
   const handleSave = async () => {
     if (!total_stamps || total_stamps < 1) {
       setModal({
@@ -85,17 +136,26 @@ export default function ConfigureStamp() {
 
     setIsSubmitting(true);
     try {
-      await createStamp({
-        store_id: storeId,
-        total_stamps,
-        reward_id,
-        expiration_mode,
-        expiration_days: expiration_mode === "card" ? expiration_days : null,
-      });
+      if (isEdit && programId) {
+        await updateStampProgram(programId, {
+          total_stamps,
+          reward_id,
+          expiration_mode,
+          expiration_days: expiration_mode === "card" ? expiration_days : null,
+        });
+      } else {
+        await createStamp({
+          store_id: storeId,
+          total_stamps,
+          reward_id,
+          expiration_mode,
+          expiration_days: expiration_mode === "card" ? expiration_days : null,
+        });
+      }
       reset();
       setModal({
         title: "Success",
-        message: "Stamp program created successfully!",
+        message: isEdit ? "Stamp program updated successfully!" : "Stamp program created successfully!",
         buttons: [{
           label: "OK",
           onPress: () => {
@@ -137,7 +197,7 @@ export default function ConfigureStamp() {
         buttons={modal?.buttons}
       />
       <AppHeader
-        title="New Stamp Program"
+        title={isEdit ? "Edit Stamp Program" : "New Stamp Program"}
         paddingTop={insets.top + 8}
         onBackPress={() => router.push({ pathname: "/(store_manager)/stamp", params: { storeId } })}
       />
@@ -384,7 +444,7 @@ export default function ConfigureStamp() {
 
           <View className="gap-y-3">
             <Button
-              label="Launch Stamp Program"
+              label={isEdit ? "Save Changes" : "Launch Stamp Program"}
               onPress={handleSave}
               disabled={isSubmitting}
               variant="primary"
