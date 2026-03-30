@@ -7,6 +7,7 @@ import { ScreenWrapper } from "@/components/ui/screen-wrapper";
 import { Button } from "@/components/button";
 import { AdminStoreRow } from "@/services/store-service";
 import { ImageViewerModal } from "@/components/ui/image-viewer-modal";
+import { getStoreCategoryBadge } from "@/type/super-admin/user";
 
 const twConfig = require("../../../../tailwind.config.js");
 const twColors = twConfig.theme.extend.colors;
@@ -114,8 +115,8 @@ export function AdminStoreDetails({
             <FieldLabel>STORE TYPE</FieldLabel>
             <FieldCard noPad>
               {store.type ? (
-                <View className="bg-orange-50 dark:bg-orange-900/20 border border-dashed border-primary rounded-full px-3.5 py-1.5 self-start m-1">
-                  <Text className="text-xs font-poppins-medium text-primary">{store.type}</Text>
+                <View className={`${getStoreCategoryBadge(store.type).bg} rounded-full px-3.5 py-1.5 self-start m-1`}>
+                  <Text className={`text-xs font-poppins-semibold ${getStoreCategoryBadge(store.type).text}`}>{store.type}</Text>
                 </View>
               ) : (
                 <Text className="text-sm font-poppins-medium text-textMuted p-1">—</Text>
