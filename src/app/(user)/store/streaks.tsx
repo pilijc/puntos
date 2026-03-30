@@ -614,7 +614,7 @@ export default function StoreStreakDetail() {
         </View>
       </View>
 
-      <View className="p-4 gap-y-3">
+      <View className="px-4 pt-3 pb-4 gap-y-3">
 
         {/* ── Stats Row ── */}
         <View className="flex-row gap-x-2.5">
