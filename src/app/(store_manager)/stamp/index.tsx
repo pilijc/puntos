@@ -10,6 +10,7 @@ import {
   getCollectorsCountByProgramId,
   endStampProgram,
   activateStampProgram,
+  deleteStampProgram,
 } from "@/services/store-manager/stamp-service";
 import { Tabs, CollectorSlice, emptyCollectorSlice } from "@/type/store-manager/stamp";
 import { Button } from "@/components/button";
@@ -71,6 +72,19 @@ export default function ViewStamp() {
       });
     } finally {
       setEndingId(null);
+    }
+  };
+  
+  const doDelete = async (programId: number) => {
+    try {
+      await deleteStampProgram(programId);
+      load();
+    } catch (e) {
+      setModal({
+        title: "Error",
+        message: (e as Error).message ?? "Failed to delete program.",
+        buttons: [{ label: "OK", variant: "secondary", onPress: () => setModal(null) }],
+      });
     }
   };
 
@@ -217,13 +231,6 @@ export default function ViewStamp() {
                   : "Ended stamp programs will appear here."}
             </Text>
           </View>
-          {activeTab !== "ended" && (
-            <Button
-              label="Create Stamp Program"
-              onPress={() => router.push({ pathname: "/(store_manager)/stamp/configure-stamp", params: { storeId } })}
-              variant="primary"
-            />
-          )}
         </View>
       ) : (
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 16, gap: 12 }}>
@@ -246,6 +253,7 @@ export default function ViewStamp() {
                 activeProgramCount={activeStamps.length}
                 doActivate={doActivate}
                 doEnd={doEnd}
+                doDelete={doDelete}
                 endingId={endingId}
               />
             );

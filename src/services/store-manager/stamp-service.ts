@@ -186,6 +186,19 @@ export async function getCollectorsByProgramId(
   }
 }
 
+export async function deleteStampProgram(programId: number): Promise<void> {
+  try {
+    const { error } = await supabase
+      .from("store_stamps")
+      .delete()
+      .eq("id", programId);
+    if (error) throw new Error(error.message);
+  } catch (error) {
+    console.error("Error in deleteStampProgram:", error);
+    throw error;
+  }
+}
+
 export async function getStampCollectorsByStoreId(storeId: string): Promise<StampCollector[]> {
   return [];
 }

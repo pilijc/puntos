@@ -26,10 +26,11 @@ export type StampCardProps = {
   programId: number;
   setCollectorByProgram: Dispatch<SetStateAction<Record<number, CollectorSlice>>>;
   loadCollectorsFirstPage: (programId: number) => void;
-  setModal: (modal: StampModalState) => void;
   activeProgramCount: number;
   doActivate: (programId: number) => void | Promise<void>;
   doEnd: (programId: number, graceDays: number) => void | Promise<void>;
+  doDelete: (programId: number) => void | Promise<void>;
+  setModal: (modal: StampModalState) => void;
   endingId: number | null;
 };
 
@@ -46,6 +47,7 @@ export function StampCard({
   activeProgramCount,
   doActivate,
   doEnd,
+  doDelete,
   endingId,
 }: StampCardProps) {
   const status = getProgramStatus(stamp);
@@ -282,9 +284,12 @@ export function StampCard({
               activeOpacity={0.8}
               onPress={() =>
                 setModal({
-                  title: "Delete Program",
-                  message: "Delete draft program will be implemented next.",
-                  buttons: [{ label: "OK", onPress: () => setModal(null) }],
+                  title: "Delete Stamp Program",
+                  message: "Are you sure you want to delete this stamp program?",
+                  buttons: [
+                    { label: "Cancel", variant: "secondary", onPress: () => setModal(null) },
+                    { label: "Delete", variant: "danger", onPress: () => { setModal(null); doDelete(stamp.id!) } },
+                  ],
                 })
               }
               className="flex-1 h-10 rounded-xl items-center justify-center bg-red-100"
