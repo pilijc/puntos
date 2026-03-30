@@ -155,7 +155,6 @@ export async function createQRTransaction(
   }
 
   // Decrease the stored_amount in points table
-   
 
   // Award a stamp if the store has the program enabled (do this BEFORE QR transaction so real-time listeners fetching stamps get the latest data)
   await addStamp(userId, storeId);
