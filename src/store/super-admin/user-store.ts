@@ -10,6 +10,8 @@ import {
   toggleUserBlockStatus 
 } from "@/services/super-admin/user-admin-service";
 
+export type { UserRoleTab, AccountStatusFilter, UserRecord };
+
 const PAGE_SIZE = 20;
 const STATUS_FILTER_WINDOW = 100;
 

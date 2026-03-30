@@ -114,8 +114,8 @@ export function AdminStoreDetails({
             <FieldLabel>STORE TYPE</FieldLabel>
             <FieldCard noPad>
               {store.type ? (
-                <View className="bg-primary rounded-full px-3.5 py-1.5 self-start m-1">
-                  <Text className="text-xs font-poppins-bold text-white">{store.type}</Text>
+                <View className="bg-orange-50 dark:bg-orange-900/20 border border-dashed border-primary rounded-full px-3.5 py-1.5 self-start m-1">
+                  <Text className="text-xs font-poppins-medium text-primary">{store.type}</Text>
                 </View>
               ) : (
                 <Text className="text-sm font-poppins-medium text-textMuted p-1">—</Text>
@@ -318,8 +318,8 @@ export function AdminStoreDetails({
           <SectionHeader title="Location Details" />
           <View className="mb-2.5">
             <FieldLabel>LANDMARK / ADDRESS</FieldLabel>
-            <View className="bg-white dark:bg-darkBackgroundCard rounded-xl p-3 flex-row items-start gap-2.5">
-              <View className="mt-0.5"><MaterialIcons name="location-on" size={20} color="#FF6600" /></View>
+            <View className="bg-white dark:bg-darkBackgroundCard rounded-xl p-3 flex-row items-center gap-2.5">
+              <View><MaterialIcons name="location-on" size={20} color="#FF6600" /></View>
               <Text className="flex-1 text-[13px] font-poppins-medium text-textPrimary dark:text-darkTextPrimary leading-5">
                 {store.address || "—"}
               </Text>

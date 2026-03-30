@@ -35,16 +35,19 @@ export function UsersSearchHeader({
       <TouchableOpacity
         activeOpacity={1}
         onPress={() => searchInputRef.current?.focus()}
-        className="flex-row items-center bg-backgroundMuted rounded-xl px-3 mb-4 h-10 border border-slate-200/50"
+        className="flex-row items-center bg-backgroundMuted rounded-xl px-3.5 mb-4 h-11 border border-slate-200/50 w-full overflow-hidden"
       >
-        <Feather name="search" size={14} color={COLORS.textMuted} style={{ marginRight: 8 }} />
+        <Feather name="search" size={16} color={COLORS.textMuted} style={{ marginRight: 10 }} />
         <TextInput
           ref={searchInputRef}
-          className="flex-1 text-[13px] font-poppins text-textPrimary"
+          className="flex-1 text-[14px] font-poppins text-textPrimary h-full py-0 m-0"
+          style={{ paddingTop: 0, paddingBottom: 0 }}
           placeholder="Search..."
           placeholderTextColor={COLORS.textMuted}
           value={search}
           onChangeText={onSearchChange}
+          autoCapitalize="none"
+          autoCorrect={false}
         />
       </TouchableOpacity>
 
