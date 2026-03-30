@@ -10,8 +10,8 @@ import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useFocusEffect } from "expo-router";
 import { AdminStoreRow } from "@/services/store-service";
 import { useSuperAdminStoresStore } from "@/store/super-admin/super-admin-stores-store";
-import { AdminStoreCard, AdminStoreSkeletonCard } from "@/components/stores/admin-store-card";
-import { AdminStoreDetails } from "@/components/stores/admin-store-details";
+import { AdminStoreCard, AdminStoreSkeletonCard } from "@/components/users/stores/admin-store-card";
+import { AdminStoreDetails } from "@/components/users/stores/admin-store-details";
 
 // ── Constants ───────────────────────────────────────────────────────────────
 const FILTERS = ["All", "pending_review", "active", "inactive"] as const;

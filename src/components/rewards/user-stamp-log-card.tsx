@@ -110,7 +110,7 @@ export default function UserStampLogCard({
             <TouchableOpacity
               onPress={(e) => {
                 e.stopPropagation();
-                router.push("/store/streaks");
+                router.push("/store/stamps");
               }}
               className="px-2 py-1"
             >
