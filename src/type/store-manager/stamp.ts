@@ -103,3 +103,47 @@ export const EXPIRATION_OPTIONS: { key: ExpirationMode; label: string; descripti
     icon: "timer",
   },
 ];
+
+export const STATUS_BADGE: Record<
+  ProgramStatus,
+  { label: string; color: string; dot: string; text: string }
+> = {
+  active: {
+    label: "Active",
+    color: "bg-emerald-50 dark:bg-emerald-900/20",
+    dot: "bg-emerald-500",
+    text: "text-emerald-600 dark:text-emerald-400",
+  },
+  ended_grace: {
+    label: "Grace Period",
+    color: "bg-amber-50 dark:bg-amber-900/20",
+    dot: "bg-amber-400",
+    text: "text-amber-600 dark:text-amber-400",
+  },
+  ended_expired: {
+    label: "Expired",
+    color: "bg-slate-100 dark:bg-slate-700",
+    dot: "bg-slate-400",
+    text: "text-slate-500 dark:text-slate-400",
+  },
+};
+
+export type CollectorSlice = {
+  collectorsOpen: boolean;
+  collectors: StampCollector[];
+  collectorsCount: number;
+  collectorsPage: number;
+  collectorsLoading: boolean;
+  loadingMore: boolean;
+  hasLoadedCollectorsOnce: boolean;
+};
+
+export const emptyCollectorSlice = (): CollectorSlice => ({
+  collectorsOpen: false,
+  collectors: [],
+  collectorsCount: 0,
+  collectorsPage: 0,
+  collectorsLoading: false,
+  loadingMore: false,
+  hasLoadedCollectorsOnce: false,
+});
