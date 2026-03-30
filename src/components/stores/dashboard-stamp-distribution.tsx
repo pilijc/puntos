@@ -17,7 +17,7 @@ export function DashboardStampDistribution({
 
     if (buckets.length === 0) {
         return (
-            <View className="bg-white dark:bg-darkBackgroundCard rounded-[20px] p-5 elevation-1 mb-[14px] border border-transparent dark:border-darkBorder">
+            <View className="bg-white dark:bg-darkBackgroundCard rounded-xl p-5 elevation-1 mb-[14px] border border-transparent dark:border-darkBorder">
                 <Text className="text-lg font-poppins-bold text-textPrimary dark:text-darkTextPrimary leading-6">
                     {translate("storeManager.dashboard.stampProgress.title")}
                 </Text>
@@ -29,10 +29,10 @@ export function DashboardStampDistribution({
     }
 
     const totalUsers = buckets.reduce((sum, b) => sum + b.count, 0);
-    const colors = ["#FED7AA", "#FDBA74", "#FB923C", "#FF6600"];
+    const colors = ["#FFEDD5", "#FED7AA", "#FDBA74", "#FB923C", "#FF6600"];
 
     return (
-        <View className="bg-white dark:bg-darkBackgroundCard rounded-[20px] p-5 elevation-1 mb-[14px] border border-transparent dark:border-darkBorder">
+        <View className="bg-white dark:bg-darkBackgroundCard rounded-xl p-5 elevation-1 mb-[14px] border border-transparent dark:border-darkBorder">
             <Text className="text-lg font-poppins-bold text-textPrimary dark:text-darkTextPrimary leading-6">
                 {translate("storeManager.dashboard.stampProgress.title")}
             </Text>

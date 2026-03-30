@@ -50,13 +50,21 @@ export default function StoreManagerDashboard() {
         retention,
         stampBuckets,
         stampMaxStamps,
-        loading: metricsLoading
+        loading: metricsLoading,
+        refresh: refreshMetrics
     } = useStoreDashboardMetrics(
         selectedStore?.id ?? 0,
         selectedStore?.latitude ?? null,
         selectedStore?.longitude ?? null,
         selectedStore?.radius ?? 100
     );
+
+    const handleRefresh = useCallback(async () => {
+        await Promise.all([
+            refresh(true),
+            refreshMetrics(false) // false because refreshControl already has its own loader
+        ]);
+    }, [refresh, refreshMetrics]);
 
     //memo so labels dont recalculate on every render
     const dayLabels = useMemo(() => getLast7Labels(), []);
@@ -71,7 +79,7 @@ export default function StoreManagerDashboard() {
                 refreshControl={
                     <RefreshControl
                         refreshing={refreshing}
-                        onRefresh={refresh}
+                        onRefresh={handleRefresh}
                         tintColor="#ff6600"
                         colors={["#ff6600"]}
                     />
@@ -127,23 +135,12 @@ export default function StoreManagerDashboard() {
                             loading={metricsLoading}
                         />
 
-                        <View className="bg-white dark:bg-darkBackgroundCard rounded-[20px] p-5 elevation-1 mb-[14px] border border-transparent dark:border-darkBorder">
-                            <View className="flex-row justify-between items-start mb-5">
-                                <View>
-                                    <Text className="text-lg font-poppins-bold text-textPrimary dark:text-darkTextPrimary leading-6">
-                                        {translate("storeManager.dashboard.activity.title")}
-                                    </Text>
-                                    <Text className="text-[12px] font-poppins text-textMuted dark:text-darkTextMuted mt-0.5">
-                                        {weekRange}
-                                    </Text>
-                                </View>
-                            </View>
-                            <DashboardActivityChart
-                                data={weeklyActivity}
-                                labels={dayLabels}
-                                loading={metricsLoading}
-                            />
-                        </View>
+                        <DashboardActivityChart
+                            data={weeklyActivity}
+                            labels={dayLabels}
+                            loading={metricsLoading}
+                            weekRange={weekRange}
+                        />
 
                         <DashboardStampDistribution
                             buckets={stampBuckets}

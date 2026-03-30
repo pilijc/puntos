@@ -16,7 +16,7 @@ export const DashboardMetricTile: React.FC<DashboardMetricTileProps> = ({
     const IconComponent = icon as React.ElementType;
 
     return (
-        <View className="bg-white dark:bg-darkBackgroundCard rounded-[20px] p-3 flex-row items-center gap-[10px] flex-1 elevation-1 border border-transparent dark:border-darkBorder">
+        <View className="bg-white dark:bg-darkBackgroundCard rounded-xl p-3 flex-row items-center gap-[10px] flex-1 elevation-1 border border-transparent dark:border-darkBorder">
             <View className="w-10 h-10 rounded-full bg-[#f8fafc] dark:bg-darkBackgroundMuted items-center justify-center">
                 <IconComponent
                     size={20}

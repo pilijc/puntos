@@ -24,11 +24,11 @@ export function DashboardRetentionChart({ data, loading }: Props) {
     const dashOffset = circumference - (returningPercent / 100) * circumference;
 
     return (
-        <View className="bg-white dark:bg-darkBackgroundCard rounded-[20px] p-5 elevation-1 mb-[14px] border border-transparent dark:border-darkBorder">
+        <View className="bg-white dark:bg-darkBackgroundCard rounded-xl p-5 elevation-1 mb-[8px] border border-transparent dark:border-darkBorder">
             <Text className="text-lg font-poppins-bold text-textPrimary dark:text-darkTextPrimary leading-6">
                 {translate("storeManager.dashboard.retention.title")}
             </Text>
-            <Text className="text-xs font-poppins text-textMuted dark:text-darkTextMuted mt-0.5 mb-5">
+            <Text className="text-xs font-poppins text-textMuted dark:text-darkTextMuted mt-0.5">
                 {translate("storeManager.dashboard.retention.subtitle")}
             </Text>
 
@@ -36,7 +36,7 @@ export function DashboardRetentionChart({ data, loading }: Props) {
                 <DashboardRetentionChartSkeleton />
             ) : (
                 <React.Fragment key="content-reten">
-                    <View className="items-center justify-center my-4">
+                    <View className="items-center justify-center my-3">
                         <View style={{ width: size, height: size, position: "relative" }}>
                             <Svg width={size} height={size}>
                                 <Circle
@@ -72,7 +72,7 @@ export function DashboardRetentionChart({ data, loading }: Props) {
                         </View>
                     </View>
 
-                    <View className="gap-[8px]">
+                    <View className="gap-[4px] mt-4">
                         <View className="flex-row justify-between items-center">
                             <View className="flex-row items-center gap-[8px]">
                                 <View className="w-[10px] h-[10px] rounded-full bg-primary" />

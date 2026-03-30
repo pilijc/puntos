@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
     getStoreMetrics,
     getRetentionData,
@@ -15,7 +15,7 @@ export function useStoreDashboardMetrics(
     const [activeUsers, setActiveUsers] = useState(0);
     const [todayTransactions, setTodayTransactions] = useState(0);
     const [weeklyActivity, setWeeklyActivity] = useState<number[]>([0, 0, 0, 0, 0, 0, 0]);
-    const [weeklyStampsActivity, setWeeklyStampsActivity] = useState<number[]>([0, 0, 0, 0, 0, 0, 0]);
+
     const [retention, setRetention] = useState<RetentionData>({
         returningCount: 0,
         newCount: 0,
@@ -26,49 +26,49 @@ export function useStoreDashboardMetrics(
     const [stampBuckets, setStampBuckets] = useState<StampBucket[]>([]);
     const [stampMaxStamps, setStampMaxStamps] = useState(0);
 
-    useEffect(() => {
-        let isMounted = true;
+    const fetchMetrics = useCallback(async (showSkeleton = true) => {
+        if (!storeId) return;
+        if (showSkeleton) setLoading(true);
 
-        async function fetchMetrics() {
-            if (!storeId) return;
-            setLoading(true);
+        try {
+            const [metricsData, retentionData, stampDistData] = await Promise.all([
+                getStoreMetrics(storeId, lat, lng, radius),
+                getRetentionData(storeId),
+                getStampDistribution(storeId),
+            ]);
 
-            try {
-                const [metricsData, retentionData, stampDistData] = await Promise.all([
-                    getStoreMetrics(storeId, lat, lng, radius),
-                    getRetentionData(storeId),
-                    getStampDistribution(storeId),
-                ]);
+            setActiveUsers(metricsData.activeUsers);
+            setTodayTransactions(metricsData.todayTransactions);
+            setWeeklyActivity(metricsData.weeklyActivity);
 
-                if (isMounted) {
-                    setActiveUsers(metricsData.activeUsers);
-                    setTodayTransactions(metricsData.todayTransactions);
-                    setWeeklyActivity(metricsData.weeklyActivity);
-                    setWeeklyStampsActivity(metricsData.weeklyStampsActivity);
-                    setRetention(retentionData);
-                    setStampBuckets(stampDistData.buckets);
-                    setStampMaxStamps(stampDistData.maxStamps);
-                    setLoading(false);
-                }
-            } catch (error) {
-                console.error("Error fetching store dashboard metrics:", error);
-                if (isMounted) setLoading(false);
-            }
+            setRetention(retentionData);
+            setStampBuckets(stampDistData.buckets);
+            setStampMaxStamps(stampDistData.maxStamps);
+        } catch (error) {
+            console.error("Error fetching store dashboard metrics:", error);
+        } finally {
+            setLoading(false);
         }
-
-        fetchMetrics();
-
-        return () => { isMounted = false; };
     }, [storeId, lat, lng, radius]);
+
+    useEffect(() => {
+        if (storeId) {
+            setLoading(true);
+        }
+    }, [storeId]);
+
+    useEffect(() => {
+        fetchMetrics(true);
+    }, [fetchMetrics]);
 
     return {
         activeUsers,
         todayTransactions,
         weeklyActivity,
-        weeklyStampsActivity,
         retention,
         stampBuckets,
         stampMaxStamps,
         loading,
+        refresh: fetchMetrics
     };
 }

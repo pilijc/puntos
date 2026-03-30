@@ -1,6 +1,20 @@
 import { supabase } from "@/supabase/supabase";
 import * as turf from "@turf/turf";
-import { RetentionData, StampBucket } from "@/type/store-manager/metric"
+import { RetentionData, StampBucket } from "@/type/store-manager/metric";
+
+function getLocalDateRange(): { today: string; sevenDaysAgo: string } {
+    const now = new Date();
+
+    //en-CA give YYYY-MM-DD format
+    const todayStr = now.toLocaleDateString("en-CA");
+
+    const sevenDaysAgoDate = new Date(now);
+    sevenDaysAgoDate.setDate(sevenDaysAgoDate.getDate() - 6);
+    const sevenDaysAgoStr = sevenDaysAgoDate.toLocaleDateString("en-CA");
+
+    return { today: todayStr, sevenDaysAgo: sevenDaysAgoStr };
+}
+
 export async function getStoreMetrics(
     storeId: number,
     lat: number | null,
@@ -10,7 +24,6 @@ export async function getStoreMetrics(
     let activeUserCount = 0;
     let todayTxCount = 0;
     let weeklyActivity = [0, 0, 0, 0, 0, 0, 0];
-    let weeklyStampsActivity = [0, 0, 0, 0, 0, 0, 0];
 
     try {
         if (lat !== null && lng !== null) {
@@ -41,54 +54,36 @@ export async function getStoreMetrics(
             }
         }
 
-        const startOfToday = new Date();
-        startOfToday.setUTCHours(0, 0, 0, 0);
+        // weekly activity & todays scans
+        const { today, sevenDaysAgo } = getLocalDateRange();
 
-        const sevenDaysAgo = new Date(startOfToday);
-        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
-
-        const { data: txData, error: txError } = await supabase
-            .from("purchases")
-            .select("created_at, user:user_id!inner( user_roles!inner(role_id) )")
+        const { data: dailyData, error: dailyError } = await supabase
+            .from("store_daily_metrics")
+            .select("metric_date, scans_count")
             .eq("store_id", storeId)
-            .gte("created_at", sevenDaysAgo.toISOString())
-            .eq("user.user_roles.role_id", 4);
-        
-        if (!txError && txData) {
-            txData.forEach(tx => {
-                const txDate = new Date(tx.created_at);
-                txDate.setUTCHours(0, 0, 0, 0);
-                
-                const diffTime = startOfToday.getTime() - txDate.getTime();
-                const diffDays = Math.floor((diffTime / (1000 * 60 * 60 * 24)) + 0.1);
-                
-                if (diffDays >= 0 && diffDays < 7) {
-                    weeklyActivity[6 - diffDays]++;
-                }
+            .gte("metric_date", sevenDaysAgo)
+            .lte("metric_date", today)
+            .order("metric_date", {ascending: true});
+
+        if(!dailyError && dailyData) {
+            //builds map for quick lookup {2026-03-30: 5, .....}
+            const scansByDate: Record<string, number> = {};
+            dailyData.forEach(row => {
+                scansByDate[row.metric_date] = row.scans_count;
             });
+
+            const sevenDaysAgoDate = new Date();
+            sevenDaysAgoDate.setDate(sevenDaysAgoDate.getDate() - 6);
+
+            for (let i = 0; i < 7; i++) {
+                const dateObj = new Date(sevenDaysAgoDate);
+                dateObj.setDate(sevenDaysAgoDate.getDate() + i);
+                const dateStr = dateObj.toLocaleDateString("en-CA");
+                weeklyActivity[i] = scansByDate[dateStr] ?? 0;
+            }
+
             todayTxCount = weeklyActivity[6];
         }
-
-        const { data: stampData, error: stampError } = await supabase
-            .from("stamp_events")
-            .select("created_at")
-            .eq("store_id", storeId)
-            .gte("created_at", sevenDaysAgo.toISOString());
-        
-        if (!stampError && stampData) {
-            stampData.forEach(stamp => {
-                const stampDate = new Date(stamp.created_at);
-                stampDate.setUTCHours(0, 0, 0, 0);
-
-                const diffTime = startOfToday.getTime() - stampDate.getTime();
-                const diffDays = Math.floor((diffTime / (1000 * 60 * 60 * 24)) + 0.1);
-
-                if (diffDays >= 0 && diffDays < 7) {
-                    weeklyStampsActivity[6 - diffDays]++;
-                }
-            });
-        }
-
     } catch (error) {
         console.error("Dashboard metrics error:", error);
     }
@@ -97,40 +92,28 @@ export async function getStoreMetrics(
         activeUsers: activeUserCount,
         todayTransactions: todayTxCount,
         weeklyActivity: weeklyActivity,
-        weeklyStampsActivity: weeklyStampsActivity
     };
 }
 
-
 export async function getRetentionData(storeId: number): Promise<RetentionData> {
-    const {data, error} = await supabase
-        .from("purchases")
-        .select("user_id")
-        .eq("store_id", storeId)
-        .not("user_id", "is", null);
+    const { data, error } = await supabase
+        .from("store_user_loyalty")
+        .select("purchase_count")
+        .eq("store_id", storeId);
 
     if (error || !data) {
         console.error("Error fetching retention data:", error);
-        return {returningCount: 0, newCount: 0, returningPercent: 0, newPercent: 0};
+        return { returningCount: 0, newCount: 0, returningPercent: 0, newPercent: 0 };
     }
 
-    const purchaseCounts: Record<string, number> = {};
-    data.forEach((row) => {
-        if (row.user_id) {
-            purchaseCounts[row.user_id] = (purchaseCounts[row.user_id] ?? 0) + 1;
-        }
-    });
-
-    const allUsers = Object.values(purchaseCounts);
-    const total = allUsers.length;
-
-    const returningCount = allUsers.filter((count) => count > 1).length;
+    const total = data.length;
+    const returningCount = data.filter(row => row.purchase_count > 1).length;
     const newCount = total - returningCount;
 
     const returningPercent = total > 0 ? Math.round((returningCount / total) * 100) : 0;
     const newPercent = total > 0 ? 100 - returningPercent : 0;
 
-     return { returningCount, newCount, returningPercent, newPercent };
+    return { returningCount, newCount, returningPercent, newPercent };
 }
 
 export async function getStampDistribution(storeId: number): Promise<{
@@ -160,9 +143,9 @@ export async function getStampDistribution(storeId: number): Promise<{
         return { buckets: [], maxStamps };
     }
 
-    // group into ~4 buckets based on maxStamps
+    // group into ~5 buckets based on maxStamps
     // split 0..maxStamps into equal segments
-    const BUCKET_COUNT = 4;
+    const BUCKET_COUNT = maxStamps < 5 ? maxStamps : 5;
     const segmentSize = Math.ceil(maxStamps / BUCKET_COUNT);
 
     // initialize buckets

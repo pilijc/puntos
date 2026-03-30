@@ -11,6 +11,7 @@ export interface DashboardMetricTileProps {
 export interface DashboardActivityChartProps {
     data: number[];
     labels: string[];
+    weekRange: string;
     loading?: boolean;
 }
 
@@ -41,4 +42,17 @@ export interface StampDistributionProps {
     buckets: StampBucket[];
     maxStamps: number;
     loading?: boolean;
+}
+
+export interface StoreDailyMetric {
+    id: string;
+    store_id: number;
+    metric_date: string;
+    scans_count: number;
+}
+
+export interface StoreUserLoyalty {
+    store_id: number;
+    user_id: string;
+    purchase_count: number;
 }
