@@ -4,6 +4,7 @@ import { useLocation } from "@/hooks/use-location";
 import { useRewardsActions } from "@/hooks/use-rewards-actions";
 import { useStampRewards } from "@/hooks/use-stamp-rewards";
 import { useStamps } from "@/hooks/use-stamps";
+import { useStreaks } from "@/hooks/use-streaks";
 import { getStores } from "@/services/store-service";
 import { StampProgress } from "@/services/stamp-service";
 import { useRewardsDataStore } from "@/hooks/use-rewards-data";
@@ -58,12 +59,14 @@ export function useStoreOverviewData(storeId?: string) {
     getEnrichedStores,
     isLoadingRewardsFeatures,
     fetchedStoreIds,
+    activeStreakProgramMap,
   } = useRewardsDataStore();
   const { stores, setStores } = useStoreStore();
   const { location, startWatching, stopWatching } = useLocation();
   const { handleRefresh, hasStampedToday } = useRewardsActions();
   const { stamps } = useStamps();
   const { stampRewards } = useStampRewards();
+  const { streaks: userStreaks, refetch: refetchStreaks } = useStreaks();
 
   const handleCarouselInteraction = useCarouselAutoplayPause(setIsAutoPlayEnabled);
   const swipeIndicatorOpacity = useSharedValue(0);
@@ -193,19 +196,42 @@ export function useStoreOverviewData(storeId?: string) {
   }, [enabledStampFeatureStoreIds, heroIndex, location, nearbyStores, sortedStamps, storeId, storesWithLocation]);
 
   const displayStreaks = useMemo(() => {
-    // If a specific storeId is requested, focus only on its streak
+    // If a specific storeId is requested, focus only on its real streak record
     if (storeId) {
       const isEligible = eligibleStreakStoreIds.includes(Number(storeId));
       if (!isEligible) return [];
 
-      const existingStamp = sortedStamps.find(
-        (stamp) => Number(stamp.store_id) === Number(storeId),
+      // Find real user_streaks record for this store
+      const existingStreak = userStreaks.find(
+        (s) => Number(s.store_id) === Number(storeId),
       );
+      if (existingStreak) return [existingStreak];
 
-      if (existingStamp) return [existingStamp];
-
+      // No record yet — build a virtual entry from the store so the card still shows
       const targetStore = storesWithLocation.find((s) => s.id.toString() === storeId);
-      return targetStore ? [buildVirtualStampEntry(targetStore)] : [];
+      if (!targetStore) return [];
+      const storeStreakId = activeStreakProgramMap.get(Number(targetStore.id)) ?? null;
+      return [{
+        id: -Number(targetStore.id),
+        user_id: "",
+        store_id: Number(targetStore.id),
+        streak_days: 0,
+        last_activity_date: "",
+        total_earned_days: 0,
+        points_earned: 0,
+        completion_bonus_awarded: false,
+        completed_at: null,
+        status: null,
+        store_streak_id: storeStreakId,
+        store_streaks: null,
+        stores: {
+          name: targetStore.name,
+          logo: targetStore.logo ?? undefined,
+          address: targetStore.address ?? undefined,
+          status: targetStore.status,
+          is_active: targetStore.is_active,
+        },
+      }];
     }
 
     if (nearbyStores.length > 0) {
@@ -215,17 +241,41 @@ export function useStoreOverviewData(storeId?: string) {
       const isEligible = eligibleStreakStoreIds.includes(Number(focusedStore.id));
       if (!isEligible) return [];
 
-      const existingStamp = sortedStamps.find(
-        (stamp) => Number(stamp.store_id) === Number(focusedStore.id),
+      const existingStreak = userStreaks.find(
+        (s) => Number(s.store_id) === Number(focusedStore.id),
       );
+      if (existingStreak) return [existingStreak];
 
-      return existingStamp ? [existingStamp] : [buildVirtualStampEntry(focusedStore)];
+      // No record yet — virtual entry
+      const storeStreakId2 = activeStreakProgramMap.get(Number(focusedStore.id)) ?? null;
+      return [{
+        id: -Number(focusedStore.id),
+        user_id: "",
+        store_id: Number(focusedStore.id),
+        streak_days: 0,
+        last_activity_date: "",
+        total_earned_days: 0,
+        points_earned: 0,
+        completion_bonus_awarded: false,
+        completed_at: null,
+        status: null,
+        store_streak_id: storeStreakId2,
+        store_streaks: null,
+        stores: {
+          name: focusedStore.name,
+          logo: focusedStore.logo ?? undefined,
+          address: focusedStore.address ?? undefined,
+          status: focusedStore.status,
+          is_active: focusedStore.is_active,
+        },
+      }];
     }
 
-    return displayStamps.filter((stamp) =>
-      eligibleStreakStoreIds.includes(Number(stamp.store_id)),
+    // Fallback: show all streaks for eligible stores
+    return userStreaks.filter((s) =>
+      eligibleStreakStoreIds.includes(Number(s.store_id)),
     );
-  }, [displayStamps, eligibleStreakStoreIds, heroIndex, nearbyStores, sortedStamps, storeId, storesWithLocation]);
+  }, [activeStreakProgramMap, eligibleStreakStoreIds, heroIndex, nearbyStores, storeId, storesWithLocation, userStreaks]);
 
   const prevFetchParams = useRef<string | null>(null);
 
@@ -285,5 +335,6 @@ export function useStoreOverviewData(storeId?: string) {
     swipeIndicatorStyle,
     isLoadingRewardsFeatures,
     fetchedStoreIds,
+    refetchStreaks,
   };
 }

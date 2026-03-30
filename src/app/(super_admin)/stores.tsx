@@ -6,8 +6,8 @@ import {
 import { View, Text, TouchableOpacity } from "@/tw";
 import { ScreenWrapper } from "@/components/ui/screen-wrapper";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { AdminStoreCard, AdminStoreSkeletonCard } from "@/components/stores/admin-store-card";
-import { AdminStoreDetails } from "@/components/stores/admin-store-details";
+import { AdminStoreCard, AdminStoreSkeletonCard } from "@/components/users/stores/admin-store-card";
+import { AdminStoreDetails } from "@/components/users/stores/admin-store-details";
 import { Modal } from "@/components/modal";
 import {
 	useSuperAdminStores,
