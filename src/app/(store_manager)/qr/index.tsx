@@ -15,10 +15,14 @@ import { QRSkeleton } from "@/components/skeleton/store_manager/qr-skeleton";
 export default function QRIndex() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { storeId } = useLocalSearchParams<{ storeId: string }>();
+  const { storeId } = useLocalSearchParams<{ storeId?: string }>();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
   const lastUpdatedRef = useRef<string | null>(null);
+  const storeIdForFetch = storeId && storeId !== "undefined" ? storeId : undefined;
+  const lastStoreIdRef = useRef<string | undefined>(undefined);
+  const hasLoadedOnceRef = useRef(false);
+  const isFetchingRef = useRef(false);
   const {
     config,
     loading,
@@ -33,32 +37,44 @@ export default function QRIndex() {
   } = useQRStore();
 
   const fetchConfig = useCallback(async () => {
-    if (!storeId) return;
-  
+    if (!storeIdForFetch) return;
+
     try {
-      const data = await getQRConfig(storeId);
-      if (data?.updated_at && lastUpdatedRef.current === data.updated_at) {
-        return;
-      }
-      lastUpdatedRef.current = data?.updated_at ?? null;
+      const data = await getQRConfig(storeIdForFetch);
+      const nextUpdatedAt = data?.updated_at ?? null;
+      if (data && lastUpdatedRef.current === nextUpdatedAt) return;
+      lastUpdatedRef.current = nextUpdatedAt;
       setConfig(data);
     } catch {
-      lastUpdatedRef.current = null;
-      setConfig(null);
+      if (lastUpdatedRef.current !== null) {
+        lastUpdatedRef.current = null;
+        setConfig(null);
+      }
     }
-  }, [storeId, setConfig]);
+  }, [storeIdForFetch, setConfig]);
 
   const load = useCallback(async () => {
-    if (!storeId) return;
-    const showInitialLoading = !lastUpdatedRef.current;
+    if (!storeIdForFetch) return;
+    if (storeIdForFetch !== lastStoreIdRef.current) {
+      lastStoreIdRef.current = storeIdForFetch;
+      lastUpdatedRef.current = null;
+      hasLoadedOnceRef.current = false;
+    }
+    if (isFetchingRef.current) return;
+
+    const showInitialLoading = !hasLoadedOnceRef.current;
     if (showInitialLoading) setLoading(true);
+
+    isFetchingRef.current = true;
 
     try {
       await fetchConfig();
     } finally {
+      hasLoadedOnceRef.current = true;
+      isFetchingRef.current = false;
       if (showInitialLoading) setLoading(false);
     }
-  }, [storeId, fetchConfig, setLoading]);
+  }, [storeIdForFetch, fetchConfig, setLoading]);
 
   useFocusEffect(
     useCallback(() => {
@@ -76,11 +92,11 @@ export default function QRIndex() {
   }, [fetchConfig, setRefreshing]);
 
   const handleToggleEnabled = async () => {
-    if (!config || toggling) return;
+    if (!config || toggling || !storeIdForFetch) return;
     setToggling(true);
     try {
       const next = !config.qr_enabled;
-      await toggleQREnabled(storeId, next);
+      await toggleQREnabled(storeIdForFetch, next);
       setConfig({ ...config, qr_enabled: next });
     } catch {
       setModal({
@@ -109,7 +125,9 @@ export default function QRIndex() {
       >
         <View className="flex-row items-center px-2">
           <TouchableOpacity
-            onPress={() => router.push({ pathname: "/(store_manager)/view-store/[id]", params: { id: storeId } })}
+            onPress={() =>
+              router.push({ pathname: "/(store_manager)/view-store/[id]", params: { id: storeIdForFetch } })
+            }
             className="w-10 h-10 rounded-full items-center justify-center"
             activeOpacity={0.7}
           >
@@ -158,7 +176,7 @@ export default function QRIndex() {
               onPress={() =>
                 router.push({
                   pathname: "/(store_manager)/qr/configure-qr",
-                  params: { storeId },
+                  params: { storeId: storeIdForFetch },
                 })
               }
               variant="primary"
@@ -275,7 +293,7 @@ export default function QRIndex() {
                   onPress={() =>
                     router.push({
                       pathname: "/(store_manager)/qr/configure-qr",
-                      params: { storeId },
+                      params: { storeId: storeIdForFetch },
                     })
                   }
                   variant="primary"
