@@ -1,4 +1,4 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useRef } from "react";
 import { RefreshControl, useColorScheme, ActivityIndicator } from "react-native";
 import { View, Text, TouchableOpacity, ScrollView } from "@/tw";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -17,6 +17,7 @@ export default function QRIndex() {
   const { storeId } = useLocalSearchParams<{ storeId: string }>();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
+  const lastUpdatedRef = useRef<string | null>(null);
   const {
     config,
     loading,
@@ -32,33 +33,45 @@ export default function QRIndex() {
 
   const fetchConfig = useCallback(async () => {
     if (!storeId) return;
+  
     try {
       const data = await getQRConfig(storeId);
-      if (config?.updated_at && data?.updated_at && config.updated_at === data.updated_at) return;
+      if (data?.updated_at && lastUpdatedRef.current === data.updated_at) {
+        return;
+      }
+      lastUpdatedRef.current = data?.updated_at ?? null;
       setConfig(data);
     } catch {
+      lastUpdatedRef.current = null;
       setConfig(null);
     }
-  }, [storeId, config, setConfig]);
+  }, [storeId, setConfig]);
 
   const load = useCallback(async () => {
-    const showInitialLoading = !config;
+    if (!storeId) return;
+    const showInitialLoading = !lastUpdatedRef.current;
     if (showInitialLoading) setLoading(true);
+
     try {
       await fetchConfig();
     } finally {
       if (showInitialLoading) setLoading(false);
     }
-  }, [fetchConfig, config, setLoading]);
+  }, [storeId, fetchConfig, setLoading]);
 
-  useFocusEffect(() => {
-    void load();
-  });
+  useFocusEffect(
+    useCallback(() => {
+      load();
+    }, [load])
+  );
 
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
-    await fetchConfig();
-    setRefreshing(false);
+    try {
+      await fetchConfig();
+    } finally {
+      setRefreshing(false);
+    }
   }, [fetchConfig, setRefreshing]);
 
   const handleToggleEnabled = async () => {
