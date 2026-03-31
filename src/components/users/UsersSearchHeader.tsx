@@ -1,5 +1,6 @@
 import React, { useRef } from "react";
 import { TextInput, FlatList } from "react-native";
+import { useTranslation } from "react-i18next";
 import { View, Text, TouchableOpacity } from "@/tw";
 import { Feather } from "@expo/vector-icons";
 import { TYPO, COLORS } from "@/type/super-admin/user";
@@ -25,11 +26,12 @@ export function UsersSearchHeader({
   onFilterPress,
 }: UsersSearchHeaderProps) {
   const searchInputRef = useRef<import("react-native").TextInput>(null);
+  const { t: translate } = useTranslation();
 
   return (
     <View className="px-5 pt-4">
       <View className="mb-4">
-        <Text className={TYPO.title}>Users</Text>
+        <Text className={TYPO.title}>{translate("superAdmin.users.title")}</Text>
       </View>
 
       <TouchableOpacity
@@ -42,7 +44,7 @@ export function UsersSearchHeader({
           ref={searchInputRef}
           className="flex-1 text-[14px] font-poppins text-textPrimary dark:text-darkTextPrimary h-full py-0 m-0"
           style={{ paddingTop: 0, paddingBottom: 0 }}
-          placeholder="Search..."
+          placeholder={translate("superAdmin.users.searchPlaceholder")}
           placeholderTextColor={COLORS.textMuted}
           value={search}
           onChangeText={onSearchChange}
@@ -73,7 +75,7 @@ export function UsersSearchHeader({
               className={`${TYPO.chip} ${statusFilter !== "All" ? "text-primary" : "text-textMuted"
                 }`}
             >
-              Filter
+              {translate("superAdmin.users.filter")}
             </Text>
           </TouchableOpacity>
         }
@@ -87,7 +89,7 @@ export function UsersSearchHeader({
               className={`${TYPO.chip} ${activeTab === tab ? "text-white" : "text-textMuted"
                 }`}
             >
-              {tab === "All" ? "All" : tab + "s"}
+              {translate(`superAdmin.users.tabs.${tab.toLowerCase()}`)}
             </Text>
           </TouchableOpacity>
         )}
