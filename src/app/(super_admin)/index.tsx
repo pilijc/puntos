@@ -24,14 +24,14 @@ export default function SuperAdminDashboard() {
 
   if (loading && !refreshing) {
     return (
-      <View className="flex-1 justify-center items-center bg-background">
+      <View className="flex-1 justify-center items-center bg-background dark:bg-darkBackground">
         <ActivityIndicator size="large" color="#FF6600" />
       </View>
     );
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-background" edges={["top", "left", "right"]}>
+    <SafeAreaView className="flex-1 bg-background dark:bg-darkBackground" edges={["top", "left", "right"]}>
       <ScrollView
         className="flex-1"
         contentContainerStyle={{ paddingBottom: 40 }}
@@ -42,12 +42,12 @@ export default function SuperAdminDashboard() {
           <View className="px-6.5">
             <View className="flex-row items-center justify-between">
               <View className="flex-1 pl-2 pt-4 items-start">
-                <Text className="text-sm text-[#94A3B8] font-[Poppins-Regular]">
+                <Text className="text-sm text-[#94A3B8] dark:text-darkTextSecondary font-[Poppins-Regular]">
                   Welcome, <Text className="text-orange-500 font-[Poppins-Bold]">
                     {adminInfo?.username?.split(" ")[0] || "Admin"}
                   </Text>!
                 </Text>
-                <Text className="text-2xl font-[Poppins-Bold] text-[#0F172A]">
+                <Text className="text-2xl font-[Poppins-Bold] text-[#0F172A] dark:text-darkTextPrimary">
                   Dashboard
                 </Text>
               </View>
@@ -71,7 +71,7 @@ export default function SuperAdminDashboard() {
             </View>
           </View>
           <View className="px-2 mt-3">
-            <View className="h-[1px] w-full bg-[#E2E8F0]" />
+            <View className="h-[1px] w-full bg-[#E2E8F0] dark:bg-darkBorder" />
           </View>
         </View>
 
@@ -86,10 +86,10 @@ export default function SuperAdminDashboard() {
         {/* User Analytics Placeholder Section */}
         <View className="mb-6 px-6">
           <SectionHeader title="User Analytics" onAction={() => { }} />
-          <View className="bg-white rounded-2xl p-8 border border-slate-100 items-center justify-center min-h-[220px]">
+          <View className="bg-white dark:bg-darkBackgroundMuted rounded-2xl p-8 border border-slate-100 dark:border-darkBorder items-center justify-center min-h-[220px]">
             <Users size={48} color="#FF6600" />
-            <Text className="text-lg font-[Poppins-Bold] text-[#0F172A] mt-3">User Insights</Text>
-            <Text className="text-sm font-[Poppins-Regular] text-[#94A3B8] text-center mt-2 px-6">
+            <Text className="text-lg font-[Poppins-Bold] text-[#0F172A] dark:text-darkTextPrimary mt-3">User Insights</Text>
+            <Text className="text-sm font-[Poppins-Regular] text-[#94A3B8] dark:text-darkTextSecondary text-center mt-2 px-6">
               User analytics and behaviors will appear here.
             </Text>
           </View>
@@ -98,10 +98,10 @@ export default function SuperAdminDashboard() {
         {/* Store Analytics Placeholder Section */}
         <View className="mb-8 px-6">
           <SectionHeader title="Store Analytics" onAction={() => { }} />
-          <View className="bg-white rounded-2xl p-8 border border-slate-100 items-center justify-center min-h-[220px]">
+          <View className="bg-white dark:bg-darkBackgroundMuted rounded-2xl p-8 border border-slate-100 dark:border-darkBorder items-center justify-center min-h-[220px]">
             <BarChart3 size={48} color="#FF6600" />
-            <Text className="text-lg font-[Poppins-Bold] text-[#0F172A] mt-3">Store Insights</Text>
-            <Text className="text-sm font-[Poppins-Regular] text-[#94A3B8] text-center mt-2 px-6">
+            <Text className="text-lg font-[Poppins-Bold] text-[#0F172A] dark:text-darkTextPrimary mt-3">Store Insights</Text>
+            <Text className="text-sm font-[Poppins-Regular] text-[#94A3B8] dark:text-darkTextSecondary text-center mt-2 px-6">
               Store analytics and insights will appear here.
             </Text>
           </View>

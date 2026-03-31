@@ -11,6 +11,8 @@ import { TYPO, COLORS } from "@/type/super-admin/user";
 import { useSuperAdminUsers } from "@/hooks/super-admin/use-super-admin-users";
 
 export default function UsersScreen() {
+  const colorScheme = require('react-native').useColorScheme();
+  const isDark = colorScheme === 'dark';
   const {
     loading,
     refreshing,
@@ -47,8 +49,8 @@ export default function UsersScreen() {
   );
 
   return (
-    <ScreenWrapper className="flex-1 bg-background">
-      <StatusBar barStyle="dark-content" />
+    <ScreenWrapper className="flex-1 bg-background dark:bg-darkBackground">
+      <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
       <UsersSearchHeader
         search={search}
         onSearchChange={setSearch}
@@ -89,7 +91,7 @@ export default function UsersScreen() {
           }
           ListEmptyComponent={
             <View className="items-center justify-center pt-20">
-              <Text className={TYPO.subtitle}>No users found</Text>
+              <Text className={`${TYPO.subtitle} dark:text-darkTextSecondary`}>No users found</Text>
             </View>
           }
         />

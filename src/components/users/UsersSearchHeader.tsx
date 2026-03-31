@@ -35,12 +35,12 @@ export function UsersSearchHeader({
       <TouchableOpacity
         activeOpacity={1}
         onPress={() => searchInputRef.current?.focus()}
-        className="flex-row items-center bg-backgroundMuted rounded-xl px-3.5 mb-4 h-11 border border-slate-200/50 w-full overflow-hidden"
+        className="flex-row items-center bg-backgroundMuted dark:bg-darkBackgroundMuted rounded-xl px-3.5 mb-4 h-11 border border-slate-200/50 dark:border-darkBorder w-full overflow-hidden"
       >
         <Feather name="search" size={16} color={COLORS.textMuted} style={{ marginRight: 10 }} />
         <TextInput
           ref={searchInputRef}
-          className="flex-1 text-[14px] font-poppins text-textPrimary h-full py-0 m-0"
+          className="flex-1 text-[14px] font-poppins text-textPrimary dark:text-darkTextPrimary h-full py-0 m-0"
           style={{ paddingTop: 0, paddingBottom: 0 }}
           placeholder="Search..."
           placeholderTextColor={COLORS.textMuted}
@@ -60,7 +60,7 @@ export function UsersSearchHeader({
         ListHeaderComponent={
           <TouchableOpacity
             onPress={onFilterPress}
-            className={`flex-row items-center h-10 px-4 rounded-full mr-2 border ${statusFilter !== "All" ? "bg-primary/5 border-primary/30" : "bg-white border-slate-100"
+            className={`flex-row items-center h-10 px-4 rounded-full mr-2 border ${statusFilter !== "All" ? "bg-primary/5 border-primary/30" : "bg-white dark:bg-darkBackgroundMuted border-slate-100 dark:border-darkBorder"
               }`}
           >
             <Feather
@@ -80,7 +80,7 @@ export function UsersSearchHeader({
         renderItem={({ item: tab }) => (
           <TouchableOpacity
             onPress={() => onTabChange(tab)}
-            className={`flex-row items-center h-10 px-4 rounded-full mr-2 ${activeTab === tab ? "bg-primary" : "bg-white border border-slate-100"
+            className={`flex-row items-center h-10 px-4 rounded-full mr-2 ${activeTab === tab ? "bg-primary" : "bg-white dark:bg-darkBackgroundMuted border border-slate-100 dark:border-darkBorder"
               }`}
           >
             <Text
