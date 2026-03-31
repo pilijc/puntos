@@ -12,6 +12,7 @@
         "allow": "Allow",
         "ok": "OK",
         "tryAgain": "Try Again",
+        "viewAll": "View all",
         "somethingWentWrong": "Something went wrong. Please try again.",
         "poweredBy": "POWERED BY PUNTOS",
         "termsAgreement": "By continuing, you agree to <tos>Terms of Service</tos> and <privacy>Privacy Policy</privacy>"
@@ -506,6 +507,35 @@
                 "user": "user",
                 "users": "users"
             }
+        }
+    },
+    "superAdmin": {
+        "dashboard": {
+            "welcome": "Welcome, ",
+            "title": "Dashboard",
+            "metrics": {
+                "totalUsers": "Total Users",
+                "totalStores": "Total Stores",
+                "activeStores": "Active Stores"
+            },
+            "analytics": {
+                "user": {
+                    "title": "User Analytics",
+                    "insights": "User Insights",
+                    "desc": "User analytics and behaviors will appear here."
+                },
+                "store": {
+                    "title": "Store Analytics",
+                    "insights": "Store Insights",
+                    "desc": "Store analytics and insights will appear here."
+                }
+            }
+        },
+        "stores": {
+
+        },
+        "users": {
+
         }
     }
 }

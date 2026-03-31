@@ -12,6 +12,7 @@
         "allow": "許可",
         "ok": "OK",
         "tryAgain": "再試行",
+        "viewAll": "すべて表示",
         "somethingWentWrong": "問題が発生しました。もう一度お試しください。",
         "poweredBy": "PUNTOS 提供",
         "termsAgreement": "続行することで、<tos>利用規約</tos>および<privacy>プライバシーポリシー</privacy>に同意したものとみなされます"
@@ -508,5 +509,35 @@
                 "users": "人"
             }
         }
+    },
+    "superAdmin": {
+        "dashboard": {
+            "welcome": "ようこそ、",
+            "title": "ダッシュボード",
+            "metrics": {
+                "totalUsers": "全ユーザー",
+                "totalStores": "全店舗",
+                "activeStores": "アクティブ店舗"
+            },
+            "analytics": {
+                "user": {
+                    "title": "ユーザー分析",
+                    "insights": "ユーザーインサイト",
+                    "desc": "ユーザーの分析と行動がここに表示されます。"
+                },
+                "store": {
+                    "title": "店舗分析",
+                    "insights": "店舗インサイト",
+                    "desc": "店舗の分析とインサイトがここに表示されます。"
+                }
+            }
+        },
+        "stores": {
+
+        },
+        "users": {
+
+        }
+
     }
 }
