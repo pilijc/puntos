@@ -395,7 +395,6 @@
         "title": "設定",
         "logout": {
             "title": "ログアウト",
-            "confirmTitle": "ログアウト確認",
             "confirmMessage": "本当にログアウトしますか？"
         },
         "checking": "確認中…",
@@ -466,17 +465,12 @@
             "title": "通知とプライバシー",
             "alerts": {
                 "title": "付近のお知らせ",
-                "description": "特典が近くにあるときに通知を受け取ります",
-                "disableTitle": "付近のお知らせを無効にする"
+                "description": "特典が近くにあるときに通知を受け取ります"
             },
             "location": {
                 "title": "位置情報のアクセス",
                 "allow": "アクセスを許可",
-                "denied": "アクセスを拒否",
-                "disableTitle": "位置情報のアクセスを無効にする"
-            },
-            "email": {
-                "title": "プロモーションメール"
+                "denied": "アクセスを拒否"
             },
             "permissions": "{{services}}の権限は、デバイスの設定で変更できます。今すぐ設定を開きますか？",
             "services": {
@@ -484,6 +478,35 @@
                 "notifications": "通知"
             },
             "openSettings": "設定を開く"
+        }
+    },
+    "storeManager": {
+        "dashboard": {
+            "title": "ダッシュボード",
+            "noStores": "利用可能な店舗がありません。",
+            "metrics": {
+                "inStore": "来店中",
+                "realTimeUsers": "リアルタイムユーザー",
+                "totalScanned": "スキャン総数",
+                "redeemedToday": "本日の利用"
+            },
+            "retention": {
+                "title": "リテンション",
+                "subtitle": "ユーザーロイヤルティ概要",
+                "returning": "リピーター",
+                "new": "新規"
+            },
+            "activity": {
+                "title": "週間スキャンアクティビティ"
+            },
+            "stampProgress": {
+                "title": "スタンプの進捗",
+                "distribution": "ユーザー分布: {{users}}人 · 目標: {{goal}} スタンプ",
+                "noProgram": "アクティブなスタンププログラムが見つかりません",
+                "stamps": "スタンプ",
+                "user": "人",
+                "users": "人"
+            }
         }
     }
 }

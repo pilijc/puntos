@@ -1,5 +1,5 @@
 import { Store } from '@/type/user/store';
-import { calculateDistance, isStoreNearby, UserLocation } from '@/services/location-service';
+import { calculateDistance, isStoreNearby, UserLocation } from '@/services/user/location-service';
 
 export interface EnrichedStore extends Store {
   calculatedDistanceMeters?: number;

@@ -1,6 +1,5 @@
 import { supabase } from "@/supabase/supabase";
 import type * as GeoJSON from "geojson";
-import type { TravelMode } from "@/type/user/store";
 
 export async function getStoresService() {
     try {
