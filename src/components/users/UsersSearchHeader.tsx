@@ -2,7 +2,7 @@ import React, { useRef } from "react";
 import { TextInput, FlatList } from "react-native";
 import { View, Text, TouchableOpacity } from "@/tw";
 import { Feather } from "@expo/vector-icons";
-import { TYPO, COLORS } from "./constants";
+import { TYPO, COLORS } from "@/type/super-admin/user";
 import type { UserRoleTab } from "@/store/super-admin/user-store";
 
 interface UsersSearchHeaderProps {
@@ -12,7 +12,6 @@ interface UsersSearchHeaderProps {
   onTabChange: (tab: UserRoleTab) => void;
   statusFilter: import("@/store/super-admin/user-store").AccountStatusFilter;
   onFilterPress: () => void;
-  tabCounts: Record<UserRoleTab, number>;
 }
 
 const TABS: UserRoleTab[] = ["All", "User", "Manager", "Staff"];
@@ -24,7 +23,6 @@ export function UsersSearchHeader({
   onTabChange,
   statusFilter,
   onFilterPress,
-  tabCounts,
 }: UsersSearchHeaderProps) {
   const searchInputRef = useRef<import("react-native").TextInput>(null);
 
@@ -32,22 +30,24 @@ export function UsersSearchHeader({
     <View className="px-5 pt-4">
       <View className="mb-4">
         <Text className={TYPO.title}>Users</Text>
-        <Text className={TYPO.subtitle}>{tabCounts.All} members total</Text>
       </View>
 
       <TouchableOpacity
         activeOpacity={1}
         onPress={() => searchInputRef.current?.focus()}
-        className="flex-row items-center bg-backgroundMuted rounded-xl px-3 mb-4 h-10 border border-slate-200/50"
+        className="flex-row items-center bg-backgroundMuted dark:bg-darkBackgroundMuted rounded-xl px-3.5 mb-4 h-11 border border-slate-200/50 dark:border-darkBorder w-full overflow-hidden"
       >
-        <Feather name="search" size={14} color={COLORS.textMuted} style={{ marginRight: 8 }} />
+        <Feather name="search" size={16} color={COLORS.textMuted} style={{ marginRight: 10 }} />
         <TextInput
           ref={searchInputRef}
-          className="flex-1 text-[13px] font-poppins text-textPrimary"
+          className="flex-1 text-[14px] font-poppins text-textPrimary dark:text-darkTextPrimary h-full py-0 m-0"
+          style={{ paddingTop: 0, paddingBottom: 0 }}
           placeholder="Search..."
           placeholderTextColor={COLORS.textMuted}
           value={search}
           onChangeText={onSearchChange}
+          autoCapitalize="none"
+          autoCorrect={false}
         />
       </TouchableOpacity>
 
@@ -60,7 +60,7 @@ export function UsersSearchHeader({
         ListHeaderComponent={
           <TouchableOpacity
             onPress={onFilterPress}
-            className={`flex-row items-center h-10 px-4 rounded-full mr-2 border ${statusFilter !== "All" ? "bg-primary/5 border-primary/30" : "bg-white border-slate-100"
+            className={`flex-row items-center h-10 px-4 rounded-full mr-2 border ${statusFilter !== "All" ? "bg-primary/5 border-primary/30" : "bg-white dark:bg-darkBackgroundMuted border-slate-100 dark:border-darkBorder"
               }`}
           >
             <Feather
@@ -80,7 +80,7 @@ export function UsersSearchHeader({
         renderItem={({ item: tab }) => (
           <TouchableOpacity
             onPress={() => onTabChange(tab)}
-            className={`flex-row items-center h-10 px-4 rounded-full mr-2 ${activeTab === tab ? "bg-primary" : "bg-white border border-slate-100"
+            className={`flex-row items-center h-10 px-4 rounded-full mr-2 ${activeTab === tab ? "bg-primary" : "bg-white dark:bg-darkBackgroundMuted border border-slate-100 dark:border-darkBorder"
               }`}
           >
             <Text
@@ -89,17 +89,6 @@ export function UsersSearchHeader({
             >
               {tab === "All" ? "All" : tab + "s"}
             </Text>
-            <View
-              className={`ml-2 px-1.5 py-0.5 rounded-md ${activeTab === tab ? "bg-white/20" : "bg-slate-100"
-                }`}
-            >
-              <Text
-                className={`text-[9px] font-poppins-bold ${activeTab === tab ? "text-white" : "text-textMuted"
-                  }`}
-              >
-                {tabCounts[tab]}
-              </Text>
-            </View>
           </TouchableOpacity>
         )}
       />

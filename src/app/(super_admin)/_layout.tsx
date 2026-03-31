@@ -1,49 +1,33 @@
 import { Tabs } from "expo-router";
-import React, { useEffect } from "react";
-import { useRouter } from "expo-router";
-import { supabase } from "@/supabase/supabase";
-import { getRoleTypeForUser } from "@/services/access-service";
+import React from "react";
+import { useColorScheme } from "react-native";
+import { useSuperAdminLayout } from "@/hooks/super-admin/use-super-admin-layout";
 import { LayoutDashboard, Users, Store, Settings } from 'lucide-react-native';
 
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function SuperAdminLayout() {
-  const router = useRouter();
+  useSuperAdminLayout();
 
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
   const insets = useSafeAreaInsets();
-
-  useEffect(() => {
-    const verifyAccess = async () => {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
-
-        const roleType = await getRoleTypeForUser(user.id);
-        if (roleType !== "super_admin") {
-          router.replace("/(user)");
-        }
-      } catch {
-        router.replace("/(user)");
-      }
-    };
-    verifyAccess();
-  }, [router]);
 
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: "#FF6600",
-        tabBarInactiveTintColor: "#8B8D98",
+        tabBarInactiveTintColor: isDark ? "#737373" : "#8B8D98",
         tabBarLabelStyle: { 
           fontSize: 10, 
           fontFamily: "Poppins-Medium",
           marginBottom: insets.bottom > 0 ? 0 : 5 
         },
         tabBarStyle: { 
-          backgroundColor: "#FFFFFF", 
+          backgroundColor: isDark ? "#171717" : "#FFFFFF", 
           borderTopWidth: 1,
-          borderTopColor: '#F3F4F6',
+          borderTopColor: isDark ? "#404040" : "#F3F4F6",
           height: 60 + insets.bottom, 
           paddingBottom: insets.bottom > 0 ? insets.bottom : 8, 
         },

@@ -1,6 +1,14 @@
 import { useState, useCallback, useEffect } from "react";
 import { supabase } from "@/supabase/supabase";
-import { getMyStores, StoreRow, deleteStore as deleteStoreService } from "@/services/store-service";
+import { getMyStores, StoreRow,} from "@/services/store-service";
+
+/*
+    I WANT TO REMOVE THIS FILE, AS IVE ALREADY REFACTORED ALL OF THIS INTO use-store-metric
+    THIS WAS USED IN THE PREVIOUS ITERATION FOR index.tsx FOR STORE_MANAGER
+    BUT SOMEONE IS USING THIS CODE FOR THEIR OWN FEATURE/BRANCH
+    I WILL KEEP THIS AS IS, BUT WILL TRY TO HELP THEM REFACTOR THIS BY NEXT WEEK :)
+    hooks/store-manager/transaction.ts
+*/
 
 export type StoreStatusFilter = "All" | "active" | "inactive" | "pending_review";
 
@@ -55,7 +63,6 @@ export function useStores(): UseStoresReturn {
     }, [fetchStores]);
 
     const deleteStore = useCallback(async (storeId: number) => {
-        await deleteStoreService(storeId);
         await fetchStores(true);
     }, [fetchStores]);
 

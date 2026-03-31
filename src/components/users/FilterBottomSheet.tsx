@@ -8,7 +8,7 @@ import { View, Text, TouchableOpacity } from "@/tw";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 import { Button } from "@/components/button";
-import { TYPO, COLORS, FILTER_OPTIONS } from "./constants";
+import { TYPO, COLORS, FILTER_OPTIONS } from "@/type/super-admin/user";
 import type { AccountStatusFilter } from "@/store/super-admin/user-store";
 
 interface FilterBottomSheetProps {
@@ -106,11 +106,11 @@ export function FilterBottomSheet({
       <Animated.View style={{ transform: [{ translateY }] }}>
         <View
           {...panResponder.panHandlers}
-          className="bg-white rounded-t-3xl pt-3 px-4"
+          className="bg-white dark:bg-darkBackgroundMuted rounded-t-3xl pt-3 px-4"
           style={{ elevation: 20, paddingBottom: insets.bottom + 20 }}
         >
-          <View className="w-9 h-1 bg-slate-200 rounded-full self-center mb-4" />
-          <Text className="text-[15px] font-poppins-bold text-textPrimary mb-4">
+          <View className="w-9 h-1 bg-slate-200 dark:bg-darkBorder rounded-full self-center mb-4" />
+          <Text className="text-[15px] font-poppins-bold text-textPrimary dark:text-darkTextPrimary mb-4">
             Filter Users
           </Text>
           <View className="gap-2">
@@ -121,18 +121,18 @@ export function FilterBottomSheet({
                   key={option.value}
                   onPress={() => closeSheet(() => onSelectFilter(option.value))}
                   className={`flex-row items-center px-3 py-2.5 rounded-xl border ${
-                    isActive ? "bg-primary/5 border-primary/30" : "bg-backgroundMuted border-slate-100"
+                    isActive ? "bg-primary/5 border-primary/30" : "bg-backgroundMuted dark:bg-darkBackgroundCard border-slate-100 dark:border-darkBorder"
                   }`}
                 >
                   <View className="flex-1">
                     <Text
                       className={`text-[12px] ${
-                        isActive ? "font-poppins-bold text-primary" : "font-poppins-medium text-textSecondary"
+                        isActive ? "font-poppins-bold text-primary" : "font-poppins-medium text-textSecondary dark:text-darkTextSecondary"
                       }`}
                     >
                       {option.label}
                     </Text>
-                    <Text className={TYPO.subtitle}>{option.desc}</Text>
+                    <Text className={`${TYPO.subtitle} dark:text-darkTextMuted`}>{option.desc}</Text>
                   </View>
                   {isActive && (
                     <Feather name="check" size={14} color={COLORS.primary} />

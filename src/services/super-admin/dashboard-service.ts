@@ -1,0 +1,59 @@
+import { supabase } from "@/supabase/supabase";
+
+const BUCKET_URL =
+  "https://gtxlhnmpvsrvryeisbqa.supabase.co/storage/v1/object/public/puntos-public/profile-pictures";
+
+export interface AdminInfo {
+  name: string;
+  username: string;
+  avatar: string;
+}
+
+export interface DashboardData {
+  users: any[];
+  stores: any[];
+}
+
+export async function getAdminSession(): Promise<AdminInfo | null> {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  
+  if (!user) return null;
+
+  return {
+    name: user.user_metadata?.display_name || "Super Admin",
+    username:
+      user.user_metadata?.username ||
+      user.email?.split("@")[0] ||
+      "admin",
+    avatar:
+      user.user_metadata?.avatar_url ||
+      `https://api.dicebear.com/7.x/avataaars/png?seed=${user.id}`,
+  };
+}
+
+export async function getDashboardData(): Promise<DashboardData> {
+  const [{ data: userData }, { data: storeData }] = await Promise.all([
+    supabase
+      .from("users_with_email")
+      .select("*")
+      .order("id", { ascending: true }),
+    supabase.from("stores").select("*"),
+  ]);
+
+  const processedUsers = (userData || []).map((u) => ({
+    ...u,
+    avatar: u.avatar_url
+      ? u.avatar_url.startsWith("http")
+        ? u.avatar_url
+        : `${BUCKET_URL}/${u.avatar_url}`
+      : `https://api.dicebear.com/7.x/avataaars/png?seed=${u.id}`,
+    displayEmail: u.email || "No Email Provided",
+  }));
+
+  return {
+    users: processedUsers,
+    stores: storeData || [],
+  };
+}

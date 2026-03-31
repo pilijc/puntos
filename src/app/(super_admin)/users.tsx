@@ -1,25 +1,22 @@
-import React, { useEffect, useCallback, useMemo, useRef } from "react";
+import React, { useCallback } from "react";
 import { ActivityIndicator, RefreshControl, StatusBar, FlatList } from "react-native";
 import { View, Text } from "@/tw";
 import { ScreenWrapper } from "@/components/ui/screen-wrapper";
-import { Modal } from "@/components/modal";
-import { useUserStore, type UserRoleTab } from "@/store/super-admin/user-store";
+import { UsersModal as Modal } from "@/components/users/UsersModal";
 import { BlockUserModal } from "@/components/users/BlockUserModal";
 import { FilterBottomSheet } from "@/components/users/FilterBottomSheet";
 import { UsersSearchHeader } from "@/components/users/UsersSearchHeader";
 import { UserListItem } from "@/components/users/UserListItem";
-import { TYPO, COLORS } from "@/components/users/constants";
-
-const ITEM_HEIGHT = 88;
-const HEADER_HEIGHT = 44;
+import { TYPO, COLORS } from "@/type/super-admin/user";
+import { useSuperAdminUsers } from "@/hooks/super-admin/use-super-admin-users";
 
 export default function UsersScreen() {
+  const colorScheme = require('react-native').useColorScheme();
+  const isDark = colorScheme === 'dark';
   const {
-    users,
     loading,
     refreshing,
     loadingMore,
-    hasMore,
     updatingUserId,
     activeTab,
     statusFilter,
@@ -28,9 +25,6 @@ export default function UsersScreen() {
     selectedUser,
     showBlockModal,
     errorModal,
-    fetchUsers,
-    fetchMoreUsers,
-    setRefreshing,
     setActiveTab,
     setStatusFilter,
     setSearch,
@@ -39,18 +33,13 @@ export default function UsersScreen() {
     closeBlockModal,
     confirmToggleBlock,
     dismissErrorModal,
-    tabCounts,
-    flatListData,
-  } = useUserStore();
-
-  const onRefresh = useCallback(() => {
-    setRefreshing(true);
-    fetchUsers({ reset: true });
-  }, [setRefreshing, fetchUsers]);
-
-  const onEndReached = useCallback(() => {
-    if (hasMore && !loadingMore) fetchMoreUsers();
-  }, [hasMore, loadingMore, fetchMoreUsers]);
+    onRefresh,
+    onEndReached,
+    listData,
+    stickyHeaders,
+    willBlock,
+    getItemLayout,
+  } = useSuperAdminUsers();
 
   const renderItem = useCallback(
     ({ item }: { item: any }) => (
@@ -59,52 +48,9 @@ export default function UsersScreen() {
     [openBlockModal]
   );
 
-  useEffect(() => {
-    fetchUsers({ reset: true });
-  }, [fetchUsers]);
-
-  const isFirstMount = useRef(true);
-  useEffect(() => {
-    if (isFirstMount.current) {
-      isFirstMount.current = false;
-      return;
-    }
-    fetchUsers({ reset: true });
-  }, [activeTab, statusFilter]);
-
-  const prevSearch = useRef(search);
-  useEffect(() => {
-    if (prevSearch.current === search) return;
-    prevSearch.current = search;
-    const t = setTimeout(() => fetchUsers({ reset: true }), 350);
-    return () => clearTimeout(t);
-  }, [search]);
-
-  const counts = useMemo(() => tabCounts(), [tabCounts, users]);
-  const listData = useMemo(() => flatListData(), [flatListData, users, activeTab, statusFilter, search]);
-  const stickyHeaders = useMemo(() => {
-    const indices: number[] = [];
-    for (let i = 0; i < listData.length; i++) {
-      if (listData[i].isHeader) indices.push(i);
-    }
-    return indices;
-  }, [listData]);
-
-  const willBlock = selectedUser?.status !== "Blocked";
-
-  const getItemLayout = useCallback((_data: any, index: number) => {
-    let offset = 0;
-    const data = listData;
-    for (let i = 0; i < index; i++) {
-      offset += data[i]?.isHeader ? HEADER_HEIGHT : ITEM_HEIGHT;
-    }
-    const length = data[index]?.isHeader ? HEADER_HEIGHT : ITEM_HEIGHT;
-    return { length, offset, index };
-  }, [listData]);
-
   return (
-    <ScreenWrapper className="flex-1 bg-background">
-      <StatusBar barStyle="dark-content" />
+    <ScreenWrapper className="flex-1 bg-background dark:bg-darkBackground">
+      <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
       <UsersSearchHeader
         search={search}
         onSearchChange={setSearch}
@@ -112,7 +58,6 @@ export default function UsersScreen() {
         onTabChange={setActiveTab}
         statusFilter={statusFilter}
         onFilterPress={() => setShowFilterModal(true)}
-        tabCounts={counts}
       />
       {loading && !refreshing && listData.length === 0 ? (
         <View className="flex-1 justify-center items-center">
@@ -146,7 +91,7 @@ export default function UsersScreen() {
           }
           ListEmptyComponent={
             <View className="items-center justify-center pt-20">
-              <Text className={TYPO.subtitle}>No users found</Text>
+              <Text className={`${TYPO.subtitle} dark:text-darkTextSecondary`}>No users found</Text>
             </View>
           }
         />

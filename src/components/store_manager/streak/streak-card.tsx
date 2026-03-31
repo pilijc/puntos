@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { ActivityIndicator } from "react-native";
 import { View, Text, TouchableOpacity } from "@/tw";
 import { CheckCircle, ChevronDown, Flame, Gift, Info, Pencil, Users } from "lucide-react-native";
-import { COLORS } from "@/components/users/constants";
+import { COLORS } from "@/type/super-admin/user";
 import { Button } from "@/components/button";
 import { getParticipantsByProgramId, getParticipantsCountByProgramId } from "@/services/store-manager/streak-service";
 import { StreakCardProps, StreakParticipant } from "@/type/store-manager/streak";

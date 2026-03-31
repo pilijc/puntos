@@ -18,24 +18,24 @@ export default function StoreManagerLayout() {
     const activeColor = "#FF6600";
 
     const isStoresSection =
-      path.startsWith("/(store_manager)/stores/") ||
-      path.startsWith("/(store_manager)/view-store/") ||
-      path.startsWith("/(store_manager)/store/") ||
-      path.startsWith("/(store_manager)/reward/") ||
-      path.startsWith("/(store_manager)/stamp/") ||
-      path.startsWith("/(store_manager)/streak/") ||
-      path.startsWith("/(store_manager)/qr/") ||
-      path.startsWith("/(store_manager)/staff/") ||
-      path.startsWith("/(store_manager)/detail/") ||
-      path.startsWith("/stores/") ||
-      path.startsWith("/view-store/") ||
-      path.startsWith("/store/") ||
-      path.startsWith("/reward/") ||
-      path.startsWith("/stamp/") ||
-      path.startsWith("/streak/") ||
-      path.startsWith("/qr/") ||
-      path.startsWith("/staff/") ||
-      path.startsWith("/detail/");
+        path.startsWith("/(store_manager)/stores/") ||
+        path.startsWith("/(store_manager)/view-store/") ||
+        path.startsWith("/(store_manager)/store/") ||
+        path.startsWith("/(store_manager)/reward/") ||
+        path.startsWith("/(store_manager)/stamp/") ||
+        path.startsWith("/(store_manager)/streak/") ||
+        path.startsWith("/(store_manager)/qr/") ||
+        path.startsWith("/(store_manager)/staff/") ||
+        path.startsWith("/(store_manager)/detail/") ||
+        path.startsWith("/stores/") ||
+        path.startsWith("/view-store/") ||
+        path.startsWith("/store/") ||
+        path.startsWith("/reward/") ||
+        path.startsWith("/stamp/") ||
+        path.startsWith("/streak/") ||
+        path.startsWith("/qr/") ||
+        path.startsWith("/staff/") ||
+        path.startsWith("/detail/");
 
     useEffect(() => {
         const verifyAccess = async () => {
@@ -65,7 +65,7 @@ export default function StoreManagerLayout() {
             screenOptions={{
                 headerShown: false,
                 tabBarStyle: {
-                    backgroundColor: isDark ? "#171717" : "#FFFFFF",
+                    backgroundColor: isDark ? "#262626" : "#FFFFFF",
                     borderTopColor: isDark ? "#404040" : "#e5e5e5",
                     height: Platform.OS === 'ios' ? 88 : 60 + insets.bottom,
                     paddingBottom: insets.bottom > 0 ? insets.bottom : 8,
@@ -73,8 +73,8 @@ export default function StoreManagerLayout() {
                 },
                 tabBarActiveTintColor: "#FF6600",
                 tabBarInactiveTintColor: isDark ? "#737373" : "#8B8D98",
-                tabBarLabelStyle: { 
-                    fontSize: 10, 
+                tabBarLabelStyle: {
+                    fontSize: 10,
                     fontFamily: "Poppins-Medium",
                     marginBottom: insets.bottom > 0 ? 0 : 4
                 },
@@ -98,14 +98,14 @@ export default function StoreManagerLayout() {
                     ),
                     tabBarLabel: ({ color }) => (
                         <Text
-                          style={{
-                            fontSize: 10,
-                            fontFamily: "Poppins-Medium",
-                            marginBottom: insets.bottom > 0 ? 0 : 4,
-                            color: isStoresSection ? activeColor : color,
-                          }}
+                            style={{
+                                fontSize: 10,
+                                fontFamily: "Poppins-Medium",
+                                marginBottom: insets.bottom > 0 ? 0 : 4,
+                                color: isStoresSection ? activeColor : color,
+                            }}
                         >
-                          Stores
+                            Stores
                         </Text>
                     ),
                 }}
@@ -153,6 +153,10 @@ export default function StoreManagerLayout() {
                 options={{ href: null }}
             />
             <Tabs.Screen
+                name="stamp/index"
+                options={{ href: null }}
+            />
+            <Tabs.Screen
                 name="reward/rewards"
                 options={{ href: null }}
             />
@@ -165,10 +169,6 @@ export default function StoreManagerLayout() {
                 options={{ href: null }}
             />
             <Tabs.Screen
-                name="stamp/view-stamp"
-                options={{ href: null }}
-            />
-             {/* <Tabs.Screen
                 name="qr/index"
                 options={{ href: null }}
             /> */}
@@ -180,11 +180,8 @@ export default function StoreManagerLayout() {
                 name="staff/index"
                 options={{ href: null }}
             />
+
             <Tabs.Screen
-                name="staff/view_staff"
-                options={{ href: null }}
-            />
-             <Tabs.Screen
                 name="staff/add-staff"
                 options={{ href: null }}
             />
