@@ -1,7 +1,7 @@
 import { supabase } from "@/supabase/supabase";
 import { ProcessVoucherCode } from "../../type/frontdesk/voucher";
 import { Voucher } from "../../type/user/voucher";
-import { points } from "@turf/turf";
+import { FinalCalculations } from "../frontdesk/percentage-service";
 
 export async function getCurrentStaffId(): Promise<string | null> {
     try {
@@ -104,31 +104,10 @@ export async function processVoucherCode(
             };
         }
 
-        const storeId = staffData.store_id;
-
-        // Get points configuration for this store
-        console.log(`Looking up points configuration for store_id: ${storeId}`);
-        const { data: pointsData, error: pointsError } = await supabase
-            .from('store_qr')
-            .select('percentage')
-            .eq('store_id', storeId)
-            .single();
-
-        console.log('Points data lookup result:', { pointsData, pointsError });
-
-        // default 10% if no configuration is found
-        const percentage = pointsData?.percentage || 10;
+           const storeId = staffData.store_id;
+           const pointResult = await FinalCalculations(storeId, amount);
+           const pointsEarned = pointResult.points;
         
-        if (pointsError) {
-            console.warn(`No points configuration found for store ${storeId}, using default 10%. Error:`, pointsError);
-        } else {
-            console.log(`Using percentage ${percentage}% for store ${storeId}`);
-        }
-
-        // Calculate points using percentage property at store_qr table
-        const pointsEarned = Math.ceil(amount * (percentage / 100));
-        console.log(`Voucher Service: Calculated points: ${pointsEarned} (amount: ${amount}, percentage: ${percentage}%)`);
-
         const currentTime = new Date().toISOString();
         const { data: purchaseData, error: purchaseError } = await supabase
             .from("purchases")
