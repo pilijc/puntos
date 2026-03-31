@@ -1,5 +1,5 @@
 import type { RewardItem } from "@/data/rewards";
-import type { UserLocation } from "@/services/location-service";
+import type { UserLocation } from "@/services/user/location-service";
 import type { PointsOrder, RewardSortOrder } from "@/services/reward-service";
 import type { StampProgress } from "@/services/stamp-service";
 import type { Store } from "@/type/user/store";

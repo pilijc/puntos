@@ -3,7 +3,7 @@ import { useFocusEffect, router } from "expo-router";
 import React, { useState, useCallback } from "react";
 import { Ionicons } from "@expo/vector-icons";
 
-import { getCurrentLocation } from "@/services/location-service";
+import { getCurrentLocation } from "@/services/user/location-service";
 import { useProfile } from "@/hooks/use-profile";
  
 // Components

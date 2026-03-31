@@ -1,33 +1,14 @@
 import { Tabs } from "expo-router";
-import React, { useEffect } from "react";
-import { useRouter } from "expo-router";
-import { supabase } from "@/supabase/supabase";
-import { getRoleTypeForUser } from "@/services/access-service";
+import React from "react";
+import { useSuperAdminLayout } from "@/hooks/super-admin/use-super-admin-layout";
 import { LayoutDashboard, Users, Store, Settings } from 'lucide-react-native';
 
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function SuperAdminLayout() {
-  const router = useRouter();
+  useSuperAdminLayout();
 
   const insets = useSafeAreaInsets();
-
-  useEffect(() => {
-    const verifyAccess = async () => {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
-
-        const roleType = await getRoleTypeForUser(user.id);
-        if (roleType !== "super_admin") {
-          router.replace("/(user)");
-        }
-      } catch {
-        router.replace("/(user)");
-      }
-    };
-    verifyAccess();
-  }, [router]);
 
   return (
     <Tabs

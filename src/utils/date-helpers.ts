@@ -11,14 +11,12 @@ export function getWeekDateRange(): string {
 
 export function getLast7Labels(): string[] {
     const labels = [];
-    const dayNames = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
     
     for (let i = 6; i >= 0; i--) {
         const d = new Date();
         d.setDate(d.getDate() - i);
-        labels.push(dayNames[d.getDay()]);
+        labels.push(`${d.getDate()}/${d.getMonth() + 1}`);
     }
-    
     return labels;
 }
 

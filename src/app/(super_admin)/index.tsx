@@ -1,45 +1,26 @@
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React from "react";
 import { ScrollView, ActivityIndicator, RefreshControl, Image, StyleSheet, Pressable } from "react-native";
 import { SafeAreaView, Text, View } from "@/tw";
-import { useRouter, useFocusEffect } from "expo-router";
-import { useDashboardStore } from "@/store/dashboard-store";
-import { useProfile } from "@/hooks/use-profile";
+import { useSuperAdminDashboard } from "@/hooks/super-admin/use-super-admin-dashboard";
 import { SectionHeader } from "@/components/ui/section-header";
 import { UserRow } from "@/components/users/UserRow";
 import { StatCard } from "@/components/ui/stat-card";
 import { Modal } from "@/components/modal";
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { Users, Store, BarChart3 } from "lucide-react-native";
 
 export default function SuperAdminDashboard() {
-  const router = useRouter();
-  const { users, stores, adminInfo, loading, fetchDashboardData, fetchAdminSession } = useDashboardStore();
-  const { profile, refreshProfile } = useProfile();
-
-  const [refreshing, setRefreshing] = useState(false);
-  const [avatarKey, setAvatarKey] = useState(Date.now());
-
-  const activeStoresCount = useMemo(() =>
-    (stores || []).filter(s => s.status?.toString().toUpperCase().trim() === "ACTIVE").length,
-    [stores]
-  );
-
-  useFocusEffect(
-    useCallback(() => {
-      initData();
-      refreshProfile();
-      setAvatarKey(Date.now());
-    }, [])
-  );
-
-  const initData = async () => {
-    await Promise.all([fetchAdminSession(), fetchDashboardData()]);
-  };
-
-  const onRefresh = async () => {
-    setRefreshing(true);
-    await initData();
-    setRefreshing(false);
-  };
+  const {
+    router,
+    users,
+    stores,
+    adminInfo,
+    loading,
+    profile,
+    refreshing,
+    avatarKey,
+    activeStoresCount,
+    onRefresh,
+  } = useSuperAdminDashboard();
 
   if (loading && !refreshing) {
     return (
@@ -96,34 +77,34 @@ export default function SuperAdminDashboard() {
 
         <View className="px-6 mb-6 mt-4">
           <View className="flex-row gap-2">
-            <StatCard label="Total Users" val={users.length} icon="groups" />
-            <StatCard label="Total Stores" val={stores.length} icon="storefront" />
-            <StatCard label="Active Stores" val={activeStoresCount} icon="storefront" />
+            <StatCard label="Total Users" val={users.length} Icon={Users} />
+            <StatCard label="Total Stores" val={stores.length} Icon={Store} />
+            <StatCard label="Active Stores" val={activeStoresCount} Icon={Store} />
           </View>
         </View>
 
         {/* User Analytics Placeholder Section */}
         <View className="mb-6 px-6">
-            <SectionHeader title="User Analytics" onAction={() => {}} />
-            <View className="bg-white rounded-2xl p-8 border border-slate-100 items-center justify-center min-h-[220px]">
-                <MaterialIcons name="groups" size={48} color="#FF6600" />
-                <Text className="text-lg font-[Poppins-Bold] text-[#0F172A] mt-3">User Insights</Text>
-                <Text className="text-sm font-[Poppins-Regular] text-[#94A3B8] text-center mt-2 px-6">
-                    User analytics and behaviors will appear here.
-                </Text>
-            </View>
+          <SectionHeader title="User Analytics" onAction={() => { }} />
+          <View className="bg-white rounded-2xl p-8 border border-slate-100 items-center justify-center min-h-[220px]">
+            <Users size={48} color="#FF6600" />
+            <Text className="text-lg font-[Poppins-Bold] text-[#0F172A] mt-3">User Insights</Text>
+            <Text className="text-sm font-[Poppins-Regular] text-[#94A3B8] text-center mt-2 px-6">
+              User analytics and behaviors will appear here.
+            </Text>
+          </View>
         </View>
 
         {/* Store Analytics Placeholder Section */}
         <View className="mb-8 px-6">
-            <SectionHeader title="Store Analytics" onAction={() => {}} />
-            <View className="bg-white rounded-2xl p-8 border border-slate-100 items-center justify-center min-h-[220px]">
-                <MaterialIcons name="bar-chart" size={48} color="#FF6600" />
-                <Text className="text-lg font-[Poppins-Bold] text-[#0F172A] mt-3">Store Insights</Text>
-                <Text className="text-sm font-[Poppins-Regular] text-[#94A3B8] text-center mt-2 px-6">
-                    Store analytics and insights will appear here.
-                </Text>
-            </View>
+          <SectionHeader title="Store Analytics" onAction={() => { }} />
+          <View className="bg-white rounded-2xl p-8 border border-slate-100 items-center justify-center min-h-[220px]">
+            <BarChart3 size={48} color="#FF6600" />
+            <Text className="text-lg font-[Poppins-Bold] text-[#0F172A] mt-3">Store Insights</Text>
+            <Text className="text-sm font-[Poppins-Regular] text-[#94A3B8] text-center mt-2 px-6">
+              Store analytics and insights will appear here.
+            </Text>
+          </View>
         </View>
       </ScrollView>
     </SafeAreaView>

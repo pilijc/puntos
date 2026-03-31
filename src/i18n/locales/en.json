@@ -394,7 +394,6 @@
         "title": "Settings",
         "logout": {
             "title": "Logout",
-            "confirmTitle": "Logout",
             "confirmMessage": "Are you sure you want to logout?"
         },
         "checking": "Checking...",
@@ -465,17 +464,12 @@
             "title": "NOTIFICATIONS & PRIVACY",
             "alerts": {
                 "title": "Nearby Alerts",
-                "description": "Get notified when rewards are close",
-                "disableTitle": "Disable Nearby Alerts"
+                "description": "Get notified when rewards are close"
             },
             "location": {
                 "title": "Location Access",
                 "allow": "Access Allowed",
-                "denied": "Access Denied",
-                "disableTitle": "Disable Location Access"
-            },
-            "email": {
-                "title": "Promotional Emails"
+                "denied": "Access Denied"
             },
             "permissions": "To change {{services}} permissions, please update them in your device’s Settings. Would you like to open it now?",
             "services": {
@@ -483,6 +477,35 @@
                 "notifications": "notification"
             },
             "openSettings": "Open Settings"
+        }
+    },
+    "storeManager": {
+        "dashboard": {
+            "title": "Dashboard",
+            "noStores": "No stores available.",
+            "metrics": {
+                "inStore": "IN-STORE",
+                "realTimeUsers": "real-time users",
+                "totalScanned": "TOTAL SCANNED",
+                "redeemedToday": "Redeemed today"
+            },
+            "retention": {
+                "title": "Retention",
+                "subtitle": "User loyalty overview",
+                "returning": "Returning",
+                "new": "New"
+            },
+            "activity": {
+                "title": "Weekly Scan Activity"
+            },
+            "stampProgress": {
+                "title": "Stamp Progress",
+                "distribution": "Distribution of {{users}} users · Goal: {{goal}} stamps",
+                "noProgram": "No active stamp program found",
+                "stamps": "stamps",
+                "user": "user",
+                "users": "users"
+            }
         }
     }
 }

@@ -12,7 +12,7 @@ import { useStoreStore } from "@/store/user/store-store";
 import { Store } from "@/type/user/store";
 import type * as GeoJSON from "geojson";
 import { getOneSignalId, sendPushNotification } from "@/services/push-notif";
-import { isStoreNearby } from "@/services/location-service";
+import { isStoreNearby } from "@/services/user/location-service";
 import * as turf from "@turf/turf";
 import { getStores } from "@/services/store-service";
 import { OneSignal } from "react-native-onesignal";
