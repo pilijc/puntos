@@ -3,7 +3,7 @@ import { Alert, KeyboardAvoidingView, useColorScheme } from "react-native";
 import { View, Text, TextInput } from "@/tw";
 import { Ionicons } from "@expo/vector-icons";
 import { supabase } from "@/supabase/supabase";
-import { Modal } from "@/components/modal";
+import { Modal, type ModalButton } from "@/components/modal";
 import { useTranslation } from "react-i18next";
 
 interface Props {
@@ -19,6 +19,11 @@ export default function ChangePasswordModal({ visible, onClose }: Props) {
     const [newPassword, setNewPassword] = useState("");
     const [repeatNewPassword, setRepeatNewPassword] = useState("");
     const [loading, setLoading] = useState(false);
+    const [feedbackModal, setFeedbackModal] = useState<{
+        title: string;
+        message: string;
+        buttons: ModalButton[];
+    } | null>(null);
 
     const resetForm = () => {
         setCurrentPassword("");
@@ -32,16 +37,26 @@ export default function ChangePasswordModal({ visible, onClose }: Props) {
     };
 
     const handleConfirm = async () => {
+        const errorAlert = (msg: string) => setFeedbackModal({
+            title: translate("label.error"),
+            message: msg,
+            buttons: [{
+                label: translate("label.ok"),
+                variant: "secondary",
+                onPress: () => setFeedbackModal(null)
+            }]
+        });
+
         if (!currentPassword || !newPassword || !repeatNewPassword) {
-            Alert.alert(translate("label.error"), translate("settings.account.security.changePassword.error.missingFields"));
+            errorAlert(translate("settings.account.security.changePassword.error.missingFields"))
             return;
         }
         if (newPassword !== repeatNewPassword) {
-            Alert.alert(translate("label.error"), translate("settings.account.security.changePassword.error.passwordMatch"));
+            errorAlert(translate("settings.account.security.changePassword.error.passwordMatch"))
             return;
         }
         if (newPassword.length < 8) {
-            Alert.alert(translate("label.error"), translate("settings.account.security.changePassword.error.passwordLimit"));
+            errorAlert(translate("settings.account.security.changePassword.error.passwordLimit"))
             return;
         }
 
@@ -59,95 +74,114 @@ export default function ChangePasswordModal({ visible, onClose }: Props) {
             const { error: updateError } = await supabase.auth.updateUser({ password: newPassword });
             if (updateError) throw updateError;
 
-            Alert.alert(translate("label.confirm"), translate("settings.account.security.changePassword.success"));
-            handleClose();
+            setFeedbackModal({
+                title: translate("label.confirm"),
+                message: translate("settings.account.security.changePassword.success"),
+                buttons: [{
+                    label: translate("label.ok"),
+                    onPress: () => {
+                        setFeedbackModal(null);
+                        handleClose();
+                    }
+                }]
+            });
         } catch (error: any) {
-            Alert.alert(translate("label.error"), error.message || translate("settings.account.security.changePassword.error.failed"));
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            errorAlert(errorMessage || translate("settings.account.security.changePassword.error.failed"));
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <Modal
-            visible={visible}
-            onClose={handleClose}
-            title={translate("settings.account.security.changePassword.title")}
-            message={translate("settings.account.security.changePassword.description")}
-            buttons={[
-                {
-                    label: translate("label.cancel"),
-                    variant: "secondary",
-                    onPress: handleClose,
-                    disabled: loading
-                },
-                {
-                    label: translate("label.confirm"),
-                    variant: "primary",
-                    onPress: handleConfirm,
-                    loading: loading
-                }
-            ]}
-        >
-            <KeyboardAvoidingView
-                behavior={"padding"}
-                keyboardVerticalOffset={100}
+        <>
+            <Modal
+                visible={visible}
+                onClose={handleClose}
+                title={translate("settings.account.security.changePassword.title")}
+                message={translate("settings.account.security.changePassword.description")}
+                buttons={[
+                    {
+                        label: translate("label.cancel"),
+                        variant: "secondary",
+                        onPress: handleClose,
+                        disabled: loading
+                    },
+                    {
+                        label: translate("label.confirm"),
+                        variant: "primary",
+                        onPress: handleConfirm,
+                        loading: loading
+                    }
+                ]}
             >
-                <View className="gap-y-4">
-                    {/* Current Password */}
-                    <View>
-                        <Text className="text-xs font-poppins-bold text-neutral-600 dark:text-darkTextSecondary mb-1.5 ml-1">
-                            {translate("settings.account.security.changePassword.label.current")}
-                        </Text>
-                        <View className="flex-row items-center bg-neutral-50 dark:bg-darkBackgroundMuted border border-neutral-200 dark:border-darkBorder rounded-xl px-4 py-1">
-                            <Ionicons name="lock-closed-outline" size={18} color={isDark ? "#6b7280" : "#9CA3AF"} />
-                            <TextInput
-                                className="flex-1 p-3 font-poppins-medium text-neutral-900 dark:text-darkTextPrimary"
-                                placeholder={translate("settings.account.security.changePassword.input.current")}
-                                secureTextEntry
-                                value={currentPassword}
-                                onChangeText={setCurrentPassword}
-                                editable={!loading}
-                                placeholderTextColor={isDark ? "#4b5563" : "#9CA3AF"}
-                            />
+                <KeyboardAvoidingView
+                    behavior={"padding"}
+                    keyboardVerticalOffset={100}
+                >
+                    <View className="gap-y-4">
+                        {/* Current Password */}
+                        <View>
+                            <Text className="text-xs font-poppins-bold text-neutral-600 dark:text-darkTextSecondary mb-1.5 ml-1">
+                                {translate("settings.account.security.changePassword.label.current")}
+                            </Text>
+                            <View className="flex-row items-center bg-neutral-50 dark:bg-darkBackgroundMuted border border-neutral-200 dark:border-darkBorder rounded-xl px-4 py-1">
+                                <Ionicons name="lock-closed-outline" size={18} color={isDark ? "#6b7280" : "#9CA3AF"} />
+                                <TextInput
+                                    className="flex-1 p-3 font-poppins-medium text-neutral-900 dark:text-darkTextPrimary"
+                                    placeholder={translate("settings.account.security.changePassword.input.current")}
+                                    secureTextEntry
+                                    value={currentPassword}
+                                    onChangeText={setCurrentPassword}
+                                    editable={!loading}
+                                    placeholderTextColor={isDark ? "#4b5563" : "#9CA3AF"}
+                                />
+                            </View>
                         </View>
-                    </View>
 
-                    {/* New Password */}
-                    <View>
-                        <Text className="text-xs font-poppins-bold text-neutral-600 dark:text-darkTextSecondary mb-1.5 ml-1">{translate("settings.account.security.changePassword.label.new")}</Text>
-                        <View className="flex-row items-center bg-neutral-50 dark:bg-darkBackgroundMuted border border-neutral-200 dark:border-darkBorder rounded-xl px-4 py-1">
-                            <Ionicons name="lock-open-outline" size={18} color={isDark ? "#6b7280" : "#9CA3AF"} />
-                            <TextInput
-                                className="flex-1 p-3 font-poppins-medium text-neutral-900 dark:text-darkTextPrimary"
-                                placeholder={translate("settings.account.security.changePassword.input.new")}
-                                secureTextEntry
-                                value={newPassword}
-                                onChangeText={setNewPassword}
-                                editable={!loading}
-                                placeholderTextColor={isDark ? "#4b5563" : "#9CA3AF"}
-                            />
+                        {/* New Password */}
+                        <View>
+                            <Text className="text-xs font-poppins-bold text-neutral-600 dark:text-darkTextSecondary mb-1.5 ml-1">{translate("settings.account.security.changePassword.label.new")}</Text>
+                            <View className="flex-row items-center bg-neutral-50 dark:bg-darkBackgroundMuted border border-neutral-200 dark:border-darkBorder rounded-xl px-4 py-1">
+                                <Ionicons name="lock-open-outline" size={18} color={isDark ? "#6b7280" : "#9CA3AF"} />
+                                <TextInput
+                                    className="flex-1 p-3 font-poppins-medium text-neutral-900 dark:text-darkTextPrimary"
+                                    placeholder={translate("settings.account.security.changePassword.input.new")}
+                                    secureTextEntry
+                                    value={newPassword}
+                                    onChangeText={setNewPassword}
+                                    editable={!loading}
+                                    placeholderTextColor={isDark ? "#4b5563" : "#9CA3AF"}
+                                />
+                            </View>
                         </View>
-                    </View>
 
-                    {/* Repeat New Password */}
-                    <View>
-                        <Text className="text-xs font-poppins-bold text-neutral-600 dark:text-darkTextSecondary mb-1.5 ml-1">{translate("settings.account.security.changePassword.label.repeat")}</Text>
-                        <View className="flex-row items-center bg-neutral-50 dark:bg-darkBackgroundMuted border border-neutral-200 dark:border-darkBorder rounded-xl px-4 py-1">
-                            <Ionicons name="shield-checkmark-outline" size={18} color={isDark ? "#6b7280" : "#9CA3AF"} />
-                            <TextInput
-                                className="flex-1 p-3 font-poppins-medium text-neutral-900 dark:text-darkTextPrimary"
-                                placeholder={translate("settings.account.security.changePassword.input.repeat")}
-                                secureTextEntry
-                                value={repeatNewPassword}
-                                onChangeText={setRepeatNewPassword}
-                                editable={!loading}
-                                placeholderTextColor={isDark ? "#4b5563" : "#9CA3AF"}
-                            />
+                        {/* Repeat New Password */}
+                        <View>
+                            <Text className="text-xs font-poppins-bold text-neutral-600 dark:text-darkTextSecondary mb-1.5 ml-1">{translate("settings.account.security.changePassword.label.repeat")}</Text>
+                            <View className="flex-row items-center bg-neutral-50 dark:bg-darkBackgroundMuted border border-neutral-200 dark:border-darkBorder rounded-xl px-4 py-1">
+                                <Ionicons name="shield-checkmark-outline" size={18} color={isDark ? "#6b7280" : "#9CA3AF"} />
+                                <TextInput
+                                    className="flex-1 p-3 font-poppins-medium text-neutral-900 dark:text-darkTextPrimary"
+                                    placeholder={translate("settings.account.security.changePassword.input.repeat")}
+                                    secureTextEntry
+                                    value={repeatNewPassword}
+                                    onChangeText={setRepeatNewPassword}
+                                    editable={!loading}
+                                    placeholderTextColor={isDark ? "#4b5563" : "#9CA3AF"}
+                                />
+                            </View>
                         </View>
                     </View>
-                </View>
-            </KeyboardAvoidingView>
-        </Modal>
+                </KeyboardAvoidingView>
+            </Modal>
+            <Modal
+                visible={!!feedbackModal}
+                onClose={() => setFeedbackModal(null)}
+                title={feedbackModal?.title ?? ""}
+                message={feedbackModal?.message}
+                buttons={feedbackModal?.buttons}
+            />
+        </>
     );
 }

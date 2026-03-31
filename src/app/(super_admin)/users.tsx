@@ -2,7 +2,7 @@ import React, { useCallback } from "react";
 import { ActivityIndicator, RefreshControl, StatusBar, FlatList } from "react-native";
 import { View, Text } from "@/tw";
 import { ScreenWrapper } from "@/components/ui/screen-wrapper";
-import { Modal } from "@/components/modal";
+import { UsersModal as Modal } from "@/components/users/UsersModal";
 import { BlockUserModal } from "@/components/users/BlockUserModal";
 import { FilterBottomSheet } from "@/components/users/FilterBottomSheet";
 import { UsersSearchHeader } from "@/components/users/UsersSearchHeader";
@@ -11,6 +11,8 @@ import { TYPO, COLORS } from "@/type/super-admin/user";
 import { useSuperAdminUsers } from "@/hooks/super-admin/use-super-admin-users";
 
 export default function UsersScreen() {
+  const colorScheme = require('react-native').useColorScheme();
+  const isDark = colorScheme === 'dark';
   const {
     loading,
     refreshing,
@@ -47,8 +49,8 @@ export default function UsersScreen() {
   );
 
   return (
-    <ScreenWrapper className="flex-1 bg-background">
-      <StatusBar barStyle="dark-content" />
+    <ScreenWrapper className="flex-1 bg-background dark:bg-darkBackground">
+      <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
       <UsersSearchHeader
         search={search}
         onSearchChange={setSearch}
@@ -89,7 +91,7 @@ export default function UsersScreen() {
           }
           ListEmptyComponent={
             <View className="items-center justify-center pt-20">
-              <Text className={TYPO.subtitle}>No users found</Text>
+              <Text className={`${TYPO.subtitle} dark:text-darkTextSecondary`}>No users found</Text>
             </View>
           }
         />

@@ -62,6 +62,8 @@ export function AdminStoreDetails({
   const scrollRef = useRef<any>(null);
   const [layoutWidth, setLayoutWidth] = useState(0);
 
+  const isDark = require("react-native").useColorScheme() === "dark";
+
   const getEffectiveStatus = (s: AdminStoreRow): StatusKey => {
     if (s.status === "pending_review" || !s.status) return "pending_review";
     if (s.status === "inactive") return "inactive";
@@ -81,8 +83,8 @@ export function AdminStoreDetails({
       {/* Header */}
       <View className="flex-row items-center justify-between px-4 h-[60px]">
         <View className="flex-row items-center gap-1.5">
-          <TouchableOpacity onPress={onBack} activeOpacity={0.7} className="w-9 h-9 items-center justify-center rounded-full">
-            <MaterialIcons name="arrow-back" size={24} color="#0F172A" />
+          <TouchableOpacity onPress={onBack} activeOpacity={0.7} className="items-center justify-center -ml-2 p-2">
+            <MaterialIcons name="chevron-left" size={28} color={isDark ? "#ffffff" : "#0F172A"} />
           </TouchableOpacity>
           <Text className="text-[17px] font-poppins-bold text-textPrimary dark:text-darkTextPrimary ml-1">Store Details</Text>
         </View>

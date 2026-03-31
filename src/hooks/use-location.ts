@@ -9,7 +9,7 @@ import {
   LocationPermissionStatus,
   watchLocation,
   LocationSubscription,
-} from '@/services/location-service';
+} from '@/services/user/location-service';
 
 export interface UseLocationReturn {
   location: UserLocation | null;
