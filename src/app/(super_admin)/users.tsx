@@ -2,7 +2,7 @@ import React, { useCallback } from "react";
 import { ActivityIndicator, RefreshControl, StatusBar, FlatList } from "react-native";
 import { View, Text } from "@/tw";
 import { ScreenWrapper } from "@/components/ui/screen-wrapper";
-import { Modal } from "@/components/modal";
+import { UsersModal as Modal } from "@/components/users/UsersModal";
 import { BlockUserModal } from "@/components/users/BlockUserModal";
 import { FilterBottomSheet } from "@/components/users/FilterBottomSheet";
 import { UsersSearchHeader } from "@/components/users/UsersSearchHeader";
