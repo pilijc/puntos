@@ -13,11 +13,12 @@ module.exports = {
         "poppins-semibold": ["Poppins-SemiBold"],
         "poppins-bold": ["Poppins-Bold"],
       },
-        colors: {
-            primary: "#FF6600",
-            accent: "#8B8D98",
-            background: "#F8FAFC",
-            backgroundMuted: "#F3F4F6",
+      colors: {
+        primary: "#FF6600",
+        accent: "#8B8D98",
+        background: "#F8FAFC",
+        backgroundMuted: "#F3F4F6",
+        border: "#E5E7EB",
 
         textPrimary: "#0F172A",
         textSecondary: "#475569",

@@ -1,7 +1,11 @@
 import React, { useState } from 'react';
-import { LayoutAnimation } from 'react-native';
+import { LayoutAnimation, Platform, UIManager } from 'react-native';
+
+if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
+    UIManager.setLayoutAnimationEnabledExperimental(true);
+}
 import { View, Text, TouchableOpacity } from "@/tw";
-import { Ionicons } from '@expo/vector-icons';
+import { Shield, ChevronRight, ChevronUp, ChevronDown } from 'lucide-react-native';
 import { router } from "expo-router";
 
 // State/Auth
@@ -44,33 +48,29 @@ export const SecurityCard = () => {
 
     return (
         <>
-            <View className="bg-background dark:bg-darkBackgroundMuted p-4 overflow-hidden">
+            <View className="bg-background dark:bg-darkBackgroundMuted p-4 border-t border-border dark:border-darkBorder overflow-hidden">
                 <TouchableOpacity
                     onPress={toggleOpen}
                     className="flex-row items-center"
                     activeOpacity={0.7}
                 >
                     <View className="h-8 w-8 rounded-lg bg-blue-50 dark:bg-blue-900/20 items-center justify-center">
-                        <Ionicons name="shield-checkmark-outline" size={15} color="#3b82f6" />
+                        <Shield size={15} color="#3b82f6" />
                     </View>
 
                     <Text className="flex-1 ml-3 text-base font-poppins-semibold text-textPrimary dark:text-darkTextPrimary">
                         {translate('settings.account.security.title')}
                     </Text>
 
-                    <Ionicons
-                        name={isOpen ? "chevron-up-outline" : "chevron-down-outline"}
-                        size={20}
-                        color="#94a3b8"
-                    />
+                    {isOpen ? <ChevronUp size={20} color="#94a3b8" /> : <ChevronDown size={20} color="#94a3b8" />}
                 </TouchableOpacity>
 
                 {isOpen && (
                     <View className="mt-2">
-                        {/* Divider */}
-                        <View className="h-[1px] bg-neutral-100 dark:bg-darkBorder mb-1 ml-12" />
+                        {/* divider */}
+                        <View className="h-[1px] bg-border dark:bg-darkBorder mb-1 ml-12" />
 
-                        {/* Change Password Row */}
+                        {/* change password*/}
                         <TouchableOpacity
                             onPress={() => setChangePasswordVisible(true)}
                             className="flex-row items-center py-3 ml-12"
@@ -79,13 +79,13 @@ export const SecurityCard = () => {
                             <Text className="flex-1 text-sm font-poppins-medium text-textSecondary dark:text-darkTextSecondary">
                                 {translate('settings.account.security.changePassword.title')}
                             </Text>
-                            <Ionicons name="chevron-forward" size={14} color="#94a3b8" />
+                            <ChevronRight size={14} color="#94a3b8" />
                         </TouchableOpacity>
 
-                        {/* Divider */}
+                        {/* divider */}
                         <View className="h-[1px] bg-neutral-100 dark:bg-darkBorder ml-12" />
 
-                        {/* Delete Account Row */}
+                        {/* delete */}
                         <TouchableOpacity
                             onPress={() => setDeleteModalVisible(true)}
                             className="flex-row items-center py-3 ml-12"
@@ -94,7 +94,7 @@ export const SecurityCard = () => {
                             <Text className="flex-1 text-sm font-poppins-medium text-danger">
                                 {translate('settings.account.security.deleteAccount.title')}
                             </Text>
-                            <Ionicons name="chevron-forward" size={14} color="#94a3b8" />
+                            <ChevronRight size={14} color="#94a3b8" />
                         </TouchableOpacity>
                     </View>
                 )}
