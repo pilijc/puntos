@@ -17,7 +17,7 @@ export class AccountDeletedError extends Error {
  */
 export class AccountBlockedError extends Error {
   constructor() {
-    super("Your account has been restricted. Please contact support.");
+    super("Your account has been restricted. To verify your account status, please contact support.");
     this.name = "AccountBlockedError";
   }
 }
@@ -55,7 +55,6 @@ export async function checkIfAccountBlockedService(userId: string): Promise<void
   if (error) throw error;
 
   if (data?.blocked === true) {
-    await supabase.auth.signOut();
     throw new AccountBlockedError();
   }
 }
@@ -160,6 +159,7 @@ export async function signUpWithGoogleService() {
       const homeRoute = data?.user?.id ? await getHomeRouteForUserId(data.user.id) : "/(user)";
 
       if (data.user) {
+        await checkIfAccountBlockedService(data.user.id);
         const name = data.user.user_metadata.full_name
 
         const { data: existingProfile } = await supabase
@@ -213,6 +213,7 @@ export async function loginService(email: string, password: string) {
     const userId = res.data?.user?.id;
     if(!userId) throw new Error("Login Failed");
 
+    await checkIfAccountBlockedService(userId);
     const roleType = await getRoleTypeForUser(userId);
 
     if (roleType === "front_desk") {
@@ -281,6 +282,7 @@ export async function signInWithGoogleLoginService() {
       });
 
       if (data.user) {
+        await checkIfAccountBlockedService(data.user.id);
         const name = data.user.user_metadata?.full_name ?? data.user.email ?? 'User';
 
         const { data: existingProfile } = await supabase
