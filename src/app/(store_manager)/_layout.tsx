@@ -171,7 +171,7 @@ export default function StoreManagerLayout() {
             <Tabs.Screen
                 name="qr/index"
                 options={{ href: null }}
-            /> */}
+            />
             <Tabs.Screen
                 name="qr/configure-qr"
                 options={{ href: null }}
