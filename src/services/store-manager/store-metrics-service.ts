@@ -143,20 +143,27 @@ export async function getStampDistribution(storeId: number): Promise<{
         return { buckets: [], maxStamps };
     }
 
-    // group into ~5 buckets based on maxStamps
-    // split 0..maxStamps into equal segments
-    const BUCKET_COUNT = maxStamps < 5 ? maxStamps : 5;
-    const segmentSize = Math.ceil(maxStamps / BUCKET_COUNT);
-
-    // initialize buckets
-    const rawBuckets: { min: number; max: number; count: number }[] = [];
-    for (let i = 0; i < BUCKET_COUNT; i++) {
-        const min = i * segmentSize + (i === 0 ? 0 : 1);
-        const max = Math.min((i + 1) * segmentSize, maxStamps);
-        rawBuckets.push({ min, max, count: 0 });
+    if (maxStamps <= 0) {
+        return { buckets: [], maxStamps: 0 };
     }
 
-    // place each user's stamps_count into the right bucket
+    const distinctValues = maxStamps + 1;
+    
+    const targetBuckets = Math.min(distinctValues, 5);
+    const segmentSize = Math.ceil(distinctValues / targetBuckets);
+
+    const rawBuckets: { min: number; max: number; count: number }[] = [];
+    let currentMin = 0;
+
+    for (let i = 0; i < targetBuckets; i++) {
+        const currentMax = Math.min(currentMin + segmentSize - 1, maxStamps);
+        
+        rawBuckets.push({ min: currentMin, max: currentMax, count: 0 });
+        
+        currentMin = currentMax + 1;
+        if (currentMin > maxStamps) break;
+    }
+
     progressData.forEach((row) => {
         const count = row.stamps_count as number;
         for (const bucket of rawBuckets) {
