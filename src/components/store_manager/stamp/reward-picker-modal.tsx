@@ -82,7 +82,7 @@ export function RewardPickerModal({
         }} onPress={onClose} />
         <View
           style={{ maxHeight: "88%", paddingBottom: Platform.OS === "ios" ? 28 : 16 }}
-          className={isDark ? "rounded-t-2xl bg-darkBackgroundCard" : "rounded-t-2xl bg-background"}
+          className={isDark ? "rounded-t-2xl bg-darkBackgroundCard" : "rounded-t-2xl bg-white dark:bg-slate-900"}
         >
           <View className="flex-row items-center justify-between px-4 py-2">
             <Text className="text-base font-poppins-bold text-textPrimary dark:text-darkTextPrimary">Choose a reward</Text>
@@ -136,8 +136,8 @@ export function RewardPickerModal({
                     }}
                     className={`mb-2 flex-row items-center justify-between rounded-xl border px-3 py-3 ${
                       selected
-                        ? "bg-primary/10 border-primary/20 dark:border-primary/30"
-                        : "bg-background dark:bg-darkBackgroundCard border-gray-200 dark:border-darkBorder"
+                        ? "border-primary bg-white"
+                        : "bg-white dark:darkBackground border-slate-200 dark:border-slate-700"
                     }`}
                   >
                     {item.image_url ? (

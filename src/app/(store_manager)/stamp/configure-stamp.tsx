@@ -243,19 +243,22 @@ export default function ConfigureStamp() {
               </Text>
             </View>
 
-            <View className="rounded-xl bg-amber-50 dark:bg-amber-900/20 py-4 px-3 gap-y-2">
+            <View className="rounded-xl bg-amber-50 dark:bg-amber-900/20 p-4">
               <View className="flex-row items-center gap-x-2">
-                <Info size={14} color="#D97706" />
                 <Text className="text-sm font-poppins-bold text-amber-700 dark:text-amber-400">
                   Before You Start
                 </Text>
               </View>
-              <View className="gap-y-1">
+              <View>
                 {[
                   "Only 1 stamp program can be active per store at a time.",
                   "When you end a program, users cannot earn new stamps, but can still redeem during the grace period.",
                 ].map((rule, i) => (
-                  <View key={i} className="flex-row items-start gap-x-2">
+                  <View
+                    key={i}
+                    className="flex-row items-start gap-x-2 gap-y-1"
+                    style={{ alignItems: "flex-start" }}
+                  >
                     <Text className="text-amber-500 text-xs mt-0.5 font-poppins-semibold">•</Text>
                     <Text className="text-xs font-poppins text-amber-700 dark:text-amber-400 flex-1">
                       {rule}
@@ -277,9 +280,27 @@ export default function ConfigureStamp() {
             </View>
 
             <View className="gap-y-1.5">
-              <Text className="text-sm font-poppins-semibold text-slate-700 dark:text-slate-300">
-                Reward
-              </Text>
+              <View className="flex-row items-center justify-between">
+                <View className="flex-row items-center gap-x-1">
+                  <Text className="text-sm font-poppins-semibold text-slate-700 dark:text-slate-300">
+                    Reward
+                  </Text>
+                  <Text className="text-sm font-poppins text-red-500 dark:text-red-400 ">*</Text>
+                </View>
+                {selectedReward && (
+                  <TouchableOpacity
+                    onPress={() => {
+                      setRewardId("");
+                      setSelectedReward(null);
+                    }}
+                    activeOpacity={0.7}
+                    className="px-2 py-1"
+                    hitSlop={8 as any}
+                  >
+                    <Text className="text-xs font-poppins-semibold text-primary">Clear</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
               {!storeHasRewards ? (
                 <View className="rounded-xl border border-dashed border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 px-4 py-5 items-center gap-y-3">
                   <Gift size={26} color="#94A3B8" />
@@ -310,7 +331,7 @@ export default function ConfigureStamp() {
                   {selectedReward?.image_url ? (
                     <Image
                       source={{ uri: selectedReward.image_url }}
-                      style={{ width: 40, height: 40, borderRadius: 10 }}
+                      style={{ width: 40, height: 40, borderRadius: 6 }}
                       contentFit="cover"
                     />
                   ) : (
@@ -333,10 +354,13 @@ export default function ConfigureStamp() {
           </View>
 
           <View className="gap-y-3">
-            <View>
-              <Text className="text-sm font-poppins-bold text-slate-700 dark:text-slate-300">
-                Expiration Mode
-              </Text>
+            <View className="gap-y-1">
+              <View className="flex-row items-center gap-x-1">
+                <Text className="text-sm font-poppins-semibold text-slate-700 dark:text-slate-300">
+                  Expiration Mode
+                </Text>
+                <Text className="text-sm font-poppins text-red-500 dark:text-red-400 ">*</Text>
+              </View>
               <Text className="text-xs font-poppins text-slate-500 dark:text-slate-400">
                 Choose how stamp cards expire for your customers.
               </Text>
@@ -349,37 +373,31 @@ export default function ConfigureStamp() {
                   key={opt.key}
                   activeOpacity={0.8}
                   onPress={() => setExpirationMode(opt.key)}
-                  className={`rounded-xl border px-4 py-3 gap-y-1 ${
+                  className={`rounded-xl border px-4 py-2 gap-y-1 bg-white dark:bg-slate-900 ${
                     selected
-                      ? "bg-primary/5 dark:bg-primary/10 border-primary/10"
-                      : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700"
+                      ? "border-primary"
+                      : "border-slate-200 dark:border-slate-700"
                   }`}
                 >
-                  <View className="flex-row items-start justify-between">
+                  <View className="flex-row items-center justify-between">
                     <View className="flex-1 pr-3">
-                      <Text
-                        className={`text-sm font-poppins-bold ${
-                          selected ? "text-primary" : "text-slate-700 dark:text-slate-300"
-                        }`}
-                      >
+                      <Text className="text-sm font-poppins pr-8 text-textSecondary dark:text-darkTextSecondary mt-1 font-poppins-semibold">
                         {opt.label}
+                      </Text>
+                      <Text
+                        className="text-xs font-poppins pr-8 text-textMuted dark:text-darkTextMuted mt-1"
+                      >
+                        {opt.description}
                       </Text>
                     </View>
                     <View
-                      className={`w-5 h-5 rounded-full border-2 items-center justify-center ${
+                      className={`w-5 h-5 rounded-full border-2 items-center justify-center self-center ${
                         selected ? "border-primary bg-primary" : "border-slate-300 dark:border-slate-600"
                       }`}
                     >
                       {selected && <Check size={12} color="#FFFFFF" />}
                     </View>
                   </View>
-                  <Text
-                    className={`text-xs font-poppins pr-8 ${
-                      selected ? "text-primary/70" : "text-slate-500 dark:text-slate-400"
-                    }`}
-                  >
-                    {opt.description}
-                  </Text>
                 </TouchableOpacity>
               );
             })}
