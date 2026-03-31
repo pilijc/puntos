@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { KeyboardAvoidingView, Platform, ScrollView, useColorScheme } from "react-native";
 import { View, Text, TouchableOpacity } from "@/tw";
 import { Check} from "lucide-react-native";
@@ -9,7 +9,7 @@ import { Modal, type ModalButton } from "@/components/modal";
 import { TextField } from "@/components/text-field";
 import { EarningType } from "@/type/store-manager/qr.purchase";
 import { useQRStore } from "@/store/store-manager/qr-store";
-import { createQRService } from "@/services/store-manager/qr-service";
+import { createQRService, getQRConfig } from "@/services/store-manager/qr-service";
 import { AppHeader } from "@/components/header";
 
 export default function ConfigureStreaks() {
@@ -57,13 +57,67 @@ export default function ConfigureStreaks() {
 			const base = parseFloat(baseAmountInput);
 			if (!percentageInput || isNaN(pct) || pct <= 0) { showError("Please enter a valid percentage."); return false; }
 			if (pct > 100) { showError("Percentage cannot exceed 100%."); return false; }
-			if (baseAmountInput && isNaN(base) || base <= 0) { showError("Please enter a valid base amount."); return false; }
+			if (baseAmountInput && (isNaN(base) || base <= 0)) { showError("Please enter a valid base amount."); return false; }
 		} else {
 			const pts = parseFloat(fixedPointsInput);
 			if (!fixedPointsInput || isNaN(pts) || pts <= 0) { showError("Please enter a valid fixed points amount."); return false; }
+      const maxTxn = maxPointsInput ? parseFloat(maxPointsInput) : NaN;
+      if (!isNaN(maxTxn) && maxTxn > 0 && maxTxn < pts) {
+        showError("Max points per transaction cannot be lower than the fixed points amount.");
+        return false;
+      }
 		}
 		return true;
 	};
+
+  useEffect(() => {
+    const storeIdForDb = storeIdParam && storeIdParam !== "undefined" ? storeIdParam : null;
+    if (!storeIdForDb) return;
+
+    let cancelled = false;
+    getQRConfig(storeIdForDb)
+      .then((cfg) => {
+        if (!cfg || cancelled) return;
+
+        const type = (cfg.earning_type as EarningType) ?? "percentage";
+        setEarningType(type);
+
+        if (type === "percentage") {
+          const pct = cfg.percentage ?? 0;
+          const base = cfg.base_amount ?? 0;
+          setPercentage(pct);
+          setBaseAmount(base);
+          setPercentageInput(pct ? String(pct) : "");
+          setBaseAmountInput(base ? String(base) : "");
+        } else {
+          const fixed = cfg.fixed_points ?? 0;
+          const minSpend = cfg.minimum_spend ?? 0;
+          setFixedPoints(fixed);
+          setMinimumSpend(minSpend);
+          setFixedPointsInput(fixed ? String(fixed) : "");
+          setMinimumSpendInput(minSpend ? String(minSpend) : "");
+        }
+
+        const maxPerTxn = cfg.max_points_per_txn ?? 0;
+        setMaxPointsPerTxn(maxPerTxn);
+        setMaxPointsInput(maxPerTxn ? String(maxPerTxn) : "");
+      })
+      .catch((error) => {
+        throw error;
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    storeIdParam,
+    setEarningType,
+    setPercentage,
+    setBaseAmount,
+    setFixedPoints,
+    setMinimumSpend,
+    setMaxPointsPerTxn,
+  ]);
 
 	const handleSave = async () => {
 		if (isSubmitting) return;
