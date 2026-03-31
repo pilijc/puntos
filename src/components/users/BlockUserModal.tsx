@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo, useRef } from "react";
 import { Image, LayoutAnimation, Platform, UIManager, Dimensions, NativeSyntheticEvent, NativeScrollEvent } from "react-native";
 import { View, Text } from "@/tw";
 import { MaterialIcons } from "@expo/vector-icons";
-import { Modal } from "@/components/modal";
+import { UsersModal as Modal } from "@/components/users/UsersModal";
 import { TYPO, COLORS, getBadge } from "@/type/super-admin/user";
 import { UserRecord } from "@/store/super-admin/user-store";
 import { useSuperAdminStoresStore } from "@/store/super-admin/super-admin-stores-store";
@@ -99,10 +99,10 @@ export function BlockUserModal({
       showCloseButton
     >
       {selectedUser && (
-        <View className="bg-backgroundMuted rounded-2xl p-4 border border-slate-100">
+        <View className="bg-backgroundMuted dark:bg-darkBackground rounded-2xl p-4 border border-slate-100 dark:border-darkBorder">
           {/* ── User Info Row ── */}
           <View className="flex-row items-center mb-3">
-            <View className="w-10 h-12 rounded-xl overflow-hidden border border-slate-200 mr-3">
+            <View className="w-10 h-12 rounded-xl overflow-hidden border border-slate-200 dark:border-darkBorder mr-3">
               <Image
                 source={{ uri: selectedUser.imageUri || selectedUser.avatar }}
                 style={{ width: "100%", height: "100%" }}
@@ -110,10 +110,10 @@ export function BlockUserModal({
               />
             </View>
             <View className="flex-1">
-              <Text className="text-[14px] font-poppins-bold text-textPrimary">
+              <Text className="text-[14px] font-poppins-bold text-textPrimary dark:text-darkTextPrimary">
                 {selectedUser.name}
               </Text>
-              <Text className={TYPO.subtitle}>
+              <Text className={`${TYPO.subtitle} dark:text-darkTextSecondary`}>
                 {selectedUser.email || selectedUser.displayEmail}
               </Text>
             </View>
@@ -159,14 +159,14 @@ export function BlockUserModal({
                     <View
                       key={store.id ?? store.store_id ?? i}
                       style={{ width: cardWidth > 0 ? cardWidth : CONTENT_WIDTH }}
-                      className="bg-white border border-slate-100 rounded-2xl p-3"
+                      className="bg-white dark:bg-darkBackgroundMuted border border-slate-100 dark:border-darkBorder rounded-2xl p-3"
                     >
                       <View className="flex-row items-center">
                         <View className="bg-primary/10 p-2 rounded-lg">
                           <MaterialIcons name="storefront" size={16} color={COLORS.primary} />
                         </View>
                         <View className="ml-3 flex-1">
-                          <Text className="text-[13px] font-poppins-bold text-textPrimary">
+                          <Text className="text-[13px] font-poppins-bold text-textPrimary dark:text-darkTextPrimary">
                             {store.name ?? store.store_name ?? "Unnamed Store"}
                           </Text>
                           {(store.phone ?? store.contact_number ?? store.phoneNumber) ? (
@@ -215,9 +215,9 @@ export function BlockUserModal({
 
           {/* ── Manager with no stores assigned yet ── */}
           {isManager && stores.length === 0 && (
-            <View className="flex-row items-center bg-amber-50 border border-amber-100 rounded-xl px-3 py-2.5">
+            <View className="flex-row items-center bg-amber-50 dark:bg-amber-500/10 border border-amber-100 dark:border-amber-500/20 rounded-xl px-3 py-2.5">
               <MaterialIcons name="info-outline" size={14} color="#D97706" />
-              <Text className="text-[11px] font-poppins-medium text-amber-700 ml-2">
+              <Text className="text-[11px] font-poppins-medium text-amber-700 dark:text-amber-500 ml-2">
                 No stores assigned to this manager yet.
               </Text>
             </View>
@@ -233,13 +233,13 @@ export function BlockUserModal({
                 </Text>
               </View>
               {stores.map((store: any, i: number) => (
-                <View key={store.id ?? store.store_id ?? i} className="bg-white border border-slate-100 rounded-2xl p-3 mb-2">
+                <View key={store.id ?? store.store_id ?? i} className="bg-white dark:bg-darkBackgroundMuted border border-slate-100 dark:border-darkBorder rounded-2xl p-3 mb-2">
                   <View className="flex-row items-center mb-1">
                     <View className="bg-primary/10 p-2 rounded-lg">
                       <MaterialIcons name="storefront" size={16} color={COLORS.primary} />
                     </View>
                     <View className="ml-3 flex-1">
-                      <Text className="text-[13px] font-poppins-bold text-textPrimary">
+                      <Text className="text-[13px] font-poppins-bold text-textPrimary dark:text-darkTextPrimary">
                         {store.name ?? store.store_name ?? "Unnamed Store"}
                       </Text>
                       {(store.phone ?? store.contact_number) ? (
@@ -261,9 +261,9 @@ export function BlockUserModal({
                     </View>
                   </View>
                   {(store.ownerName || store.managerName) && (
-                    <View className="flex-row items-center bg-slate-50 rounded-lg px-2.5 py-1.5 mt-1 border border-slate-100/50">
+                    <View className="flex-row items-center bg-slate-50 dark:bg-darkBackground rounded-lg px-2.5 py-1.5 mt-1 border border-slate-100/50 dark:border-darkBorder">
                       <MaterialIcons name="person" size={12} color={COLORS.primary} />
-                      <Text className="text-[10px] font-poppins-bold text-textSecondary ml-1.5 flex-1">
+                      <Text className="text-[10px] font-poppins-bold text-textSecondary dark:text-darkTextSecondary ml-1.5 flex-1">
                         {store.ownerName || store.managerName}
                       </Text>
                     </View>

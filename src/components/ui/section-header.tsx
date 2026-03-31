@@ -9,7 +9,7 @@ interface SectionHeaderProps {
 
 export const SectionHeader = ({ title, onAction }: SectionHeaderProps) => (
   <View className="flex-row justify-between items-center mb-3">
-    <Text className="text-base font-poppins-bold text-textPrimary">{title}</Text>
+    <Text className="text-base font-poppins-bold text-textPrimary dark:text-darkTextPrimary">{title}</Text>
     <TouchableOpacity className="flex-row items-center" onPress={onAction}>
       <Text className="text-[11px] font-poppins-bold text-primary mr-0.5">View all</Text>
       <MaterialIcons name="chevron-right" size={14} color="#FF6600" />

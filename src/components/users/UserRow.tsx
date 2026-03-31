@@ -22,18 +22,19 @@ const getRoleDetails = (roleType: string, roleLevel?: number) => {
 
 export const UserRow = React.memo(function UserRow({ user, isFirst }: any) {
   const roleInfo = getRoleDetails(user.role_type, user.role);
+  const isDark = require('react-native').useColorScheme() === 'dark';
   return (
     <View 
       className="flex-row items-center p-3.5"
-      style={{ borderTopWidth: isFirst ? 0 : 1, borderTopColor: "#F8FAFC" }}
+      style={{ borderTopWidth: isFirst ? 0 : 1, borderTopColor: isFirst ? 'transparent' : (isDark ? "#404040" : "#F8FAFC") }}
     >
       <Image
         source={{ uri: user.avatar }}
-        style={{ width: 48, height: 48, borderRadius: 12, backgroundColor: "#F1F5F9" }}
+        style={{ width: 48, height: 48, borderRadius: 12, backgroundColor: isDark ? "#262626" : "#F1F5F9" }}
       />
       <View className="ml-3 flex-1">
-        <Text className="text-[13px] font-poppins-bold text-textPrimary">{user.name || "User"}</Text>
-        <Text className="text-[10px] font-poppins text-textMuted italic">{user.displayEmail}</Text>
+        <Text className="text-[13px] font-poppins-bold text-textPrimary dark:text-darkTextPrimary">{user.name || "User"}</Text>
+        <Text className="text-[10px] font-poppins text-textMuted dark:text-darkTextSecondary italic">{user.displayEmail}</Text>
       </View>
       <View style={{ backgroundColor: roleInfo.bg }} className="px-[10px] py-1 rounded-md">
         <Text style={{ color: roleInfo.text }} className="text-[9px] font-poppins-bold">{roleInfo.label}</Text>
