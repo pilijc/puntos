@@ -14,7 +14,7 @@ import Carousel from "react-native-reanimated-carousel";
 import { Dimensions } from "react-native";
 import { ActivityIndicator, RefreshControl } from "react-native";
 import { useTranslation } from "react-i18next";
-import UserStoreHeroCarousel from "@/components/stores/user-store-hero-carousel";
+import UserStoreHeroCarousel from "@/components/users/stores/user-store-hero-carousel";
 import UserStreakCard from "@/components/rewards/user-streak-card";
 import UserStampLogCard from "@/components/rewards/user-stamp-log-card";
 import RewardCard from "@/components/rewards/reward-card";
@@ -75,6 +75,7 @@ export default function StoreOverviewDetail() {
     swipeIndicatorStyle,
     isLoadingRewardsFeatures,
     fetchedStoreIds,
+    refetchStreaks,
   } = useStoreOverviewData(storeId);
 
   // If a specific store is requested, we don't necessarily need to snap the carousel 
@@ -124,11 +125,6 @@ export default function StoreOverviewDetail() {
           <ChevronLeft
             size={36}
             color="#FFFFFF"
-            style={{ 
-              textShadowColor: 'rgba(0, 0, 0, 0.5)', 
-              textShadowOffset: { width: 0, height: 1 }, 
-              textShadowRadius: 3 
-            }} 
           />
         </TouchableOpacity>
       </View>
@@ -313,6 +309,7 @@ export default function StoreOverviewDetail() {
                       streak={streak}
                       nearbyStores={nearbyStores}
                       isStoreNearby={isStoreNearby}
+                      onStreakRecorded={refetchStreaks}
                     />
                   )}
                 />

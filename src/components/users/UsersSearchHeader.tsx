@@ -2,7 +2,7 @@ import React, { useRef } from "react";
 import { TextInput, FlatList } from "react-native";
 import { View, Text, TouchableOpacity } from "@/tw";
 import { Feather } from "@expo/vector-icons";
-import { TYPO, COLORS } from "./constants";
+import { TYPO, COLORS } from "@/type/super-admin/user";
 import type { UserRoleTab } from "@/store/super-admin/user-store";
 
 interface UsersSearchHeaderProps {
@@ -12,7 +12,6 @@ interface UsersSearchHeaderProps {
   onTabChange: (tab: UserRoleTab) => void;
   statusFilter: import("@/store/super-admin/user-store").AccountStatusFilter;
   onFilterPress: () => void;
-  tabCounts: Record<UserRoleTab, number>;
 }
 
 const TABS: UserRoleTab[] = ["All", "User", "Manager", "Staff"];
@@ -24,7 +23,6 @@ export function UsersSearchHeader({
   onTabChange,
   statusFilter,
   onFilterPress,
-  tabCounts,
 }: UsersSearchHeaderProps) {
   const searchInputRef = useRef<import("react-native").TextInput>(null);
 
@@ -32,22 +30,24 @@ export function UsersSearchHeader({
     <View className="px-5 pt-4">
       <View className="mb-4">
         <Text className={TYPO.title}>Users</Text>
-        <Text className={TYPO.subtitle}>{tabCounts.All} members total</Text>
       </View>
 
       <TouchableOpacity
         activeOpacity={1}
         onPress={() => searchInputRef.current?.focus()}
-        className="flex-row items-center bg-backgroundMuted rounded-xl px-3 mb-4 h-10 border border-slate-200/50"
+        className="flex-row items-center bg-backgroundMuted rounded-xl px-3.5 mb-4 h-11 border border-slate-200/50 w-full overflow-hidden"
       >
-        <Feather name="search" size={14} color={COLORS.textMuted} style={{ marginRight: 8 }} />
+        <Feather name="search" size={16} color={COLORS.textMuted} style={{ marginRight: 10 }} />
         <TextInput
           ref={searchInputRef}
-          className="flex-1 text-[13px] font-poppins text-textPrimary"
+          className="flex-1 text-[14px] font-poppins text-textPrimary h-full py-0 m-0"
+          style={{ paddingTop: 0, paddingBottom: 0 }}
           placeholder="Search..."
           placeholderTextColor={COLORS.textMuted}
           value={search}
           onChangeText={onSearchChange}
+          autoCapitalize="none"
+          autoCorrect={false}
         />
       </TouchableOpacity>
 
@@ -89,17 +89,6 @@ export function UsersSearchHeader({
             >
               {tab === "All" ? "All" : tab + "s"}
             </Text>
-            <View
-              className={`ml-2 px-1.5 py-0.5 rounded-md ${activeTab === tab ? "bg-white/20" : "bg-slate-100"
-                }`}
-            >
-              <Text
-                className={`text-[9px] font-poppins-bold ${activeTab === tab ? "text-white" : "text-textMuted"
-                  }`}
-              >
-                {tabCounts[tab]}
-              </Text>
-            </View>
           </TouchableOpacity>
         )}
       />

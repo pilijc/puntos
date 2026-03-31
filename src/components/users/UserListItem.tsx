@@ -2,7 +2,7 @@ import React from "react";
 import { View, Text, TouchableOpacity } from "@/tw";
 import { MaterialIcons, Feather } from "@expo/vector-icons";
 import { UserRow } from "./UserRow";
-import { TYPO, COLORS } from "./constants";
+import { TYPO, COLORS } from "@/type/super-admin/user";
 
 interface UserListItemProps {
   item: any;
