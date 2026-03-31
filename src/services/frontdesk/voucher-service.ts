@@ -49,7 +49,24 @@ export async function processVoucherCode(
 
         // Check if voucher is expired (using UTC time)
         const now = new Date().toISOString();
+        const status = "expired";
         if (now > voucher.expires_at) {
+        const {error: updateError} = await supabase
+            .from("vouchers")
+            .update({ 
+                is_used: true,
+                used_at: now,
+                status: status
+            })
+            .eq("code", voucherCode);
+            
+            if (updateError) {
+                return {
+                    success: false,
+                    message: "Error updating voucher",
+                };
+            }
+            
             return {
                 success: false,
                 message: "Voucher has expired",
@@ -57,15 +74,16 @@ export async function processVoucherCode(
         }
 
         // Mark voucher as used
-        const { error: updateError } = await supabase
+        const { error: voucherUpdateError } = await supabase
             .from("vouchers")
             .update({ 
                 is_used: true,
-                used_at: now
+                used_at: now,
+                status: "used"
             })
             .eq("code", voucherCode);
 
-        if (updateError) {
+        if (voucherUpdateError) {
             return {
                 success: false,
                 message: "Failed to process voucher",
@@ -112,7 +130,7 @@ export async function processVoucherCode(
         console.log(`Voucher Service: Calculated points: ${pointsEarned} (amount: ${amount}, percentage: ${percentage}%)`);
 
         const currentTime = new Date().toISOString();
-            const { data: purchaseData, error: purchaseError } = await supabase
+        const { data: purchaseData, error: purchaseError } = await supabase
             .from("purchases")
             .insert({
                 user_id: voucher.user_id,
@@ -123,14 +141,52 @@ export async function processVoucherCode(
             .select()
             .single();
 
+        // Check if purchase creation was successful
+        if (purchaseError || !purchaseData) {
+            console.error("Purchase creation error:", purchaseError);
+            
+            // Rollback voucher status to unused
+            await supabase
+                .from('vouchers')
+                .update({ is_used: false, used_at: null })
+                .eq('id', voucher.id);
+
+            return {
+                success: false,
+                message: "Failed to create purchase record. Please try again.",
+                pointsEarned: 0,
+            };
+        }
+
         // Update with points earned
-        await supabase
+        const { error: updateError } = await supabase
             .from("purchases")
             .update({ points_earned: pointsEarned })
             .eq("id", purchaseData.id);
 
+        if (updateError) {
+            console.error("Purchase update error:", updateError);
+            
+            // Rollback voucher status and delete purchase
+            await supabase
+                .from('vouchers')
+                .update({ is_used: false, used_at: null })
+                .eq('id', voucher.id);
+            
+            await supabase
+                .from("purchases")
+                .delete()
+                .eq("id", purchaseData.id);
+
+            return {
+                success: false,
+                message: "Failed to update purchase with points. Please try again.",
+                pointsEarned: 0,
+            };
+        }
+
         // Create transaction record
-        const { error: transactionError } = await supabase
+        const { data: transactionData, error: transactionError } = await supabase
             .from("voucher_transactions")
             .insert({
                 voucher_id: voucher.id,
@@ -140,17 +196,36 @@ export async function processVoucherCode(
                 amount: amount,
                 points_earned: pointsEarned,
                 created_at: currentTime
-            });
+            })
+            .select()
+            .single();
 
         if (transactionError) {
             console.error("Transaction recording error:", transactionError);
-            
+
+            // Rollback voucher status to unused
+            await supabase
+                .from('vouchers')
+                .update({ is_used: false, used_at: null })
+                .eq('id', voucher.id);
+
+            // Also rollback the purchase record
+            await supabase
+                .from("purchases")
+                .delete()
+                .eq("id", purchaseData.id);
+
+            return {
+                success: false,
+                message: "Failed to record voucher transaction. Please try again.",
+                pointsEarned: 0,
+            };
         }
 
         return {
             success: true,
             message: "Voucher processed successfully",
-            transactionId: voucher.id,
+            transactionId: transactionData.id, // Return correct transaction ID
             pointsEarned: pointsEarned,
         };
     } catch (error) {

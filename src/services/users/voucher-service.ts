@@ -1,16 +1,6 @@
 import { supabase } from "@/supabase/supabase";
-import { Voucher } from "@/type/user/voucher";
+import { VoucherTransaction } from "@/type/user/voucher";
 
-export interface VoucherTransaction {
-    id: string;
-    voucher_id: string;
-    user_id: string;
-    store_staff_id: string;
-    store_id: number;
-    amount: number;
-    points_earned: number;
-    created_at: string;
-}
 
 const limit = 5; 
 
@@ -56,6 +46,7 @@ export async function generateVoucherCode(
         expires_at: expiresAt,
         user_id: userId,
         is_used: false,
+        status: "active",
       })
       .select()
       .single();
@@ -72,25 +63,6 @@ export async function generateVoucherCode(
   }
 }
  
-// export async function getActiveVoucher(userId: string): Promise<Voucher | null> {
-//   const { data, error } = await supabase
-//     .from("vouchers")
-//     .select("*")
-//     .eq("user_id", userId)
-//     .eq("is_used", false)
-//     .gte("expires_at", new Date().toISOString())
-//     .maybeSingle();
-
-//   if (error) {
-//     console.error("Error fetching active voucher:", error);
-//     return null;
-//   }
-
-//   return data ?? null;
-// }
-
-//HISTORY SIDE
-//Get user voucher transaction history with store names (limited to 5 latest)
 export async function getUserVoucherTransactionHistory(userId: string): Promise<any[]> {
   try {
     // First, test basic access to the table

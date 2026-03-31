@@ -1,8 +1,9 @@
 import { supabase } from "@/supabase/supabase";
 
 import { QRCodeState, QRTransaction } from "@/type/qr";
-import { VoucherTransaction, listenToVoucherTransaction } from "@/services/users/voucher-service";
+import {listenToVoucherTransaction } from "@/services/users/voucher-service";
 import { addStamp } from "@/services/stamp-service";
+import { VoucherTransaction } from "@/type/user/voucher";
 
 
 //import { store } from "expo-router/build/global-state/router-store";
