@@ -3,7 +3,7 @@ import { Dispatch, SetStateAction } from "react";
 
 export type ExpirationMode = "none" | "card";
 
-export type ProgramStatus = "active" | "ended_grace" | "ended_expired";
+export type ProgramStatus = "active" | "ended_grace" | "ended_expired" | "draft" | "ended";
 
 export type TabKey = "draft" | "active" | "ended";
 
@@ -123,6 +123,18 @@ export const STATUS_BADGE: Record<
   },
   ended_expired: {
     label: "Expired",
+    color: "bg-slate-100 dark:bg-slate-700",
+    dot: "bg-slate-400",
+    text: "text-slate-500 dark:text-slate-400",
+  },
+  draft: {
+    label: "Draft",
+    color: "bg-slate-100 dark:bg-slate-700",
+    dot: "bg-slate-400",
+    text: "text-slate-500 dark:text-slate-400",
+  }, 
+  ended: {
+    label: "Ended",
     color: "bg-slate-100 dark:bg-slate-700",
     dot: "bg-slate-400",
     text: "text-slate-500 dark:text-slate-400",

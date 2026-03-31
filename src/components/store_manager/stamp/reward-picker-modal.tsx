@@ -72,8 +72,14 @@ export function RewardPickerModal({
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <View className="flex-1 justify-end">
-        <Pressable className="absolute top-0 left-0 right-0 bottom-0 bg-black/50" onPress={onClose} />
-
+        <Pressable style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: "rgba(0,0,0,0.5)",
+        }} onPress={onClose} />
         <View
           style={{ maxHeight: "88%", paddingBottom: Platform.OS === "ios" ? 28 : 16 }}
           className={isDark ? "rounded-t-2xl bg-darkBackgroundCard" : "rounded-t-2xl bg-background"}

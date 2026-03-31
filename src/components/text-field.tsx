@@ -36,6 +36,7 @@ export function TextField({
           className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-4 text-base font-poppins text-slate-900 dark:text-slate-100 pr-12"
           placeholder={placeholder}
           placeholderTextColor="#94A3B8"
+          style={{ paddingLeft: 12, paddingTop: 12 }}
           keyboardType={keyboardType}
           value={value}
           onChangeText={(v) => onChangeText(v.replace(/-/g, ""))}

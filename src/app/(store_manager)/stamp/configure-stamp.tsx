@@ -18,7 +18,8 @@ import { AppHeader } from "@/components/header";
 import { Button } from "@/components/button";
 import { Modal } from "@/components/modal";
 import { RewardPickerModal } from "@/components/store_manager/stamp/reward-picker-modal";
-import { Info, Pin, Gift, Check, CheckCircle2, Timer, ChevronRight } from "lucide-react-native";
+import { Info, Gift, Check, ChevronRight } from "lucide-react-native";
+import { TextField } from "@/components/text-field";
 
 export default function ConfigureStamp() {
   const router = useRouter();
@@ -133,7 +134,7 @@ export default function ConfigureStamp() {
   const handleSave = async () => {
     if (!total_stamps || total_stamps < 1) {
       setModal({
-        title: "Validation Error",
+        title: "Almost there!",
         message: "Please enter a valid number of stamps required.",
         buttons: [{ label: "OK", onPress: () => setModal(null) }],
       });
@@ -141,7 +142,7 @@ export default function ConfigureStamp() {
     }
     if (!reward_id) {
       setModal({
-        title: "Validation Error",
+        title: "Almost there!",
         message: "Please select a reward for this stamp program.",
         buttons: [{ label: "OK", onPress: () => setModal(null) }],
       });
@@ -149,7 +150,7 @@ export default function ConfigureStamp() {
     }
     if (expiration_mode === "card" && (!expiration_days || expiration_days < 1)) {
       setModal({
-        title: "Validation Error",
+        title: "Almost there!",
         message: "Please enter a valid number of days for card expiration.",
         buttons: [{ label: "OK", onPress: () => setModal(null) }],
       });
@@ -265,23 +266,14 @@ export default function ConfigureStamp() {
             </View>
 
             <View className="gap-y-1.5">
-              <Text className="text-sm font-poppins-semibold text-slate-700 dark:text-slate-300">
-                Stamps Required to Redeem
-              </Text>
-              <View className="relative">
-                <TextInput
-                  className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-4 text-base font-poppins text-slate-900 dark:text-slate-100 pr-12"
-                  placeholder="e.g. 10"
-                  placeholderTextColor="#94A3B8"
-                  style={{ paddingLeft: 12 }}
-                  keyboardType="numeric"
-                  value={total_stamps > 0 ? String(total_stamps) : ""}
-                  onChangeText={(v) => setTotalStamps(parseInt(v) || 0)}
-                />
-                <View className="absolute right-4 top-0 bottom-0 justify-center">
-                  <Pin size={18} color="#94A3B8" />
-                </View>
-              </View>
+              <TextField
+                label="Stamps Required to Redeem"
+                placeholder="e.g. 10"
+                keyboardType="decimal-pad"
+                value={total_stamps > 0 ? String(total_stamps) : ""}
+                onChangeText={(v) => setTotalStamps(parseInt(v) || 0)}
+                required
+              />
             </View>
 
             <View className="gap-y-1.5">
@@ -394,26 +386,14 @@ export default function ConfigureStamp() {
 
             {expiration_mode === "card" && (
               <View className="gap-y-1.5 pl-1">
-                <Text className="text-sm font-poppins-semibold text-slate-700 dark:text-slate-300">
-                  Expiration Period (days)
-                </Text>
-                <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">
-                  The stamp card will expire this many days after the user's first stamp.
-                </Text>
-                <View className="relative">
-                  <TextInput
-                    style={{ paddingLeft: 12 }}
-                    className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-4 text-base font-poppins text-slate-900 dark:text-slate-100 pr-20"
-                    placeholder="e.g. 30"
-                    placeholderTextColor="#94A3B8"
-                    keyboardType="numeric"
-                    value={expiration_days > 0 ? String(expiration_days) : ""}
-                    onChangeText={(v) => setExpirationDays(parseInt(v) || 0)}
-                  />
-                  <View className="absolute right-4 top-0 bottom-0 justify-center">
-                    <Text className="text-sm font-poppins text-slate-400">days</Text>
-                  </View>
-                </View>
+                <TextField
+                  label="Expiration Period (days)"
+                  placeholder="e.g. 30"
+                  keyboardType="numeric"
+                  value={expiration_days > 0 ? String(expiration_days) : ""}
+                  onChangeText={(v) => setExpirationDays(parseInt(v) || 0)}
+                  required
+                />
               </View>
             )}
           </View>

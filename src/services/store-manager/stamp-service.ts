@@ -4,11 +4,21 @@ import { ProgramStatus, Stamp, StampCollector } from "@/type/store-manager/stamp
 
 export function getProgramStatus(stamp: Stamp): ProgramStatus {
   if (stamp.status === "active") return "active";
+  if (stamp.status === "draft") return "draft";
   const now = new Date();
   if (stamp.redemption_deadline && now < new Date(stamp.redemption_deadline)) {
     return "ended_grace";
   }
-  return "ended_expired";
+  if (stamp.created_at && stamp.expiration_days != null) {
+    const createdAt = new Date(stamp.created_at);
+    const expiredAt = new Date(
+      createdAt.getTime() + Number(stamp.expiration_days) * 24 * 60 * 60 * 1000,
+    );
+    if (now <= expiredAt) {
+      return "ended_expired";
+    }
+  }
+  return "ended";
 }
 
 export async function getActiveStampProgram(storeId: string): Promise<Stamp | null> {
@@ -16,7 +26,7 @@ export async function getActiveStampProgram(storeId: string): Promise<Stamp | nu
     const { data, error } = await supabase
     .from("store_stamps")
     .select("*")
-    .eq("store_id", storeId)
+    .eq("store_id", storeId)  
     .eq("status", "active")
     .maybeSingle();
 
