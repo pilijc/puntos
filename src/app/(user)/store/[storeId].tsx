@@ -6,9 +6,9 @@ import {
   AnimatedView,
   Image,
 } from "@/tw";
-import { CalendarDays, ChevronDown, ChevronLeft, ChevronUp, CircleCheck, MapPinOff } from "lucide-react-native";
+import { CalendarDays, ChevronDown, ChevronLeft, ChevronUp, CircleCheck, Gift, MapPinOff } from "lucide-react-native";
 import React, { useCallback, useEffect, useState } from "react";
-import { FadeIn, FadeOut, Layout, Easing } from "react-native-reanimated";
+import Animated, { FadeIn, FadeOut, Layout, Easing, useSharedValue, useAnimatedStyle, withSpring, withTiming } from "react-native-reanimated";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import Carousel from "react-native-reanimated-carousel";
 import { Dimensions } from "react-native";
@@ -101,6 +101,18 @@ export default function StoreOverviewDetail() {
       setIsInitialLoading(false);
     }
   }, [storeId, isStoreCached]);
+
+  const claimScale = useSharedValue(1);
+  const claimOpacity = useSharedValue(1);
+  const claimScaleStyle = useAnimatedStyle(() => ({ opacity: claimOpacity.value, transform: [{ scale: claimScale.value }] }));
+  const handleClaimPressIn = () => {
+    claimScale.value = withSpring(0.96, { damping: 15, stiffness: 200, mass: 1 });
+    claimOpacity.value = withTiming(0.7, { duration: 80 });
+  };
+  const handleClaimPressOut = () => {
+    claimScale.value = withSpring(1, { damping: 15, stiffness: 200, mass: 1 });
+    claimOpacity.value = withTiming(1, { duration: 80 });
+  };
 
   return (
     <StoreScreenContainer
@@ -366,6 +378,22 @@ export default function StoreOverviewDetail() {
           <Text className="text-lg font-poppins-semibold text-neutral-900 dark:text-darkTextPrimary">
             {translate("user.rewards.rewardCatalog")}
           </Text>
+          <Animated.View style={claimScaleStyle}>
+            <Pressable
+              onPressIn={handleClaimPressIn}
+              onPressOut={handleClaimPressOut}
+              className="flex-row items-center gap-x-1.5 bg-white dark:bg-darkBackgroundCard border border-primary px-3 py-1.5 rounded-full"
+              onPress={() => {
+                const found = storesWithLocation.find(s => s.id.toString() === storeId);
+                router.push({ pathname: "/store/claim-rewards", params: { storeName: found?.name, storeLogo: found?.logo ?? "", storeAddress: found?.address ?? "" } });
+              }}
+            >
+              <Gift size={14} color="#FF6600" />
+              <Text className="text-primary font-poppins-semibold text-xs">
+                {translate("user.rewards.buttons.claimRewards")}
+              </Text>
+            </Pressable>
+          </Animated.View>
         </View>
 
         <View className="gap-y-4">
