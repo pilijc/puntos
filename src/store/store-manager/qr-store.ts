@@ -6,7 +6,7 @@ export const useQRStore = create<QRPurchaseStore>((set) => ({
   percentage: 0,
   base_amount: 0,
   earning_type: "percentage",
-  fixed_points: 0,
+  fixed_points: 0,  
   minimum_spend: 0,
   max_points_per_txn: 0,
   active: false,

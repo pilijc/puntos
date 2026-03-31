@@ -273,6 +273,7 @@ export default function ConfigureStamp() {
                   className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-4 text-base font-poppins text-slate-900 dark:text-slate-100 pr-12"
                   placeholder="e.g. 10"
                   placeholderTextColor="#94A3B8"
+                  style={{ paddingLeft: 12 }}
                   keyboardType="numeric"
                   value={total_stamps > 0 ? String(total_stamps) : ""}
                   onChangeText={(v) => setTotalStamps(parseInt(v) || 0)}
@@ -401,6 +402,7 @@ export default function ConfigureStamp() {
                 </Text>
                 <View className="relative">
                   <TextInput
+                    style={{ paddingLeft: 12 }}
                     className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-4 text-base font-poppins text-slate-900 dark:text-slate-100 pr-20"
                     placeholder="e.g. 30"
                     placeholderTextColor="#94A3B8"
