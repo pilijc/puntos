@@ -125,7 +125,7 @@ export default function ConfigureStreaks() {
         <TouchableOpacity
           className="w-10 h-10 rounded-full items-center justify-center"
           activeOpacity={0.7}
-          onPress={() => router.push({ pathname: "/(store_manager)/qr/index", params: { storeId: storeIdParam } })}
+          onPress={() => router.push({ pathname: "/(store_manager)/qr", params: { storeId: storeIdParam } })}
         >
           <ChevronLeft size={22} color={isDark ? "#F1F5F9" : "#0F172A"} />
         </TouchableOpacity>
