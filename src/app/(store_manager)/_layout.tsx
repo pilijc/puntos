@@ -168,14 +168,14 @@ export default function StoreManagerLayout() {
                 name="reward/add-rewards"
                 options={{ href: null }}
             />
-            <Tabs.Screen
+            {/* <Tabs.Screen
                 name="qr/index"
                 options={{ href: null }}
             />
             <Tabs.Screen
                 name="qr/configure-qr"
                 options={{ href: null }}
-            />
+            /> */}
             <Tabs.Screen
                 name="staff/index"
                 options={{ href: null }}

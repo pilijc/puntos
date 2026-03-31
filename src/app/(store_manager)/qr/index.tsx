@@ -217,7 +217,7 @@ export default function QRIndex() {
                 <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">
                   Earnings Type
                 </Text>
-                <Text className="text-sm font-poppins-bold text-slate-800 dark:text-slate-100 mt-0.5">
+                <Text className="text-sm font-poppins-bold text-textPrimary dark:text-darkTextPrimary mt-0.5">
                   {config.earning_type === "percentage" ? "Percentage" : "Fixed"}
                 </Text>
               </View>
@@ -226,7 +226,7 @@ export default function QRIndex() {
                 <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">
                   How customers earn points
                 </Text>
-                <Text className="text-sm font-poppins-bold text-slate-800 dark:text-slate-100 mt-0.5">
+                <Text className="text-sm font-poppins-bold text-textPrimary dark:text-darkTextPrimary mt-0.5">
                   {config.earning_type === "percentage"
                     ? `Earn ${config.percentage ?? 0}% of every ₱${config.base_amount ?? 0} spent`
                     : `Earn ${config.fixed_points ?? 0} pts per transaction`}
@@ -237,13 +237,13 @@ export default function QRIndex() {
                 <View className="flex-row">
                   <View className="flex-1 px-4 py-3 border-r border-slate-100 dark:border-neutral-700">
                     <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">Rate</Text>
-                    <Text className="text-base font-poppins-bold text-primary dark:text-primary mt-0.5">
+                    <Text className="text-base font-poppins-bold text-textPrimary dark:text-darkTextPrimary mt-0.5">
                       {config.percentage ?? 0}%
                     </Text>
                   </View>
                   <View className="flex-1 px-4 py-3">
                     <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">Per</Text>
-                    <Text className="text-base font-poppins-bold text-primary dark:text-primary mt-0.5">
+                    <Text className="text-base font-poppins-bold text-textPrimary dark:text-darkTextPrimary mt-0.5">
                       ₱{config.base_amount ?? 0}
                     </Text>
                   </View>
@@ -252,13 +252,13 @@ export default function QRIndex() {
                 <View className="flex-row">
                   <View className="flex-1 px-4 py-3 border-r border-slate-100 dark:border-neutral-700">
                     <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">Points</Text>
-                    <Text className="text-base font-poppins-bold text-primary dark:text-primary mt-0.5">
+                    <Text className="text-base font-poppins-bold text-textPrimary dark:text-darkTextPrimary mt-0.5">
                       {config.fixed_points ?? 0} pts
                     </Text>
                   </View>
                   <View className="flex-1 px-4 py-3">
                     <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">Min. Spend</Text>
-                    <Text className="text-base font-poppins-bold text-primary dark:text-primary mt-0.5">
+                    <Text className="text-base font-poppins-bold text-textPrimary dark:text-darkTextPrimary mt-0.5">
                       {config.minimum_spend != null && config.minimum_spend > 0
                         ? `₱${config.minimum_spend}`
                         : "None"}
@@ -271,7 +271,7 @@ export default function QRIndex() {
                 <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">
                   Max points per transaction
                 </Text>
-                <Text className="text-sm font-poppins-bold text-primary dark:text-primary">
+                <Text className="text-sm font-poppins-bold text-textPrimary dark:text-darkTextPrimary">
                   {config.max_points_per_txn != null ? `${config.max_points_per_txn} pts` : "No cap"}
                 </Text>
               </View>
@@ -284,12 +284,10 @@ export default function QRIndex() {
                   </Text>
                 </View>
               )}
-            </View>
 
-            <View className="flex-row">
-              <View className="flex-1 pr-1">
+              <View className="border-t border-slate-100 dark:border-neutral-700 px-4 py-3">
                 <Button
-                  label="Edit "
+                  label="Edit"
                   onPress={() =>
                     router.push({
                       pathname: "/(store_manager)/qr/configure-qr",
