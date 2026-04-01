@@ -54,6 +54,20 @@ export async function createReward(reward: Reward): Promise<void> {
   if (error) throw new Error(error.message);
 }
 
+export async function updateReward(
+  storeId: string,
+  rewardId: string,
+  payload: Pick<Reward, "title" | "description" | "points_cost" | "stock" | "image_url">,
+): Promise<void> {
+  const { error } = await supabase
+    .from("store_rewards")
+    .update(payload)
+    .eq("id", rewardId)
+    .eq("store_id", storeId);
+
+  if (error) throw new Error(error.message);
+}
+
 export async function uploadRewardImage(
   storeId: string,
   base64: string,

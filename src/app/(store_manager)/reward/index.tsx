@@ -139,8 +139,16 @@ export default function RewardIndex() {
         ) : (
           <View className="mx-4 gap-y-2">
             {rewards.map((reward) => (
-              <View
+              <TouchableOpacity
                 key={reward.id ?? reward.title}
+                activeOpacity={0.7}
+                onPress={() => {
+                  if (reward.id == null) return;
+                  router.push({
+                    pathname: "/(store_manager)/reward/add-rewards",
+                    params: { storeId, rewardId: String(reward.id) },
+                  });
+                }}
                 className="bg-white dark:bg-neutral-800 rounded-xl border border-slate-100 dark:border-neutral-700 flex-row items-center p-2 gap-2.5"
               >
                 <View
@@ -196,7 +204,7 @@ export default function RewardIndex() {
                     </View>
                   </View>
                 </View>
-              </View>
+              </TouchableOpacity>
             ))}
           </View>
         )}

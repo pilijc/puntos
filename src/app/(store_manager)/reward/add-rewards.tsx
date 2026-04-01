@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -12,7 +12,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as ImagePicker from "expo-image-picker";
 import { Image } from "expo-image";
 import { useRewardStore } from "@/store/store-manager/reward-store";
-import { createReward, uploadRewardImage } from "@/services/store-manager/reward-service";
+import { createReward, getRewardById, updateReward, uploadRewardImage } from "@/services/store-manager/reward-service";
 import { Button } from "@/components/button";
 import { Modal, type ModalButton } from "@/components/modal";
 import { AppHeader } from "@/components/header";
@@ -21,7 +21,8 @@ import { TextField } from "@/components/text-field";
 export default function Rewards() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { storeId } = useLocalSearchParams<{ storeId: string }>();
+  const { storeId, rewardId } = useLocalSearchParams<{ storeId: string; rewardId?: string }>();
+  const isEditMode = !!rewardId;
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const {
@@ -43,6 +44,55 @@ export default function Rewards() {
 		buttons: ModalButton[];
 	} | null>(null);
 
+  useEffect(() => {
+    if (!storeId) return;
+    if (!rewardId) {
+      reset();
+      return;
+    }
+    let cancelled = false;
+    getRewardById(storeId, rewardId)
+      .then((row) => {
+        if (cancelled) return;
+        if (!row) {
+          setModal({
+            title: "Error",
+            message: "Reward not found.",
+            buttons: [{
+              label: "OK",
+              onPress: () => {
+                setModal(null);
+                router.push({ pathname: "/(store_manager)/reward", params: { storeId } });
+              },
+              variant: "secondary",
+            }],
+          });
+          return;
+        }
+        setTitle(row.title ?? "");
+        setDescription(row.description ?? "");
+        setPointsCost(row.points_cost ?? 0);
+        setStock(row.stock ?? 0);
+        setImageUrl(row.image_url ?? "");
+      })
+      .catch(() => {
+        setModal({
+          title: "Error",
+          message: "Could not load this reward.",
+          buttons: [{
+            label: "OK",
+            onPress: () => {
+              setModal(null);
+              router.push({ pathname: "/(store_manager)/reward", params: { storeId } });
+            },
+            variant: "secondary",
+          }],
+        });
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [storeId, rewardId, setTitle, setDescription, setPointsCost, setStock, setImageUrl, reset, router]);
 
   const pickImage = async () => {
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -90,8 +140,8 @@ export default function Rewards() {
     }
   };
 
-  const handleCreate = async () => {
-    if (!title.trim() || !description || !image_url) {
+  const handleSave = async () => {
+    if (!title.trim() || !description?.trim() || !image_url) {
       setModal({
         title: "Almost there!",
         message: "Please fill out all required fields and upload an image.",
@@ -101,17 +151,27 @@ export default function Rewards() {
     }
     setIsSubmitting(true);
     try {
-      await createReward({
-        store_id: storeId,
-        title,
-        description,
-        points_cost,
-        image_url,
-        stock,
-      });
-	  setModal({
+      if (isEditMode && rewardId) {
+        await updateReward(storeId, rewardId, {
+          title: title.trim(),
+          description: description.trim(),
+          points_cost,
+          stock,
+          image_url,
+        });
+      } else {
+        await createReward({
+          store_id: storeId,
+          title: title.trim(),
+          description: description.trim(),
+          points_cost,
+          image_url,
+          stock,
+        });
+      }
+      setModal({
         title: "Success",
-        message: "Reward created successfully",
+        message: isEditMode ? "Reward updated successfully" : "Reward created successfully",
         buttons: [{ label: "OK", onPress: () => setModal(null), variant: "secondary" }],
       });
       reset();
@@ -119,7 +179,7 @@ export default function Rewards() {
     } catch (error) {
       setModal({
         title: "Error",
-        message: (error as Error).message ?? "Failed to create reward",
+        message: (error as Error).message ?? (isEditMode ? "Failed to update reward" : "Failed to create reward"),
         buttons: [{ label: "OK", onPress: () => setModal(null), variant: "secondary" }],
       });
     } finally {
@@ -141,7 +201,7 @@ export default function Rewards() {
 				buttons={modal?.buttons}
 			/>
       <AppHeader
-        title="Create New Reward"
+        title={isEditMode ? "Edit Reward" : "Create New Reward"}
         paddingTop={insets.top + 8}
         onBackPress={() => router.push({ pathname: "/(store_manager)/reward", params: { storeId } })}
         className="bg-background dark:bg-[#111921]"
@@ -251,8 +311,8 @@ export default function Rewards() {
 
           <View style={{ paddingBottom: insets.bottom }}>
             <Button
-              label="Save Reward"
-              onPress={handleCreate}
+              label={isEditMode ? "Save changes" : "Save Reward"}
+              onPress={handleSave}
               disabled={isSubmitting || isUploadingImage}
               loading={isSubmitting}
               fullWidth={true}
