@@ -77,7 +77,7 @@ export default function RewardIndex() {
         }
       >
         {/* Summary banner */}
-        <View className="mx-4 mb-4 flex-row items-center bg-white dark:bg-neutral-800 rounded-xl border border-slate-100 dark:border-neutral-700 px-4 py-3 gap-x-3">
+        <View className="mx-4 mb-4 flex-row items-center bg-white dark:bg-neutral-800 rounded-xl px-4 py-3 gap-x-3">
           <View className="w-10 h-10 rounded-xl items-center justify-center">
             <Gift size={20} color="#FF6600" />
           </View>
@@ -147,7 +147,7 @@ export default function RewardIndex() {
                     params: { storeId, rewardId: String(reward.id) },
                   });
                 }}
-                className="bg-white dark:bg-neutral-800 rounded-xl border border-slate-100 dark:border-neutral-700 flex-row items-center px-4 py-2 gap-2.5"
+                className="bg-white dark:bg-neutral-800 rounded-xl flex-row items-center px-4 py-2 gap-2.5"
               >
                 <View
                   className="rounded-lg overflow-hidden bg-white dark:bg-neutral-700 border border-slate-100 dark:border-neutral-600 shrink-0"
