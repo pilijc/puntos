@@ -1,9 +1,5 @@
 import React, { useState } from 'react';
-import { LayoutAnimation, Platform, UIManager } from 'react-native';
-
-if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
-    UIManager.setLayoutAnimationEnabledExperimental(true);
-}
+import { LayoutAnimation } from 'react-native';
 import { View, Text, TouchableOpacity } from "@/tw";
 import { Shield, ChevronRight, ChevronUp, ChevronDown } from 'lucide-react-native';
 import { router } from "expo-router";
@@ -48,7 +44,7 @@ export const SecurityCard = () => {
 
     return (
         <>
-            <View className="bg-background dark:bg-darkBackgroundMuted p-4 border-t border-border dark:border-darkBorder overflow-hidden">
+            <View className="bg-background dark:bg-darkBackgroundMuted p-3 overflow-hidden">
                 <TouchableOpacity
                     onPress={toggleOpen}
                     className="flex-row items-center"
@@ -58,17 +54,22 @@ export const SecurityCard = () => {
                         <Shield size={15} color="#3b82f6" />
                     </View>
 
-                    <Text className="flex-1 ml-3 text-base font-poppins-semibold text-textPrimary dark:text-darkTextPrimary">
-                        {translate('settings.account.security.title')}
-                    </Text>
+                    <View className="flex-1 ml-3">
+                        <Text className="text-base font-poppins-semibold text-textPrimary dark:text-darkTextPrimary">
+                            {translate('settings.account.security.title')}
+                        </Text>
+                        <Text className="text-xs font-poppins-regular text-textMuted dark:text-darkTextMuted">
+                            {translate('settings.account.security.description')}
+                        </Text>
+                    </View>
 
-                    {isOpen ? <ChevronUp size={20} color="#94a3b8" /> : <ChevronDown size={20} color="#94a3b8" />}
+                    {isOpen ? <ChevronUp size={15} color="#94a3b8" /> : <ChevronDown size={15} color="#94a3b8" />}
                 </TouchableOpacity>
 
                 {isOpen && (
-                    <View className="mt-2">
+                    <View className="mt-3">
                         {/* divider */}
-                        <View className="h-[1px] bg-border dark:bg-darkBorder mb-1 ml-12" />
+                        <View className="h-[1px] bg-border dark:bg-darkBorder " />
 
                         {/* change password*/}
                         <TouchableOpacity
@@ -79,11 +80,11 @@ export const SecurityCard = () => {
                             <Text className="flex-1 text-sm font-poppins-medium text-textSecondary dark:text-darkTextSecondary">
                                 {translate('settings.account.security.changePassword.title')}
                             </Text>
-                            <ChevronRight size={14} color="#94a3b8" />
+                            <ChevronRight size={12} color="#94a3b8" />
                         </TouchableOpacity>
 
                         {/* divider */}
-                        <View className="h-[1px] bg-neutral-100 dark:bg-darkBorder ml-12" />
+                        <View className="h-[1px] bg-border dark:bg-darkBorder opacity-25 ml-12" />
 
                         {/* delete */}
                         <TouchableOpacity
@@ -94,7 +95,7 @@ export const SecurityCard = () => {
                             <Text className="flex-1 text-sm font-poppins-medium text-danger">
                                 {translate('settings.account.security.deleteAccount.title')}
                             </Text>
-                            <ChevronRight size={14} color="#94a3b8" />
+                            <ChevronRight size={12} color="#94a3b8" />
                         </TouchableOpacity>
                     </View>
                 )}

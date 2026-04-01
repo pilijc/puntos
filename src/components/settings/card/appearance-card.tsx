@@ -2,12 +2,8 @@ import React, { useState } from 'react';
 import { View, Text, TouchableOpacity } from "@/tw";
 import { useTranslation } from 'react-i18next';
 import { useAppearanceStore } from '@/store/appearance-store';
-import { LayoutAnimation, Platform, UIManager } from 'react-native';
-
-if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
-    UIManager.setLayoutAnimationEnabledExperimental(true);
-}
-import { SunMoon, ChevronUp, ChevronDown, Check, Sun, Moon, Settings } from 'lucide-react-native';
+import { LayoutAnimation } from 'react-native';
+import { SunMoon, ChevronUp, ChevronDown, Check } from 'lucide-react-native';
 
 export const AppearanceCard = () => {
     const [isOpen, setIsOpen] = useState(false);
@@ -19,7 +15,7 @@ export const AppearanceCard = () => {
     }
 
     return (
-        <View className="bg-background dark:bg-darkBackgroundMuted p-4 border-t border-border dark:border-darkBorder overflow-hidden">
+        <View className="bg-background dark:bg-darkBackgroundMuted p-3 overflow-hidden">
             <TouchableOpacity
                 onPress={toggleOpen}
                 className="flex-row items-center"
@@ -42,13 +38,13 @@ export const AppearanceCard = () => {
                     </Text>
                 </View>
 
-                {isOpen ? <ChevronUp size={20} color="#94a3b8" /> : <ChevronDown size={20} color="#94a3b8" />}
+                {isOpen ? <ChevronUp size={15} color="#94a3b8" /> : <ChevronDown size={15} color="#94a3b8" />}
             </TouchableOpacity>
 
             {isOpen && (
-                <View className="mt-2">
+                <View className="mt-3">
                     {/* divider */}
-                    <View className="h-[1px] bg-border dark:bg-darkBorder mb-1 ml-12" />
+                    <View className="h-[1px] bg-border dark:bg-darkBorder" />
 
                     {/* light */}
                     <TouchableOpacity
@@ -56,17 +52,15 @@ export const AppearanceCard = () => {
                         className="flex-row items-center justify-between py-3 ml-12"
                         activeOpacity={0.6}
                     >
-                        <View className="flex-row">
-                            <Sun size={8} color="#ff6600" />
-                            <Text className={`text-sm font-poppins-medium ${theme === 'light' ? 'text-primary' : 'text-textPrimary dark:text-darkTextSecondary'}`}>
-                                {translate('settings.account.appearance.light')}
-                            </Text>
-                        </View>
-                        {theme === 'light' && <Check size={18} color="#ff6600" />}
+                        <Text className={`text-sm font-poppins-medium ${theme === 'light' ? 'text-primary' : 'text-textPrimary dark:text-darkTextSecondary'}`}>
+                            {translate('settings.account.appearance.light')}
+                        </Text>
+
+                        {theme === 'light' && <Check size={12} color="#ff6600" />}
                     </TouchableOpacity>
 
                     {/* divider */}
-                    <View className="h-[1px] bg-border dark:bg-darkBorder ml-12" />
+                    <View className="h-[1px] bg-border dark:bg-darkBorder opacity-25 ml-12" />
 
                     {/* dark */}
                     <TouchableOpacity
@@ -77,12 +71,11 @@ export const AppearanceCard = () => {
                         <Text className={`text-sm font-poppins-medium ${theme === 'dark' ? 'text-primary' : 'text-textPrimary dark:text-darkTextSecondary'}`}>
                             {translate('settings.account.appearance.dark')}
                         </Text>
-
-                        {theme === 'dark' && <Check size={18} color="#ff6600" />}
+                        {theme === 'dark' && <Check size={12} color="#ff6600" />}
                     </TouchableOpacity>
 
                     {/* divider */}
-                    <View className="h-[1px] bg-border dark:bg-darkBorder ml-12" />
+                    <View className="h-[1px] bg-border dark:bg-darkBorder opacity-25 ml-12" />
 
                     {/* system */}
                     <TouchableOpacity
@@ -93,8 +86,7 @@ export const AppearanceCard = () => {
                         <Text className={`text-sm font-poppins-medium ${theme === 'system' ? 'text-primary' : 'text-textPrimary dark:text-darkTextSecondary'}`}>
                             {translate('settings.account.appearance.system')}
                         </Text>
-
-                        {theme === 'system' && <Check size={18} color="#ff6600" />}
+                        {theme === 'system' && <Check size={12} color="#ff6600" />}
                     </TouchableOpacity>
                 </View>
             )}

@@ -1,9 +1,5 @@
 import React, { useState } from 'react';
-import { LayoutAnimation, Platform, UIManager } from 'react-native';
-
-if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
-    UIManager.setLayoutAnimationEnabledExperimental(true);
-}
+import { LayoutAnimation } from 'react-native';
 import { View, Text, TouchableOpacity } from "@/tw";
 import { Languages, Check, ChevronUp, ChevronDown } from "lucide-react-native";
 import { useTranslation } from "react-i18next";
@@ -26,7 +22,7 @@ export const LanguageCard = () => {
     };
 
     return (
-        <View className="bg-background dark:bg-darkBackgroundMuted p-4 border-t border-border dark:border-darkBorder overflow-hidden">
+        <View className="bg-background dark:bg-darkBackgroundMuted p-3 overflow-hidden">
             <TouchableOpacity
                 onPress={toggleOpen}
                 className="flex-row items-center"
@@ -45,13 +41,13 @@ export const LanguageCard = () => {
                     </Text>
                 </View>
 
-                {isOpen ? <ChevronUp size={20} color="#94a3b8" /> : <ChevronDown size={20} color="#94a3b8" />}
+                {isOpen ? <ChevronUp size={15} color="#94a3b8" /> : <ChevronDown size={15} color="#94a3b8" />}
             </TouchableOpacity>
 
             {isOpen && (
-                <View className="mt-2">
+                <View className="mt-3">
                     {/* divider */}
-                    <View className="h-[1px] bg-border dark:bg-darkBorder mb-1 ml-12" />
+                    <View className="h-[1px] bg-border dark:bg-darkBorder" />
 
                     {/* english */}
                     <TouchableOpacity
@@ -63,12 +59,12 @@ export const LanguageCard = () => {
                             English
                         </Text>
                         {language === 'en' && (
-                            <Check size={18} color="#FF6600" />
+                            <Check size={12} color="#FF6600" />
                         )}
                     </TouchableOpacity>
 
                     {/* divider */}
-                    <View className="h-[1px] bg-border dark:bg-darkBorder ml-12" />
+                    <View className="h-[1px] bg-border dark:bg-darkBorder opacity-25 ml-12" />
 
                     {/* japanese */}
                     <TouchableOpacity
@@ -80,7 +76,7 @@ export const LanguageCard = () => {
                             日本語
                         </Text>
                         {language === 'ja' && (
-                            <Check size={18} color="#FF6600" />
+                            <Check size={12} color="#FF6600" />
                         )}
                     </TouchableOpacity>
                 </View>
