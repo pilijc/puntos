@@ -269,13 +269,6 @@ export default function ViewStreak() {
                 : "Ended streak programs will appear here."}
             </Text>
           </View>
-          {activeTab !== "ended" && (
-            <Button
-              label="Create Program"
-              onPress={() => router.push({ pathname: "/(store_manager)/streak/configure-streaks", params: { storeId } })}
-              variant="primary"
-            />
-          )}
         </View>
       ) : (
         <FlatList
