@@ -205,8 +205,8 @@ const styles = StyleSheet.create({
   // Invisible, keeps existing tap-to-dismiss logic
   _invisibleBackdrop: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "transparent",
     zIndex: 1,
+    backgroundColor: "rgba(0,0,0,0.3)",
   },
   /* Original non-blur fallback (for reference only):
   backdrop: {

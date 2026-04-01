@@ -192,7 +192,7 @@ export default function ViewStamp() {
               </Text>
               {count > 0 && (
                 <View
-                  className={`rounded-full px-1.5 min-w-[18px] items-center ${isActive ? "bg-primary/10" : "bg-neutral-100 dark:bg-neutral-700"}`}
+                  className="rounded-full px-1.5 min-w-[18px] items-center bg-white"
                 >
                   <Text
                     className={`text-[9px] font-poppins-bold ${isActive ? "text-primary" : "text-neutral-500 dark:text-neutral-400"}`}

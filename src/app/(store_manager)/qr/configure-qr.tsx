@@ -1,7 +1,7 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { KeyboardAvoidingView, Platform, ScrollView, useColorScheme } from "react-native";
 import { View, Text, TouchableOpacity } from "@/tw";
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { Check} from "lucide-react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Button } from "@/components/button";
@@ -9,15 +9,22 @@ import { Modal, type ModalButton } from "@/components/modal";
 import { TextField } from "@/components/text-field";
 import { EarningType } from "@/type/store-manager/qr.purchase";
 import { useQRStore } from "@/store/store-manager/qr-store";
-import { createQRService } from "@/services/store-manager/qr-service";
+import { createQRService, getQRConfig } from "@/services/store-manager/qr-service";
+import { AppHeader } from "@/components/header";
 
 export default function ConfigureStreaks() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { storeId } = useLocalSearchParams<{ storeId: string }>();
+  const { storeId, id } = useLocalSearchParams<{ storeId?: string; id?: string }>();
+  const storeIdParam = storeId ?? id;
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [percentageInput, setPercentageInput] = useState("");
+  const [baseAmountInput, setBaseAmountInput] = useState("");
+  const [fixedPointsInput, setFixedPointsInput] = useState("");
+  const [minimumSpendInput, setMinimumSpendInput] = useState("");
+  const [maxPointsInput, setMaxPointsInput] = useState("");
   const [modal, setModal] = useState<{
     title: string;
     message: string;
@@ -40,37 +47,115 @@ export default function ConfigureStreaks() {
 		reset
   } = useQRStore();
 
-  const [percentageInput, setPercentageInput] = useState("");
-  const [baseAmountInput, setBaseAmountInput] = useState("");
-  const [fixedPointsInput, setFixedPointsInput] = useState("");
-  const [minimumSpendInput, setMinimumSpendInput] = useState("");
-  const [maxPointsInput, setMaxPointsInput] = useState("");
-
 	const showError = (message: string) =>
-		setModal({ title: "Invalid Input", message, buttons: [{ label: "OK", onPress: () => setModal(null) }] });
+		setModal({ title: "Almost there!", message, buttons: [{ label: "OK", onPress: () => setModal(null) }] });
 
 	const validate = (): boolean => {
 		if (earning_type === "percentage") {
 			const pct = parseFloat(percentageInput);
 			const base = parseFloat(baseAmountInput);
-			if (!percentageInput || isNaN(pct) || pct <= 0) { showError("Percentage must be greater than 0."); return false; }
+			if (!percentageInput || isNaN(pct) || pct <= 0) { showError("Please enter a valid percentage."); return false; }
 			if (pct > 100) { showError("Percentage cannot exceed 100%."); return false; }
-			if (baseAmountInput && isNaN(base) || base <= 0) { showError("Base amount must be greater than 0."); return false; }
+			if (baseAmountInput && (isNaN(base) || base <= 0)) { showError("Please enter a valid base amount."); return false; }
 		} else {
 			const pts = parseFloat(fixedPointsInput);
-			if (!fixedPointsInput || isNaN(pts) || pts <= 0) { showError("Fixed points must be greater than 0."); return false; }
+			if (!fixedPointsInput || isNaN(pts) || pts <= 0) { showError("Please enter a valid fixed points amount."); return false; }
+      const maxTxn = maxPointsInput ? parseFloat(maxPointsInput) : NaN;
+      if (!isNaN(maxTxn) && maxTxn > 0 && maxTxn < pts) {
+        showError("Max points per transaction cannot be lower than the fixed points amount.");
+        return false;
+      }
 		}
 		return true;
 	};
 
+  useEffect(() => {
+    const storeIdForDb = storeIdParam && storeIdParam !== "undefined" ? storeIdParam : null;
+    if (!storeIdForDb) return;
+
+    let cancelled = false;
+    reset();
+    setPercentageInput("");
+    setBaseAmountInput("");
+    setFixedPointsInput("");
+    setMinimumSpendInput("");
+    setMaxPointsInput("");
+    getQRConfig(storeIdForDb)
+      .then((cfg) => {
+        if (cancelled) return;
+        if (!cfg) {
+          reset();
+          setPercentageInput("");
+          setBaseAmountInput("");
+          setFixedPointsInput("");
+          setMinimumSpendInput("");
+          setMaxPointsInput("");
+          return;
+        }
+        const type = (cfg.earning_type as EarningType) ?? "percentage";
+        setEarningType(type);
+
+        if (type === "percentage") {
+          const pct = cfg.percentage ?? 0;
+          const base = cfg.base_amount ?? 0;
+          setPercentage(pct);
+          setBaseAmount(base);
+          setPercentageInput(pct ? String(pct) : "");
+          setBaseAmountInput(base ? String(base) : "");
+        } else {
+          const fixed = cfg.fixed_points ?? 0;
+          const minSpend = cfg.minimum_spend ?? 0;
+          setFixedPoints(fixed);
+          setMinimumSpend(minSpend);
+          setFixedPointsInput(fixed ? String(fixed) : "");
+          setMinimumSpendInput(minSpend ? String(minSpend) : "");
+        }
+
+        const maxPerTxn = cfg.max_points_per_txn ?? 0;
+        setMaxPointsPerTxn(maxPerTxn);
+        setMaxPointsInput(maxPerTxn ? String(maxPerTxn) : "");
+      })
+      .catch((error) => {
+        if (cancelled) return;
+        setModal({
+          title: "Couldn’t load QR rules",
+          message:
+            "We couldn’t load this store’s QR earning rules right now. Please try again in a moment.",
+          buttons: [{ label: "OK", onPress: () => setModal(null), variant: "secondary" }],
+        });
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    storeIdParam,
+    setEarningType,
+    setPercentage,
+    setBaseAmount,
+    setFixedPoints,
+    setMinimumSpend,
+    setMaxPointsPerTxn,
+    reset,
+  ]);
+
 	const handleSave = async () => {
 		if (isSubmitting) return;
+    const storeIdForDb = storeIdParam && storeIdParam !== "undefined" ? storeIdParam : null;
+    if (!storeIdForDb) {
+      setModal({
+        title: "Invalid Store",
+        message: "Missing store id. Please go back and try again.",
+        buttons: [{ label: "OK", onPress: () => setModal(null), variant: "secondary" }],
+      });
+      return;
+    }
 		if (!validate()) return;
 
 		setIsSubmitting(true);
 		try {
-			await createQRService(storeId, {
-				store_id: storeId,
+      await createQRService(storeIdForDb, {
+        store_id: storeIdForDb,
 				percentage,
 				base_amount,
 				earning_type,
@@ -82,9 +167,8 @@ export default function ConfigureStreaks() {
 			setModal({
 				title: "Success",
 				message: "QR purchase rules saved successfully",
-				buttons: [{ label: "OK", onPress: () => router.push({ pathname: "/(store_manager)/qr", params: { storeId } }) }],
+        buttons: [{ label: "OK", onPress: () => router.push({ pathname: "/(store_manager)/qr", params: { storeId: storeIdForDb } }) }],
 			});
-			router.push({ pathname: "/(store_manager)/qr", params: { storeId } });
 		} catch (error) {
 			setModal({
 				title: "Error",
@@ -99,7 +183,7 @@ export default function ConfigureStreaks() {
   return (
     <KeyboardAvoidingView
       style={{ flex: 1 }}
-      className="bg-background dark:bg-[#111921]"
+      className="bg-backgroundMuted dark:bg-neutral-900"
       behavior={Platform.OS === "android" ? "height" : "padding"}
     >
       <Modal
@@ -109,21 +193,12 @@ export default function ConfigureStreaks() {
         message={modal?.message}
         buttons={modal?.buttons}
       />
-      <View
-        className="bg-background dark:bg-[#111921] border-b border-slate-200 dark:border-slate-800 flex-row items-center px-2"
-        style={{ paddingTop: insets.top + 8, paddingBottom: 12 }}
-      >
-        <TouchableOpacity
-          className="w-10 h-10 rounded-full items-center justify-center"
-          activeOpacity={0.7}
-          onPress={() => router.back()}
-        >
-          <MaterialIcons name="chevron-left" size={22} color={isDark ? "#F1F5F9" : "#0F172A"} />
-        </TouchableOpacity>
-        <Text className="flex-1 text-center text-[17px] font-poppins-bold text-slate-900 dark:text-slate-100 pr-10">
-          QR Purchase Rules
-        </Text>
-      </View>
+      
+      <AppHeader
+        title="QR Earning Rules"
+        paddingTop={insets.top + 8}
+        onBackPress={() => router.push({ pathname: "/(store_manager)/qr", params: { storeId: storeIdParam } })}
+      />
 
       <ScrollView
         style={{ flex: 1 }}
@@ -131,49 +206,44 @@ export default function ConfigureStreaks() {
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={{ padding: 16, paddingBottom: 32, gap: 20 }}
       >
-        <View>
-          <Text className="text-xl font-poppins-bold text-slate-900 dark:text-slate-100">
-            QR Purchase Rules
-          </Text>
-          <Text className="text-sm font-poppins text-slate-500 dark:text-slate-400 mt-1">
-            Define how customers earn loyalty points through QR purchases.
-          </Text>
-        </View>
-
-        {/* Points mode toggle */}
+        <View className="bg-white rounded-xl p-4 flex-col gap-y-5">
+          <View>
+            <Text className="text-md font-poppins-bold text-slate-900 dark:text-slate-100">
+            Set how QR scans earn points
+            </Text>
+            <Text className="text-sm font-poppins text-slate-500 dark:text-slate-400">
+              Choose between percentage or fixed points and define when customers start earning.
+            </Text>
+          </View>
         <View className="gap-y-2">
           <Text className="text-sm font-poppins-semibold text-slate-700 dark:text-slate-300">
             Points Type
           </Text>
           <View className="flex-row gap-x-2">
-            {([
-              { key: "percentage" as EarningType, label: "Percentage", icon: "percent" as const, desc: "Points based on purchase percentage" },
-              { key: "fixed" as EarningType,       label: "Fixed",       icon: "monetization-on" as const, desc: "Fixed points per purchase" },
-            ]).map((opt) => {
+            {[{key: "percentage" as EarningType, label: "Percentage", desc: "Earn points by Purchase Percentage"},
+              {key: "fixed" as EarningType, label: "Fixed", desc: "Earn a fixed number of points per transaction"}]
+              .map((opt) => {
               const selected = earning_type === opt.key;
               return (
                 <TouchableOpacity
                   key={opt.key}
                   activeOpacity={0.8}
                   onPress={() => setEarningType(opt.key)}
-                  className={`flex-1 rounded-2xl border p-3 gap-y-1 ${
+                  className={`flex-1 rounded-2xl border p-3 gap-y-1 bg-white dark:bg-slate-900 ${
                     selected
-                      ? "bg-primary/5 dark:bg-primary/10 border border-primary/10"
-                      : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700"
+                      ? "border-primary"
+                      : "border-slate-200 dark:border-slate-700"
                   }`}
                 >
                   <View className="flex-row items-center justify-between">
-                    <View className={`w-7 h-7 rounded-lg items-center justify-center ${selected ? "bg-primary/20" : "bg-slate-100 dark:bg-slate-700"}`}>
-                      <MaterialIcons name={opt.icon} size={14} color={selected ? "#FF6600" : "#94A3B8"} />
-                    </View>
-                    <View className={`w-4 h-4 rounded-full border-2 items-center justify-center ${selected ? "border-primary bg-primary" : "border-slate-300 dark:border-slate-600"}`}>
-                      {selected && <MaterialIcons name="check" size={9} color="#fff" />}
+                    <View className={`w-4 h-4 rounded-full border-2 items-center justify-center self-center ${selected ? "border-primary bg-primary" : "border-slate-300 dark:border-slate-600"}`}>
+                      {selected && <Check size={9} color="#fff" />}
                     </View>
                   </View>
-                  <Text className={`text-xs font-poppins-bold mt-1 ${selected ? "text-primary" : "text-slate-800 dark:text-slate-200"}`}>
+                  <Text className={`text-xs font-poppins-bold mt-1 ${selected ? "text-textSecondary dark:text-darkTextSecondary" : "text-textSecondary dark:text-darkTextSecondary"}`}>
                     {opt.label}
                   </Text>
-                  <Text className={`text-[10px] font-poppins ${selected ? "text-primary/70" : "text-slate-400 dark:text-slate-500"}`}>
+                  <Text className="text-[10px] font-poppins text-textMuted dark:text-darkTextMuted">
                     {opt.desc}
                   </Text>
                 </TouchableOpacity>
@@ -182,7 +252,6 @@ export default function ConfigureStreaks() {
           </View>
         </View>
 
-        {/* Percentage fields */}
         {earning_type === "percentage" && (
           <View className="gap-y-3">
             <View className="flex-row gap-x-3">
@@ -211,14 +280,15 @@ export default function ConfigureStreaks() {
                     const parsed = parseFloat(v);
                     if (!isNaN(parsed)) setBaseAmount(Math.max(0, parsed));
                   }}
+                  required
                 />
               </View>
             </View>
 
-            <View className="bg-primary/5 dark:bg-primary/10 rounded-xl border border-primary/10 px-4 py-3 flex-row items-start gap-x-2">
-              <MaterialIcons name="info-outline" size={15} color="#FF6600" style={{ marginTop: 1 }} />
-              <Text className="flex-1 text-[11px] font-poppins text-primary/90 dark:text-primary/80">
-                For every <Text className="font-poppins-semibold text-primary">Base Amount</Text> spent, customers earn <Text className="font-poppins-semibold text-primary">Percentage%</Text> in points.
+            <View className="bg-yellow-50 dark:bg-yellow-900/20 rounded-xl px-4 py-3">
+              <Text className="text-xs font-poppins text-yellow-800 dark:text-yellow-200">
+                Customers earn points based on a <Text className="font-poppins-semibold text-yellow-900 dark:text-yellow-300">percentage</Text> of their purchase.
+                The <Text className="font-poppins-semibold text-yellow-900 dark:text-yellow-300">Base Amount</Text> helps determine how points are calculated for every amount spent.
               </Text>
             </View>
           </View>
@@ -253,18 +323,17 @@ export default function ConfigureStreaks() {
 										const parsed = parseFloat(v);
 										if (!isNaN(parsed)) setMinimumSpend(Math.max(0, parsed));
 									}}
+                  required
 								/>
 							</View>
 						</View>
 
-						<View className="bg-primary/5 dark:bg-primary/10 rounded-xl border border-primary/10 px-4 py-3 flex-row items-start gap-x-2">
-							<MaterialIcons name="info-outline" size={15} color="#FF6600" style={{ marginTop: 1 }} />
-							<View className="flex-1">
-								<Text className="text-[11px] font-poppins text-primary/90 dark:text-primary/80">
-									Customers earn a fixed <Text className="font-poppins-semibold text-primary">Points</Text> amount for each transaction above the <Text className="font-poppins-semibold text-primary">Minimum Spend</Text>.
-								</Text>
-							</View>
-						</View>
+            <View className="bg-yellow-50 dark:bg-yellow-900/20 rounded-xl px-4 py-3">
+              <Text className="text-xs font-poppins text-yellow-800 dark:text-yellow-200">
+                With <Text className="font-poppins-semibold text-yellow-900 dark:text-yellow-300">Fixed Points</Text>, customers earn the same number of points every time they make a purchase.
+                The <Text className="font-poppins-semibold text-yellow-900 dark:text-yellow-300">Minimum Spend</Text> is the amount they need to spend before they can start earning points.
+              </Text>
+            </View>
 					</>
         )}
 
@@ -283,7 +352,7 @@ export default function ConfigureStreaks() {
         />
 
         {/* Actions */}
-        <View className="gap-y-3 border-t border-slate-200 dark:border-slate-800 pt-3">
+        <View className="gap-y-3">
           <Button
             label="Save Rules"
             onPress={handleSave}
@@ -294,10 +363,11 @@ export default function ConfigureStreaks() {
           />
           <Button
             label="Cancel"
-            onPress={() => router.back()}
+            onPress={() => router.push({ pathname: "/(store_manager)/view-store/[id]", params: { id: storeIdParam } })}
             fullWidth={true}
             variant="secondary"
           />
+        </View>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
