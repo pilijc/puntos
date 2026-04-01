@@ -1,26 +1,31 @@
 import { useEffect } from 'react';
-import { useRouter } from 'expo-router';
+import { useRouter, usePathname } from 'expo-router';
 import { supabase } from '@/supabase/supabase';
 import { getHomeRouteForUserId } from '@/services/access-service';
-import { checkIfAccountDeletedService, AccountDeletedError } from '@/services/auth-service';
+import { checkIfAccountDeletedService, checkIfAccountBlockedService, AccountDeletedError, AccountBlockedError } from '@/services/auth-service';
 import { Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { upsertPushId } from '@/services/push-notif';
+import { useAuthStore } from '@/store/auth-store';
 import { OneSignal } from 'react-native-onesignal';
 
 export function useAuthListener() {
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
     const { data: listener } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        // Get current route to check if we're on signup flow
+        const isOnSignupFlow = pathname?.includes('/signup');
+        
         if (event === 'PASSWORD_RECOVERY' && session) {
           console.log("Password recovery session started for:", session.user.email);
           router.replace("/reset-password");
         } else if (event === 'SIGNED_OUT') {
           console.log("User logged out");
           router.replace("/(onboarding)/welcome");
-        } else if (event === 'SIGNED_IN' && session) {
+        } else if (event === 'SIGNED_IN' && session && !isOnSignupFlow) {
           console.log("User logged in:", session.user.email);
           void (async () => {
             try {
@@ -36,6 +41,7 @@ export function useAuthListener() {
               }
 
               await checkIfAccountDeletedService(session.user.id);
+              await checkIfAccountBlockedService(session.user.id);
 
               const userId = session.user.id;
               const nextRoute = await getHomeRouteForUserId(userId);
@@ -44,15 +50,19 @@ export function useAuthListener() {
               await upsertPushId();
 
               router.replace(nextRoute as any);
-            } catch (err: any) {
+              } catch (err: any) {
               if (err instanceof AccountDeletedError) {
                 Alert.alert("Login Failed", err.message);
                 router.replace("/(auth)/login");
+              } else if (err instanceof AccountBlockedError) {
+                useAuthStore.getState().setRestricted(true);
               } else {
                 console.error("Auth listener session error:", err);
               }
             }
           })();
+        } else if (event === 'SIGNED_IN' && session && isOnSignupFlow) {
+          console.log("User has session but is on signup flow - not auto-redirecting");
         }
       }
     );
@@ -60,5 +70,5 @@ export function useAuthListener() {
     return () => {
       listener.subscription.unsubscribe();
     };
-  }, [router]);
+  }, [router, pathname]);
 }

@@ -1,63 +1,24 @@
-import React, { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, Alert, RefreshControl, Switch, useColorScheme } from "react-native";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { RefreshControl, useColorScheme, NativeSyntheticEvent, NativeScrollEvent, useWindowDimensions } from "react-native";
 import { View, Text, TouchableOpacity, ScrollView, Image } from "@/tw";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { getStoreById } from "@/services/store-service";
-import { getStoreFeaturesById, updateStoreFeatures } from "@/services/store-manager/feature-service";
-import { getRewardsByStoreId } from "@/services/store-manager/reward-service";
-import { Reward } from "@/type/store-manager/reward";
-import { getActiveStampProgram } from "@/services/store-manager/stamp-service";
-import { Stamp } from "@/type/store-manager/stamp";
-import { Button } from "@/components/button";
-import { Modal, ModalButton, ModalProps } from "@/components/modal";
-
-const FEATURES = [
-  {
-    id: "streaks",
-    title: "Streaks",
-    description: "Reward daily consecutive visits.",
-    icon: "local-fire-department" as const,
-    iconColor: "#F97316",
-    iconBg: "rgba(249,115,22,0.10)",
-    badge: "5 points/day • 7-day streak",
-  },
-  {
-    id: "stamps",
-    title: "Stamps",
-    description: "Digital punch cards for purchases.",
-    icon: "loyalty" as const,
-    iconColor: "#F97316",
-    iconBg: "rgba(249,115,22,0.10)",
-    badge: null,
-  },
-  {
-    id: "purchased",
-    title: "QR Purchase Rewards",
-    description: "Scan at checkout to earn.",
-    icon: "qr-code-2" as const,
-    iconColor: "#F97316",
-    iconBg: "rgba(249,115,22,0.10)",
-    badge: null,
-  },
-];
-
-const TABS = ["Overview", "Features", "Rewards"];
+import { Modal, ModalButton } from "@/components/modal";
+import { Building2, Gift, QrCode, UsersRound, Stamp, Flame } from "lucide-react-native";
 
 export default function ViewStore() {
   const { id } = useLocalSearchParams();
   const storeId = Number(id);
   const insets = useSafeAreaInsets();
+  const { width: screenWidth } = useWindowDimensions();
   const router = useRouter();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
   const [store, setStore] = useState<Awaited<ReturnType<typeof getStoreById>> | null>(null);
-  const [activeTab, setActiveTab] = useState(1);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [rewards, setRewards] = useState<Reward[]>([]);
-  const [activeStamp, setActiveStamp] = useState<Stamp | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [modal, setModal] = useState<{
     title: string;
     message: string;
@@ -65,115 +26,51 @@ export default function ViewStore() {
     timer?: boolean;
   } | null>(null);
 
-  const [savedFeatures, setSavedFeatures] = useState({
-    streak_enabled: false,
-    stamp_enabled: false,
-    reward_enabled: false,
-  });
+  const menuItems = useMemo(
+    () => [
+      { key: "staff",   label: "Staff",       description: "Manage team",        icon: <UsersRound size={18} color="#FF6600" />, route: "/(store_manager)/staff"              as const },
+      { key: "streak",  label: "Streak",      description: "Daily rewards",      icon: <Flame      size={18} color="#FF6600" />, route: "/(store_manager)/streak" as const },
+      { key: "stamp",   label: "Stamp",       description: "Punch cards",        icon: <Stamp      size={18} color="#FF6600" />, route: "/(store_manager)/stamp/"   as const },
+      { key: "qr",      label: "QR Purchase", description: "Scan rewards",       icon: <QrCode     size={18} color="#FF6600" />, route: "/(store_manager)/qr"                 as const },
+      { key: "rewards", label: "Rewards",     description: "Redeemable items",   icon: <Gift       size={18} color="#FF6600" />, route: "/(store_manager)/reward"             as const },
+      { key: "media",   label: "Details",     description: "Manage Store",       icon: <Building2  size={18} color="#FF6600" />, route: "/(store_manager)/detail"             as const },
+    ],
+    []
+  );
 
-  const [streakEnabled, setStreakEnabled] = useState(false);
-  const [stampEnabled, setStampEnabled] = useState(false);
-  const [rewardEnabled, setRewardEnabled] = useState(false);
+  const carouselImages = useMemo(() => {
+    const pictures = (store?.store_pictures ?? []).filter((u): u is string => !!u);
+    if (pictures.length > 0) return pictures;
+    if (store?.logo) return [store.logo];
+    return [require("@/assets/images/puntos-icon.png")];
+  }, [store?.store_pictures, store?.logo]);
 
-  const toggleStreak = () => setStreakEnabled(prev => !prev);
-  const toggleStamp  = () => setStampEnabled(prev => !prev);
-  const toggleReward = () => setRewardEnabled(prev => !prev);
+  const onCarouselScroll = useCallback((e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const cardWidth = e.nativeEvent.layoutMeasurement.width;
+    if (!cardWidth) return;
+    const nextIndex = Math.round(e.nativeEvent.contentOffset.x / cardWidth);
+    setActiveImageIndex(nextIndex);
+  }, []);
 
-  const featureToggles: Record<string, { enabled: boolean; toggle: () => void }> = {
-    streaks:   { enabled: streakEnabled, toggle: toggleStreak },
-    stamps:    { enabled: stampEnabled,  toggle: toggleStamp  },
-    purchased: { enabled: rewardEnabled, toggle: toggleReward },
-  };
-
-  const hasChanges =
-    streakEnabled !== savedFeatures.streak_enabled ||
-    stampEnabled  !== savedFeatures.stamp_enabled  ||
-    rewardEnabled !== savedFeatures.reward_enabled;
-
-    const navigateToView = (featureId: string) => {
-      if (featureId === "streaks") {
-        router.push({ pathname: "/(store_manager)/view-streak", params: { storeId } });
-      } else if (featureId === "stamps") {
-        router.push({ pathname: "/(store_manager)/view-stamp", params: { storeId } });
-      }
-    };
-    
-    const navigateToConfigure = (featureId: string) => {
-      if (featureId === "streaks") {
-        router.push({ pathname: "/(store_manager)/configure-streaks", params: { storeId } });
-      } else if (featureId === "stamps") {
-        router.push({ pathname: "/(store_manager)/configure-stamp", params: { storeId } });
-      }
-    };
-
-  const fetchDynamicData = useCallback(async () => {
-    const [rewardsData, stampData] = await Promise.all([
-      getRewardsByStoreId(String(storeId)),
-      getActiveStampProgram(String(storeId)),
-    ]);
-    setRewards(rewardsData);
-    setActiveStamp(stampData);
+  const fetchStore = useCallback(async () => {
+    const storeData = await getStoreById(storeId);
+    setStore(storeData);
   }, [storeId]);
 
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
     try {
-      await fetchDynamicData();
+      await fetchStore();
     } finally {
       setRefreshing(false);
     }
-  }, [fetchDynamicData]);
+  }, [fetchStore]);
 
   useEffect(() => {
-    (async () => {
-      const [storeData, featureData, rewardsData] = await Promise.all([
-        getStoreById(storeId),
-        getStoreFeaturesById(String(storeId)),
-        getRewardsByStoreId(String(storeId)),
-      ]);
-      setStore(storeData);
-      setRewards(rewardsData);
-
-      const saved = {
-        streak_enabled: featureData?.streak_enabled ?? false,
-        stamp_enabled:  featureData?.stamp_enabled  ?? false,
-        reward_enabled: featureData?.reward_enabled ?? false,
-      };
-      setSavedFeatures(saved);
-      setStreakEnabled(saved.streak_enabled);
-      setStampEnabled(saved.stamp_enabled);
-      setRewardEnabled(saved.reward_enabled);
-
-      await fetchDynamicData();
-    })();
-  }, [storeId]);
-
-  const handleSaveChanges = async () => {
-    try {
-      setIsSubmitting(true);
-      await updateStoreFeatures({
-        store_id: storeId,
-        streak_enabled: streakEnabled,
-        stamp_enabled: stampEnabled,
-        reward_enabled: rewardEnabled,
-      });
-      setSavedFeatures({ streak_enabled: streakEnabled, stamp_enabled: stampEnabled, reward_enabled: rewardEnabled });
-      setModal({
-        title: "Success",
-        message: "Changes saved successfully",
-        buttons: [{ label: "OK", onPress: () => setModal(null) }],
-        timer: 3000,
-      });
-    } catch (error) {
-      setModal({
-        title: "Error",
-        message: (error as Error).message ?? "Failed to save changes",
-        buttons: [{ label: "OK", onPress: () => setModal(null) }],
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+    setStore(null);
+    setActiveImageIndex(0);
+    void fetchStore();
+  }, [fetchStore]);
 
   return (
     <View className="flex-1 bg-backgroundMuted dark:bg-neutral-900">
@@ -183,7 +80,7 @@ export default function ViewStore() {
         title={modal?.title ?? ""}
         message={modal?.message}
         buttons={modal?.buttons}
-        timer={modal?.timer}
+        timer={modal?.timer ? 3000 : undefined}
       />
       <View
         className="border-b border-neutral-100 dark:border-neutral-700 bg-background dark:bg-neutral-800"
@@ -197,15 +94,15 @@ export default function ViewStore() {
           >
             <MaterialIcons name="chevron-left" size={22} color={isDark ? "#F1F5F9" : "#0F172A"} />
           </TouchableOpacity>
-          <Text className="flex-1 text-center text-[17px] font-poppins-bold text-[#0F172A] dark:text-[#F1F5F9] pr-10">
-            Store Details
-          </Text>
-          <TouchableOpacity
-            className="w-10 h-10 items-center justify-center"
-            activeOpacity={0.7}
-          >
-            <MaterialIcons name="more-vert" size={24} color={isDark ? "#F1F5F9" : "#0F172A"} />
-          </TouchableOpacity>
+          <View className="flex-1 items-center justify-center -ml-10">
+            <Text className="text-md font-poppins-bold text-textPrimary dark:text-textPrimary">
+              {store?.name || "Store Details"}
+            </Text>
+            <Text className="text-xs font-poppins text-textMuted dark:text-textMuted -mt-2">
+              {store?.address || "View & manage store info"}
+            </Text>
+          </View>
+
         </View>
       </View>
 
@@ -222,226 +119,85 @@ export default function ViewStore() {
           />
         }
       >
-
-        <View className="items-center gap-y-1">
-          <View className="w-full h-30 items-center justify-center overflow-hidden">
-            {store?.logo ? (
-              <Image
-                source={{ uri: store.logo }}
-                className="w-full h-full"
-                contentFit="cover"
-              />
-            ) : (
-              <Image
-                source={require("@/assets/images/puntos-icon.png")}
-                className="w-full h-full object-cover"
-              />
-            )}
-          </View>
-
-          <View className="items-center w-full space-y-2 py-2 bg-white">
-            <Text className="text-2xl font-poppins-bold text-textbg-Primary dark:text-textbg-Primary">
-              {store?.name}
-            </Text>
-            {store?.address && (
-              <Text className="text-sm font-poppins text-textMuted dark:text-textMuted">
-                {store?.address}
-              </Text>
-            )}
-          </View>
-        </View>
-
-        <View className="flex-row dark:border-neutral-700 px-4 pt-2 bg-white dark:bg-neutral-800">
-          {TABS.map((tab, i) => {
-            const selected = activeTab === i;
-            return (
-              <View key={tab} className="flex-1 items-center justify-center">
-                <TouchableOpacity
-                  onPress={() => setActiveTab(i)}
-                  className="w-full items-center justify-center"
-                  activeOpacity={0.7}
-                >
-                  <View
-                    className={`items-center pb-2 border-b-2 w-full ${
-                      selected ? "border-primary" : "border-transparent"
-                    }`}
-                  >
-                    <Text
-                      className={`text-sm font-poppins-semibold text-center ${
-                        selected
-                          ? "text-primary"
-                          : "text-slate-500 dark:text-slate-400"
-                      }`}
-                    >
-                      {tab}
-                    </Text>
-                  </View>
-                </TouchableOpacity>
-              </View>
-            );
-          })}
-        </View>
-
-        {activeTab === 1 && (
-          <View className="px-4 elevation-0.5 mt-4">
-            {FEATURES.map((feature) => {
-              const { enabled, toggle } = featureToggles[feature.id];
-              return (
+        <View className="items-center gap-y-2">
+          <View className="w-full px-4">
+            <View style={{ width: (screenWidth - 32), height: 144, borderRadius: 12, overflow: "hidden" }}>
+              <ScrollView
+                horizontal
+                pagingEnabled
+                showsHorizontalScrollIndicator={false}
+                onScroll={onCarouselScroll}
+                scrollEventThrottle={16}
+                style={{ width: (screenWidth - 32), height: 144 }}
+              >
+                {carouselImages.map((img, idx) => (
+                  <Image
+                    key={`${typeof img === "string" ? img : "default"}-${idx}`}
+                    source={typeof img === "string" ? { uri: img } : img}
+                    style={{ width: (screenWidth - 32), height: 144 }}
+                    contentFit="cover"
+                  />
+                ))}
+              </ScrollView>
+              {carouselImages.length > 1 && (
                 <View
-                  key={feature.id}
-                  className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl overflow-hidden mb-3"
+                  className="flex-row items-center justify-center gap-x-1.5 absolute bottom-4 left-0 right-0"
                 >
-                  <View className="p-4 flex-row items-start justify-between">
-                    <TouchableOpacity
-                      className="flex-row gap-x-3 flex-1"
-                      activeOpacity={0.7}
-                      onPress={() => navigateToView(feature.id)}
-                    >
-                      <View
-                        className="w-12 h-12 rounded-xl items-center justify-center"
-                      >
-                        <MaterialIcons name={feature.icon} size={24} color={feature.iconColor} />
-                      </View>
-                      <View className="flex-1 justify-center">
-                        <Text className="text-base font-poppins-bold text-[#0F172A] dark:text-[#F1F5F9]">
-                          {feature.title}
-                        </Text>
-                        <Text className="text-xs font-poppins text-slate-500 dark:text-slate-500 mt-0.5">
-                          {feature.description}
-                        </Text>
-                      </View>
-                    </TouchableOpacity>
-                    <Switch
-                      value={enabled}
-                      onValueChange={toggle}
-                      trackColor={{ false: "#E2E8F0", true: "#FF6600" }}
-                      thumbColor="#FFFFFF"
+                  {carouselImages.map((_, i) => (
+                    <View
+                      key={`dot-${i}`}
+                      className={`rounded-full ${activeImageIndex === i ? "bg-white w-5 h-1.5" : "bg-white/50 w-1.5 h-1.5"}`}
                     />
-                  </View>
-                  {enabled && (feature.badge || feature.id === "stamps") && (() => {
-                    const badgeText = feature.id === "stamps"
-                      ? activeStamp
-                        ? `${activeStamp.total_stamps} stamps • ${rewards.find(r => r.id === activeStamp.reward_id)?.title ?? "Reward"}`
-                        : "No active program"
-                      : feature.badge;
-                    return (
-                      <View className="px-4 py-3 border-t border-slate-100 dark:border-slate-800 flex-row items-center justify-between bg-slate-50 dark:bg-slate-900">
-                        <View
-                          className="flex-row items-center gap-x-1.5 px-2.5 py-1 rounded-lg"
-                        >
-                          <MaterialIcons
-                            name="info-outline"
-                            size={13}
-                            color="#334155"
-                          />
-                          <Text
-                            className="text-xs font-poppins-semibold text-slate-700 dark:text-slate-200"
-                          >
-                            {badgeText}
-                          </Text>
-                        </View>
-                        <TouchableOpacity
-                          className="flex-row items-center gap-x-1"
-                          activeOpacity={0.7}
-                          onPress={() => navigateToConfigure(feature.id)}
-                        >
-                          <Text className="text-sm font-poppins-semibold text-primary">
-                            Configure
-                          </Text>
-                        </TouchableOpacity>
-                      </View>
-                    );
-                  })()}
+                  ))}
                 </View>
-              );
-            })}
-
-            {hasChanges && (
-              <Button
-                label="Save Changes"
-                onPress={handleSaveChanges}
-                variant="primary"
-                loading={isSubmitting}
-                disabled={!hasChanges || isSubmitting}
-                fullWidth={true}
-              />
-            )}
+              )}
+            </View>
           </View>
-        )}
+        </View>
 
-        {activeTab === 0 && (
-          <View className="pt-16 items-center gap-y-3">
-            <MaterialIcons name="construction" size={40} color="#64748B" />
-            <Text className="text-sm font-poppins text-slate-500 dark:text-slate-500">
-              Coming soon
-            </Text>
-          </View>
-        )}
-
-        {activeTab === 2 && (
-          <View className="px-4 mt-4 gap-y-3">
-            {rewards.length === 0 ? (
-              <View className="pt-12 items-center gap-y-3">
-                <MaterialIcons name="redeem" size={40} color="#94A3B8" />
-                <Text className="text-sm font-poppins text-slate-400 dark:text-slate-500">
-                  No rewards yet. Create your first one!
+        <View className="px-4 py-3">
+          <View className="flex-row flex-wrap gap-y-2 justify-between">
+            {menuItems.map((item) => (
+              <TouchableOpacity
+                key={item.key}
+                activeOpacity={0.85}
+                onPress={() => router.push({ pathname: item.route, params: { storeId } })}
+                style={{ width: "32.5%" }}
+                className="bg-white dark:bg-neutral-800 border border-slate-100 dark:border-neutral-700 rounded-xl p-3"
+              >
+                <View className="w-9 h-9 rounded-lg items-center justify-center mb-1 -ml-1">
+                  {item.icon}
+                </View>
+                <Text className="text-[11px] font-poppins-semibold text-slate-800 dark:text-slate-100 leading-4">
+                  {item.label}
                 </Text>
-              </View>
-            ) : (
-              rewards.map((reward) => (
-                <View
-                  key={reward.id}
-                  className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl p-4 flex-row items-start gap-x-3"
-                >
-                  {reward.image_url ? (
-                    <Image
-                      source={{ uri: reward.image_url }}
-                      className="w-20 h-20 rounded-xl"
-                    />
-                  ) : (
-                    <View className="w-20 h-20 rounded-xl bg-primary/10 items-center justify-center">
-                      <MaterialIcons name="redeem" size={32} color="#FF6600" />
-                    </View>
-                  )}
-                  <View className="flex-1">
-                    <View className="flex-row justify-between items-start">
-                      <Text
-                        className="text-md font-poppins-bold text-slate-900 dark:text-slate-100 flex-shrink"
-                        numberOfLines={1}
-                      >
-                        {reward.title}
-                      </Text>
-                      {reward.type === "stamp" ? (
-                        <View className="ml-2 flex-row items-center gap-x-1 px-2 py-0.5 rounded-lg bg-primary/10">
-                          <MaterialIcons name="loyalty" size={11} color="#FF6600" />
-                          <Text className="text-xs font-poppins-semibold text-primary">Stamp</Text>
-                        </View>
-                      ) : (
-                        <Text className="text-sm font-poppins-bold text-primary ml-2 whitespace-nowrap">
-                          {reward.points_cost} pts
-                        </Text>
-                      )}
-                    </View>
-                    <Text className="text-xs font-poppins text-slate-500 dark:text-slate-400" numberOfLines={2}>
-                      {reward.description}
-                    </Text>
-                  </View>
-                </View>
-              ))
-            )}
+                <Text className="text-[9px] font-poppins text-slate-400 dark:text-slate-500 mt-0.5">
+                  {item.description}
+                </Text>
+              </TouchableOpacity>
+            ))}
           </View>
-        )}
-      </ScrollView>
+        </View>
 
-      {activeTab === 2 && (
-        <TouchableOpacity
-          className="absolute bottom-8 right-6 w-14 h-14 rounded-full bg-primary items-center justify-center shadow-lg"
-          activeOpacity={0.85}
-          onPress={() => router.push({ pathname: "/(store_manager)/rewards", params: { storeId } })}
-        >
-          <MaterialIcons name="add" size={28} color="#fff" />
-        </TouchableOpacity>
-      )}
+        <View className="px-4">
+          <View className="flex-row items-center justify-between mb-3">
+            <Text className="text-sm font-poppins-bold text-textSecondary dark:text-textSecondary ml-1">
+              Recent Transactions
+            </Text>
+            <TouchableOpacity activeOpacity={0.7} className="flex-row items-center gap-x-0.5">
+              <Text className="text-xs font-poppins text-primary">See all</Text>
+              <MaterialIcons name="chevron-right" size={14} color="#FF6600" />
+            </TouchableOpacity>
+          </View>
+
+          <View className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 px-4 py-10 items-center gap-y-2">
+            <MaterialIcons name="receipt-long" size={32} color="#CBD5E1" />
+            <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">
+              No transactions yet
+            </Text>
+          </View>
+        </View>
+      </ScrollView>
     </View>
   );
 }

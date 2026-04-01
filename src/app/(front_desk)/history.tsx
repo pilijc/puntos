@@ -1,6 +1,7 @@
 import React from "react";
 import { SafeAreaView, ScrollView, Text, TouchableOpacity, View } from "@/tw";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { useTranslation } from "react-i18next";
 
 const mockTransactions = [
     {
@@ -88,144 +89,81 @@ const mockTransactions = [
 const totalPtsToday = mockTransactions.reduce((sum, t) => sum + t.points, 0);
 
 export default function FrontDeskHistory() {
-    const softCardShadow = {
-        shadowColor: "#0F172A",
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.08,
-        shadowRadius: 12,
-        elevation: 4,
-    };
+    const { t: translate } = useTranslation();
 
     return (
-        <SafeAreaView style={{ flex: 1, backgroundColor: "#F1F5F9" }}>
+        <SafeAreaView className="flex-1 bg-slate-100 dark:bg-darkBackground">
             <ScrollView
-                style={{ flex: 1 }}
+                className="flex-1"
                 contentContainerStyle={{ paddingBottom: 100 }}
                 showsVerticalScrollIndicator={false}
             >
-                {/* Header */}
-                <View
-                    style={{
-                        backgroundColor: "#FF6600",
-                        borderBottomLeftRadius: 35,
-                        borderBottomRightRadius: 35,
-                        paddingHorizontal: 24,
-                        paddingTop: 8,
-                        paddingBottom: 25,
-                        overflow: "hidden",
-                        position: "relative",
-                    }}
-                >
-                    {/* Decorative Circles */}
-                    <View style={{ position: "absolute", top: -40, right: -40, width: 240, height: 240, borderRadius: 120, backgroundColor: "rgba(255,255,255,0.1)" }} />
-                    <View style={{ position: "absolute", bottom: -48, left: -40, width: 128, height: 128, borderRadius: 64, backgroundColor: "rgba(255,255,255,0.1)" }} />
+                {/* ── Orange Header ── */}
+                <View className="bg-primary rounded-b-[35px] px-6 pt-2 pb-6 overflow-hidden relative">
+                    {/* Decorative circles */}
+                    <View className="absolute -top-10 -right-10 w-60 h-60 rounded-full bg-white/10" />
+                    <View className="absolute -bottom-12 -left-10 w-32 h-32 rounded-full bg-white/10" />
 
-                    {/* Top Bar */}
-                    <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", marginTop: 8, position: "relative" }}>
-                        <Text style={{ color: "#FFFFFF", fontSize: 22, fontFamily: "Poppins-Bold" }}>Transaction History</Text>
-                        <TouchableOpacity style={{ position: "absolute", right: 0, width: 28, height: 28, borderRadius: 14, backgroundColor: "#FFFFFF", alignItems: "center", justifyContent: "center" }}>
-                            <Text style={{ color: "#FF6600", fontFamily: "Poppins-Bold", fontSize: 13 }}>?</Text>
+                    {/* Title row */}
+                    <View className="flex-row items-center justify-center mt-2 relative">
+                        <Text className="text-white text-[22px] font-poppins-bold">
+                            {translate("layout.transactions")}
+                        </Text>
+                        <TouchableOpacity className="absolute right-0 w-7 h-7 rounded-full bg-white items-center justify-center">
+                            <Text className="text-primary font-poppins-bold text-sm">?</Text>
                         </TouchableOpacity>
                     </View>
 
-                    {/* Total Points Today Banner */}
-                    <View
-                        style={{
-                            marginTop: 28,
-                            backgroundColor: "rgba(255,255,255,0.18)",
-                            borderRadius: 20,
-                            paddingVertical: 20,
-                            paddingHorizontal: 24,
-                            alignItems: "center",
-                        }}
-                    >
-                        <Text style={{ color: "rgba(255,255,255,0.8)", fontSize: 11, fontFamily: "Poppins-Bold", letterSpacing: 1.5 }}>
-                            TOTAL POINTS ISSUED TODAY
+                    {/* Total points banner */}
+                    <View className="mt-7 bg-white/[0.18] rounded-2xl py-5 px-6 items-center">
+                        <Text className="text-white/80 text-[11px] font-poppins-bold tracking-[1.5px] uppercase">
+                            {translate("frontdesk.transactionHistory.totalPointsToday")}
                         </Text>
-                        <Text style={{ color: "#FFFFFF", fontSize: 38, fontFamily: "Poppins-Bold", marginTop: 4 }}>
+                        <Text className="text-white text-[38px] font-poppins-bold mt-1">
                             {totalPtsToday.toLocaleString()} PTS
                         </Text>
 
-                        {/* View All Transactions Button */}
-                        <TouchableOpacity
-                            style={{
-                                marginTop: 16,
-                                flexDirection: "row",
-                                alignItems: "center",
-                                backgroundColor: "rgba(255,255,255,0.2)",
-                                paddingHorizontal: 20,
-                                paddingVertical: 10,
-                                borderRadius: 9999,
-                                borderWidth: 1,
-                                borderColor: "rgba(255,255,255,0.35)",
-                            }}
-                        >
+                        {/* View All button */}
+                        <TouchableOpacity className="mt-4 flex-row items-center bg-white/20 px-5 py-2.5 rounded-full border border-white/35">
                             <MaterialIcons name="history" size={16} color="#FFFFFF" />
-                            <Text style={{ color: "#FFFFFF", fontFamily: "Poppins-Bold", fontSize: 13, marginLeft: 6 }}>
-                                View All Transactions
+                            <Text className="text-white font-poppins-bold text-sm ml-1.5">
+                                {translate("frontdesk.transactionHistory.viewAllTransactions")}
                             </Text>
-                            <MaterialIcons name="chevron-right" size={16} color="#FFFFFF" style={{ marginLeft: 2 }} />
+                            <MaterialIcons name="chevron-right" size={16} color="#FFFFFF" />
                         </TouchableOpacity>
                     </View>
                 </View>
 
-                {/* Today's Transactions */}
-                <View style={{ paddingHorizontal: 24, marginTop: 20 }}>
-                    {/* Transactions Card */}
-                    <View
-                        style={[
-                            softCardShadow,
-                            {
-                                backgroundColor: "#FFFFFF",
-                                borderRadius: 24,
-                                overflow: "hidden",
-                            },
-                        ]}
-                    >
+                {/* ── Transaction List ── */}
+                <View className="px-6 mt-5">
+                    <View className="bg-white dark:bg-darkBackgroundMuted rounded-xl overflow-hidden border border-white dark:border-darkBorder">
                         {mockTransactions.slice(0, 4).map((txn, index) => (
                             <View
                                 key={txn.id}
-                                style={{
-                                    flexDirection: "row",
-                                    justifyContent: "space-between",
-                                    alignItems: "center",
-                                    paddingVertical: 18,
-                                    paddingHorizontal: 20,
-                                    borderTopWidth: index === 0 ? 0 : 1,
-                                    borderTopColor: "#F1F5F9",
-                                }}
+                                className={`flex-row justify-between items-center py-[18px] px-5 ${index !== 0 ? "border-t border-neutral-200 dark:border-darkBorder" : ""
+                                    }`}
                             >
-                                {/* Left: Avatar + Name & Time */}
-                                <View style={{ flexDirection: "row", alignItems: "center", flex: 1 }}>
-                                    <View
-                                        style={{
-                                            width: 44,
-                                            height: 44,
-                                            borderRadius: 22,
-                                            backgroundColor: "#FFF5F0",
-                                            alignItems: "center",
-                                            justifyContent: "center",
-                                            marginRight: 14,
-                                        }}
-                                    >
+                                {/* Avatar + name/time */}
+                                <View className="flex-row items-center flex-1">
+                                    <View className="w-11 h-11 rounded-full bg-orange-50 dark:bg-primary/10 items-center justify-center mr-3.5">
                                         <MaterialIcons name="person" size={22} color="#FF6600" />
                                     </View>
                                     <View>
-                                        <Text style={{ fontSize: 15, fontFamily: "Poppins-Bold", color: "#0F172A" }}>
+                                        <Text className="text-[15px] font-poppins-bold text-slate-900 dark:text-darkTextPrimary">
                                             {txn.name}
                                         </Text>
-                                        <Text style={{ fontSize: 12, fontFamily: "Poppins-Regular", color: "#94A3B8", marginTop: 2 }}>
+                                        <Text className="text-xs font-poppins text-slate-400 dark:text-darkTextMuted mt-0.5">
                                             {txn.date} • {txn.time}
                                         </Text>
                                     </View>
                                 </View>
 
-                                {/* Right: Amount + Points */}
-                                <View style={{ alignItems: "flex-end" }}>
-                                    <Text style={{ fontSize: 15, fontFamily: "Poppins-Bold", color: "#0F172A" }}>
+                                {/* Amount + points */}
+                                <View className="items-end">
+                                    <Text className="text-[15px] font-poppins-bold text-slate-900 dark:text-darkTextPrimary">
                                         ₱{txn.amount.toLocaleString()}
                                     </Text>
-                                    <Text style={{ fontSize: 13, fontFamily: "Poppins-Bold", color: "#FF6600", marginTop: 2 }}>
+                                    <Text className="text-sm font-poppins-bold text-primary mt-0.5">
                                         +{txn.points} PTS
                                     </Text>
                                 </View>
@@ -233,17 +171,12 @@ export default function FrontDeskHistory() {
                         ))}
 
                         {/* View More */}
-                        <TouchableOpacity
-                            style={{
-                                paddingVertical: 16,
-                                alignItems: "center",
-                                borderTopWidth: 1,
-                                borderTopColor: "#F1F5F9",
-                            }}
-                        >
-                            <View style={{ flexDirection: "row", alignItems: "center" }}>
-                                <Text style={{ fontSize: 14, fontFamily: "Poppins-Bold", color: "#FF6600" }}>View More</Text>
-                                <MaterialIcons name="expand-more" size={18} color="#FF6600" style={{ marginLeft: 2 }} />
+                        <TouchableOpacity className="py-4 items-center border-t border-slate-100 dark:border-darkBorder">
+                            <View className="flex-row items-center">
+                                <Text className="text-sm font-poppins-bold text-primary">
+                                    {translate("frontdesk.transactionHistory.viewMore")}
+                                </Text>
+                                <MaterialIcons name="expand-more" size={18} color="#FF6600" />
                             </View>
                         </TouchableOpacity>
                     </View>

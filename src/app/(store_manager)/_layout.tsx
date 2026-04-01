@@ -1,17 +1,41 @@
 import { Tabs } from "expo-router";
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { StyleSheet, useColorScheme, Platform } from "react-native";
+import { StyleSheet, useColorScheme, Platform, Text } from "react-native";
 import React, { useEffect } from "react";
-import { useRouter } from "expo-router";
+import { usePathname, useRouter } from "expo-router";
 import { supabase } from "@/supabase/supabase";
 import { getRoleTypeForUser } from "@/services/access-service";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { LayoutDashboard, Store, ArrowLeftRight, Settings } from 'lucide-react-native';
 
 export default function StoreManagerLayout() {
     const colorScheme = useColorScheme();
     const isDark = colorScheme === 'dark';
     const router = useRouter();
     const insets = useSafeAreaInsets();
+    const pathname = usePathname();
+    const path = pathname.endsWith("/") ? pathname : `${pathname}/`;
+
+    const activeColor = "#FF6600";
+
+    const isStoresSection =
+        path.startsWith("/(store_manager)/stores/") ||
+        path.startsWith("/(store_manager)/view-store/") ||
+        path.startsWith("/(store_manager)/store/") ||
+        path.startsWith("/(store_manager)/reward/") ||
+        path.startsWith("/(store_manager)/stamp/") ||
+        path.startsWith("/(store_manager)/streak/") ||
+        path.startsWith("/(store_manager)/qr/") ||
+        path.startsWith("/(store_manager)/staff/") ||
+        path.startsWith("/(store_manager)/detail/") ||
+        path.startsWith("/stores/") ||
+        path.startsWith("/view-store/") ||
+        path.startsWith("/store/") ||
+        path.startsWith("/reward/") ||
+        path.startsWith("/stamp/") ||
+        path.startsWith("/streak/") ||
+        path.startsWith("/qr/") ||
+        path.startsWith("/staff/") ||
+        path.startsWith("/detail/");
 
     useEffect(() => {
         const verifyAccess = async () => {
@@ -41,7 +65,7 @@ export default function StoreManagerLayout() {
             screenOptions={{
                 headerShown: false,
                 tabBarStyle: {
-                    backgroundColor: isDark ? "#171717" : "#FFFFFF",
+                    backgroundColor: isDark ? "#262626" : "#FFFFFF",
                     borderTopColor: isDark ? "#404040" : "#e5e5e5",
                     height: Platform.OS === 'ios' ? 88 : 60 + insets.bottom,
                     paddingBottom: insets.bottom > 0 ? insets.bottom : 8,
@@ -49,8 +73,8 @@ export default function StoreManagerLayout() {
                 },
                 tabBarActiveTintColor: "#FF6600",
                 tabBarInactiveTintColor: isDark ? "#737373" : "#8B8D98",
-                tabBarLabelStyle: { 
-                    fontSize: 11, 
+                tabBarLabelStyle: {
+                    fontSize: 10,
                     fontFamily: "Poppins-Medium",
                     marginBottom: insets.bottom > 0 ? 0 : 4
                 },
@@ -61,7 +85,7 @@ export default function StoreManagerLayout() {
                 options={{
                     title: "Dashboard",
                     tabBarIcon: ({ color }) => (
-                        <MaterialIcons size={22} name="dashboard" color={color} />
+                        <LayoutDashboard size={22} color={color} />
                     ),
                 }}
             />
@@ -70,16 +94,28 @@ export default function StoreManagerLayout() {
                 options={{
                     title: "Stores",
                     tabBarIcon: ({ color }) => (
-                        <MaterialIcons size={22} name="storefront" color={color} />
+                        <Store size={22} color={isStoresSection ? activeColor : color} />
+                    ),
+                    tabBarLabel: ({ color }) => (
+                        <Text
+                            style={{
+                                fontSize: 10,
+                                fontFamily: "Poppins-Medium",
+                                marginBottom: insets.bottom > 0 ? 0 : 4,
+                                color: isStoresSection ? activeColor : color,
+                            }}
+                        >
+                            Stores
+                        </Text>
                     ),
                 }}
             />
             <Tabs.Screen
-                name="analytics"
+                name="transactions"
                 options={{
-                    title: "Analytics",
+                    title: "Transactions",
                     tabBarIcon: ({ color }) => (
-                        <MaterialIcons size={22} name="bar-chart" color={color} />
+                        <ArrowLeftRight size={22} color={color} />
                     ),
                 }}
             />
@@ -88,7 +124,7 @@ export default function StoreManagerLayout() {
                 options={{
                     title: "Settings",
                     tabBarIcon: ({ color }) => (
-                        <MaterialIcons size={22} name="settings" color={color} />
+                        <Settings size={22} color={color} />
                     ),
                 }}
             />
@@ -97,7 +133,7 @@ export default function StoreManagerLayout() {
                 options={{ href: null }}
             />
             <Tabs.Screen
-                name="create-store"
+                name="store/create-store"
                 options={{ href: null }}
             />
             <Tabs.Screen
@@ -105,79 +141,58 @@ export default function StoreManagerLayout() {
                 options={{ href: null }}
             />
             <Tabs.Screen
-                name="configure-streaks"
+                name="streak/index"
                 options={{ href: null }}
             />
             <Tabs.Screen
-                name="configure-stamp"
+                name="streak/configure-streaks"
                 options={{ href: null }}
             />
             <Tabs.Screen
-                name="rewards"
+                name="stamp/configure-stamp"
                 options={{ href: null }}
             />
             <Tabs.Screen
-                name="view-stamp"
+                name="stamp/index"
                 options={{ href: null }}
             />
-             <Tabs.Screen
-                name="view-streak"
+            <Tabs.Screen
+                name="reward/rewards"
+                options={{ href: null }}
+            />
+            <Tabs.Screen
+                name="reward/index"
+                options={{ href: null }}
+            />
+            <Tabs.Screen
+                name="reward/add-rewards"
+                options={{ href: null }}
+            />
+            <Tabs.Screen
+                name="qr/index"
+                options={{ href: null }}
+            />
+            <Tabs.Screen
+                name="qr/configure-qr"
+                options={{ href: null }}
+            />
+            <Tabs.Screen
+                name="staff/index"
+                options={{ href: null }}
+            />
+
+            <Tabs.Screen
+                name="staff/add-staff"
+                options={{ href: null }}
+            />
+            <Tabs.Screen
+                name="detail/index"
+                options={{ href: null }}
+            />
+            <Tabs.Screen
+                name="detail/edit-details"
                 options={{ href: null }}
             />
         </Tabs>
     );
 }
-
-const styles = StyleSheet.create({
-    fabContainer: {
-        top: -24,
-        width: 72,
-        alignItems: "center",
-        justifyContent: "center",
-    },
-    fab: {
-        width: 58,
-        height: 58,
-        borderRadius: 18,
-        backgroundColor: "#FF6600",
-        alignItems: "center",
-        justifyContent: "center",
-        shadowColor: "#FF6600",
-        shadowOffset: { width: 0, height: 6 },
-        shadowOpacity: 0.45,
-        shadowRadius: 10,
-        elevation: 8,
-    },
-    fabLabel: {
-        marginTop: 4,
-        fontSize: 10,
-        fontFamily: "Poppins-Medium",
-        color: "#FF6600",
-    },
-    fabCompactContainer: {
-        flex: 1,
-        alignItems: "center",
-        justifyContent: "flex-start",
-        paddingTop: 10,
-    },
-    fabCompact: {
-        width: 30,
-        height: 22,
-        borderRadius: 9,
-        backgroundColor: "#FF6600",
-        alignItems: "center",
-        justifyContent: "center",
-        shadowColor: "#FF6600",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.3,
-        shadowRadius: 4,
-        elevation: 4,
-    },
-    fabCompactLabel: {
-        marginTop: 3,
-        fontSize: 10,
-        fontFamily: "Poppins-Medium",
-        color: "#FF6600",
-    },
-});
-

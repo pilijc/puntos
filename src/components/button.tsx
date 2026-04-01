@@ -1,5 +1,5 @@
 import React from "react";
-import { ActivityIndicator } from "react-native";
+import { ActivityIndicator, Keyboard } from "react-native";
 import { View, Text, TouchableOpacity } from "@/tw";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 
@@ -15,6 +15,7 @@ interface ButtonProps {
   fullWidth?: boolean;
   loading?: boolean;
   disabled?: boolean;
+  keyboardDismiss?: boolean;
 }
 
 const config: Record<
@@ -39,13 +40,13 @@ const config: Record<
     spinnerColor: "#fff"
   },
   danger: {
-    container: "border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20",
+    container: "bg-red-100 dark:bg-red-800/20",
     text: "text-red-500",
     iconColor: "#EF4444",
     spinnerColor: "#EF4444"
   },
   secondary: {
-    container: "border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-900",
+    container: "bg-slate-100 dark:bg-slate-800",
     text: "text-slate-500 dark:text-slate-400",
     iconColor: "#94A3B8",
     spinnerColor: "#94A3B8"
@@ -66,6 +67,7 @@ export function Button({
   fullWidth = false,
   loading = false,
   disabled = false,
+  keyboardDismiss = false,
 }: ButtonProps) {
   let { container, text, iconColor, spinnerColor } = config[variant];
 
@@ -78,6 +80,7 @@ export function Button({
       activeOpacity={0.8}
       disabled={disabled || loading}
       onPress={onPress}
+      onPressIn={keyboardDismiss ? () => { Keyboard.dismiss(); onPress(); } : undefined}
       className={`${fullWidth ? "w-full" : "w-fit"} rounded-xl ${container} py-3 px-6 items-center flex-row justify-center gap-x-2`}
     >
       {loading ? (
