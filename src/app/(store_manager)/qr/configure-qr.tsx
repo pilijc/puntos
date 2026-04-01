@@ -20,6 +20,11 @@ export default function ConfigureStreaks() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [percentageInput, setPercentageInput] = useState("");
+  const [baseAmountInput, setBaseAmountInput] = useState("");
+  const [fixedPointsInput, setFixedPointsInput] = useState("");
+  const [minimumSpendInput, setMinimumSpendInput] = useState("");
+  const [maxPointsInput, setMaxPointsInput] = useState("");
   const [modal, setModal] = useState<{
     title: string;
     message: string;
@@ -41,12 +46,6 @@ export default function ConfigureStreaks() {
     setMaxPointsPerTxn,
 		reset
   } = useQRStore();
-
-  const [percentageInput, setPercentageInput] = useState("");
-  const [baseAmountInput, setBaseAmountInput] = useState("");
-  const [fixedPointsInput, setFixedPointsInput] = useState("");
-  const [minimumSpendInput, setMinimumSpendInput] = useState("");
-  const [maxPointsInput, setMaxPointsInput] = useState("");
 
 	const showError = (message: string) =>
 		setModal({ title: "Almost there!", message, buttons: [{ label: "OK", onPress: () => setModal(null) }] });
@@ -83,8 +82,16 @@ export default function ConfigureStreaks() {
     setMaxPointsInput("");
     getQRConfig(storeIdForDb)
       .then((cfg) => {
-        if (!cfg || cancelled) return;
-
+        if (cancelled) return;
+        if (!cfg) {
+          reset();
+          setPercentageInput("");
+          setBaseAmountInput("");
+          setFixedPointsInput("");
+          setMinimumSpendInput("");
+          setMaxPointsInput("");
+          return;
+        }
         const type = (cfg.earning_type as EarningType) ?? "percentage";
         setEarningType(type);
 
