@@ -75,6 +75,12 @@ export default function ConfigureStreaks() {
     if (!storeIdForDb) return;
 
     let cancelled = false;
+    reset();
+    setPercentageInput("");
+    setBaseAmountInput("");
+    setFixedPointsInput("");
+    setMinimumSpendInput("");
+    setMaxPointsInput("");
     getQRConfig(storeIdForDb)
       .then((cfg) => {
         if (!cfg || cancelled) return;
@@ -103,7 +109,13 @@ export default function ConfigureStreaks() {
         setMaxPointsInput(maxPerTxn ? String(maxPerTxn) : "");
       })
       .catch((error) => {
-        throw error;
+        if (cancelled) return;
+        setModal({
+          title: "Couldn’t load QR rules",
+          message:
+            "We couldn’t load this store’s QR earning rules right now. Please try again in a moment.",
+          buttons: [{ label: "OK", onPress: () => setModal(null), variant: "secondary" }],
+        });
       });
 
     return () => {
@@ -117,6 +129,7 @@ export default function ConfigureStreaks() {
     setFixedPoints,
     setMinimumSpend,
     setMaxPointsPerTxn,
+    reset,
   ]);
 
 	const handleSave = async () => {

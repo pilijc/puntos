@@ -36,60 +36,48 @@ export default function QRIndex() {
     setModal,
   } = useQRStore();
 
-  const fetchConfig = useCallback(async () => {
-    if (!storeIdForFetch) return;
-
-    try {
-      const data = await getQRConfig(storeIdForFetch);
-      const nextUpdatedAt = data?.updated_at ?? null;
-      if (data && lastUpdatedRef.current === nextUpdatedAt) return;
-      lastUpdatedRef.current = nextUpdatedAt;
-      setConfig(data);
-    } catch {
-      if (lastUpdatedRef.current !== null) {
+  const loadConfig = useCallback(
+    async (isRefresh = false) => {
+      if (!storeIdForFetch || isFetchingRef.current) return;
+  
+      const isNewStore = storeIdForFetch !== lastStoreIdRef.current;
+      if (isNewStore) {
+        lastStoreIdRef.current = storeIdForFetch;
         lastUpdatedRef.current = null;
+        hasLoadedOnceRef.current = false;
         setConfig(null);
       }
-    }
-  }, [storeIdForFetch, setConfig]);
-
-  const load = useCallback(async () => {
-    if (!storeIdForFetch) return;
-    if (storeIdForFetch !== lastStoreIdRef.current) {
-      lastStoreIdRef.current = storeIdForFetch;
-      lastUpdatedRef.current = null;
-      hasLoadedOnceRef.current = false;
-    }
-    if (isFetchingRef.current) return;
-
-    const showInitialLoading = !hasLoadedOnceRef.current;
-    if (showInitialLoading) setLoading(true);
-
-    isFetchingRef.current = true;
-
-    try {
-      await fetchConfig();
-    } finally {
-      hasLoadedOnceRef.current = true;
-      isFetchingRef.current = false;
-      if (showInitialLoading) setLoading(false);
-    }
-  }, [storeIdForFetch, fetchConfig, setLoading]);
-
+  
+      if (!hasLoadedOnceRef.current && !isRefresh) setLoading(true);
+      if (isRefresh) setRefreshing(true);
+      isFetchingRef.current = true;
+  
+      try {
+        const data = await getQRConfig(storeIdForFetch);
+        if (lastUpdatedRef.current !== data?.updated_at) {
+          lastUpdatedRef.current = data?.updated_at ?? null;
+          setConfig(data ?? null);
+        }
+      } catch {
+        lastUpdatedRef.current = null;
+        setConfig(null);
+      } finally {
+        hasLoadedOnceRef.current = true;
+        isFetchingRef.current = false;
+        setLoading(false);
+        setRefreshing(false);
+      }
+    },
+    [storeIdForFetch]
+  );
+  
   useFocusEffect(
     useCallback(() => {
-      load();
-    }, [load])
+      loadConfig();
+    }, [loadConfig])
   );
-
-  const handleRefresh = useCallback(async () => {
-    setRefreshing(true);
-    try {
-      await fetchConfig();
-    } finally {
-      setRefreshing(false);
-    }
-  }, [fetchConfig, setRefreshing]);
+  
+  const handleRefresh = () => loadConfig(true);
 
   const handleToggleEnabled = async () => {
     if (!config || toggling || !storeIdForFetch) return;
