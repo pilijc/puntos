@@ -1,18 +1,16 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { RefreshControl, useColorScheme, ActivityIndicator } from "react-native";
 import { View, Text, TouchableOpacity, ScrollView, SafeAreaView } from "@/tw";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Image } from "expo-image";
 import { getRewardsByStoreId } from "@/services/store-manager/reward-service";
 import { Reward } from "@/type/store-manager/reward";
 import { Modal, type ModalButton } from "@/components/modal";
 import { AppHeader } from "@/components/header";
-import { ChevronRight, CircleStar, Coins, Gift, Star } from "lucide-react-native";
+import { ChevronRight, CircleStar, Gift } from "lucide-react-native";
 
 export default function RewardIndex() {
   const router = useRouter();
-  const insets = useSafeAreaInsets();
   const { storeId } = useLocalSearchParams<{ storeId: string }>();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
@@ -145,20 +143,20 @@ export default function RewardIndex() {
                 onPress={() => {
                   if (reward.id == null) return;
                   router.push({
-                    pathname: "/(store_manager)/reward/add-rewards",
+                    pathname: "/(store_manager)/reward/view-reward",
                     params: { storeId, rewardId: String(reward.id) },
                   });
                 }}
-                className="bg-white dark:bg-neutral-800 rounded-xl border border-slate-100 dark:border-neutral-700 flex-row items-center p-2 gap-2.5"
+                className="bg-white dark:bg-neutral-800 rounded-xl border border-slate-100 dark:border-neutral-700 flex-row items-center px-4 py-2 gap-2.5"
               >
                 <View
                   className="rounded-lg overflow-hidden bg-white dark:bg-neutral-700 border border-slate-100 dark:border-neutral-600 shrink-0"
-                  style={{ width: 64, height: 64 }}
+                  style={{ width: 60, height: 60 }}
                 >
                   {reward.image_url ? (
                     <Image
                       source={{ uri: reward.image_url }}
-                      style={{ width: 64, height: 64 }}
+                      style={{ width: 60, height: 60 }}
                       contentFit="cover"
                     />
                   ) : (

@@ -68,6 +68,16 @@ export async function updateReward(
   if (error) throw new Error(error.message);
 }
 
+export async function deleteReward(storeId: string, rewardId: string): Promise<void> {
+  const { error } = await supabase
+    .from("store_rewards")
+    .delete()
+    .eq("id", rewardId)
+    .eq("store_id", storeId);
+
+  if (error) throw new Error(error.message);
+}
+
 export async function uploadRewardImage(
   storeId: string,
   base64: string,
