@@ -421,7 +421,7 @@ export default function ConfigureStreaks() {
               numberOfLines={3}
               value={reward_description}
               onChangeText={setRewardDescription}
-              style={{ textAlignVertical: "top", minHeight: 88, paddingLeft: 12 }}
+              style={{ textAlignVertical: "top", minHeight: 88, paddingLeft: 12, fontSize: 13 }}
             />
           </View>
 
