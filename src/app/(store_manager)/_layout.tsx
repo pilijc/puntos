@@ -140,14 +140,14 @@ export default function StoreManagerLayout() {
                 name="view-store/[id]"
                 options={{ href: null }}
             />
-            {/* <Tabs.Screen
+            <Tabs.Screen
                 name="streak/index"
                 options={{ href: null }}
             />
             <Tabs.Screen
                 name="streak/configure-streaks"
                 options={{ href: null }}
-            /> */}
+            />
             <Tabs.Screen
                 name="stamp/configure-stamp"
                 options={{ href: null }}
