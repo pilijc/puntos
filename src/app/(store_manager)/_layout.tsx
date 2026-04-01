@@ -169,6 +169,10 @@ export default function StoreManagerLayout() {
                 options={{ href: null }}
             />
             <Tabs.Screen
+                name="reward/view-reward"
+                options={{ href: null }}
+            />
+            <Tabs.Screen
                 name="qr/index"
                 options={{ href: null }}
             />

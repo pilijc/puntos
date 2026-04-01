@@ -41,10 +41,10 @@ export async function getActiveStampProgram(storeId: string): Promise<Stamp | nu
 export async function getAllStampsByStoreId(storeId: string): Promise<Stamp[]> {
   try {
     const { data, error } = await supabase
-    .from("store_stamps")
-    .select("*")
-    .eq("store_id", storeId)
-    .order("created_at", { ascending: false });
+      .from("store_stamps")
+      .select("*")
+      .eq("store_id", storeId)
+      .order("created_at", { ascending: false });
 
     if (error) throw new Error(error.message);
     return (data ?? []) as Stamp[];
@@ -52,6 +52,22 @@ export async function getAllStampsByStoreId(storeId: string): Promise<Stamp[]> {
     console.error("Error in getAllStampsByStoreId:", error);
     throw error;
   }
+}
+
+/** True if any stamp program for the store uses this store reward as its completion reward. */
+export async function isStoreRewardLinkedToStampProgram(
+  storeId: string,
+  rewardId: string,
+): Promise<boolean> {
+  const { data, error } = await supabase
+    .from("store_stamps")
+    .select("id")
+    .eq("store_id", storeId)
+    .eq("reward_id", rewardId)
+    .limit(1);
+
+  if (error) throw new Error(error.message);
+  return (data?.length ?? 0) > 0;
 }
 
 export async function createStamp(payload: Omit<Stamp, "id" | "status" | "ended_at" | "redemption_deadline" | "created_at">): Promise<void> {
