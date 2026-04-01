@@ -8,6 +8,7 @@ import {
   StyleSheet,
   Platform,
 } from "react-native";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { View, Text, TouchableOpacity } from "@/tw";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { Button } from "@/components/button";
@@ -69,7 +70,8 @@ export function Modal({
       statusBarTranslucent
       onRequestClose={onClose}
     >
-      <RNView style={styles.overlay}>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <RNView style={styles.overlay}>
         <BlurView
           intensity={75}
           tint={isDark ? "dark" : "light"}
@@ -187,7 +189,8 @@ export function Modal({
             </View>
           )}
         </Pressable>
-      </RNView>
+        </RNView>
+      </GestureHandlerRootView>
     </RNModal>
   );
 }

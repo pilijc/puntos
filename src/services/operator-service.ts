@@ -1,5 +1,5 @@
 import { supabase } from "@/supabase/supabase";
-import { parseQRCode, createQRTransaction } from "@/services/qr-service";
+import { parseQRCode, createQRTransaction } from "@/services/users/qr-service";
 import { FrontDeskScanResult, ScanResult } from "@/type/qr-transaction";
 
 

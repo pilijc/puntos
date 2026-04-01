@@ -1,100 +1,42 @@
-import React, { useState, useCallback } from "react";
+import React from "react";
 import {
 	ScrollView,
-	Alert,
 	RefreshControl,
 } from "react-native";
 import { View, Text, TouchableOpacity } from "@/tw";
 import { ScreenWrapper } from "@/components/ui/screen-wrapper";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { useFocusEffect } from "expo-router";
-import { AdminStoreRow } from "@/services/store-service";
-import { useSuperAdminStoresStore } from "@/store/super-admin/super-admin-stores-store";
-import { AdminStoreCard, AdminStoreSkeletonCard } from "@/components/stores/admin-store-card";
-import { AdminStoreDetails } from "@/components/stores/admin-store-details";
-
-// ── Constants ───────────────────────────────────────────────────────────────
-const FILTERS = ["All", "pending_review", "active", "inactive"] as const;
-type Filter = typeof FILTERS[number];
-
-const FILTER_LABELS: Record<Filter, string> = {
-	All: "All",
-	pending_review: "Pending",
-	active: "Active",
-	inactive: "Inactive",
-};
+import { AdminStoreCard, AdminStoreSkeletonCard } from "@/components/users/stores/admin-store-card";
+import { AdminStoreDetails } from "@/components/users/stores/admin-store-details";
+import { Modal } from "@/components/modal";
+import {
+	useSuperAdminStores,
+	FILTERS,
+	FILTER_LABELS,
+} from "@/hooks/super-admin/use-super-admin-stores";
 
 // ── Screen ──────────────────────────────────────────────────────────────────
 export default function SuperAdminStores() {
-	const { stores, loading, error, isFetching, fetchStores, approveStore, rejectStore } = useSuperAdminStoresStore();
-	const [activeFilter, setActiveFilter] = useState<Filter>("pending_review");
-	const [refreshing, setRefreshing] = useState(false);
-	const [selectedStore, setSelectedStore] = useState<AdminStoreRow | null>(null);
-
-	useFocusEffect(useCallback(() => { fetchStores(); }, []));
-
-	const onRefresh = async () => { 
-		setRefreshing(true); 
-		await fetchStores(true); 
-		setRefreshing(false);
-	};
-
-	// ── Approve handler ────────────────────────────────────────────────────
-	const handleApprove = (store: AdminStoreRow) => {
-		Alert.alert(
-			"Approve Store",
-			`Approve "${store.name}"? It will go live immediately.`,
-			[
-				{ text: "Cancel", style: "cancel" },
-				{
-					text: "Approve",
-					onPress: async () => {
-						try {
-							await approveStore(store);
-						} catch (e: any) {
-							Alert.alert("Error", e?.message ?? "Failed to approve store");
-						}
-					},
-				},
-			],
-		);
-	};
-
-	// ── Reject handler ─────────────────────────────────────────────────────
-	const handleReject = (store: AdminStoreRow) => {
-		Alert.alert(
-			"Reject Store",
-			`Reject "${store.name}"? The store-manager will need to resubmit.`,
-			[
-				{ text: "Cancel", style: "cancel" },
-				{
-					text: "Reject",
-					style: "destructive",
-					onPress: async () => {
-						try {
-							await rejectStore(store);
-						} catch (e: any) {
-							Alert.alert("Error", e?.message ?? "Failed to reject store");
-						}
-					},
-				},
-			],
-		);
-	};
-
-	const getEffectiveStatus = (s: AdminStoreRow) => {
-		if (s.status === "pending_review" || !s.status) return "pending_review";
-		if (s.status === "inactive") return "inactive";
-		return s.is_active ? "active" : "inactive";
-	};
-
-	const filtered = (activeFilter === "All"
-		? stores
-		: stores.filter((s) => getEffectiveStatus(s) === activeFilter))
-		.slice()
-		.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-
-	const pendingCount = stores.filter((s) => s.status === "pending_review").length;
+	const {
+		stores,
+		loading,
+		error,
+		errorModal,
+		dismissErrorModal,
+		activeFilter,
+		setActiveFilter,
+		refreshing,
+		selectedStore,
+		setSelectedStore,
+		confirmModal,
+		setConfirmModal,
+		onRefresh,
+		handleApprove,
+		handleReject,
+		getEffectiveStatus,
+		filtered,
+		pendingCount,
+	} = useSuperAdminStores();
 
 	if (selectedStore) {
 		return (
@@ -114,20 +56,20 @@ export default function SuperAdminStores() {
 	}
 
 	return (
-		<ScreenWrapper className="flex-1 bg-backgroundMuted dark:bg-slate-950">
+		<ScreenWrapper className="flex-1 bg-backgroundMuted dark:bg-darkBackground">
 
 			{/* ── Header ── */}
-			<View className="bg-white border-b border-slate-100 dark:bg-slate-900 dark:border-slate-800 px-6 py-4 flex-row items-center justify-start">
+			<View className="bg-white border-b border-slate-100 dark:bg-darkBackgroundMuted dark:border-darkBorder px-6 py-4 flex-row items-center justify-start">
 				<View className="flex-row items-center gap-2 py-1">
 					<MaterialIcons name="storefront" size={22} color="black" className="mt-1" />
-					<Text className="text-2xl font-poppins-bold text-slate-900 dark:text-slate-100 flex-1">
+					<Text className="text-2xl font-poppins-bold text-slate-900 dark:text-darkTextPrimary flex-1">
 						Store Approvals
 					</Text>
 				</View>
 			</View>
 
 			{/* ── Filter tabs ── */}
-			<View className="bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800">
+			<View className="bg-white dark:bg-darkBackgroundMuted border-b border-slate-100 dark:border-darkBorder">
 				<ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 20, gap: 28, flexDirection: "row" }}>
 					{FILTERS.map((f) => {
 						const active = activeFilter === f;
@@ -143,7 +85,7 @@ export default function SuperAdminStores() {
 								className={
 									active
 										? "text-sm font-poppins-bold text-primary"
-										: "text-sm font-poppins-medium text-slate-400 dark:text-slate-500"
+										: "text-sm font-poppins-medium text-slate-400 dark:text-darkTextMuted"
 								}
 								numberOfLines={1}
 							>
@@ -153,13 +95,13 @@ export default function SuperAdminStores() {
 								<View
 									className={`rounded-full px-1.5 min-w-[20px] items-center ${active
 										? "bg-primary/10"
-										: "bg-neutral-100 dark:bg-neutral-700"
+										: "bg-neutral-100 dark:bg-darkBackgroundCard"
 										}`}
 								>
 									<Text
 										className={`text-[10px] font-poppins-bold ${active
 											? "text-primary"
-											: "text-neutral-500 dark:text-neutral-400"
+											: "text-neutral-500 dark:text-darkTextMuted"
 											}`}
 									>
 										{count}
@@ -215,7 +157,7 @@ export default function SuperAdminStores() {
 					{!loading && filtered.length === 0 && !error && (
 						<View className="items-center pt-16 gap-3">
 							<MaterialIcons name="storefront" size={52} color="#CBD5E1" />
-							<Text className="text-base font-poppins-bold text-slate-600 dark:text-slate-300">
+							<Text className="text-base font-poppins-bold text-slate-600 dark:text-darkTextSecondary">
 								{activeFilter === "All" ? "No stores yet" : `No ${FILTER_LABELS[activeFilter]} stores`}
 							</Text>
 							<Text className="text-sm font-poppins text-slate-400 text-center px-8">
@@ -225,6 +167,43 @@ export default function SuperAdminStores() {
 					)}
 				</ScrollView>
 			</View>
+
+			<Modal
+				visible={!!errorModal}
+				onClose={dismissErrorModal}
+				title={errorModal?.title ?? (errorModal?.type === "success" ? "Success" : "Error")}
+				message={errorModal?.message ?? ""}
+				buttons={[
+					{
+						label: "OK",
+						onPress: dismissErrorModal,
+						variant: errorModal?.type === "success" ? "success" : "primary",
+					},
+				]}
+				showCloseButton={false}
+				dismissOnBackdrop
+			/>
+
+			<Modal
+				visible={!!confirmModal}
+				onClose={() => setConfirmModal(null)}
+				title={confirmModal?.title ?? ""}
+				message={confirmModal?.message ?? ""}
+				buttons={[
+					{
+						label: "Cancel",
+						onPress: () => setConfirmModal(null),
+						variant: "secondary",
+					},
+					{
+						label: confirmModal?.label ?? "Confirm",
+						onPress: confirmModal?.onConfirm ?? (() => {}),
+						variant: confirmModal?.variant ?? "primary",
+					},
+				]}
+				showCloseButton={false}
+				dismissOnBackdrop
+			/>
 		</ScreenWrapper>
 	);
 }

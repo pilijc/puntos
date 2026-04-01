@@ -1,28 +1,23 @@
-import React, { useState } from "react";
-import { ActivityIndicator, Alert, KeyboardAvoidingView, Platform, ScrollView, useColorScheme } from "react-native";
+import React from "react";
+import { KeyboardAvoidingView, Platform, ScrollView, useColorScheme } from "react-native";
 import { View, Text, TouchableOpacity, TextInput } from "@/tw";
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { useRouter, useLocalSearchParams } from "expo-router";
+import DateTimePicker from "@react-native-community/datetimepicker";
+import { useRouter, useLocalSearchParams, useFocusEffect } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useStreakStore } from "@/store/store-manager/streak-store";
-import { createStreak } from "@/services/store-manager/streak-service";
-import { PointsMode } from "@/type/store-manager/streak";
+import { createStreak, getAllStreaksByStoreId, getStreakProgramById, updateStreakProgram } from "@/services/store-manager/streak-service";
+import { PointsMode, Streak } from "@/type/store-manager/streak";
 import { Button } from "@/components/button";
-import { Modal, type ModalButton } from "@/components/modal";
+import { Modal } from "@/components/modal";
+import { ChevronLeft, Coins, CircleDot, TrendingUp, CalendarDays, Repeat, Flame, Check } from "lucide-react-native";
 
 export default function ConfigureStreaks() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { storeId } = useLocalSearchParams<{ storeId: string }>();
+  const { storeId, streakId } = useLocalSearchParams<{ storeId: string; streakId?: string }>();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [modal, setModal] = useState<{
-    title: string;
-    message: string;
-    buttons: ModalButton[];
-    timer?: boolean;
-  } | null>(null);
+  const isEditMode = !!streakId;
   const {
     points_mode, setPointsMode,
     fixed_points_per_day, setFixedPointsPerDay,
@@ -31,15 +26,112 @@ export default function ConfigureStreaks() {
     streak_length, setStreakLength,
     max_days_cap,  setMaxDaysCap,
     reward_description, setRewardDescription,
+    start_at, setStartAt,
+    min_start_at, setMinStartAt,
+    showStartDatePicker, setShowStartDatePicker,
+    showStartTimePicker, setShowStartTimePicker,
+    isSubmitting, setIsSubmitting,
+    modal, setModal,
     reset,
   } = useStreakStore();
 
-  const [rawPointsPerDay,   setRawPointsPerDay]   = useState(fixed_points_per_day != null ? String(fixed_points_per_day) : "");
-  const [rawStartingPoints, setRawStartingPoints] = useState(starting_points  != null ? String(starting_points)  : "");
-  const [rawIncrementValue, setRawIncrementValue] = useState(increment_value  != null ? String(increment_value)  : "");
-
   const isFixed = points_mode === "fixed";
   const previewDays = Math.min(Math.max(streak_length ?? 1, 1), 7);
+  const activationAt = start_at ? new Date(start_at) : new Date();
+  const isActivationValid = start_at ? !Number.isNaN(activationAt.getTime()) : false;
+  const activationDateText = isActivationValid
+    ? activationAt.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })
+    : "Select date";
+  const activationTimeText = isActivationValid
+    ? activationAt.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })
+    : "Select time";
+  const minActivationAt = min_start_at ? new Date(min_start_at) : new Date();
+
+  const computeMinStartAtFromActive = (active: Streak | undefined) => {
+    const now = new Date();
+    if (!active) return now;
+
+    if (active.end_date) {
+      const endOfDay = new Date(`${active.end_date}T23:59:59.999Z`);
+      return endOfDay > now ? endOfDay : now;
+    }
+
+    if (active.start_at && active.streak_length && active.streak_length > 0) {
+      const derivedEnd = new Date(active.start_at);
+      derivedEnd.setDate(derivedEnd.getDate() + active.streak_length);
+      return derivedEnd > now ? derivedEnd : now;
+    }
+
+    return now;
+  };
+
+  useFocusEffect(
+    React.useCallback(() => {
+      if (!storeId) return;
+      getAllStreaksByStoreId(storeId)
+        .then((rows) => {
+          const active = rows.find((s) => s.status === "active");
+          const minAllowed = computeMinStartAtFromActive(active);
+          setMinStartAt(minAllowed.toISOString());
+          if (start_at && new Date(start_at) < minAllowed) {
+            setStartAt(minAllowed.toISOString());
+          }
+        })
+        .catch(() => {
+          const now = new Date();
+          setMinStartAt(now.toISOString());
+        });
+
+      if (!isEditMode || !streakId) return;
+      getStreakProgramById(Number(streakId))
+        .then((row) => {
+          if (!row) throw new Error("Streak program not found.");
+          if (row.status !== "draft") throw new Error("Only draft streak programs can be edited.");
+
+          setPointsMode((row.points_mode as PointsMode) ?? "fixed");
+          setFixedPointsPerDay(row.fixed_points_per_day ?? null);
+          setStartingPoints(row.starting_points ?? null);
+          setIncrementValue(row.increment_value ?? null);
+          setStreakLength(row.streak_length ?? 0);
+          setMaxDaysCap(row.max_days_cap ?? null);
+          setRewardDescription(row.reward_description ?? "");
+          setStartAt(row.start_at ?? null);
+        })
+        .catch((error) => {
+          setModal({
+            title: "Error",
+            message: (error as Error).message ?? "Failed to load streak program.",
+            buttons: [{
+              label: "OK",
+              onPress: () => {
+                setModal(null);
+                router.push({ pathname: "/(store_manager)/streak", params: { storeId } });
+              },
+            }],
+          });
+        });
+    }, [storeId, streakId, isEditMode, start_at, setMinStartAt, setStartAt, setPointsMode, setFixedPointsPerDay, setStartingPoints, setIncrementValue, setStreakLength, setMaxDaysCap, setRewardDescription, setModal, router]),
+  );
+
+  const updateStartAtDate = (date: Date) => {
+    const base = start_at ? new Date(start_at) : new Date();
+    base.setFullYear(date.getFullYear(), date.getMonth(), date.getDate());
+    if (base < minActivationAt) {
+      setStartAt(minActivationAt.toISOString());
+      return;
+    }
+    setStartAt(base.toISOString());
+  };
+
+  const updateStartAtTime = (time: Date) => {
+    const base = start_at ? new Date(start_at) : new Date();
+    base.setHours(time.getHours(), time.getMinutes(), 0, 0);
+    if (base < minActivationAt) {
+      setStartAt(minActivationAt.toISOString());
+      return;
+    }
+    setStartAt(base.toISOString());
+  };
 
   const handleSave = async () => {
     if (!streak_length || streak_length < 1) {
@@ -74,29 +166,54 @@ export default function ConfigureStreaks() {
       });
       return;
     }
+    if (start_at && new Date(start_at) < minActivationAt) {
+      setModal({
+        title: "Validation Error",
+        message: `Start time must be after ${minActivationAt.toLocaleString()}.`,
+        buttons: [{ label: "OK", onPress: () => setModal(null) }],
+      });
+      return;
+    }
 
     setIsSubmitting(true);
     try {
-      await createStreak({
-        store_id: storeId,
-        points_mode,
-        ...(isFixed ? { fixed_points_per_day: fixed_points_per_day ?? 10 } : {}),
-        starting_points: !isFixed ? starting_points : null,
-        increment_value: !isFixed ? increment_value : null,
-        streak_length,
-        max_days_cap,
-        reward_description,
-      });
-      reset();
-      setRawPointsPerDay("");
-      setRawStartingPoints("");
-      setRawIncrementValue("");
+      if (isEditMode && streakId) {
+        await updateStreakProgram(Number(streakId), {
+          points_mode,
+          start_at,
+          fixed_points_per_day: isFixed ? (fixed_points_per_day ?? 10) : null,
+          starting_points: !isFixed ? starting_points : null,
+          increment_value: !isFixed ? increment_value : null,
+          streak_length,
+          max_days_cap,
+          reward_description,
+        });
+      } else {
+        await createStreak({
+          store_id: storeId,
+          points_mode,
+          status: "draft",
+          start_at,
+          fixed_points_per_day: isFixed ? (fixed_points_per_day ?? 10) : null,
+          starting_points: !isFixed ? starting_points : null,
+          increment_value: !isFixed ? increment_value : null,
+          streak_length,
+          max_days_cap,
+          reward_description,
+        });
+        reset();
+      }
       setModal({
         title: "Success",
-        message: "Streak configuration saved successfully",
-        buttons: [{ label: "OK", onPress: () => router.push({ pathname: "/(store_manager)/view-streak", params: { storeId } }) }],
+        message: isEditMode ? "Streak program updated successfully" : "Streak configuration saved successfully",
+        buttons: [{
+          label: "OK",
+          onPress: () => {
+            setModal(null);
+            router.push({ pathname: "/(store_manager)/streak", params: { storeId } });
+          },
+        }],
       });
-      router.push({ pathname: "/(store_manager)/view-streak", params: { storeId } });
     } catch (error) {
       setModal({
         title: "Error",
@@ -128,12 +245,12 @@ export default function ConfigureStreaks() {
         <TouchableOpacity
           className="w-10 h-10 rounded-full items-center justify-center"
           activeOpacity={0.7}
-          onPress={() => router.push({ pathname: "/(store_manager)/view-store/[id]", params: { id: storeId } })}
+          onPress={() => router.push({ pathname: "/(store_manager)/streak", params: { storeId } })}
         >
-          <MaterialIcons name="chevron-left" size={22} color={isDark ? "#F1F5F9" : "#0F172A"} />
+          <ChevronLeft size={22} color={isDark ? "#F1F5F9" : "#0F172A"} />
         </TouchableOpacity>
-        <Text className="flex-1 text-center text-[17px] font-poppins-bold text-slate-900 dark:text-slate-100 pr-10">
-          Configure Streaks
+        <Text className="flex-1 text-center text-md font-poppins-bold text-slate-900 dark:text-slate-100 pr-10">
+          {isEditMode ? "Edit Streak Program" : "Configure Streaks"}
         </Text>
       </View>
 
@@ -143,8 +260,9 @@ export default function ConfigureStreaks() {
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={{ padding: 16, paddingBottom: 32, gap: 20 }}
       >
+        <View className="bg-white dark:bg-slate-900 rounded-xl p-4 gap-y-4">
         <View>
-          <Text className="text-xl font-poppins-bold text-slate-900 dark:text-slate-100">
+          <Text className="text-md font-poppins-bold text-slate-900 dark:text-slate-100">
             Streak Rules
           </Text>
           <Text className="text-sm font-poppins text-slate-500 dark:text-slate-400 mt-1">
@@ -159,8 +277,8 @@ export default function ConfigureStreaks() {
           </Text>
           <View className="flex-row gap-x-2">
             {([
-              { key: "fixed" as PointsMode,       label: "Fixed",       icon: "monetization-on" as const, desc: "Same points every day" },
-              { key: "incremental" as PointsMode, label: "Incremental", icon: "trending-up" as const,     desc: "Points grow each day" },
+              { key: "fixed" as PointsMode, label: "Fixed", icon: <Coins size={14} />, desc: "Same points every day" },
+              { key: "incremental" as PointsMode, label: "Incremental", icon: <TrendingUp size={14} />, desc: "Points grow each day" },
             ]).map((opt) => {
               const selected = points_mode === opt.key;
               return (
@@ -176,10 +294,10 @@ export default function ConfigureStreaks() {
                 >
                   <View className="flex-row items-center justify-between">
                     <View className={`w-7 h-7 rounded-lg items-center justify-center ${selected ? "bg-primary/20" : "bg-slate-100 dark:bg-slate-700"}`}>
-                      <MaterialIcons name={opt.icon} size={14} color={selected ? "#FF6600" : "#94A3B8"} />
+                      {React.cloneElement(opt.icon, { color: selected ? "#FF6600" : "#94A3B8" })}
                     </View>
                     <View className={`w-4 h-4 rounded-full border-2 items-center justify-center ${selected ? "border-primary bg-primary" : "border-slate-300 dark:border-slate-600"}`}>
-                      {selected && <MaterialIcons name="check" size={9} color="#fff" />}
+                      {selected && <Check size={9} color="#fff" />}
                     </View>
                   </View>
                   <Text className={`text-xs font-poppins-bold mt-1 ${selected ? "text-primary" : "text-slate-800 dark:text-slate-200"}`}>
@@ -206,15 +324,14 @@ export default function ConfigureStreaks() {
                   placeholder="e.g. 10"
                   placeholderTextColor="#94A3B8"
                   keyboardType="decimal-pad"
-                  value={rawPointsPerDay}
+                  value={fixed_points_per_day != null ? String(fixed_points_per_day) : ""}
                   onChangeText={(v) => {
-                    setRawPointsPerDay(v);
                     const parsed = parseFloat(v);
                     setFixedPointsPerDay(!isNaN(parsed) ? parsed : null);
                   }}
                 />
               <View className="absolute right-4 top-0 bottom-0 justify-center">
-                <MaterialIcons name="monetization-on" size={20} color="#94A3B8" />
+                <Coins size={20} color="#94A3B8" />
               </View>
             </View>
           </View>
@@ -233,15 +350,14 @@ export default function ConfigureStreaks() {
                   placeholder="e.g. 5"
                   placeholderTextColor="#94A3B8"
                   keyboardType="decimal-pad"
-                  value={rawStartingPoints}
+                  value={starting_points != null ? String(starting_points) : ""}
                   onChangeText={(v) => {
-                    setRawStartingPoints(v);
                     const parsed = parseFloat(v);
                     setStartingPoints(!isNaN(parsed) ? parsed : null);
                   }}
                 />
                 <View className="absolute right-4 top-0 bottom-0 justify-center">
-                  <MaterialIcons name="looks-one" size={18} color="#94A3B8" />
+                  <CircleDot size={18} color="#94A3B8" />
                 </View>
               </View>
             </View>
@@ -256,15 +372,14 @@ export default function ConfigureStreaks() {
                   placeholder="e.g. 3"
                   placeholderTextColor="#94A3B8"
                   keyboardType="decimal-pad"
-                  value={rawIncrementValue}
+                  value={increment_value != null ? String(increment_value) : ""}
                   onChangeText={(v) => {
-                    setRawIncrementValue(v);
                     const parsed = parseFloat(v);
                     setIncrementValue(!isNaN(parsed) ? parsed : null);
                   }}
                 />
                 <View className="absolute right-4 top-0 bottom-0 justify-center">
-                  <MaterialIcons name="trending-up" size={18} color="#94A3B8" />
+                  <TrendingUp size={18} color="#94A3B8" />
                 </View>
               </View>
             </View>
@@ -286,7 +401,7 @@ export default function ConfigureStreaks() {
               onChangeText={(v) => setStreakLength(parseInt(v) || 0)}
             />
             <View className="absolute right-4 top-0 bottom-0 justify-center">
-              <MaterialIcons name="calendar-today" size={20} color="#94A3B8" />
+              <CalendarDays size={20} color="#94A3B8" />
             </View>
           </View>
         </View>
@@ -309,7 +424,7 @@ export default function ConfigureStreaks() {
               onChangeText={(v) => setMaxDaysCap(v ? parseInt(v) : null)}
             />
             <View className="absolute right-4 top-0 bottom-0 justify-center">
-              <MaterialIcons name="event-repeat" size={20} color="#94A3B8" />
+              <Repeat size={20} color="#94A3B8" />
             </View>
           </View>
         </View>
@@ -331,32 +446,87 @@ export default function ConfigureStreaks() {
           />
         </View>
 
+        {/* Activation schedule */}
+        <View className="gap-y-2">
+          <Text className="text-sm font-poppins-semibold text-slate-700 dark:text-slate-300">
+            Activation Schedule
+          </Text>
+          <Text className="text-xs font-poppins text-slate-500 dark:text-slate-400">
+            Set when this streak should activate automatically.
+          </Text>
+          <View className="flex-row gap-x-2">
+            <TouchableOpacity
+              activeOpacity={0.8}
+              onPress={() => {
+                setShowStartTimePicker(false);
+                setShowStartDatePicker(true);
+              }}
+              className="flex-1 rounded-xl border border-slate-200 dark:border-slate-700 px-3 py-3"
+            >
+              <Text className="text-[10px] font-poppins text-slate-400 dark:text-slate-500">Date</Text>
+              <Text className="text-sm font-poppins-semibold text-slate-900 dark:text-slate-100 mt-0.5">
+                {activationDateText}
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              activeOpacity={0.8}
+              onPress={() => {
+                setShowStartDatePicker(false);
+                setShowStartTimePicker(true);
+              }}
+              className="flex-1 rounded-xl border border-slate-200 dark:border-slate-700 px-3 py-3"
+            >
+              <Text className="text-[10px] font-poppins text-slate-400 dark:text-slate-500">Time</Text>
+              <Text className="text-sm font-poppins-semibold text-slate-900 dark:text-slate-100 mt-0.5">
+                {activationTimeText}
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          {showStartDatePicker && (
+            <DateTimePicker
+              value={activationAt}
+              minimumDate={minActivationAt}
+              mode="date"
+              display={Platform.OS === "ios" ? "inline" : "default"}
+              onChange={(_, selectedDate) => {
+                if (selectedDate) updateStartAtDate(selectedDate);
+                if (Platform.OS !== "ios") setShowStartDatePicker(false);
+              }}
+            />
+          )}
+          {showStartTimePicker && (
+            <DateTimePicker
+              value={activationAt}
+              mode="time"
+              display={Platform.OS === "ios" ? "spinner" : "default"}
+              onChange={(_, selectedTime) => {
+                if (selectedTime) updateStartAtTime(selectedTime);
+                if (Platform.OS !== "ios") setShowStartTimePicker(false);
+              }}
+            />
+          )}
+        </View>
+
         {/* Customer preview */}
         <View>
-          <Text className="text-sm font-poppins-semibold ttext-slate-700 dark:text-slate-300 mb-3 px-1">
+          <Text className="text-sm font-poppins-semibold text-slate-700 dark:text-slate-300 mb-2 px-1">
             Customer Preview
           </Text>
-          <View className="bg-primary/3 rounded-xl p-5 flex-row gap-4 items-start">
-            <View className="p-2 items-center justify-center">
-              <MaterialIcons name="local-fire-department" size={24} color="#FF6600" />
+          <View className="bg-primary/5 dark:bg-primary/10 rounded-xl p-4 flex-row gap-3 items-start">
+            <View className="mt-0.5">
+              <Flame size={24} color="#FF6600" />
             </View>
             <View className="flex-1">
-              <Text className="text-sm font-poppins-bold text-primary">
-                Daily Streak Active
+              <Text className="text-sm font-poppins-semibold text-primary">
+                What customers will see
               </Text>
 
               {isFixed ? (
                 <>
-                  <Text className="text-sm font-poppins text-slate-600 dark:text-slate-300 mt-1">
-                    Earn{" "}
-                    <Text className="font-poppins-bold text-slate-900 dark:text-slate-100">
-                      {fixed_points_per_day ?? "—"} pts
-                    </Text>
-                    {" "}per day for{" "}
-                    <Text className="font-poppins-bold text-slate-900 dark:text-slate-100">
-                      {streak_length ?? "—"} days
-                    </Text>
-                    .
+                  <Text className="text-xs font-poppins text-slate-600 dark:text-slate-300 mt-1 leading-5">
+                    Earn <Text className="font-poppins-semibold text-slate-900 dark:text-slate-100">{fixed_points_per_day ?? "—"} pts/day</Text> for{" "}
+                    <Text className="font-poppins-semibold text-slate-900 dark:text-slate-100">{streak_length ?? "—"} days</Text>.
                   </Text>
                   <View className="flex-row gap-1 mt-4">
                     {Array.from({ length: previewDays }).map((_, i) => (
@@ -369,16 +539,9 @@ export default function ConfigureStreaks() {
                 </>
               ) : (
                 <>
-                  <Text className="text-sm font-poppins text-slate-600 dark:text-slate-300 mt-1">
-                    Starts at{" "}
-                    <Text className="font-poppins-bold text-slate-900 dark:text-slate-100">
-                      {starting_points ?? "—"} pts
-                    </Text>
-                    , increasing by{" "}
-                    <Text className="font-poppins-bold text-slate-900 dark:text-slate-100">
-                      {increment_value ?? "—"} pts
-                    </Text>
-                    {" "}each day.
+                  <Text className="text-xs font-poppins text-slate-600 dark:text-slate-300 mt-1 leading-5">
+                    Start at <Text className="font-poppins-semibold text-slate-900 dark:text-slate-100">{starting_points ?? "—"} pts</Text> and add{" "}
+                    <Text className="font-poppins-semibold text-slate-900 dark:text-slate-100">{increment_value ?? "—"} pts</Text> each day.
                   </Text>
                   {/* Growing bar chart */}
                   <View className="flex-row gap-1 mt-4 items-end" style={{ height: 28 }}>
@@ -413,7 +576,7 @@ export default function ConfigureStreaks() {
         {/* Actions */}
         <View className="gap-y-3 border-t border-slate-200 dark:border-slate-800 pt-3">
           <Button
-            label="Save as Draft"
+            label={isEditMode ? "Save Changes" : "Save as Draft"}
             onPress={handleSave}
             disabled={isSubmitting}
             loading={isSubmitting}
@@ -424,10 +587,10 @@ export default function ConfigureStreaks() {
             label="Cancel"
             onPress={() => router.push({ pathname: "/(store_manager)/view-store/[id]", params: { id: storeId } })}
             disabled={isSubmitting}
-            loading={isSubmitting}
             fullWidth={true}
             variant="secondary"
           />
+        </View>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>

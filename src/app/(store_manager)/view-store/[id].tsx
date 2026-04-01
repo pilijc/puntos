@@ -29,8 +29,8 @@ export default function ViewStore() {
   const menuItems = useMemo(
     () => [
       { key: "staff",   label: "Staff",       description: "Manage team",        icon: <UsersRound size={18} color="#FF6600" />, route: "/(store_manager)/staff"              as const },
-      { key: "streak",  label: "Streak",      description: "Daily rewards",      icon: <Flame      size={18} color="#FF6600" />, route: "/(store_manager)/streak/view-streak" as const },
-      { key: "stamp",   label: "Stamp",       description: "Punch cards",        icon: <Stamp      size={18} color="#FF6600" />, route: "/(store_manager)/stamp/view-stamp"   as const },
+      { key: "streak",  label: "Streak",      description: "Daily rewards",      icon: <Flame      size={18} color="#FF6600" />, route: "/(store_manager)/streak" as const },
+      { key: "stamp",   label: "Stamp",       description: "Punch cards",        icon: <Stamp      size={18} color="#FF6600" />, route: "/(store_manager)/stamp/"   as const },
       { key: "qr",      label: "QR Purchase", description: "Scan rewards",       icon: <QrCode     size={18} color="#FF6600" />, route: "/(store_manager)/qr"                 as const },
       { key: "rewards", label: "Rewards",     description: "Redeemable items",   icon: <Gift       size={18} color="#FF6600" />, route: "/(store_manager)/reward"             as const },
       { key: "media",   label: "Details",     description: "Manage Store",       icon: <Building2  size={18} color="#FF6600" />, route: "/(store_manager)/detail"             as const },

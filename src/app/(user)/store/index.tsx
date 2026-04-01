@@ -1,7 +1,7 @@
 import { TextInput, RefreshControl } from "react-native";
 import { View, Text, TouchableOpacity } from "@/tw";
 import React, { useMemo, useCallback } from "react";
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { Search, Store, X } from "lucide-react-native";
 import { useTranslation } from "react-i18next";
 import { useStoreStore } from "@/store/user/store-store";
 import { useRewardsUiStore } from "@/store/user/rewards-ui-store";
@@ -9,8 +9,7 @@ import { useRewardsDataStore } from "@/hooks/use-rewards-data";
 import { useStamps } from "@/hooks/use-stamps";
 import { useStampRewards } from "@/hooks/use-stamp-rewards";
 import { useLocation } from "@/hooks/use-location";
-import StoreHeader from "@/components/ui/store-header";
-import UserStoreListItem from "@/components/stores/user-store-list-item";
+import UserStoreListItem from "@/components/users/stores/user-store-list-item";
 import StoreScreenContainer from "@/components/ui/store-screen-container";
 import { buildStampedStoreList } from "@/utils/store-helpers";
 
@@ -73,7 +72,7 @@ export default function StoreListScreen() {
   return (
     <StoreScreenContainer
       backgroundClassName="bg-backgroundMuted dark:bg-darkBackground"
-      contentGap={24}
+      contentGap={16}
       refreshControl={
         <RefreshControl
           refreshing={refreshing}
@@ -83,14 +82,15 @@ export default function StoreListScreen() {
         />
       }
     >
-      <View className="flex-row justify-between items-center ml-1 mt-7.5">
+      <View className="flex-row justify-between items-center w-full ml-1 mt-7.5">
         <Text className="text-xl font-poppins-bold text-neutral-900 dark:text-darkTextPrimary">
           {translate("user.rewards.storesList.title")}
         </Text>
+        <View className="w-10 h-10 opacity-0" />
       </View>
 
-      <View className="flex-row items-center bg-white dark:bg-darkBackgroundCard rounded-2xl px-4 py-1 border border-neutral-100 dark:border-darkBorder shadow-sm shadow-neutral-100 dark:shadow-none mt-1.2">
-        <MaterialIcons name="search" size={20} color="#9CA3AF" />
+      <View className="flex-row items-center bg-white dark:bg-darkBackgroundCard rounded-2xl px-4 py-1 border border-neutral-100 dark:border-darkBorder shadow-sm shadow-neutral-100 dark:shadow-none">
+        <Search size={20} color="#9CA3AF" />
         <TextInput
           placeholder={translate("user.rewards.storesList.searchPlaceholder")}
           placeholderTextColor="#9CA3AF"
@@ -101,7 +101,7 @@ export default function StoreListScreen() {
         />
         {searchQuery.length > 0 && (
           <TouchableOpacity onPress={() => setSearchQuery("")}>
-            <MaterialIcons name="close" size={18} color="#9CA3AF" />
+            <X size={18} color="#9CA3AF" />
           </TouchableOpacity>
         )}
       </View>
@@ -110,7 +110,7 @@ export default function StoreListScreen() {
         {filteredStores.length === 0 ? (
           <View className="items-center justify-center py-20">
             <View className="w-24 h-24 rounded-full bg-neutral-100 dark:bg-white/5 items-center justify-center mb-6">
-              <MaterialIcons name="storefront" size={48} color="#CBD5E1" />
+              <Store size={48} color="#CBD5E1" />
             </View>
             <Text className="text-xl font-poppins-bold text-neutral-900 dark:text-white text-center">
               {searchQuery

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo } from "react";
 import { useFocusEffect } from "expo-router";
-import { useStores } from "@/hooks/use-stores";
+import { useStores } from "@/hooks/store-manager/use-stores";
 import { getTransactionsPageForStore } from "@/services/store-manager/transactions-service";
 import { useTransactionStore } from "@/store/store-manager/transaction";
 import { TypeFilter, ListItem } from "@/type/store-manager/transaction";

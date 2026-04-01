@@ -1189,15 +1189,6 @@
   },
   {
     "table_name": "store_stamps",
-    "column_name": "is_active",
-    "data_type": "boolean",
-    "is_primary_key": "NO",
-    "is_foreign_key": "NO",
-    "foreign_table_name": null,
-    "foreign_column_name": null
-  },
-  {
-    "table_name": "store_stamps",
     "column_name": "ended_at",
     "data_type": "timestamp with time zone",
     "is_primary_key": "NO",
@@ -1227,6 +1218,15 @@
     "table_name": "store_stamps",
     "column_name": "expiration_days",
     "data_type": "integer",
+    "is_primary_key": "NO",
+    "is_foreign_key": "NO",
+    "foreign_table_name": null,
+    "foreign_column_name": null
+  },
+  {
+    "table_name": "store_stamps",
+    "column_name": "status",
+    "data_type": "text",
     "is_primary_key": "NO",
     "is_foreign_key": "NO",
     "foreign_table_name": null,
@@ -1306,15 +1306,6 @@
   },
   {
     "table_name": "store_streaks",
-    "column_name": "start_date",
-    "data_type": "date",
-    "is_primary_key": "NO",
-    "is_foreign_key": "NO",
-    "foreign_table_name": null,
-    "foreign_column_name": null
-  },
-  {
-    "table_name": "store_streaks",
     "column_name": "end_date",
     "data_type": "date",
     "is_primary_key": "NO",
@@ -1380,6 +1371,15 @@
     "table_name": "store_streaks",
     "column_name": "title",
     "data_type": "text",
+    "is_primary_key": "NO",
+    "is_foreign_key": "NO",
+    "foreign_table_name": null,
+    "foreign_column_name": null
+  },
+  {
+    "table_name": "store_streaks",
+    "column_name": "start_at",
+    "data_type": "timestamp with time zone",
     "is_primary_key": "NO",
     "is_foreign_key": "NO",
     "foreign_table_name": null,

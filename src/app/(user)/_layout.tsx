@@ -9,14 +9,14 @@ export default function TabLayout() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
   const { t: translate } = useTranslation();
-  const insets = useSafeAreaInsets();  
+  const insets = useSafeAreaInsets();
 
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: isDark ? '#171717' : '#FFFFFF',
+          backgroundColor: isDark ? '#262626' : '#FFFFFF',
           borderTopColor: isDark ? '#404040' : '#e5e5e5',
           height: Platform.OS === 'ios' ? 88 : 60 + insets.bottom,
           paddingBottom: insets.bottom > 0 ? insets.bottom : 8,
@@ -57,7 +57,11 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => <Settings size={22} color={color} />,
         }}
       />
+      <Tabs.Screen
+          name="qr"
+          options={{ href: null }}
+      />
     </Tabs>
   );
 }
-  
+
