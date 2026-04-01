@@ -43,6 +43,7 @@ export function TextField({
           paddingHorizontal: 12,
           textAlignVertical: "center",
           includeFontPadding: false,
+          fontSize: 13,
         }}
         keyboardType={keyboardType}
         value={value}
