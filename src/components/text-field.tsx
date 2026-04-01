@@ -3,13 +3,14 @@ import { KeyboardTypeOptions } from "react-native";
 import { View, Text, TextInput } from "@/tw";
 
 interface TextFieldProps {
-	label: string;
-	value: string;
-	onChangeText: (value: string) => void;
-	placeholder?: string;
-	hint?: string;
-	keyboardType?: KeyboardTypeOptions;
-	required?: boolean;
+  label: string;
+  value: string;
+  onChangeText: (value: string) => void;
+  placeholder?: string;
+  hint?: string;
+  keyboardType?: KeyboardTypeOptions;
+  required?: boolean;
+  secureTextEntry?: boolean;
 }
 
 export function TextField({
@@ -20,12 +21,13 @@ export function TextField({
   hint,
   keyboardType = "default",
   required = false,
+  secureTextEntry = false,
 }: TextFieldProps) {
   return (
     <View className="gap-y-2">
       <Text className="text-sm font-poppins-semibold text-slate-700 dark:text-slate-300">
         {label} {required && <Text className="text-sm font-poppins text-red-500 dark:text-red-400 -mt-1">*</Text>}
-      </Text> 
+      </Text>
       {hint && (
         <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500 -mt-1">
           {hint}
@@ -39,6 +41,7 @@ export function TextField({
           keyboardType={keyboardType}
           value={value}
           onChangeText={(v) => onChangeText(v.replace(/-/g, ""))}
+          secureTextEntry={secureTextEntry}
         />
       </View>
     </View>
