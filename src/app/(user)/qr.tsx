@@ -5,9 +5,10 @@ import { SafeAreaView, View, Text, TouchableOpacity } from '@/tw';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useRouter } from 'expo-router';
 import QRCode from 'react-native-qrcode-svg';
-//import { supabase } from '@/supabase/supabase';
-import { getCurrentUser, getStaticQRCode, addAutoUser, listenToQRTransaction } from '@/services/qr-service';
-import { supabase } from 'supabase/supabase';
+import { getCurrentUser, getStaticQRCode, addAutoUser, setupQRListeners, cleanupQRChannels } from '@/services/users/qr-service';
+import { useStamps } from '@/hooks/use-stamps';
+import { useStampRewards } from '@/hooks/use-stamp-rewards';
+import { VoucherGenerator } from '@/components/users/voucher';
 
 export default function Qr() {
   const router = useRouter();
@@ -18,6 +19,8 @@ export default function Qr() {
   const [qrValue, setQrValue] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
+  const { refetch: refetchStamps } = useStamps();
+  const { refetch: refetchStampRewards } = useStampRewards();
 
   // Get static QR code based on userID
   const fetchQRCode = async () => {
@@ -50,40 +53,54 @@ export default function Qr() {
   };
 
   useEffect(() => {
-  const setupQR = async () => {
-    const currentUser = await getCurrentUser();
-    if (!currentUser) return;
+    const setupQR = async () => {
+      const currentUser = await getCurrentUser();
+      if (!currentUser) return;
 
-    setUser(currentUser);
-    const qr = `puntos:user:${currentUser.id}`;
-    setQrValue(qr);
-    setLoading(false);
+      setUser(currentUser);
+      const qr = `puntos:user:${currentUser.id}`;
+      setQrValue(qr);
+      setLoading(false);
 
-    // Listen to transactions
-    const channel = listenToQRTransaction(currentUser.id, (transaction) => {
-      console.log('Customer side: QR transaction received!', transaction);
-      //vibration for celebration
-      Vibration.vibrate(500);
-      
-      // Show custom congratulations modal
-      setEarnedPoints(transaction.points_earned);
-      setShowCongratsModal(true);
+      // Setup QR and voucher listeners using service
+      const channels = setupQRListeners(
+        currentUser.id,
+        (transaction) => {
+          console.log('Customer side: QR transaction received!', transaction);
+          Vibration.vibrate(500);
+          refetchStamps();
+          refetchStampRewards();
+          setEarnedPoints(transaction.points_earned);
+          setShowCongratsModal(true);
+        },
+        (transaction) => {
+          console.log('Customer side: Voucher transaction received!', transaction);
+          Vibration.vibrate(500);
+          refetchStamps();
+          refetchStampRewards();
+          setEarnedPoints(transaction.points_earned);
+          setShowCongratsModal(true);
+        }
+      );
+
+      return channels;
+    };
+
+    let channels: { qrChannel: any; voucherChannel: any } | null = null;
+    
+    setupQR().then((result) => {
+      channels = result;
+      return fetchQRCode();
+    }).catch((error) => {
+      console.error('Error setting up QR listeners:', error);
     });
 
-    return channel;
-  };
-
-  let channelRef: any;
-  setupQR().then((channel) => {
-    channelRef = channel;
-    return fetchQRCode();
-  });
-
-  return () => {
-    if (channelRef) supabase.removeChannel(channelRef);
-  };
-}, []);
- 
+    return () => {
+      if (channels) {
+        cleanupQRChannels(channels);
+      }
+    };
+  }, []);
 
   return (
     <SafeAreaView className="flex-1 bg-white dark:bg-darkBackground">
@@ -129,6 +146,7 @@ export default function Qr() {
               Failed to load QR code. Try again.
             </Text>
           )}
+          {user?.id && <VoucherGenerator userId={user.id} />}
         </View>
       </View>
 

@@ -1,6 +1,5 @@
 import { supabase } from "@/supabase/supabase";
 import type * as GeoJSON from "geojson";
-import type { TravelMode } from "@/type/user/store";
 
 export async function getStoresService() {
     try {
@@ -16,12 +15,12 @@ export async function getStoresService() {
     }
 }
 
-export async function getSearchResultsService(query: string) {
+export async function getSearchResultsService(query: string, language: string = 'en') {
     try {
-    const res = await fetch(
-        `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(
-            query
-        )}.json?limit=5&country=ph&access_token=${process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN}`
+        const res = await fetch(
+            `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(
+                query
+            )}.json?limit=5&country=ph&language=${language}&access_token=${process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN}`
         );
         const data = await res.json();
         return data;

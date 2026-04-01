@@ -1,12 +1,10 @@
-export type RewardType = "streak" | "stamp";
-
 export interface Reward {
   id?: string | null;
   store_id: string;
   title: string;
   description: string;
   points_cost: number;
-  type: RewardType;
+  stock:number
   image_url: string;
 }
 
@@ -17,8 +15,8 @@ export interface RewardState {
   setDescription:(value: string) => void;
   points_cost: number;
   setPointsCost:(value: number) => void;
-  type: RewardType;
-  setType:(value: RewardType) => void;
+  stock:number
+  setStock:(value: number) => void;
   image_url: string;
   setImageUrl:    (value: string) => void;
   reset: () => void;

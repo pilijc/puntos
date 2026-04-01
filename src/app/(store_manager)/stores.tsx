@@ -111,27 +111,6 @@ function StoreCard({ store, router }: { store: StoreRow; router: any }) {
           ) : null}
         </View>
       </View>
-
-      <View className="px-4 py-3 border-t border-slate-100 dark:border-slate-800 flex-row items-center justify-between bg-slate-50 dark:bg-slate-800/30">
-        <View className="flex-row items-center gap-2">
-          <Text className="text-sm font-poppins-medium text-slate-500 dark:text-slate-400">
-            {store.type ? store.type.charAt(0).toUpperCase() + store.type.slice(1) : ""}
-          </Text>
-        </View>
-        <TouchableOpacity
-          className="bg-primary/10 py-2 px-3 rounded-lg flex-row items-center gap-1"
-          activeOpacity={0.8}
-          onPress={() =>
-            router.push({
-              pathname: `/(store_manager)/view-store/${store.id}`,
-              params: { storeId: store.id },
-            })
-          }
-        >
-          <Text className="text-primary text-xs font-poppins-bold">Manage</Text>
-          <MaterialIcons name="chevron-right" size={14} color="#FF6600" />
-        </TouchableOpacity>
-      </View>
     </TouchableOpacity>
   );
 }
@@ -184,7 +163,6 @@ export default function StoreManagerStores() {
     return stores.filter(s => s.status === activeTab);
   }, [stores, activeTab]);
 
-  // Initial Fetch (Only hits the network if it's the very first time opening the tab)
   React.useEffect(() => {
     if (!hasFetchedOnce) {
       fetchStores();
@@ -196,24 +174,19 @@ export default function StoreManagerStores() {
     await fetchStores(true);
   };
 
-  React.useEffect(() => {
-      if (!hasFetchedOnce) {
-          fetchStores();
-      }
-  }, [hasFetchedOnce, fetchStores]);
-
   useFocusEffect(
     useCallback(() => {
-      fetchStores();
-    }, [fetchStores])
+      if (hasFetchedOnce) {
+        fetchStores();
+      }
+    }, [hasFetchedOnce, fetchStores])
   );
 
   return (
-    <SafeAreaView className="flex-1 bg-backgroundMuted dark:bg-slate-950">
+    <SafeAreaView edges={["top"]} className="flex-1 bg-backgroundMuted dark:bg-slate-950">
       <View className="bg-white border-b border-slate-100 dark:bg-slate-900 dark:border-slate-800 px-6 py-4 flex-row items-center justify-start">
-        <View className="flex-row items-center gap-2 py-1">
-          <MaterialIcons name="storefront" size={22} color="black" className="mt-1" />
-          <Text className="text-2xl font-poppins-bold text-slate-900 dark:text-slate-100">
+        <View className="flex-row items-center gap-2">
+          <Text className="text-xl font-poppins-bold text-slate-900 dark:text-slate-100">
             Merchant Stores
           </Text>
         </View>
@@ -226,10 +199,10 @@ export default function StoreManagerStores() {
             tab.key === "all"
               ? stores.length
               : stores.filter((s) =>
-                  tab.key === "pending"
-                    ? s.status === "pending_review"
-                    : s.status === tab.key
-                ).length;
+                tab.key === "pending"
+                  ? s.status === "pending_review"
+                  : s.status === tab.key
+              ).length;
 
           return (
             <TouchableOpacity
@@ -253,18 +226,16 @@ export default function StoreManagerStores() {
               </Text>
               {count > 0 && (
                 <View
-                  className={`rounded-full px-1.5 min-w-[18px] items-center ${
-                    active
+                  className={`rounded-full px-1.5 min-w-[18px] items-center ${active
                       ? "bg-primary/10"
                       : "bg-neutral-100 dark:bg-neutral-700"
-                  }`}
+                    }`}
                 >
                   <Text
-                    className={`text-[9px] font-poppins-bold ${
-                      active
+                    className={`text-[9px] font-poppins-bold ${active
                         ? "text-primary"
                         : "text-neutral-500 dark:text-neutral-400"
-                    }`}
+                      }`}
                   >
                     {count}
                   </Text>
@@ -341,7 +312,7 @@ export default function StoreManagerStores() {
             //   console.log("Payment required to create store");
             //   return;
             // }
-            router.push("/(store_manager)/create-store");
+            router.push("/(store_manager)/store/create-store");
           }}
         >
           <MaterialIcons name="add" size={28} color="#fff" />

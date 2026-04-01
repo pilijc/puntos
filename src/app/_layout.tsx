@@ -1,7 +1,8 @@
 import "react-native-url-polyfill/auto";
 import "react-native-gesture-handler";
 import "../global.css";
-import { Slot, useRouter, Stack } from "expo-router";
+import "@/i18n";
+import { Slot, useRouter, Stack, usePathname } from "expo-router";
 import { useFonts } from "expo-font";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as SplashScreen from "expo-splash-screen";
@@ -13,7 +14,8 @@ import { useAuthListener } from "@/hooks/auth-listener";
 import { useAnimatedStyle, useSharedValue, withRepeat, withSequence, withTiming } from "react-native-reanimated";
 import { Image } from "@/tw";
 import { getHomeRouteForUserId } from "@/services/access-service";
-import { checkIfAccountDeletedService, AccountDeletedError } from "@/services/auth-service";
+import { checkIfAccountDeletedService, checkIfAccountBlockedService, AccountDeletedError, AccountBlockedError } from "@/services/auth-service";
+import { Modal } from "@/components/modal";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { useAuthStore } from "@/store/auth-store";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -36,6 +38,7 @@ export async function initOneSignal() {
 export default function Layout() {
   useAuthListener();
   const router = useRouter();
+  const pathname = usePathname();
   const [fontsLoaded] = useFonts({
     "Poppins-Regular": require("../assets/fonts/Poppins-Regular.ttf"),
     "Poppins-Medium": require("../assets/fonts/Poppins-Medium.ttf"),
@@ -43,6 +46,7 @@ export default function Layout() {
     "Poppins-Bold": require("../assets/fonts/Poppins-Bold.ttf"),
   });
   const sessionToken = useAuthStore((s) => s.sessionToken);
+  const isRestricted = useAuthStore((s) => s.isRestricted);
   const fetchStamps = useStamps((s) => s.fetchStamps);
 
   useEffect(() => {
@@ -68,12 +72,15 @@ export default function Layout() {
           fetchStamps();
 
           await checkIfAccountDeletedService(userId);
+          await checkIfAccountBlockedService(userId);
           const nextRoute = await getHomeRouteForUserId(userId);
           router.replace(nextRoute as any);
         } catch (err: any) {
           if (err instanceof AccountDeletedError) {
             Alert.alert("Login Failed", err.message);
             router.replace("/(auth)/login");
+          } else if (err instanceof AccountBlockedError) {
+            useAuthStore.getState().setRestricted(true);
           } else {
             console.error("Session restoration error:", err);
           }
@@ -85,6 +92,30 @@ export default function Layout() {
       checkSession();
     }
   }, [fontsLoaded, sessionToken]);
+
+  // Dedicated navigation guard for account restrictions
+  useEffect(() => {
+    const checkUserStatusOnNav = async () => {
+      // Skip check if already restricted or on public pages
+      const isPublicPage = pathname?.includes("(onboarding)") || pathname?.includes("(auth)");
+      if (isRestricted || isPublicPage) return;
+
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        try {
+          await checkIfAccountBlockedService(session.user.id);
+        } catch (err) {
+          if (err instanceof AccountBlockedError) {
+            useAuthStore.getState().setRestricted(true);
+          }
+        }
+      }
+    };
+
+    if (fontsLoaded) {
+      checkUserStatusOnNav();
+    }
+  }, [pathname, isRestricted, fontsLoaded]);
 
   SplashScreen.setOptions({
     duration: 1000,
@@ -105,6 +136,25 @@ export default function Layout() {
     <GestureHandlerRootView className="flex-1">
       <StatusBar barStyle="light-content" backgroundColor="#121212" />
       <Slot />
+      <Modal
+        visible={isRestricted}
+        onClose={() => {}} // Block dismissal
+        title="Account Restricted"
+        message="Your account has been restricted. To verify your account status, please contact support."
+        buttons={[
+          {
+            label: "OK",
+            variant: "primary",
+            onPress: async () => {
+              const { setRestricted } = useAuthStore.getState();
+              await supabase.auth.signOut();
+              await AsyncStorage.removeItem("sessionToken");
+              setRestricted(false);
+              router.replace("/(onboarding)/welcome");
+            },
+          },
+        ]}
+      />
     </GestureHandlerRootView>
   );
 }

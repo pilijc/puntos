@@ -122,7 +122,7 @@ export async function addStamp(
     }
 
     // ──────────────────────────────────────────────
-    // 2. Check existing stamp_progress for daily limit
+    // 2. Check existing stamp_progress
     // ──────────────────────────────────────────────
     const { data: existingProgress, error: fetchError } = await supabase
       .from("stamp_progress")
@@ -137,11 +137,6 @@ export async function addStamp(
     }
 
     const now = new Date().toISOString();
-
-    // If user already stamped today for this store → reject
-    if (existingProgress?.last_stamp_at && isSameDay(existingProgress.last_stamp_at, now)) {
-      return { success: false, reason: "already_stamped_today" };
-    }
 
     // ──────────────────────────────────────────────
     // 3. Upsert stamp_progress
@@ -199,27 +194,24 @@ export async function addStamp(
     }
 
     if (existingReward) {
-      // If already logged for today, skip reward update
-      if (existingReward.last_stamp_date !== todayDate) {
-        let newStampCount = existingReward.current_stamp_count + 1;
+      let newStampCount = existingReward.current_stamp_count + 1;
 
-        // If count has reached target (full cycle completed), reset to 1
-        if (existingReward.current_stamp_count >= existingReward.target_stamps) {
-          newStampCount = 1;
-        }
+      // If count has reached target (full cycle completed), reset to 1
+      if (existingReward.current_stamp_count >= existingReward.target_stamps) {
+        newStampCount = 1;
+      }
 
-        const { error: rewardUpdateError } = await supabase
-          .from("stamp_rewards")
-          .update({
-            current_stamp_count: newStampCount,
-            last_stamp_date: todayDate,
-            updated_at: now,
-          })
-          .eq("id", existingReward.id);
+      const { error: rewardUpdateError } = await supabase
+        .from("stamp_rewards")
+        .update({
+          current_stamp_count: newStampCount,
+          last_stamp_date: todayDate,
+          updated_at: now,
+        })
+        .eq("id", existingReward.id);
 
-        if (rewardUpdateError) {
-          console.error("Error updating stamp reward:", rewardUpdateError.message);
-        }
+      if (rewardUpdateError) {
+        console.error("Error updating stamp reward:", rewardUpdateError.message);
       }
     } else {
       // First-ever stamp for this store → create reward row
@@ -351,6 +343,38 @@ export async function getStoresWithEnabledStreaks(
   }
 }
 
+/**
+ * Returns a map of storeId → active store_streaks.id for the given stores.
+ * Used to populate store_streak_id in virtual (first-time) streak entries.
+ */
+export async function getActiveStreakProgramsByStore(
+  storeIds: number[],
+): Promise<Map<number, number>> {
+  if (storeIds.length === 0) return new Map();
+
+  try {
+    const { data, error } = await supabase
+      .from("store_streaks")
+      .select("id, store_id")
+      .in("store_id", storeIds)
+      .eq("status", "active");
+
+    if (error) {
+      console.warn("[getActiveStreakProgramsByStore] Error:", error.message);
+      return new Map();
+    }
+
+    const map = new Map<number, number>();
+    for (const row of data ?? []) {
+      map.set(Number(row.store_id), Number(row.id));
+    }
+    return map;
+  } catch (error) {
+    console.error("Exception fetching active streak programs:", error);
+    return new Map();
+  }
+}
+
 export async function getActiveStampProgramRewards(
   storeIds: number[],
 ): Promise<ActiveStampProgramReward[]> {
@@ -360,8 +384,7 @@ export async function getActiveStampProgramRewards(
     const { data: stampRows, error: stampError } = await supabase
       .from("store_stamps")
       .select("store_id, total_stamps, reward_id")
-      .in("store_id", storeIds)
-      .eq("is_active", true);
+      .in("store_id", storeIds);
 
     if (stampError) {
       throw new Error(stampError.message);

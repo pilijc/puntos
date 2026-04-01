@@ -1,184 +1,160 @@
-import React, { useState, useCallback } from "react";
-import { RefreshControl, useColorScheme, FlatList, Dimensions } from "react-native";
+import React, { useState, useCallback, useMemo } from "react";
+import { RefreshControl } from "react-native";
 import { ScrollView, View, Text, SafeAreaView } from "@/tw";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { MapPin, Users, ScanLine } from "lucide-react-native";
 import { useFocusEffect } from "expo-router";
+import { useTranslation } from "react-i18next";
 
-import { StoreRow } from "@/services/store-service";
+import { useManagerStoresStore } from "@/store/manager-stores-store";
+import { useStoreDashboardMetrics } from "@/hooks/store-manager/use-store-metrics";
+import { getLast7Labels, getWeekDateRange } from "@/utils/date-helpers";
 
-//hooks
-import { useStores } from "@/hooks/use-stores";
-import { useStoreDashboardMetrics } from "@/hooks/use-store-metrics";
+import { StorePickerDropdown } from "@/components/stores/store-picker-dropdown";
+import { DashboardMetricTile } from "@/components/stores/dashboard-metric-tile";
+import { DashboardActivityChart } from "@/components/stores/dashboard-activity-chart";
+import { DashboardRetentionChart } from "@/components/stores/dashboard-retention-chart";
+import { DashboardStampDistribution } from "@/components/stores/dashboard-stamp-distribution";
 
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
-const HORIZONTAL_PADDING = 20; // consistent with p-5
-const CARD_WIDTH = SCREEN_WIDTH - (HORIZONTAL_PADDING * 2);
+export default function StoreManagerDashboard() {
+    const { t: translate } = useTranslation();
+    const {
+        stores,
+        isFetching: refreshing,
+        fetchStores: refresh
+    } = useManagerStoresStore();
 
-// ── Store Card Component ──────────────────────────────────────────────────
-function StoreCard({ store }: { store: StoreRow }) {
-    const { activeUsers, todayTransactions, weeklyActivity, loading: metricsLoading } = useStoreDashboardMetrics(
-        store.id,
-        store.latitude,
-        store.longitude,
-        store.radius ?? 100
+    const [selectedStoreId, setSelectedStoreId] = useState<number | null>(null);
+    const [isDropdownVisible, setDropdownVisible] = useState(false);
+
+    useFocusEffect(
+        useCallback(() => {
+            const task = setTimeout(() => {
+                refresh(true);
+            }, 0);
+            return () => clearTimeout(task);
+        }, [refresh])
     );
 
-    const maxActivity = Math.max(...weeklyActivity, 1);
-    const dayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-    const last7DaysLabels = [...Array(7)].map((_, i) => {
-        const d = new Date();
-        d.setDate(d.getDate() - (6 - i));
-        return dayLabels[d.getDay()];
-    });
+    React.useEffect(() => {
+        if (!selectedStoreId && stores.length > 0) {
+            setSelectedStoreId(stores[0].id);
+        }
+    }, [stores, selectedStoreId]);
+
+    const selectedStore = stores.find((s) => s.id === selectedStoreId) || stores[0];
+
+    const {
+        activeUsers,
+        todayTransactions,
+        weeklyActivity,
+        retention,
+        stampBuckets,
+        stampMaxStamps,
+        loading: metricsLoading,
+        refresh: refreshMetrics
+    } = useStoreDashboardMetrics(
+        selectedStore?.id ?? 0,
+        selectedStore?.latitude ?? null,
+        selectedStore?.longitude ?? null,
+        selectedStore?.radius ?? 100
+    );
+
+    const handleRefresh = useCallback(async () => {
+        await Promise.all([
+            refresh(true),
+            refreshMetrics(false) // false because refreshControl already has its own loader
+        ]);
+    }, [refresh, refreshMetrics]);
+
+    //memo so labels dont recalculate on every render
+    const dayLabels = useMemo(() => getLast7Labels(), []);
+    const weekRange = useMemo(() => getWeekDateRange(), []);
 
     return (
-        <View style={{ width: CARD_WIDTH }}>
-            <View className="bg-white rounded-[24px] p-4 dark:bg-darkBackgroundCard min-h-[250px]">
+        <SafeAreaView edges={['top']} className="flex-1 bg-backgroundMuted dark:bg-darkBackground">
+            <ScrollView
+                className="flex-1"
+                contentContainerStyle={{ padding: 20 }}
+                showsVerticalScrollIndicator={false}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={refreshing}
+                        onRefresh={handleRefresh}
+                        tintColor="#ff6600"
+                        colors={["#ff6600"]}
+                    />
+                }
+            >
+                <View className="mb-[24px]">
+                    <View className="flex-row justify-between items-center mb-[4px]">
+                        <Text className="text-xl font-poppins-bold text-textPrimary dark:text-darkTextPrimary">
+                            {translate("storeManager.dashboard.title")}
+                        </Text>
+                        <StorePickerDropdown
+                            stores={stores}
+                            selectedStore={selectedStore}
+                            isVisible={isDropdownVisible}
+                            onOpen={() => setDropdownVisible(true)}
+                            onClose={() => setDropdownVisible(false)}
+                            onSelect={(id) => setSelectedStoreId(id)}
+                        />
+                    </View>
 
-                {/* Store Header Info */}
-                <View className="mb-6">
-                    <Text className="text-xl font-poppins-bold text-textPrimary dark:text-darkTextPrimary" numberOfLines={1}>
-                        {store.name}
-                    </Text>
-                    {store.address && (
-                        <View className="flex-row items-center mt-1">
-                            <MaterialIcons name="location-on" size={16} color="#94A3B8" />
-                            <Text className="text-sm font-poppins text-textMuted ml-1 dark:text-darkTextSecondary" numberOfLines={1}>
-                                {store.address}
+                    {selectedStore?.address && (
+                        <View className="flex-row items-center">
+                            <MapPin size={14} color="#94a3b8" />
+                            <Text className="text-xs font-poppins text-textMuted dark:text-darkTextMuted ml-[4px]">
+                                {selectedStore.address}
                             </Text>
                         </View>
                     )}
                 </View>
 
-                {/* Metrics Row */}
-                <View className="flex-row justify-between mb-6">
-                    {/* Active Users Section */}
-                    <View className="flex-1 bg-orange-50/50 rounded-xl p-4 mr-2 dark:bg-orange-900/20">
-                        <View className="flex-row items-center mb-2">
-                            <View className="bg-orange-100 p-1.5 rounded-full mr-1 dark:bg-orange-800">
-                                <MaterialIcons name="people" size={16} color="#FF6600" />
-                            </View>
-                            <Text className="text-[11px] font-poppins-bold text-orange-600 tracking-wider dark:text-darkPrimarySecondary uppercase">In-Store</Text>
+                {selectedStore ? (
+                    <View className="w-full mb-8">
+                        <View className="flex-row gap-[10px] mb-[14px]">
+                            <DashboardMetricTile
+                                label={translate("storeManager.dashboard.metrics.inStore")}
+                                value={activeUsers}
+                                subtitle={translate("storeManager.dashboard.metrics.realTimeUsers")}
+                                icon={Users}
+                                loading={metricsLoading}
+                            />
+                            <DashboardMetricTile
+                                label={translate("storeManager.dashboard.metrics.totalScanned")}
+                                value={todayTransactions}
+                                subtitle={translate("storeManager.dashboard.metrics.redeemedToday")}
+                                icon={ScanLine}
+                                loading={metricsLoading}
+                            />
                         </View>
-                        <Text className="text-3xl font-poppins-bold text-textPrimary dark:text-darkTextPrimary">
-                            {metricsLoading ? "-" : activeUsers}
+
+                        {/* user retention chart */}
+                        <DashboardRetentionChart
+                            data={retention}
+                            loading={metricsLoading}
+                        />
+
+                        <DashboardActivityChart
+                            data={weeklyActivity}
+                            labels={dayLabels}
+                            loading={metricsLoading}
+                            weekRange={weekRange}
+                        />
+
+                        <DashboardStampDistribution
+                            buckets={stampBuckets}
+                            maxStamps={stampMaxStamps}
+                            loading={metricsLoading}
+                        />
+                    </View>
+                ) : (
+                    <View className="py-10 items-center">
+                        <Text className="font-poppins text-textPrimary">
+                            {translate("storeManager.dashboard.noStores")}
                         </Text>
                     </View>
-
-                    {/* Today's Transactions Section */}
-                    <View className="flex-1 bg-orange-50/50 rounded-xl p-4 ml-2 dark:bg-orange-900/20">
-                        <View className="flex-row items-center mb-2">
-                            <View className="bg-orange-100 p-1.5 rounded-full mr-1 dark:bg-orange-800">
-                                <MaterialIcons name="receipt" size={16} color="#FF6600" />
-                            </View>
-                            <Text className="text-[11px] font-poppins-bold text-orange-600 tracking-wider dark:text-darkPrimarySecondary uppercase">Today's Scans</Text>
-                        </View>
-                        <Text className="text-3xl font-poppins-bold text-textPrimary dark:text-darkTextPrimary">
-                            {metricsLoading ? "-" : todayTransactions}
-                        </Text>
-                    </View>
-                </View>
-
-                {/* Transaction Activity Graph Section */}
-                <View className="mt-2">
-                    <Text className="text-[11px] font-poppins-bold text-textMuted tracking-widest mb-3 dark:text-darkTextSecondary uppercase">
-                        Weekly Scan Activity
-                    </Text>
-                    <View className="flex-row justify-between px-1">
-                        {weeklyActivity.map((count, i) => (
-                            <View key={i} className="items-center" style={{ width: (CARD_WIDTH - 40) / 7 }}>
-                                <View className="h-16 w-full items-center justify-end">
-                                    <View
-                                        className={`w-6 rounded-t-sm ${i === 6 ? "bg-primary" : "bg-primary/20"}`}
-                                        style={{ height: `${Math.max((count / maxActivity) * 100, 5)}%` }}
-                                    />
-                                </View>
-                                <Text className={`text-[9px] font-poppins-bold mt-2 ${i === 6 ? "text-primary" : "text-textMuted dark:text-darkTextSecondary"}`}>
-                                    {last7DaysLabels[i].toUpperCase()}
-                                </Text>
-                            </View>
-                        ))}
-                    </View>
-                </View>
-            </View>
-        </View>
-    );
-}
-
-// ── Dashboard screen ───────────────────────────────────────────────────────
-export default function StoreManagerDashboard() {
-    const isDark = useColorScheme() === "dark";
-    const insets = useSafeAreaInsets();
-
-    const { stores, filteredStores, refreshing, refresh } = useStores();
-
-    useFocusEffect(useCallback(() => { refresh(); }, []));
-
-    const [currentIndex, setCurrentIndex] = useState(0);
-
-    const onViewableItemsChanged = useCallback(({ viewableItems }: any) => {
-        if (viewableItems.length > 0) {
-            setCurrentIndex(viewableItems[0].index || 0);
-        }
-    }, []);
-
-    //render card
-    const renderStoreCard = useCallback(({ item: store }: { item: StoreRow }) => (
-        <StoreCard store={store} />
-    ), []);
-
-    return (
-        <SafeAreaView className="flex-1 bg-backgroundMuted dark:bg-darkBackground p-5">
-            <ScrollView
-                className="flex-1"
-                contentContainerStyle={{ flexGrow: 1 }}
-                showsVerticalScrollIndicator={false}
-                refreshControl={
-                    <RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor="#FFFFFF" colors={["#FF6600"]}
-                    />
-                }
-            >
-                {/* ── NEW HEADER
-                ──────────────────────────────────────── */}
-                <View className="justify-between mb-6">
-                    <Text className="text-xl font-poppins-bold text-textPrimary dark:text-darkTextPrimary">
-                        Dashboard
-                    </Text>
-                </View>
-
-                {/* ── Store Performance Carousel ──────────────────────── */}
-                <View className="mb-8">
-                    <FlatList
-                        data={filteredStores.length > 0 ? filteredStores : stores}
-                        renderItem={renderStoreCard}
-                        keyExtractor={(item) => item.id.toString()}
-                        horizontal
-                        showsHorizontalScrollIndicator={false}
-                        snapToInterval={CARD_WIDTH + 8} // CARD_WIDTH + gap
-                        snapToAlignment="start"
-                        decelerationRate="fast"
-                        disableIntervalMomentum={true}
-                        onViewableItemsChanged={onViewableItemsChanged}
-                        viewabilityConfig={{ itemVisiblePercentThreshold: 50 }}
-                        ItemSeparatorComponent={() => <View style={{ width: 8 }} />}
-                    />
-
-                    {/* ── Dot Indicators ── */}
-                    {(filteredStores.length > 0 ? filteredStores : stores).length > 1 && (
-                        <View className="flex-row justify-center items-center mt-5 gap-x-2">
-                            {(filteredStores.length > 0 ? filteredStores : stores).map((_, index) => (
-                                <View
-                                    key={index}
-                                    className={`h-2 rounded-full transition-all ${currentIndex === index
-                                        ? "w-6 bg-primary"
-                                        : "w-2 bg-slate-200 dark:bg-slate-700"
-                                        }`}
-                                />
-                            ))}
-                        </View>
-                    )}
-                </View>
+                )}
             </ScrollView>
         </SafeAreaView>
     );

@@ -33,6 +33,7 @@ export interface StoreRow {
     phone: string | null;
     registration_number: string | null;
     business_document_image: string | null;
+    store_pictures?: string[] | null;
     store_open: string | null;
     store_close: string | null;
     created_at: string;
@@ -78,6 +79,7 @@ export async function createStore(payload: CreateStorePayload): Promise<StoreRow
         streak_enabled: false,
         stamp_enabled: false,
         reward_enabled: false,
+        qr_enabled: false,
     });
 
     await supabase.from("store_points_rules").insert({
@@ -105,14 +107,43 @@ export async function createStore(payload: CreateStorePayload): Promise<StoreRow
 }
 
 export async function getMyStores(ownerId: string): Promise<StoreRow[]> {
-    const { data, error } = await supabase
-        .from("stores")
-        .select("*")
-        .eq("owner_id", ownerId)
-        .order("created_at", { ascending: false });
+    const [
+        { data: ownedData, error: ownedError },
+        { data: roleData, error: roleError },
+    ] = await Promise.all([
+        supabase
+            .from("stores")
+            .select("*")
+            .eq("owner_id", ownerId)
+            .eq("is_active", true)
+            .order("created_at", { ascending: false }),
+        supabase
+            .from("user_roles")
+            .select(`
+                store_id,
+                stores:store_id!inner (*)
+            `)
+            .eq("user_id", ownerId)
+            .eq("stores.is_active", true)
+            .not("store_id", "is", null),
+    ]);
 
-    if (error) throw new Error(error.message);
-    return (data ?? []) as StoreRow[];
+    if (ownedError) throw new Error(ownedError.message);
+    if (roleError) throw new Error(roleError.message);
+
+    const roleStores = (roleData ?? [])
+        .map((r: any) => r.stores)
+        .filter(Boolean) as StoreRow[];
+
+    const allStores = [...(ownedData ?? []) as StoreRow[], ...roleStores];
+    const seen = new Set<number>();
+    const unique = allStores.filter((s) => {
+        if (seen.has(s.id)) return false;
+        seen.add(s.id);
+        return true;
+    });
+
+    return unique;
 }
 
 export async function updateStoreLogo(storeId: number, imageUrl: string): Promise<void> {
@@ -155,7 +186,7 @@ export async function getAllStores(): Promise<AdminStoreRow[]> {
         .select(`
             id, name, type, address, latitude, longitude, radius,
             status, is_active, logo, owner_id,
-            phone, registration_number, created_at,
+            phone, registration_number, business_document_image, store_pictures, store_open, store_close, created_at,
             users ( name )
         `)
         .order("created_at", { ascending: false });
@@ -169,11 +200,6 @@ export async function getAllStores(): Promise<AdminStoreRow[]> {
     })) as AdminStoreRow[];
 }
 
-/**
- * Approves or rejects a store by updating its status and is_active flag.
- * - Approve: status = 'active',   is_active = true
- * - Reject:  status = 'inactive', is_active = false
- */
 export async function updateStoreStatus(
     storeId: number,
     status: "active" | "inactive" | "pending_review",
@@ -192,7 +218,8 @@ export async function getStores() {
 			const { data, error } = await supabase
 				.from("stores")
 				.select("*")
-				.eq("status", "active");
+				.eq("status", "active")
+				.eq("is_active", true);
     if (error) throw new Error(error.message);
     return data;
     } catch (error) {
@@ -232,10 +259,11 @@ export async function uploadStoreImage(
     kind === "logo"
       ? "store/logo"
       : kind === "business_document"
-      ? "store/business-document"
+      ? "store/documents"
       : "store/pictures";
   const filePath = `${folder}/${storeId}/${Date.now()}.${ext}`;
 
+  console.log("filePath", filePath);
   const { error: uploadError } = await supabase.storage
     .from("puntos-public")
     .upload(filePath, bytes, { contentType: mimeType, upsert: true });
