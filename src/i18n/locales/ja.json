@@ -536,7 +536,40 @@
 
         },
         "users": {
-
+            "noUsersFound": "ユーザーが見つかりません",
+            "title": "ユーザー",
+            "searchPlaceholder": "検索...",
+            "filter": "フィルター",
+            "tabs": {
+                "all": "すべて",
+                "user": "ユーザー",
+                "manager": "マネージャー",
+                "staff": "スタッフ"
+            },
+            "roles": {
+                "sadmin": "スーパー管理者",
+                "manager": "マネージャー",
+                "staff": "スタッフ",
+                "frontdesk": "フロントデスク",
+                "blocked": "ブロック済",
+                "user": "ユーザー"
+            },
+            "defaultUserName": "ユーザー",
+            "status": {
+                "blocked": "ブロック済み"
+            },
+            "blockModal": {
+                "blockTitle": "ユーザーをブロック",
+                "unblockTitle": "ブロック解除",
+                "blockMessage": "このユーザーのアクセスを制限してもよろしいですか？",
+                "unblockMessage": "このユーザーのアクセスを復元してもよろしいですか？",
+                "blockAction": "ブロック",
+                "unblockAction": "解除"
+            },
+            "managedStores": "管理中の店舗",
+            "unnamedStore": "店名未設定",
+            "noStoresAssigned": "このマネージャーにはまだ店舗が割り当てられていません。",
+            "branchAssignment": "担当店舗"
         }
 
     }

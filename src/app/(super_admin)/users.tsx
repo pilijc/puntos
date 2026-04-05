@@ -9,6 +9,7 @@ import { UsersSearchHeader } from "@/components/users/UsersSearchHeader";
 import { UserListItem } from "@/components/users/UserListItem";
 import { TYPO, COLORS } from "@/type/super-admin/user";
 import { useSuperAdminUsers } from "@/hooks/super-admin/use-super-admin-users";
+import { useTranslation } from "react-i18next";
 
 export default function UsersScreen() {
   const colorScheme = require('react-native').useColorScheme();
@@ -40,6 +41,7 @@ export default function UsersScreen() {
     willBlock,
     getItemLayout,
   } = useSuperAdminUsers();
+  const { t: translate } = useTranslation();
 
   const renderItem = useCallback(
     ({ item }: { item: any }) => (
@@ -91,7 +93,7 @@ export default function UsersScreen() {
           }
           ListEmptyComponent={
             <View className="items-center justify-center pt-20">
-              <Text className={`${TYPO.subtitle} dark:text-darkTextSecondary`}>No users found</Text>
+              <Text className={`${TYPO.subtitle} dark:text-darkTextSecondary`}>{translate("superAdmin.users.noUsersFound")}</Text>
             </View>
           }
         />
@@ -117,11 +119,11 @@ export default function UsersScreen() {
       <Modal
         visible={!!errorModal}
         onClose={dismissErrorModal}
-        title={errorModal?.title ?? (errorModal?.type === "success" ? "Success" : "Error")}
+        title={errorModal?.title ?? (errorModal?.type === "success" ? translate("label.success") : translate("label.error"))}
         message={errorModal?.message ?? ""}
         buttons={[
           {
-            label: "OK",
+            label: translate("label.ok"),
             onPress: dismissErrorModal,
             variant: errorModal?.type === "success" ? "success" : "primary",
           },
