@@ -1,6 +1,7 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useMemo } from "react";
 import { ScrollView } from "react-native";
 import { View, Text, TouchableOpacity } from "@/tw";
+import { useTranslation } from "react-i18next";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { Image } from "expo-image";
 import { ScreenWrapper } from "@/components/ui/screen-wrapper";
@@ -15,12 +16,12 @@ const twColors = twConfig.theme.extend.colors;
 type StatusKey = "pending_review" | "active" | "inactive";
 
 const STATUS_CONFIG: Record<StatusKey, {
-  label: string; icon: "schedule" | "check-circle" | "cancel";
+  icon: "schedule" | "check-circle" | "cancel";
   bg: string; border: string; badgeBg: string; text: string;
 }> = {
-  pending_review: { label: "PENDING", icon: "schedule", bg: "#ffffff", border: "#f5e4a8", badgeBg: "#fef0c0", text: "#7a5c00" },
-  active: { label: "ACTIVE", icon: "check-circle", bg: "#ffffff", border: "#d4fce2", badgeBg: "#dcfce7", text: twColors.success },
-  inactive: { label: "INACTIVE", icon: "cancel", bg: "#ffffff", border: "#fecaca", badgeBg: "#fee2e2", text: twColors.danger },
+  pending_review: { icon: "schedule", bg: "#ffffff", border: "#f5e4a8", badgeBg: "#fef0c0", text: "#7a5c00" },
+  active: { icon: "check-circle", bg: "#ffffff", border: "#d4fce2", badgeBg: "#dcfce7", text: twColors.success },
+  inactive: { icon: "cancel", bg: "#ffffff", border: "#fecaca", badgeBg: "#fee2e2", text: twColors.danger },
 };
 
 // ─── Field helpers ────────────────────────────────────────────────────────────
@@ -57,6 +58,14 @@ export function AdminStoreDetails({
   onApprove: (store: AdminStoreRow) => void;
   onReject: (store: AdminStoreRow) => void;
 }) {
+	const { t: translate, i18n } = useTranslation();
+
+	const STATUS_LABELS: Record<StatusKey, string> = {
+		pending_review: translate("superAdmin.stores.status.pending"),
+		active: translate("superAdmin.stores.status.active"),
+		inactive: translate("superAdmin.stores.status.inactive"),
+	};
+
   const [viewingDoc, setViewingDoc] = useState(false);
   const [currentPicIndex, setCurrentPicIndex] = useState(0);
   const scrollRef = useRef<any>(null);
@@ -73,9 +82,11 @@ export function AdminStoreDetails({
   const statusCfg = STATUS_CONFIG[statusKey] ?? STATUS_CONFIG.pending_review;
   const isPending = statusKey === "pending_review";
 
-  const registeredDate = new Date(store.created_at).toLocaleDateString("en-US", {
-    month: "short", day: "numeric", year: "numeric",
-  });
+  const registeredDate = useMemo(() => {
+    return new Date(store.created_at).toLocaleDateString(i18n.language === "ja" ? "ja-JP" : "en-US", {
+      month: "short", day: "numeric", year: "numeric",
+    });
+  }, [store.created_at, i18n.language]);
 
   return (
     <ScreenWrapper className="flex-1 bg-backgroundMuted dark:bg-darkBackgroundMuted">
@@ -86,7 +97,9 @@ export function AdminStoreDetails({
           <TouchableOpacity onPress={onBack} activeOpacity={0.7} className="items-center justify-center -ml-2 p-2">
             <MaterialIcons name="chevron-left" size={28} color={isDark ? "#ffffff" : "#0F172A"} />
           </TouchableOpacity>
-          <Text className="text-[17px] font-poppins-bold text-textPrimary dark:text-darkTextPrimary ml-1">Store Details</Text>
+          <Text className="text-[17px] font-poppins-bold text-textPrimary dark:text-darkTextPrimary ml-1">
+						{translate("superAdmin.stores.details.title")}
+					</Text>
         </View>
       </View>
 
@@ -99,7 +112,7 @@ export function AdminStoreDetails({
         {/* Store Details */}
         <View>
           <View className="mb-2.5">
-            <FieldLabel>STORE NAME</FieldLabel>
+            <FieldLabel>{translate("superAdmin.stores.details.name")}</FieldLabel>
             <FieldCard>
               <View className="flex-row items-center justify-between">
                 <Text className="text-sm font-poppins-medium text-textPrimary dark:text-darkTextPrimary flex-1 mr-2" numberOfLines={1}>
@@ -107,18 +120,22 @@ export function AdminStoreDetails({
                 </Text>
                 <View style={{ backgroundColor: statusCfg.badgeBg }} className="flex-row items-center gap-1 px-2 py-1 rounded-full">
                   <MaterialIcons name={statusCfg.icon} size={12} color={statusCfg.text} />
-                  <Text style={{ color: statusCfg.text }} className="text-[10px] font-poppins-bold tracking-wider">{statusCfg.label}</Text>
+                  <Text style={{ color: statusCfg.text }} className="text-[10px] font-poppins-bold tracking-wider">
+                    {STATUS_LABELS[statusKey]}
+                  </Text>
                 </View>
               </View>
             </FieldCard>
           </View>
 
           <View className="mb-2.5">
-            <FieldLabel>STORE TYPE</FieldLabel>
+            <FieldLabel>{translate("superAdmin.stores.details.type")}</FieldLabel>
             <FieldCard noPad>
               {store.type ? (
                 <View className={`${getStoreCategoryBadge(store.type).bg} rounded-full px-3.5 py-1.5 self-start m-1`}>
-                  <Text className={`text-xs font-poppins-semibold ${getStoreCategoryBadge(store.type).text}`}>{store.type}</Text>
+                  <Text className={`text-xs font-poppins-semibold ${getStoreCategoryBadge(store.type).text}`}>
+                    {translate(`superAdmin.stores.category.${store.type.toLowerCase().replace(/ & /g, '_')}`, { defaultValue: store.type })}
+                  </Text>
                 </View>
               ) : (
                 <Text className="text-sm font-poppins-medium text-textMuted p-1">—</Text>
@@ -128,7 +145,7 @@ export function AdminStoreDetails({
 
           {/* Logo — static, no tap */}
           <View className="mb-2.5">
-            <FieldLabel>STORE LOGO</FieldLabel>
+            <FieldLabel>{translate("superAdmin.stores.details.logo")}</FieldLabel>
             <FieldCard noPad>
               <View className="w-[60px] h-[60px] rounded-xl overflow-hidden bg-[#f1f5f9] dark:bg-darkBackgroundCard items-center justify-center m-1">
                 {store.logo
@@ -140,7 +157,7 @@ export function AdminStoreDetails({
           </View>
 
           <View className="mb-2.5">
-            <FieldLabel>STORE PICTURES</FieldLabel>
+            <FieldLabel>{translate("superAdmin.stores.details.pictures")}</FieldLabel>
             <FieldCard noPad>
               {store.store_pictures && store.store_pictures.length > 0 ? (
                 <View 
@@ -220,12 +237,12 @@ export function AdminStoreDetails({
 
         {/* Business Details */}
         <View>
-          <SectionHeader title="Business Details" />
-          <ReadOnlyField label="OWNER NAME" value={store.owner_name} />
-          <ReadOnlyField label="PHONE NUMBER" value={store.phone} />
+          <SectionHeader title={translate("superAdmin.stores.details.businessDetails")} />
+          <ReadOnlyField label={translate("superAdmin.stores.details.ownerName")} value={store.owner_name} />
+          <ReadOnlyField label={translate("superAdmin.stores.details.phone")} value={store.phone} />
           
           <View className="mb-2.5">
-            <FieldLabel>OPERATING HOURS</FieldLabel>
+            <FieldLabel>{translate("superAdmin.stores.details.operatingHours")}</FieldLabel>
             <FieldCard>
               <View className="flex-row items-center px-1">
                 <View className="flex-1 flex-row items-center justify-center gap-2">
@@ -249,7 +266,7 @@ export function AdminStoreDetails({
 
           <View className="flex-row gap-2.5">
             <View className="flex-1">
-              <FieldLabel>BUSINESS REGISTRATION #</FieldLabel>
+              <FieldLabel>{translate("superAdmin.stores.details.registrationNumber")}</FieldLabel>
               <FieldCard>
                 <Text className="text-sm font-poppins-medium text-textPrimary dark:text-darkTextPrimary" numberOfLines={1}>
                   {store.registration_number || "—"}
@@ -257,7 +274,7 @@ export function AdminStoreDetails({
               </FieldCard>
             </View>
             <View className="flex-1">
-              <FieldLabel>REGISTERED ON</FieldLabel>
+              <FieldLabel>{translate("superAdmin.stores.details.registeredOn")}</FieldLabel>
               <FieldCard>
                 <Text className="text-sm font-poppins-medium text-textPrimary dark:text-darkTextPrimary" numberOfLines={1}>
                   {registeredDate}
@@ -268,7 +285,7 @@ export function AdminStoreDetails({
 
           {/* Business document — taps into full-screen viewer */}
           <View className="mb-2.5 mt-2.5">
-            <FieldLabel>BUSINESS DOCUMENT</FieldLabel>
+            <FieldLabel>{translate("superAdmin.stores.details.businessDocument")}</FieldLabel>
             <FieldCard noPad>
               {store.business_document_image ? (
                 <TouchableOpacity
@@ -304,7 +321,7 @@ export function AdminStoreDetails({
                       paddingHorizontal: 12, paddingVertical: 5, borderRadius: 14,
                     }}>
                       <Text style={{ color: "#fff", fontSize: 11, fontFamily: "Poppins-Medium" }}>
-                        Tap to view & zoom
+                        {translate("superAdmin.stores.details.viewAndZoom")}
                       </Text>
                     </View>
                   </View>
@@ -318,9 +335,9 @@ export function AdminStoreDetails({
 
         {/* Location */}
         <View>
-          <SectionHeader title="Location Details" />
+          <SectionHeader title={translate("superAdmin.stores.details.locationDetails")} />
           <View className="mb-2.5">
-            <FieldLabel>LANDMARK / ADDRESS</FieldLabel>
+            <FieldLabel>{translate("superAdmin.stores.details.landmarkAddress")}</FieldLabel>
             <View className="bg-white dark:bg-darkBackgroundCard rounded-xl p-3 flex-row items-center gap-2.5">
               <View><MaterialIcons name="location-on" size={20} color="#FF6600" /></View>
               <Text className="flex-1 text-[13px] font-poppins-medium text-textPrimary dark:text-darkTextPrimary leading-5">
@@ -335,10 +352,10 @@ export function AdminStoreDetails({
           <View className="-mt-1">
             <View className="flex-row gap-3">
               <View className="flex-1">
-                <Button variant="danger" label="Reject Application" onPress={() => onReject(store)} fullWidth />
+                <Button variant="danger" label={translate("superAdmin.stores.details.rejectApplication")} onPress={() => onReject(store)} fullWidth />
               </View>
               <View className="flex-1">
-                <Button variant="primary" label="Approve Store" onPress={() => onApprove(store)} fullWidth />
+                <Button variant="primary" label={translate("superAdmin.stores.details.approveStore")} onPress={() => onApprove(store)} fullWidth />
               </View>
             </View>
           </View>
