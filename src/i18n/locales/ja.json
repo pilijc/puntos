@@ -534,7 +534,62 @@
             }
         },
         "stores": {
-
+            "title": "店舗承認",
+            "noStores": "店舗がまだありません",
+            "noFilteredStores": "{{status}}の店舗はありません",
+            "filter": {
+                "all": "すべて",
+                "pending": "保留中",
+                "active": "有効",
+                "inactive": "無効"
+            },
+            "modal": {
+                "approveTitle": "店舗を承認",
+                "approveMessage": "「{{name}}」を承認しますか？ すぐに公開されます。",
+                "approveAction": "承認",
+                "rejectTitle": "店舗を却下",
+                "rejectMessage": "「{{name}}」を却下しますか？ ストアマネージャーは再申請が必要になります。",
+                "rejectAction": "却下",
+                "successTitle": "店舗承認完了",
+                "successMessage": "「{{name}}」が有効になり、運営を開始できます。",
+                "errorTitle": "申請却下",
+                "errorMessage": "「{{name}}」の申請は却下されました。"
+            },
+            "details": {
+                "title": "店舗の詳細",
+                "name": "店名",
+                "type": "店舗タイプ",
+                "logo": "店舗ロゴ",
+                "pictures": "店舗写真",
+                "businessDetails": "事業詳細",
+                "ownerName": "オーナー名",
+                "phone": "電話番号",
+                "operatingHours": "営業時間",
+                "registrationNumber": "事業者登録番号",
+                "registeredOn": "登録日",
+                "businessDocument": "事業書類",
+                "viewAndZoom": "タップで表示・ズーム",
+                "locationDetails": "所在地詳細",
+                "landmarkAddress": "住所 / ランドマーク",
+                "rejectApplication": "却下",
+                "approveStore": "承認",
+                "tapToView": "タップで詳細を表示",
+                "noAddress": "住所未記入"
+            },
+            "category": {
+                "cafe_bar": "カフェ & バー",
+                "food_drinks": "フード & ドリンク",
+                "shopping": "ショッピング",
+                "beauty": "美容",
+                "health": "健康",
+                "entertainment": "娯楽",
+                "other": "その他"
+            },
+            "status": {
+                "pending": "保留中",
+                "active": "有効",
+                "inactive": "無効"
+            }
         },
         "users": {
             "noUsersFound": "ユーザーが見つかりません",
@@ -572,6 +627,5 @@
             "noStoresAssigned": "このマネージャーにはまだ店舗が割り当てられていません。",
             "branchAssignment": "担当店舗"
         }
-
     }
 }
