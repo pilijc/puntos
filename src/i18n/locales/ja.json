@@ -536,7 +536,6 @@
             "title": "店舗承認",
             "noStores": "店舗がまだありません",
             "noFilteredStores": "{{status}}の店舗はありません",
-            "pullToRefresh": "下にスワイプして更新するか、別のカテゴリを試してください。",
             "filter": {
                 "all": "すべて",
                 "pending": "保留中",

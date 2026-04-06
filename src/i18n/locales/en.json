@@ -535,7 +535,6 @@
             "title": "Store Approvals",
             "noStores": "No stores yet",
             "noFilteredStores": "No {{status}} stores",
-            "pullToRefresh": "Pull down to refresh or try another category.",
             "filter": {
                 "all": "All",
                 "pending": "Pending",
