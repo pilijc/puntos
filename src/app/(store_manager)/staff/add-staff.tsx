@@ -1,7 +1,6 @@
 import React, { useEffect } from "react";
 import { KeyboardAvoidingView, Platform, ScrollView, useColorScheme } from "react-native";
 import { View, Text, TouchableOpacity, TextInput } from "@/tw";
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Button } from "@/components/button";
@@ -9,6 +8,9 @@ import { Modal } from "@/components/modal";
 import { createStoreStaff, getStoreStaffMember, updateStoreStaffMember } from "@/services/store-manager/staff-service";
 import { useStaffStore } from "@/store/store-manager/staff-store";
 import { generateRandomPassword } from "@/utils/store_manager/staff-utils";
+import { TextField } from "@/components/text-field";
+import { RefreshCcw } from "lucide-react-native";
+import { AppHeader } from "@/components/header";
 
 export default function AddStaff() {
   const router = useRouter();
@@ -137,28 +139,11 @@ export default function AddStaff() {
         timer={modal?.timer ? 3000 : undefined}
       />
 
-      <View
-        className="bg-background dark:bg-[#111921] flex-row items-center px-2"
-        style={{ paddingTop: insets.top + 8, paddingBottom: 12 }}
-      >
-        <TouchableOpacity
-          className="w-10 h-10 rounded-full items-center justify-center"
-          activeOpacity={0.7}
-          onPress={() =>
-            router.push({
-              pathname: "/(store_manager)/staff",
-              params: { storeId },
-            })
-          }
-        >
-          <MaterialIcons name="chevron-left" size={22} color={isDark ? "#F1F5F9" : "#0F172A"} />
-        </TouchableOpacity>
-        <View className="flex-1 -ml-10">
-          <Text className="text-center text-md font-poppins-bold text-textPrimary dark:text-textPrimary">
-            {isEditMode ? "Update Frontdesk Staff" : "Create Frontdesk Staff"}
-          </Text>
-        </View>
-      </View>
+      <AppHeader
+        title={isEditMode ? "Edit staff" : "Add staff"}
+        paddingTop={insets.top + 8}
+        onBackPress={() => router.replace({ pathname: "/(store_manager)/staff", params: { storeId } })}
+      />
 
       <ScrollView
         style={{ flex: 1 }}
@@ -169,16 +154,16 @@ export default function AddStaff() {
         <View className="bg-white  rounded-xl p-4 gap-y-4">
           <View>
             <Text className="text-md font-poppins-bold text-slate-900 dark:text-slate-100">
-              {isEditMode ? "Edit Frontdesk Staff" : "Frontdesk Staff"}
+              {isEditMode ? "Profile & login" : "Front desk access"}
             </Text>
             <Text className="text-sm font-poppins text-slate-500 dark:text-slate-400">
               {isEditMode
-                ? "Update the frontdesk staff profile details"
-                : "Add a frontdesk staff member who can help your store, assist customers, and handle daily store tasks"}
+                ? "Change this person's name or email for their store account."
+                : "They'll use this account at the front desk. You'll share a temporary password after you save."}
             </Text>
           </View>
 
-				{!isEditMode && <View className="bg-primary/5 dark:bg-primary-800 rounded-xl px-2 py-3 ">
+				{!isEditMode && <View className="bg-primary/5 dark:bg-primary-800 rounded-xl p-4 ">
 					<Text className="text-sm font-poppins-semibold text-primary">
 						Staff Login Information
 					</Text>
@@ -199,36 +184,22 @@ export default function AddStaff() {
         </View>}
 
         <View className="gap-y-2">
-          <View className="flex-row items-center gap-x-0.5">
-            <Text className="text-sm font-poppins-semibold text-slate-700 dark:text-slate-300">
-              Full Name
-            </Text>
-            <Text className="text-xs font-poppins-bold text-red-500">*</Text>
-          </View>
-          <TextInput
-            className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-4 text-base font-poppins text-slate-900 dark:text-slate-100"
-            placeholder="e.g. Jane Doe"
-            placeholderTextColor="#94A3B8"
+          <TextField
+            label="Full Name"
             value={name}
             onChangeText={setName}
+            placeholder="e.g. Jane Doe"
+            required={true}
           />
         </View>
 
         <View className="gap-y-2">
-          <View className="flex-row items-center gap-x-0.5">
-            <Text className="text-sm font-poppins-semibold text-slate-700 dark:text-slate-300">
-              Email
-            </Text>
-            <Text className="text-xs font-poppins-bold text-red-500">*</Text>
-          </View>
-          <TextInput
-            className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-4 text-base font-poppins text-slate-900 dark:text-slate-100"
-            placeholder="e.g. jane@example.com"
-            placeholderTextColor="#94A3B8"
-            autoCapitalize="none"
-            keyboardType="email-address"
+          <TextField
+            label="Email"
             value={email}
             onChangeText={setEmail}
+            placeholder="e.g. jane@example.com"
+            required={true}
           />
         </View>
 
@@ -243,11 +214,22 @@ export default function AddStaff() {
             <TouchableOpacity
               onPress={() => setPassword(generateRandomPassword(8))}
             >
-              <Text className="text-primary text-sm font-poppins">Generate Password</Text>
+              <Text className="text-primary text-sm font-poppins">
+                <RefreshCcw size={14} color="#FF6600" />
+              </Text>
             </TouchableOpacity>
           </View>
           <TextInput
-            className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-4 text-base font-poppins text-slate-900 dark:text-slate-100"
+            className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 text-base font-poppins text-slate-900 dark:text-slate-100 pr-12"
+            style={{
+              height: 45,
+              lineHeight: 20,
+              paddingVertical: 0,
+              paddingHorizontal: 12,
+              textAlignVertical: "center",
+              includeFontPadding: false,
+            }}
+            keyboardType="default"
             placeholder="Default password is autogenerated"
             placeholderTextColor="#94A3B8"
             value={password}

@@ -9,6 +9,7 @@ import { useStaffStore, useStaffViewStore } from "@/store/store-manager/staff-st
 import { ChevronLeft, ChevronRight, UsersRound, Pencil, Trash, UserRoundX  } from "lucide-react-native";
 import StaffSkeleton from "@/components/skeleton/store_manager/staff-skeleton";
 import { getInitials } from "@/utils/store_manager/staff-utils";
+import { AppHeader } from "@/components/header";
 
 export default function ViewStaff() {
   const router = useRouter();
@@ -118,29 +119,12 @@ export default function ViewStaff() {
         message={modal?.message}
         buttons={modal?.buttons}
       />
-      <View
-        className="bg-background dark:bg-neutral-800 border-b border-neutral-100 dark:border-neutral-700"
-        style={{ paddingTop: insets.top + 8, paddingBottom: 12 }}
-      >
-        <View className="flex-row items-center px-2">
-          <TouchableOpacity
-            onPress={() => router.replace({ pathname: "/(store_manager)/view-store/[id]", params: { id: storeId } })}
-            className="w-10 h-10 rounded-full items-center justify-center"
-            activeOpacity={0.7}
-          >
-            <ChevronLeft size={22} color={isDark ? "#F1F5F9" : "#0F172A"} />
-          </TouchableOpacity>
-
-          <View className="flex-1 items-center justify-center -ml-10">
-            <Text className="text-md font-poppins-bold text-textPrimary dark:text-textPrimary">
-              Staff
-            </Text>
-            <Text className="text-xs font-poppins text-textMuted dark:text-textMuted -mt-1">
-              Frontdesk team members
-            </Text>
-          </View>
-        </View>
-      </View>
+      <AppHeader
+        title="Front desk staff"
+        description="Frontdesk staff assigned to this store"
+        paddingTop={insets.top + 8}
+        onBackPress={() => router.replace({ pathname: "/(store_manager)/staff", params: { storeId } })}
+      />
 
       <ScrollView
         className="flex-1"
@@ -167,19 +151,21 @@ export default function ViewStaff() {
               Frontdesk staff assigned to this store
             </Text>
           </View>
-          <TouchableOpacity
-            onPress={() =>
-              router.push({
-                pathname: "/(store_manager)/staff/add-staff",
-                params: { storeId },
-              })
-            }
-            className="flex-row items-center gap-x-0.5"
-            activeOpacity={0.7}
-          >
-            <Text className="text-xs font-poppins-semibold text-primary">Add</Text>
-            <ChevronRight size={14} color="#FF6600" />
-          </TouchableOpacity>
+          {staff.length > 0 && (
+            <TouchableOpacity
+              onPress={() =>
+                router.push({
+                  pathname: "/(store_manager)/staff/add-staff",
+                  params: { storeId },
+                })
+              }
+              className="flex-row items-center gap-x-0.5"
+              activeOpacity={0.7}
+            >
+              <Text className="text-xs font-poppins-semibold text-primary">Add</Text>
+              <ChevronRight size={14} color="#FF6600" />
+            </TouchableOpacity>
+          )}
         </View>
 
         {loading ? (
@@ -207,7 +193,7 @@ export default function ViewStaff() {
             </TouchableOpacity>
           </View>
         ) : (
-          <View className="mx-4 bg-white dark:bg-neutral-800 rounded-xl border border-slate-100 dark:border-neutral-700 overflow-hidden">
+          <View className="mx-4 bg-white dark:bg-neutral-800 rounded-xl overflow-hidden">
             {staff.map((member, index) => {
               const user = member.user as unknown as { id: string; name: string | null; email: string } | null;
               const isLast = index === staff.length - 1;

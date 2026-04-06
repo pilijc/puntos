@@ -1,17 +1,16 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { RefreshControl, useColorScheme, ActivityIndicator } from "react-native";
-import { View, Text, TouchableOpacity, ScrollView } from "@/tw";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { View, Text, TouchableOpacity, ScrollView, SafeAreaView } from "@/tw";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Image } from "expo-image";
 import { getRewardsByStoreId } from "@/services/store-manager/reward-service";
 import { Reward } from "@/type/store-manager/reward";
 import { Modal, type ModalButton } from "@/components/modal";
+import { AppHeader } from "@/components/header";
+import { ChevronRight, CircleStar, Gift } from "lucide-react-native";
 
 export default function RewardIndex() {
   const router = useRouter();
-  const insets = useSafeAreaInsets();
   const { storeId } = useLocalSearchParams<{ storeId: string }>();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
@@ -49,7 +48,7 @@ export default function RewardIndex() {
     pts >= 1000 ? `${(pts / 1000).toFixed(pts % 1000 === 0 ? 0 : 1)}k` : `${pts}`;
 
   return (
-    <View className="flex-1 bg-backgroundMuted dark:bg-neutral-900">
+    <SafeAreaView edges={["top"]} className="flex-1 bg-backgroundMuted dark:bg-neutral-900">
       <Modal
         visible={!!modal}
         onClose={() => setModal(null)}
@@ -58,30 +57,11 @@ export default function RewardIndex() {
         buttons={modal?.buttons}
       />
 
-      {/* Header */}
-      <View
-        className="bg-background dark:bg-neutral-800 border-b border-neutral-100 dark:border-neutral-700"
-        style={{ paddingTop: insets.top + 8, paddingBottom: 12 }}
-      >
-        <View className="flex-row items-center px-2">
-          <TouchableOpacity
-            onPress={() => router.push({ pathname: "/(store_manager)/view-store/[id]", params: { id: storeId } })}
-            className="w-10 h-10 rounded-full items-center justify-center"
-            activeOpacity={0.7}
-          >
-            <MaterialIcons name="chevron-left" size={22} color={isDark ? "#F1F5F9" : "#0F172A"} />
-          </TouchableOpacity>
-
-          <View className="flex-1 items-center justify-center -ml-10">
-            <Text className="text-lg font-poppins-bold text-textPrimary dark:text-textPrimary">
-              Rewards
-            </Text>
-            <Text className="text-xs font-poppins text-textMuted dark:text-textMuted -mt-1">
-              Redeemable items for your customers
-            </Text>
-          </View>
-        </View>
-      </View>
+      <AppHeader
+        title="Rewards"
+        description="Redeemable items for your customers"
+        onBackPress={() => router.replace({ pathname: "/(store_manager)/view-store/[id]", params: { id: storeId } })}
+      />
 
       <ScrollView
         className="flex-1"
@@ -97,9 +77,9 @@ export default function RewardIndex() {
         }
       >
         {/* Summary banner */}
-        <View className="mx-4 mb-4 flex-row items-center bg-white dark:bg-neutral-800 rounded-xl border border-slate-100 dark:border-neutral-700 px-4 py-3 gap-x-3">
-          <View className="w-10 h-10 rounded-xl bg-orange-50 dark:bg-orange-950 items-center justify-center">
-            <MaterialIcons name="card-giftcard" size={20} color="#FF6600" />
+        <View className="mx-4 mb-4 flex-row items-center bg-white dark:bg-neutral-800 rounded-xl px-4 py-3 gap-x-3">
+          <View className="w-10 h-10 rounded-xl items-center justify-center">
+            <Gift size={20} color="#FF6600" />
           </View>
           <View className="flex-1">
             <Text className="text-sm font-poppins-bold text-slate-800 dark:text-slate-100">
@@ -120,7 +100,7 @@ export default function RewardIndex() {
             activeOpacity={0.7}
           >
             <Text className="text-xs font-poppins-semibold text-primary">Add</Text>
-            <MaterialIcons name="chevron-right" size={14} color="#FF6600" />
+            <ChevronRight size={14} color="#FF6600" />
           </TouchableOpacity>
         </View>
 
@@ -134,7 +114,7 @@ export default function RewardIndex() {
           </View>
         ) : rewards.length === 0 ? (
           <View className="mx-4 bg-white dark:bg-neutral-800 rounded-xl border border-slate-100 dark:border-neutral-700 px-4 py-14 items-center gap-y-2">
-            <MaterialIcons name="card-giftcard" size={36} color="#CBD5E1" />
+            <Gift size={36} color="#CBD5E1" />
             <Text className="text-sm font-poppins-semibold text-slate-400 dark:text-slate-500">
               No rewards yet
             </Text>
@@ -157,28 +137,37 @@ export default function RewardIndex() {
         ) : (
           <View className="mx-4 gap-y-2">
             {rewards.map((reward) => (
-              <View
+              <TouchableOpacity
                 key={reward.id ?? reward.title}
-                className="bg-white dark:bg-neutral-800 rounded-xl border border-slate-100 dark:border-neutral-700 overflow-hidden flex-row"
+                activeOpacity={0.7}
+                onPress={() => {
+                  if (reward.id == null) return;
+                  router.push({
+                    pathname: "/(store_manager)/reward/view-reward",
+                    params: { storeId, rewardId: String(reward.id) },
+                  });
+                }}
+                className="bg-white dark:bg-neutral-800 rounded-xl flex-row items-center px-4 py-2 gap-2.5"
               >
-                {/* Image */}
-                {reward.image_url ? (
-                  <Image
-                    source={{ uri: reward.image_url }}
-                    style={{ width: 88, height: 88 }}
-                    contentFit="cover"
-                  />
-                ) : (
-                  <View
-                    className="bg-slate-100 dark:bg-neutral-700 items-center justify-center"
-                    style={{ width: 88, height: 88 }}
-                  >
-                    <MaterialIcons name="card-giftcard" size={28} color="#CBD5E1" />
-                  </View>
-                )}
+                <View
+                  className="rounded-lg overflow-hidden bg-white dark:bg-neutral-700 border border-slate-100 dark:border-neutral-600 shrink-0"
+                  style={{ width: 60, height: 60 }}
+                >
+                  {reward.image_url ? (
+                    <Image
+                      source={{ uri: reward.image_url }}
+                      style={{ width: 60, height: 60 }}
+                      contentFit="cover"
+                    />
+                  ) : (
+                    <View className="w-full h-full bg-slate-50 dark:bg-neutral-600 items-center justify-center">
+                      <Gift size={24} color="#CBD5E1" />
+                    </View>
+                  )}
+                </View>
 
                 {/* Details */}
-                <View className="flex-1 px-3 py-3 justify-between">
+                <View className="flex-1 min-w-0 justify-between">
                   <View>
                     <Text
                       className="text-sm font-poppins-semibold text-slate-800 dark:text-slate-100 leading-5"
@@ -196,10 +185,10 @@ export default function RewardIndex() {
                     )}
                   </View>
 
-                  <View className="flex-row items-center justify-between mt-2">
+                  <View className="flex-row items-center justify-between mt-1">
                     {/* Points cost */}
                     <View className="flex-row items-center gap-x-1">
-                      <MaterialIcons name="stars" size={13} color="#FF6600" />
+                      <CircleStar size={13} color="#FF6600" />
                       <Text className="text-xs font-poppins-semibold text-primary">
                         {formatPoints(reward.points_cost)} pts
                       </Text>
@@ -213,11 +202,11 @@ export default function RewardIndex() {
                     </View>
                   </View>
                 </View>
-              </View>
+              </TouchableOpacity>
             ))}
           </View>
         )}
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 }
