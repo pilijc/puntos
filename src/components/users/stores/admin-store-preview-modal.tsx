@@ -36,7 +36,7 @@ export function AdminStorePreviewModal({
 
   const status = getEffectiveStatus(store);
   const statusCfg = STORE_STATUS_CONFIG[status] ?? STORE_STATUS_CONFIG["inactive"];
-  
+
   const formatTime = (t: string | null) => {
     if (!t) return "";
     return t.slice(0, 5);
@@ -62,25 +62,25 @@ export function AdminStorePreviewModal({
           </View>
 
           <View className="flex-1 items-start justify-center gap-y-0.5">
-            <Text className="text-base font-poppins-bold text-slate-900 dark:text-darkTextPrimary" numberOfLines={1}>
-              {store.name || "Unnamed Store"}
-            </Text>
+            <View className="flex-row items-center justify-between w-full">
+              <Text className="text-base font-poppins-bold text-slate-900 dark:text-darkTextPrimary flex-1 mr-2" numberOfLines={1}>
+                {store.name || "Unnamed Store"}
+              </Text>
+              <View className={`flex-row items-center justify-center px-2.5 py-0.5 rounded-full ${statusCfg.bg}`}>
+                <Text className={`text-[9px] font-poppins-bold uppercase tracking-wider text-center ${statusCfg.text}`}>
+                  {statusCfg.label}
+                </Text>
+              </View>
+            </View>
             
             {(store.store_open || store.store_close) && (
-              <Text className="text-xs font-poppins-semibold text-slate-400 dark:text-slate-500">
+              <Text className="text-xs font-poppins-semibold text-slate-400 dark:text-slate-500 mt-0.5">
                 {formatTime(store.store_open)} – {formatTime(store.store_close)}
               </Text>
             )}
             
             <Text className="text-xs font-poppins-semibold text-slate-400 dark:text-slate-500">
               {store.type || translate("superAdmin.stores.details.noType", { defaultValue: "Store" })}
-            </Text>
-          </View>
-
-          <View className={`self-start flex-row items-center gap-x-1 px-2.5 py-1 rounded-full ${statusCfg.bg}`}>
-            <View className={`w-1.5 h-1.5 rounded-full ${statusCfg.dot}`} />
-            <Text className={`text-[10px] font-poppins-bold uppercase tracking-wider ${statusCfg.text}`}>
-              {statusCfg.label}
             </Text>
           </View>
         </View>
