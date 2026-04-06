@@ -3,8 +3,8 @@ import { Linking } from 'react-native';
 import { View, Text, TouchableOpacity } from "@/tw";
 import { ChevronRight, MapPin } from "lucide-react-native";
 import { useTranslation } from "react-i18next";
-import { useProfile } from "@/hooks/use-profile";
-import { useLocation } from "@/hooks/use-location";
+import { useProfile } from "@/hooks/user/use-profile";
+import { useLocation } from "@/hooks/user/use-location";
 import { Modal, type ModalButton } from "@/components/modal";
 
 export const LocationCard = () => {

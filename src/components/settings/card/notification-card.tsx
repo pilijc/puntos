@@ -3,7 +3,7 @@ import { Linking } from 'react-native';
 import { View, Text, TouchableOpacity } from "@/tw";
 import { ChevronRight, Bell } from "lucide-react-native";
 import { useTranslation } from "react-i18next";
-import { useProfile } from "@/hooks/use-profile";
+import { useProfile } from "@/hooks/user/use-profile";
 import { useNotifications } from "@/hooks/use-notifications";
 import { Modal, type ModalButton } from '@/components/modal';
 
