@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { RefreshControl } from "react-native";
-import { View, Text, TouchableOpacity, ScrollView } from "@/tw";
+import { View, Text, TouchableOpacity, ScrollView, SafeAreaView } from "@/tw";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useRouter } from "expo-router";
@@ -11,11 +11,10 @@ import { useStoreDetail } from "@/hooks/store-manager/use-detail";
 import { FontAwesome, Ionicons } from "@expo/vector-icons";
 import { DetailsSkeleton } from "@/components/skeleton/store_manager/details-skeleton";
 import { OptionsMenu } from "@/components/options";
+import { AppHeader } from "@/components/header";
 
 export default function DetailIndex() {
   const router = useRouter();
-  const insets = useSafeAreaInsets();
-  const [menuOpen, setMenuOpen] = useState(false);
   const {
     storeId,
     detail,
@@ -31,48 +30,22 @@ export default function DetailIndex() {
   } = useStoreDetail();
 
   return (
-    <View className="flex-1 bg-backgroundMuted dark:bg-neutral-900">
-      <View
-        className="bg-background dark:bg-neutral-800 border-b border-neutral-100 dark:border-neutral-700"
-        style={{ paddingTop: insets.top + 8, paddingBottom: 12 }}
-      >
-        <View className="flex-row items-center px-2">
-          <TouchableOpacity
-            onPress={() => router.replace(`/(store_manager)/view-store/${storeId}`)}
-            className="w-10 h-10 rounded-full items-center justify-center"
-            activeOpacity={0.7}
-          >
-            <MaterialIcons name="chevron-left" size={22} color={isDark ? "#F1F5F9" : "#0F172A"} />
-          </TouchableOpacity>
-
-          <View className="flex-1 items-center justify-center -ml-5">
-            <Text className="text-md font-poppins-bold text-textPrimary dark:text-textPrimary">
-              {detail?.name || "Store Details"}
-            </Text>
-            <Text className="text-xs font-poppins text-textMuted dark:text-textMuted -mt-2">
-              {detail?.address || "View & manage store info"}
-            </Text>
-          </View>
-
-          <OptionsMenu
-            options={[
-              {
-                label: "Edit",
-                icon: <MaterialIcons name="edit" size={14} color="black" />,
-                onPress: () => router.push({ pathname: "/(store_manager)/detail/edit-details", params: { storeId } }),
-              },
-              {
-                label: "Delete",
-                icon: <MaterialIcons name="delete-outline" size={14} color="#DC2626" />,
-                onPress: () => {
-                  // TODO: delete logic
-                },
-                destructive: true,
-              },
-            ]}
-          />
-        </View>
-      </View>
+    <SafeAreaView edges={["top"]} className="flex-1 bg-backgroundMuted dark:bg-neutral-900">
+      <AppHeader
+        title={detail?.name || "Store Details"}
+        description={detail?.address || "View & manage store info"}
+        onBackPress={() => router.replace(`/(store_manager)/view-store/${storeId}`)}
+        rightIcon={<OptionsMenu
+          options={[
+            {
+              label: "Edit",
+              icon: <MaterialIcons name="edit" size={14} color="black" />,
+              onPress: () => router.push({ pathname: "/(store_manager)/detail/edit-details", params: { storeId } }),
+            },
+          ]}
+        />}
+        onRightIconPress={() => router.push({ pathname: "/(store_manager)/detail/edit-details", params: { storeId } })}
+      />
 
       {loading ? (
         <DetailsSkeleton />
@@ -133,17 +106,17 @@ export default function DetailIndex() {
             {(detail?.phone || detail?.registration_number) && (
               <View className="px-4 pb-4">
                 {detail?.phone && (
-                  <View className="flex-row items-center gap-x-1">
-                    <FontAwesome name="phone" size={12} color="black" />
-                    <Text className="text-xs font-poppins-semibold text-textPrimary dark:text-slate-500">
+                  <View className="flex-row items-center gap-x-2">
+                    <FontAwesome name="phone" size={12} color="text-textSecondary" />
+                    <Text className="text-xs font-poppins-semibold text-textSecondary dark:text-slate-500">
                       {detail.phone}
                     </Text>
                   </View>
                 )}
                 {detail?.registration_number && (
-                  <View className="flex-row items-center gap-x-1">
-                    <Ionicons name="document" size={12} color="black" />
-                    <Text className="text-xs font-poppins-semibold text-textPrimary dark:text-slate-500">
+                  <View className="flex-row items-center gap-x-2">
+                    <Ionicons name="document" size={12} color="text-textSecondary" />
+                    <Text className="text-xs font-poppins-semibold text-textSecondary dark:text-slate-500">
                       {detail.registration_number}
                     </Text>
                   </View>
@@ -257,6 +230,6 @@ export default function DetailIndex() {
 
         </ScrollView>
       )}
-    </View>
+    </SafeAreaView>
   );
 }

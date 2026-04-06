@@ -10,6 +10,9 @@ interface TextFieldProps {
 	hint?: string;
 	keyboardType?: KeyboardTypeOptions;
 	required?: boolean;
+  multiline?: boolean;
+  numberOfLines?: number;
+  sanitize?: (value: string) => string;
 }
 
 export function TextField({
@@ -20,6 +23,9 @@ export function TextField({
   hint,
   keyboardType = "default",
   required = false,
+  multiline = false,
+  numberOfLines,
+  sanitize = (v) => v.replace(/-/g, ""),
 }: TextFieldProps) {
   return (
     <View className="gap-y-2">
@@ -37,17 +43,20 @@ export function TextField({
         placeholder={placeholder}
         placeholderTextColor="#94A3B8"
         style={{
-          height: 45,
+          height: multiline ? 96 : 45,
           lineHeight: 20,
           paddingVertical: 0,
           paddingHorizontal: 12,
-          textAlignVertical: "center",
+          textAlignVertical: multiline ? "top" : "center",
           includeFontPadding: false,
+          paddingTop: multiline ? 12 : 0,
           fontSize: 13,
         }}
         keyboardType={keyboardType}
+        multiline={multiline}
+        numberOfLines={numberOfLines}
         value={value}
-        onChangeText={(v) => onChangeText(v.replace(/-/g, ""))}
+        onChangeText={(v) => onChangeText(sanitize(v))}
       />
       </View>
     </View>
