@@ -49,6 +49,7 @@ export function useSuperAdminStores() {
         setConfirmModal(null);
         const success = await approveStore(store);
         if (success) {
+          setPreviewStore(null);
           useSuperAdminStoresStore.setState({
             errorModal: {
               title: translate("superAdmin.stores.modal.successTitle"),

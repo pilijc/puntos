@@ -5,7 +5,7 @@ import { Image } from "expo-image";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useTranslation } from "react-i18next";
 import { AdminStoreRow } from "@/services/store-service";
-import { STORE_STATUS_CONFIG } from "@/type/super-admin/user";
+import { STORE_STATUS_CONFIG, getStoreCategoryBadge } from "@/type/super-admin/user";
 import { Button } from "@/components/button";
 import { Modal } from "@/components/modal";
 
@@ -79,9 +79,7 @@ export function AdminStorePreviewModal({
               </Text>
             )}
             
-            <Text className="text-xs font-poppins-semibold text-slate-400 dark:text-slate-500">
-              {store.type || translate("superAdmin.stores.details.noType", { defaultValue: "Store" })}
-            </Text>
+
           </View>
         </View>
 
@@ -148,9 +146,7 @@ export function AdminStorePreviewModal({
             activeOpacity={0.7}
             className="w-[42px] h-[42px] items-center justify-center rounded-[14px] bg-green-50 dark:bg-green-900/20 border border-green-100 dark:border-green-900/30"
           >
-            <View className="w-[26px] h-[26px] rounded-full bg-green-600 items-center justify-center">
-              <MaterialIcons name="check" size={16} color="white" />
-            </View>
+            <MaterialIcons name="verified" size={22} color="#16A34A" />
           </TouchableOpacity>
         )}
       </View>

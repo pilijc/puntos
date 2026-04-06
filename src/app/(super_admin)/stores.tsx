@@ -123,7 +123,7 @@ export default function SuperAdminStores() {
 			<View className="flex-1">
 				<ScrollView
 					className="flex-1"
-					contentContainerStyle={{ padding: 16, paddingBottom: 110 }}
+					contentContainerStyle={{ padding: 16, paddingBottom: filtered.length === 0 ? 16 : 40 }}
 					showsVerticalScrollIndicator={false}
 					refreshControl={
 						<RefreshControl
@@ -185,7 +185,6 @@ export default function SuperAdminStores() {
 				}}
 				onApprove={() => {
 					if (previewStore) handleApprove(previewStore);
-					setPreviewStore(null);
 				}}
 			/>
 
