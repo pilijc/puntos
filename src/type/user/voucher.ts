@@ -12,3 +12,14 @@ export type VoucherGeneratorProps = {
   onVoucherReady?: (voucher: Voucher) => void;  
 };
 
+export interface VoucherTransaction {
+    id: string;
+    voucher_id: string;
+    user_id: string;
+    store_staff_id: string;
+    store_id: number;
+    amount: number;
+    points_earned: number;
+    created_at: string;
+}
+
