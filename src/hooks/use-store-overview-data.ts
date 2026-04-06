@@ -62,7 +62,7 @@ export function useStoreOverviewData(storeId?: string) {
     activeStreakProgramMap,
   } = useRewardsDataStore();
   const { stores, setStores } = useStoreStore();
-  const { location, startWatching, stopWatching } = useLocation();
+  const { location } = useLocation();
   const { handleRefresh, hasStampedToday } = useRewardsActions();
   const { stamps } = useStamps();
   const { stampRewards } = useStampRewards();
@@ -83,14 +83,6 @@ export function useStoreOverviewData(storeId?: string) {
   useEffect(() => {
     fetchActiveStores();
   }, [fetchActiveStores]);
-
-  useEffect(() => {
-    startWatching();
-    return () => {
-      stopWatching();
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   const storesWithLocation = useMemo(
     () => getEnrichedStores(stores, location),

@@ -1,15 +1,16 @@
 import React, { useState } from 'react';
 import { Linking } from 'react-native';
 import { View, Text, TouchableOpacity } from "@/tw";
-import { ChevronRight, MapPin } from "lucide-react-native";
+import { ChevronRight, MapPin, User } from "lucide-react-native";
 import { useTranslation } from "react-i18next";
 import { useProfile } from "@/hooks/user/use-profile";
 import { useLocation } from "@/hooks/user/use-location";
 import { Modal, type ModalButton } from "@/components/modal";
+import { clearLocationService } from "@/services/user/settings-service";
 
 export const LocationCard = () => {
     const { t: translate } = useTranslation();
-    const { preferences, updatePreferences } = useProfile();
+    const { preferences, updatePreferences, user } = useProfile();
     const {
         permissionStatus,
         loading: locationLoading,
@@ -27,6 +28,14 @@ export const LocationCard = () => {
     const togglePreference = async (key: string) => {
         const newValue = !(preferences as any)[key];
         await updatePreferences({ [key]: newValue });
+
+        if (key === 'location_enabled' && !newValue && user?.id) {
+            try {
+                await clearLocationService(user.id);
+            } catch (e) {
+                console.error("Failed to clear location on disable:", e);
+            }
+        }
     };
 
     const handlePress = async () => {
