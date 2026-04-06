@@ -25,7 +25,7 @@ PointsResult {
             calculatedPoints = fixedPoints;
             calculation = purchaseAmount + " ≥ " + minimumSpend + " → Fixed Points: " + fixedPoints;
         }else{
-            calculatedPoints = 0;
+            calculatedPoints = fixedPoints / 2;
             calculation = purchaseAmount 
             + " < " + minimumSpend + " → No Points";
         }
