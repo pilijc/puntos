@@ -127,7 +127,7 @@ export async function processVoucherCode(
             // Rollback voucher status to unused
             await supabase
                 .from('vouchers')
-                .update({ is_used: false, used_at: null })
+                .update({ is_used: false, used_at: null, status: "active" })
                 .eq('id', voucher.id);
 
             return {
