@@ -4,6 +4,7 @@ import { View, Text, TouchableOpacity } from "@/tw";
 import { useTranslation } from "react-i18next";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { Image } from "expo-image";
+import Mapbox, { Camera, MapView } from "@rnmapbox/maps";
 import { ScreenWrapper } from "@/components/ui/screen-wrapper";
 import { Button } from "@/components/button";
 import { AdminStoreRow } from "@/services/store-service";
@@ -344,6 +345,65 @@ export function AdminStoreDetails({
                 {store.address || "—"}
               </Text>
             </View>
+
+            {(store.latitude !== null && store.longitude !== null && store.latitude !== undefined && store.longitude !== undefined) && (
+              <View style={{ width: "100%", height: 180, borderRadius: 12, overflow: "hidden", marginTop: 12 }} className="border border-slate-100 dark:border-neutral-800">
+                <MapView
+                  style={{ flex: 1 }}
+                  styleURL={
+                    isDark
+                      ? "mapbox://styles/mapbox/navigation-night-v1"
+                      : "mapbox://styles/mapbox/streets-v12"
+                  }
+                  scrollEnabled={false}
+                  zoomEnabled={false}
+                  rotateEnabled={false}
+                  pitchEnabled={false}
+                  attributionEnabled={false}
+                  logoEnabled={false}
+                >
+                  <Camera
+                    centerCoordinate={[Number(store.longitude), Number(store.latitude)]}
+                    zoomLevel={15}
+                    animationMode="none"
+                  />
+                  <Mapbox.Images
+                    images={{
+                      default: require("../../../assets/images/markers/default.png"),
+                    }}
+                  />
+                  <Mapbox.ShapeSource
+                    id="storePinLocation"
+                    shape={{
+                      type: "Feature",
+                      geometry: {
+                        type: "Point",
+                        coordinates: [Number(store.longitude), Number(store.latitude)],
+                      },
+                      properties: { icon: "default" },
+                    }}
+                  >
+                    <Mapbox.SymbolLayer
+                      id="storePinLayerLoc"
+                      style={{
+                        iconImage: ["get", "icon"],
+                        iconAllowOverlap: true,
+                        iconSize: 0.015,
+                      }}
+                    />
+                  </Mapbox.ShapeSource>
+                </MapView>
+              </View>
+            )}
+            
+            {(!store.latitude || !store.longitude) && (
+              <View className="h-32 bg-slate-50 dark:bg-neutral-800/50 rounded-xl items-center justify-center gap-y-1 mt-3 border border-slate-100 dark:border-neutral-800">
+                <MaterialIcons name="location-off" size={24} color={isDark ? "#525252" : "#CBD5E1"} />
+                <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">
+                  {translate("superAdmin.stores.details.noLocation", { defaultValue: "No map coordinates provided" })}
+                </Text>
+              </View>
+            )}
           </View>
         </View>
 

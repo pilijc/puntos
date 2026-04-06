@@ -133,7 +133,7 @@ export function AdminStorePreviewModal({
       </ScrollView>
 
       {/* Buttons Row */}
-      <View className="flex-row w-full gap-3 pt-4 mt-2 border-t border-slate-100 dark:border-neutral-800">
+      <View className="flex-row items-center w-full gap-3 pt-4 mt-2 border-t border-slate-100 dark:border-neutral-800">
         <View className="flex-1">
           <Button
             label={translate("superAdmin.stores.preview.viewDetails", { defaultValue: "View Full Details" })}
@@ -146,10 +146,10 @@ export function AdminStorePreviewModal({
           <TouchableOpacity
             onPress={onApprove}
             activeOpacity={0.7}
-            className="w-12 h-12 items-center justify-center rounded-2xl bg-green-50 dark:bg-green-900/20 border border-green-100 dark:border-green-900/30"
+            className="w-[42px] h-[42px] items-center justify-center rounded-[14px] bg-green-50 dark:bg-green-900/20 border border-green-100 dark:border-green-900/30"
           >
-            <View className="w-8 h-8 rounded-full bg-green-600 items-center justify-center">
-              <MaterialIcons name="check" size={20} color="white" />
+            <View className="w-[26px] h-[26px] rounded-full bg-green-600 items-center justify-center">
+              <MaterialIcons name="check" size={16} color="white" />
             </View>
           </TouchableOpacity>
         )}
