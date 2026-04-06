@@ -29,7 +29,7 @@ export interface ActiveStampProgramReward {
 
 export type StampResult = {
   success: boolean;
-  reason?: "already_stamped_today" | "stamp_not_enabled" | "error";
+  reason?: "already_stamped_today" | "already_completed" | "stamp_not_enabled" | "error";
 };
 
 export async function getUserStamps(userId: string): Promise<StampProgress[]> {
@@ -122,14 +122,27 @@ export async function addStamp(
     }
 
     // ──────────────────────────────────────────────
-    // 2. Check existing stamp_progress
+    // 2. Fetch the active stamp program to get real target
+    // ──────────────────────────────────────────────
+    const { data: stampProgram } = await supabase
+      .from("store_stamps")
+      .select("id, total_stamps")
+      .eq("store_id", storeId)
+      .eq("status", "active")
+      .maybeSingle();
+
+    const programTarget = stampProgram?.total_stamps ?? 7;
+    const programId = stampProgram?.id ?? null;
+
+    // ──────────────────────────────────────────────
+    // 3. Check existing stamp_progress
     // ──────────────────────────────────────────────
     const { data: existingProgress, error: fetchError } = await supabase
       .from("stamp_progress")
       .select("*")
       .eq("user_id", userId)
       .eq("store_id", storeId)
-      .single();
+      .maybeSingle();
 
     if (fetchError && fetchError.code !== "PGRST116") {
       console.error("Error checking existing stamp progress:", fetchError.message);
@@ -139,10 +152,25 @@ export async function addStamp(
     const now = new Date().toISOString();
 
     // ──────────────────────────────────────────────
-    // 3. Upsert stamp_progress
+    // 4. Upsert stamp_progress
     // ──────────────────────────────────────────────
     if (existingProgress) {
+      // ✅ BLOCKER: Already stamped today — no double-dipping
+      if (existingProgress.last_stamp_at && isSameDay(existingProgress.last_stamp_at, now)) {
+        return { success: false, reason: "already_stamped_today" };
+      }
+
+      // ✅ BLOCKER: Stamp card already completed — cannot earn more stamps
+      const cardTarget = existingProgress.target ?? programTarget;
+      if (
+        existingProgress.card_status === "completed" ||
+        existingProgress.stamps_count >= cardTarget
+      ) {
+        return { success: false, reason: "already_completed" };
+      }
+
       const newStampsCount = existingProgress.stamps_count + 1;
+      const justCompleted = newStampsCount >= cardTarget;
 
       const { error: updateError } = await supabase
         .from("stamp_progress")
@@ -150,6 +178,7 @@ export async function addStamp(
           stamps_count: newStampsCount,
           last_stamp_at: now,
           updated_at: now,
+          ...(justCompleted && { card_status: "completed" }),
         })
         .eq("id", existingProgress.id);
 
@@ -158,16 +187,21 @@ export async function addStamp(
         return { success: false, reason: "error" };
       }
     } else {
-      // Brand new row
+      // Brand new row — link to the active program with the real target
+      const justCompleted = programTarget <= 1;
+
       const { error: insertError } = await supabase
         .from("stamp_progress")
         .insert({
           user_id: userId,
           store_id: storeId,
           stamps_count: 1,
-          target: 7,
+          target: programTarget,
+          stamp_program_id: programId,
+          card_started_at: now,
           last_stamp_at: now,
           updated_at: now,
+          card_status: justCompleted ? "completed" : "active",
         });
 
       if (insertError) {

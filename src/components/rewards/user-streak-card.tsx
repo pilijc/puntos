@@ -254,9 +254,19 @@ export default function UserStreakCard({
                           Number(streak.store_id),
                           storeStreakId,
                           streakProgram?.fixed_points_per_day ?? 0,
+                          targetCount, // ✅ pass streak_length so the service can block at cap
                         );
                         if (result.alreadyRecorded) {
                           Alert.alert("Already Earned!", "You've already earned your streak for today. Come back tomorrow!");
+                        } else if (result.justCompleted) {
+                          // ✅ Streak fully completed — celebrate!
+                          setHasEarnedToday(true);
+                          setShowStreakModal(true);
+                          onStreakRecorded?.();
+                          Alert.alert(
+                            "🎉 Streak Complete!",
+                            `You've completed the full ${targetCount}-day streak! Your reward is on its way.`,
+                          );
                         } else {
                           setHasEarnedToday(true);
                           setShowStreakModal(true);

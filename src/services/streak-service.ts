@@ -4,6 +4,8 @@ export interface RecordStreakResult {
   alreadyRecorded: boolean;
   newStreakDays: number;
   pointsEarned: number;
+  /** true when this call pushed the user to exactly streakLength (just completed) */
+  justCompleted: boolean;
 }
 
 export async function recordUserStreak(
@@ -11,6 +13,7 @@ export async function recordUserStreak(
   storeId: number,
   storeStreakId: number,
   pointsPerDay: number = 0,
+  streakLength: number = 0,
 ): Promise<RecordStreakResult> {
   const today = new Date().toISOString().split("T")[0];
   const yesterday = new Date(Date.now() - 86400000).toISOString().split("T")[0];
@@ -24,15 +27,25 @@ export async function recordUserStreak(
     .maybeSingle();
 
   if (existing) {
-    // Already earned today
+    // ✅ BLOCKER: Already earned today — no double-dipping
     if (existing.last_activity_date === today) {
-      return { alreadyRecorded: true, newStreakDays: existing.streak_days, pointsEarned: 0 };
+      return { alreadyRecorded: true, newStreakDays: existing.streak_days, pointsEarned: 0, justCompleted: false };
+    }
+
+    // ✅ BLOCKER: Already completed the streak program — cannot earn more days
+    const currentTotal = existing.total_earned_days ?? 0;
+    if (streakLength > 0 && currentTotal >= streakLength) {
+      return { alreadyRecorded: true, newStreakDays: existing.streak_days, pointsEarned: 0, justCompleted: false };
     }
 
     const isConsecutive = existing.last_activity_date === yesterday;
     const newStreakDays = isConsecutive ? existing.streak_days + 1 : 1;
-    const newTotalEarned = (existing.total_earned_days ?? 0) + 1;
+    const newTotalEarned = currentTotal + 1;
     const newPointsEarned = Number(existing.points_earned ?? 0) + pointsPerDay;
+
+    // ✅ Mark as completed when the user hits exactly the target
+    const justCompleted = streakLength > 0 && newTotalEarned >= streakLength;
+    const nowIso = new Date().toISOString();
 
     const { error } = await supabase
       .from("user_streaks")
@@ -41,15 +54,23 @@ export async function recordUserStreak(
         last_activity_date: today,
         total_earned_days: newTotalEarned,
         points_earned: newPointsEarned,
-        updated_at: new Date().toISOString(),
+        updated_at: nowIso,
+        ...(justCompleted && {
+          status: "completed",
+          completed_at: nowIso,
+        }),
       })
       .eq("id", existing.id);
 
     if (error) throw new Error(error.message);
-    return { alreadyRecorded: false, newStreakDays, pointsEarned: pointsPerDay };
+    return { alreadyRecorded: false, newStreakDays, pointsEarned: pointsPerDay, justCompleted };
   }
 
   // New record — first ever streak for this store
+  // Edge-case: if streakLength is 1, it's immediately completed
+  const justCompleted = streakLength > 0 && streakLength <= 1;
+  const nowIso = new Date().toISOString();
+
   const { error } = await supabase
     .from("user_streaks")
     .insert({
@@ -60,11 +81,12 @@ export async function recordUserStreak(
       last_activity_date: today,
       total_earned_days: 1,
       points_earned: pointsPerDay,
-      status: "in_progress",
+      status: justCompleted ? "completed" : "in_progress",
+      ...(justCompleted && { completed_at: nowIso }),
     });
 
   if (error) throw new Error(error.message);
-  return { alreadyRecorded: false, newStreakDays: 1, pointsEarned: pointsPerDay };
+  return { alreadyRecorded: false, newStreakDays: 1, pointsEarned: pointsPerDay, justCompleted };
 }
 
 export interface UserStreakProgram {
