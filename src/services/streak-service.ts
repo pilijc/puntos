@@ -63,6 +63,16 @@ export async function recordUserStreak(
       .eq("id", existing.id);
 
     if (error) throw new Error(error.message);
+
+    // ✅ Log the individual earned day — UNIQUE constraint prevents duplicates
+    await supabase.from("streak_events").insert({
+      user_id: userId,
+      store_id: storeId,
+      user_streak_id: existing.id,
+      store_streak_id: storeStreakId,
+      earned_date: today,
+    });
+
     return { alreadyRecorded: false, newStreakDays, pointsEarned: pointsPerDay, justCompleted };
   }
 
@@ -71,7 +81,7 @@ export async function recordUserStreak(
   const justCompleted = streakLength > 0 && streakLength <= 1;
   const nowIso = new Date().toISOString();
 
-  const { error } = await supabase
+  const { error, data: inserted } = await supabase
     .from("user_streaks")
     .insert({
       user_id: userId,
@@ -83,10 +93,50 @@ export async function recordUserStreak(
       points_earned: pointsPerDay,
       status: justCompleted ? "completed" : "in_progress",
       ...(justCompleted && { completed_at: nowIso }),
-    });
+    })
+    .select("id")
+    .single();
 
   if (error) throw new Error(error.message);
+
+  // ✅ Log the first earned day for this streak
+  if (inserted?.id) {
+    await supabase.from("streak_events").insert({
+      user_id: userId,
+      store_id: storeId,
+      user_streak_id: inserted.id,
+      store_streak_id: storeStreakId,
+      earned_date: today,
+    });
+  }
+
   return { alreadyRecorded: false, newStreakDays: 1, pointsEarned: pointsPerDay, justCompleted };
+}
+
+/**
+ * Fetch all earned dates from streak_events for a given user + store.
+ * Returns a Set of "YYYY-MM-DD" strings in the user's LOCAL timezone.
+ * Used by the activity calendar so it shows real per-day history.
+ */
+export async function getStreakEarnedDates(
+  userId: string,
+  storeId: number,
+): Promise<Set<string>> {
+  const { data, error } = await supabase
+    .from("streak_events")
+    .select("earned_date")
+    .eq("user_id", userId)
+    .eq("store_id", storeId)
+    .order("earned_date", { ascending: false })
+    .limit(365); // cap at one year of history
+
+  if (error) {
+    console.error("Error fetching streak earned dates:", error.message);
+    return new Set();
+  }
+
+  // earned_date comes as "YYYY-MM-DD" from Supabase (a `date` column)
+  return new Set((data ?? []).map((row: { earned_date: string }) => row.earned_date));
 }
 
 export interface UserStreakProgram {

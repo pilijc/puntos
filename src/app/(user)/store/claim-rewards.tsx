@@ -181,7 +181,7 @@ export default function ClaimRewardsScreen() {
             </RNView>
           </Animated.View>
           <Text style={{ color: heroSub, fontFamily: "Poppins_400Regular", fontSize: 12, marginTop: 4 }}>
-            Your balance at this store
+            Your balance
           </Text>
         </RNView>
       </RNView>

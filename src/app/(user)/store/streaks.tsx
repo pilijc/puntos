@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { View, Text, Image } from "@/tw";
 import {
   Animated,
@@ -8,10 +8,10 @@ import {
   View as RNView,
 } from "react-native";
 import Svg, { Circle } from "react-native-svg";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { storeLogos } from "@/data/rewards";
-import { getUserStreakByStore, UserStreak } from "@/services/streak-service";
+import { getStreakEarnedDates, getUserStreakByStore, UserStreak } from "@/services/streak-service";
 import { supabase } from "@/supabase/supabase";
 import {
   ChevronLeft,
@@ -23,6 +23,7 @@ import {
   Star,
   Store,
   CircleCheck,
+  Clock,
 } from "lucide-react-native";
 
 const getOrdinalSuffix = (n: number) => {
@@ -105,58 +106,73 @@ function ProgressRing({
   );
 }
 
+// ─── Local-time date helpers (avoids UTC midnight shift for UTC+ timezones) ───
+/**
+ * Parse a "YYYY-MM-DD" string as LOCAL midnight.
+ * `new Date("YYYY-MM-DD")` is UTC midnight, which shifts the date backward
+ * by 8 h for UTC+8 users — causing all earned cells to appear one day early.
+ */
+function parseLocalDate(dateStr: string): Date {
+  const [y, m, d] = dateStr.split("-").map(Number);
+  return new Date(y, m - 1, d); // no time argument → local midnight
+}
+
+/** Format a Date as "YYYY-MM-DD" in LOCAL time (not UTC). */
+function toLocalDateStr(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Calendar driven by real streak_events data.
+ * earnedDates is a Set of "YYYY-MM-DD" strings fetched directly from the DB.
+ */
 function RecentActivityCalendar({
-  streakDays,
-  lastActivityDate,
+  earnedDates,
 }: {
-  streakDays: number;
-  lastActivityDate: string | null;
+  earnedDates: Set<string>;
 }) {
   const [expanded, setExpanded] = React.useState(false);
   const scrollRef = React.useRef<any>(null);
   const STRIP_DAYS = 90;
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  // Today at local midnight
+  const todayLocal = new Date();
+  todayLocal.setHours(0, 0, 0, 0);
+  const todayStr = toLocalDateStr(todayLocal);
 
-  const lastDate = lastActivityDate ? new Date(lastActivityDate) : today;
-  lastDate.setHours(0, 0, 0, 0);
-
-  const earnedDates = new Set<string>();
-  for (let i = 0; i < streakDays; i++) {
-    const d = new Date(lastDate);
-    d.setDate(lastDate.getDate() - i);
-    earnedDates.add(d.toISOString().split("T")[0]);
-  }
-
-  const todayStr = today.toISOString().split("T")[0];
   const dayLabels = ["S", "M", "T", "W", "T", "F", "S"];
 
+  // 90-day strip — dates generated in local time
   const allCells = Array.from({ length: STRIP_DAYS }, (_, i) => {
-    const d = new Date(today);
-    d.setDate(today.getDate() - (STRIP_DAYS - 1 - i));
-    const dateStr = d.toISOString().split("T")[0];
+    const d = new Date(todayLocal);
+    d.setDate(todayLocal.getDate() - (STRIP_DAYS - 1 - i));
+    const dateStr = toLocalDateStr(d); // ← local, not UTC
     return {
       dateStr,
       day: d.getDate(),
       dow: d.getDay(),
       isToday: dateStr === todayStr,
       earned: earnedDates.has(dateStr),
-      isFuture: d > today,
+      isFuture: d > todayLocal,
     };
   });
 
-  const firstOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+  // Monthly grid
+  const firstOfMonth = new Date(todayLocal.getFullYear(), todayLocal.getMonth(), 1);
   const startPad = firstOfMonth.getDay();
-  const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
-  const monthLabel = today.toLocaleString("default", { month: "long", year: "numeric" });
+  const daysInMonth = new Date(todayLocal.getFullYear(), todayLocal.getMonth() + 1, 0).getDate();
+  const monthLabel = todayLocal.toLocaleString("default", { month: "long", year: "numeric" });
 
-  const Cell = ({ day, isToday, earned, isFuture, pad = false }: {
+  const Cell = ({ day, isToday, earned, isFuture, isOtherMonth }: {
     day?: number;
     isToday?: boolean;
     earned?: boolean;
     isFuture?: boolean;
-    pad?: boolean;
+    isOtherMonth?: boolean;
   }) => (
     <RNView
       style={{
@@ -166,41 +182,56 @@ function RecentActivityCalendar({
         borderRadius: 8,
         alignItems: "center",
         justifyContent: "center",
-        backgroundColor: pad ? "transparent" : earned ? "#FF6600" : isToday && !earned ? "#FFF7ED" : "#f3f4f6",
-        borderWidth: !pad && isToday && !earned ? 1.5 : 0,
+        backgroundColor: earned ? "#FF6600" : isToday && !earned ? "#FFF7ED" : "#f3f4f6",
+        borderWidth: isToday && !earned ? 1.5 : 0,
         borderColor: "#FF6600",
-        opacity: isFuture ? 0.35 : 1,
+        opacity: isFuture && !earned ? 0.35 : isOtherMonth && !earned ? 0.4 : 1,
       }}
     >
-      {!pad && (
-        earned ? (
-          <Flame size={12} color="#FFFFFF" />
-        ) : (
-          <Text style={{ fontSize: 9, color: isToday ? "#FF6600" : "#9ca3af", fontWeight: "600" }}>
-            {day}
-          </Text>
-        )
+      {earned ? (
+        <Flame size={12} color="#FFFFFF" />
+      ) : (
+        <Text style={{ fontSize: 9, color: isToday ? "#FF6600" : "#9ca3af", fontWeight: "600" }}>
+          {day}
+        </Text>
       )}
     </RNView>
   );
+
+  // Monthly grid — prev-month trailing days fill the start padding
+  const prevMonthYear = todayLocal.getMonth() === 0 ? todayLocal.getFullYear() - 1 : todayLocal.getFullYear();
+  const prevMonthIdx = todayLocal.getMonth() === 0 ? 11 : todayLocal.getMonth() - 1;
+  const prevMonthDays = new Date(prevMonthYear, prevMonthIdx + 1, 0).getDate();
 
   const totalCells = startPad + daysInMonth;
   const rows: React.ReactNode[] = [];
   let cells: React.ReactNode[] = [];
   for (let i = 0; i < totalCells; i++) {
     if (i < startPad) {
-      cells.push(<Cell key={`pad-${i}`} pad />);
+      // Show trailing prev-month days — dimmed, but orange if earned
+      const prevDay = prevMonthDays - (startPad - 1 - i);
+      const d = new Date(prevMonthYear, prevMonthIdx, prevDay);
+      const dateStr = toLocalDateStr(d);
+      cells.push(
+        <Cell
+          key={`prev-${i}`}
+          day={prevDay}
+          earned={earnedDates.has(dateStr)}
+          isFuture={false}
+          isOtherMonth
+        />,
+      );
     } else {
       const dayNum = i - startPad + 1;
-      const d = new Date(today.getFullYear(), today.getMonth(), dayNum);
-      const dateStr = d.toISOString().split("T")[0];
+      const d = new Date(todayLocal.getFullYear(), todayLocal.getMonth(), dayNum);
+      const dateStr = toLocalDateStr(d);
       cells.push(
         <Cell
           key={dateStr}
           day={dayNum}
           isToday={dateStr === todayStr}
           earned={earnedDates.has(dateStr)}
-          isFuture={d > today}
+          isFuture={d > todayLocal}
         />,
       );
     }
@@ -209,13 +240,28 @@ function RecentActivityCalendar({
       cells = [];
     }
   }
+  // Fill trailing cells of the last row with next-month days
   if (cells.length > 0) {
-    while (cells.length < 7) cells.push(<Cell key={`end-pad-${cells.length}`} pad />);
+    let nextDay = 1;
+    while (cells.length < 7) {
+      const d = new Date(todayLocal.getFullYear(), todayLocal.getMonth() + 1, nextDay);
+      const dateStr = toLocalDateStr(d);
+      cells.push(
+        <Cell
+          key={`next-${nextDay}`}
+          day={nextDay}
+          earned={earnedDates.has(dateStr)}
+          isFuture
+          isOtherMonth
+        />,
+      );
+      nextDay++;
+    }
     rows.push(<View key={`row-${rows.length}`} className="flex-row">{cells}</View>);
   }
 
   const Legend = () => (
-    <View className="flex-row items-center gap-x-3">
+    <View className="flex-row items-center gap-x-3 flex-wrap gap-y-1">
       <View className="flex-row items-center gap-x-1">
         <RNView style={{ width: 12, height: 12, borderRadius: 3, backgroundColor: "#FF6600" }} />
         <Text className="text-[10px] text-neutral-400 font-poppins">Earned</Text>
@@ -345,44 +391,49 @@ export default function StoreStreakDetail() {
   const router = useRouter();
   const { t: translate } = useTranslation();
   const [streak, setStreak] = useState<UserStreak | null>(null);
+  const [earnedDates, setEarnedDates] = useState<Set<string>>(new Set());
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    let cancelled = false;
+  // useFocusEffect re-fetches every time the screen gains focus.
+  // This ensures navigating back from the streak card always shows fresh data.
+  useFocusEffect(
+    useCallback(() => {
+      let cancelled = false;
 
-    const loadStreak = async () => {
-      if (!storeId) {
-        setStreak(null);
-        setIsLoading(false);
-        return;
-      }
-
-      try {
-        setIsLoading(true);
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user?.id) {
-          if (!cancelled) {
-            setStreak(null);
-          }
+      const loadStreak = async () => {
+        if (!storeId) {
+          setStreak(null);
+          setIsLoading(false);
           return;
         }
 
-        const data = await getUserStreakByStore(user.id, Number(storeId));
-        if (!cancelled) {
-          setStreak(data);
-        }
-      } finally {
-        if (!cancelled) {
-          setIsLoading(false);
-        }
-      }
-    };
+        try {
+          setIsLoading(true);
+          const { data: { user } } = await supabase.auth.getUser();
+          if (!user?.id) {
+            if (!cancelled) setStreak(null);
+            return;
+          }
 
-    loadStreak();
-    return () => {
-      cancelled = true;
-    };
-  }, [storeId]);
+          // Fetch streak record + earned dates in parallel
+          const [data, dates] = await Promise.all([
+            getUserStreakByStore(user.id, Number(storeId)),
+            getStreakEarnedDates(user.id, Number(storeId)),
+          ]);
+
+          if (!cancelled) {
+            setStreak(data);
+            setEarnedDates(dates);
+          }
+        } finally {
+          if (!cancelled) setIsLoading(false);
+        }
+      };
+
+      loadStreak();
+      return () => { cancelled = true; };
+    }, [storeId]),
+  );
 
   const program = streak?.store_streaks;
   const storeStr = streak?.stores;
@@ -416,11 +467,56 @@ export default function StoreStreakDetail() {
     );
   }
 
-  const streakDays = streak.streak_days ?? 0;
+  // ✅ Use total_earned_days so a missed day doesn't reset the ring/stats back to 1.
+  // streak_days is the consecutive counter (resets on miss); total_earned_days is cumulative.
+  const totalEarned = streak.total_earned_days ?? streak.streak_days ?? 0;
+  const streakDays = totalEarned; // alias kept so existing JSX below still compiles
   const targetDays = program?.streak_length ?? 7;
-  const progress = targetDays > 0 ? Math.min(streakDays / targetDays, 1) : 0;
-  const daysLeft = Math.max(targetDays - streakDays, 0);
-  const isCompleted = streak.status === "completed";
+  const progress = targetDays > 0 ? Math.min(totalEarned / targetDays, 1) : 0;
+  const daysLeft = Math.max(targetDays - totalEarned, 0);
+  const isCompleted = streak.status === "completed" || totalEarned >= targetDays;
+
+  // ── End-date deadline notice ─────────────────────────────────────────
+  const endDateStr = program?.end_date ?? null;
+  // Margin-based deadline state:
+  //   "failed"   → red      (margin < 0, mathematically impossible to finish)
+  //   "critical" → red      (margin === 0, no days to spare)
+  //   "urgent"   → amber    (margin <= 3, warning zone)
+  //   "expiring" → grey     (margin > 3, plenty of time)
+  //   null       → hidden
+  type DeadlineTier = "critical" | "urgent" | "expiring" | "failed" | null;
+  let deadlineTier: DeadlineTier = null;
+  let deadlineLabel: string | null = null;
+
+  if (endDateStr && !isCompleted) {
+    const endDate = parseLocalDate(endDateStr);
+    // End of the end_date day in local time
+    endDate.setHours(23, 59, 59, 999);
+    const msLeft = endDate.getTime() - Date.now();
+    const daysUntilEnd = Math.ceil(msLeft / 86400000);
+    const fmt = parseLocalDate(endDateStr).toLocaleDateString("en-US", {
+      month: "short", day: "numeric", year: "numeric",
+    });
+
+    if (daysUntilEnd > 0) {
+      const margin = daysUntilEnd - daysLeft;
+      const endingText = daysUntilEnd === 1 ? "Program ending today!" : `Program ending in ${daysUntilEnd} days!`;
+      
+      if (margin < 0) {
+        deadlineTier = "failed";
+        deadlineLabel = endingText;
+      } else if (margin === 0) {
+        deadlineTier = "critical";
+        deadlineLabel = `${endingText} No days to spare — don't skip!`;
+      } else if (margin <= 3) {
+        deadlineTier = "urgent";
+        deadlineLabel = `${endingText} You need ${daysLeft} more visits.`;
+      } else {
+        deadlineTier = "expiring";
+        deadlineLabel = `Complete before ${fmt} — ${daysUntilEnd} days left.`;
+      }
+    }
+  }
   const storeName = storeStr?.name ?? translate("user.rewards.store");
 
   const getLogoImage = () => {
@@ -497,6 +593,32 @@ export default function StoreStreakDetail() {
         ) : null}
       </View>
 
+      {/* ── Deadline / end-date notice — separate container, rounded top ── */}
+      {(deadlineTier === "critical" || deadlineTier === "failed") && (
+        <View className="mx-4 mt-2 rounded-t-2xl overflow-hidden border border-red-200 dark:border-red-800 flex-row items-start gap-x-2.5 px-4 py-3 bg-red-50 dark:bg-red-900/20">
+          <Clock size={14} color="#dc2626" style={{ marginTop: 1 }} />
+          <Text className="text-[11px] font-poppins-medium text-red-700 dark:text-red-400 flex-1">
+            {deadlineLabel}
+          </Text>
+        </View>
+      )}
+      {deadlineTier === "urgent" && (
+        <View className="mx-4 mt-2 rounded-t-2xl overflow-hidden border border-amber-200 dark:border-amber-800 flex-row items-start gap-x-2.5 px-4 py-3 bg-amber-50 dark:bg-amber-900/20">
+          <Clock size={14} color="#d97706" style={{ marginTop: 1 }} />
+          <Text className="text-[11px] font-poppins-medium text-amber-700 dark:text-amber-400 flex-1">
+            {deadlineLabel}
+          </Text>
+        </View>
+      )}
+      {deadlineTier === "expiring" && (
+        <View className="mx-4 mt-2 rounded-t-2xl overflow-hidden border border-neutral-200 dark:border-darkBorder flex-row items-start gap-x-2.5 px-4 py-3 bg-neutral-50 dark:bg-darkBackgroundMuted">
+          <Clock size={14} color="#6b7280" style={{ marginTop: 1 }} />
+          <Text className="text-[11px] font-poppins text-neutral-500 dark:text-neutral-400 flex-1">
+            {deadlineLabel}
+          </Text>
+        </View>
+      )}
+
       <View className="bg-white dark:bg-darkBackgroundMuted mx-4 mt-3 rounded-2xl border border-neutral-100 dark:border-darkBorder items-center py-6">
         <ProgressRing
           progress={progress}
@@ -521,13 +643,45 @@ export default function StoreStreakDetail() {
               : `${daysLeft} day${daysLeft !== 1 ? "s" : ""} to go`}
           </Text>
         </View>
+
+        {/* Program date range */}
+        {(program?.start_at || program?.end_date) && (
+          <View className="flex-row items-center gap-x-3 mt-3">
+            {program?.start_at && (
+              <View className="flex-row items-center gap-x-1">
+                <CalendarDays size={11} color="#9ca3af" />
+                <Text className="text-[10px] font-poppins text-neutral-400">
+                  Started{" "}
+                  {new Date(program.start_at).toLocaleDateString("en-US", {
+                    month: "short", day: "numeric", year: "numeric",
+                  })}
+                </Text>
+              </View>
+            )}
+            {program?.start_at && program?.end_date && (
+              <Text className="text-[10px] text-neutral-300">·</Text>
+            )}
+            {program?.end_date && (
+              <View className="flex-row items-center gap-x-1">
+                <CalendarDays size={11} color="#9ca3af" />
+                <Text className="text-[10px] font-poppins text-neutral-400">
+                  {isCompleted ? "Ended" : "Ends"}{" "}
+                  {parseLocalDate(program.end_date).toLocaleDateString("en-US", {
+                    month: "short", day: "numeric", year: "numeric",
+                  })}
+                </Text>
+              </View>
+            )}
+          </View>
+        )}
       </View>
+
 
       <View className="px-4 pt-3 pb-4 gap-y-3">
         <View className="flex-row gap-x-2.5">
           <StatCard
             label="Current Streak"
-            value={`${streakDays}${getOrdinalSuffix(streakDays)}`}
+            value={streakDays === 0 ? "0" : `${streakDays}${getOrdinalSuffix(streakDays)}`}
             icon={<Flame size={16} color="#FF6600" />}
           />
           <StatCard
@@ -607,10 +761,8 @@ export default function StoreStreakDetail() {
             title="Recent Activity"
             sub="(last 14 days)"
           />
-          <RecentActivityCalendar
-            streakDays={streakDays}
-            lastActivityDate={streak.last_activity_date}
-          />
+          {/* ✅ Real per-day history from streak_events — no backward-count guessing */}
+          <RecentActivityCalendar earnedDates={earnedDates} />
         </SectionCard>
       </View>
     </ScrollView>
