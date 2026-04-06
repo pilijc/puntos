@@ -532,7 +532,62 @@
             }
         },
         "stores": {
-
+            "title": "Store Approvals",
+            "noStores": "No stores yet",
+            "noFilteredStores": "No {{status}} stores",
+            "filter": {
+                "all": "All",
+                "pending": "Pending",
+                "active": "Active",
+                "inactive": "Inactive"
+            },
+            "modal": {
+                "approveTitle": "Approve Store",
+                "approveMessage": "Approve \"{{name}}\"? It will go live immediately.",
+                "approveAction": "Approve",
+                "rejectTitle": "Reject Store",
+                "rejectMessage": "Reject \"{{name}}\"? The store-manager will need to resubmit.",
+                "rejectAction": "Reject",
+                "successTitle": "Store Approved",
+                "successMessage": "\"{{name}}\" is now active and can begin operations.",
+                "errorTitle": "Application Rejected",
+                "errorMessage": "The application for \"{{name}}\" has been rejected."
+            },
+            "details": {
+                "title": "Store Details",
+                "name": "STORE NAME",
+                "type": "STORE TYPE",
+                "logo": "STORE LOGO",
+                "pictures": "STORE PICTURES",
+                "businessDetails": "Business Details",
+                "ownerName": "OWNER NAME",
+                "phone": "PHONE NUMBER",
+                "operatingHours": "OPERATING HOURS",
+                "registrationNumber": "BUSINESS REGISTRATION #",
+                "registeredOn": "REGISTERED ON",
+                "businessDocument": "BUSINESS DOCUMENT",
+                "viewAndZoom": "Tap to view & zoom",
+                "locationDetails": "Location Details",
+                "landmarkAddress": "LANDMARK / ADDRESS",
+                "rejectApplication": "Reject",
+                "approveStore": "Approve",
+                "tapToView": "Tap to view details",
+                "noAddress": "No address provided"
+            },
+            "category": {
+                "cafe_bar": "Cafe & Bar",
+                "food_drinks": "Food & Drinks",
+                "shopping": "Shopping",
+                "beauty": "Beauty",
+                "health": "Health",
+                "entertainment": "Entertainment",
+                "other": "Other"
+            },
+            "status": {
+                "pending": "PENDING",
+                "active": "ACTIVE",
+                "inactive": "INACTIVE"
+            }
         },
         "users": {
             "noUsersFound": "No users found",
