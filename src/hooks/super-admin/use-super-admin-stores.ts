@@ -22,6 +22,7 @@ export function useSuperAdminStores() {
   const [activeFilter, setActiveFilter] = useState<Filter>("pending_review");
   const [refreshing, setRefreshing] = useState(false);
   const [selectedStore, setSelectedStore] = useState<AdminStoreRow | null>(null);
+  const [previewStore, setPreviewStore] = useState<AdminStoreRow | null>(null);
   const [confirmModal, setConfirmModal] = useState<{
     title: string;
     message: string;
@@ -103,6 +104,8 @@ export function useSuperAdminStores() {
     refreshing,
     selectedStore,
     setSelectedStore,
+    previewStore,
+    setPreviewStore,
     confirmModal,
     setConfirmModal,
     onRefresh,

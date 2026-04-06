@@ -9,6 +9,7 @@ import { ScreenWrapper } from "@/components/ui/screen-wrapper";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { AdminStoreCard, AdminStoreSkeletonCard } from "@/components/users/stores/admin-store-card";
 import { AdminStoreDetails } from "@/components/users/stores/admin-store-details";
+import { AdminStorePreviewModal } from "@/components/users/stores/admin-store-preview-modal";
 import { Modal } from "@/components/modal";
 import {
 	useSuperAdminStores,
@@ -29,6 +30,8 @@ export default function SuperAdminStores() {
 		refreshing,
 		selectedStore,
 		setSelectedStore,
+		previewStore,
+		setPreviewStore,
 		confirmModal,
 		setConfirmModal,
 		onRefresh,
@@ -152,7 +155,7 @@ export default function SuperAdminStores() {
 						store={store}
 						onApprove={handleApprove}
 						onReject={handleReject}
-						onSelect={(s) => setSelectedStore(s)}
+						onSelect={(s) => setPreviewStore(s)}
 					/>
 				))}
 
@@ -171,6 +174,20 @@ export default function SuperAdminStores() {
 					)}
 				</ScrollView>
 			</View>
+
+			<AdminStorePreviewModal
+				visible={!!previewStore}
+				store={previewStore}
+				onClose={() => setPreviewStore(null)}
+				onViewFullDetails={() => {
+					setSelectedStore(previewStore);
+					setPreviewStore(null);
+				}}
+				onApprove={() => {
+					if (previewStore) handleApprove(previewStore);
+					setPreviewStore(null);
+				}}
+			/>
 
 			<Modal
 				visible={!!errorModal}
