@@ -470,3 +470,27 @@ export async function getActiveStampProgramRewards(
     return [];
   }
 }
+
+export async function getStampEventsForStore(
+  userId: string,
+  storeId: number | string
+) {
+  try {
+    const { data, error } = await supabase
+      .from("stamp_events")
+      .select("id, created_at")
+      .eq("user_id", userId)
+      .eq("store_id", storeId)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("Error fetching stamp events:", error.message);
+      return [];
+    }
+
+    return data || [];
+  } catch (err) {
+    console.error("Exception fetching stamp events:", err);
+    return [];
+  }
+}

@@ -27,12 +27,12 @@ export async function recordUserStreak(
     .maybeSingle();
 
   if (existing) {
-    // ✅ BLOCKER: Already earned today — no double-dipping
+    // BLOCKER: Already earned today — no double-dipping
     if (existing.last_activity_date === today) {
       return { alreadyRecorded: true, newStreakDays: existing.streak_days, pointsEarned: 0, justCompleted: false };
     }
 
-    // ✅ BLOCKER: Already completed the streak program — cannot earn more days
+    // BLOCKER: Already completed the streak program — cannot earn more days
     const currentTotal = existing.total_earned_days ?? 0;
     if (streakLength > 0 && currentTotal >= streakLength) {
       return { alreadyRecorded: true, newStreakDays: existing.streak_days, pointsEarned: 0, justCompleted: false };
@@ -43,7 +43,7 @@ export async function recordUserStreak(
     const newTotalEarned = currentTotal + 1;
     const newPointsEarned = Number(existing.points_earned ?? 0) + pointsPerDay;
 
-    // ✅ Mark as completed when the user hits exactly the target
+    // Mark as completed when the user hits exactly the target
     const justCompleted = streakLength > 0 && newTotalEarned >= streakLength;
     const nowIso = new Date().toISOString();
 
@@ -64,7 +64,7 @@ export async function recordUserStreak(
 
     if (error) throw new Error(error.message);
 
-    // ✅ Log the individual earned day — UNIQUE constraint prevents duplicates
+    // Log the individual earned day — UNIQUE constraint prevents duplicates
     await supabase.from("streak_events").insert({
       user_id: userId,
       store_id: storeId,
@@ -99,7 +99,7 @@ export async function recordUserStreak(
 
   if (error) throw new Error(error.message);
 
-  // ✅ Log the first earned day for this streak
+  // Log the first earned day for this streak
   if (inserted?.id) {
     await supabase.from("streak_events").insert({
       user_id: userId,
