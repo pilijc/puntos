@@ -9,6 +9,12 @@
     },
     "plugins": [
       "expo-router",
+      [
+        "onesignal-expo-plugin",
+        {
+          "mode": "production"
+        }
+      ],
       "expo-sqlite",
       [
         "expo-location",
@@ -42,14 +48,22 @@
             }
           }
         }
-      ]
+      ],
+      "@react-native-community/datetimepicker"
     ],
+    "extra": {
+      "oneSignalAppId": "${EXPO_PUBLIC_ONESIGNAL_APP_ID}"
+    },
     "name": "puntos",
     "slug": "puntos",
     "android": {
       "package": "com.project.puntos",
       "newArchEnabled": true,
-      "permissions": ["ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION"]
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "POST_NOTIFICATIONS"
+      ]
     },
     "ios": {
       "bundleIdentifier": "com.project.puntos"

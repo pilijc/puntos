@@ -1,26 +1,34 @@
 import { Text, SafeAreaView, View, Image } from "@/tw";
-import React, { useEffect, useRef, useState } from "react";
-import Mapbox, { MapView, UserLocation, Camera, PointAnnotation, UserTrackingMode } from "@rnmapbox/maps";
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import Mapbox, { MapView, PointAnnotation } from "@rnmapbox/maps";
 import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
-import { Alert, PermissionsAndroid, Platform, TextInput, TextInputSubmitEditingEvent, TouchableOpacity } from "react-native";
+import { TextInput, TouchableOpacity, useColorScheme } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 import * as Location from 'expo-location'
-import { supabase } from "@/supabase/supabase";
 import { Ionicons, MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
 import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
-import { getSearchResultsService, getStoresService } from "@/services/discover-service";
-import { useStoreStore } from "@/store/store-store";
-import { Store } from "@/type/store";
+import { getRouteService, getSearchResultsService } from "@/services/discover-service";
+import { useStoreStore } from "@/store/user/store-store";
+import { Store } from "@/type/user/store";
 import type * as GeoJSON from "geojson";
-// import * as Notifications from 'expo-notifications';
-
+import { getOneSignalId, sendPushNotification } from "@/services/push-notif";
+import { isStoreNearby } from "@/services/user/location-service";
+import * as turf from "@turf/turf";
+import { getStores } from "@/services/store-service";
+import { OneSignal } from "react-native-onesignal";
+import { storeIconKey } from "@/type/user/discover";
+import Svg, { Path } from "react-native-svg";
+import { useTranslation } from "react-i18next";
+import { useLanguageStore } from "@/store/language-store";
 
 Mapbox.setAccessToken(process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN);
 
 export default function Discover() {
   const bottomSheetRef = useRef<BottomSheet>(null);
   const cameraRef = useRef(null);
+  const [mapReady, setMapReady] = useState(false);
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
   const [location, setLocation] = useState<Location.LocationObject | null>(null);
   const { stores, setStores } = useStoreStore();
   const [searchQuery, setSearchQuery] = useState("");
@@ -28,76 +36,97 @@ export default function Discover() {
   const [selectedSearchResult, setSelectedSearchResult] = useState<any>(null);
   const [routeGeoJSON, setRouteGeoJSON] = useState<GeoJSON.LineString | null>(null);
   const [routeDrawProgress, setRouteDrawProgress] = useState(0);
+  const [selectedStore, setSelectedStore] = useState<Store | null>(null);
+  const [sheetStores, setSheetStores] = useState<Store[]>([]);
+  const [sheetView, setSheetView] = useState<"list" | "detail">("detail");
   const routeAnimationRef = useRef<ReturnType<typeof requestAnimationFrame> | null>(null);
+  const notifiedStoreIds = useRef<Set<number>>(new Set());
+  const locationWatchRef = useRef<Location.LocationSubscription | null>(null);
+  const hasCenteredOnUserRef = useRef(false);
+  const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number; heading?: number } | null>(null);
+  const { t: translate } = useTranslation();
+  const language = useLanguageStore((s) => s.language);
 
-  const getToken = async () => {
-  //   try {
-  //     // 1) Ask for notification permission
-  //     const { status: existingStatus } = await Notifications.getPermissionsAsync();
-  //     let finalStatus = existingStatus;
-  
-  //     if (existingStatus !== "granted") {
-  //       const { status } = await Notifications.requestPermissionsAsync();
-  //       finalStatus = status;
-  //     }
-  
-  //     if (finalStatus !== "granted") {
-  //       Alert.alert(
-  //         "Permission needed",
-  //         "We need notification permission to send you updates."
-  //       );
-  //       return;
-  //     }
-  
-  //     // 2) Get Expo push token from the physical device
-  //     // If you ever see a "must provide projectId" error,
-  //     // use: await Notifications.getExpoPushTokenAsync({ projectId: "your-expo-project-id" });
-  //     const expoPushToken = (await Notifications.getExpoPushTokenAsync()).data;
-  //     console.log("Expo push token:", expoPushToken);
-  
-  //     // 3) Get current logged-in user from Supabase
-  //     const {
-  //       data: { user },
-  //       error: userError,
-  //     } = await supabase.auth.getUser();
-  
-  //     if (userError || !user) {
-  //       console.log("No logged in user or error:", userError);
-  //       Alert.alert("Error", "You must be logged in to register this device.");
-  //       return;
-  //     }
-  
-  //     // 4) Save token to your push_tokens table in Supabase
-  //     // I'm assuming your columns: user_id, expo_push_token, platform
-  //     const { error: upsertError } = await supabase
-  //       .from("push_tokens")
-  //       .insert({
-  //         user_id: user.id,
-  //         expo_push_token: expoPushToken,
-  //         platform: Platform.OS, // "ios" or "android"
-  //       });
-  
-  //     if (upsertError) {
-  //       console.log("Error saving push token:", upsertError);
-  //       Alert.alert("Error", "Could not save push notification token.");
-  //       return;
-  //     }
-  
-  //     Alert.alert("Done", "This device is registered for push notifications.");
-  //   } catch (err) {
-  //     console.log("Unexpected error registering push token:", err);
-  //     Alert.alert("Error", "Something went wrong setting up notifications.");
-  //   }
-  };
+  const discoverMoreStores = useMemo(() => {
+    if (!location) return [];
+    const user = turf.point([location.coords.longitude, location.coords.latitude]);
+    const nearbyIds = new Set(sheetStores.map((s) => String(s.id)));
+
+    const candidates = stores
+      .filter((s) => s.latitude && s.longitude)
+      .filter((s) => !nearbyIds.has(String(s.id)))
+      .map((s) => {
+        const p = turf.point([s.longitude, s.latitude]);
+        const meters = turf.distance(user, p, { units: "kilometers" }) * 1000;
+        return { store: s, meters };
+      })
+      .filter(({ meters }) => meters >= 50 && meters <= 200)
+      .sort((a, b) => a.meters - b.meters)
+      .slice(0, 10);
+
+    return candidates;
+  }, [location, sheetStores, stores]);
 
   useEffect(() => {
     (async () => {
-      const data = await getStoresService();
+      const data = await getStores();
       setStores(data ?? []);
     })();
   }, []);
 
-  // Animate route drawing from start to end
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setSearchResults([]);
+      setSelectedSearchResult(null);
+    }
+  }, [searchQuery]);
+
+  useEffect(() => {
+    const handleNotificationClick = (event: any) => {
+      (async () => {
+        try {
+          const notification = event.notification as any;
+          const data = (notification.additionalData ?? notification.data) as
+            | { store_id?: number | string; store_ids?: (number | string)[] }
+            | undefined;
+
+          const rawIds: (number | string)[] = [];
+          if (data?.store_id != null) rawIds.push(data.store_id);
+          if (Array.isArray(data?.store_ids)) rawIds.push(...data.store_ids);
+
+          const storeIds = Array.from(
+            new Set(rawIds.map((id) => Number(id)).filter((n) => !Number.isNaN(n))),
+          );
+          if (storeIds.length === 0) return;
+
+          const allStores = (await getStores()) ?? [];
+          const matchedStores = allStores.filter((s) =>
+            storeIds.includes(Number(s.id)),
+          ) as Store[];
+
+          if (matchedStores.length === 0) return;
+
+          setSheetStores(matchedStores);
+          if (matchedStores.length > 1) {
+            setSheetView("list");
+            setSelectedStore(null);
+          } else {
+            setSheetView("detail");
+            setSelectedStore(matchedStores[0]);
+          }
+          bottomSheetRef.current?.snapToIndex(1);
+        } catch (e) {
+          console.error("[NearbyPush] error handling notification click:", e);
+        }
+      })();
+    };
+
+    OneSignal.Notifications.addEventListener("click", handleNotificationClick);
+    return () => {
+      OneSignal.Notifications.removeEventListener("click", handleNotificationClick);
+    };
+  }, []);
+
   useEffect(() => {
     if (!routeGeoJSON?.coordinates?.length) return;
     const durationMs = 1800;
@@ -116,65 +145,176 @@ export default function Discover() {
     };
   }, [routeGeoJSON]);
 
+  useEffect(() => {
+    let cancelled = false;
+
+    (async () => {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') return;
+
+      const initial = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.High,
+      }).catch(() => null)
+        ?? await Location.getLastKnownPositionAsync({}).catch(() => null);
+
+      if (initial && !cancelled) {
+        setLocation(initial);
+      }
+
+      const sub = await Location.watchPositionAsync(
+        {
+          accuracy: Location.Accuracy.Balanced,
+          timeInterval: 5000,
+          distanceInterval: 0,
+        },
+        async (position) => {
+          if (cancelled) return;
+          setLocation(position);
+
+          const { latitude: uLat, longitude: uLon } = position.coords;
+          const currentStores = useStoreStore.getState().stores;
+
+          const nearbyStoreIds: number[] = [];
+          for (const store of currentStores) {
+            if (notifiedStoreIds.current.has(store.id)) continue;
+            if (!store.latitude || !store.longitude) continue;
+
+            const nearby = isStoreNearby(
+              uLat,
+              uLon,
+              store.latitude,
+              store.longitude,
+              store.radius!
+            );
+
+            if (nearby) nearbyStoreIds.push(store.id);
+          }
+
+          const nearbyCount = nearbyStoreIds.length;
+          if (nearbyCount === 0) {
+            return;
+          }
+
+          let title: string;
+          let body: string;
+
+          if (nearbyCount === 1) {
+            const onlyStoreId = nearbyStoreIds[0];
+            const onlyStore = currentStores.find((s) => s.id === onlyStoreId);
+            const storeName = onlyStore?.name ?? "A store";
+            title = translate("user.discover.geofence.singleTitle", { name: storeName });
+            body = translate("user.discover.geofence.singleBody", { name: storeName });
+          } else {
+            title = translate("user.discover.geofence.multiTitle", { count: nearbyCount });
+            body = translate("user.discover.geofence.multiBody");
+          }
+
+          try {
+            const subscriptionId = await getOneSignalId();
+            if (!subscriptionId) return;
+
+            const res = await sendPushNotification(
+              subscriptionId,
+              title,
+              body,
+              {
+                store_ids: nearbyStoreIds,
+              },
+            );
+            if (res instanceof Response) {
+              console.log(
+                `[Geofence] Push sent (${nearbyCount} nearby stores):`,
+                res.status
+              );
+            }
+
+            nearbyStoreIds.forEach((id) => notifiedStoreIds.current.add(id));
+          } catch (err) {
+            console.error("[Geofence] Failed to send push notification:", err);
+          }
+        }
+      );
+
+      if (!cancelled) {
+        locationWatchRef.current = sub;
+      } else {
+        sub.remove();
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+      locationWatchRef.current?.remove();
+      locationWatchRef.current = null;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!mapReady || !location) return;
+    if (hasCenteredOnUserRef.current) return;
+    const { longitude, latitude } = location.coords;
+    cameraRef.current?.setCamera({
+      centerCoordinate: [longitude, latitude],
+      zoomLevel: 10,
+      animationDuration: 1000,
+    });
+    hasCenteredOnUserRef.current = true;
+  }, [mapReady, location]);
+
+  // Localize Mapbox Labels
+  useEffect(() => {
+    if (!mapReady) return;
+
+    const localizeMap = async () => {
+      try {
+        // Mapbox supports these language codes
+        const mapboxLanguage = language === 'ja' ? 'ja' : 'en';
+
+        const labelLayerPatterns = [
+          'label',
+          'place',
+          'town',
+          'city',
+          'country',
+          'road',
+          'boundary'
+        ];
+      } catch (e) {
+        console.warn("Failed to localize Mapbox labels", e);
+      }
+    };
+
+    localizeMap();
+  }, [mapReady, language]);
+
   const searchPlaces = async () => {
     if (!searchQuery.trim()) return;
     try {
-      const data = await getSearchResultsService(searchQuery);
+      const data = await getSearchResultsService(searchQuery, language);
       setSearchResults(data.features || []);
     } catch (e) {
       console.error("Search error", e);
     }
   };
 
-  const getRoute = async (
-    start: [number, number],
-    end: [number, number]
-  ): Promise<GeoJSON.LineString | null> => {
-    const url = `https://api.mapbox.com/directions/v5/mapbox/driving/${start[0]},${start[1]};${end[0]},${end[1]}?geometries=geojson&access_token=${process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN}`;
-
-    const res = await fetch(url);
-    const json = await res.json();
-
-    return json.routes?.[0]?.geometry ?? null; 
-  };
-
   const handleStoreSelect = async (store: Store) => {
-    if (!location) return;
-  
-    const start: [number, number] = [
-      location.coords.longitude,
-      location.coords.latitude,
-    ];
-  
-    const end: [number, number] = [
-      store.longitude,
-      store.latitude,
-    ];
-  
-    const route = await getRoute(start, end);
-    setRouteGeoJSON(route);
-    setRouteDrawProgress(0);
-    // if (route && Array.isArray(route.coordinates) && route.coordinates.length >= 2) {
-    //   const coords = [...route.coordinates];
-    //   // ensure the line starts/ends exactly at the same coordinates as the markers
-    //   coords[0] = start;
-    //   coords[coords.length - 1] = end;
+    setSelectedStore(store);
+    setSheetStores([store]);
+    setSheetView("detail");
+    bottomSheetRef.current?.snapToIndex(1);
 
-    //   setRouteGeoJSON({
-    //     ...route,
-    //     coordinates: coords,
-    //   });
-    // } else {
-    //   setRouteGeoJSON(null);
-    // }
-  
+    if (!location) return;
+    const start: [number, number] = [location.coords.longitude, location.coords.latitude];
+    const end: [number, number] = [store.longitude, store.latitude];
+    const route = await getRouteService(start, end);
+    setRouteGeoJSON(route ?? null);
+    setRouteDrawProgress(0);
     cameraRef.current?.fitBounds(start, end, 80, 1000);
   };
 
   const handleSearchResultPress = (result: any) => {
     setSelectedSearchResult(result);
     setSearchResults([]);
-
     cameraRef.current?.setCamera({
       centerCoordinate: result.center,
       zoomLevel: 14,
@@ -182,111 +322,173 @@ export default function Discover() {
       animationMode: "flyTo",
     });
   };
-  
-  useEffect(() => {
-    (async () => {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== "granted") return;
 
-      const loc = await Location.getCurrentPositionAsync({});
-      setLocation(loc);
 
-      cameraRef.current?.setCamera({
-        centerCoordinate: [loc.coords.longitude, loc.coords.latitude],
-        zoomLevel: 14,
-        animationDuration: 1000,
+  const storeFeatures: GeoJSON.FeatureCollection = {
+    type: "FeatureCollection",
+    features: stores.map((s) => ({
+      type: "Feature",
+      id: s.id,
+      geometry: {
+        type: "Point",
+        coordinates: [s.longitude, s.latitude],
+      },
+      properties: {
+        storeId: String(s.id),
+        icon: storeIconKey(s.type),
+      },
+    })),
+  };
+
+  const circlesFC = useMemo(() => {
+    const features = stores
+      .filter((s) => s.latitude && s.longitude)
+      .map((s) => {
+        const circle = turf.circle(
+          [s.longitude, s.latitude],
+          s.radius! / 1000,
+          { steps: 64, units: "kilometers" }
+        );
+        circle.properties = { storeId: String(s.id) };
+        return circle;
       });
-    })();
-  }, []);
 
-  console.log(location);
+    return turf.featureCollection(features);
+  }, [stores]);
 
   return (
-    <SafeAreaView className="flex-1">
-      <View className="absolute top-15 left-4 right-4 z-20">
-        <View className="bg-white rounded-xl flex-row justify-between items-center px-4 py-1">
-          <TextInput
-            className="flex-1 text-base text-black font-poppins-semibold items-center justify-center"
-            style={{ fontFamily: "Poppins-Regular" }}
-            placeholderTextColor="gray"
-            placeholder="Search a place"
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            onSubmitEditing={searchPlaces}
-            returnKeyType="search"
-          />
-          { searchQuery.length > 0 ? (
-            <TouchableOpacity onPress={() => setSearchQuery("")}>
-              <Ionicons name="close-outline" size={24} color="darkorange" />
-            </TouchableOpacity>
-          ): (
-            <Ionicons name="search-outline" size={24} color="darkorange" className="font-poppins-bold" />
+    <View className="flex-1">
+      <SafeAreaView className="absolute top-0 left-0 right-0 z-20">
+        <View className="mt-4 mx-4">
+          <View className="bg-white dark:bg-darkBackgroundMuted rounded-xl flex-row justify-between items-center px-4 py-1">
+            <TextInput
+              className="flex-1 text-base text-black dark:text-darkTextPrimary font-poppins-semibold items-center justify-center"
+              style={{ fontFamily: "Poppins-Regular" }}
+              placeholderTextColor="gray"
+              placeholder={translate("user.discover.searchBar")}
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              onSubmitEditing={searchPlaces}
+              returnKeyType="search"
+            />
+            {searchQuery.length > 0 ? (
+              <TouchableOpacity onPress={() => {
+                setSearchQuery("");
+                setSearchResults([]);
+                setSelectedSearchResult(null);
+              }}>
+                <Ionicons name="close-outline" size={24} color="darkorange" />
+              </TouchableOpacity>
+            ) : (
+              <Ionicons name="search-outline" size={24} color="darkorange" className="font-poppins-bold" />
+            )}
+          </View>
+
+          {searchResults.length > 0 && (
+            <View className="bg-white dark:bg-darkBackgroundMuted mt-2 rounded-xl p-2 max-h-72 border border-neutral-100 dark:border-darkBorder">
+              <ScrollView
+                keyboardShouldPersistTaps="handled"
+                contentContainerClassName="divide-y divide-neutral-100"
+              >
+                {searchResults.map((r) => (
+                  <TouchableOpacity
+                    key={r.id}
+                    onPress={() => handleSearchResultPress(r)}
+                    activeOpacity={0.75}
+                    className="flex-row items-center rounded-xl px-4 gap-x-3"
+                    style={{ marginHorizontal: 4 }}
+                  >
+                    <View className="flex-1 py-2">
+                      <Text className="font-semibold text-base text-neutral-900 dark:text-darkTextPrimary">{r.text}</Text>
+                      <Text numberOfLines={1} className="text-xs text-neutral-500 dark:text-darkTextSecondary">
+                        {r.place_name}
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </View>
           )}
         </View>
-
-        {searchResults.length > 0 && (
-          <View className="bg-white mt-2 rounded-xl p-2 max-h-72 border border-neutral-100">
-            <ScrollView
-              keyboardShouldPersistTaps="handled"
-              contentContainerClassName="divide-y divide-neutral-100"
-            >
-              {searchResults.map((r) => (
-                <TouchableOpacity
-                  key={r.id}
-                  onPress={() => handleSearchResultPress(r)}
-                  activeOpacity={0.75}
-                  className="flex-row items-center rounded-xl px-4 gap-x-3"
-                  style={{ marginHorizontal: 4 }}
-                >
-                  <View className="flex-1 py-2">
-                    <Text className="font-semibold text-base text-neutral-900">{r.text}</Text>
-                    <Text numberOfLines={1} className="text-xs text-neutral-500">
-                      {r.place_name}
-                    </Text>
-                  </View>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-          </View>
-        )}
-      </View>
+      </SafeAreaView>
 
       <MapView
         style={{ flex: 1 }}
-        styleURL="mapbox://styles/mapbox/streets-v12"
+        onDidFinishLoadingMap={() => setMapReady(true)}
+        styleURL={isDark ? "mapbox://styles/mapbox/navigation-night-v1" : "mapbox://styles/mapbox/streets-v12"}
       >
+
+        <Mapbox.UserLocation
+          visible
+          showsUserHeadingIndicator={true}
+          androidRenderMode="compass"
+        />
+
+        <Mapbox.Images
+          images={{
+            bar: require("../../assets/images/markers/bar.png"),
+            coffee: require("../../assets/images/markers/cafe.png"),
+            restaurant: require("../../assets/images/markers/restau.png"),
+            market: require("../../assets/images/markers/market.png"),
+            shop: require("../../assets/images/markers/shop.png"),
+            default: require("../../assets/images/markers/default.png"),
+          }}
+        />
         <Mapbox.Camera
           ref={cameraRef}
-          followUserLocation={searchQuery ? false : true}
+          // followUserLocation={searchQuery ? false : true}
           followUserMode={Mapbox.UserTrackingMode.FollowWithHeading}
           followZoomLevel={16}
           animationMode="easeTo"
           animationDuration={300}
         />
-        <Mapbox.UserLocation 
-          visible 
-          showsUserHeadingIndicator={true}
-          androidRenderMode="compass"
-        /> 
 
-       {selectedSearchResult && (
+        {selectedSearchResult && (
           <PointAnnotation
             id="search-location"
             coordinate={selectedSearchResult.center}
             children={<View className="w-4 h-4 bg-orange-500 rounded-full" />}
-          /> 
+          />
         )}
 
-        {stores.map((s) => (
-          <PointAnnotation
-            key={s.id.toString()}
-            id={`store-${s.id}`}
-            coordinate={[s.longitude, s.latitude]}
-            onSelected={() => handleStoreSelect(s)}
-            children={<View className="" />}
+        <Mapbox.ShapeSource
+          id="storesSource"
+          shape={storeFeatures}
+          onPress={(e) => {
+            const p = e.features?.[0]?.properties;
+            const storeId = p?.storeId;
+            const store = stores.find((x) => String(x.id) === String(storeId));
+            if (store) handleStoreSelect(store);
+          }}
+        >
+          <Mapbox.SymbolLayer
+            id="storesLayer"
+            style={{
+              iconImage: ["get", "icon"],
+              iconAllowOverlap: true,
+              iconSize: [
+                "interpolate",
+                ["linear"],
+                ["zoom"],
+                5, 0.025,
+                10, 0.02,
+              ],
+            }}
           />
-        ))}
+        </Mapbox.ShapeSource>
 
+        <Mapbox.ShapeSource id="storeCirclesSource" shape={circlesFC}>
+          <Mapbox.FillLayer
+            id="storeCirclesFill"
+            style={{
+              fillColor: "#f97316",
+              fillOpacity: 0.08,
+            }}
+            belowLayerID="storesLayer"
+          />
+        </Mapbox.ShapeSource>
+
+        {/* Animated route line */}
         {routeGeoJSON && !searchQuery && (() => {
           const coords = routeGeoJSON.coordinates;
           const total = coords.length;
@@ -319,168 +521,316 @@ export default function Discover() {
         })()}
       </MapView>
 
-      <BottomSheet ref={bottomSheetRef} snapPoints={["20%", "55%"]} index={0}>
-        <BottomSheetView className="flex-1 bg-white">
-          <ScrollView
-            horizontal={false}
-            pagingEnabled={false}
-            nestedScrollEnabled
-            snapToAlignment="start"
-            decelerationRate="fast"
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ paddingHorizontal: 16, gap: 16 }}
-            className="flex-1 pb-4"
-          >
-
-            <View
-              className="bg-white p-2 flex-row items-center gap-x-3"
-            >
-              <Image
-                source={{
-                  uri: "https://lh3.googleusercontent.com/aida-public/AB6AXuC4UoIc5vV5FsC0GfTTA75QiDrtMiMWtt6tFc38XKl5LuFnQw44le3ELNt73nsTAZjzI-LsorNZ4J6gPThjuNutUG2gc0FRc28x32itJuxsbctOi-CTpqY0IciSSDhEW2D_W1HXd4CD76pkUY8zeFOJaseJmsrJWE9GR41XiIsGFBT1LngvIvhlPFBhCuDi0HyB0wgetKeYbvj19Q6ewuYHYo7Hd8NOQrkxpsSZuYEXDgvA6MysHT_fhPQoKSf657uhwFNqQeM9LQ",
-                }}
-                className="w-24 h-24 rounded-xl bg-slate-100"
-              />
-              <View className="flex-1">
-                <View className="flex-row justify-between items-start">
-                  <Text className="text-lg text-neutral-900 flex-1 font-poppins-semibold" numberOfLines={1}>
-                    The Artisan Brew
-                  </Text>
-                </View>
-                <View className="flex-col items-start gap-1 mt-1">
-                  <View className="flex-row items-center gap-2">
-                    <MaterialCommunityIcons name="map-marker-radius-outline" size={14} color="gray" />
-                    <Text className="text-xs text-slate-500 font-poppins">123 Address St, City, PH</Text>
-                  </View>
-                  <View className="flex-row items-center gap-2">
-                    <FontAwesome6 name="clock" size={12} color="gray" />
-                    <Text className="text-xs text-slate-500 font-poppins">Open 10:00 AM - 10:00 PM</Text>
-                  </View>
-                </View>
-                <View className="flex-row items-center justify-between mt-3">
-                  <View className="flex-row items-center gap-1">
-                    <Ionicons name="star" size={14} color="#FB8500" />
-                    <Text className="text-xs text-orange-500 ml-0.5 font-poppins">4.9</Text>
-                  </View>
-
-                  <TouchableOpacity className="bg-orange-500/10 px-3 py-1.5 rounded-xl ">
-                    <Text className="text-xs text-orange-500 font-poppins-semibold">Details</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            </View>
-            
-            <View className="mt-2">
-              <ScrollView
-                horizontal
-                nestedScrollEnabled
-                showsHorizontalScrollIndicator
-                contentContainerStyle={{ gap: 12, paddingHorizontal: 4 }}
-              >
-                {[
-                  "https://images.pexels.com/photos/262978/pexels-photo-262978.jpeg",
-                  "https://images.pexels.com/photos/373888/pexels-photo-373888.jpeg",
-                  "https://images.pexels.com/photos/414630/pexels-photo-414630.jpeg",
-                  "https://images.pexels.com/photos/302899/pexels-photo-302899.jpeg",
-                ].map((uri, index) => (
-                  <Image
-                    key={index}
-                    source={{ uri }}
-                    style={{
-                      width: 120,
-                      height: 120,
-                      borderRadius: 12,
-                      backgroundColor: "#f1f5f9",
-                    }}
-                  />
-                ))}
-              </ScrollView>
-            </View>
-
-            <View className="bg-white p-2 flex-row items-center gap-x-3">
-              <View className="flex-1 justify-between">
-                <View className="flex-row items-center gap-x-2">
-                  <Text className="text-lg text-neutral-900 flex-1 font-poppins-semibold">
-                    Rewards
-                  </Text>
-                  <TouchableOpacity className="bg-orange-500/10 px-3 py-1.5 rounded-xl" onPress={getToken}>
-                    <Text className="text-xs text-orange-500 font-poppins-semibold">View All</Text>
-                  </TouchableOpacity>
-                </View>
-
-                <View className="flex-col items-center gap-y-2">
-                  <View className="w-full flex-row items-center justify-between py-3 rounded-xl">
-                    <Image
-                      source={{
-                        uri: "https://images.pexels.com/photos/414630/pexels-photo-414630.jpeg",
-                      }}
-                      className="w-24 h-24 rounded-xl bg-slate-100"
-                    />
-                    <View className="flex-1 flex-col justify-between ml-3 py-1">
-                      <View className="flex-1 flex-col items-start justify-start">
-                        <Text className="text-base font-poppins-semibold text-neutral-900">
-                          Free Coffee
-                        </Text>
-                        <Text className="text-xs font-poppins text-neutral-500" numberOfLines={2}>
-                          Any medium drink of your choice
-                        </Text>
-                      </View>
-
-                      <View className="flex-row justify-start items-center mt-2">
-                        <View className="flex-row items-center gap-x-2 flex-shrink">
-                          <FontAwesome6 name="coins" size={12} color="#FB8500" />
-                          <Text className="text-sm font-poppins-bold text-primary">
-                            1,200 pts
-                          </Text>
-                        </View>
-                      </View>
-
-                    </View>
-                  </View>
-                </View>
-              </View>
-            </View>
-          </ScrollView>
-        </BottomSheetView>
-      </BottomSheet>
-
-      { routeGeoJSON && (
-        <TouchableOpacity style={{
-          position: "absolute",
-          right: 16,
-          bottom: 215,
-          zIndex: 999,
-          elevation: 20, 
-        }} className="bg-white rounded-full p-2" onPress={() => setRouteGeoJSON(null)}>
+      {routeGeoJSON && (
+        <TouchableOpacity
+          style={{
+            position: "absolute",
+            top: 120,
+            right: 16,
+            zIndex: 101,
+            elevation: 4,
+          }}
+          className="bg-white dark:bg-darkBackgroundMuted rounded-full p-2"
+          onPress={() => {
+            setRouteGeoJSON(null);
+            setSelectedStore(null);
+            setSheetStores([]);
+            setSheetView("detail");
+          }}
+        >
           <MaterialIcons name="clear" size={35} color="#FB8500" />
         </TouchableOpacity>
       )}
 
-      {location && (
-        <TouchableOpacity
-          style={{
-            position: "absolute",
-            right: 16,
-            bottom: 170,
-            zIndex: 999,
-            elevation: 20, 
-          }}
-          className="bg-white rounded-full p-2"
-          onPress={() => {
-            cameraRef.current?.setCamera({
-              centerCoordinate: [
-                location.coords.longitude,
-                location.coords.latitude,
-              ],
-              zoomLevel: 14,
-              animationDuration: 600,
-              animationMode: "flyTo",
-            });
-          }}
+      {(selectedStore || sheetStores.length > 0) && (
+        <BottomSheet
+          ref={bottomSheetRef}
+          snapPoints={["20%", "55%"]}
+          index={0}
+          backgroundStyle={{ backgroundColor: isDark ? '#171717' : '#FFFFFF' }}
+          handleIndicatorStyle={{ backgroundColor: isDark ? '#525252' : '#D4D4D4' }}
         >
-          <MaterialIcons name="filter-center-focus" size={35} color="#FB8500" />
-        </TouchableOpacity>
+          <BottomSheetView className="flex-1">
+            <ScrollView
+              horizontal={false}
+              pagingEnabled={false}
+              nestedScrollEnabled
+              snapToAlignment="start"
+              decelerationRate="fast"
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ paddingHorizontal: 16, gap: 12 }}
+              className="flex-1"
+            >
+              {sheetStores.length > 1 && sheetView === "list" ? (
+                <>
+                  <Text className="text-lg font-poppins-bold text-slate-900 dark:text-slate-100">
+                    {translate("user.discover.nearbyStores")}
+                  </Text>
+                  {sheetStores.map((s) => (
+                    <TouchableOpacity
+                      key={s.id}
+                      activeOpacity={0.7}
+                      onPress={() => {
+                        setSelectedStore(s);
+                        setSheetView("detail");
+                      }}
+                      style={{
+                        backgroundColor: isDark ? '#171717' : '#fff',
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        paddingVertical: 12,
+                        gap: 8,
+                      }}
+                    >
+                      <Image
+                        source={{
+                          uri: s.logo ||
+                            "https://lh3.googleusercontent.com/aida-public/AB6AXuC4UoIc5vV5FsC0GfTTA75QiDrtMiMWtt6tFc38XKl5LuFnQw44le3ELNt73nsTAZjzI-LsorNZ4J6gPThjuNutUG2gc0FRc28x32itJuxsbctOi-CTpqY0IciSSDhEW2D_W1HXd4CD76pkUY8zeFOJaseJmsrJWE9GR41XiIsGFBT1LngvIvhlPFBhCuDi0HyB0wgetKeYbvj19Q6ewuYHYo7Hd8NOQrkxpsSZuYEXDgvA6MysHT_fhPQoKSf657uhwFNqQeM9LQ",
+                        }}
+                        style={{
+                          width: 54,
+                          height: 54,
+                          borderRadius: 14,
+                          backgroundColor: isDark ? "#262837" : "#f3f4f6",
+                          flexShrink: 0,
+                          marginRight: 12,
+                        }}
+                      />
+                      <View style={{ flex: 1, minWidth: 0 }}>
+                        <Text
+                          style={{
+                            fontSize: 15,
+                            fontFamily: 'Poppins-SemiBold',
+                            color: isDark ? '#f1f5f9' : '#0f172a',
+                          }}
+                          numberOfLines={1}
+                        >
+                          {s.name}
+                        </Text>
+                        <Text
+                          style={{
+                            fontSize: 12,
+                            color: isDark ? "#a3a3a3" : "#64748b",
+                            fontFamily: 'Poppins-Regular',
+                          }}
+                          numberOfLines={2}
+                        >
+                          {s.address}
+                        </Text>
+                      </View>
+                      <MaterialIcons name="chevron-right" size={24} color={isDark ? "#94A3B8" : "#64748B"} />
+                    </TouchableOpacity>
+                  ))}
+
+                  {discoverMoreStores.length > 0 && (
+                    <>
+                      <View className="mt-2">
+                        <Text className="text-lg font-poppins-bold text-slate-900 dark:text-slate-100">
+                          {translate("user.discover.discoverMore")}
+                        </Text>
+                      </View>
+
+                      {discoverMoreStores.map(({ store: s, meters }) => (
+                        <TouchableOpacity
+                          key={`discover-${s.id}`}
+                          activeOpacity={0.7}
+                          onPress={() => handleStoreSelect(s)}
+                          style={{
+                            backgroundColor: isDark ? '#171717' : '#fff',
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            paddingVertical: 12,
+                            gap: 8,
+                          }}
+                        >
+                          <Image
+                            source={{
+                              uri: s.logo ||
+                                "https://lh3.googleusercontent.com/aida-public/AB6AXuC4UoIc5vV5FsC0GfTTA75QiDrtMiMWtt6tFc38XKl5LuFnQw44le3ELNt73nsTAZjzI-LsorNZ4J6gPThjuNutUG2gc0FRc28x32itJuxsbctOi-CTpqY0IciSSDhEW2D_W1HXd4CD76pkUY8zeFOJaseJmsrJWE9GR41XiIsGFBT1LngvIvhlPFBhCuDi0HyB0wgetKeYbvj19Q6ewuYHYo7Hd8NOQrkxpsSZuYEXDgvA6MysHT_fhPQoKSf657uhwFNqQeM9LQ",
+                            }}
+                            style={{
+                              width: 54,
+                              height: 54,
+                              borderRadius: 14,
+                              backgroundColor: isDark ? "#262837" : "#f3f4f6",
+                              flexShrink: 0,
+                              marginRight: 12,
+                            }}
+                          />
+                          <View style={{ flex: 1, minWidth: 0 }}>
+                            <View
+                              style={{
+                                flexDirection: "row",
+                                alignItems: "center",
+                                justifyContent: "space-between",
+                                gap: 8,
+                              }}
+                            >
+                              <Text
+                                style={{
+                                  fontSize: 15,
+                                  fontFamily: 'Poppins-SemiBold',
+                                  color: isDark ? '#f1f5f9' : '#0f172a',
+                                  flex: 1,
+                                }}
+                                numberOfLines={1}
+                              >
+                                {s.name}
+                              </Text>
+                            </View>
+                            <Text
+                              style={{
+                                fontSize: 12,
+                                color: isDark ? "#a3a3a3" : "#64748b",
+                                fontFamily: 'Poppins-Regular',
+                              }}
+                              numberOfLines={2}
+                            >
+                              {s.address}
+                            </Text>
+                          </View>
+                          {/* meters + chevron stacked vertically centered */}
+                          <View style={{ flexDirection: "row", alignItems: "center", marginLeft: 4 }}>
+                            <Text
+                              style={{
+                                fontFamily: 'Poppins-Regular',
+                                color: isDark ? "#a3a3a3" : "#64748b",
+                                marginRight: 4,
+                              }}
+                              className="font-poppins-regular text-xs"
+                            >
+                              {translate("user.discover.metersAway", { meters: Math.round(meters) })}
+                            </Text>
+                            <MaterialIcons name="chevron-right" size={24} color={isDark ? "#94A3B8" : "#64748B"} />
+                          </View>
+                        </TouchableOpacity>
+                      ))}
+                    </>
+                  )}
+                </>
+              ) : (
+                <>
+                  {sheetStores.length > 1 && sheetView === "detail" && selectedStore && (
+                    <TouchableOpacity
+                      onPress={() => setSheetView("list")}
+                      className="flex-row items-center gap-x-2 py-1"
+                    >
+                      <View className="flex-row items-center gap-x-2">
+                        <MaterialIcons name="chevron-left" size={20} color={isDark ? "#94A3B8" : "#64748B"} />
+                        <Text className="text-sm font-poppins-semibold text-slate-600 dark:text-slate-400">{translate("user.discover.backToList")}</Text>
+                      </View>
+                    </TouchableOpacity>
+                  )}
+                  {(sheetStores.length > 0 ? sheetStores : stores).length <= 2 || sheetView === "detail" ? (
+                    (() => {
+                      const toShow = sheetStores.length > 1 && selectedStore ? [selectedStore] : (sheetStores.length > 0 ? sheetStores : stores);
+                      return toShow.map((s) => (
+                        <View
+                          key={s.id}
+                          className="bg-white dark:bg-darkBackgroundMuted py-4 flex-row items-start gap-x-4 rounded-2xl"
+                        >
+                          <Image
+                            source={{
+                              uri: s.logo ||
+                                "https://lh3.googleusercontent.com/aida-public/AB6AXuC4UoIc5vV5FsC0GfTTA75QiDrtMiMWtt6tFc38XKl5LuFnQw44le3ELNt73nsTAZjzI-LsorNZ4J6gPThjuNutUG2gc0FRc28x32itJuxsbctOi-CTpqY0IciSSDhEW2D_W1HXd4CD76pkUY8zeFOJaseJmsrJWE9GR41XiIsGFBT1LngvIvhlPFBhCuDi0HyB0wgetKeYbvj19Q6ewuYHYo7Hd8NOQrkxpsSZuYEXDgvA6MysHT_fhPQoKSf657uhwFNqQeM9LQ",
+                            }}
+                            className="w-24 h-24 rounded-xl bg-slate-100 dark:bg-slate-800 flex-shrink-0"
+                          />
+                          <View className="flex-1 min-w-0 gap-y-2">
+                            <Text className="text-lg text-neutral-900 dark:text-darkTextPrimary font-poppins-semibold" numberOfLines={2}>
+                              {s.name}
+                            </Text>
+                            <View className="flex-col items-start gap-2">
+                              <View className="flex-row items-start gap-2 w-full">
+                                <MaterialCommunityIcons name="map-marker-radius-outline" size={14} color="gray" />
+                                <Text className="text-xs text-slate-500 dark:text-slate-400 font-poppins flex-1 min-w-0" numberOfLines={3}>
+                                  {s.address}
+                                </Text>
+                              </View>
+                              <View className="flex-row items-center gap-2">
+                                <FontAwesome6 name="clock" size={12} color="gray" />
+                                <Text className="text-xs text-slate-500 dark:text-slate-400 font-poppins">
+                                  {translate("user.discover.storeHoursPlaceholder")}
+                                </Text>
+                              </View>
+                            </View>
+                          </View>
+                        </View>
+                      ));
+                    })()
+                  ) : null}
+
+                  <View className="mt-2">
+                    <ScrollView
+                      horizontal
+                      nestedScrollEnabled
+                      showsHorizontalScrollIndicator={false}
+                      contentContainerStyle={{ gap: 12, paddingHorizontal: 4 }}
+                    >
+                      {[
+                        "https://images.pexels.com/photos/262978/pexels-photo-262978.jpeg",
+                        "https://images.pexels.com/photos/373888/pexels-photo-373888.jpeg",
+                        "https://images.pexels.com/photos/414630/pexels-photo-414630.jpeg",
+                        "https://images.pexels.com/photos/302899/pexels-photo-302899.jpeg",
+                      ].map((uri, index) => (
+                        <Image
+                          key={index}
+                          source={{ uri }}
+                          style={{
+                            width: 120,
+                            height: 120,
+                            borderRadius: 12,
+                            backgroundColor: "#f1f5f9",
+                          }}
+                        />
+                      ))}
+                    </ScrollView>
+                  </View>
+
+                  <View className="bg-white dark:bg-darkBackgroundMuted p-2 flex-row items-center gap-x-3">
+                    <View className="flex-1 justify-between">
+                      <View className="flex-row items-center gap-x-2">
+                        <Text className="text-lg text-neutral-900 dark:text-darkTextPrimary flex-1 font-poppins-semibold">
+                          {translate("user.discover.rewards")}
+                        </Text>
+                      </View>
+
+                      <View className="flex-col items-center gap-y-2">
+                        <View className="w-full flex-row items-center justify-between py-3 rounded-xl">
+                          <Image
+                            source={{
+                              uri: "https://images.pexels.com/photos/414630/pexels-photo-414630.jpeg",
+                            }}
+                            className="w-24 h-24 rounded-xl bg-slate-100"
+                          />
+                          <View className="flex-1 flex-col justify-between ml-3 py-1">
+                            <View className="flex-1 flex-col items-start justify-start">
+                              <Text className="text-base font-poppins-semibold text-neutral-900 dark:text-darkTextPrimary">
+                                {translate("user.discover.rewardPlaceholder.title")}
+                              </Text>
+                              <Text className="text-xs font-poppins text-neutral-500 dark:text-darkTextSecondary" numberOfLines={2}>
+                                {translate("user.discover.rewardPlaceholder.description")}
+                              </Text>
+                            </View>
+                            <View className="flex-row justify-start items-center mt-2">
+                              <View className="flex-row items-center gap-x-2 flex-shrink">
+                                <FontAwesome6 name="coins" size={12} color="#FB8500" />
+                                <Text className="text-sm font-poppins-bold text-primary">
+                                  {translate("user.discover.rewardPlaceholder.points", { points: "1,200" })}
+                                </Text>
+                              </View>
+                            </View>
+                          </View>
+                        </View>
+                      </View>
+                    </View>
+                  </View>
+                </>
+              )}
+            </ScrollView>
+          </BottomSheetView>
+        </BottomSheet>
       )}
-    </SafeAreaView>
+    </View>
   );
 }

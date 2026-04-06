@@ -1,104 +1,120 @@
 import { supabase } from "@/supabase/supabase";
-import { parseQRCode, createQRTransaction } from "@/services/qr-service";
+import { parseQRCode, createQRTransaction } from "@/services/users/qr-service";
 import { FrontDeskScanResult, ScanResult } from "@/type/qr-transaction";
 
- 
-export async function scanQRCode(
-  qrId: string,
-  operatorId: string,
-  storeId: string,
-  pointsEarned: number
-): Promise<ScanResult> {
- 
-  // 1. Fetch QR code
-  const { data: qrData, error: fetchError } = await supabase
-    .from("qr_codes")
-    .select("*")
-    .eq("id", qrId)
-    .single();
 
-  if (fetchError || !qrData) {
-    return { success: false, message: "QR code not found" };
-  }
-
-  // VALIDATION: Check if QR is already used
-  const now = new Date();
-  if (qrData.is_used) {
-    return { success: false, message: "QR code has already been used" };
-  }
-
-  // 3. Update qr_codes as used
-  const { error: updateError } = await supabase
-    .from("qr_codes")
-    .update({
-      is_used: true,
-      scanned_at: now.toISOString(),
-      store_staff_id: operatorId,
-      transaction_completed_at: now.toISOString(),
-    })
-    .eq("id", qrId);
-
-  if (updateError) {
-    return { success: false, message: "Failed to update QR code" };
-  }
-
-  // 4. Insert into qr_transactions
-  const { error: insertError } = await supabase
-    .from("qr_transactions")
-    .insert([
-      {
-        qr_code_id: qrId,
-        user_id: qrData.user_id,
-        store_id: storeId,
-        points_earned: pointsEarned,
-        created_at: now.toISOString(),
-      },
-    ]);
-
-  if (insertError) {
-    return { success: false, message: "Failed to log transaction" };
-  }
-
-  return { success: true, message: "QR scanned successfully", pointsEarned };
-}
-
-/**
- * Process a front desk scan from raw QR code data
- * Handles QR parsing, staff authentication, and transaction creation
- */
+  
 export async function processFrontDeskScan(
   qrData: string,
-  pointsToAward: number = 10
+  purchaseAmount: number
 ): Promise<FrontDeskScanResult> {
-  // 1. Parse the QR code
+  // Parse the QR code
   const parsed = parseQRCode(qrData);
 
   if (!parsed) {
     return { success: false, message: "Invalid QR Code. This QR code is not recognized." };
   }
 
-  // 2. Get current staff user
+  //Get current staff user
   const { data: { user }, error: authError } = await supabase.auth.getUser();
 
   if (authError || !user) {
     return { success: false, message: "Staff not authenticated." };
   }
 
-  // 3. Create QR transaction
+  //Create QR transaction
   try {
     const transaction = await createQRTransaction(
       parsed.userId,
       user.id,
-      pointsToAward
+      purchaseAmount
     );
 
     return {
       success: true,
       message: "Customer QR scanned successfully",
       transactionId: transaction.id,
+      pointsEarned: transaction.points_earned,
     };
   } catch (error) {
     console.error("Failed to create transaction:", error);
     return { success: false, message: "Failed to process QR code. Please try again." };
   }
 }
+
+ //Get the store for operator side
+export async function getCurrentUserStore(): Promise<{name: string; id: number} | null> {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return null;
+
+     const { data: profile, error: profileError } = await supabase
+      .from("users")
+      .select("id, role")
+      .eq("id", user.id)
+      .single();
+
+    if (profileError || !profile) {
+      console.error("User not found in public.users:", profileError);
+      return null;
+    }
+
+    if (profile.role !== "front_desk") {
+      console.error("User is not a front desk operator:", profile.role);
+      return null;
+    }
+
+    // Get store_id from store_staff table for current user
+    const { data: staffData, error: staffError } = await supabase
+      .from('store_staff')
+      .select('store_id')
+      .eq('user_id', user.id)
+      .eq('is_active', true)
+      .single();
+
+    if (staffError || !staffData) {
+     // console.error('No active store staff record found:', staffError);
+      return null;
+    }
+
+    // Get store name from stores table
+    const { data: storeData, error: storeError } = await supabase
+      .from('stores')
+      .select('name')
+      .eq('id', staffData.store_id)
+      .eq('status', 'active')
+      .single();
+
+    if (storeError || !storeData) {
+      console.error('Store not found:', storeError);
+      return null;
+    }
+
+    return { name: storeData.name, id: staffData.store_id };
+  } catch (error) {
+    console.error('Error fetching store info:', error);
+    return null;
+  }
+}
+
+export const getCurrentUserIsActive = async (): Promise<boolean> => {
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) return false;
+
+  const { data, error } = await supabase
+    .from("store_staff")
+    .select("is_active")
+    .eq("user_id", user.id)
+    .single();
+
+  if (error || !data) {
+    console.log("Error fetching is_active:", error);
+    return false;
+  }
+
+  return data.is_active ?? false;
+};
+
+
+ 

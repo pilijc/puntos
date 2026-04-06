@@ -5,7 +5,9 @@
     "jsx": "react",
     "baseUrl": ".",
     "paths": {
-      "@firebase-auth":[""],
+      "@firebase-auth": [
+        ""
+      ],
       "@/*": [
         "./src/*"
       ]
@@ -17,5 +19,9 @@
     "**/*.ts",
     "**/*.tsx",
     "nativewind-env.d.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "src/supabase/functions/**/*.ts"
   ]
 }

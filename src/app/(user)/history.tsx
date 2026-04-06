@@ -1,304 +1,321 @@
-import React, { useState, useRef } from "react";
-import { Animated } from "react-native";
-import { FadeInDown, FadeInUp } from "react-native-reanimated";
-import {
-  AnimatedView,
-  SafeAreaView,
-  Text,
-  View,
-  Image,
-  ScrollView,
-  TouchableOpacity,
-} from "@/tw";
+import React, { useState, useEffect } from "react";
+import { Text, View, Image, TouchableOpacity } from "@/tw";
+import { CirclePlus, Gift, ReceiptText, TrendingUp } from "lucide-react-native";
+import { RefreshControl } from "react-native";
+import { getUserTransactionHistory } from "@/services/users/qr-service";
+import { supabase } from "@/supabase/supabase";
+import { useTranslation } from "react-i18next";
+import StoreScreenContainer from "@/components/ui/store-screen-container";
 
-const TABS = ["All", "Earned", "Claimed"];
-
-const HISTORY_DATA = [
-  {
-    id: 1,
-    section: "Today",
-    type: "earned",
-    title: "The Daily Brew",
-    subtitle: "Purchase Points",
-    time: "10:24 AM",
-    points: "+45",
-    positive: true,
-    image:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuB5UrWxqFKu85Q6t5k1XYZX5msC9nEcivRLk_W8Egr5k12jVaYNYvQ1Q5wh_w7lzH0J6q9RJFJv1_rla_RVoS_QYDE5YKHkVRanYFOlk3kIv27V41DeqICTsa-dXdiVRHJTSDtZwL6DpyIkYTzBXGh-MEPn-yUZp34ClrLZSxdDkdCz3UgOMu8ok-Gf0-YR1lIJ1vEe-2Szd54GnwwHxg14sJJ6JT-1cv4y4N74zcpTZMwjzJo6rn4UHn8e1cefHZ6X_Be4qJoyXQ",
-  },
-  {
-    id: 2,
-    section: "Today",
-    type: "claimed",
-    title: "Burger Hub",
-    subtitle: "Redeemed Burger",
-    time: "08:15 AM",
-    points: "-800",
-    image:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuCDzVbbcDnW0KxdXyzYto5A0eD3-MrP-HJyQuJ16GJWpd8LXKUo5Fndi_Ifv3ShnX0mqyNijarrU4eVmtQeqq3pNto-Ho2-d5QqJMvZw8AQSkuKiEO3GlpYlCX_fRKgXKtLei5HXTcAwbBzR8JaocCw_2-YnssPSnELptffzKui7ClKlpMLtqcded1E2fm59P9sYC1Kh4wgNuGcbq9t7QKDBoGy0wABF9xGh2YUQq9qxJM7tpCn8otxtJSxsmGafagpq3TKXKcYHg",
-  },
-  {
-    id: 3,
-    section: "Today",
-    type: "earned",
-    title: "Bella Bakery",
-    subtitle: "Purchase Points",
-    time: "4:30 PM",
-    points: "+32",
-    positive: true,
-    icon: "🥐",
-  },
-  {
-    id: 4,
-    section: "Yesterday",
-    type: "earned",
-    title: "System Reward",
-    subtitle: "7-Day Streak Bonus",
-    points: "+150",
-    positive: true,
-    icon: "🔥",
-  },
-  {
-    id: 5,
-    section: "Yesterday",
-    type: "claimed",
-    title: "Zen Studio",
-    subtitle: "Discount Voucher",
-    time: "11:45 AM",
-    points: "-500",
-    icon: "🎟️",
-  },
-  {
-    id: 6,
-    section: "October 14",
-    type: "earned",
-    title: "Iron Gym",
-    subtitle: "Location Check-in",
-    time: "6:00 AM",
-    points: "+10",
-    positive: true,
-    image: "https://lh3.googleusercontent.com/aida-public/AB6AXuCkbOOvlwTwDNwhkROLzoIwvBgyEScWV8Flwxtl3QlyNWfSuOfeWFjRwsXD-G0_G2HRxeyOg7oK9dfzvtzqfRzDahy1xdLfHj5vqDkbwHfvasndc16rHw3wXCywrQoNY5unEh4cHmFofmUrPv0XH2Pglbt-QLgU-UBRRB6BxxatssPU2fqevQub5yoetDMEoHOJpCuyT9jy0AT7qfAI5GIKkk0ttASL1eL5y9p8msRE6sOrEKMU-G_1E8X-pcms3LLSa4a3wLICQw",
-  },
-  {
-    id: 7,
-    section: "October 14",
-    type: "claimed",
-    title: "Zen Studio",
-    subtitle: "Reward Claimed",
-    time: "8:20 PM",
-    points: "-300",
-    image: "https://lh3.googleusercontent.com/aida-public/AB6AXuCWjyL0GY6w2llQQhUrAZYxiS9wzf9Zkww8zwknp6802tWHgFiGobSBFCYQgC7SSJsNkbeZ_NBfE7a8NTlYfUVy_28_afCiqDppV1HJBEKJ03NtqamvYGXLia5m3Yy_7dkIOa4MuDo3Am49S5HSFj4a1N4QphPqVHiQ99eY-kbwtNyTCmrMRAQr11NN6FtrQq7oRt9lAjtgbcPxOCGLZx4jm8-tndrGLx9MHn6yPsn8w4XvoPae2wYDals8hmRBNtE7ZPKqaNZXeQ",
-  },
-  {
-    id: 8,
-    section: "October 14",
-    type: "earned",
-    title: "Bella Bakery",
-    subtitle: "Morning Coffee Purchase",
-    time: "9:10 AM",
-    points: "+18",
-    positive: true,
-    icon: "☕",
-  },
-  {
-    id: 9,
-    section: "February 21",
-    type: "earned",
-    title: "Burger Hub",
-    subtitle: "Combo Meal Purchase",
-    time: "12:45 PM",
-    points: "+64",
-    positive: true,
-    icon: "🍔",
-  },
-  {
-    id: 10,
-    section: "February 20",
-    type: "claimed",
-    title: "Bella Bakery",
-    subtitle: "Free Pastry Reward",
-    time: "3:15 PM",
-    points: "-120",
-    icon: "🎁",
-  },
-];
+const TABS = ["all", "earned", "claimed"];
 
 export default function History() {
   const [activeTab, setActiveTab] = useState(0);
+  const [transactionHistory, setTransactionHistory] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
-  const filteredData =
-    activeTab === 0
-      ? HISTORY_DATA
-      : HISTORY_DATA.filter((item) =>
-        activeTab === 1 ? item.type === "earned" : item.type === "claimed"
-      );
+  const { t: translate, i18n } = useTranslation();
 
-  const sections = [...new Set(filteredData.map((item) => item.section))];
+  const fetchTransactionHistory = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { setLoading(false); return; }
+      const history = await getUserTransactionHistory(user.id);
+      setTransactionHistory(history);
+    } catch (error) {
+      console.error("Error fetching transaction history:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const parsePoints = (value) => Number(value || 0);
+  useEffect(() => { fetchTransactionHistory(); }, []);
 
-  const totalEarnedPoints = HISTORY_DATA
-    .filter((item) => item.type === "earned")
-    .reduce((sum, item) => sum + parsePoints(item.points), 0);
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchTransactionHistory();
+    setRefreshing(false);
+  };
 
-  const formattedTotal =
-    totalEarnedPoints > 0
-      ? `+${totalEarnedPoints.toLocaleString()}`
-      : totalEarnedPoints.toLocaleString();
+  const parsePoints = (value: string) => Number(value.replace(/[+\-]/g, ""));
+
+  const filteredData = transactionHistory.filter((item) => {
+    const matchesTab =
+      activeTab === 0 ? true
+        : activeTab === 1 ? item.type === "earned"
+          : item.type === "claimed";
+    return matchesTab;
+  });
+
+  const sections = [...new Set(filteredData.map((item) => item.section))] as string[];
+
+  const totalEarned = transactionHistory
+    .filter((i) => i.type === "earned")
+    .reduce((sum, i) => sum + parsePoints(i.points), 0);
+
+  const totalSpent = transactionHistory
+    .filter((i) => i.type === "claimed")
+    .reduce((sum, i) => sum + parsePoints(i.points), 0);
 
   return (
-    <SafeAreaView className="flex-1 bg-background">
-      <AnimatedView entering={FadeInDown.duration(500)}>
-        <View className="px-6 pt-6 pb-6 bg-primary">
-          <View className="flex-row justify-between items-center">
-            <View>
-              <Text className="text-white text-2xl font-poppins-bold">
-                Activity
+    <StoreScreenContainer
+      backgroundClassName="bg-backgroundMuted dark:bg-darkBackground"
+      contentGap={16}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          tintColor="#FF6600"
+          colors={["#FF6600"]}
+        />
+      }
+    >
+      {/* ── Header ── */}
+      <View>
+        <View className="flex-row justify-between items-center w-full ml-1 mt-7.5">
+          <Text className="text-xl font-poppins-bold text-neutral-900 dark:text-darkTextPrimary">
+            {translate("user.activity.title")}
+          </Text>
+          <View className="w-10 h-10 opacity-0" />
+        </View>
+      </View>
+
+      {/* ── Summary Card ── */}
+      <View>
+        <View className="bg-white dark:bg-darkBackgroundCard rounded-2xl border border-neutral-100 dark:border-darkBorder overflow-hidden">
+          {/* Top gradient accent strip */}
+          <View className="h-1 bg-neutral-100 dark:bg-darkBorder" />
+          <View className="flex-row p-4">
+            {/* Earned */}
+            <View className="flex-1 items-center py-2">
+              <View className="w-9 h-9 rounded-full bg-emerald-50 dark:bg-emerald-500/10 items-center justify-center mb-2">
+                <TrendingUp size={18} color="#10b981" />
+              </View>
+              <Text className="text-xl font-poppins-bold text-emerald-500">
+                +{totalEarned.toLocaleString()}
               </Text>
-              <Text className="text-white/70 text-sm font-poppins-regular">
-                Unclaimed Points
+              <Text className="text-[10px] font-poppins-medium text-neutral-400 dark:text-darkTextSecondary tracking-wide mt-0.5">
+                {translate("user.activity.filter.earned").toUpperCase()}
               </Text>
             </View>
 
-            <Text className="text-white text-3xl font-poppins-bold">
-              {formattedTotal}
-            </Text>
-          </View>
+            {/* Divider */}
+            <View className="w-[1px] bg-neutral-100 dark:bg-darkBorder my-2" />
 
-          <View className="flex-row bg-white/20 mt-5 p-1 rounded-xl">
-            {TABS.map((tab, i) => {
-              const isActive = activeTab === i;
-
-              return (
-                <TouchableOpacity
-                  key={tab}
-                  onPress={() => setActiveTab(i)}
-                  className={`flex-1 py-2 rounded-lg items-center ${isActive ? "bg-white" : ""
-                    }`}
-                >
-                  <Text
-                    className={`text-sm font-poppins-semibold ${isActive ? "text-primary" : "text-white"
-                      }`}
-                  >
-                    {tab}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
+            {/* Spent */}
+            <View className="flex-1 items-center py-2">
+              <View className="w-9 h-9 rounded-full bg-neutral-100 dark:bg-white/10 items-center justify-center mb-2">
+                <Gift size={18} color="#64748B" />
+              </View>
+              <Text className="text-xl font-poppins-bold text-neutral-700 dark:text-darkTextPrimary">
+                {totalSpent.toLocaleString()}
+              </Text>
+              <Text className="text-[10px] font-poppins-medium text-neutral-400 dark:text-darkTextSecondary tracking-wide mt-0.5">
+                {translate("user.activity.filter.claimed").toUpperCase()}
+              </Text>
+            </View>
           </View>
         </View>
-      </AnimatedView>
+      </View>
 
-      <ScrollView
-        className="flex-1"
-        contentContainerStyle={{
-          paddingHorizontal: 20,
-          paddingBottom: 30,
-          paddingTop: 10,
-        }}
-        showsVerticalScrollIndicator={false}
-      >
-        {sections.map((section) => (
-          <AnimatedView key={section} entering={FadeInUp.duration(500)}>
-            <SectionLabel label={section} />
+      {/* ── Filter Chips ── */}
+      <View>
+        <View className="flex-row gap-x-2">
+          {TABS.map((tab, i) => {
+            const isActive = activeTab === i;
+            return (
+              <TouchableOpacity
+                key={tab}
+                onPress={() => setActiveTab(i)}
+                className={`px-3.5 py-1.5 rounded-full border ${isActive
+                  ? "bg-primary border-primary"
+                  : "bg-white dark:bg-darkBackgroundCard border-neutral-200 dark:border-darkBorder"
+                  }`}
+              >
+                <Text
+                  className={`text-xs font-poppins-semibold ${isActive ? "text-white" : "text-neutral-500 dark:text-darkTextSecondary"
+                    }`}
+                >
+                  {translate(`user.activity.filter.${tab}`)}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      </View>
 
-            <View className="mt-1">
-              {filteredData
-                .filter((item) => item.section === section)
-                .map((item) => (
-                  <HistoryItem key={item.id} {...item} />
-                ))}
-            </View>
-          </AnimatedView>
-        ))}
-
-        <AnimatedView entering={FadeInUp.delay(200).duration(600)}>
-          <View className="items-center pt-6 pb-4">
-            <Text className="text-[10px] tracking-[2px] text-neutral-300 font-poppins-medium">
-              POWERED BY PUNTOS
-            </Text>
+      {/* ── Transaction List ── */}
+      {loading ? (
+        <HistorySkeleton />
+      ) : sections.length === 0 ? (
+        <View className="items-center justify-center py-20">
+          <View className="w-24 h-24 rounded-full bg-neutral-100 dark:bg-white/5 items-center justify-center mb-6">
+            <ReceiptText size={44} color="#CBD5E1" />
           </View>
-        </AnimatedView>
-      </ScrollView>
-    </SafeAreaView>
+          <Text className="text-xl font-poppins-bold text-neutral-900 dark:text-white text-center">
+            {translate("user.activity.empty")}
+          </Text>
+          <Text className="text-sm font-poppins text-neutral-400 text-center mt-2 px-10">
+            {translate("user.activity.loading")}
+          </Text>
+        </View>
+      ) : (
+        sections.map((section) => {
+          const items = filteredData.filter((item) => item.section === section);
+          return (
+            <View key={section}>
+              {/* Floating uppercase section label */}
+              <SectionLabel label={section} />
+
+              {/* Grouped card with dividers — mirrors Settings cards */}
+              <View className="bg-white dark:bg-darkBackgroundCard rounded-2xl border border-neutral-100 dark:border-darkBorder overflow-hidden">
+                {items.map((item, idx) => (
+                  <View key={item.id}>
+                    <HistoryRow {...item} />
+                    {idx < items.length - 1 && (
+                      <View className="h-[1px] bg-neutral-100 dark:bg-darkBorder ml-[68px]" />
+                    )}
+                  </View>
+                ))}
+              </View>
+            </View>
+          );
+        })
+      )}
+
+      {/* Footer */}
+      <View className="items-center pt-2">
+        <Text className="text-[10px] tracking-[2px] text-neutral-300 font-poppins-medium">
+          {translate("label.poweredBy")}
+        </Text>
+      </View>
+    </StoreScreenContainer>
   );
 }
 
-function SectionLabel({ label }) {
+/* ── Skeleton ── */
+function HistorySkeleton() {
   return (
-    <View className="mt-6 mb-3">
-      <Text className="text-xs font-poppins-semibold text-neutral-400 tracking-widest">
-        {label.toUpperCase()}
-      </Text>
+    <View className="gap-y-5">
+      {/* Summary card skeleton */}
+      <View className="bg-white dark:bg-darkBackgroundCard rounded-2xl border border-neutral-100 dark:border-darkBorder overflow-hidden">
+        <View className="h-1 bg-neutral-100 dark:bg-white/10" />
+        <View className="flex-row p-4">
+          {[0, 1].map((i) => (
+            <View key={i} className="flex-1 items-center gap-y-2 py-2">
+              <View className="w-9 h-9 rounded-full bg-neutral-100 dark:bg-white/10" />
+              <View className="h-5 w-16 rounded-full bg-neutral-100 dark:bg-white/10" />
+              <View className="h-2.5 w-12 rounded-full bg-neutral-50 dark:bg-white/5" />
+            </View>
+          ))}
+        </View>
+      </View>
+
+      {/* Transaction groups */}
+      {[2, 3].map((count, g) => (
+        <View key={g}>
+          <View className="h-3 w-20 rounded-full bg-neutral-200 dark:bg-white/10 mb-2 ml-1" />
+          <View className="bg-white dark:bg-darkBackgroundCard rounded-2xl border border-neutral-100 dark:border-darkBorder overflow-hidden">
+            {[...Array(count)].map((_, i) => (
+              <View key={i}>
+                <View className="flex-row items-center gap-x-3 px-4 py-3.5">
+                  <View className="w-10 h-10 rounded-full bg-neutral-100 dark:bg-white/10" />
+                  <View className="flex-1 gap-y-2">
+                    <View className="h-3.5 w-2/3 rounded-full bg-neutral-100 dark:bg-white/10" />
+                    <View className="h-2.5 w-1/3 rounded-full bg-neutral-50 dark:bg-white/5" />
+                  </View>
+                  <View className="h-5 w-14 rounded-full bg-neutral-100 dark:bg-white/10" />
+                </View>
+                {i < count - 1 && <View className="h-[1px] bg-neutral-100 dark:bg-darkBorder ml-[68px]" />}
+              </View>
+            ))}
+          </View>
+        </View>
+      ))}
     </View>
   );
 }
 
-function HistoryItem({ title, subtitle, time, points, positive, image, icon }) {
+/* ── Section Label ── */
+function SectionLabel({ label }: { label: string }) {
+  const { t: translate, i18n } = useTranslation();
+  let display = label;
+  if (label === "today") display = translate("user.activity.sections.today");
+  else if (label === "yesterday") display = translate("user.activity.sections.yesterday");
+  else {
+    const d = new Date(label);
+    display = d.toLocaleDateString(
+      i18n.language === "ja" ? "ja-JP" : "en-US",
+      { month: "long", day: "numeric" }
+    );
+  }
+  return (
+    <Text className="text-xs font-poppins-semibold text-neutral-400 dark:text-darkTextSecondary tracking-widest uppercase ml-1 mb-2">
+      {display}
+    </Text>
+  );
+}
+
+/* ── History Row ── */
+function HistoryRow({ title, subtitle, time, points, positive, image, icon }: any) {
+  const { t: translate, i18n } = useTranslation();
   const isPositive = positive ?? points?.startsWith("+");
-  const scaleAnim = useRef(new Animated.Value(1)).current;
 
-  const handlePressIn = () => {
-    Animated.spring(scaleAnim, {
-      toValue: 0.97,
-      useNativeDriver: true,
-    }).start();
-  };
-
-  const handlePressOut = () => {
-    Animated.spring(scaleAnim, {
-      toValue: 1,
-      useNativeDriver: true,
-    }).start();
-  };
+  const timeStr = time
+    ? new Date(time).toLocaleTimeString(
+      i18n.language === "ja" ? "ja-JP" : "en-US",
+      { hour: "numeric", minute: "2-digit", hour12: true }
+    )
+    : null;
 
   return (
-    <TouchableOpacity
-      activeOpacity={1}
-      onPressIn={handlePressIn}
-      onPressOut={handlePressOut}
-    >
-      <Animated.View
-        style={{ transform: [{ scale: scaleAnim }] }}
-        className="bg-white rounded-2xl p-4 mb-3 border border-neutral-100"
+    <View className="flex-row items-center px-4 py-3.5">
+      {/* Circular icon well */}
+      <View
+        className={`w-10 h-10 rounded-full items-center justify-center flex-shrink-0 ${isPositive ? "bg-emerald-50 dark:bg-emerald-500/10" : "bg-orange-50 dark:bg-primary/10"
+          }`}
       >
-        <View className="flex-row items-center justify-between">
-          <View className="flex-row items-center flex-1">
-            <View className="w-12 h-12 my-3 rounded-xl bg-background items-center justify-center mr-3 overflow-hidden">
-              {image ? (
-                <Image source={{ uri: image }} className="w-12 h-12" />
-              ) : (
-                <Text className="text-xl">{icon}</Text>
-              )}
-            </View>
+        {icon ? (
+          <Text className={`text-base ${isPositive ? "text-emerald-500" : "text-primary"}`}>
+            {icon}
+          </Text>
+        ) : image ? (
+          <Image source={{ uri: image }} className="w-10 h-10 rounded-full" />
+        ) : (
+          isPositive ? (
+            <CirclePlus size={18} color="#10b981" />
+          ) : (
+            <Gift size={18} color="#FF6600" />
+          )
+        )}
+      </View>
 
-            <View className="flex-1">
-              <Text
-                numberOfLines={1}
-                className="text-base font-poppins-semibold text-neutral-900"
-              >
-                {title}
-              </Text>
+      {/* Text */}
+      <View className="flex-1 ml-3">
+        <Text
+          numberOfLines={1}
+          className="text-sm font-poppins-semibold text-neutral-800 dark:text-darkTextPrimary"
+        >
+          {translate(title)}
+        </Text>
+        <Text className="text-xs font-poppins text-neutral-400 dark:text-darkTextSecondary mt-0.5">
+          {translate(subtitle)}{timeStr ? ` • ${timeStr}` : ""}
+        </Text>
+      </View>
 
-              <Text className="text-xs font-poppins-regular text-neutral-400">
-                {subtitle} {time ? `• ${time}` : ""}
-              </Text>
-            </View>
-          </View>
-
-          <View
-            className={`px-3 py-1 rounded-full ${isPositive ? "bg-emerald-50" : "bg-red-50"
-              }`}
-          >
-            <Text
-              className={`text-sm font-poppins-bold ${isPositive ? "text-emerald-500" : "text-red-500"
-                }`}
-            >
-              {points}
-            </Text>
-          </View>
-        </View>
-      </Animated.View>
-    </TouchableOpacity>
+      {/* Points pill */}
+      <View
+        className={`px-2.5 py-1 rounded-full ml-3 ${isPositive ? "bg-emerald-50 dark:bg-emerald-500/10" : "bg-orange-50 dark:bg-primary/10"
+          }`}
+      >
+        <Text
+          className={`text-sm font-poppins-bold ${isPositive ? "text-emerald-500" : "text-primary"
+            }`}
+        >
+          {points}
+        </Text>
+      </View>
+    </View>
   );
 }

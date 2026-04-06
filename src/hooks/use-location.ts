@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { create } from 'zustand';
 import * as Location from 'expo-location';
 import {
   getCurrentLocation,
@@ -8,7 +9,7 @@ import {
   LocationPermissionStatus,
   watchLocation,
   LocationSubscription,
-} from '@/services/location-service';
+} from '@/services/user/location-service';
 
 export interface UseLocationReturn {
   location: UserLocation | null;
@@ -22,11 +23,19 @@ export interface UseLocationReturn {
   stopWatching: () => void;
 }
 
+export const useLocationStore = create<{
+  globalLocation: UserLocation | null;
+  setGlobalLocation: (loc: UserLocation | null) => void;
+}>((set) => ({
+  globalLocation: null,
+  setGlobalLocation: (loc) => set({ globalLocation: loc }),
+}));
+
 /**
  * Hook to manage user location state and permissions
  */
 export function useLocation(): UseLocationReturn {
-  const [location, setLocation] = useState<UserLocation | null>(null);
+  const { globalLocation: location, setGlobalLocation: setLocation } = useLocationStore();
   const [permissionStatus, setPermissionStatus] = useState<LocationPermissionStatus>({
     granted: false,
     canAskAgain: true,
@@ -95,10 +104,14 @@ export function useLocation(): UseLocationReturn {
     if (subscription) {
       subscription.remove();
     }
-    if (!permissionStatus.granted) {
+    // Fetch live hardware permission status natively to avoid referencing stale React closures on the first mount
+    let liveStatus = await checkLocationPermission();
+    if (!liveStatus.granted) {
       await requestPermission();
+      liveStatus = await checkLocationPermission();
     }
-    if (permissionStatus.granted) {
+
+    if (liveStatus.granted) {
       const sub = await watchLocation((loc) => {
         setLocation(loc);
       });

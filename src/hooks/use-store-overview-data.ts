@@ -1,0 +1,340 @@
+import { rewards } from "@/data/rewards";
+import { useCarouselAutoplayPause } from "@/hooks/use-carousel-autoplay-pause";
+import { useLocation } from "@/hooks/use-location";
+import { useRewardsActions } from "@/hooks/use-rewards-actions";
+import { useStampRewards } from "@/hooks/use-stamp-rewards";
+import { useStamps } from "@/hooks/use-stamps";
+import { useStreaks } from "@/hooks/use-streaks";
+import { getStores } from "@/services/store-service";
+import { StampProgress } from "@/services/stamp-service";
+import { useRewardsDataStore } from "@/hooks/use-rewards-data";
+import { useRewardsUiStore } from "@/store/user/rewards-ui-store";
+import { useStoreStore } from "@/store/user/store-store";
+import { sortRewards } from "@/utils/store-helpers";
+import { distance, point } from "@turf/turf";
+import { useCallback, useEffect, useMemo, useRef } from "react";
+import {
+  useAnimatedStyle,
+  useSharedValue,
+  withRepeat,
+  withSequence,
+  withTiming,
+} from "react-native-reanimated";
+
+function buildVirtualStampEntry(focusedStore: any): StampProgress {
+  return {
+    id: -Number(focusedStore.id),
+    user_id: "",
+    store_id: Number(focusedStore.id),
+    stamps_count: 0,
+    target: 7,
+    last_stamp_at: "",
+    updated_at: "",
+    stores: {
+      name: focusedStore.name,
+      logo: focusedStore.logo ?? undefined,
+      status: focusedStore.status,
+      is_active: focusedStore.is_active,
+      latitude: focusedStore.latitude ?? undefined,
+      longitude: focusedStore.longitude ?? undefined,
+      address: focusedStore.address ?? undefined,
+    },
+  };
+}
+
+export function useStoreOverviewData(storeId?: string) {
+  const {
+    rewardSort,
+    rewardPointsOrder,
+    isAutoPlayEnabled,
+    setIsAutoPlayEnabled,
+    heroIndex,
+    setHeroIndex,
+  } = useRewardsUiStore();
+  const {
+    enabledStampFeatureStoreIds,
+    eligibleStreakStoreIds,
+    activeStampProgramRewards,
+    fetchRewardsData,
+    getEnrichedStores,
+    isLoadingRewardsFeatures,
+    fetchedStoreIds,
+    activeStreakProgramMap,
+  } = useRewardsDataStore();
+  const { stores, setStores } = useStoreStore();
+  const { location, startWatching, stopWatching } = useLocation();
+  const { handleRefresh, hasStampedToday } = useRewardsActions();
+  const { stamps } = useStamps();
+  const { stampRewards } = useStampRewards();
+  const { streaks: userStreaks, refetch: refetchStreaks } = useStreaks();
+
+  const handleCarouselInteraction = useCarouselAutoplayPause(setIsAutoPlayEnabled);
+  const swipeIndicatorOpacity = useSharedValue(0);
+
+  const fetchActiveStores = useCallback(async () => {
+    try {
+      const data = await getStores();
+      setStores(data ?? []);
+    } catch (error) {
+      console.error("Failed to load stores in Store tab:", error);
+    }
+  }, [setStores]);
+
+  useEffect(() => {
+    fetchActiveStores();
+  }, [fetchActiveStores]);
+
+  useEffect(() => {
+    startWatching();
+    return () => {
+      stopWatching();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const storesWithLocation = useMemo(
+    () => getEnrichedStores(stores, location),
+    [getEnrichedStores, location, stores],
+  );
+
+  const nearbyStores = useMemo(
+    () => storesWithLocation.filter((store) => store.isNearby),
+    [storesWithLocation],
+  );
+
+  useEffect(() => {
+    if (nearbyStores.length >= 2) {
+      swipeIndicatorOpacity.value = withRepeat(
+        withSequence(
+          withTiming(1, { duration: 600 }),
+          withTiming(0.2, { duration: 600 }),
+        ),
+        -1,
+        true,
+      );
+    } else {
+      swipeIndicatorOpacity.value = 0;
+    }
+  }, [nearbyStores.length, swipeIndicatorOpacity]);
+
+  const sortedStamps = useMemo(() => {
+    if (!location) return stamps;
+    const userPoint = point([location.longitude, location.latitude]);
+
+    return [...stamps].sort((a, b) => {
+      const storeA = a.stores as { latitude?: number; longitude?: number } | undefined;
+      const storeB = b.stores as { latitude?: number; longitude?: number } | undefined;
+
+      let distanceA = Infinity;
+      let distanceB = Infinity;
+
+      if (storeA?.latitude != null && storeA?.longitude != null) {
+        distanceA = distance(
+          userPoint,
+          point([storeA.longitude, storeA.latitude]),
+          { units: "kilometers" },
+        );
+      }
+
+      if (storeB?.latitude != null && storeB?.longitude != null) {
+        distanceB = distance(
+          userPoint,
+          point([storeB.longitude, storeB.latitude]),
+          { units: "kilometers" },
+        );
+      }
+
+      return distanceA - distanceB;
+    });
+  }, [location, stamps]);
+
+  const sortedRewards = useMemo(
+    () => sortRewards(rewards, rewardSort, rewardPointsOrder).slice(0, 3),
+    [rewardPointsOrder, rewardSort],
+  );
+
+  const isStoreNearby = useCallback((storeLat?: number | null, storeLon?: number | null) => {
+    if (!location || storeLat == null || storeLon == null) return false;
+
+    const from = point([location.longitude, location.latitude]);
+    const to = point([storeLon, storeLat]);
+    const distKm = distance(from, to, { units: "kilometers" });
+    return distKm <= 0.03;
+  }, [location]);
+
+  const displayStamps = useMemo(() => {
+    // If a specific storeId is requested, we only want to show that one
+    if (storeId) {
+      const targetStore = storesWithLocation.find((s) => s.id.toString() === storeId);
+      if (!targetStore) return [];
+
+      const isEnabled = enabledStampFeatureStoreIds.includes(Number(targetStore.id));
+      if (!isEnabled) return [];
+
+      const existingStamp = sortedStamps.find(
+        (stamp) => Number(stamp.store_id) === Number(targetStore.id),
+      );
+
+      return existingStamp ? [existingStamp] : [buildVirtualStampEntry(targetStore)];
+    }
+
+    if (!location) return sortedStamps;
+
+    if (nearbyStores.length === 0) return sortedStamps;
+
+    const focusedStore = nearbyStores[heroIndex];
+    if (!focusedStore) return [];
+
+    const isEnabled = enabledStampFeatureStoreIds.includes(Number(focusedStore.id));
+    if (!isEnabled) return [];
+
+    const existingStamp = sortedStamps.find(
+      (stamp) => Number(stamp.store_id) === Number(focusedStore.id),
+    );
+
+    return existingStamp ? [existingStamp] : [buildVirtualStampEntry(focusedStore)];
+  }, [enabledStampFeatureStoreIds, heroIndex, location, nearbyStores, sortedStamps, storeId, storesWithLocation]);
+
+  const displayStreaks = useMemo(() => {
+    // If a specific storeId is requested, focus only on its real streak record
+    if (storeId) {
+      const isEligible = eligibleStreakStoreIds.includes(Number(storeId));
+      if (!isEligible) return [];
+
+      // Find real user_streaks record for this store
+      const existingStreak = userStreaks.find(
+        (s) => Number(s.store_id) === Number(storeId),
+      );
+      if (existingStreak) return [existingStreak];
+
+      // No record yet — build a virtual entry from the store so the card still shows
+      const targetStore = storesWithLocation.find((s) => s.id.toString() === storeId);
+      if (!targetStore) return [];
+      const storeStreakId = activeStreakProgramMap.get(Number(targetStore.id)) ?? null;
+      return [{
+        id: -Number(targetStore.id),
+        user_id: "",
+        store_id: Number(targetStore.id),
+        streak_days: 0,
+        last_activity_date: "",
+        total_earned_days: 0,
+        points_earned: 0,
+        completion_bonus_awarded: false,
+        completed_at: null,
+        status: null,
+        store_streak_id: storeStreakId,
+        store_streaks: null,
+        stores: {
+          name: targetStore.name,
+          logo: targetStore.logo ?? undefined,
+          address: targetStore.address ?? undefined,
+          status: targetStore.status,
+          is_active: targetStore.is_active,
+        },
+      }];
+    }
+
+    if (nearbyStores.length > 0) {
+      const focusedStore = nearbyStores[heroIndex];
+      if (!focusedStore) return [];
+
+      const isEligible = eligibleStreakStoreIds.includes(Number(focusedStore.id));
+      if (!isEligible) return [];
+
+      const existingStreak = userStreaks.find(
+        (s) => Number(s.store_id) === Number(focusedStore.id),
+      );
+      if (existingStreak) return [existingStreak];
+
+      // No record yet — virtual entry
+      const storeStreakId2 = activeStreakProgramMap.get(Number(focusedStore.id)) ?? null;
+      return [{
+        id: -Number(focusedStore.id),
+        user_id: "",
+        store_id: Number(focusedStore.id),
+        streak_days: 0,
+        last_activity_date: "",
+        total_earned_days: 0,
+        points_earned: 0,
+        completion_bonus_awarded: false,
+        completed_at: null,
+        status: null,
+        store_streak_id: storeStreakId2,
+        store_streaks: null,
+        stores: {
+          name: focusedStore.name,
+          logo: focusedStore.logo ?? undefined,
+          address: focusedStore.address ?? undefined,
+          status: focusedStore.status,
+          is_active: focusedStore.is_active,
+        },
+      }];
+    }
+
+    // Fallback: show all streaks for eligible stores
+    return userStreaks.filter((s) =>
+      eligibleStreakStoreIds.includes(Number(s.store_id)),
+    );
+  }, [activeStreakProgramMap, eligibleStreakStoreIds, heroIndex, nearbyStores, storeId, storesWithLocation, userStreaks]);
+
+  const prevFetchParams = useRef<string | null>(null);
+
+  useEffect(() => {
+    const nearbyIds = nearbyStores.map((store) => Number(store.id));
+    const displayStampStoreIds = sortedStamps.map((stamp) => Number(stamp.store_id));
+    
+    // Ensure we fetch feature flags for out-of-range Discover stores when viewing their details
+    if (storeId && !nearbyIds.includes(Number(storeId))) {
+      nearbyIds.push(Number(storeId));
+    }
+    
+    const currentParams = JSON.stringify({
+      nearbyIds: [...nearbyIds].sort(),
+      displayStampStoreIds: [...displayStampStoreIds].sort(),
+    });
+
+    if (prevFetchParams.current !== currentParams) {
+      prevFetchParams.current = currentParams;
+      fetchRewardsData(nearbyIds, displayStampStoreIds);
+    }
+  }, [fetchRewardsData, nearbyStores, sortedStamps, storeId]);
+
+  useEffect(() => {
+    if (storeId) {
+      const index = nearbyStores.findIndex((s) => s.id.toString() === storeId);
+      if (index !== -1) {
+        setHeroIndex(index);
+      } else {
+        setHeroIndex(0);
+      }
+    } else {
+      setHeroIndex(0);
+    }
+  }, [nearbyStores, setHeroIndex, storeId]);
+
+  const swipeIndicatorStyle = useAnimatedStyle(() => {
+    'worklet';
+    return {
+      opacity: swipeIndicatorOpacity.value,
+    };
+  });
+
+  return {
+    activeStampProgramRewards,
+    handleCarouselInteraction,
+    handleRefresh,
+    hasStampedToday,
+    isAutoPlayEnabled,
+    isStoreNearby,
+    nearbyStores,
+    sortedRewards,
+    stampRewards,
+    storesWithLocation,
+    displayStamps,
+    displayStreaks,
+    swipeIndicatorStyle,
+    isLoadingRewardsFeatures,
+    fetchedStoreIds,
+    refetchStreaks,
+  };
+}
