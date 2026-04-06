@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { create } from 'zustand';
 import * as Location from 'expo-location';
 import { getCurrentLocation, checkLocationPermission, requestLocationPermission, UserLocation, LocationPermissionStatus } from '@/services/user/location-service';
-import { syncLocationService } from "@/services/settings-service";
+import { syncLocationService } from "@/services/user/settings-service";
 
 export interface UseLocationReturn {
     location: UserLocation | null;

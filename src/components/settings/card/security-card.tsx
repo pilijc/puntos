@@ -6,7 +6,7 @@ import { router } from "expo-router";
 
 // State/Auth
 import { supabase } from '@/supabase/supabase';
-import { softDeleteUserAccountService } from "@/services/settings-service";
+import { softDeleteUserAccountService } from "@/services/user/settings-service";
 
 // Components
 import { Modal } from "@/components/modal";
