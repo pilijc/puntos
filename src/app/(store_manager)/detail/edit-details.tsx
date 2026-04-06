@@ -277,12 +277,11 @@ export default function EditDetails() {
                       key={opt.value}
                       onPress={() => setType(opt.value)}
                       activeOpacity={0.8}
-                      className={`px-3.5 py-1.5 rounded-full ${
+                      className={`px-3.5 py-1.5 rounded-full bg-white ${
                         selected
-                          ? "bg-primary/10"
-                          : "bg-white border border-slate-100 dark:border-slate-800"
+                          ? "border border-primary"
+                          : "border border-slate-100 dark:border-slate-800"
                       }`}
-                      style={selected ? { borderWidth: 0 } : undefined}
                     >
                       <Text
                         className={`text-xs font-poppins-semibold ${
