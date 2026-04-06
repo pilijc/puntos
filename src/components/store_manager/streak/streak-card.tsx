@@ -1,9 +1,8 @@
 import React, { useState } from "react";
 import { ActivityIndicator } from "react-native";
 import { View, Text, TouchableOpacity } from "@/tw";
-import { CheckCircle, ChevronDown, Flame, Gift, Info, Pencil, Users } from "lucide-react-native";
+import { Check, ChevronDown, Flame, Gift, Info, Pencil, Play, SendHorizonal, StopCircle, Trash2, Users } from "lucide-react-native";
 import { COLORS } from "@/type/super-admin/user";
-import { Button } from "@/components/button";
 import { getParticipantsByProgramId, getParticipantsCountByProgramId } from "@/services/store-manager/streak-service";
 import { StreakCardProps, StreakParticipant } from "@/type/store-manager/streak";
 import { formatDate, formatDateTime } from "@/utils/store_manager/streak-utils";
@@ -27,6 +26,7 @@ export function StreakCard({
   const PAGE_SIZE = 5;
   const status = streak.status ?? "draft";
   const isFixed = !streak.points_mode || streak.points_mode === "fixed";
+  const showParticipantsCount = status === "active" || status === "ended";
 
   const [participantsOpen, setParticipantsOpen] = useState(false);
   const [participants, setParticipants] = useState<StreakParticipant[]>([]);
@@ -78,7 +78,7 @@ export function StreakCard({
       <View className="flex-row items-center justify-between px-4 pt-4 pb-3 border-b border-slate-100 dark:border-slate-800">
         <View className="flex-row items-center gap-x-2">
           <View className="w-8 h-8 rounded-lg items-center justify-center">
-            <Flame size={16} color="#FF6600" />
+            <Flame size={16} color="gray" />
           </View>
           <Text className="text-md font-poppins-bold text-textPrimary ">
             {streak.title ?? "Streak Program"}
@@ -192,7 +192,7 @@ export function StreakCard({
 
       {status === "active" && (
         <View className="mx-4 my-3 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-700 px-3 py-2.5 flex-row items-center gap-x-2">
-          <CheckCircle size={14} color="#10B981" />
+          <Check size={14} color="#10B981" />
           <Text className="text-xs font-poppins text-textSecondary flex-1">
             Users can earn today if they{streak.radius_meters ? ` are within ${streak.radius_meters}m and` : ""} haven't checked in yet today.
           </Text>
@@ -205,17 +205,19 @@ export function StreakCard({
         className="flex-row items-center justify-between px-4 py-3"
       >
         <View className="flex-row items-center gap-x-2">
-          <View className="w-8 h-8 rounded-lg bg-backgroundMuted items-center justify-center">
+          <View className="w-8 h-8 rounded-lg items-center justify-center">
             <Users size={16} color={COLORS.textMuted} />
           </View>
           <Text className="text-sm font-poppins-semibold text-textSecondary">
             Participants
           </Text>
-          <View className="spx-2 py-0.5 min-w-[22px] items-center">
-            <Text className="text-xs font-poppins-bold text-textSecondary">
-              {participantsCount}
-            </Text>
-          </View>
+          {showParticipantsCount && (
+            <View className="px-2 py-0.5 min-w-[22px] items-center">
+              <Text className="text-xs font-poppins-bold text-textSecondary">
+                {participantsCount}
+              </Text>
+            </View>
+          )}
         </View>
         <ChevronDown size={20} color={COLORS.textMuted} />
       </TouchableOpacity>
@@ -256,7 +258,9 @@ export function StreakCard({
                     <>
                       <ChevronDown size={16} color={COLORS.primary} />
                       <Text className="text-xs font-poppins-semibold text-primary">
-                        Load more ({participantsCount - participants.length} remaining)
+                        {showParticipantsCount
+                          ? `Load more (${participantsCount - participants.length} remaining)`
+                          : "Load more"}
                       </Text>
                     </>
                   )}
@@ -266,7 +270,9 @@ export function StreakCard({
               {!hasMore && participants.length > 0 && (
                 <View className="py-2.5 items-center border-t border-slate-100 dark:border-slate-800">
                   <Text className="text-[10px] font-poppins text-textMuted">
-                    All {participantsCount} participants shown
+                    {showParticipantsCount
+                      ? `All ${participantsCount} participants shown`
+                      : "All participants shown"}
                   </Text>
                 </View>
               )}
@@ -277,60 +283,78 @@ export function StreakCard({
 
       {hasActions && (
         <View className="px-4 pb-4 pt-2 border-t border-slate-100 dark:border-slate-800 gap-y-2">
-          {onPublish && (
-            <Button
-              label="Publish Program"
-              onPress={onPublish}
-              variant="primary"
-              icon="publish"
-              loading={isPublishing}
-              disabled={isActingAny}
-            />
-          )}
-
-          {onActivate && (
-            <Button
-              label="Activate Now"
-              onPress={onActivate}
-              variant="primary"
-              icon="play-arrow"
-              loading={isActivating}
-              disabled={isActingAny}
-            />
-          )}
-
-          {onEnd && (
-            <Button
-              label="End Program"
-              onPress={onEnd}
-              variant="danger"
-              icon="stop-circle"
-              loading={isEnding}
-              disabled={isActingAny}
-            />
-          )}
-
-          {onDelete && (
-            <Button
-              label="Delete Program"
-              onPress={onDelete}
-              variant="danger"
-              icon="delete"
-              loading={isDeleting}
-              disabled={isActingAny}
-            />
-          )}
-
-          {onEdit && (
-            <Button
-              label="Edit Program"
-              onPress={onEdit}
-              variant="secondary"
-              icon="edit"
-              loading={isEditing}
-              disabled={isActingAny}
-            />
-          )}
+          <View className="flex-row gap-x-2 flex-wrap">
+            {onEnd && (
+              <TouchableOpacity
+                activeOpacity={0.8}
+                disabled={isActingAny}
+                onPress={onEnd}
+                className="flex-1 min-w-[28%] h-10 rounded-lg items-center justify-center bg-red-100"
+              >
+                {isEnding ? (
+                  <ActivityIndicator size="small" color="#ef4444" />
+                ) : (
+                  <StopCircle size={16} color="#ef4444" />
+                )}
+              </TouchableOpacity>
+            )}
+            {onDelete && (
+              <TouchableOpacity
+                activeOpacity={0.8}
+                disabled={isActingAny}
+                onPress={onDelete}
+                className="flex-1 min-w-[28%] h-8 rounded-lg items-center justify-center bg-red-100"
+              >
+                {isDeleting ? (
+                  <ActivityIndicator size="small" color="#ef4444" />
+                ) : (
+                  <Trash2 size={12} color="#ef4444" />
+                )}
+              </TouchableOpacity>
+            )}
+            {onEdit && (
+              <TouchableOpacity
+                activeOpacity={0.8}
+                disabled={isActingAny}
+                onPress={onEdit}
+                className="flex-1 min-w-[28%] h-8 rounded-lg items-center justify-center bg-gray-200"
+              >
+                {isEditing ? (
+                  <ActivityIndicator size="small" color="#64748b" />
+                ) : (
+                  <Pencil size={12} color="#64748b" />
+                )}
+              </TouchableOpacity>
+            )}
+            {onPublish && (
+              <TouchableOpacity
+                activeOpacity={0.8}
+                disabled={isActingAny}
+                onPress={onPublish}
+                className="flex-1 min-w-[28%] h-8 rounded-lg items-center justify-center bg-orange-500"
+              >
+                {isPublishing ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <SendHorizonal size={12} color="#fff" />
+                )}
+              </TouchableOpacity>
+            )}
+            {onActivate && (
+              <TouchableOpacity
+                activeOpacity={0.8}
+                disabled={isActingAny}
+                onPress={onActivate}
+                className="flex-1 min-w-[28%] h-8 rounded-lg items-center justify-center bg-emerald-600"
+              >
+                {isActivating ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <Play size={12} color="#fff" />
+                )}
+              </TouchableOpacity>
+            )}
+          </View>
         </View>
       )}
     </View>

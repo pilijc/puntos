@@ -1,11 +1,10 @@
 import React from "react";
 import { ActivityIndicator, Keyboard } from "react-native";
-import { View, Text, TouchableOpacity } from "@/tw";
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { Text, TouchableOpacity } from "@/tw";
+import * as LucideIcons from "lucide-react-native";
 
 type ButtonVariant = "primary" | "success" | "danger" | "secondary" | "ghost";
-
-type IconName = React.ComponentProps<typeof MaterialIcons>["name"];
+type IconName = keyof typeof LucideIcons;
 
 interface ButtonProps {
   label: string;
@@ -75,19 +74,21 @@ export function Button({
     container = container.replace("bg-primary", "bg-primary/50");
   }
 
+  const LucideIcon = icon ? (LucideIcons[icon] as React.ComponentType<{ size: number; color: string }>) : null;
+
   return (
     <TouchableOpacity
       activeOpacity={0.8}
       disabled={disabled || loading}
       onPress={onPress}
       onPressIn={keyboardDismiss ? () => { Keyboard.dismiss(); onPress(); } : undefined}
-      className={`${fullWidth ? "w-full" : "w-fit"} rounded-xl ${container} py-3 px-6 items-center flex-row justify-center gap-x-2`}
+      className={`${fullWidth ? "w-full py-3 px-10" : "w-fit py-2.5 px-10"} rounded-xl ${container} items-center flex-row justify-center gap-x-2`}
     >
       {loading ? (
         <ActivityIndicator size="small" color={spinnerColor} />
       ) : (
         <>
-          {icon && <MaterialIcons name={icon} size={16} color={iconColor} />}
+          {LucideIcon && <LucideIcon size={16} color={iconColor} />}
           <Text className={`text-sm font-poppins-semibold ${text}`}>{label}</Text>
         </>
       )}

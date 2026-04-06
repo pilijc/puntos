@@ -32,14 +32,23 @@ export function TextField({
         </Text>
       )}
       <View className="relative">
-        <TextInput
-          className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-4 text-base font-poppins text-slate-900 dark:text-slate-100 pr-12"
-          placeholder={placeholder}
-          placeholderTextColor="#94A3B8"
-          keyboardType={keyboardType}
-          value={value}
-          onChangeText={(v) => onChangeText(v.replace(/-/g, ""))}
-        />
+      <TextInput
+        className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 text-base font-poppins text-slate-900 dark:text-slate-100 pr-12"
+        placeholder={placeholder}
+        placeholderTextColor="#94A3B8"
+        style={{
+          height: 45,
+          lineHeight: 20,
+          paddingVertical: 0,
+          paddingHorizontal: 12,
+          textAlignVertical: "center",
+          includeFontPadding: false,
+          fontSize: 13,
+        }}
+        keyboardType={keyboardType}
+        value={value}
+        onChangeText={(v) => onChangeText(v.replace(/-/g, ""))}
+      />
       </View>
     </View>
   );

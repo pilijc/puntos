@@ -1,4 +1,3 @@
-import { getQRConfig } from "@/services/store-manager/qr-service";
 
 export interface QRCodeState {
   id: string;

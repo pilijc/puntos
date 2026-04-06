@@ -39,6 +39,12 @@ export function getBadge(user: any) {
   return ROLE_CONFIG[user.roleLabel] || ROLE_CONFIG["User"];
 }
 
+export const STORE_STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; dot: string; text?: string }> = {
+	active: { label: "Active", color: "#22C55E", bg: "bg-success/10", dot: "#22C55E", text: "text-success" },
+	pending_review: { label: "Pending", color: "#F59E0B", bg: "bg-amber-100 dark:bg-amber-900/20", dot: "#F59E0B", text: "text-amber-600 dark:text-amber-400" },
+	inactive: { label: "Inactive", color: "#EF4444", bg: "bg-red-100 dark:bg-red-900/20", dot: "#EF4444", text: "text-red-600 dark:text-red-400" },
+};
+
 export const STORE_CATEGORY_CONFIG: Record<string, { bg: string; text: string }> = {
   "Cafe": { bg: "bg-orange-100 dark:bg-orange-900/30", text: "text-orange-700 dark:text-orange-400" },
   "Bar & Drinks": { bg: "bg-purple-100 dark:bg-purple-900/30", text: "text-purple-700 dark:text-purple-400" },

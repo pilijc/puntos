@@ -56,20 +56,20 @@ export default function SuperAdminStores() {
 	}
 
 	return (
-		<ScreenWrapper className="flex-1 bg-backgroundMuted dark:bg-slate-950">
+		<ScreenWrapper className="flex-1 bg-backgroundMuted dark:bg-darkBackground">
 
 			{/* ── Header ── */}
-			<View className="bg-white border-b border-slate-100 dark:bg-slate-900 dark:border-slate-800 px-6 py-4 flex-row items-center justify-start">
+			<View className="bg-white border-b border-slate-100 dark:bg-darkBackgroundMuted dark:border-darkBorder px-6 py-4 flex-row items-center justify-start">
 				<View className="flex-row items-center gap-2 py-1">
 					<MaterialIcons name="storefront" size={22} color="black" className="mt-1" />
-					<Text className="text-2xl font-poppins-bold text-slate-900 dark:text-slate-100 flex-1">
+					<Text className="text-2xl font-poppins-bold text-slate-900 dark:text-darkTextPrimary flex-1">
 						Store Approvals
 					</Text>
 				</View>
 			</View>
 
 			{/* ── Filter tabs ── */}
-			<View className="bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800">
+			<View className="bg-white dark:bg-darkBackgroundMuted border-b border-slate-100 dark:border-darkBorder">
 				<ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 20, gap: 28, flexDirection: "row" }}>
 					{FILTERS.map((f) => {
 						const active = activeFilter === f;
@@ -85,7 +85,7 @@ export default function SuperAdminStores() {
 								className={
 									active
 										? "text-sm font-poppins-bold text-primary"
-										: "text-sm font-poppins-medium text-slate-400 dark:text-slate-500"
+										: "text-sm font-poppins-medium text-slate-400 dark:text-darkTextMuted"
 								}
 								numberOfLines={1}
 							>
@@ -95,13 +95,13 @@ export default function SuperAdminStores() {
 								<View
 									className={`rounded-full px-1.5 min-w-[20px] items-center ${active
 										? "bg-primary/10"
-										: "bg-neutral-100 dark:bg-neutral-700"
+										: "bg-neutral-100 dark:bg-darkBackgroundCard"
 										}`}
 								>
 									<Text
 										className={`text-[10px] font-poppins-bold ${active
 											? "text-primary"
-											: "text-neutral-500 dark:text-neutral-400"
+											: "text-neutral-500 dark:text-darkTextMuted"
 											}`}
 									>
 										{count}
@@ -157,7 +157,7 @@ export default function SuperAdminStores() {
 					{!loading && filtered.length === 0 && !error && (
 						<View className="items-center pt-16 gap-3">
 							<MaterialIcons name="storefront" size={52} color="#CBD5E1" />
-							<Text className="text-base font-poppins-bold text-slate-600 dark:text-slate-300">
+							<Text className="text-base font-poppins-bold text-slate-600 dark:text-darkTextSecondary">
 								{activeFilter === "All" ? "No stores yet" : `No ${FILTER_LABELS[activeFilter]} stores`}
 							</Text>
 							<Text className="text-sm font-poppins text-slate-400 text-center px-8">

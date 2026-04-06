@@ -54,7 +54,7 @@ export const SecurityCard = () => {
                         <Ionicons name="shield-checkmark-outline" size={15} color="#3b82f6" />
                     </View>
 
-                    <Text className="flex-1 ml-3 text-base font-poppins-semibold text-neutral-800 dark:text-darkTextPrimary">
+                    <Text className="flex-1 ml-3 text-base font-poppins-semibold text-textPrimary dark:text-darkTextPrimary">
                         {translate('settings.account.security.title')}
                     </Text>
 
@@ -76,7 +76,7 @@ export const SecurityCard = () => {
                             className="flex-row items-center py-3 ml-12"
                             activeOpacity={0.6}
                         >
-                            <Text className="flex-1 text-sm font-poppins-medium text-neutral-600 dark:text-darkTextSecondary">
+                            <Text className="flex-1 text-sm font-poppins-medium text-textSecondary dark:text-darkTextSecondary">
                                 {translate('settings.account.security.changePassword.title')}
                             </Text>
                             <Ionicons name="chevron-forward" size={14} color="#94a3b8" />
