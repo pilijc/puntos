@@ -417,9 +417,10 @@
             }
         },
         "account": {
-            "title": "ACCOUNT SETTINGS",
+            "title": "Account Settings",
             "security": {
                 "title": "Security",
+                "description": "Password, Delete Account",
                 "changePassword": {
                     "title": "Change Password",
                     "description": "Enter your current and new password",
@@ -461,7 +462,7 @@
             }
         },
         "notificationsPrivacy": {
-            "title": "NOTIFICATIONS & PRIVACY",
+            "title": "Notifications & Privacy",
             "alerts": {
                 "title": "Nearby Alerts",
                 "description": "Get notified when rewards are close"

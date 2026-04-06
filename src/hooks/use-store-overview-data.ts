@@ -1,6 +1,6 @@
 import { rewards } from "@/data/rewards";
 import { useCarouselAutoplayPause } from "@/hooks/use-carousel-autoplay-pause";
-import { useLocation } from "@/hooks/use-location";
+import { useLocation } from "@/hooks/user/use-location";
 import { useRewardsActions } from "@/hooks/use-rewards-actions";
 import { useStampRewards } from "@/hooks/use-stamp-rewards";
 import { useStamps } from "@/hooks/use-stamps";
