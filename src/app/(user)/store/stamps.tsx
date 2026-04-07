@@ -2,7 +2,6 @@ import React, { useEffect, useMemo, useState } from "react";
 import { View, Text, Image, TouchableOpacity } from "@/tw";
 import {
   ScrollView,
-  ActivityIndicator,
 } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { useStamps } from "@/hooks/use-stamps";
@@ -23,6 +22,7 @@ import {
   TicketPercent
 } from "lucide-react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { StampDetailSkeleton } from "@/components/skeleton/user/stamp-detail-skeleton";
 
 // ─── Single Punch Card ────────────────────────────────────────────────────────
 function StampCard({
@@ -426,10 +426,13 @@ export default function StampLogScreen() {
         </View>
       </View>
 
-      <ScrollView
-        contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
-        showsVerticalScrollIndicator={false}
-      >
+      {isLoading ? (
+        <StampDetailSkeleton />
+      ) : (
+        <ScrollView
+          contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
+          showsVerticalScrollIndicator={false}
+        >
         {/* ─── The Single Active Punch Card ─── */}
         {(cardsToDisplay.length > 0 || showVirtualCard) && (
           <View className="mb-2">
@@ -569,7 +572,8 @@ export default function StampLogScreen() {
           </View>
         </View>
 
-      </ScrollView>
+        </ScrollView>
+      )}
     </View>
   );
 }

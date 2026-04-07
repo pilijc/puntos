@@ -441,7 +441,21 @@ export default function StoreStreakDetail() {
 
   if (!streak) {
     if (isLoading) {
-      return <StreakDetailSkeleton />;
+      // Render the real header so the back button and title are always visible during loading.
+      // The skeleton only fills the body content area below the header.
+      return (
+        <View className="flex-1 bg-background dark:bg-darkBackground">
+          <View className="bg-white dark:bg-darkBackgroundMuted flex-row items-center px-4 pt-12 pb-3 border-b border-neutral-100 dark:border-darkBorder">
+            <TouchableOpacity onPress={() => router.back()} style={{ padding: 4, marginRight: 8 }}>
+              <ChevronLeft size={24} color="#FF6600" />
+            </TouchableOpacity>
+            <Text className="text-base font-poppins-semibold text-neutral-900 dark:text-white">
+              Streak Log
+            </Text>
+          </View>
+          <StreakDetailSkeleton />
+        </View>
+      );
     }
     return (
       <View className="flex-1 items-center justify-center p-6 bg-background dark:bg-darkBackground">

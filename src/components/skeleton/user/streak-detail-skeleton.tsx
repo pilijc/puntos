@@ -27,13 +27,6 @@ export function StreakDetailSkeleton() {
       contentContainerStyle={{ paddingBottom: 40 }}
       showsVerticalScrollIndicator={false}
     >
-      {/* Header Skeleton */}
-      <View className="bg-white dark:bg-darkBackgroundMuted flex-row items-center px-4 pt-12 pb-3 border-b border-neutral-100 dark:border-darkBorder">
-        <View className="w-[32px] h-[32px] items-center justify-center mr-[8px]">
-          <View className="w-6 h-6 rounded-full bg-neutral-100 dark:bg-white/5" />
-        </View>
-        <View className="h-5 w-28 rounded-md bg-neutral-200 dark:bg-white/10" />
-      </View>
 
       {/* Store Box Skeleton */}
       <View className="bg-white dark:bg-darkBackgroundMuted mx-4 mt-4 rounded-2xl border border-neutral-100 dark:border-darkBorder overflow-hidden">
