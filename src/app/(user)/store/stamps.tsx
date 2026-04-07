@@ -1,35 +1,30 @@
-import React, { useEffect } from "react";
-import { View, Text, Image } from "@/tw";
+import React, { useEffect, useMemo, useState } from "react";
+import { View, Text, Image, TouchableOpacity } from "@/tw";
 import {
   ScrollView,
-  TouchableOpacity,
-  ActivityIndicator,
 } from "react-native";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import { useStamps } from "@/hooks/use-stamps";
-import { useStampRewards } from "@/hooks/use-stamp-rewards";
-import { getActiveStampProgramRewards } from "@/services/stamp-service";
+import { getActiveStampProgramRewards, getStampEventsForStore, getUserStampEvents, getUserRewardRedemptions } from "@/services/stamp-service";
+import { getStoreById } from "@/services/store-service";
 import { storeLogos } from "@/data/rewards";
+import { supabase } from "@/supabase/supabase";
 import {
   ChevronLeft,
-  Check,
-  Sparkles,
+  Stamp,
   Store,
   Gem,
+  Gift,
   PackageOpen,
+  History,
+  Clock,
+  AlertCircle,
+  TicketPercent
 } from "lucide-react-native";
-import { useTranslation } from "react-i18next";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { StampDetailSkeleton } from "@/components/skeleton/user/stamp-detail-skeleton";
 
-// ─── SectionCard wrapper ──────────────────────────────────────────────────────
-function SectionCard({ children }: { children: React.ReactNode }) {
-  return (
-    <View className="bg-white dark:bg-darkBackgroundMuted rounded-3xl border border-neutral-100 dark:border-darkBorder p-4">
-      {children}
-    </View>
-  );
-}
-
-// ─── Single Stamp Card ────────────────────────────────────────────────────────
+// ─── Single Punch Card ────────────────────────────────────────────────────────
 function StampCard({
   stamp,
   rewardTitle,
@@ -50,7 +45,8 @@ function StampCard({
   const count = stamp.stamps_count ?? 0;
   const target = stamp.target ?? 7;
   const clampedCount = Math.min(Math.max(count, 0), target);
-  const progress = target > 0 ? clampedCount / target : 0;
+
+  const isCompleted = clampedCount >= target || stamp.card_status === 'completed';
 
   const getLogoImage = () => {
     if (storeStr?.logo) return { uri: storeStr.logo };
@@ -58,203 +54,524 @@ function StampCard({
     return require("../../../assets/images/rewards/coffee-shop.png");
   };
 
-  const days = Array.from({ length: target }, (_, i) => ({
-    number: i + 1,
-    state: i < clampedCount ? "completed" : i === clampedCount && clampedCount < target ? "current" : "upcoming",
-  }));
+  // ─── 5x2 (10-stamp) Pagination Logic ───
+  const pageCapacity = 10;
+
+  // If the user has completed the target, show the final page (e.g. target 30 -> page 2)
+  // Otherwise show their current active page.
+  const activePage = clampedCount >= target
+    ? Math.max(0, Math.ceil(target / pageCapacity) - 1)
+    : Math.floor(clampedCount / pageCapacity);
+
+  const startNum = activePage * pageCapacity + 1;
+  const endNum = Math.min((activePage + 1) * pageCapacity, target);
+
+  const displayDays = [];
+  for (let i = startNum; i <= endNum; i++) {
+    displayDays.push({
+      number: i,
+      state: i <= clampedCount ? "completed" : i === clampedCount + 1 ? "current" : "upcoming"
+    });
+  }
+
+  // Expiration logic
+  let deadlineStr = null;
+  let deadlineUrgent = false;
+
+  if (stamp.card_expires_at && !isCompleted && stamp.card_status !== 'expired') {
+    const expiresAt = new Date(stamp.card_expires_at);
+    expiresAt.setHours(23, 59, 59, 999);
+    const msLeft = expiresAt.getTime() - Date.now();
+    const daysUntilEnd = Math.ceil(msLeft / 86400000);
+
+    if (daysUntilEnd <= 0) {
+      deadlineStr = "Expired";
+      deadlineUrgent = true;
+    } else if (daysUntilEnd === 1) {
+      deadlineStr = "Expires today!";
+      deadlineUrgent = true;
+    } else if (daysUntilEnd <= 7) {
+      deadlineStr = `Expires in ${daysUntilEnd} days!`;
+      deadlineUrgent = true;
+    } else {
+      deadlineStr = `Valid until ${expiresAt.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}`;
+      deadlineUrgent = false;
+    }
+  } else if (stamp.card_status === 'expired') {
+    deadlineStr = "Program expired";
+    deadlineUrgent = true;
+  }
 
   return (
-    <SectionCard>
-      {/* Store header */}
-      <View className="flex-row items-center gap-x-3 mb-3">
-        <View className="w-10 h-10 rounded-full bg-neutral-100 dark:bg-darkBackgroundCard items-center justify-center overflow-hidden border border-neutral-100 dark:border-darkBorder">
+    <View
+      className={`border bg-white dark:bg-darkBackgroundCard rounded-3xl overflow-hidden shadow-sm shadow-neutral-100 dark:shadow-none border-neutral-100 dark:border-darkBorder`}
+    >
+      {/* ─── Header Top ─── */}
+      <View className="px-4 py-4 flex-row items-center gap-x-3">
+        <View className="w-10 h-10 rounded-full bg-neutral-100 dark:bg-darkBackgroundMuted items-center justify-center overflow-hidden border border-neutral-100 dark:border-darkBorder">
           {storeStr?.logo || storeLogos[stamp.store_id?.toString()] ? (
             <Image source={getLogoImage()} className="w-full h-full" contentFit="cover" />
           ) : (
-            <Store size={20} color="#FF6600" />
+            <Store size={18} color="#9ca3af" />
           )}
         </View>
         <View className="flex-1">
-          <Text className="font-poppins-semibold text-neutral-900 dark:text-white text-sm" numberOfLines={1}>
+          <Text className="font-poppins-bold text-neutral-900 dark:text-white text-base" numberOfLines={1}>
             {storeName}
           </Text>
-          {!!storeAddress && (
-            <Text className="text-[10px] font-poppins text-neutral-400" numberOfLines={1}>
-              {storeAddress}
-            </Text>
-          )}
-        </View>
-        <View className="items-end">
-          <Text className="text-[11px] font-poppins-bold text-primary">
-            {clampedCount}/{target}
+          <Text className="text-[11px] font-poppins text-neutral-500 line-clamp-1" numberOfLines={1}>
+            {storeAddress || "Reward Program"}
           </Text>
-          <Text className="text-[9px] font-poppins text-neutral-400">stamps</Text>
+        </View>
+        <View className="items-end justify-center pr-1">
+          <Text className={`font-poppins-bold text-lg leading-6 ${isCompleted ? 'text-neutral-900 dark:text-neutral-100' : 'text-neutral-800 dark:text-neutral-200'}`}>
+            {clampedCount}
+            <Text className="font-poppins-medium text-neutral-400 text-[11px]"> / {target}</Text>
+          </Text>
         </View>
       </View>
 
-      {/* Progress bar */}
-      <View className="h-1.5 bg-neutral-100 dark:bg-darkBackgroundCard rounded-full mb-3 overflow-hidden">
-        <View
-          className="h-full bg-primary rounded-full"
-          style={{ width: `${progress * 100}%` }}
-        />
+      {/* ─── Perforated separator (Ticket Effect) ─── */}
+      <View className="relative h-4 flex-row items-center overflow-hidden">
+        <View className="absolute -left-2 w-4 h-4 bg-neutral-50 dark:bg-darkBackground rounded-full border border-neutral-200 dark:border-darkBorder" />
+        <View className="flex-1 border-t border-dashed border-neutral-200 dark:border-darkBorder mx-4" />
+        <View className="absolute -right-2 w-4 h-4 bg-neutral-50 dark:bg-darkBackground rounded-full border border-neutral-200 dark:border-darkBorder" />
       </View>
 
-      {/* Stamp dots */}
-      <View className="flex-row flex-wrap gap-1.5 mb-3">
-        {days.map((day, i) => {
-          const isCompleted = day.state === "completed";
-          const isCurrent = day.state === "current";
-          return (
-            <View
-              key={i}
-              className={`w-9 h-9 rounded-full items-center justify-center ${
-                isCompleted
-                  ? "bg-primary"
-                  : isCurrent
-                  ? "bg-white dark:bg-darkBackgroundMuted"
-                  : "bg-neutral-100 dark:bg-darkBackgroundCard"
-              }`}
-              style={isCurrent ? { borderWidth: 1.5, borderColor: "#FF6600", borderStyle: "dashed" } : undefined}
-            >
-              {isCompleted ? (
-                <Check size={14} color="#FFFFFF" />
-              ) : (
-                <Text className={`text-xs font-poppins-semibold ${isCurrent ? "text-primary" : "text-neutral-400"}`}>
-                  {day.number}
-                </Text>
-              )}
+      {/* ─── Punch Grid ─── */}
+      <View className="px-4 py-8 gap-y-7">
+        {(() => {
+          const totalInPage = displayDays.length;
+          const numTop = Math.ceil(totalInPage / 2);
+          const topRow = displayDays.slice(0, numTop);
+          const bottomRow = displayDays.slice(numTop);
+
+          // Dynamically adjust size to fill space. 
+          // 4-per-row can be larger (w-20) than 5-per-row (w-16)
+          const stampSizeClass = numTop <= 4 ? "w-[72px] h-[72px]" : "w-[62px] h-[62px]";
+          const stampMargin = numTop <= 4 ? "gap-x-3" : "gap-x-2";
+          const iconSize = numTop <= 4 ? 36 : 30;
+
+          const renderRow = (rowItems: typeof displayDays, extraClass = "") => (
+            <View className={`flex-row justify-start ${stampMargin} ${extraClass}`}>
+              {rowItems.map((day, i) => {
+                const isFilled = day.state === "completed";
+                const isNext = day.state === "current";
+
+                return (
+                  <View key={i} className="items-center">
+                    <View
+                      className={`${stampSizeClass} rounded-2xl items-center justify-center overflow-hidden ${isFilled
+                        ? "bg-white dark:bg-darkBackgroundCard border border-neutral-300 dark:border-neutral-600 shadow-sm"
+                        : "bg-neutral-50 dark:bg-darkBackgroundMuted border border-neutral-200 dark:border-darkBorder border-dashed"
+                        }`}
+                      style={isNext ? { borderColor: "#FF6600" } : undefined}
+                    >
+                      {isFilled ? (
+                        <View className="w-full h-full items-center justify-center">
+                          {/* Tilted, faded store logo */}
+                          {(storeStr?.logo || storeLogos[stamp.store_id?.toString()]) ? (
+                            <Image
+                              source={getLogoImage()}
+                              className="w-full h-full p-1 opacity-45 rotate-12"
+                              contentFit="contain"
+                            />
+                          ) : (
+                            <Store size={iconSize} color="#e5e5e5" strokeWidth={1.5} className="rotate-12" />
+                          )}
+
+                          {/* Centered Stamp Icon (The "Ink") with subtle shadow for emphasis */}
+                          <View
+                            className="absolute inset-0 items-center justify-center pointer-events-none"
+                            style={{
+                              shadowColor: "#000",
+                              shadowOffset: { width: 0, height: 1 },
+                              shadowOpacity: 0.15,
+                              shadowRadius: 1.5,
+                              elevation: 1,
+                            }}
+                          >
+                            <Image
+                              source={require("../../../assets/images/stamp/stamp_orange.png")}
+                              style={{ width: iconSize * 1.4, height: iconSize * 1.4 }}
+                              contentFit="contain"
+                            />
+                          </View>
+                        </View>
+                      ) : (
+                        /* Empty slot — same logo style as stamped, no ink overlay */
+                        <View className="w-full h-full items-center justify-center">
+                          {(storeStr?.logo || storeLogos[stamp.store_id?.toString()]) ? (
+                            <Image
+                              source={getLogoImage()}
+                              className="w-full h-full p-1 opacity-45 rotate-12"
+                              contentFit="contain"
+                            />
+                          ) : (
+                            <Store
+                              size={iconSize}
+                              color="#e5e5e5"
+                              strokeWidth={1.5}
+                              style={{ transform: [{ rotate: "12deg" }], opacity: 0.45 }}
+                            />
+                          )}
+                        </View>
+                      )}
+                    </View>
+                  </View>
+                );
+              })}
             </View>
           );
-        })}
+
+          return (
+            <View className="items-center w-full px-1">
+              <View>
+                {renderRow(topRow)}
+                {bottomRow.length > 0 && renderRow(bottomRow, "mt-3")}
+              </View>
+            </View>
+          );
+        })()}
       </View>
 
-      {/* Reward row */}
-      {rewardTitle && (
-        <View className="flex-row items-center gap-x-2 pt-2 border-t border-neutral-100 dark:border-darkBorder">
-          <Gem size={13} color={clampedCount >= target ? "#FF6600" : "#d1d5db"} />
+      {/* ─── Footer (Rewards & Deadlines) ─── */}
+      <View className={`px-4 py-3 flex-row items-center border-t justify-between ${isCompleted
+        ? 'bg-neutral-50/50 dark:bg-darkBackgroundMuted border-neutral-100 dark:border-darkBorder'
+        : 'bg-neutral-50 dark:bg-darkBackgroundMuted border-neutral-100 dark:border-darkBorder'
+        }`}>
+
+        {/* Left: Reward Info */}
+        <View className="flex-row items-center gap-x-2.5 flex-1 mr-2">
+          <View className={`w-8 h-8 rounded-lg items-center justify-center bg-white border border-neutral-200 dark:border-darkBorder dark:bg-darkBackgroundCard`}>
+            <Gift size={15} color={isCompleted ? "#171717" : "#9ca3af"} />
+          </View>
           <Text
-            className="text-[11px] font-poppins-semibold flex-1"
-            style={{ color: clampedCount >= target ? "#FF6600" : "#9ca3af" }}
+            className={`text-[11px] font-poppins-semibold flex-1 ${isCompleted ? 'text-neutral-900 dark:text-white' : 'text-neutral-700 dark:text-neutral-300'}`}
             numberOfLines={1}
           >
-            {clampedCount >= target ? "Ready to claim: " : "Reward: "}
-            {rewardTitle}
+            {rewardTitle ? rewardTitle : `${target} Stamps Reward`}
           </Text>
-          {clampedCount >= target && (
-            <View className="bg-orange-50 px-2 py-0.5 rounded-full">
-              <Text className="text-[9px] font-poppins-bold text-primary">UNLOCKED</Text>
-            </View>
-          )}
         </View>
-      )}
-    </SectionCard>
+
+        {/* Right: Redeem button — always visible, disabled when incomplete */}
+        {isCompleted ? (
+          <TouchableOpacity
+            className="bg-primary pt-[6px] pb-[6px] px-4 rounded-full shadow-sm flex-row items-center justify-center"
+            activeOpacity={0.7}
+          >
+            <Text className="text-[10px] font-poppins-bold text-white tracking-[1px]">CLAIM</Text>
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity
+            disabled
+            className="bg-neutral-100 dark:bg-darkBackgroundCard pt-[6px] pb-[6px] px-3 rounded-full flex-row items-center gap-x-1 border border-neutral-200 dark:border-darkBorder"
+            activeOpacity={1}
+          >
+            <Text className="text-[10px] font-poppins-bold text-neutral-400 dark:text-neutral-500 tracking-[1px]">
+              CLAIM
+            </Text>
+          </TouchableOpacity>
+        )}
+      </View>
+    </View>
   );
 }
 
 // ─── Main Screen ──────────────────────────────────────────────────────────────
-export default function AllStampsScreen() {
+export default function StampLogScreen() {
   const router = useRouter();
-  const { t: translate } = useTranslation();
-  const { stamps, isLoading, fetchStamps } = useStamps();
-  const { stampRewards } = useStampRewards();
-  const [activePrograms, setActivePrograms] = React.useState<any[]>([]);
+  const insets = useSafeAreaInsets();
+
+  const { storeId } = useLocalSearchParams<{ storeId?: string }>();
+
+  const { stamps, isLoading: isStampsLoading, fetchStamps } = useStamps();
+  const [activePrograms, setActivePrograms] = useState<any[]>([]);
+  const [stampEvents, setStampEvents] = useState<any[]>([]);
+  const [rewardEvents, setRewardEvents] = useState<any[]>([]);
+  const [isEventsLoading, setIsEventsLoading] = useState(true);
+  // Virtual card: shown when storeId is set but no stamp_progress row exists yet
+  const [virtualCard, setVirtualCard] = useState<any | null>(null);
+
+  const parsedStoreId = storeId ? Number(storeId) : null;
 
   useEffect(() => {
     fetchStamps();
   }, []);
 
   useEffect(() => {
-    if (stamps.length === 0) return;
-    const storeIds = stamps.map((s) => s.store_id);
-    getActiveStampProgramRewards(storeIds).then(setActivePrograms).catch(console.error);
-  }, [stamps]);
+    let active = true;
+    setIsEventsLoading(true);
 
-  const totalStamps = stamps.reduce((sum, s) => sum + (s.stamps_count ?? 0), 0);
-  const activeCards = stamps.length;
+    const loadEvents = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user || !active) return;
+
+      try {
+        const [stamps, rewards] = await Promise.all([
+          parsedStoreId
+            ? getStampEventsForStore(user.id, parsedStoreId)
+            : getUserStampEvents(user.id),
+          getUserRewardRedemptions(user.id, parsedStoreId || undefined)
+        ]);
+
+        if (active) {
+          setStampEvents(stamps);
+          setRewardEvents(rewards);
+        }
+      } catch (err) {
+        console.error("Error loading events:", err);
+      } finally {
+        if (active) setIsEventsLoading(false);
+      }
+    };
+
+    loadEvents();
+    return () => { active = false; };
+  }, [parsedStoreId]);
+
+  const storeStamps = useMemo(() => {
+    if (!parsedStoreId) return stamps;
+    return stamps.filter(s => s.store_id === parsedStoreId);
+  }, [stamps, parsedStoreId]);
+
+  // When viewing a specific store but the user has no progress yet (e.g. erased),
+  // build a virtual zero-stamp card so the UI still shows the punch card.
+  useEffect(() => {
+    if (!parsedStoreId) {
+      setVirtualCard(null);
+      return;
+    }
+    if (storeStamps.length > 0) {
+      setVirtualCard(null);
+      return;
+    }
+
+    let active = true;
+    (async () => {
+      try {
+        const [storeRow, programs] = await Promise.all([
+          getStoreById(parsedStoreId),
+          getActiveStampProgramRewards([parsedStoreId]),
+        ]);
+        if (!active) return;
+
+        const program = programs[0];
+        setVirtualCard({
+          id: `virtual-${parsedStoreId}`,
+          store_id: parsedStoreId,
+          stamps_count: 0,
+          target: program?.total_stamps ?? 7,
+          card_status: 'active',
+          stores: {
+            name: storeRow?.name ?? 'Store',
+            logo: storeRow?.logo ?? null,
+            address: storeRow?.address ?? '',
+            is_active: storeRow?.is_active ?? true,
+            status: storeRow?.status ?? 'active',
+          },
+        });
+        // Also seed the active programs list so reward title shows
+        if (programs.length > 0) setActivePrograms(programs);
+      } catch (e) {
+        console.error('[StampLog] Failed to build virtual card:', e);
+      }
+    })();
+    return () => { active = false; };
+  }, [parsedStoreId, storeStamps.length]);
+
+  useEffect(() => {
+    if (storeStamps.length === 0) return;
+    const storeIds = parsedStoreId ? [parsedStoreId] : storeStamps.map((s) => s.store_id);
+    getActiveStampProgramRewards(storeIds)
+      .then(setActivePrograms)
+      .catch(console.error);
+  }, [storeStamps, parsedStoreId]);
+
+  // Handle active cards
+  const activeCards = storeStamps.filter((s) => (s.stamps_count ?? 0) < (s.target ?? 7) && (s as any).card_status !== 'completed' && (s as any).card_status !== 'expired');
+  const readyToClaim = storeStamps.filter((s) => (s.stamps_count ?? 0) >= (s.target ?? 7) || (s as any).card_status === 'completed');
+
+  // Show real cards first, then the virtual zero-card as fallback
+  const cardsToDisplay = [...readyToClaim, ...activeCards];
+  const showVirtualCard = cardsToDisplay.length === 0 && virtualCard !== null;
+
+  const storeObj = (storeStamps[0]?.stores as any) ?? (virtualCard?.stores);
+  const displayStoreName = storeObj?.name ?? 'Store';
+
+  const isLoading = isStampsLoading || isEventsLoading;
 
   return (
     <View className="flex-1 bg-neutral-50 dark:bg-darkBackground">
-      {/* Header */}
-      <View className="flex-row items-center px-4 pt-14 pb-4 gap-x-3 bg-white dark:bg-darkBackgroundMuted border-b border-neutral-100 dark:border-darkBorder">
-        <TouchableOpacity
-          onPress={() => router.back()}
-          className="w-9 h-9 rounded-full bg-neutral-100 dark:bg-darkBackgroundCard items-center justify-center"
-        >
-          <ChevronLeft size={20} color="#FF6600" />
-        </TouchableOpacity>
-        <View className="flex-1">
-          <Text className="text-base font-poppins-bold text-neutral-900 dark:text-white">
-            {translate("user.rewards.streaks.title")}
-          </Text>
-          <Text className="text-[10px] font-poppins text-neutral-400">
-            {translate("user.rewards.streaks.status")}
-          </Text>
+      {/* ─── Header ─── */}
+      <View
+        className="bg-white dark:bg-darkBackgroundMuted border-b border-neutral-100 dark:border-darkBorder"
+        style={{ paddingTop: insets.top }}
+      >
+        <View className="flex-row items-center px-4 py-4 gap-x-3">
+          <TouchableOpacity
+            onPress={() => router.back()}
+            className="w-9 h-9 rounded-full bg-neutral-100 dark:bg-darkBackgroundCard items-center justify-center"
+          >
+            <ChevronLeft size={20} color="#171717" className="dark:text-white" />
+          </TouchableOpacity>
+          <View className="flex-1">
+            <Text className="text-base font-poppins-bold text-neutral-900 dark:text-white tracking-[0.2px]" numberOfLines={1}>
+              {parsedStoreId ? `${displayStoreName} Stamps` : "Stamp Log"}
+            </Text>
+            <Text className="text-[11px] font-poppins text-neutral-500">
+              Loyalty Progress
+            </Text>
+          </View>
         </View>
-        <Sparkles size={18} color="#FF6600" />
       </View>
 
       {isLoading ? (
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator color="#FF6600" />
-          <Text className="text-xs font-poppins text-neutral-400 mt-2">
-            {translate("user.rewards.streaks.loading")}
-          </Text>
-        </View>
-      ) : stamps.length === 0 ? (
-        <View className="flex-1 items-center justify-center px-8">
-          <PackageOpen size={40} color="#d1d5db" />
-          <Text className="text-sm font-poppins-semibold text-neutral-500 dark:text-neutral-400 mt-3 text-center">
-            {translate("user.rewards.streaks.notFound")}
-          </Text>
-          <Text className="text-[11px] font-poppins text-neutral-400 mt-1 text-center">
-            {translate("user.rewards.streaks.notFoundDetail")}
-          </Text>
-        </View>
+        <StampDetailSkeleton />
       ) : (
         <ScrollView
-          contentContainerStyle={{ padding: 16, gap: 12 }}
+          contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
           showsVerticalScrollIndicator={false}
         >
-          {/* Summary stats */}
-          <SectionCard>
-            <View className="flex-row">
-              <View className="flex-1 items-center">
-                <Text className="text-xl font-poppins-bold text-primary">{totalStamps}</Text>
-                <Text className="text-[10px] font-poppins text-neutral-400">
-                  {translate("user.rewards.streaks.lifetime")}
-                </Text>
-              </View>
-              <View className="w-px bg-neutral-100 dark:bg-darkBorder" />
-              <View className="flex-1 items-center">
-                <Text className="text-xl font-poppins-bold text-primary">{activeCards}</Text>
-                <Text className="text-[10px] font-poppins text-neutral-400">
-                  {translate("user.rewards.streaks.activeCards")}
-                </Text>
-              </View>
-              <View className="w-px bg-neutral-100 dark:bg-darkBorder" />
-              <View className="flex-1 items-center">
-                <Text className="text-xl font-poppins-bold text-primary">
-                  {Math.max(...stamps.map((s) => s.stamps_count ?? 0), 0)}
-                </Text>
-                <Text className="text-[10px] font-poppins text-neutral-400">
-                  {translate("user.rewards.streaks.highestStamps")}
-                </Text>
-              </View>
-            </View>
-          </SectionCard>
-
-          {/* Stamp cards */}
-          {stamps.map((stamp) => {
-            const program = activePrograms.find((p) => p.store_id === stamp.store_id);
-            return (
+        {/* ─── The Single Active Punch Card ─── */}
+        {(cardsToDisplay.length > 0 || showVirtualCard) && (
+          <View className="mb-2">
+            {showVirtualCard ? (
               <StampCard
-                key={stamp.id}
-                stamp={stamp}
-                rewardTitle={program?.reward_title ?? null}
+                key={virtualCard.id}
+                stamp={virtualCard}
+                rewardTitle={activePrograms.find(p => p.store_id === parsedStoreId)?.reward_title ?? null}
               />
-            );
-          })}
+            ) : (
+              cardsToDisplay.map((stamp) => {
+                const program = activePrograms.find((p) => p.store_id === stamp.store_id);
+                return (
+                  <StampCard
+                    key={stamp.id}
+                    stamp={stamp}
+                    rewardTitle={program?.reward_title ?? null}
+                  />
+                );
+              })
+            )}
+
+            {/* How to Earn Banner Text */}
+            <Text className="text-[11px] font-poppins text-neutral-500 text-center mt-3 mb-6 px-4">
+              Earn 1 stamp per purchase! Complete your card to unlock the reward.
+            </Text>
+          </View>
+        )}
+
+        {/* ─── Vertical Timeline Stamp History ─── */}
+        <View className="mb-8">
+          <View className="flex-row items-center gap-x-2 mb-4 px-1">
+            <History size={16} color="#475569" className="dark:text-neutral-400" />
+            <Text className="text-sm font-poppins-bold text-neutral-800 dark:text-neutral-200">
+              Stamp History
+            </Text>
+          </View>
+
+          <View className="bg-white dark:bg-darkBackgroundCard rounded-3xl p-5 border border-neutral-100 dark:border-darkBorder">
+            {stampEvents.length === 0 ? (
+              <View className="items-center py-4">
+                <Clock size={24} color="#d1d5db" className="mb-2" />
+                <Text className="text-center text-[11px] font-poppins text-neutral-400">
+                  No stamps earned yet. {"\n"}Your history will appear here.
+                </Text>
+              </View>
+            ) : (
+              <View className="mt-2">
+                {stampEvents.map((evt, idx) => (
+                  <View key={evt.id} className="flex-row items-stretch">
+                    <View className="w-8 items-center">
+                      <View className="w-2.5 h-2.5 rounded-full bg-[#FF6600] mt-1" />
+                      {idx !== stampEvents.length - 1 && (
+                        <View className="flex-1 w-px bg-orange-200 dark:bg-orange-900/50 my-1.5" />
+                      )}
+                    </View>
+                    <View className={`flex-1 flex-row pb-${idx !== stampEvents.length - 1 ? '6' : '1'} items-start justify-between`}>
+                      <View>
+                        <Text className="text-xs font-poppins-semibold text-neutral-800 dark:text-neutral-200">
+                          Stamp Earned
+                        </Text>
+                        <Text className="text-[10px] font-poppins text-neutral-500 mt-0.5">
+                          {new Date(evt.created_at).toLocaleDateString("en-US", {
+                            year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit'
+                          })}
+                        </Text>
+                      </View>
+                      {(evt as any).points && (
+                        <View className="bg-orange-50 dark:bg-orange-900/30 px-2 py-0.5 rounded flex-row items-center border border-orange-100 dark:border-orange-800/50">
+                          <Text className="text-[10px] font-poppins-semibold text-[#FF6600]">
+                            +{(evt as any).points} pts
+                          </Text>
+                        </View>
+                      )}
+                    </View>
+                  </View>
+                ))}
+              </View>
+            )}
+          </View>
+        </View>
+
+        {/* ─── Vertical Timeline Reward History ─── */}
+        <View className="mb-4">
+          <View className="flex-row items-center gap-x-2 mb-4 px-1">
+            <Gift size={16} color="#d97706" />
+            <Text className="text-sm font-poppins-bold text-neutral-800 dark:text-neutral-200">
+              Reward History
+            </Text>
+          </View>
+
+          <View className="bg-white dark:bg-darkBackgroundCard rounded-3xl p-5 border border-neutral-100 dark:border-darkBorder">
+            {rewardEvents.length === 0 ? (
+              <View className="items-center py-4">
+                <Gift size={24} color="#d1d5db" className="mb-2" />
+                <Text className="text-center text-[11px] font-poppins text-neutral-400">
+                  No rewards redeemed yet.
+                </Text>
+              </View>
+            ) : (
+              <View className="mt-2">
+                {rewardEvents.map((evt, idx) => (
+                  <View key={evt.id} className="flex-row items-stretch">
+                    <View className="w-8 items-center">
+                      <View className="w-6 h-6 rounded-full bg-amber-50 border border-amber-200 items-center justify-center -mt-1 dark:bg-amber-900/40 dark:border-amber-800 overflow-hidden">
+                        {evt.image_url ? (
+                          <Image source={{ uri: evt.image_url }} className="w-full h-full" contentFit="cover" />
+                        ) : (
+                          <Gem size={10} color="#d97706" />
+                        )}
+                      </View>
+                      {idx !== rewardEvents.length - 1 && (
+                        <View className="flex-1 w-px bg-amber-100 dark:bg-amber-900/50 my-1.5" />
+                      )}
+                    </View>
+                    <View className={`flex-1 flex-row pb-${idx !== rewardEvents.length - 1 ? '6' : '1'} items-start justify-between`}>
+                      <View className="flex-1 mr-2">
+                        <Text className="text-xs font-poppins-semibold text-neutral-800 dark:text-neutral-200 line-clamp-1" numberOfLines={1}>
+                          {evt.title}
+                        </Text>
+                        <Text className="text-[10px] font-poppins text-neutral-500 mt-0.5">
+                          {new Date(evt.redeemed_at).toLocaleDateString("en-US", {
+                            year: 'numeric', month: 'long', day: 'numeric'
+                          })}
+                        </Text>
+                      </View>
+                      <View className="bg-amber-50 dark:bg-amber-900/30 px-2 py-0.5 rounded flex-row items-center border border-amber-100 dark:border-amber-800/50">
+                        <Text className="text-[10px] font-poppins-semibold text-amber-600 dark:text-amber-500">
+                          Claimed
+                        </Text>
+                      </View>
+                    </View>
+                  </View>
+                ))}
+              </View>
+            )}
+          </View>
+        </View>
+
         </ScrollView>
       )}
     </View>

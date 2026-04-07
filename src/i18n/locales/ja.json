@@ -238,7 +238,8 @@
             },
             "buttons": {
                 "stamp": "スタンプ",
-                "stamped": "獲得済"
+                "stamped": "獲得済",
+                "claimRewards": "報酬を獲得"
             },
             "messages": {
                 "signInToStamp": "スタンプを押すにはログインが必要です。",

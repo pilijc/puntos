@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { View, Text, AnimatedView, TouchableOpacity, Image, Pressable } from "@/tw";
-import { Check, ChevronDown, Coins, ExternalLink, Sparkles, Store } from "lucide-react-native";
+import { Check, ChevronDown, Coins, ExternalLink, Sparkles, Store, Stamp } from "lucide-react-native";
 import { FadeIn, FadeOut, Layout, useAnimatedStyle, withTiming, interpolate } from "react-native-reanimated";
 import { storeLogos } from "@/data/rewards";
 import { Alert } from "react-native";
@@ -15,6 +15,7 @@ interface UserStampLogCardProps {
   activeStampProgramRewards: any[];
   isStampLogOpen: boolean;
   onToggleExpand: () => void;
+  onForceExpand?: () => void;
 }
 
 export default function UserStampLogCard({
@@ -25,6 +26,7 @@ export default function UserStampLogCard({
   activeStampProgramRewards,
   isStampLogOpen,
   onToggleExpand,
+  onForceExpand,
 }: UserStampLogCardProps) {
   const { t: translate } = useTranslation();
 
@@ -40,6 +42,17 @@ export default function UserStampLogCard({
   );
   const clampedCount = Math.min(Math.max(count, 0), targetCount);
 
+  const hasAutoOpened = useRef(false);
+
+  useEffect(() => {
+    if (clampedCount >= targetCount && !isStampLogOpen && !hasAutoOpened.current) {
+      hasAutoOpened.current = true;
+      setTimeout(() => {
+        onForceExpand?.();
+      }, 50);
+    }
+  }, [clampedCount, targetCount, isStampLogOpen, onForceExpand]);
+
   // Compute Nearby Status
   const storeStr = stamp.stores as unknown as { latitude?: number; longitude?: number; name?: string; is_active?: boolean; logo?: string; banner?: string; address?: string };
   const storeName = storeStr?.name ?? translate("user.rewards.store");
@@ -47,16 +60,33 @@ export default function UserStampLogCard({
   const nearby = nearbyStores.some((s) => Number(s.id) === Number(stamp.store_id)) ||
     isStoreNearby(storeStr?.latitude, storeStr?.longitude);
 
-  const days = Array.from({ length: targetCount }, (_, index) => ({
-    label: `Log ${index + 1}`,
-    number: index + 1,
-    state:
-      index < clampedCount
-        ? "completed"
-        : index === clampedCount && clampedCount < targetCount
-          ? "current"
-          : "upcoming",
-  }));
+  const pageCapacity = 7;
+  const activePage = clampedCount >= targetCount
+    ? Math.max(0, Math.ceil(targetCount / pageCapacity) - 1)
+    : Math.floor(clampedCount / pageCapacity);
+
+  const startNum = activePage * pageCapacity + 1;
+  const endNum = Math.min((activePage + 1) * pageCapacity, targetCount);
+
+  // Keep exactly 7 slots for structural integrity of flex justify-between
+  const days = Array.from({ length: pageCapacity }, (_, index) => {
+    const actualNum = startNum + index;
+    if (actualNum <= endNum) {
+      return {
+        label: `Log ${actualNum}`,
+        number: actualNum,
+        state: actualNum <= clampedCount ? "completed" : actualNum === clampedCount + 1 ? "current" : "upcoming",
+        invisible: false,
+      };
+    } else {
+      return {
+        label: `Empty ${actualNum}`,
+        number: actualNum,
+        state: "upcoming",
+        invisible: true,
+      };
+    }
+  });
 
   const chevronStyle = useAnimatedStyle(() => {
     return {
@@ -110,7 +140,7 @@ export default function UserStampLogCard({
             <TouchableOpacity
               onPress={(e) => {
                 e.stopPropagation();
-                router.push("/store/stamps");
+                router.push({ pathname: "/store/stamps", params: { storeId: stamp.store_id } });
               }}
               className="px-2 py-1"
             >
@@ -173,20 +203,27 @@ export default function UserStampLogCard({
               : "text-neutral-400 font-poppins-semibold text-sm";
             return (
               <View key={`${day.label}-${index}`} className="items-center w-11">
-                <View
-                  className={circleClass}
-                  style={isCurrent ? {
-                    borderWidth: 1.5,
-                    borderColor: "#FF6600",
-                    borderStyle: "dashed",
-                  } : undefined}
-                >
-                  {isCompleted ? (
-                    <Check size={16} color="#FFFFFF" />
-                  ) : (
-                    <Text className={textClass}>{day.number}</Text>
-                  )}
-                </View>
+                {!day.invisible ? (
+                  <View
+                    className={circleClass}
+                    style={isCurrent ? {
+                      borderWidth: 1.5,
+                      borderColor: "#FF6600",
+                      borderStyle: "dashed",
+                    } : undefined}
+                  >
+                    {isCompleted ? (
+                      <Stamp size={16} color="#FFFFFF" />
+                    ) : (
+                      <Text className={textClass}>{day.number}</Text>
+                    )}
+                  </View>
+                ) : (
+                  // Bullet placeholder instead of invisible blocks to fill the remaining space intentionally
+                  <View className="w-10 h-10 items-center justify-center">
+                    <View className="w-1.5 h-1.5 rounded-full bg-neutral-200 dark:bg-neutral-700" />
+                  </View>
+                )}
               </View>
             );
           })}
