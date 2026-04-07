@@ -140,7 +140,7 @@ export default function Login() {
             contentContainerStyle={{ flexGrow: 1 }}
             keyboardShouldPersistTaps="handled"
           >
-            <View className="flex-1 gap-y-4 px-2">
+            <View className="flex-1 gap-y-3 px-2">
               <View className="items-center justify-center">
                 <Image
                   source={require("../../assets/images/puntos-icon.png")}
@@ -158,7 +158,7 @@ export default function Login() {
                 </View>
               </View>
 
-              <View className="gap-y-2 space-y-2 w-full items-center">
+              <View className="w-full items-center gap-y-3">
                 <View className="w-full">
                   <TextField
                     label={translate("onboarding.login.label.email")}
@@ -192,9 +192,9 @@ export default function Login() {
                     }
                   />
                 </View>
-                <View className="w-full mt-2">
+                <View className="w-full">
                   {(errors.password || errors.email) ? (
-                    <Text className="mt-2 text-sm font-poppins text-red-500 dark:text-red-400 text-center bg-red-50 dark:bg-red-900/20 rounded-xl px-4 py-3.5 w-full">
+                    <Text className="text-sm font-poppins text-red-500 dark:text-red-400 text-center bg-red-50 dark:bg-red-900/20 rounded-xl px-4 py-3 w-full">
                       {errors.password || errors.email}
                     </Text>
                   ) : null}
@@ -209,7 +209,7 @@ export default function Login() {
                 fullWidth={true}
                 authButton={true}
               />
-              
+
               <View className="flex-row items-center gap-x-4 w-full max-w-md">
                 <View className="flex-1 h-px bg-neutral-200 dark:bg-darkBorder" />
                 <Text className="text-neutral-500 dark:text-darkTextMuted font-poppins text-sm text-center">
