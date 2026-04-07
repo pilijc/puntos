@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { supabase } from "@/supabase/supabase";
-import { UserProfile, UserPreferences } from "@/type/settings";
+import { UserProfile, UserPreferences } from "@/type/user/settings";
 import {
     getUserProfileService,
     getUserSettingsService,

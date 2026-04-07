@@ -24,6 +24,7 @@ import { useRewardsUiStore } from "@/store/user/rewards-ui-store";
 import { useStoreOverviewData } from "@/hooks/use-store-overview-data";
 import { ProgramSkeleton } from "@/components/skeleton/user/program-skeleton";
 import StoreScreenContainer from "@/components/ui/store-screen-container";
+import { MuteStoreIconButton } from "@/components/users/stores/mute-store-icon-button";
 
 const { width: screenWidth } = Dimensions.get("window");
 
@@ -56,9 +57,9 @@ export default function StoreOverviewDetail() {
     isStamping,
     refreshing,
   } = useRewardsUiStore();
-  
+
   const router = useRouter();
-  
+
   const {
     activeStampProgramRewards,
     handleCarouselInteraction,
@@ -80,7 +81,7 @@ export default function StoreOverviewDetail() {
 
   // If a specific store is requested, we don't necessarily need to snap the carousel 
   // unless we want to show it in context. For now, let's keep it simple.
-  
+
   const handleHeroSnap = useCallback((index: number) => {
     setHeroIndex(index);
     setIsSwitchingStore(true);
@@ -105,7 +106,7 @@ export default function StoreOverviewDetail() {
   return (
     <StoreScreenContainer
       backgroundClassName="bg-backgroundMuted dark:bg-darkBackground"
-      contentContainerClassName="gap-y-6"
+      contentContainerClassName="gap-y-3"
       contentGap={24}
       onTouchStart={handleCarouselInteraction}
       refreshControl={
@@ -117,19 +118,25 @@ export default function StoreOverviewDetail() {
         />
       }
     >
-      <View className="flex-row items-center gap-x-4 mb-[-12px] z-50 pt-2 pl-2">
-        <TouchableOpacity 
-          onPress={() => router.back()}
-          className="p-1 -ml-1"
-        >
-          <ChevronLeft
-            size={36}
-            color="#FFFFFF"
-          />
-        </TouchableOpacity>
-      </View>
-
       <View className="gap-y-0 -mt-16">
+        <View className="w-full absolute top-14 flex-row items-center justify-between z-50 px-5 pointer-events-box-none">
+          <TouchableOpacity
+            onPress={() => router.back()}
+            className="w-10 h-10 -ml-7 justify-center pointer-events-auto"
+          >
+            <ChevronLeft
+              size={32}
+              color="#FFFFFF"
+            />
+          </TouchableOpacity>
+
+          {storeId && (
+            <View className="pointer-events-auto -mr-4">
+              <MuteStoreIconButton storeId={Number(storeId)} />
+            </View>
+          )}
+        </View>
+
         <UserStoreHeroCarousel
           nearbyStores={storesWithLocation.filter(s => s.id.toString() === storeId)}
           storesWithLocation={storesWithLocation}
@@ -304,7 +311,7 @@ export default function StoreOverviewDetail() {
                   onScrollStart={handleCarouselInteraction}
                   onSnapToItem={(index) => setCarouselIndex(index)}
                   renderItem={({ item: streak }) => (
-                     <UserStreakCard
+                    <UserStreakCard
                       key={streak.store_id}
                       streak={streak}
                       nearbyStores={nearbyStores}
