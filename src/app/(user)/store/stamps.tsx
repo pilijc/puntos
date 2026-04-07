@@ -6,7 +6,8 @@ import {
 } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { useStamps } from "@/hooks/use-stamps";
-import { getActiveStampProgramRewards, getStampEventsForStore } from "@/services/stamp-service";
+import { getActiveStampProgramRewards, getStampEventsForStore, getUserStampEvents, getUserRewardRedemptions } from "@/services/stamp-service";
+import { getStoreById } from "@/services/store-service";
 import { storeLogos } from "@/data/rewards";
 import { supabase } from "@/supabase/supabase";
 import {
@@ -164,6 +165,7 @@ function StampCard({
                         ? "bg-white dark:bg-darkBackgroundCard border border-neutral-300 dark:border-neutral-600 shadow-sm"
                         : "bg-neutral-50 dark:bg-darkBackgroundMuted border border-neutral-200 dark:border-darkBorder border-dashed"
                         }`}
+                      style={isNext ? { borderColor: "#FF6600" } : undefined}
                     >
                       {isFilled ? (
                         <View className="w-full h-full items-center justify-center">
@@ -171,7 +173,7 @@ function StampCard({
                           {(storeStr?.logo || storeLogos[stamp.store_id?.toString()]) ? (
                             <Image
                               source={getLogoImage()}
-                              className="w-full h-full p-1 opacity-15 rotate-12"
+                              className="w-full h-full p-1 opacity-45 rotate-12"
                               contentFit="contain"
                             />
                           ) : (
@@ -197,9 +199,23 @@ function StampCard({
                           </View>
                         </View>
                       ) : (
-                        <Text className={`font-poppins-semibold ${numTop <= 4 ? 'text-2xl' : 'text-xl'} ${isNext ? 'text-neutral-600 dark:text-neutral-300' : 'text-neutral-400'}`}>
-                          {day.number}
-                        </Text>
+                        /* Empty slot — same logo style as stamped, no ink overlay */
+                        <View className="w-full h-full items-center justify-center">
+                          {(storeStr?.logo || storeLogos[stamp.store_id?.toString()]) ? (
+                            <Image
+                              source={getLogoImage()}
+                              className="w-full h-full p-1 opacity-45 rotate-12"
+                              contentFit="contain"
+                            />
+                          ) : (
+                            <Store
+                              size={iconSize}
+                              color="#e5e5e5"
+                              strokeWidth={1.5}
+                              style={{ transform: [{ rotate: "12deg" }], opacity: 0.45 }}
+                            />
+                          )}
+                        </View>
                       )}
                     </View>
                   </View>
@@ -238,26 +254,25 @@ function StampCard({
           </Text>
         </View>
 
-        {/* Right: Deadline or Redeem */}
+        {/* Right: Redeem button — always visible, disabled when incomplete */}
         {isCompleted ? (
           <TouchableOpacity
             className="bg-primary pt-[6px] pb-[6px] px-4 rounded-full shadow-sm flex-row items-center justify-center"
             activeOpacity={0.7}
           >
-            <Text className="text-[10px] font-poppins-bold text-white tracking-[1px]">REDEEM</Text>
+            <Text className="text-[10px] font-poppins-bold text-white tracking-[1px]">CLAIM</Text>
           </TouchableOpacity>
-        ) : deadlineStr ? (
-          <View className="flex-row items-center gap-x-1.5">
-            {deadlineUrgent ? (
-              <AlertCircle size={12} color="#dc2626" />
-            ) : (
-              <Clock size={12} color="#9ca3af" />
-            )}
-            <Text className={`text-[10px] font-poppins-medium ${deadlineUrgent ? 'text-red-600 dark:text-red-400' : 'text-neutral-500'}`}>
-              {deadlineStr}
+        ) : (
+          <TouchableOpacity
+            disabled
+            className="bg-neutral-100 dark:bg-darkBackgroundCard pt-[6px] pb-[6px] px-3 rounded-full flex-row items-center gap-x-1 border border-neutral-200 dark:border-darkBorder"
+            activeOpacity={1}
+          >
+            <Text className="text-[10px] font-poppins-bold text-neutral-400 dark:text-neutral-500 tracking-[1px]">
+              CLAIM
             </Text>
-          </View>
-        ) : null}
+          </TouchableOpacity>
+        )}
       </View>
     </View>
   );
@@ -275,6 +290,8 @@ export default function StampLogScreen() {
   const [stampEvents, setStampEvents] = useState<any[]>([]);
   const [rewardEvents, setRewardEvents] = useState<any[]>([]);
   const [isEventsLoading, setIsEventsLoading] = useState(true);
+  // Virtual card: shown when storeId is set but no stamp_progress row exists yet
+  const [virtualCard, setVirtualCard] = useState<any | null>(null);
 
   const parsedStoreId = storeId ? Number(storeId) : null;
 
@@ -284,19 +301,32 @@ export default function StampLogScreen() {
 
   useEffect(() => {
     let active = true;
-    if (parsedStoreId) {
-      setIsEventsLoading(true);
-      (async () => {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user && active) {
-          const events = await getStampEventsForStore(user.id, parsedStoreId);
-          setStampEvents(events);
+    setIsEventsLoading(true);
+
+    const loadEvents = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user || !active) return;
+
+      try {
+        const [stamps, rewards] = await Promise.all([
+          parsedStoreId
+            ? getStampEventsForStore(user.id, parsedStoreId)
+            : getUserStampEvents(user.id),
+          getUserRewardRedemptions(user.id, parsedStoreId || undefined)
+        ]);
+
+        if (active) {
+          setStampEvents(stamps);
+          setRewardEvents(rewards);
         }
+      } catch (err) {
+        console.error("Error loading events:", err);
+      } finally {
         if (active) setIsEventsLoading(false);
-      })();
-    } else {
-      setIsEventsLoading(false);
-    }
+      }
+    };
+
+    loadEvents();
     return () => { active = false; };
   }, [parsedStoreId]);
 
@@ -305,20 +335,69 @@ export default function StampLogScreen() {
     return stamps.filter(s => s.store_id === parsedStoreId);
   }, [stamps, parsedStoreId]);
 
+  // When viewing a specific store but the user has no progress yet (e.g. erased),
+  // build a virtual zero-stamp card so the UI still shows the punch card.
+  useEffect(() => {
+    if (!parsedStoreId) {
+      setVirtualCard(null);
+      return;
+    }
+    if (storeStamps.length > 0) {
+      setVirtualCard(null);
+      return;
+    }
+
+    let active = true;
+    (async () => {
+      try {
+        const [storeRow, programs] = await Promise.all([
+          getStoreById(parsedStoreId),
+          getActiveStampProgramRewards([parsedStoreId]),
+        ]);
+        if (!active) return;
+
+        const program = programs[0];
+        setVirtualCard({
+          id: `virtual-${parsedStoreId}`,
+          store_id: parsedStoreId,
+          stamps_count: 0,
+          target: program?.total_stamps ?? 7,
+          card_status: 'active',
+          stores: {
+            name: storeRow?.name ?? 'Store',
+            logo: storeRow?.logo ?? null,
+            address: storeRow?.address ?? '',
+            is_active: storeRow?.is_active ?? true,
+            status: storeRow?.status ?? 'active',
+          },
+        });
+        // Also seed the active programs list so reward title shows
+        if (programs.length > 0) setActivePrograms(programs);
+      } catch (e) {
+        console.error('[StampLog] Failed to build virtual card:', e);
+      }
+    })();
+    return () => { active = false; };
+  }, [parsedStoreId, storeStamps.length]);
+
   useEffect(() => {
     if (storeStamps.length === 0) return;
-    const storeIds = storeStamps.map((s) => s.store_id);
-    getActiveStampProgramRewards(storeIds).then(setActivePrograms).catch(console.error);
-  }, [storeStamps]);
+    const storeIds = parsedStoreId ? [parsedStoreId] : storeStamps.map((s) => s.store_id);
+    getActiveStampProgramRewards(storeIds)
+      .then(setActivePrograms)
+      .catch(console.error);
+  }, [storeStamps, parsedStoreId]);
 
-  // Handle active cards 
+  // Handle active cards
   const activeCards = storeStamps.filter((s) => (s.stamps_count ?? 0) < (s.target ?? 7) && (s as any).card_status !== 'completed' && (s as any).card_status !== 'expired');
   const readyToClaim = storeStamps.filter((s) => (s.stamps_count ?? 0) >= (s.target ?? 7) || (s as any).card_status === 'completed');
 
+  // Show real cards first, then the virtual zero-card as fallback
   const cardsToDisplay = [...readyToClaim, ...activeCards];
+  const showVirtualCard = cardsToDisplay.length === 0 && virtualCard !== null;
 
-  const storeObj = storeStamps[0]?.stores as any;
-  const displayStoreName = storeObj?.name ?? "Store";
+  const storeObj = (storeStamps[0]?.stores as any) ?? (virtualCard?.stores);
+  const displayStoreName = storeObj?.name ?? 'Store';
 
   const isLoading = isStampsLoading || isEventsLoading;
 
@@ -352,18 +431,26 @@ export default function StampLogScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* ─── The Single Active Punch Card ─── */}
-        {cardsToDisplay.length > 0 && (
+        {(cardsToDisplay.length > 0 || showVirtualCard) && (
           <View className="mb-2">
-            {cardsToDisplay.map((stamp) => {
-              const program = activePrograms.find((p) => p.store_id === stamp.store_id);
-              return (
-                <StampCard
-                  key={stamp.id}
-                  stamp={stamp}
-                  rewardTitle={program?.reward_title ?? null}
-                />
-              );
-            })}
+            {showVirtualCard ? (
+              <StampCard
+                key={virtualCard.id}
+                stamp={virtualCard}
+                rewardTitle={activePrograms.find(p => p.store_id === parsedStoreId)?.reward_title ?? null}
+              />
+            ) : (
+              cardsToDisplay.map((stamp) => {
+                const program = activePrograms.find((p) => p.store_id === stamp.store_id);
+                return (
+                  <StampCard
+                    key={stamp.id}
+                    stamp={stamp}
+                    rewardTitle={program?.reward_title ?? null}
+                  />
+                );
+              })
+            )}
 
             {/* How to Earn Banner Text */}
             <Text className="text-[11px] font-poppins text-neutral-500 text-center mt-3 mb-6 px-4">
@@ -447,8 +534,12 @@ export default function StampLogScreen() {
                 {rewardEvents.map((evt, idx) => (
                   <View key={evt.id} className="flex-row items-stretch">
                     <View className="w-8 items-center">
-                      <View className="w-6 h-6 rounded-full bg-amber-50 border border-amber-200 items-center justify-center -mt-1 dark:bg-amber-900/40 dark:border-amber-800">
-                        <Gem size={10} color="#d97706" />
+                      <View className="w-6 h-6 rounded-full bg-amber-50 border border-amber-200 items-center justify-center -mt-1 dark:bg-amber-900/40 dark:border-amber-800 overflow-hidden">
+                        {evt.image_url ? (
+                          <Image source={{ uri: evt.image_url }} className="w-full h-full" contentFit="cover" />
+                        ) : (
+                          <Gem size={10} color="#d97706" />
+                        )}
                       </View>
                       {idx !== rewardEvents.length - 1 && (
                         <View className="flex-1 w-px bg-amber-100 dark:bg-amber-900/50 my-1.5" />

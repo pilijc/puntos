@@ -478,7 +478,13 @@ export async function getStampEventsForStore(
   try {
     const { data, error } = await supabase
       .from("stamp_events")
-      .select("id, created_at")
+      .select(`
+        id, 
+        created_at,
+        purchases (
+          points_earned
+        )
+      `)
       .eq("user_id", userId)
       .eq("store_id", storeId)
       .order("created_at", { ascending: false });
@@ -488,9 +494,87 @@ export async function getStampEventsForStore(
       return [];
     }
 
-    return data || [];
+    return (data || []).map(evt => ({
+      ...evt,
+      points: (evt.purchases as any)?.points_earned
+    }));
   } catch (err) {
     console.error("Exception fetching stamp events:", err);
+    return [];
+  }
+}
+
+export async function getUserStampEvents(userId: string) {
+  try {
+    const { data, error } = await supabase
+      .from("stamp_events")
+      .select(`
+        id, 
+        created_at,
+        store_id,
+        purchases (
+          points_earned
+        )
+      `)
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("Error fetching all user stamp events:", error.message);
+      return [];
+    }
+
+    return (data || []).map(evt => ({
+      ...evt,
+      points: (evt.purchases as any)?.points_earned
+    }));
+  } catch (err) {
+    console.error("Exception fetching all user stamp events:", err);
+    return [];
+  }
+}
+
+export async function getUserRewardRedemptions(
+  userId: string,
+  storeId?: number | string
+) {
+  try {
+    let query = supabase
+      .from("reward_redemptions")
+      .select(`
+        id,
+        created_at,
+        points_spent,
+        store_id,
+        store_rewards (
+          title,
+          image_url
+        )
+      `)
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false });
+
+    if (storeId) {
+      query = query.eq("store_id", storeId);
+    }
+
+    const { data, error } = await query;
+
+    if (error) {
+      console.error("Error fetching reward redemptions:", error.message);
+      return [];
+    }
+
+    return (data || []).map(evt => ({
+      id: evt.id,
+      redeemed_at: evt.created_at,
+      title: (evt.store_rewards as any)?.title || "Reward Claimed",
+      image_url: (evt.store_rewards as any)?.image_url,
+      points_spent: evt.points_spent,
+      store_id: evt.store_id
+    }));
+  } catch (err) {
+    console.error("Exception fetching reward redemptions:", err);
     return [];
   }
 }
