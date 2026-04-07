@@ -355,9 +355,11 @@ export default function FrontDeskScan() {
                   onPress={switchToQR}
                   className="will-change-variable flex-1 py-2.5 rounded-lg items-center flex-row justify-center"
                   style={inputMode === "qr"
-                    ? { backgroundColor: isDark ? "#1F2937" : "#FFFFFF",
-                        shadowColor: "#000", shadowOffset: { width: 0, height: 1 },
-                        shadowOpacity: 0.08, shadowRadius: 2, elevation: 2 }
+                    ? {
+                      backgroundColor: isDark ? "#1F2937" : "#FFFFFF",
+                      shadowColor: "#000", shadowOffset: { width: 0, height: 1 },
+                      shadowOpacity: 0.08, shadowRadius: 2, elevation: 2
+                    }
                     : undefined}
                 >
                   <MaterialIcons
@@ -376,9 +378,11 @@ export default function FrontDeskScan() {
                   onPress={switchToManual}
                   className="will-change-variable flex-1 py-2.5 rounded-lg items-center flex-row justify-center"
                   style={inputMode === "manual"
-                    ? { backgroundColor: isDark ? "#1F2937" : "#FFFFFF",
-                        shadowColor: "#000", shadowOffset: { width: 0, height: 1 },
-                        shadowOpacity: 0.08, shadowRadius: 2, elevation: 2 }
+                    ? {
+                      backgroundColor: isDark ? "#1F2937" : "#FFFFFF",
+                      shadowColor: "#000", shadowOffset: { width: 0, height: 1 },
+                      shadowOpacity: 0.08, shadowRadius: 2, elevation: 2
+                    }
                     : undefined}
                 >
                   <MaterialIcons
@@ -540,7 +544,7 @@ export default function FrontDeskScan() {
           </View>
 
           {recentScans.length > 0 ? (
-            recentScans.map((scan, index) => (
+            recentScans.slice(0, 5).map((scan, index) => (
               <View
                 key={index}
                 className="bg-white dark:bg-darkBackgroundCard rounded-2xl border border-neutral-100 dark:border-darkBorder mb-3 overflow-hidden"
