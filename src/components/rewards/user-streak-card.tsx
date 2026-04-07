@@ -61,34 +61,43 @@ export default function UserStreakCard({
   };
   const weekStartStr = getMondayOfCurrentWeek(); // e.g. "2026-04-06" when today is Mon
 
-  // Was the last check-in within the CURRENT week?
-  const lastActivityStr = streak.last_activity_date ?? ""; // "YYYY-MM-DD" or ""
-  const isLastActivityThisWeek = lastActivityStr >= weekStartStr && lastActivityStr !== "";
+  // ─── Accurate computation of exactly WHICH days are completed ───
+  const addDays = (dateStr: string, d: number) => {
+    const date = new Date(dateStr + "T00:00:00");
+    date.setDate(date.getDate() + d);
+    return date.toISOString().split("T")[0];
+  };
 
-  // How many days were completed within this week?
-  // If the user earned Mon→Tue→Wed consecutively, last_activity is Wed (weekday index 2),
-  // so completedThisWeek = 2 + 1 = 3.
-  let completedThisWeek = 0;
-  if (isLastActivityThisWeek) {
-    const lastActivityWeekday = (new Date(lastActivityStr + "T00:00:00").getDay() + 6) % 7;
-    completedThisWeek = lastActivityWeekday + 1;
+  const diffDays = (d1Str: string, d2Str: string) => {
+    const d1 = new Date(d1Str + "T00:00:00");
+    const d2 = new Date(d2Str + "T00:00:00");
+    return Math.round((d1.getTime() - d2.getTime()) / (1000 * 3600 * 24));
+  };
+
+  const lastActivityStr = streak.last_activity_date ?? "";
+  let effectiveLastDateStr = lastActivityStr;
+  let effectiveStreakDays = streak.streak_days ?? 0;
+
+  // Optimistic bump if the user just earned today in this session
+  if (hasEarnedToday && effectiveLastDateStr !== today) {
+    const yesterdayStr = addDays(today, -1);
+    if (effectiveLastDateStr === yesterdayStr) {
+      effectiveStreakDays += 1;
+    } else {
+      effectiveStreakDays = 1; // broken streak
+    }
+    effectiveLastDateStr = today;
   }
 
-  // Optimistic bump: if the user just earned today in this session, make sure today counts
-  if (hasEarnedToday && lastActivityStr !== today) {
-    completedThisWeek = Math.max(completedThisWeek, todayWeekdayIndex + 1);
-  }
-
-  const clampedCount = Math.min(completedThisWeek, targetCount);
-
-  // For the subtitle text we still want to show cumulative total earned days
-  const totalEarnedDisplay = Math.min(
+  // Display value for subtitle and completion modal
+  const clampedCount = Math.min(
     (streak.total_earned_days ?? streak.streak_days ?? 0) +
-      (hasEarnedToday && lastActivityStr !== today ? 1 : 0),
+    (hasEarnedToday && lastActivityStr !== today ? 1 : 0),
     targetCount,
   );
+  const totalEarnedDisplay = clampedCount;
 
-  const streakDays = [
+  const streakDaysLabels = [
     translate("user.rewards.days.mon"),
     translate("user.rewards.days.tue"),
     translate("user.rewards.days.wed"),
@@ -98,25 +107,26 @@ export default function UserStreakCard({
     translate("user.rewards.days.sun"),
   ];
 
-  // Build exactly displayDayCount circles (capped at 7)
   const displayDayCount = Math.min(targetCount, 7);
 
   const days = Array.from({ length: displayDayCount }, (_, index) => {
-    // Circles 0..clampedCount-1 → completed (earned this week up through last activity)
-    if (index < clampedCount) {
-      return { label: streakDays[index % 7], state: "completed" as const };
+    const circleDateStr = addDays(weekStartStr, index);
+
+    if (effectiveLastDateStr !== "") {
+      const daysSinceCircle = diffDays(effectiveLastDateStr, circleDateStr);
+      // It's completed if the date falls inside the active consecutive streak window
+      if (daysSinceCircle >= 0 && daysSinceCircle < effectiveStreakDays) {
+        return { label: streakDaysLabels[index % 7], state: "completed" as const };
+      }
     }
-    // Today's weekday → always "current" so the user knows which day to tap
-    // (whether already claimed→shows completed above, or not yet→shows dashed here)
+
     if (index === todayWeekdayIndex) {
-      return { label: streakDays[index % 7], state: "current" as const };
+      return { label: streakDaysLabels[index % 7], state: "current" as const };
     }
-    // Days between last earned day and today (within this week) that were skipped → "missed"
     if (index < todayWeekdayIndex) {
-      return { label: streakDays[index % 7], state: "missed" as const };
+      return { label: streakDaysLabels[index % 7], state: "missed" as const };
     }
-    // Future days this week → upcoming
-    return { label: streakDays[index % 7], state: "upcoming" as const };
+    return { label: streakDaysLabels[index % 7], state: "upcoming" as const };
   });
 
   const pressScale = useSharedValue(1);
@@ -268,7 +278,7 @@ export default function UserStreakCard({
               isCompleted || isCurrent
                 ? "text-primary font-poppins-semibold text-[10px]"
                 : isMissed
-                  ? "text-neutral-400 dark:text-neutral-500 font-poppins-semibold text-[10px] line-through"
+                  ? "text-neutral-400 dark:text-neutral-500 font-poppins-semibold text-[10px]"
                   : "text-neutral-400 font-poppins-semibold text-[10px]";
             return (
               <View
@@ -357,10 +367,10 @@ export default function UserStreakCard({
                         </Text>
                       </View>
                     ) : isMissed ? (
-                      // ✅ Missed day — greyed out with a small ✕ to indicate it was skipped
-                      <View className="items-center justify-center">
-                        <Text className="text-neutral-400 dark:text-neutral-500 font-poppins-bold text-[10px]">✕</Text>
+                      // Missed day — greyed out with an explicit horizontal line
+                      <View className="items-center justify-center w-full h-full relative">
                         <Text className={textClass}>{day.label}</Text>
+                        <View className="absolute w-[27px] h-[1.5px] bg-neutral-400 dark:bg-neutral-500 rounded-full mt-0.1" />
                       </View>
                     ) : (
                       <Text className={textClass}>{day.label}</Text>

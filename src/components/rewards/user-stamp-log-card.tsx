@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { View, Text, AnimatedView, TouchableOpacity, Image, Pressable } from "@/tw";
-import { Check, ChevronDown, Coins, ExternalLink, Sparkles, Store } from "lucide-react-native";
+import { Check, ChevronDown, Coins, ExternalLink, Sparkles, Store, Stamp } from "lucide-react-native";
 import { FadeIn, FadeOut, Layout, useAnimatedStyle, withTiming, interpolate } from "react-native-reanimated";
 import { storeLogos } from "@/data/rewards";
 import { Alert } from "react-native";
@@ -182,7 +182,7 @@ export default function UserStampLogCard({
                   } : undefined}
                 >
                   {isCompleted ? (
-                    <Check size={16} color="#FFFFFF" />
+                    <Stamp size={16} color="#FFFFFF" />
                   ) : (
                     <Text className={textClass}>{day.number}</Text>
                   )}

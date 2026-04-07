@@ -358,6 +358,7 @@ export async function getStoresWithEnabledStreaks(
   if (storeIds.length === 0) return [];
 
   try {
+    // ── Step 1: Check which stores have streak_enabled = true ────────────────
     const { data: featureRows, error: featureError } = await supabase
       .from("store_feature")
       .select("store_id, streak_enabled")
@@ -368,9 +369,41 @@ export async function getStoresWithEnabledStreaks(
       return [];
     }
 
-    return (featureRows ?? [])
+    // Store IDs where the feature flag is explicitly enabled
+    const featureEnabledIds = (featureRows ?? [])
       .filter((row: any) => row.streak_enabled === true)
       .map((row: any) => Number(row.store_id));
+
+    if (featureEnabledIds.length === 0) return [];
+
+    // ── Step 2: Cross-check against store_streaks — must have an active program ─
+    // A streak_enabled flag alone is not enough; the store must also have an
+    // active streak program row. If the program has ended (status ≠ 'active'),
+    // the card should be hidden even if the feature flag is still on.
+    const { data: activeStreakRows, error: streakError } = await supabase
+      .from("store_streaks")
+      .select("store_id")
+      .in("store_id", featureEnabledIds)
+      .eq("status", "active");
+
+    if (streakError) {
+      // If we can't read store_streaks, fall back to feature flag only.
+      // This avoids hiding the card due to an RLS or network issue.
+      console.warn(
+        "[getStoresWithEnabledStreaks] Could not read store_streaks, falling back to feature flag only:",
+        streakError.message,
+      );
+      return featureEnabledIds;
+    }
+
+    // Return only the stores that satisfy BOTH conditions:
+    // 1. streak_enabled = true in store_feature
+    // 2. at least one row with status = 'active' in store_streaks
+    const activeStreakStoreIds = new Set(
+      (activeStreakRows ?? []).map((row: any) => Number(row.store_id)),
+    );
+
+    return featureEnabledIds.filter((id) => activeStreakStoreIds.has(id));
   } catch (error) {
     console.error("Exception fetching eligible streak stores:", error);
     return [];

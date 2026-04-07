@@ -196,10 +196,16 @@ export function useStoreOverviewData(storeId?: string) {
   }, [enabledStampFeatureStoreIds, heroIndex, location, nearbyStores, sortedStamps, storeId, storesWithLocation]);
 
   const displayStreaks = useMemo(() => {
+    // Helper: a streak entry is only eligible to display if the attached
+    // store_streaks program is still active (defense-in-depth against stale cache).
+    const hasActiveProgram = (storeId: number) =>
+      activeStreakProgramMap.has(storeId);
+
     // If a specific storeId is requested, focus only on its real streak record
     if (storeId) {
       const isEligible = eligibleStreakStoreIds.includes(Number(storeId));
-      if (!isEligible) return [];
+      // Also verify the program is still active (guards stale eligibleStreakStoreIds cache)
+      if (!isEligible || !hasActiveProgram(Number(storeId))) return [];
 
       // Find real user_streaks record for this store
       const existingStreak = userStreaks.find(
@@ -239,7 +245,8 @@ export function useStoreOverviewData(storeId?: string) {
       if (!focusedStore) return [];
 
       const isEligible = eligibleStreakStoreIds.includes(Number(focusedStore.id));
-      if (!isEligible) return [];
+      // Also verify the program is still active (guards stale eligibleStreakStoreIds cache)
+      if (!isEligible || !hasActiveProgram(Number(focusedStore.id))) return [];
 
       const existingStreak = userStreaks.find(
         (s) => Number(s.store_id) === Number(focusedStore.id),
@@ -271,9 +278,10 @@ export function useStoreOverviewData(storeId?: string) {
       }];
     }
 
-    // Fallback: show all streaks for eligible stores
+    // Fallback: show all streaks for eligible stores that also have an active program
     return userStreaks.filter((s) =>
-      eligibleStreakStoreIds.includes(Number(s.store_id)),
+      eligibleStreakStoreIds.includes(Number(s.store_id)) &&
+      hasActiveProgram(Number(s.store_id)),
     );
   }, [activeStreakProgramMap, eligibleStreakStoreIds, heroIndex, nearbyStores, storeId, storesWithLocation, userStreaks]);
 
