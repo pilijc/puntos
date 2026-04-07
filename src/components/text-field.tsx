@@ -3,13 +3,15 @@ import { KeyboardTypeOptions } from "react-native";
 import { View, Text, TextInput } from "@/tw";
 
 interface TextFieldProps {
-	label: string;
-	value: string;
-	onChangeText: (value: string) => void;
-	placeholder?: string;
-	hint?: string;
-	keyboardType?: KeyboardTypeOptions;
-	required?: boolean;
+  label: string;
+  value: string;
+  onChangeText: (value: string) => void;
+  placeholder?: string;
+  hint?: string;
+  keyboardType?: KeyboardTypeOptions;
+  required?: boolean;
+  rightAccessory?: React.ReactNode;
+  secureTextEntry?: boolean;
 }
 
 export function TextField({
@@ -20,35 +22,50 @@ export function TextField({
   hint,
   keyboardType = "default",
   required = false,
+  rightAccessory,
+  secureTextEntry = false,
 }: TextFieldProps) {
+  const hasRight = !!rightAccessory;
+
   return (
-    <View className="gap-y-2">
+    <View className="gap-y-1.5">
       <Text className="text-sm font-poppins-semibold text-slate-700 dark:text-slate-300">
         {label} {required && <Text className="text-sm font-poppins text-red-500 dark:text-red-400 -mt-1">*</Text>}
-      </Text> 
+      </Text>
       {hint && (
         <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500 -mt-1">
           {hint}
         </Text>
       )}
-      <View className="relative">
-      <TextInput
-        className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 text-base font-poppins text-slate-900 dark:text-slate-100 pr-12"
-        placeholder={placeholder}
-        placeholderTextColor="#94A3B8"
-        style={{
-          height: 45,
-          lineHeight: 20,
-          paddingVertical: 0,
-          paddingHorizontal: 12,
-          textAlignVertical: "center",
-          includeFontPadding: false,
-          fontSize: 13,
-        }}
-        keyboardType={keyboardType}
-        value={value}
-        onChangeText={(v) => onChangeText(v.replace(/-/g, ""))}
-      />
+      <View className="relative justify-center">
+        <TextInput
+          className={`w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 text-base font-poppins text-slate-900 dark:text-slate-100 ${
+            hasRight ? "pr-11" : "pr-4"
+          }`}
+          placeholder={placeholder}
+          placeholderTextColor="#94A3B8"
+          style={{
+            height: 45,
+            lineHeight: 20,
+            paddingVertical: 0,
+            paddingHorizontal: 12,
+            textAlignVertical: "center",
+            includeFontPadding: false,
+            fontSize: 13,
+          }}
+          keyboardType={keyboardType}
+          value={value}
+          onChangeText={(v) => onChangeText(v.replace(/-/g, ""))}
+          secureTextEntry={secureTextEntry}
+        />
+        {hasRight ? (
+          <View
+            pointerEvents="box-none"
+            className="absolute right-1 top-0 bottom-0 justify-center items-center"
+          >
+            {rightAccessory}
+          </View>
+        ) : null}
       </View>
     </View>
   );

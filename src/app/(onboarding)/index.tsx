@@ -5,6 +5,7 @@ import React, { useState } from "react";
 import { useWindowDimensions } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useTranslation } from "react-i18next";
+import { Button } from "@/components/button";
 
 const slides = [
   {
@@ -94,17 +95,16 @@ export default function Welcome() {
       <View className="min-h-32 pb-2 justify-center">
         {currentIndex === slides.length - 1 && (
           <View>
-            <TouchableOpacity
+            <Button
+              label={translate("onboarding.slide.button")}
               onPress={async () => {
                 await AsyncStorage.setItem("hasSeenOnboarding", "true");
                 router.replace("/(onboarding)/welcome");
               }}
-              className="bg-primary py-4 rounded-xl items-center"
-            >
-              <Text className="text-white text-base font-poppins-semibold">
-                {translate("onboarding.slide.button")}
-              </Text>
-            </TouchableOpacity>
+              variant="primary"
+              fullWidth={true}
+              authButton={true}
+            />
           </View>
         )}
       </View>

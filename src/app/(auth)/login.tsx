@@ -1,67 +1,49 @@
-import {
-  View,
-  Text,
-  SafeAreaView,
-  TouchableOpacity,
-  TextInput,
-  ScrollView,
-  Image,
-} from "@/tw";
+import { View, Text, TouchableOpacity, ScrollView, Image, SafeAreaView } from "@/tw";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useState, useEffect } from "react";
-import { ActivityIndicator, Alert, KeyboardAvoidingView, Platform } from "react-native";
+import {  KeyboardAvoidingView, Platform } from "react-native";
 import { useAuthStore } from "../../store/auth-store";
-import { Feather, Ionicons } from "@expo/vector-icons";
 import { loginService, signInWithGoogleLoginService } from "@/services/auth-service";
 import { useTranslation, Trans } from "react-i18next";
-import OnboardingLayout from "../(onboarding)/_layout";
 import { Modal, type ModalButton } from "@/components/modal";
 import { supabase } from "@/supabase/supabase";
 import TranslateButton from "@/components/ui/translate-button";
-
-
+import { AppHeader } from "@/components/header";
+import { TextField } from "@/components/text-field";
+import { Button } from "@/components/button";
+import { LucideEye, LucideEyeOff } from "lucide-react-native";
 
 export default function Login() {
-  const { name, email, password, setEmail, setPassword, showPassword, setShowPassword } = useAuthStore();
-
+  const {email, password, setEmail, setPassword, showPassword, setShowPassword } = useAuthStore();
   const { restricted } = useLocalSearchParams();
-
-  const showRestrictedAccountModal = () => {
-    setModal({
-      title: "Account Restricted",
-      message: "Your account has been restricted. To verify your account status, please contact support.",
-      buttons: [
-        {
-          label: "OK",
-          variant: "primary",
-          onPress: () => setModal(null),
-        },
-      ],
-    });
-  };
-
-  useEffect(() => {
-    if (restricted === "true") {
-      showRestrictedAccountModal();
-    }
-  }, [restricted]);
-
+  const emptyState = { email: "", password: "" };
   const [loading, setLoading] = useState(false);
   const [loadingGoogle, setLoadingGoogle] = useState(false);
   const { t: translate } = useTranslation();
-  const [errors, setErrors] = useState({
-    email: "",
-    password: "",
-  });
+  const [errors, setErrors] = useState(emptyState);
   const [modal, setModal] = useState<{
     title: string;
     message: string;
     buttons: ModalButton[];
   } | null>(null);
-  const handleLogin = async () => {
-    const nextErrors = { ...errors };
 
+  const showRestrictedAccountModal = () =>
+    setModal({
+      title: "Account Restricted",
+      message:
+        "Your account has been restricted. To verify your account status, please contact support.",
+      buttons: [
+        { label: "OK", variant: "primary", onPress: () => setModal(null) },
+      ],
+    });
+
+  useEffect(() => {
+    if (restricted === "true") showRestrictedAccountModal();
+  }, [restricted]);
+
+  const handleLogin = async () => {
     const trimmedEmail = email.trim();
+    const nextErrors = { ...emptyState }; 
     if (!trimmedEmail) {
       nextErrors.email = translate("onboarding.login.error.emailRequired");
     } else if (!/^\S+@\S+\.\S+$/.test(trimmedEmail)) {
@@ -70,18 +52,18 @@ export default function Login() {
     if (!password) {
       nextErrors.password = translate("onboarding.login.error.passwordRequired");
     }
+
     if (nextErrors.email || nextErrors.password) {
       setErrors(nextErrors);
       return;
     }
-    setErrors({ email: "", password: "" });
+    setErrors(emptyState);
 
     try {
       setLoading(true);
       const data = await loginService(trimmedEmail, password);
       console.log("login component", data);
       if (!data.success) {
-        //  Alert.alert("Login Failed", data.message);
         setModal({
           title: "You are not assigned to a store",
           message: data.message,
@@ -92,7 +74,6 @@ export default function Login() {
               onPress: async () => {
                 await supabase.auth.signOut();
                 setModal(null);
-
               }
             },
           ],
@@ -102,19 +83,16 @@ export default function Login() {
       router.replace(data.homeRoute);
     } catch (error: any) {
       console.log("error login component", error);
-
-      if (error.name === "AccountBlockedError") {
+      if (error?.name === "AccountBlockedError") {
         useAuthStore.getState().setRestricted(true);
         return;
       }
 
-      let message = error?.msg ?? error?.message;
-
-      if (message === "Invalid login credentials") {
-        message = translate("onboarding.login.error.invalidLogin");
-      } else if (!message) {
-        message = translate("onboarding.login.error.invalidLogin");
-      }
+      const rawMessage = error?.msg ?? error?.message;
+      const message =
+        !rawMessage || rawMessage === "Invalid login credentials"
+          ? translate("onboarding.login.error.invalidLogin")
+          : rawMessage;
 
       setErrors({ email: "", password: message });
     } finally {
@@ -126,14 +104,12 @@ export default function Login() {
     try {
       setLoadingGoogle(true);
       const data = await signInWithGoogleLoginService();
-      console.log("data", data);
       router.replace(data.homeRoute ?? "/(user)");
     } catch (error: any) {
-      if (error.name === "AccountBlockedError") {
+      if (error?.name === "AccountBlockedError") {
         useAuthStore.getState().setRestricted(true);
         return;
       }
-
       const message = error?.message ?? "Something went wrong";
       setErrors({ email: "", password: message });
     } finally {
@@ -142,7 +118,7 @@ export default function Login() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-background dark:bg-darkBackground">
+    <SafeAreaView className="flex-1 bg-white dark:bg-darkBackground">
       <Modal
         visible={!!modal}
         onClose={() => setModal(null)}
@@ -150,19 +126,11 @@ export default function Login() {
         message={modal?.message}
         buttons={modal?.buttons}
       />
-      <View className="flex-row items-center justify-center shadow-xs p-4 bg">
-        <TouchableOpacity
-          onPress={() => router.replace("/welcome")}
-          hitSlop={10}
-        >
-          <Ionicons name="chevron-back" size={18} color="#9ca3af" />
-        </TouchableOpacity>
-        <View className="flex-1 items-center ml-10">
-          <Text className="text-xl font-poppins-bold text-neutral-900 dark:text-darkTextPrimary">{translate("onboarding.login.button")}</Text>
-        </View>
-
-        <TranslateButton />
-      </View>
+      <AppHeader
+        title={translate("onboarding.login.button")}
+        onBackPress={() => router.replace("/welcome")}
+        rightIcon={<TranslateButton />}
+      />
       <View className="flex-1 justify-start p-4">
         <KeyboardAvoidingView
           behavior={Platform.OS === "android" ? "padding" : "height"}
@@ -184,87 +152,64 @@ export default function Login() {
                   <Text className="text-2xl font-poppins-bold text-neutral-900 dark:text-darkTextPrimary text-center">
                     {translate("onboarding.login.welcome")}
                   </Text>
-                  <Text className="text-neutral-600 dark:text-darkTextSecondary font-poppins text-center">
+                  <Text className="text-neutral-600 dark:text-darkTextSecondary font-poppins text-center text-sm">
                     {translate("onboarding.login.subhead")}
                   </Text>
                 </View>
               </View>
 
-              <View className="gap-y-2 w-full items-center">
+              <View className="gap-y-2 space-y-2 w-full items-center">
                 <View className="w-full">
-                  <Text className="mb-2 text-sm font-poppins-medium text-neutral-700 dark:text-darkTextSecondary">
-                    {translate("onboarding.login.label.email")}
-                  </Text>
-                  <TextInput
-                    placeholder={translate("onboarding.login.input.email")}
-                    placeholderTextColor="#9ca3af"
-                    keyboardType="email-address"
-                    className="border border-neutral-300 dark:border-darkBorder bg-neutral-50 dark:bg-darkBackgroundMuted rounded-xl px-4 py-4 font-poppins text-neutral-900 dark:text-darkTextPrimary"
-                    onChangeText={setEmail}
+                  <TextField
+                    label={translate("onboarding.login.label.email")}
                     value={email}
-                    autoFocus
+                    onChangeText={setEmail}
+                    placeholder={translate("onboarding.login.input.email")}
+                    keyboardType="email-address"
                   />
                 </View>
 
                 <View className="w-full">
-                  <View className="flex-row items-center justify-between">
-                    <Text className="mb-2 text-sm font-poppins-medium text-neutral-700 dark:text-darkTextSecondary">
-                      {translate("onboarding.login.label.password")}
-                    </Text>
-                    <TouchableOpacity
-                      className="items-center"
-                      onPress={() => router.push("/forgot-pass")}
-                    >
-                      <Text className="text-primary text-sm font-poppins">
-                        {translate("onboarding.login.forgotPassword")}
-                      </Text>
-                    </TouchableOpacity>
-                  </View>
-                  <View className="relative">
-                    <View className="flex-row items-center">
-                      <TextInput
-                        placeholderTextColor="#9ca3af"
-                        value={password}
-                        onChangeText={setPassword}
-                        placeholder={translate("onboarding.login.input.password")}
-                        secureTextEntry={!showPassword}
-                        autoCapitalize="none"
-                        className="flex-1 border border-neutral-300 dark:border-darkBorder bg-neutral-50 dark:bg-darkBackgroundMuted rounded-xl px-4 py-4 font-poppins text-neutral-900 dark:text-darkTextPrimary"
-                      />
+                  <TextField
+                    label={translate("onboarding.login.label.password")}
+                    value={password}
+                    onChangeText={setPassword}
+                    placeholder={translate("onboarding.login.input.password")}
+                    keyboardType="default"
+                    secureTextEntry={!showPassword}
+                    rightAccessory={
                       <TouchableOpacity
                         onPress={() => setShowPassword(!showPassword)}
                         className="ml-[-32px] p-2"
                         activeOpacity={0.7}
                       >
-                        <Feather
-                          name={showPassword ? "eye" : "eye-off"}
-                          size={18}
-                          color="#9ca3af"
-                        />
+                        {showPassword ? (
+                          <LucideEye color="#9ca3af" size={16} />
+                        ) : (
+                          <LucideEyeOff color="#9ca3af" size={16} />
+                        )}
                       </TouchableOpacity>
-                    </View>
-                  </View>
-
+                    }
+                  />
                 </View>
-                {(errors.password || errors.email) ? (
-                  <Text className="mt-2 text-sm font-poppins text-red-500 dark:text-red-400 text-center bg-red-50 dark:bg-red-900/20 rounded-xl p-4 w-full border border-red-100 dark:border-red-900/30">
-                    {errors.password || errors.email}
-                  </Text>
-                ) : null}
+                <View className="w-full mt-2">
+                  {(errors.password || errors.email) ? (
+                    <Text className="mt-2 text-sm font-poppins text-red-500 dark:text-red-400 text-center bg-red-50 dark:bg-red-900/20 rounded-xl px-4 py-3.5 w-full">
+                      {errors.password || errors.email}
+                    </Text>
+                  ) : null}
+                </View>
               </View>
 
-              <TouchableOpacity className="bg-primary py-4 rounded-xl items-center w-full max-w-md" onPress={handleLogin}>
-                {loading ? (
-                  <ActivityIndicator size="small" color="white" />
-                ) : (
-                  <>
-                    <Text className="text-white text-base font-poppins-semibold">
-                      {translate("onboarding.login.button")}
-                    </Text>
-                  </>
-                )}
-              </TouchableOpacity>
-
+              <Button
+                label={translate("onboarding.login.button")}
+                onPress={handleLogin}
+                loading={loading}
+                disabled={loading}
+                fullWidth={true}
+                authButton={true}
+              />
+              
               <View className="flex-row items-center gap-x-4 w-full max-w-md">
                 <View className="flex-1 h-px bg-neutral-200 dark:bg-darkBorder" />
                 <Text className="text-neutral-500 dark:text-darkTextMuted font-poppins text-sm text-center">
@@ -273,27 +218,18 @@ export default function Login() {
                 <View className="flex-1 h-px bg-neutral-200 dark:bg-darkBorder" />
               </View>
 
-              <TouchableOpacity
+              <Button
+                label={translate("onboarding.signup.google")}
                 onPress={handleSignInWithGoogle}
-                className="rounded-xl p-4 border border-neutral-200 dark:border-darkBorder bg-transparent flex-row items-center justify-center gap-x-3 w-full max-w-md"
-              >
-                {loadingGoogle ? (
-                  <ActivityIndicator size="small" color="#9ca3af" />
-                ) : (
-                  <>
-                    <Image
-                      source={require("../../assets/images/google-icon.png")}
-                      className="w-5 h-5"
-                    />
-                    <Text className="font-poppins-medium text-neutral-700 dark:text-darkTextSecondary">
-                      {translate("onboarding.signup.google")}
-                    </Text>
-                  </>
-                )}
-              </TouchableOpacity>
+                variant="secondary"
+                fullWidth={true}
+                authButton={true}
+                leftImage={require("../../assets/images/google-icon.png")}
+                leftImageSize={14}
+              />
 
               <View className="flex-row justify-center items-center w-full">
-                <Text className="font-poppins text-neutral-600 dark:text-darkTextSecondary text-center">
+                <Text className="text-sm font-poppins text-neutral-600 dark:text-darkTextSecondary text-center">
                   <Trans
                     i18nKey="onboarding.login.signup"
                     components={{

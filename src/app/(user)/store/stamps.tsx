@@ -55,7 +55,7 @@ function StampCard({
   const getLogoImage = () => {
     if (storeStr?.logo) return { uri: storeStr.logo };
     if (storeLogos[stamp.store_id?.toString()]) return storeLogos[stamp.store_id.toString()];
-    return require("../../../assets/images/rewards/coffee-shop.png");
+    // return require("../../../assets/images/rewards/coffee-shop.png");
   };
 
   const days = Array.from({ length: target }, (_, i) => ({
