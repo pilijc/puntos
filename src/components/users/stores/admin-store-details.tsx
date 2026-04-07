@@ -1,5 +1,6 @@
 import React, { useState, useRef, useMemo } from "react";
 import { ScrollView } from "react-native";
+import Carousel from 'react-native-reanimated-carousel';
 import { View, Text, TouchableOpacity } from "@/tw";
 import { useTranslation } from "react-i18next";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
@@ -191,8 +192,11 @@ export function AdminStoreDetails({
               {store.owner_name ? `By: ${store.owner_name}` : "By: Not specified"}
             </Text>
 
-            <View className={`self-start px-2 py-0.5 rounded-full ${getStoreCategoryBadge(store.type).bg} mb-1.5`}>
-              <Text className={`text-[10px] font-poppins-semibold ${getStoreCategoryBadge(store.type).text}`}>
+            <View className={`self-start px-2 py-0.5 rounded-full ${getStoreCategoryBadge(store.type).bg} mb-1.5 flex-row items-center justify-center`}>
+              <Text
+                className={`text-[10px] font-poppins-semibold ${getStoreCategoryBadge(store.type).text}`}
+                style={{ lineHeight: 16, includeFontPadding: false } as any}
+              >
                 {store.type || "General"}
               </Text>
             </View>
@@ -236,11 +240,14 @@ export function AdminStoreDetails({
                 No store information has been provided yet by the manager.
               </Text>
               {store.status !== 'pending_review' && (
-                <View className="mt-4 flex-row items-center gap-2 self-start bg-emerald-50 dark:bg-emerald-900/10 px-3 py-2 rounded-xl border border-emerald-100 dark:border-emerald-800/30">
+                <View className="mt-4 flex-row text-center items-center gap-2 self-start bg-emerald-50 dark:bg-emerald-900/10 px-3 py-2 rounded-xl border border-emerald-100 dark:border-emerald-800/30">
                   <View className="w-5 h-5 rounded-full bg-emerald-500 items-center justify-center">
                     <MaterialIcons name="verified" size={12} color="#ffffff" />
                   </View>
-                  <Text className="text-[10px] font-poppins-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
+                  <Text
+                    className="text-[10px] font-poppins-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400"
+                    style={{ lineHeight: 14, includeFontPadding: false } as any}
+                  >
                     Approved Date: {store.approved_at ? new Date(store.approved_at).toLocaleDateString("en-US", { year: 'numeric', month: 'short', day: 'numeric' }) : "N/A"}
                   </Text>
                 </View>
@@ -257,41 +264,33 @@ export function AdminStoreDetails({
                 </View>
 
                 <View className="relative w-full h-[180px] rounded-[16px] overflow-hidden bg-[#F8FAFC] dark:bg-darkBackgroundMuted" onLayout={(e) => setLayoutWidth(e.nativeEvent.layout.width)}>
-                  <ScrollView ref={scrollRef} horizontal pagingEnabled showsHorizontalScrollIndicator={false} bounces={false} scrollEventThrottle={16}
-                    onScroll={(e) => {
-                      if (layoutWidth > 0) {
-                        const idx = Math.round(e.nativeEvent.contentOffset.x / layoutWidth);
-                        if (idx !== currentPicIndex && idx >= 0 && idx < store.store_pictures!.length) {
-                          setCurrentPicIndex(idx);
-                        }
-                      }
-                    }}
-                  >
-                    {store.store_pictures.map((uri, idx) => (
-                      <View key={idx} style={{ width: layoutWidth > 0 ? layoutWidth : '100%', height: '100%' }}>
-                        <Image source={{ uri }} style={{ width: "100%", height: "100%" }} contentFit="cover" />
-                      </View>
-                    ))}
-                  </ScrollView>
-
+                  {layoutWidth > 0 && (
+                    <Carousel
+                      loop
+                      width={layoutWidth}
+                      height={180}
+                      autoPlay={false}
+                      data={store.store_pictures}
+                      scrollAnimationDuration={1000}
+                      onSnapToItem={(index) => setCurrentPicIndex(index)}
+                      renderItem={({ item: uri }) => (
+                        <TouchableOpacity 
+                           activeOpacity={0.9} 
+                           onPress={() => setViewingDocUri(uri)}
+                           className="w-full h-full"
+                        >
+                          <Image source={{ uri }} style={{ width: "100%", height: "100%" }} contentFit="cover" />
+                        </TouchableOpacity>
+                      )}
+                    />
+                  )}
+ 
                   {store.store_pictures.length > 1 && (
-                    <>
-                      {currentPicIndex > 0 && (
-                        <TouchableOpacity activeOpacity={0.8} onPress={() => scrollRef.current?.scrollTo({ x: (currentPicIndex - 1) * layoutWidth, animated: true })} className="absolute left-2 top-1/2 -mt-4 w-7 h-7 rounded-full bg-black/40 backdrop-blur-md items-center justify-center z-10">
-                          <MaterialIcons name="chevron-left" size={20} color="#fff" />
-                        </TouchableOpacity>
-                      )}
-                      {currentPicIndex < store.store_pictures.length - 1 && (
-                        <TouchableOpacity activeOpacity={0.8} onPress={() => scrollRef.current?.scrollTo({ x: (currentPicIndex + 1) * layoutWidth, animated: true })} className="absolute right-2 top-1/2 -mt-4 w-7 h-7 rounded-full bg-black/40 backdrop-blur-md items-center justify-center z-10">
-                          <MaterialIcons name="chevron-right" size={20} color="#fff" />
-                        </TouchableOpacity>
-                      )}
-                      <View className="absolute bottom-2 left-0 right-0 flex-row justify-center gap-1.5 z-10">
-                        {store.store_pictures.map((_, idx) => (
-                          <View key={idx} className={`h-1.5 rounded-full transition-all ${idx === currentPicIndex ? 'w-4 bg-primary' : 'w-1.5 bg-white/70'}`} />
-                        ))}
-                      </View>
-                    </>
+                    <View className="absolute bottom-2 left-0 right-0 flex-row justify-center gap-1.5 z-10" pointerEvents="none">
+                      {store.store_pictures.map((_, idx) => (
+                        <View key={idx} className={`h-1.5 rounded-full transition-all ${idx === currentPicIndex ? 'w-4 bg-primary' : 'w-1.5 bg-white/70'}`} />
+                      ))}
+                    </View>
                   )}
                 </View>
               </View>
@@ -362,7 +361,7 @@ export function AdminStoreDetails({
           <View className="bg-white dark:bg-darkBackgroundCard rounded-3xl p-6 shadow-sm shadow-slate-200/40 dark:shadow-none mb-6 border border-slate-100 dark:border-neutral-800/50">
             <View className="flex-row items-center gap-1.5 mb-5">
               <MaterialIcons name="verified" size={18} color="#15803d" />
-              <Text className="text-sm font-poppins-bold text-slate-800 dark:text-slate-100 pt-0.5">Verification</Text>
+              <Text className="text-sm font-poppins-bold text-slate-800 dark:text-slate-100">Verification</Text>
             </View>
 
             {store.business_document_image ? (
@@ -386,12 +385,7 @@ export function AdminStoreDetails({
               </View>
             )}
 
-            {/* ADDITIONAL DOCUMENTS PLACEHOLDER */}
-            <View className="border-2 border-dashed border-[#E2E8F0] dark:border-neutral-700/80 rounded-2xl p-4 items-center justify-center">
-              <MaterialIcons name="upload-file" size={20} color="#CBD5E1" />
-              <Text className="text-[10px] font-poppins-semibold tracking-widest text-[#94A3B8] mt-2 uppercase">Additional Documents</Text>
-              <Text className="text-[9px] font-poppins text-slate-400 mt-1 text-center">Managed by store owner</Text>
-            </View>
+
           </View>
 
           {/* Approve / Reject Actions */}
