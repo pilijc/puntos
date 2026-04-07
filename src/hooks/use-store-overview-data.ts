@@ -287,6 +287,12 @@ export function useStoreOverviewData(storeId?: string) {
     if (storeId && !nearbyIds.includes(Number(storeId))) {
       nearbyIds.push(Number(storeId));
     }
+
+    // Ensure reward program is fetched for the focused store even when the user has
+    // no stamp_progress row yet (virtual card path — after erasure or first visit)
+    if (storeId && !displayStampStoreIds.includes(Number(storeId))) {
+      displayStampStoreIds.push(Number(storeId));
+    }
     
     const currentParams = JSON.stringify({
       nearbyIds: [...nearbyIds].sort(),
