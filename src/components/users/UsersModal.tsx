@@ -40,7 +40,7 @@ export interface ModalProps {
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const MODAL_WIDTH = Math.min(SCREEN_WIDTH - 32, 420);
 
-export function Modal({
+export function UsersModal({
   visible,
   onClose,
   title,
@@ -88,8 +88,8 @@ export function Modal({
             styles.card,
             {
               width: MODAL_WIDTH,
-              backgroundColor: isDark ? "#404040" : "#ffffff",
-              borderColor: isDark ? "#1e293b" : "#e2e8f0",
+              backgroundColor: isDark ? "#262626" : "#ffffff",
+              borderColor: isDark ? "#404040" : "#e2e8f0",
             },
           ]}
         >
@@ -110,7 +110,7 @@ export function Modal({
                 <MaterialIcons
                   name="close"
                   size={18}
-                  color={isDark ? "#262626" : "#64748B"}
+                  color={isDark ? "#ffffff" : "#64748B"}
                 />
               </TouchableOpacity>
             )}
@@ -202,18 +202,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 16,
   },
-  // Invisible, keeps existing tap-to-dismiss logic
   _invisibleBackdrop: {
     ...StyleSheet.absoluteFillObject,
+    backgroundColor: "transparent",
     zIndex: 1,
-    backgroundColor: "rgba(0,0,0,0.3)",
   },
-  /* Original non-blur fallback (for reference only):
-  backdrop: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(11, 1, 1, 0.4)",
-  },
-  */
   card: {
     borderRadius: 14,
     borderWidth: 1,

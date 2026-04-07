@@ -12,6 +12,7 @@
         "allow": "Allow",
         "ok": "OK",
         "tryAgain": "Try Again",
+        "viewAll": "View all",
         "somethingWentWrong": "Something went wrong. Please try again.",
         "poweredBy": "POWERED BY PUNTOS",
         "termsAgreement": "By continuing, you agree to <tos>Terms of Service</tos> and <privacy>Privacy Policy</privacy>"
@@ -507,6 +508,123 @@
                 "user": "user",
                 "users": "users"
             }
+        }
+    },
+    "superAdmin": {
+        "dashboard": {
+            "welcome": "Welcome, ",
+            "title": "Dashboard",
+            "metrics": {
+                "totalUsers": "Total Users",
+                "totalStores": "Total Stores",
+                "activeStores": "Active Stores"
+            },
+            "analytics": {
+                "user": {
+                    "title": "User Analytics",
+                    "insights": "User Insights",
+                    "desc": "User analytics and behaviors will appear here."
+                },
+                "store": {
+                    "title": "Store Analytics",
+                    "insights": "Store Insights",
+                    "desc": "Store analytics and insights will appear here."
+                }
+            }
+        },
+        "stores": {
+            "title": "Store Approvals",
+            "noStores": "No stores yet",
+            "noFilteredStores": "No {{status}} stores",
+            "filter": {
+                "all": "All",
+                "pending": "Pending",
+                "active": "Active",
+                "inactive": "Inactive"
+            },
+            "modal": {
+                "approveTitle": "Approve Store",
+                "approveMessage": "Approve \"{{name}}\"? It will go live immediately.",
+                "approveAction": "Approve",
+                "rejectTitle": "Reject Store",
+                "rejectMessage": "Reject \"{{name}}\"? The store-manager will need to resubmit.",
+                "rejectAction": "Reject",
+                "successTitle": "Store Approved",
+                "successMessage": "\"{{name}}\" is now active and can begin operations.",
+                "errorTitle": "Application Rejected",
+                "errorMessage": "The application for \"{{name}}\" has been rejected."
+            },
+            "details": {
+                "title": "Store Details",
+                "name": "STORE NAME",
+                "type": "STORE TYPE",
+                "logo": "STORE LOGO",
+                "pictures": "STORE PICTURES",
+                "businessDetails": "Business Details",
+                "ownerName": "OWNER NAME",
+                "phone": "PHONE NUMBER",
+                "operatingHours": "OPERATING HOURS",
+                "registrationNumber": "BUSINESS REGISTRATION #",
+                "registeredOn": "REGISTERED ON",
+                "businessDocument": "BUSINESS DOCUMENT",
+                "viewAndZoom": "Tap to view & zoom",
+                "locationDetails": "Location Details",
+                "landmarkAddress": "LANDMARK / ADDRESS",
+                "rejectApplication": "Reject",
+                "approveStore": "Approve",
+                "tapToView": "Tap to view details",
+                "noAddress": "No address provided"
+            },
+            "category": {
+                "cafe_bar": "Cafe & Bar",
+                "food_drinks": "Food & Drinks",
+                "shopping": "Shopping",
+                "beauty": "Beauty",
+                "health": "Health",
+                "entertainment": "Entertainment",
+                "other": "Other"
+            },
+            "status": {
+                "pending": "PENDING",
+                "active": "ACTIVE",
+                "inactive": "INACTIVE"
+            }
+        },
+        "users": {
+            "noUsersFound": "No users found",
+            "title": "Users",
+            "searchPlaceholder": "Search...",
+            "filter": "Filter",
+            "tabs": {
+                "all": "All",
+                "user": "Users",
+                "manager": "Managers",
+                "staff": "Staff"
+            },
+            "roles": {
+                "sadmin": "S-ADMIN",
+                "manager": "MANAGER",
+                "staff": "STAFF",
+                "frontdesk": "FRONT DESK",
+                "blocked": "BLOCKED",
+                "user": "USER"
+            },
+            "defaultUserName": "User",
+            "status": {
+                "blocked": "Blocked"
+            },
+            "blockModal": {
+                "blockTitle": "Block User",
+                "unblockTitle": "Unblock User",
+                "blockMessage": "Are you sure you want to restrict access for this user?",
+                "unblockMessage": "Are you sure you want to restore access for this user?",
+                "blockAction": "Block User",
+                "unblockAction": "Unblock"
+            },
+            "managedStores": "Managed Stores",
+            "unnamedStore": "Unnamed Store",
+            "noStoresAssigned": "No stores assigned to this manager yet.",
+            "branchAssignment": "Branch Assignment"
         }
     }
 }

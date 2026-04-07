@@ -175,7 +175,6 @@ export default function StoreManagerStores() {
     await fetchStores(true);
   };
 
-  // Re-fetch silently when the tab regains focus (skips if already loaded)
   useFocusEffect(
     useCallback(() => {
       if (hasFetchedOnce) {
@@ -185,7 +184,7 @@ export default function StoreManagerStores() {
   );
 
   return (
-    <SafeAreaView className="flex-1 bg-backgroundMuted dark:bg-slate-950">
+    <SafeAreaView edges={["top"]} className="flex-1 bg-backgroundMuted dark:bg-slate-950">
       <View className="bg-white border-b border-slate-100 dark:bg-slate-900 dark:border-slate-800 px-6 py-4 flex-row items-center justify-start">
         <View className="flex-row items-center gap-2">
           <Text className="text-xl font-poppins-bold text-slate-900 dark:text-slate-100">
