@@ -187,7 +187,7 @@ export async function getAllStores(): Promise<AdminStoreRow[]> {
             id, name, type, address, latitude, longitude, radius,
             status, is_active, logo, owner_id,
             phone, registration_number, business_document_image, store_pictures, store_open, store_close, created_at,
-            users ( name )
+            users!owner_id ( name )
         `)
         .order("created_at", { ascending: false });
 
