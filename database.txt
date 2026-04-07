@@ -1881,6 +1881,15 @@
     "foreign_column_name": null
   },
   {
+    "table_name": "stores",
+    "column_name": "approved_at",
+    "data_type": "timestamp with time zone",
+    "is_primary_key": "NO",
+    "is_foreign_key": "NO",
+    "foreign_table_name": null,
+    "foreign_column_name": null
+  },
+  {
     "table_name": "streak_events",
     "column_name": "id",
     "data_type": "bigint",

@@ -17,6 +17,7 @@ import { useTranslation } from "react-i18next";
 import UserStoreHeroCarousel from "@/components/users/stores/user-store-hero-carousel";
 import UserStreakCard from "@/components/rewards/user-streak-card";
 import UserStampLogCard from "@/components/rewards/user-stamp-log-card";
+import UpcomingProgramBanner from "@/components/rewards/upcoming-program-banner";
 import RewardCard from "@/components/rewards/reward-card";
 import SortPill from "@/components/rewards/sort-pill";
 import { storeLogos } from "@/data/rewards";
@@ -76,6 +77,7 @@ export default function StoreOverviewDetail() {
     isLoadingRewardsFeatures,
     fetchedStoreIds,
     refetchStreaks,
+    upcomingStreak,
   } = useStoreOverviewData(storeId);
 
   // If a specific store is requested, we don't necessarily need to snap the carousel 
@@ -287,7 +289,8 @@ export default function StoreOverviewDetail() {
           <ProgramSkeleton />
         ) : (
           <>
-            {displayStreaks.length === 0 && displayStamps.length === 0 && (
+            {/* Generic empty state — only when NO programs at all (active OR upcoming) */}
+            {displayStreaks.length === 0 && displayStamps.length === 0 && !upcomingStreak && (
               <AnimatedView
                 entering={FadeIn.duration(400)}
                 className="bg-white dark:bg-darkBackgroundMuted rounded-xl p-8 items-center border border-neutral-100 dark:border-darkBorder mx-1 mb-3"
@@ -324,6 +327,21 @@ export default function StoreOverviewDetail() {
                       onStreakRecorded={refetchStreaks}
                     />
                   )}
+                />
+              </View>
+            )}
+
+            {/* Upcoming streak banner — shown below the active streak card if present,
+                or alone when there is no active streak program */}
+            {upcomingStreak && displayStreaks.length === 0 && (
+              <View className="mb-3">
+                <UpcomingProgramBanner
+                  type="streak"
+                  title={upcomingStreak.title}
+                  startAt={upcomingStreak.start_at}
+                  endDate={upcomingStreak.end_date}
+                  programLength={upcomingStreak.streak_length}
+                  description={upcomingStreak.reward_description}
                 />
               </View>
             )}

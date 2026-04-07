@@ -27,9 +27,19 @@ export interface ActiveStampProgramReward {
   reward_image_url: string | null;
 }
 
+export interface UpcomingStreakProgram {
+  id: number;
+  store_id: number;
+  title: string | null;
+  start_at: string | null;
+  end_date: string | null;
+  streak_length: number | null;
+  reward_description: string | null;
+}
+
 export type StampResult = {
   success: boolean;
-  reason?: "already_stamped_today" | "already_completed" | "stamp_not_enabled" | "error";
+  reason?: "already_stamped_today" | "already_completed" | "stamp_not_enabled" | "card_expired" | "error";
 };
 
 export async function getUserStamps(userId: string): Promise<StampProgress[]> {
@@ -95,6 +105,7 @@ function todayLocalDate(): string {
 export async function addStamp(
   userId: string,
   storeId: number | string,
+  purchaseId?: number | string | null
 ): Promise<StampResult> {
   try {
     // ──────────────────────────────────────────────
@@ -124,12 +135,21 @@ export async function addStamp(
     // ──────────────────────────────────────────────
     // 2. Fetch the active stamp program to get real target
     // ──────────────────────────────────────────────
-    const { data: stampProgram } = await supabase
+    const { data: stampPrograms, error: stampProgramError } = await supabase
       .from("store_stamps")
       .select("id, total_stamps")
       .eq("store_id", storeId)
-      .eq("status", "active")
-      .maybeSingle();
+      .eq("status", "active");
+
+    if (stampProgramError) {
+      console.error("[addStamp] Error fetching active stamp program:", stampProgramError);
+    }
+
+    const stampProgram = stampPrograms?.[0] ?? null;
+
+    if (!stampProgram) {
+      console.warn(`[addStamp] CRITICAL: No active stamp program found for store_id=${storeId}. Falling back to target 7. Check if program is truly active or if RLS blocked it.`);
+    }
 
     const programTarget = stampProgram?.total_stamps ?? 7;
     const programId = stampProgram?.id ?? null;
@@ -155,27 +175,30 @@ export async function addStamp(
     // 4. Upsert stamp_progress
     // ──────────────────────────────────────────────
     if (existingProgress) {
-      // ✅ BLOCKER: Already stamped today — no double-dipping
-      if (existingProgress.last_stamp_at && isSameDay(existingProgress.last_stamp_at, now)) {
-        return { success: false, reason: "already_stamped_today" };
+      // ✅ BLOCKER: Card is expired
+      if (existingProgress.card_expires_at && new Date(now) > new Date(existingProgress.card_expires_at)) {
+        return { success: false, reason: "card_expired" };
       }
 
       // ✅ BLOCKER: Stamp card already completed — cannot earn more stamps
-      const cardTarget = existingProgress.target ?? programTarget;
+      // Automatically heal/sync the DB target to the active program's true target
+      const trueTarget = programTarget;
+      
       if (
         existingProgress.card_status === "completed" ||
-        existingProgress.stamps_count >= cardTarget
+        existingProgress.stamps_count >= trueTarget
       ) {
         return { success: false, reason: "already_completed" };
       }
 
       const newStampsCount = existingProgress.stamps_count + 1;
-      const justCompleted = newStampsCount >= cardTarget;
+      const justCompleted = newStampsCount >= trueTarget;
 
       const { error: updateError } = await supabase
         .from("stamp_progress")
         .update({
           stamps_count: newStampsCount,
+          target: trueTarget, // <-- Force upgrade to new active program target
           last_stamp_at: now,
           updated_at: now,
           ...(justCompleted && { card_status: "completed" }),
@@ -231,7 +254,7 @@ export async function addStamp(
       let newStampCount = existingReward.current_stamp_count + 1;
 
       // If count has reached target (full cycle completed), reset to 1
-      if (existingReward.current_stamp_count >= existingReward.target_stamps) {
+      if (existingReward.current_stamp_count >= programTarget) {
         newStampCount = 1;
       }
 
@@ -239,6 +262,7 @@ export async function addStamp(
         .from("stamp_rewards")
         .update({
           current_stamp_count: newStampCount,
+          target_stamps: programTarget, // <-- Auto-heal legacy targets!
           last_stamp_date: todayDate,
           updated_at: now,
         })
@@ -255,7 +279,7 @@ export async function addStamp(
           user_id: userId,
           store_id: storeId,
           current_stamp_count: 1,
-          target_stamps: 7, // default target
+          target_stamps: programTarget,
           last_stamp_date: todayDate,
         });
 
@@ -272,6 +296,7 @@ export async function addStamp(
       .insert({
         user_id: userId,
         store_id: storeId,
+        ...(purchaseId && { purchase_id: purchaseId })
       });
 
     if (eventError) {
@@ -296,7 +321,7 @@ export async function getStoresWithEnabledActiveStampProgram(
       .from("store_stamps")
       .select("store_id")
       .in("store_id", storeIds)
-      .eq("is_active", true);
+      .eq("status", "active");
 
     const activeStoreIds = stampError
       ? []
@@ -451,7 +476,8 @@ export async function getActiveStampProgramRewards(
     const { data: stampRows, error: stampError } = await supabase
       .from("store_stamps")
       .select("store_id, total_stamps, reward_id")
-      .in("store_id", storeIds);
+      .in("store_id", storeIds)
+      .eq("status", "active");
 
     if (stampError) {
       throw new Error(stampError.message);
@@ -609,5 +635,68 @@ export async function getUserRewardRedemptions(
   } catch (err) {
     console.error("Exception fetching reward redemptions:", err);
     return [];
+  }
+}
+
+/**
+ * Returns a map of storeId → upcoming store_streaks program for the given stores.
+ * A program is "upcoming" when its status = 'upcoming' (start_at is in the future
+ * and the program has not yet gone live).
+ */
+export async function getUpcomingStreakProgramsByStore(
+  storeIds: number[],
+): Promise<Map<number, UpcomingStreakProgram>> {
+  if (storeIds.length === 0) return new Map();
+
+  try {
+    // ── Step 1: Check which stores have streak_enabled = true ────────────────
+    const { data: featureRows, error: featureError } = await supabase
+      .from("store_feature")
+      .select("store_id, streak_enabled")
+      .in("store_id", storeIds);
+
+    if (featureError) {
+      console.warn("[getUpcomingStreakProgramsByStore] Could not read store_feature:", featureError.message);
+      return new Map();
+    }
+
+    const featureEnabledIds = (featureRows ?? [])
+      .filter((row: any) => row.streak_enabled === true)
+      .map((row: any) => Number(row.store_id));
+
+    if (featureEnabledIds.length === 0) return new Map();
+
+    // ── Step 2: Fetch upcoming programs for only enabled stores
+    const { data, error } = await supabase
+      .from("store_streaks")
+      .select("id, store_id, title, start_at, end_date, streak_length, reward_description")
+      .in("store_id", featureEnabledIds)
+      .eq("status", "upcoming");
+
+    if (error) {
+      console.warn("[getUpcomingStreakProgramsByStore] Error:", error.message);
+      return new Map();
+    }
+
+    const map = new Map<number, UpcomingStreakProgram>();
+    for (const row of data ?? []) {
+      // If multiple upcoming rows exist per store, keep the one starting soonest
+      const storeId = Number(row.store_id);
+      if (!map.has(storeId)) {
+        map.set(storeId, {
+          id: Number(row.id),
+          store_id: storeId,
+          title: row.title ?? null,
+          start_at: row.start_at ?? null,
+          end_date: row.end_date ?? null,
+          streak_length: row.streak_length ?? null,
+          reward_description: row.reward_description ?? null,
+        });
+      }
+    }
+    return map;
+  } catch (error) {
+    console.error("Exception fetching upcoming streak programs:", error);
+    return new Map();
   }
 }

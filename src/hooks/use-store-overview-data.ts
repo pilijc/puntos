@@ -21,13 +21,13 @@ import {
   withTiming,
 } from "react-native-reanimated";
 
-function buildVirtualStampEntry(focusedStore: any): StampProgress {
+function buildVirtualStampEntry(focusedStore: any, targetStamps: number = 7): StampProgress {
   return {
     id: -Number(focusedStore.id),
     user_id: "",
     store_id: Number(focusedStore.id),
     stamps_count: 0,
-    target: 7,
+    target: targetStamps,
     last_stamp_at: "",
     updated_at: "",
     stores: {
@@ -60,6 +60,7 @@ export function useStoreOverviewData(storeId?: string) {
     isLoadingRewardsFeatures,
     fetchedStoreIds,
     activeStreakProgramMap,
+    upcomingStreakProgramMap,
   } = useRewardsDataStore();
   const { stores, setStores } = useStoreStore();
   const { location, startWatching, stopWatching } = useLocation();
@@ -163,37 +164,43 @@ export function useStoreOverviewData(storeId?: string) {
   }, [location]);
 
   const displayStamps = useMemo(() => {
+    // Helper: only show a stamp card if the store has an ACTIVE stamp program
+    const getActiveProgram = (id: number) =>
+      activeStampProgramRewards.find((r) => Number(r.store_id) === id);
+
     // If a specific storeId is requested, we only want to show that one
     if (storeId) {
       const targetStore = storesWithLocation.find((s) => s.id.toString() === storeId);
       if (!targetStore) return [];
 
       const isEnabled = enabledStampFeatureStoreIds.includes(Number(targetStore.id));
-      if (!isEnabled) return [];
+      const activeProgram = getActiveProgram(Number(targetStore.id));
+      if (!isEnabled || !activeProgram) return [];
 
       const existingStamp = sortedStamps.find(
         (stamp) => Number(stamp.store_id) === Number(targetStore.id),
       );
 
-      return existingStamp ? [existingStamp] : [buildVirtualStampEntry(targetStore)];
+      return existingStamp ? [existingStamp] : [buildVirtualStampEntry(targetStore, activeProgram.total_stamps)];
     }
 
-    if (!location) return sortedStamps;
+    if (!location) return sortedStamps.filter(s => getActiveProgram(Number(s.store_id)));
 
-    if (nearbyStores.length === 0) return sortedStamps;
+    if (nearbyStores.length === 0) return sortedStamps.filter(s => getActiveProgram(Number(s.store_id)));
 
     const focusedStore = nearbyStores[heroIndex];
     if (!focusedStore) return [];
 
     const isEnabled = enabledStampFeatureStoreIds.includes(Number(focusedStore.id));
-    if (!isEnabled) return [];
+    const activeProgram = getActiveProgram(Number(focusedStore.id));
+    if (!isEnabled || !activeProgram) return [];
 
     const existingStamp = sortedStamps.find(
       (stamp) => Number(stamp.store_id) === Number(focusedStore.id),
     );
 
-    return existingStamp ? [existingStamp] : [buildVirtualStampEntry(focusedStore)];
-  }, [enabledStampFeatureStoreIds, heroIndex, location, nearbyStores, sortedStamps, storeId, storesWithLocation]);
+    return existingStamp ? [existingStamp] : [buildVirtualStampEntry(focusedStore, activeProgram.total_stamps)];
+  }, [activeStampProgramRewards, enabledStampFeatureStoreIds, heroIndex, location, nearbyStores, sortedStamps, storeId, storesWithLocation]);
 
   const displayStreaks = useMemo(() => {
     // Helper: a streak entry is only eligible to display if the attached
@@ -207,16 +214,24 @@ export function useStoreOverviewData(storeId?: string) {
       // Also verify the program is still active (guards stale eligibleStreakStoreIds cache)
       if (!isEligible || !hasActiveProgram(Number(storeId))) return [];
 
-      // Find real user_streaks record for this store
+      // ── Program-aware lookup ──────────────────────────────────────────────
+      // When a store switches to a new streak program (Program A → Program B),
+      // the old user_streaks record (linked to Program A's ID) must not surface
+      // as the user's current progress. We match on BOTH store_id AND the current
+      // active program ID. If the record belongs to an old program, we fall through
+      // and return the virtual 0-progress entry so the reset is visible immediately.
+      const currentProgramId = activeStreakProgramMap.get(Number(storeId));
       const existingStreak = userStreaks.find(
-        (s) => Number(s.store_id) === Number(storeId),
+        (s) =>
+          Number(s.store_id) === Number(storeId) &&
+          (currentProgramId == null || s.store_streak_id === currentProgramId),
       );
       if (existingStreak) return [existingStreak];
 
-      // No record yet — build a virtual entry from the store so the card still shows
+      // No record for this program yet — build a virtual 0-progress entry
       const targetStore = storesWithLocation.find((s) => s.id.toString() === storeId);
       if (!targetStore) return [];
-      const storeStreakId = activeStreakProgramMap.get(Number(targetStore.id)) ?? null;
+      const storeStreakId = currentProgramId ?? null;
       return [{
         id: -Number(targetStore.id),
         user_id: "",
@@ -248,13 +263,17 @@ export function useStoreOverviewData(storeId?: string) {
       // Also verify the program is still active (guards stale eligibleStreakStoreIds cache)
       if (!isEligible || !hasActiveProgram(Number(focusedStore.id))) return [];
 
+      // ── Program-aware lookup (same logic as the storeId-specific path above) ──
+      const currentProgramId2 = activeStreakProgramMap.get(Number(focusedStore.id));
       const existingStreak = userStreaks.find(
-        (s) => Number(s.store_id) === Number(focusedStore.id),
+        (s) =>
+          Number(s.store_id) === Number(focusedStore.id) &&
+          (currentProgramId2 == null || s.store_streak_id === currentProgramId2),
       );
       if (existingStreak) return [existingStreak];
 
-      // No record yet — virtual entry
-      const storeStreakId2 = activeStreakProgramMap.get(Number(focusedStore.id)) ?? null;
+      // No record for the current program yet — virtual 0-progress entry
+      const storeStreakId2 = currentProgramId2 ?? null;
       return [{
         id: -Number(focusedStore.id),
         user_id: "",
@@ -326,6 +345,20 @@ export function useStoreOverviewData(storeId?: string) {
     }
   }, [nearbyStores, setHeroIndex, storeId]);
 
+  // ─── Upcoming program banners ──────────────────────────────────────────────
+  // Show the upcoming banner for the focused store when there is no active program.
+  const upcomingStreak = useMemo(() => {
+    const focusedId = storeId
+      ? Number(storeId)
+      : nearbyStores[heroIndex]
+        ? Number(nearbyStores[heroIndex].id)
+        : null;
+    if (focusedId == null) return null;
+    // Only show "upcoming" if there is NO active program for this store
+    if (activeStreakProgramMap.has(focusedId)) return null;
+    return upcomingStreakProgramMap.get(focusedId) ?? null;
+  }, [activeStreakProgramMap, heroIndex, nearbyStores, storeId, upcomingStreakProgramMap]);
+
   const swipeIndicatorStyle = useAnimatedStyle(() => {
     'worklet';
     return {
@@ -350,5 +383,6 @@ export function useStoreOverviewData(storeId?: string) {
     isLoadingRewardsFeatures,
     fetchedStoreIds,
     refetchStreaks,
+    upcomingStreak,
   };
 }

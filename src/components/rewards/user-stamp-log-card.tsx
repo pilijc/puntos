@@ -47,16 +47,33 @@ export default function UserStampLogCard({
   const nearby = nearbyStores.some((s) => Number(s.id) === Number(stamp.store_id)) ||
     isStoreNearby(storeStr?.latitude, storeStr?.longitude);
 
-  const days = Array.from({ length: targetCount }, (_, index) => ({
-    label: `Log ${index + 1}`,
-    number: index + 1,
-    state:
-      index < clampedCount
-        ? "completed"
-        : index === clampedCount && clampedCount < targetCount
-          ? "current"
-          : "upcoming",
-  }));
+  const pageCapacity = 7;
+  const activePage = clampedCount >= targetCount
+    ? Math.max(0, Math.ceil(targetCount / pageCapacity) - 1)
+    : Math.floor(clampedCount / pageCapacity);
+
+  const startNum = activePage * pageCapacity + 1;
+  const endNum = Math.min((activePage + 1) * pageCapacity, targetCount);
+
+  // Keep exactly 7 slots for structural integrity of flex justify-between
+  const days = Array.from({ length: pageCapacity }, (_, index) => {
+    const actualNum = startNum + index;
+    if (actualNum <= endNum) {
+      return {
+        label: `Log ${actualNum}`,
+        number: actualNum,
+        state: actualNum <= clampedCount ? "completed" : actualNum === clampedCount + 1 ? "current" : "upcoming",
+        invisible: false,
+      };
+    } else {
+      return {
+        label: `Empty ${actualNum}`,
+        number: actualNum,
+        state: "upcoming",
+        invisible: true,
+      };
+    }
+  });
 
   const chevronStyle = useAnimatedStyle(() => {
     return {
@@ -173,20 +190,27 @@ export default function UserStampLogCard({
               : "text-neutral-400 font-poppins-semibold text-sm";
             return (
               <View key={`${day.label}-${index}`} className="items-center w-11">
-                <View
-                  className={circleClass}
-                  style={isCurrent ? {
-                    borderWidth: 1.5,
-                    borderColor: "#FF6600",
-                    borderStyle: "dashed",
-                  } : undefined}
-                >
-                  {isCompleted ? (
-                    <Stamp size={16} color="#FFFFFF" />
-                  ) : (
-                    <Text className={textClass}>{day.number}</Text>
-                  )}
-                </View>
+                {!day.invisible ? (
+                  <View
+                    className={circleClass}
+                    style={isCurrent ? {
+                      borderWidth: 1.5,
+                      borderColor: "#FF6600",
+                      borderStyle: "dashed",
+                    } : undefined}
+                  >
+                    {isCompleted ? (
+                      <Stamp size={16} color="#FFFFFF" />
+                    ) : (
+                      <Text className={textClass}>{day.number}</Text>
+                    )}
+                  </View>
+                ) : (
+                  // Bullet placeholder instead of invisible blocks to fill the remaining space intentionally
+                  <View className="w-10 h-10 items-center justify-center">
+                    <View className="w-1.5 h-1.5 rounded-full bg-neutral-200 dark:bg-neutral-700" />
+                  </View>
+                )}
               </View>
             );
           })}

@@ -267,10 +267,21 @@ export async function getUserStreaks(userId: string): Promise<UserStreak[]> {
       return [];
     }
 
-    // Filter out streaks for stores that are not active
-    const validStreaks = (data as unknown as UserStreak[]).filter(
-      (streak) => isValidStreakStore(streak)
-    );
+    // Filter criteria:
+    // 1. Store must be active (existing logic)
+    // 2. The linked streak program must also be active — this prevents old records
+    //    from ended programs (e.g. Program A) from surfacing as the user's current
+    //    progress when a new program (Program B) has just started.
+    //    Exception: keep completed records regardless of program status so that
+    //    completion bonuses remain claimable and audit history is preserved.
+    const validStreaks = (data as unknown as UserStreak[]).filter((streak) => {
+      if (!isValidStreakStore(streak)) return false;
+      const programStatus = streak.store_streaks?.status;
+      // Keep if: program is still active OR the user already completed this streak
+      const isActiveProgram = programStatus === "active";
+      const isUserCompleted = streak.status === "completed";
+      return isActiveProgram || isUserCompleted;
+    });
 
     return validStreaks;
   } catch (error) {
@@ -278,6 +289,7 @@ export async function getUserStreaks(userId: string): Promise<UserStreak[]> {
     return [];
   }
 }
+
 
 export async function getUserStreakByStore(
   userId: string,
