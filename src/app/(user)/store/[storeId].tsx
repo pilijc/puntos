@@ -22,6 +22,7 @@ import RewardCard from "@/components/rewards/reward-card";
 import SortPill from "@/components/rewards/sort-pill";
 import { storeLogos } from "@/data/rewards";
 import { useRewardsUiStore } from "@/store/user/rewards-ui-store";
+import { useRewardsDataStore } from "@/hooks/use-rewards-data";
 import { useStoreOverviewData } from "@/hooks/use-store-overview-data";
 import { ProgramSkeleton } from "@/components/skeleton/user/program-skeleton";
 import StoreScreenContainer from "@/components/ui/store-screen-container";
@@ -55,8 +56,9 @@ export default function StoreOverviewDetail() {
     setHeroIndex,
     setIsSwitchingStore,
     isStamping,
-    refreshing,
   } = useRewardsUiStore();
+  
+  const { fetchRewardsData } = useRewardsDataStore();
   
   const router = useRouter();
   
@@ -104,6 +106,25 @@ export default function StoreOverviewDetail() {
     }
   }, [storeId, isStoreCached]);
 
+  const [isRefreshingLocal, setIsRefreshingLocal] = useState(false);
+
+  const onRefreshLocal = useCallback(async () => {
+    setIsRefreshingLocal(true);
+    
+    const promises: Promise<any>[] = [handleRefresh(storeId)];
+    if (refetchStreaks) promises.push(refetchStreaks());
+    
+    if (storeId) {
+      const numericStoreId = Number(storeId);
+      if (!isNaN(numericStoreId)) {
+        promises.push(fetchRewardsData([numericStoreId], [numericStoreId]));
+      }
+    }
+    
+    await Promise.all(promises);
+    setIsRefreshingLocal(false);
+  }, [handleRefresh, storeId, fetchRewardsData, refetchStreaks]);
+
   const claimScale = useSharedValue(1);
   const claimOpacity = useSharedValue(1);
   const claimScaleStyle = useAnimatedStyle(() => ({ opacity: claimOpacity.value, transform: [{ scale: claimScale.value }] }));
@@ -124,8 +145,8 @@ export default function StoreOverviewDetail() {
       onTouchStart={handleCarouselInteraction}
       refreshControl={
         <RefreshControl
-          refreshing={refreshing}
-          onRefresh={() => handleRefresh()}
+          refreshing={isRefreshingLocal}
+          onRefresh={onRefreshLocal}
           tintColor="#FF6600"
           colors={["#FF6600"]}
         />
@@ -369,6 +390,7 @@ export default function StoreOverviewDetail() {
                       activeStampProgramRewards={activeStampProgramRewards}
                       isStampLogOpen={isStampLogOpen}
                       onToggleExpand={() => setIsStampLogOpen(!isStampLogOpen)}
+                      onForceExpand={() => setIsStampLogOpen(true)}
                     />
                   )}
                 />

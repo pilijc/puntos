@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { View, Text, AnimatedView, TouchableOpacity, Image, Pressable } from "@/tw";
 import { Check, ChevronDown, Coins, ExternalLink, Sparkles, Store, Stamp } from "lucide-react-native";
 import { FadeIn, FadeOut, Layout, useAnimatedStyle, withTiming, interpolate } from "react-native-reanimated";
@@ -15,6 +15,7 @@ interface UserStampLogCardProps {
   activeStampProgramRewards: any[];
   isStampLogOpen: boolean;
   onToggleExpand: () => void;
+  onForceExpand?: () => void;
 }
 
 export default function UserStampLogCard({
@@ -25,6 +26,7 @@ export default function UserStampLogCard({
   activeStampProgramRewards,
   isStampLogOpen,
   onToggleExpand,
+  onForceExpand,
 }: UserStampLogCardProps) {
   const { t: translate } = useTranslation();
 
@@ -39,6 +41,17 @@ export default function UserStampLogCard({
     1,
   );
   const clampedCount = Math.min(Math.max(count, 0), targetCount);
+
+  const hasAutoOpened = useRef(false);
+
+  useEffect(() => {
+    if (clampedCount >= targetCount && !isStampLogOpen && !hasAutoOpened.current) {
+      hasAutoOpened.current = true;
+      setTimeout(() => {
+        onForceExpand?.();
+      }, 50);
+    }
+  }, [clampedCount, targetCount, isStampLogOpen, onForceExpand]);
 
   // Compute Nearby Status
   const storeStr = stamp.stores as unknown as { latitude?: number; longitude?: number; name?: string; is_active?: boolean; logo?: string; banner?: string; address?: string };

@@ -111,11 +111,15 @@ export const useRewardsDataStore = create<RewardsDataState>((set, get) => ({
       // Merge streak program map
       const { activeStreakProgramMap: currentMap, upcomingStreakProgramMap: currentUpcomingStreak } = get();
       const newStreakMap = new Map<number, number>(currentMap);
+      // Clear requested IDs to remove stale programs (e.g. if a feature was disabled)
+      allRequestedIds.forEach((id) => newStreakMap.delete(id));
       const fetchedStreakMap = results[4] as Map<number, number>;
       fetchedStreakMap.forEach((programId, storeId) => newStreakMap.set(storeId, programId));
 
       // Merge upcoming streak program map
       const newUpcomingStreakMap = new Map<number, UpcomingStreakProgram>(currentUpcomingStreak);
+      // Clear requested IDs to remove stale programs
+      allRequestedIds.forEach((id) => newUpcomingStreakMap.delete(id));
       const fetchedUpcomingStreak = results[5] as Map<number, UpcomingStreakProgram>;
       fetchedUpcomingStreak.forEach((program, storeId) => newUpcomingStreakMap.set(storeId, program));
       // Remove stores that now have active programs (they should no longer show as upcoming)
