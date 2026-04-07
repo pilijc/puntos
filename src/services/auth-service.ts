@@ -219,7 +219,7 @@ export async function loginService(email: string, password: string) {
     if (roleType === "front_desk") {
         const { data: storeStaff, error } = await supabase
           .from("store_staff")
-          .select("store_id")
+          .select("store_id, password_updated_at")
           .eq("user_id", userId)
           .single();
 
@@ -233,7 +233,16 @@ export async function loginService(email: string, password: string) {
               message:
                 "You are not assigned to any store. Please contact your administrator.",
             };
-         }     
+         }
+
+        // Check if password setup is required
+        if (!storeStaff.password_updated_at) {
+          return {
+            success: true,
+            homeRoute: "/(front_desk)/setup-password",
+            requiresPasswordSetup: true
+          };
+        }
       }
 
     // if (res.data?.session?.access_token) {
