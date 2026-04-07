@@ -25,15 +25,7 @@ export default function StoreListScreen() {
   const { activeStampProgramRewards } = useRewardsDataStore();
   const { stamps, isLoading: stampsLoading, refetch: refetchStamps } = useStamps();
   const { stampRewards } = useStampRewards();
-  const { location, refreshLocation, startWatching, stopWatching } = useLocation();
-
-  React.useEffect(() => {
-    startWatching();
-    return () => {
-      stopWatching();
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const { location, refreshLocation } = useLocation();
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
