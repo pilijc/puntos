@@ -12,7 +12,7 @@ import { Button } from "@/components/button";
 import { Modal, type ModalButton } from "@/components/modal";
 import { useRecentTransactions } from "@/hooks/use-recent-transactions";
 import { useTranslation } from "react-i18next";
-import VoucherForm from "@/components/front-desk/voucherForm";
+import VoucherForm from "@/components/voucher/voucherForm";
 
 export default function FrontDeskScan() {
   const router = useRouter();
