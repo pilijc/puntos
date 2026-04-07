@@ -25,6 +25,7 @@ import {
   CircleCheck,
   Clock,
 } from "lucide-react-native";
+import { StreakDetailSkeleton } from "@/components/skeleton/user/streak-detail-skeleton";
 
 const getOrdinalSuffix = (n: number) => {
   const s = ["th", "st", "nd", "rd"];
@@ -438,16 +439,10 @@ export default function StoreStreakDetail() {
   const program = streak?.store_streaks;
   const storeStr = streak?.stores;
 
-  if (isLoading) {
-    return (
-      <View className="flex-1 items-center justify-center bg-primary">
-        <Flame size={40} color="#FFFFFF" />
-        <Text className="text-white font-poppins-medium text-sm mt-3">Loading streak…</Text>
-      </View>
-    );
-  }
-
   if (!streak) {
+    if (isLoading) {
+      return <StreakDetailSkeleton />;
+    }
     return (
       <View className="flex-1 items-center justify-center p-6 bg-background dark:bg-darkBackground">
         <Flame size={48} color="#d1d5db" />
