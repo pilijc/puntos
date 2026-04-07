@@ -35,8 +35,15 @@ export default function UserStreakCard({
     nearbyStores.some((s) => Number(s.id) === Number(streak.store_id)) ||
     isStoreNearby(storeStr?.latitude, storeStr?.longitude);
 
+  const formatLocalDate = (date: Date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
+
   // Derive if already earned today from last_activity_date
-  const today = new Date().toISOString().split("T")[0];
+  const today = formatLocalDate(new Date());
   const alreadyEarnedToday = streak.last_activity_date === today || hasEarnedToday;
   const shouldPulseCurrentDay = nearby && !alreadyEarnedToday;
 
@@ -57,20 +64,23 @@ export default function UserStreakCard({
     const d = new Date();
     const offset = (d.getDay() + 6) % 7; // days since Monday
     d.setDate(d.getDate() - offset);
-    return d.toISOString().split("T")[0]; // "YYYY-MM-DD"
+    return formatLocalDate(d); // "YYYY-MM-DD"
   };
   const weekStartStr = getMondayOfCurrentWeek(); // e.g. "2026-04-06" when today is Mon
 
   // ─── Accurate computation of exactly WHICH days are completed ───
   const addDays = (dateStr: string, d: number) => {
-    const date = new Date(dateStr + "T00:00:00");
+    const [year, month, day] = dateStr.split("-").map(Number);
+    const date = new Date(year, month - 1, day);
     date.setDate(date.getDate() + d);
-    return date.toISOString().split("T")[0];
+    return formatLocalDate(date);
   };
 
   const diffDays = (d1Str: string, d2Str: string) => {
-    const d1 = new Date(d1Str + "T00:00:00");
-    const d2 = new Date(d2Str + "T00:00:00");
+    const [y1, m1, day1] = d1Str.split("-").map(Number);
+    const [y2, m2, day2] = d2Str.split("-").map(Number);
+    const d1 = new Date(y1, m1 - 1, day1);
+    const d2 = new Date(y2, m2 - 1, day2);
     return Math.round((d1.getTime() - d2.getTime()) / (1000 * 3600 * 24));
   };
 
@@ -107,26 +117,46 @@ export default function UserStreakCard({
     translate("user.rewards.days.sun"),
   ];
 
-  const displayDayCount = Math.min(targetCount, 7);
-
-  const days = Array.from({ length: displayDayCount }, (_, index) => {
+  const days = Array.from({ length: 7 }, (_, index) => {
     const circleDateStr = addDays(weekStartStr, index);
 
     if (effectiveLastDateStr !== "") {
       const daysSinceCircle = diffDays(effectiveLastDateStr, circleDateStr);
       // It's completed if the date falls inside the active consecutive streak window
       if (daysSinceCircle >= 0 && daysSinceCircle < effectiveStreakDays) {
-        return { label: streakDaysLabels[index % 7], state: "completed" as const };
+        return { label: streakDaysLabels[index], state: "completed" as const };
       }
     }
 
-    if (index === todayWeekdayIndex) {
-      return { label: streakDaysLabels[index % 7], state: "current" as const };
+    // --- IMPORTANT UI BEHAVIOR FOR AI / FUTURE DEVS ---
+    // The user specifically requested that when today is ALREADY earned,
+    // the NEXT day (tomorrow) should be visually emphasized as the "next target"
+    // by reusing the `state: "current"` stylistic wrapper (broken border, orange text).
+    // However, it intentionally does NOT pulse (since `!alreadyEarnedToday` evaluates to false for the animation).
+    // If the user clicks this emphasized "next target", the `onPress` wrapper catches `alreadyEarnedToday`
+    // and correctly shows the "Already earned for today, come back tomorrow" alert.
+    if (alreadyEarnedToday && clampedCount < targetCount) {
+      if (todayWeekdayIndex < 6 && index === todayWeekdayIndex + 1) {
+        return { label: streakDaysLabels[index], state: "current" as const };
+      }
+    } else if (!alreadyEarnedToday && index === todayWeekdayIndex) {
+      // Emphasize today as the target
+      if (clampedCount >= targetCount) {
+        return { label: streakDaysLabels[index], state: "inactive" as const };
+      }
+      return { label: streakDaysLabels[index], state: "current" as const };
     }
+
     if (index < todayWeekdayIndex) {
-      return { label: streakDaysLabels[index % 7], state: "missed" as const };
+      return { label: streakDaysLabels[index], state: "inactive" as const };
     }
-    return { label: streakDaysLabels[index % 7], state: "upcoming" as const };
+    
+    // Future days past the cap should also be rendered as inactive
+    if (clampedCount >= targetCount) {
+      return { label: streakDaysLabels[index], state: "inactive" as const };
+    }
+
+    return { label: streakDaysLabels[index], state: "upcoming" as const };
   });
 
   const pressScale = useSharedValue(1);
@@ -266,19 +296,19 @@ export default function UserStreakCard({
           {days.map((day, index) => {
             const isCompleted = day.state === "completed";
             const isCurrent = day.state === "current";
-            const isMissed = day.state === "missed";
+            const isInactive = day.state === "inactive";
             const circleClass = isCompleted
               ? "w-10 h-10 rounded-full bg-primary items-center justify-center"
               : isCurrent
                 ? "w-10 h-10 rounded-full items-center justify-center bg-white dark:bg-darkBackgroundMuted"
-                : isMissed
-                  ? "w-10 h-10 rounded-full bg-neutral-200 dark:bg-neutral-700 items-center justify-center"
+                : isInactive
+                  ? "w-10 h-10 rounded-full bg-transparent border border-neutral-200 dark:border-darkBorder items-center justify-center"
                   : "w-10 h-10 rounded-full bg-neutral-100 dark:bg-darkBackgroundCard items-center justify-center";
             const textClass =
               isCompleted || isCurrent
                 ? "text-primary font-poppins-semibold text-[10px]"
-                : isMissed
-                  ? "text-neutral-400 dark:text-neutral-500 font-poppins-semibold text-[10px]"
+                : isInactive
+                  ? "text-neutral-300 dark:text-neutral-500 font-poppins-semibold text-[10px]"
                   : "text-neutral-400 font-poppins-semibold text-[10px]";
             return (
               <View
@@ -366,12 +396,6 @@ export default function UserStreakCard({
                           {day.label}
                         </Text>
                       </View>
-                    ) : isMissed ? (
-                      // Missed day — greyed out with an explicit horizontal line
-                      <View className="items-center justify-center w-full h-full relative">
-                        <Text className={textClass}>{day.label}</Text>
-                        <View className="absolute w-[27px] h-[1.5px] bg-neutral-400 dark:bg-neutral-500 rounded-full mt-0.1" />
-                      </View>
                     ) : (
                       <Text className={textClass}>{day.label}</Text>
                     )}
@@ -400,7 +424,7 @@ export default function UserStreakCard({
               style={{ width: 220, height: 220 }}
             />
             <Text className="text-center text-white font-poppins-bold text-3xl mt-4">
-              1+
+              {effectiveStreakDays} {effectiveStreakDays === 1 ? 'Day' : 'Days'} Streak!
             </Text>
             <Text className="text-center text-white/90 font-poppins-medium text-base mt-2">
               {`Day ${clampedCount} / Day ${targetCount}`}

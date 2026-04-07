@@ -8,6 +8,13 @@ export interface RecordStreakResult {
   justCompleted: boolean;
 }
 
+function formatLocalDate(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
 export async function recordUserStreak(
   userId: string,
   storeId: number,
@@ -15,8 +22,10 @@ export async function recordUserStreak(
   pointsPerDay: number = 0,
   streakLength: number = 0,
 ): Promise<RecordStreakResult> {
-  const today = new Date().toISOString().split("T")[0];
-  const yesterday = new Date(Date.now() - 86400000).toISOString().split("T")[0];
+  const d = new Date();
+  const today = formatLocalDate(d);
+  d.setDate(d.getDate() - 1);
+  const yesterday = formatLocalDate(d);
 
   const { data: existing } = await supabase
     .from("user_streaks")
