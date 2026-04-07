@@ -2,7 +2,6 @@ import React, { useCallback, useEffect, useState } from "react";
 import {
   useColorScheme,
   ActivityIndicator,
-  TextInput,
   Modal as RNModal,
   Platform,
 } from "react-native";
@@ -19,32 +18,13 @@ import Slider from "@react-native-community/slider";
 import * as turf from "@turf/turf";
 import { Modal, type ModalButton } from "@/components/modal";
 import { Button } from "@/components/button";
+import { TextField } from "@/components/text-field";
 import { getStoreDetail, updateStoreDetail, uploadDetailImage } from "@/services/store-manager/detail-service";
-import { useDetailStore } from "@/store/store-manager/detail-store";
+import { useDetailStore, useDetailViewStore } from "@/store/store-manager/detail-store";
 import { store_types_options, aspect_ratios, type PickImageType } from "@/type/store-manager/store";
+import { dateToTimeString, timeStringToDate } from "@/utils/date-helpers";
 
 Mapbox.setAccessToken(process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN!);
-
-const MAX_PICTURES = 3;
-
-function timeStringToDate(s: string, fallbackHour = 9, fallbackMin = 0): Date {
-  const match = s.trim().match(/^(\d{1,2}):(\d{2})$/);
-  if (!match) return new Date(2000, 0, 1, fallbackHour, fallbackMin);
-  return new Date(2000, 0, 1, Math.min(23, parseInt(match[1])), Math.min(59, parseInt(match[2])));
-}
-
-function dateToTimeString(d: Date): string {
-  return `${d.getHours().toString().padStart(2, "0")}:${d.getMinutes().toString().padStart(2, "0")}`;
-}
-
-function SectionHeader({ icon, label }: { icon: string; label: string }) {
-  const isDark = useColorScheme() === "dark";
-  return (
-    <View className="flex-row items-center gap-x-2 mb-3">
-      <Text className="text-xs font-poppins-semibold text-slate-600 dark:text-slate-400 mb-1.5">{label}</Text>
-    </View>
-  );
-}
 
 export default function EditDetails() {
   const router = useRouter();
@@ -52,25 +32,23 @@ export default function EditDetails() {
   const { storeId } = useLocalSearchParams<{ storeId: string }>();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
-
-  const { detail, setDetail } = useDetailStore();
-
-  // Form state
-  const [name, setName] = useState(detail?.name ?? "");
-  const [type, setType] = useState(detail?.type ?? "");
-  const [logo, setLogo] = useState<string | null>(detail?.logo ?? null);
-  const [pictures, setPictures] = useState<(string | null)[]>(
-    [detail?.store_pictures?.[0] ?? null, detail?.store_pictures?.[1] ?? null, detail?.store_pictures?.[2] ?? null]
-  );
-  const [phone, setPhone] = useState(detail?.phone ?? "");
-  const [registrationNumber, setRegistrationNumber] = useState(detail?.registration_number ?? "");
-  const [businessDoc, setBusinessDoc] = useState<string | null>(detail?.business_document_image ?? null);
-  const [storeOpen, setStoreOpen] = useState(detail?.store_open ?? "09:00");
-  const [storeClose, setStoreClose] = useState(detail?.store_close ?? "21:00");
-  const [address, setAddress] = useState(detail?.address ?? "");
-  const [latitude, setLatitude] = useState<string>(detail?.latitude != null ? String(detail.latitude) : "");
-  const [longitude, setLongitude] = useState<string>(detail?.longitude != null ? String(detail.longitude) : "");
-  const [radius, setRadius] = useState<number>(detail?.radius ?? 50);
+  const { detail, setDetail } = useDetailViewStore();
+  const {
+    name, setName,
+    type, setType,
+    logo, setLogo,
+    pictures, setPictures,
+    phone, setPhone,
+    registrationNumber, setRegistrationNumber,
+    businessDoc, setBusinessDoc,
+    storeOpen, setStoreOpen,
+    storeClose, setStoreClose,
+    address, setAddress,
+    latitude, setLatitude,
+    longitude, setLongitude,
+    radius, setRadius,
+    initFromDetail,
+  } = useDetailStore();
 
   const [scrollEnabled, setScrollEnabled] = useState(true);
   const [showOpenPicker, setShowOpenPicker] = useState(false);
@@ -81,40 +59,33 @@ export default function EditDetails() {
 
   const [loadingInitial, setLoadingInitial] = useState(!detail);
   useEffect(() => {
-    if (!detail) {
-      getStoreDetail(storeId)
-        .then((data) => {
-          setDetail(data);
-          setName(data.name ?? "");
-          setType(data.type ?? "");
-          setLogo(data.logo ?? null);
-          setPictures([
-            data.store_pictures?.[0] ?? null,
-            data.store_pictures?.[1] ?? null,
-            data.store_pictures?.[2] ?? null,
-          ]);
-          setPhone(data.phone ?? "");
-          setRegistrationNumber(data.registration_number ?? "");
-          setBusinessDoc(data.business_document_image ?? null);
-          setStoreOpen(data.store_open ?? "09:00");
-          setStoreClose(data.store_close ?? "21:00");
-          setAddress(data.address ?? "");
-          setLatitude(data.latitude != null ? String(data.latitude) : "");
-          setLongitude(data.longitude != null ? String(data.longitude) : "");
-          setRadius(data.radius ?? 50);
-        })
-        .catch(() => {})
-        .finally(() => setLoadingInitial(false));
-    } else {
-      setLoadingInitial(false);
+    let cancelled = false;
+    const done = () => !cancelled && setLoadingInitial(false);
+
+    if (detail) {
+      initFromDetail(detail);
+      return done();
     }
-  }, []);
+
+    getStoreDetail(storeId)
+      .then((data) => {
+        if (cancelled) return;
+        setDetail(data);
+        initFromDetail(data);
+      })
+      .catch(() => {})
+      .finally(done);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [storeId, detail, setDetail, initFromDetail]);
 
   const showError = (message: string) =>
     setModal({
-      title: "Error",
+      title: "Something went wrong",
       message,
-      buttons: [{ label: "OK", onPress: () => setModal(null), variant: "secondary" }],
+      buttons: [{ label: "OK", onPress: () => setModal(null), variant: "primary" }],
     });
 
   const pickImage = async (kind: PickImageType, index?: number) => {
@@ -140,11 +111,11 @@ export default function EditDetails() {
     if (kind === "logo") { setLogo(dataUri); return; }
     if (kind === "business_document") { setBusinessDoc(dataUri); return; }
     if (kind === "picture" && index !== undefined) {
-      setPictures((prev) => {
-        const next = [...prev];
+      setPictures((() => {
+        const next = [...pictures];
         next[index] = dataUri;
         return next;
-      });
+      })());
     }
   };
 
@@ -154,7 +125,7 @@ export default function EditDetails() {
 
   const radiusCircle = React.useMemo(() => {
     if (!hasPin) return null;
-    return turf.circle([parsedLng, parsedLat], (radius || 50) / 1000, { steps: 64, units: "kilometers" });
+    return turf.circle([parsedLng, parsedLat], ((radius ?? 50) || 50) / 1000, { steps: 64, units: "kilometers" });
   }, [hasPin, parsedLat, parsedLng, radius]);
 
   const handleGetCurrentLocation = async () => {
@@ -211,7 +182,8 @@ export default function EditDetails() {
         radius: radius || null,
       });
 
-      setDetail(null); // bust cache so view page re-fetches
+      setDetail(null);
+      initFromDetail(null);
       setModal({
         title: "Saved",
         message: "Store details updated successfully.",
@@ -273,123 +245,115 @@ export default function EditDetails() {
         scrollEnabled={scrollEnabled}
         contentContainerStyle={{ padding: 16, paddingBottom: 40, gap: 20 }}
       >
-
         <View className="bg-white dark:bg-neutral-800 rounded-2xl border border-slate-100 dark:border-neutral-700 p-4 gap-y-4">
-          <Text className="text-sm font-poppins-semibold text-slate-600 dark:text-slate-400 mb-1.5">Store Details</Text>
-
-          {/* Store Name */}
-          <View>
-            <Text className="text-xs font-poppins-semibold text-slate-600 dark:text-slate-400 mb-1.5">Store Name</Text>
-            <TextInput
-              className="bg-backgroundMuted dark:bg-backgroundMuted rounded-xl h-12 px-4 font-poppins text-slate-900 dark:text-slate-100 border border-slate-200 dark:border-neutral-700"
+          <View className="gap-y-4">
+            <TextField
+              label="Store Name"
               placeholder="e.g. Blue Bottle Coffee"
-              placeholderTextColor="#94A3B8"
               value={name}
               onChangeText={setName}
+              sanitize={(v) => v}
             />
-          </View>
 
-          {/* Store Type */}
-          <View>
-            <Text className="text-xs font-poppins-semibold text-slate-600 dark:text-slate-400 mb-1.5">Store Type</Text>
-            <View className="flex-row flex-wrap gap-2">
-              {store_types_options.map((opt) => {
-                const selected = type === opt.value;
-                return (
-                  <TouchableOpacity
-                    key={opt.value}
-                    onPress={() => setType(opt.value)}
-                    activeOpacity={0.8}
-                    className={`px-3.5 py-1.5 rounded-full border ${
-                      selected
-                        ? "bg-primary/10 border-primary/30"
-                        : "bg-slate-100 dark:bg-neutral-700 border-transparent"
-                    }`}
-                  >
-                    <Text
-                      className={`text-xs font-poppins-semibold ${
-                        selected ? "text-primary" : "text-slate-600 dark:text-slate-300"
+            <View className="gap-y-2">
+              <Text className="text-sm font-poppins-semibold text-textSecondary dark:text-textSecondary mb-1.5">Store Type</Text>
+              <View className="flex-row flex-wrap gap-2">
+                {store_types_options.map((opt) => {
+                  const selected = type === opt.value;
+                  return (
+                    <TouchableOpacity
+                      key={opt.value}
+                      onPress={() => setType(opt.value)}
+                      activeOpacity={0.8}
+                      className={`px-3.5 py-1.5 rounded-full bg-white ${
+                        selected
+                          ? "border border-primary"
+                          : "border border-slate-100 dark:border-slate-800"
                       }`}
                     >
-                      {opt.label}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
+                      <Text
+                        className={`text-xs font-poppins-semibold ${
+                          selected
+                            ? 'text-primary'
+                            : 'text-textSecondary dark:text-textSecondary'
+                        }`}
+                      >
+                        {opt.label}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
             </View>
-          </View>
 
-          {/* Opening / Closing times */}
-          <View className="flex-row gap-x-3">
-            <View className="flex-1">
-              <Text className="text-xs font-poppins-semibold text-slate-600 dark:text-slate-400 h-10 mb-1.5">Opening Time</Text>
-              <TouchableOpacity
-                onPress={() => setShowOpenPicker(true)}
-                activeOpacity={0.8}
-                className="bg-backgroundMuted dark:bg-backgroundMuted rounded-xl px-4 justify-center"
-              >
-                <Text className="font-poppins text-slate-900 dark:text-slate-100">{storeOpen || "09:00"}</Text>
-              </TouchableOpacity>
-            </View>
-            <View className="flex-1">
-              <Text className="text-xs font-poppins-semibold text-slate-600 dark:text-slate-400 mb-1.5">Closing Time</Text>
-              <TouchableOpacity
-                onPress={() => setShowClosePicker(true)}
-                activeOpacity={0.8}
-                className="bg-backgroundMuted dark:bg-backgroundMuted rounded-xl h-12 px-4 justify-center"
-              >
-                <Text className="font-poppins text-slate-900 dark:text-slate-100">{storeClose || "21:00"}</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-
-          {/* Opening time picker */}
-          {showOpenPicker && (
-            Platform.OS === "android" ? (
-              <DateTimePicker
-                value={timeStringToDate(storeOpen || "09:00", 9, 0)}
-                mode="time"
-                onChange={(_, d) => { if (d) setStoreOpen(dateToTimeString(d)); setShowOpenPicker(false); }}
-              />
-            ) : (
-              <RNModal visible transparent animationType="slide">
-                <TouchableOpacity className="flex-1 bg-black/40 justify-end" activeOpacity={1} onPress={() => setShowOpenPicker(false)}>
-                  <TouchableOpacity activeOpacity={1} onPress={(e) => e.stopPropagation()} className="bg-white dark:bg-slate-800 rounded-t-2xl pb-8 pt-2">
-                    <DateTimePicker value={timeStringToDate(storeOpen || "09:00", 9, 0)} mode="time" onChange={(_, d) => { if (d) setStoreOpen(dateToTimeString(d)); }} />
-                    <View className="px-4"><Button label="Done" onPress={() => setShowOpenPicker(false)} variant="primary" fullWidth /></View>
-                  </TouchableOpacity>
+            {/* Opening / Closing times */}
+            <View className="flex-row gap-x-3">
+              <View className="flex-1">
+                <Text className="text-sm font-poppins-semibold text-textSecondary dark:text-textSecondary mb-1.5">Opening Time</Text>
+                <TouchableOpacity
+                  onPress={() => setShowOpenPicker(true)}
+                  activeOpacity={0.8}
+                  className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 justify-center h-[45px]"
+                >
+                  <Text className="font-poppins text-slate-900 dark:text-slate-100">{storeOpen || "09:00"}</Text>
                 </TouchableOpacity>
-              </RNModal>
-            )
-          )}
+              </View>
 
-          {/* Closing time picker */}
-          {showClosePicker && (
-            Platform.OS === "android" ? (
-              <DateTimePicker
-                value={timeStringToDate(storeClose || "21:00", 21, 0)}
-                mode="time"
-                onChange={(_, d) => { if (d) setStoreClose(dateToTimeString(d)); setShowClosePicker(false); }}
-              />
-            ) : (
-              <RNModal visible transparent animationType="slide">
-                <TouchableOpacity className="flex-1 bg-black/40 justify-end" activeOpacity={1} onPress={() => setShowClosePicker(false)}>
-                  <TouchableOpacity activeOpacity={1} onPress={(e) => e.stopPropagation()} className="bg-white dark:bg-slate-800 rounded-t-2xl pb-8 pt-2">
-                    <DateTimePicker value={timeStringToDate(storeClose || "21:00", 21, 0)} mode="time" onChange={(_, d) => { if (d) setStoreClose(dateToTimeString(d)); }} />
-                    <View className="px-4"><Button label="Done" onPress={() => setShowClosePicker(false)} variant="primary" fullWidth /></View>
-                  </TouchableOpacity>
+              <View className="flex-1">
+                <Text className="text-sm font-poppins-semibold text-textSecondary dark:text-textSecondary mb-1.5">Closing Time</Text>
+                <TouchableOpacity
+                  onPress={() => setShowClosePicker(true)}
+                  activeOpacity={0.8}
+                  className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 justify-center h-[45px]"
+                >
+                  <Text className="font-poppins text-slate-900 dark:text-slate-100">{storeClose || "21:00"}</Text>
                 </TouchableOpacity>
-              </RNModal>
-            )
-          )}
-        </View>
+              </View>
+            </View>
 
-        <View className="bg-white dark:bg-neutral-800 rounded-2xl border border-slate-100 dark:border-neutral-700 p-4 gap-y-4">
-          <SectionHeader icon="perm-media" label="Media" />
+            {/* Opening time picker */}
+            {showOpenPicker && (
+              Platform.OS === "android" ? (
+                <DateTimePicker
+                  value={timeStringToDate(storeOpen || "09:00", 9, 0)}
+                  mode="time"
+                  onChange={(_, d) => { if (d) setStoreOpen(dateToTimeString(d)); setShowOpenPicker(false); }}
+                />
+              ) : (
+                <RNModal visible transparent animationType="slide">
+                  <TouchableOpacity className="flex-1 bg-black/40 justify-end" activeOpacity={1} onPress={() => setShowOpenPicker(false)}>
+                    <TouchableOpacity activeOpacity={1} onPress={(e) => e.stopPropagation()} className="bg-white dark:bg-slate-800 rounded-t-2xl pb-8 pt-2">
+                      <DateTimePicker value={timeStringToDate(storeOpen || "09:00", 9, 0)} mode="time" onChange={(_, d) => { if (d) setStoreOpen(dateToTimeString(d)); }} />
+                      <View className="px-4"><Button label="Done" onPress={() => setShowOpenPicker(false)} variant="primary" fullWidth /></View>
+                    </TouchableOpacity>
+                  </TouchableOpacity>
+                </RNModal>
+              )
+            )}
 
-          {/* Logo */}
+            {/* Closing time picker */}
+            {showClosePicker && (
+              Platform.OS === "android" ? (
+                <DateTimePicker
+                  value={timeStringToDate(storeClose || "21:00", 21, 0)}
+                  mode="time"
+                  onChange={(_, d) => { if (d) setStoreClose(dateToTimeString(d)); setShowClosePicker(false); }}
+                />
+              ) : (
+                <RNModal visible transparent animationType="slide">
+                  <TouchableOpacity className="flex-1 bg-black/40 justify-end" activeOpacity={1} onPress={() => setShowClosePicker(false)}>
+                    <TouchableOpacity activeOpacity={1} onPress={(e) => e.stopPropagation()} className="bg-white dark:bg-slate-800 rounded-t-2xl pb-8 pt-2">
+                      <DateTimePicker value={timeStringToDate(storeClose || "21:00", 21, 0)} mode="time" onChange={(_, d) => { if (d) setStoreClose(dateToTimeString(d)); }} />
+                      <View className="px-4"><Button label="Done" onPress={() => setShowClosePicker(false)} variant="primary" fullWidth /></View>
+                    </TouchableOpacity>
+                  </TouchableOpacity>
+                </RNModal>
+              )
+            )}
+          </View>
+          <View className="h-px bg-slate-100 dark:bg-neutral-700" />
           <View>
-            <Text className="text-xs font-poppins-semibold text-slate-600 dark:text-slate-400 mb-1.5">Store Logo</Text>
+            <Text className="text-sm font-poppins-semibold text-textSecondary dark:text-textSecondary mb-1.5">Store Logo</Text>
             <View className="flex-row items-center gap-x-3">
               <TouchableOpacity
                 onPress={() => pickImage("logo")}
@@ -415,28 +379,14 @@ export default function EditDetails() {
                   </View>
                 )}
               </TouchableOpacity>
-              <View className="flex-1">
-                <Text className="text-xs font-poppins text-slate-500 dark:text-slate-400">
-                  Square image recommended. This appears on your store card and profile.
-                </Text>
-                {!logo && (
-                  <Text className="text-xs font-poppins-semibold text-red-500 mt-1">Required</Text>
-                )}
-              </View>
             </View>
           </View>
 
           {/* Pictures */}
           <View>
             <View className="flex-row items-center justify-between mb-1.5">
-              <Text className="text-xs font-poppins-semibold text-slate-600 dark:text-slate-400 mb-1.5">Store Pictures</Text>
-              <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">
-                {pictures.filter(Boolean).length} / {MAX_PICTURES}
-              </Text>
+              <Text className="text-sm font-poppins-semibold text-textSecondary dark:text-textSecondary mb-1.5">Store Pictures</Text>
             </View>
-            <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500 mb-3">
-              Add up to 3 photos. Tap a slot to add or replace.
-            </Text>
             <View className="flex-row gap-x-2">
               {[0, 1, 2].map((i) => {
                 const uri = pictures[i];
@@ -475,39 +425,25 @@ export default function EditDetails() {
               })}
             </View>
           </View>
-        </View>
+          <View className="h-px bg-slate-100 dark:bg-neutral-700" />
+          <TextField
+            label="Phone Number"
+            placeholder="0912 - 234 - 5678"
+            keyboardType="phone-pad"
+            value={phone}
+            onChangeText={setPhone}
+          />
 
-        <View className="bg-white dark:bg-neutral-800 rounded-2xl border border-slate-100 dark:border-neutral-700 p-4 gap-y-4">
-          <SectionHeader icon="business-center" label="Business Details" />
+          <TextField
+            label="Business Registration Number"
+            placeholder="e.g. TAX-ID-123456"
+            value={registrationNumber}
+            onChangeText={setRegistrationNumber}
+            sanitize={(v) => v}
+          />
 
-          {/* Phone */}
           <View>
-            <Text className="text-xs font-poppins-semibold text-slate-600 dark:text-slate-400 mb-1.5">Phone Number</Text>
-            <TextInput
-              className="bg-backgroundMuted dark:bg-backgroundMuted rounded-xl h-12 px-4 font-poppins text-slate-900 dark:text-slate-100 border border-slate-200 dark:border-neutral-700"
-              placeholder="0912 - 234 - 5678"
-              placeholderTextColor="#94A3B8"
-              keyboardType="phone-pad"
-              value={phone}
-              onChangeText={setPhone}
-            />
-          </View>
-
-          {/* Registration Number */}
-          <View>
-            <Text className="text-xs font-poppins-semibold text-slate-600 dark:text-slate-400 mb-1.5">Business Registration Number</Text>
-            <TextInput
-              className="bg-backgroundMuted dark:bg-backgroundMuted rounded-xl h-12 px-4 font-poppins text-slate-900 dark:text-slate-100 border border-slate-200 dark:border-neutral-700"
-              placeholder="e.g. TAX-ID-123456"
-              placeholderTextColor="#94A3B8"
-              value={registrationNumber}
-              onChangeText={setRegistrationNumber}
-            />
-          </View>
-
-          {/* Business Document */}
-          <View>
-            <Text className="text-xs font-poppins-semibold text-slate-600 dark:text-slate-400 mb-1.5">Business Document</Text>
+            <Text className="text-sm font-poppins-semibold text-textSecondary dark:text-textSecondary mb-1.5">Business Document</Text>
             <TouchableOpacity
               onPress={() => { if (!businessDoc) pickImage("business_document"); }}
               disabled={!!businessDoc}
@@ -541,22 +477,22 @@ export default function EditDetails() {
               )}
             </TouchableOpacity>
           </View>
-        </View>
+          <View className="h-px bg-slate-100 dark:bg-neutral-700" />
 
-        <View className="bg-white dark:bg-neutral-800 rounded-2xl border border-slate-100 dark:border-neutral-700 p-4 gap-y-4">
           <View className="flex-row items-center justify-between">
-            <SectionHeader icon="place" label="Location" />
+            <Text className="text-sm font-poppins-semibold text-textSecondary dark:text-textSecondary">
+              Location
+            </Text>
             <TouchableOpacity
               onPress={handleGetCurrentLocation}
-              className="flex-row items-center gap-x-1 mb-3"
+              className="flex-row items-center gap-x-1"
               activeOpacity={0.8}
             >
               <MaterialIcons name="my-location" size={14} color="#FF6600" />
-              <Text className="text-xs font-poppins-semibold text-primary">Use Current</Text>
+              <Text className="text-xs font-poppins-semibold text-textPrimary dark:text-textPrimary">Use Current</Text>
             </TouchableOpacity>
           </View>
 
-          {/* Map */}
           <View className="rounded-xl overflow-hidden border border-slate-200 dark:border-neutral-700" style={{ height: 280 }}>
             <MapView
               style={{ height: 280, width: "100%" }}
@@ -595,24 +531,18 @@ export default function EditDetails() {
             </View>
           </View>
 
-          {/* Address */}
-          <View>
-            <Text className="text-xs font-poppins-semibold text-slate-600 dark:text-slate-400 mb-1.5">Address / Landmark</Text>
-            <TextInput
-              className="bg-backgroundMuted dark:bg-backgroundMuted rounded-xl px-4 py-3 font-poppins text-slate-900 dark:text-slate-100 border border-slate-200 dark:border-neutral-700"
-              placeholder="Enter full physical address"
-              placeholderTextColor="#94A3B8"
-              multiline
-              textAlignVertical="top"
-              value={address}
-              onChangeText={setAddress}
-            />
-          </View>
+          <TextField
+            label="Address / Landmark"
+            placeholder="Enter full physical address"
+            value={address}
+            onChangeText={setAddress}
+            multiline
+            sanitize={(v) => v}
+          />
 
-          {/* Radius slider */}
           <View>
             <View className="flex-row justify-between items-center mb-1">
-              <Text className="text-xs font-poppins-semibold text-slate-600 dark:text-slate-400 mb-1.5">Store Radius</Text>
+              <Text className="text-sm font-poppins-semibold text-textSecondary dark:text-textSecondary mb-1.5">Store Radius</Text>
               <Text className="text-sm font-poppins-bold text-primary">{radius}m</Text>
             </View>
             <Slider
@@ -630,17 +560,26 @@ export default function EditDetails() {
               <Text className="text-xs font-poppins text-slate-400">500m</Text>
             </View>
           </View>
-        </View>
+          <View className="h-px bg-slate-100 dark:bg-neutral-700" />
 
-        {/* Save Button */}
-        <Button
-          label={isUploading ? "Uploading images…" : "Save Changes"}
-          onPress={handleSave}
-          variant="primary"
-          loading={isSaving}
-          fullWidth
-          disabled={isSaving}
-        />
+          <View className="gap-y-3">
+            <Button
+              label={isUploading ? "Uploading images…" : "Save Changes"}
+              onPress={handleSave}
+              variant="primary"
+              loading={isSaving}
+              fullWidth
+              disabled={isSaving}
+            />
+            <Button
+              label="Cancel"
+              onPress={() => router.back()}
+              variant="secondary"
+              fullWidth
+              disabled={isSaving}
+            />
+          </View>
+        </View>
       </ScrollView>
     </View>
   );
