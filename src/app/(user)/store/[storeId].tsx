@@ -280,19 +280,15 @@ export default function StoreOverviewDetail() {
                   </View>
                   <View className="flex-row items-center gap-x-2">
                     <TouchableOpacity
-                      className={`px-3 py-1 rounded-full ${hasStampedToday(Number(store.id)) ? "bg-neutral-200 dark:bg-white/10" : "bg-primary"}`}
-                      onPress={() => router.push("/qr")}
-                      disabled={isStamping || hasStampedToday(Number(store.id))}
+                      className="px-3 py-1 rounded-full bg-primary"
+                      onPress={() => router.push("/(user)/qr")}
+                      disabled={isStamping}
                     >
                       {isStamping ? (
                         <ActivityIndicator size="small" color="#FF6600" />
                       ) : (
-                        <Text
-                          className={`text-[10px] font-poppins-semibold ${hasStampedToday(Number(store.id)) ? "text-neutral-500" : "text-white"}`}
-                        >
-                          {hasStampedToday(Number(store.id))
-                            ? translate("user.rewards.buttons.stamped")
-                            : translate("user.rewards.buttons.stamp")}
+                        <Text className="text-[10px] font-poppins-semibold text-white">
+                          {translate("user.rewards.buttons.stamp")}
                         </Text>
                       )}
                     </TouchableOpacity>
