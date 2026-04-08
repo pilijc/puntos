@@ -56,6 +56,12 @@ export function useStoreDetailActions(storeId?: string) {
           translate("label.notice"),
           translate("user.rewards.messages.alreadyStamped"),
         );
+      } else if (result.reason === "already_completed") {
+        // ✅ Stamp card fully completed — blocked at the cap
+        Alert.alert(
+          translate("label.notice"),
+          "You've already completed your stamp card for this store! 🎉",
+        );
       } else if (result.reason === "stamp_not_enabled") {
         Alert.alert(
           translate("label.notice"),

@@ -15,7 +15,7 @@
         "viewAll": "View all",
         "somethingWentWrong": "Something went wrong. Please try again.",
         "poweredBy": "POWERED BY PUNTOS",
-        "termsAgreement": "By continuing, you agree to <tos>Terms of Service</tos> and <privacy>Privacy Policy</privacy>"
+        "termsAgreement": "By continuing, you agree to our\n<legal>Terms of Service and Privacy Policy</legal>."
     },
     "onboarding": {
         "welcome": "Welcome to <brand>{{appName}}</brand>",
@@ -105,7 +105,7 @@
             "title": "Sign Up",
             "titleManager": "Sign Up as Store Manager",
             "button": "Sign Up",
-            "divider": "OR CONTINUE WITH",
+            "divider": "or continue with",
             "google": "Continue with Google",
             "creating": "Creating Account...",
             "continue": "Continue",
@@ -216,7 +216,7 @@
             "nearby": "Nearby",
             "purchase": "Purchase",
             "viewAll": "View All",
-            "daysThisWeek": "{{current}}/{{target}} DAYS THIS WEEK",
+            "daysThisWeek": "{{current}}/{{target}} DAYS PROGRESS",
             "completed": "{{current}}/{{target}} COMPLETED",
             "noActiveStamps": "No Active Stamps",
             "visitStartStamps": "Visit a partner store to start your stamp log!",
@@ -238,7 +238,8 @@
             },
             "buttons": {
                 "stamp": "STAMP",
-                "stamped": "STAMPED"
+                "stamped": "STAMPED",
+                "claimRewards": "Claim Rewards"
             },
             "messages": {
                 "signInToStamp": "You must be logged in to stamp.",

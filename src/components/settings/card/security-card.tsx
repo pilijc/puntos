@@ -14,7 +14,12 @@ import ChangePasswordModal from "@/components/settings/modal/change-password-mod
 import { useTranslation } from "react-i18next";
 
 
-export const SecurityCard = () => {
+interface SecurityCardProps {
+    disabled?: boolean;
+    warning?: boolean;
+}
+
+export const SecurityCard: React.FC<SecurityCardProps> = ({ disabled = false, warning = false }) => {
     const [isOpen, setIsOpen] = useState(false);
     const [changePasswordVisible, setChangePasswordVisible] = useState(false);
     const [deleteModalVisible, setDeleteModalVisible] = useState(false);
@@ -22,8 +27,14 @@ export const SecurityCard = () => {
     const { t: translate } = useTranslation();
 
     const toggleOpen = () => {
+        if (disabled) return;
         LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
         setIsOpen(prev => !prev);
+    };
+
+    const handleChangePassword = () => {
+        if (disabled) return;
+        setChangePasswordVisible(true);
     };
 
     const handleDeleteAccount = async () => {
@@ -44,35 +55,54 @@ export const SecurityCard = () => {
 
     return (
         <>
-            <View className="bg-background dark:bg-darkBackgroundMuted p-4 overflow-hidden">
+            <View className={`bg-background dark:bg-darkBackgroundMuted p-4 overflow-hidden ${disabled ? 'opacity-60' : ''}`}>
                 <TouchableOpacity
                     onPress={toggleOpen}
                     className="flex-row items-center"
-                    activeOpacity={0.7}
+                    activeOpacity={disabled ? 1 : 0.7}
                 >
-                    <View className="h-8 w-8 rounded-lg bg-blue-50 dark:bg-blue-900/20 items-center justify-center">
-                        <Ionicons name="shield-checkmark-outline" size={15} color="#3b82f6" />
+                    <View className={`h-8 w-8 rounded-lg items-center justify-center ${
+                        warning 
+                            ? 'bg-yellow-50 dark:bg-yellow-900/20' 
+                            : 'bg-blue-50 dark:bg-blue-900/20'
+                    }`}>
+                        <Ionicons 
+                            name={warning ? "warning-outline" : "shield-checkmark-outline"} 
+                            size={15} 
+                            color={warning ? "#d97706" : "#3b82f6"} 
+                        />
                     </View>
 
-                    <Text className="flex-1 ml-3 text-base font-poppins-semibold text-textPrimary dark:text-darkTextPrimary">
-                        {translate('settings.account.security.title')}
-                    </Text>
+                    <View className="flex-1 ml-3">
+                        <Text className={`text-base font-poppins-semibold ${
+                            disabled 
+                                ? 'text-neutral-400 dark:text-neutral-500' 
+                                : 'text-textPrimary dark:text-darkTextPrimary'
+                        }`}>
+                            {translate('settings.account.security.title')}
+                        </Text>
+                        {disabled && (
+                            <Text className="text-xs text-yellow-600 dark:text-yellow-400 font-poppins-regular mt-1">
+                                Complete password setup to access
+                            </Text>
+                        )}
+                    </View>
 
                     <Ionicons
                         name={isOpen ? "chevron-up-outline" : "chevron-down-outline"}
                         size={20}
-                        color="#94a3b8"
+                        color={disabled ? "#cbd5e1" : "#94a3b8"}
                     />
                 </TouchableOpacity>
 
-                {isOpen && (
+                {isOpen && !disabled && (
                     <View className="mt-2">
                         {/* Divider */}
                         <View className="h-[1px] bg-neutral-100 dark:bg-darkBorder mb-1 ml-12" />
 
                         {/* Change Password Row */}
                         <TouchableOpacity
-                            onPress={() => setChangePasswordVisible(true)}
+                            onPress={handleChangePassword}
                             className="flex-row items-center py-3 ml-12"
                             activeOpacity={0.6}
                         >
