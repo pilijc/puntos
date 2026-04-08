@@ -1,22 +1,26 @@
-import { Tabs } from "expo-router";
-import React, { useEffect } from "react";
+import { Tabs, usePathname } from "expo-router";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "expo-router";
 import { Platform, View, StyleSheet, useColorScheme } from "react-native";
 import { supabase } from "@/supabase/supabase";
 import { getRoleTypeForUser } from "@/services/access-service";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-//import QRRoundedButton from "@/components/qr/qr-rounded";
 import { getCurrentUserIsActive } from "@/services/frontdesk/scan-service";
+import { checkPasswordSetupRequired } from "@/services/frontdesk/password-service";
 import { useTranslation } from "react-i18next";
 import { History, Settings, Home } from 'lucide-react-native';
 
 export default function FrontDeskLayout() {
     const router = useRouter();
+    const pathname = usePathname();
     const insets = useSafeAreaInsets();
-    const [isActive, setIsActive] = React.useState<boolean>(false);
+    const [isActive, setIsActive] = useState(false);
     const colorScheme = useColorScheme();
     const isDark = colorScheme === 'dark';
     const { t: translate } = useTranslation();
+
+    // Check if we're on the setup password page
+    const isOnPasswordSetup = pathname.includes('setup-password');
 
     useEffect(() => {
         const { data: { subscription } } =
@@ -41,13 +45,20 @@ export default function FrontDeskLayout() {
                         } else {
                             router.replace("/(user)");
                         }
+                        return;
+                    }
+
+                    // Check if password setup is required
+                    const requiresPasswordSetup = await checkPasswordSetupRequired(user.id);
+                    if (requiresPasswordSetup) {
+                        router.replace("/(front_desk)/setup-password");
+                        return;
                     }
                 } catch {
                     router.replace("/(user)");
                 }
             }
             );
-
 
         const verifyAccess = async () => {
             try {
@@ -62,6 +73,14 @@ export default function FrontDeskLayout() {
                     } else {
                         router.replace("/(user)");
                     }
+                    return;
+                }
+
+                // Check if password setup is required
+                const requiresPasswordSetup = await checkPasswordSetupRequired(user.id);
+                if (requiresPasswordSetup) {
+                    router.replace("/(front_desk)/setup-password");
+                    return;
                 }
             } catch {
                 router.replace("/(user)");
@@ -94,6 +113,7 @@ export default function FrontDeskLayout() {
             }}
         >
 
+            {/* Only show History and Dashboard tabs when NOT on password setup page */}
             <Tabs.Screen
                 name="history"
                 options={{
@@ -101,6 +121,7 @@ export default function FrontDeskLayout() {
                     tabBarIcon: ({ color }) => (
                         <History size={22} color={color} />
                     ),
+                    href: isOnPasswordSetup ? null : undefined,
                 }}
             />
             <Tabs.Screen
@@ -110,9 +131,10 @@ export default function FrontDeskLayout() {
                     tabBarIcon: ({color}) => (
                         <Home size={24} color={color} />
                     ),
-                    
+                    href: isOnPasswordSetup ? null : undefined,
                 }}
             />
+            {/* Always show Settings tab */}
             <Tabs.Screen
                 name="settings"
                 options={{
@@ -120,6 +142,13 @@ export default function FrontDeskLayout() {
                     tabBarIcon: ({ color }) => (
                         <Settings size={22} color={color} />
                     ),
+                }}
+            />
+            {/* Hide setup-password from tab navigation */}
+            <Tabs.Screen
+                name="setup-password"
+                options={{
+                    href: null, 
                 }}
             />
         </Tabs>

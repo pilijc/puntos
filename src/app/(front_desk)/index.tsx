@@ -1,4 +1,4 @@
-import { useRouter } from "expo-router";
+import { useRouter, useFocusEffect } from "expo-router";
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Alert, useColorScheme } from "react-native";
 import { SafeAreaView, ScrollView, View, Text, TouchableOpacity, TextInput } from "@/tw";
@@ -13,6 +13,7 @@ import { Modal, type ModalButton } from "@/components/modal";
 import { useRecentTransactions } from "@/hooks/use-recent-transactions";
 import { useTranslation } from "react-i18next";
 import VoucherForm from "@/components/voucher/voucherForm";
+import { checkPasswordSetupRequired } from "@/services/frontdesk/password-service";
 
 export default function FrontDeskScan() {
   const router = useRouter();
@@ -29,6 +30,12 @@ export default function FrontDeskScan() {
   const [successPoints, setSuccessPoints] = useState(0);
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string>("");
+  const [isPasswordSetupComplete, setIsPasswordSetupComplete] = useState<boolean | null>(null);
+  const [passwordSetupModal, setPasswordSetupModal] = useState<{
+    title: string;
+    message: string;
+    buttons: ModalButton[];
+  } | null>(null);
   const { t: translate } = useTranslation();
   const ColorScheme = useColorScheme();
   const isDark = ColorScheme === "dark";
@@ -53,8 +60,7 @@ export default function FrontDeskScan() {
       setStoreInfo(info);
       if (info) fetchTransactions(info.id);
     } catch (err) {
-      // Session not ready yet — will be retried via auth listener
-      console.warn("fetchStoreInfo: session not ready, waiting for auth event", err);
+      
     }
   }, [fetchTransactions]);
 
@@ -68,6 +74,41 @@ export default function FrontDeskScan() {
 
     return () => subscription.unsubscribe();
   }, []);
+
+  // Check password setup status
+  useFocusEffect(
+    useCallback(() => {
+      const checkPasswordSetup = async () => {
+        try {
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user) {
+            const requiresPasswordSetup = await checkPasswordSetupRequired(user.id);
+            const isComplete = !requiresPasswordSetup;
+            setIsPasswordSetupComplete(isComplete);
+            
+            if (requiresPasswordSetup) {
+              setPasswordSetupModal({
+                title: "Password Setup Required",
+                message: "Complete your password setup to access all dashboard features and ensure proper account security.",
+                buttons: [{
+                  label: "Set Password",
+                  variant: "primary",
+                  onPress: () => {
+                    setPasswordSetupModal(null);
+                    router.replace("/(front_desk)/setup-password");
+                  }
+                }]
+              });
+            }
+          }
+        } catch (error) {
+           setIsPasswordSetupComplete(false);
+        }
+      };
+      
+      checkPasswordSetup();
+    }, [router])
+  );
 
   const handleStartScanning = async () => {
     if (!purchaseAmount || parseFloat(purchaseAmount) <= 0) {
@@ -162,6 +203,17 @@ export default function FrontDeskScan() {
 
   return (
     <View className="flex-1 bg-neutral-50 dark:bg-darkBackground">
+      {/* Password Setup Modal */}
+      <Modal
+        visible={!!passwordSetupModal}
+        onClose={() => {}}
+        title={passwordSetupModal?.title ?? ""}
+        message={passwordSetupModal?.message}
+        buttons={passwordSetupModal?.buttons}
+        showCloseButton={false}
+        dismissOnBackdrop={false}
+      />
+
       <Modal
         visible={!!modal}
         onClose={() => setModal(null)}
@@ -216,6 +268,7 @@ export default function FrontDeskScan() {
                     facing="back"
                     onBarcodeScanned={scanned ? undefined : handleBarCodeScanned}
                     barcodeScannerSettings={{ barcodeTypes: ["qr"] }}
+                    enableTorch={false}
                   >
                     <View className="absolute inset-0 bg-black/40" />
                     {/* Corner guides */}
