@@ -1,61 +1,91 @@
-import React from "react";
-import { View, Text, TouchableOpacity, Alert, StyleSheet } from "react-native";
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { router } from "expo-router";
-import { supabase } from "@/supabase/supabase";
+import React, { useState, useCallback } from "react";
+import { View, Text, SafeAreaView, ScrollView } from "@/tw";
+import { useFocusEffect } from "expo-router";
+
+// Hooks
+import { useProfile } from "@/hooks/use-profile";
+
+// Components
+import EditProfileModal from "@/components/settings/modal/edit-profile-modal";
+import { LogoutButton } from "@/components/settings/logout-button";
+import { UserProfileCard } from "@/components/settings/card/user-profile-card";
+import { SecurityCard } from "@/components/settings/card/security-card";
+import { LanguageCard } from "@/components/settings/card/language-card";
+import { AppearanceCard } from "@/components/settings/card/appearance-card";
+import { useTranslation } from "react-i18next";
 
 export default function StoreManagerSettings() {
-    const handleLogout = async () => {
-        Alert.alert("Log Out", "Are you sure you want to log out?", [
-            { text: "Cancel", style: "cancel" },
-            {
-                text: "Log Out",
-                style: "destructive",
-                onPress: async () => {
-                    await supabase.auth.signOut();
-                    router.replace("/(onboarding)/welcome");
-                },
-            },
-        ]);
+    const [editModalVisible, setEditModalVisible] = useState(false);
+    const { t: translate } = useTranslation();
+
+    const {
+        user,
+        profile,
+        loading,
+        refreshProfile,
+    } = useProfile();
+
+    useFocusEffect(
+        useCallback(() => {
+            refreshProfile();
+        }, [])
+    );
+
+    const handleProfilePress = () => {
+        setEditModalVisible(true);
     };
 
-    return (
-        <View style={styles.container}>
-            <Text style={styles.title}>Settings</Text>
+    if (loading && !user) {
+        return (
+            <SafeAreaView className="flex-1 bg-background dark:bg-darkBackground justify-center items-center">
+                <Text className="text-neutral-500 font-poppins-regular">{translate("user.discover.loadingProfile")}</Text>
+            </SafeAreaView>
+        );
+    }
 
-            <TouchableOpacity onPress={handleLogout} style={styles.logoutBtn}>
-                <MaterialIcons name="logout" size={20} color="#FF6600" />
-                <Text style={styles.logoutText}>Log Out</Text>
-            </TouchableOpacity>
-        </View>
+    return (
+        <SafeAreaView edges={['top']} className="flex-1 bg-muted-white dark:bg-darkBackground">
+            <ScrollView
+                className="flex-1"
+                contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
+                showsVerticalScrollIndicator={false}
+            >
+                {/* Header */}
+                <View className="flex-row justify-between items-center mb-6 mt-2">
+                    <Text className="text-xl font-poppins-bold text-neutral-900 dark:text-darkTextPrimary">
+                        {translate('settings.title')}
+                    </Text>
+                </View>
+
+                {user && (
+                    <View className="mb-6">
+                        <UserProfileCard
+                            user={user}
+                            profile={profile}
+                            onPress={handleProfilePress}
+                        />
+                    </View>
+                )}
+
+                <View className="mb-6 overflow-hidden bg-white dark:bg-darkBackgroundCard rounded-2xl border border-neutral-100 dark:border-darkBorder">
+                    <SecurityCard />
+                    <LanguageCard />
+                    <AppearanceCard />
+                </View>
+
+                <LogoutButton />
+
+                <View className="mx-8 mt-6 items-center">
+                    <Text className="text-sm text-center font-poppins-regular text-neutral-500 dark:text-darkTextSecondary">
+                        {translate("settings.copyright")} 2026 Store Manager
+                    </Text>
+                </View>
+            </ScrollView>
+
+            <EditProfileModal
+                visible={editModalVisible}
+                onClose={() => setEditModalVisible(false)}
+            />
+        </SafeAreaView>
     );
 }
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: "#F3F4F6",
-        paddingHorizontal: 24,
-        paddingTop: 80,
-    },
-    title: {
-        fontSize: 20,
-        fontFamily: "Poppins-Bold",
-        color: "#0F172A",
-        marginBottom: 24,
-    },
-    logoutBtn: {
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "center",
-        gap: 8,
-        backgroundColor: "#FFF5F0",
-        borderRadius: 14,
-        paddingVertical: 14,
-    },
-    logoutText: {
-        fontSize: 15,
-        fontFamily: "Poppins-Bold",
-        color: "#FF6600",
-    },
-});

@@ -1,35 +1,69 @@
-import { useRouter } from "expo-router";
 import React from "react";
-import { Alert } from "react-native";
-import { SafeAreaView, Text, TouchableOpacity, View } from "@/tw";
-import { supabase } from "@/supabase/supabase";
+import { View, Text, SafeAreaView, ScrollView } from "@/tw";
+
+// Hooks
+import { useSuperAdminSettings } from "@/hooks/super-admin/use-super-admin-settings";
+
+// Components
+import EditProfileModal from "@/components/settings/modal/edit-profile-modal";
+import { LogoutButton } from "@/components/settings/logout-button";
+import { UserProfileCard } from "@/components/settings/card/user-profile-card";
+import { SecurityCard } from "@/components/settings/card/security-card";
+import { LanguageCard } from "@/components/settings/card/language-card";
+import { AppearanceCard } from "@/components/settings/card/appearance-card";
 
 export default function SuperAdminSettings() {
-    const router = useRouter();
-
-    const handleLogout = async () => {
-        try {
-            await supabase.auth.signOut();
-            router.replace("/(onboarding)/welcome");
-        } catch (error: any) {
-            Alert.alert("Logout error", error?.message || "Unable to logout right now.");
-        }
-    };
+    const {
+        editModalVisible,
+        setEditModalVisible,
+        translate,
+        user,
+        profile,
+        handleProfilePress,
+    } = useSuperAdminSettings();
 
     return (
-        <SafeAreaView className="flex-1 bg-backgroundMuted p-6">
-            <View className="flex-1 w-full max-w-sm mt-4">
-                <Text className="text-2xl font-poppins-bold mb-6">Settings</Text>
-
-                <TouchableOpacity
-                    onPress={handleLogout}
-                    className="bg-primary w-full py-4 rounded-xl items-center"
-                >
-                    <Text className="text-white text-base font-poppins-semibold">
-                        Logout
+        <SafeAreaView className="flex-1 bg-muted-white dark:bg-darkBackground">
+            <ScrollView
+                className="flex-1"
+                contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
+                showsVerticalScrollIndicator={false}
+            >
+                {/* Header */}
+                <View className="flex-row justify-between items-center mb-6 mt-2">
+                    <Text className="text-2xl font-poppins-bold text-neutral-900 dark:text-darkTextPrimary">
+                        {translate('settings.title')}
                     </Text>
-                </TouchableOpacity>
-            </View>
+                </View>
+
+                {user && (
+                    <UserProfileCard
+                        user={user}
+                        profile={profile}
+                        onPress={handleProfilePress}
+                    />
+                )}
+
+                <View className="mx-4 mb-6 overflow-hidden bg-background dark:bg-darkBackgroundMuted rounded-xl border border-neutral-200 dark:border-darkBorder">
+                    <SecurityCard />
+                    <LanguageCard />
+                    <AppearanceCard />
+                </View>
+
+                <LogoutButton />
+
+                {/* Footer */}
+                <View className="mx-8 mt-6 items-center">
+                    <Text className="text-sm text-center font-poppins-regular text-neutral-500 dark:text-darkTextSecondary">
+                        {translate("settings.copyright")} 2026 Admin Panel
+                    </Text>
+                </View>
+            </ScrollView>
+
+            <EditProfileModal
+                visible={editModalVisible}
+                onClose={() => setEditModalVisible(false)}
+            />
         </SafeAreaView>
     );
 }

@@ -1,3 +1,4 @@
+
 export interface QRCodeState {
   id: string;
   user_id: string | null;
@@ -15,6 +16,7 @@ export interface QRTransaction {
   user_id: string;
   store_staff_id: string;
   scanned_at: string;
-  points_awarded?: number;
+  points_earned?: number;
   created_at?: string;
 }
+

@@ -8,4 +8,6 @@ export interface FrontDeskScanResult {
   success: boolean;
   message: string;
   transactionId?: string;
+  pointsEarned?: number;
 }
+

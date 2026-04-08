@@ -1,325 +1,331 @@
-import React, { useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
+import { Switch, RefreshControl } from "react-native";
 import {
-    View,
-    Text,
-    TouchableOpacity,
-    ScrollView,
-    StyleSheet,
-} from "react-native";
+  View,
+  Text,
+  TouchableOpacity,
+  ScrollView,
+  SafeAreaView,
+} from "@/tw";
+import { Image } from "expo-image";
+import { useRouter, useFocusEffect } from "expo-router";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { router } from "expo-router";
+import { StoreRow, getMyStores } from "@/services/store-service";
+import { useManagerStoresStore } from "@/store/manager-stores-store";
+import { supabase } from "@/supabase/supabase";
+import { getStoreByOwnerId } from "@/services/store-manager/payment-service";
+import PaymentModal from "@/components/payment/paymentBoxModal";
 
-// ── Mock data ──────────────────────────────────────────────────────────────
-const MOCK_STORES = [
-    { id: "1", name: "The Coffee Foundry", location: "Brooklyn, NY", status: "Active", staff: 12 },
-    { id: "2", name: "Brew & Grind Co.", location: "Manhattan, NY", status: "Active", staff: 8 },
-    { id: "3", name: "The Roast Room", location: "Queens, NY", status: "Pending Review", staff: 5 },
+type TabKey = "all" | "active" | "pending" | "inactive";
+
+const TABS: { key: TabKey; label: string }[] = [
+  { key: "all", label: "All" },
+  { key: "active", label: "Active" },
+  { key: "pending", label: "Pending" },
+  { key: "inactive", label: "Inactive" },
 ];
 
-const FILTERS = ["All", "Active", "Pending Review", "Inactive"];
-
-const STATUS_CONFIG: Record<string, { color: string; bg: string; dot: string }> = {
-    "Active": { color: "#16A34A", bg: "#F0FDF4", dot: "#22C55E" },
-    "Pending Review": { color: "#D97706", bg: "#FFFBEB", dot: "#F59E0B" },
-    "Inactive": { color: "#64748B", bg: "#F1F5F9", dot: "#94A3B8" },
+const STATUS_BADGE: Record<
+  string,
+  { label: string; bg: string; text: string }
+> = {
+  active: {
+    label: "Active",
+    bg: "bg-green-100",
+    text: "text-green-700",
+  },
+  pending_review: {
+    label: "Pending",
+    bg: "bg-amber-100",
+    text: "text-amber-700",
+  },
+  inactive: {
+    label: "Inactive",
+    bg: "bg-slate-100",
+    text: "text-slate-500",
+  },
 };
 
-// ── Store Card ─────────────────────────────────────────────────────────────
-function StoreCard({ store }: { store: typeof MOCK_STORES[0] }) {
-    const cfg = STATUS_CONFIG[store.status] ?? STATUS_CONFIG["Inactive"];
-    return (
-        <View style={styles.card}>
-            <View style={{ flexDirection: "row", alignItems: "flex-start" }}>
-                <View style={styles.storeImg}>
-                    <MaterialIcons name="image" size={22} color="#CBD5E1" />
-                </View>
-                <View style={{ flex: 1, marginLeft: 12 }}>
-                    <Text style={styles.storeName}>{store.name}</Text>
-                    <View style={{ flexDirection: "row", alignItems: "center", marginTop: 2 }}>
-                        <MaterialIcons name="location-on" size={13} color="#94A3B8" />
-                        <Text style={styles.storeLocation}>{store.location}</Text>
-                    </View>
-                </View>
-                <View style={[styles.statusBadge, { backgroundColor: cfg.bg }]}>
-                    <View style={[styles.statusDot, { backgroundColor: cfg.dot }]} />
-                    <Text style={[styles.statusText, { color: cfg.color }]}>{store.status}</Text>
-                </View>
-            </View>
+function StoreCard({ store, router }: { store: StoreRow; router: any }) {
+  const status = store.status ?? "inactive";
+  const badge = STATUS_BADGE[status] ?? STATUS_BADGE.inactive;
 
-            <View style={styles.divider} />
-
-            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-                <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-                    <MaterialIcons name="people" size={15} color="#94A3B8" />
-                    <Text style={styles.statText}>{store.staff} Staff</Text>
-                </View>
-                <TouchableOpacity style={styles.manageBtn}>
-                    <Text style={styles.manageBtnText}>Manage</Text>
-                    <MaterialIcons name="arrow-forward" size={13} color="#FF6600" />
-                </TouchableOpacity>
-            </View>
-
-            {store.status === "Pending Review" && (
-                <View style={styles.pendingBanner}>
-                    <MaterialIcons name="hourglass-empty" size={14} color="#D97706" />
-                    <Text style={styles.pendingText}>
-                        Under review — our team will verify this store within 1–2 business days.
-                    </Text>
-                </View>
-            )}
+  return (
+    <TouchableOpacity
+      className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl overflow-hidden mb-3"
+      activeOpacity={0.95}
+      onPress={() =>
+        router.push({
+          pathname: `/(store_manager)/view-store/${store.id}`,
+          params: { storeId: store.id },
+        })
+      }
+    >
+      <View className="p-4 flex-row gap-3">
+        <View className="w-[60px] h-[60px] rounded-xl bg-slate-100 dark:bg-slate-800 items-center justify-center overflow-hidden">
+          {store.logo ? (
+            <Image
+              source={{ uri: store.logo }}
+              style={{ width: 60, height: 60 }}
+              contentFit="cover"
+            />
+          ) : (
+            <MaterialIcons name="storefront" size={26} color="#94A3B8" />
+          )}
         </View>
-    );
-}
-
-// ── Screen ─────────────────────────────────────────────────────────────────
-export default function StoreManagerStores() {
-    const [activeFilter, setActiveFilter] = useState("All");
-
-    const filtered = MOCK_STORES.filter(
-        (s) => activeFilter === "All" || s.status === activeFilter
-    );
-
-    return (
-        <View style={{ flex: 1, backgroundColor: "#F3F4F6" }}>
-
-            {/* ── Header ─────────────────────────────────────────────────── */}
-            <View style={styles.header}>
-                <View>
-                    <Text style={styles.headerTitle}>My Stores</Text>
-                    <Text style={styles.headerSub}>
-                        {MOCK_STORES.length} store{MOCK_STORES.length !== 1 ? "s" : ""} managed
-                    </Text>
-                </View>
-                <TouchableOpacity
-                    style={[styles.addBtn, { alignSelf: "center" }]}
-                    onPress={() => router.push("/(store_manager)/create-store")}
-                >
-                    <MaterialIcons name="add" size={18} color="#FFFFFF" />
-                    <Text style={styles.addBtnText}>Add Store</Text>
-                </TouchableOpacity>
-            </View>
-
-            {/* ── Filter pills (fixed height — no background bleed) ────────── */}
-            <View style={styles.filterWrapper}>
-                <ScrollView
-                    horizontal
-                    showsHorizontalScrollIndicator={false}
-                    contentContainerStyle={styles.filterRow}
-                >
-                    {FILTERS.map((f) => {
-                        const active = activeFilter === f;
-                        return (
-                            <TouchableOpacity
-                                key={f}
-                                onPress={() => setActiveFilter(f)}
-                                style={[styles.filterPill, active && styles.filterPillActive]}
-                            >
-                                <Text style={[styles.filterText, active && styles.filterTextActive]}>
-                                    {f}
-                                </Text>
-                            </TouchableOpacity>
-                        );
-                    })}
-                </ScrollView>
-            </View>
-
-            {/* ── Store list ─────────────────────────────────────────────── */}
-            <ScrollView
-                contentContainerStyle={styles.listContent}
-                showsVerticalScrollIndicator={false}
+        <View className="flex-1 justify-center gap-y-1">
+          <View className="flex-row items-center justify-between">
+            <Text
+              className="font-poppins-bold text-[15px] text-slate-900 dark:text-slate-100 flex-1 mr-2"
+              numberOfLines={1}
             >
-                {filtered.length > 0 ? (
-                    filtered.map((store) => <StoreCard key={store.id} store={store} />)
-                ) : (
-                    <View style={styles.emptyState}>
-                        <MaterialIcons name="storefront" size={48} color="#CBD5E1" />
-                        <Text style={styles.emptyTitle}>No stores found</Text>
-                        <Text style={styles.emptySub}>
-                            Tap "Add Store" to create your first store.
-                        </Text>
-                    </View>
-                )}
-            </ScrollView>
+              {store.name}
+            </Text>
+            <View className={`px-2 py-0.5 rounded-full ${badge.bg}`}>
+              <Text
+                className={`text-[9px] font-poppins-bold uppercase tracking-wider ${badge.text}`}
+              >
+                {badge.label}
+              </Text>
+            </View>
+          </View>
+          <View className="flex-row items-center gap-1">
+            <MaterialIcons name="location-on" size={12} color="#94A3B8" />
+            <Text
+              className="text-xs font-poppins text-slate-400 dark:text-slate-500 flex-1"
+              numberOfLines={1}
+            >
+              {store.address ?? "No address provided"}
+            </Text>
+          </View>
+          {store.type ? (
+            <View className="flex-row items-center gap-1">
+              <MaterialIcons name="category" size={12} color="#94A3B8" />
+              <Text
+                className="text-xs font-poppins text-slate-400 dark:text-slate-500"
+                numberOfLines={1}
+              >
+                {store.type}
+              </Text>
+            </View>
+          ) : null}
         </View>
-    );
+      </View>
+    </TouchableOpacity>
+  );
 }
 
-// ── Styles ─────────────────────────────────────────────────────────────────
-const styles = StyleSheet.create({
-    header: {
-        flexDirection: "row",
-        alignItems: "flex-start",
-        justifyContent: "space-between",
-        paddingHorizontal: 24,
-        paddingTop: 70,
-        paddingBottom: 16,
-        backgroundColor: "#FFFFFF",
-        borderBottomWidth: 1,
-        borderBottomColor: "#F1F5F9",
-    },
-    headerTitle: {
-        fontSize: 20,
-        fontFamily: "Poppins-Bold",
-        color: "#0F172A",
-    },
-    headerSub: {
-        fontSize: 12,
-        fontFamily: "Poppins-Regular",
-        color: "#94A3B8",
-        marginTop: 2,
-    },
-    addBtn: {
-        flexDirection: "row",
-        alignItems: "center",
-        gap: 4,
-        backgroundColor: "#FF6600",
-        borderRadius: 12,
-        paddingHorizontal: 14,
-        paddingVertical: 9,
-    },
-    addBtnText: {
-        fontSize: 13,
-        fontFamily: "Poppins-Bold",
-        color: "#FFFFFF",
-    },
-    // Filter pills — wrapped in a plain View so it never grows past its content
-    filterWrapper: {
-        backgroundColor: "#FFFFFF",
-        borderBottomWidth: 1,
-        borderBottomColor: "#F1F5F9",
-    },
-    filterRow: {
-        paddingHorizontal: 24,
-        paddingVertical: 12,
-        gap: 8,
-    },
-    filterPill: {
-        paddingHorizontal: 16,
-        paddingVertical: 7,
-        borderRadius: 9999,
-        backgroundColor: "#F3F4F6",
-        borderWidth: 1,
-        borderColor: "#E2E8F0",
-    },
-    filterPillActive: {
-        backgroundColor: "#FF6600",
-        borderColor: "#FF6600",
-    },
-    filterText: {
-        fontSize: 12,
-        fontFamily: "Poppins-Medium",
-        color: "#64748B",
-    },
-    filterTextActive: {
-        color: "#FFFFFF",
-    },
-    listContent: {
-        paddingHorizontal: 20,
-        paddingTop: 20,
-        paddingBottom: 40,
-    },
-    card: {
-        backgroundColor: "#FFFFFF",
-        borderRadius: 20,
-        padding: 16,
-        marginBottom: 14,
-        shadowColor: "#0F172A",
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.07,
-        shadowRadius: 12,
-        elevation: 4,
-    },
-    storeImg: {
-        width: 52,
-        height: 52,
-        borderRadius: 12,
-        backgroundColor: "#F1F5F9",
-        alignItems: "center",
-        justifyContent: "center",
-    },
-    storeName: {
-        fontSize: 15,
-        fontFamily: "Poppins-Bold",
-        color: "#0F172A",
-    },
-    storeLocation: {
-        fontSize: 12,
-        fontFamily: "Poppins-Regular",
-        color: "#94A3B8",
-        marginLeft: 2,
-    },
-    statusBadge: {
-        flexDirection: "row",
-        alignItems: "center",
-        borderRadius: 8,
-        paddingHorizontal: 8,
-        paddingVertical: 4,
-        gap: 4,
-    },
-    statusDot: {
-        width: 6,
-        height: 6,
-        borderRadius: 3,
-    },
-    statusText: {
-        fontSize: 11,
-        fontFamily: "Poppins-Bold",
-    },
-    divider: {
-        height: 1,
-        backgroundColor: "#F1F5F9",
-        marginVertical: 12,
-    },
-    statText: {
-        fontSize: 13,
-        fontFamily: "Poppins-Medium",
-        color: "#475569",
-    },
-    manageBtn: {
-        flexDirection: "row",
-        alignItems: "center",
-        gap: 3,
-        paddingHorizontal: 12,
-        paddingVertical: 6,
-        borderRadius: 9,
-        backgroundColor: "#FFF5F0",
-    },
-    manageBtnText: {
-        fontSize: 12,
-        fontFamily: "Poppins-Bold",
-        color: "#FF6600",
-    },
-    pendingBanner: {
-        flexDirection: "row",
-        alignItems: "flex-start",
-        gap: 6,
-        marginTop: 12,
-        backgroundColor: "#FFFBEB",
-        borderRadius: 10,
-        padding: 10,
-        borderLeftWidth: 3,
-        borderLeftColor: "#F59E0B",
-    },
-    pendingText: {
-        flex: 1,
-        fontSize: 11,
-        fontFamily: "Poppins-Regular",
-        color: "#92400E",
-    },
-    emptyState: {
-        alignItems: "center",
-        paddingTop: 60,
-        gap: 8,
-    },
-    emptyTitle: {
-        fontSize: 16,
-        fontFamily: "Poppins-Bold",
-        color: "#0F172A",
-    },
-    emptySub: {
-        fontSize: 13,
-        fontFamily: "Poppins-Regular",
-        color: "#94A3B8",
-        textAlign: "center",
-    },
-});
+function SkeletonCard() {
+  return (
+    <View className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden mb-3">
+      <View className="p-4 flex-row gap-3">
+        <View className="w-[60px] h-[60px] rounded-xl bg-slate-100 dark:bg-slate-800" />
+        <View className="flex-1 justify-center gap-y-2">
+          <View
+            className="h-4 rounded-lg bg-slate-100 dark:bg-slate-800"
+            style={{ width: "55%" }}
+          />
+          <View
+            className="h-3 rounded-lg bg-slate-100 dark:bg-slate-800"
+            style={{ width: "75%" }}
+          />
+          <View
+            className="h-3 rounded-lg bg-slate-100 dark:bg-slate-800"
+            style={{ width: "40%" }}
+          />
+        </View>
+      </View>
+      <View className="px-4 py-3 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/30 flex-row justify-between items-center">
+        <View className="h-5 w-20 rounded-full bg-slate-100 dark:bg-slate-800" />
+        <View className="h-7 w-20 rounded-lg bg-slate-100 dark:bg-slate-800" />
+      </View>
+    </View>
+  );
+}
+
+export default function StoreManagerStores() {
+  const [activeTab, setActiveTab] = useState<TabKey>("all");
+
+  const router = useRouter();
+
+  const { stores, loading, error, hasFetchedOnce, fetchStores } = useManagerStoresStore();
+
+  const [selectedStore, setSelectedStore] = useState<StoreRow | null>(null);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [user, setUser] = useState<string | null>(null);
+  const [hasPaidStoreFee, setHasPaidStoreFee] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const filtered = React.useMemo(() => {
+    if (activeTab === "all") return stores;
+    if (activeTab === "pending") return stores.filter(s => s.status === "pending_review");
+    return stores.filter(s => s.status === activeTab);
+  }, [stores, activeTab]);
+
+  // Initial fetch — only fires when the tab has never loaded data yet
+  React.useEffect(() => {
+    if (!hasFetchedOnce) {
+      fetchStores();
+    }
+  }, [hasFetchedOnce, fetchStores]);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchStores(true);
+  };
+
+  useFocusEffect(
+    useCallback(() => {
+      if (hasFetchedOnce) {
+        fetchStores();
+      }
+    }, [hasFetchedOnce, fetchStores])
+  );
+
+  return (
+    <SafeAreaView edges={["top"]} className="flex-1 bg-backgroundMuted dark:bg-slate-950">
+      <View className="bg-white border-b border-slate-100 dark:bg-slate-900 dark:border-slate-800 px-6 py-4 flex-row items-center justify-start">
+        <View className="flex-row items-center gap-2">
+          <Text className="text-xl font-poppins-bold text-slate-900 dark:text-slate-100">
+            Merchant Stores
+          </Text>
+        </View>
+      </View>
+
+      <View className="bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 flex-row px-6">
+        {TABS.map((tab) => {
+          const active = activeTab === tab.key;
+          const count =
+            tab.key === "all"
+              ? stores.length
+              : stores.filter((s) =>
+                tab.key === "pending"
+                  ? s.status === "pending_review"
+                  : s.status === tab.key
+              ).length;
+
+          return (
+            <TouchableOpacity
+              key={tab.key}
+              className="flex-1 py-3 items-center flex-row justify-center gap-1.5"
+              style={{
+                borderBottomWidth: 2,
+                borderBottomColor: active ? "#FF6600" : "transparent",
+              }}
+              onPress={() => setActiveTab(tab.key)}
+              activeOpacity={0.7}
+            >
+              <Text
+                className={
+                  active
+                    ? "text-xs font-poppins-bold text-primary"
+                    : "text-xs font-poppins-medium text-slate-400 dark:text-slate-500"
+                }
+              >
+                {tab.label}
+              </Text>
+              {count > 0 && (
+                <View
+                  className={`rounded-full px-1.5 min-w-[18px] items-center ${active
+                      ? "bg-primary/10"
+                      : "bg-neutral-100 dark:bg-neutral-700"
+                    }`}
+                >
+                  <Text
+                    className={`text-[9px] font-poppins-bold ${active
+                        ? "text-primary"
+                        : "text-neutral-500 dark:text-neutral-400"
+                      }`}
+                  >
+                    {count}
+                  </Text>
+                </View>
+              )}
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+
+      <View className="flex-1">
+        <ScrollView
+          className="flex-1"
+          contentContainerStyle={{ padding: 16, paddingBottom: 80 }}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor="#FF6600"
+              colors={["#FF6600"]}
+            />
+          }
+        >
+          {error && !loading && (
+            <View className="flex-row items-center gap-2 bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 rounded-xl p-3 mb-4">
+              <MaterialIcons
+                name="error-outline"
+                size={16}
+                color="#DC2626"
+              />
+              <Text className="flex-1 text-sm font-poppins text-red-600 dark:text-red-400">
+                {error}
+              </Text>
+            </View>
+          )}
+          {loading && (
+            <>
+              <SkeletonCard />
+              <SkeletonCard />
+              <SkeletonCard />
+            </>
+          )}
+          {!loading &&
+            filtered.map((store) => (
+              <StoreCard key={store.id} store={store} router={router} />
+            ))}
+          {!loading && filtered.length === 0 && !error && (
+            <View className="items-center pt-16 gap-3">
+              <MaterialIcons
+                name="storefront"
+                size={52}
+                color="#CBD5E1"
+              />
+              <Text className="text-base font-poppins-bold text-slate-600 dark:text-slate-300">
+                {activeTab === "all"
+                  ? "No stores yet"
+                  : `No ${activeTab} stores`}
+              </Text>
+              <Text className="text-sm font-poppins text-slate-400 text-center px-8">
+                {activeTab === "all"
+                  ? "Tap the + button to create your first store."
+                  : "Try a different tab or add a new store."}
+              </Text>
+            </View>
+          )}
+        </ScrollView>
+
+        <TouchableOpacity
+          className="absolute bottom-5 right-6 w-14 h-14 rounded-full bg-primary items-center justify-center"
+          onPress={() => {
+            // if (!hasPaidStoreFee) {
+            //   setShowPaymentModal(true);
+            //   console.log("Payment required to create store");
+            //   return;
+            // }
+            router.push("/(store_manager)/store/create-store");
+          }}
+        >
+          <MaterialIcons name="add" size={28} color="#fff" />
+        </TouchableOpacity>
+        {/* {showPaymentModal && (
+          <PaymentModal
+            setShowPaymentModal={setShowPaymentModal}
+            userId={user}
+            amount={199}
+          />
+        )} */}
+      </View>
+    </SafeAreaView>
+  );
+}

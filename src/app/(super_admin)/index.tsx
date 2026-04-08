@@ -1,225 +1,129 @@
-﻿import React, { useState } from "react";
-import { Image, Modal, ScrollView } from "react-native";
-import { SafeAreaView, Text, TouchableOpacity, View } from "@/tw";
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { useRouter } from "expo-router";
+import React from "react";
+import { ScrollView, ActivityIndicator, RefreshControl, Image, StyleSheet, Pressable } from "react-native";
+import { SafeAreaView, Text, View } from "@/tw";
+import { useSuperAdminDashboard } from "@/hooks/super-admin/use-super-admin-dashboard";
+import { SectionHeader } from "@/components/ui/section-header";
+import { UserRow } from "@/components/users/UserRow";
+import { StatCard } from "@/components/ui/stat-card";
+import { Modal } from "@/components/modal";
+import { Users, Store, BarChart3 } from "lucide-react-native";
+import { useTranslation } from "react-i18next";
 
-export default function SuperAdminHome() {
-  const router = useRouter();
-  const [showNotifications, setShowNotifications] = useState(false);
+export default function SuperAdminDashboard() {
+  const {
+    router,
+    users,
+    stores,
+    adminInfo,
+    loading,
+    profile,
+    refreshing,
+    avatarKey,
+    activeStoresCount,
+    onRefresh,
+  } = useSuperAdminDashboard();
+  const { t: translate } = useTranslation();
 
-  const softCardShadow = {
-    shadowColor: "#0F172A",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
-  };
-
-  // ✅ Generate 30 users
-  const mockUsers = Array.from({ length: 30 }, (_, i) => {
-    const names = [
-      "Alex Morgan","Sarah Jenkins","Michael Chen","Emma Watson",
-      "Daniel Cruz","Sophia Lee","James Carter","Olivia Brown",
-      "Liam Garcia","Isabella Martinez","Noah Anderson",
-      "Mia Thompson","Lucas White","Charlotte Hall",
-      "Ethan Young","Amelia King","Logan Wright",
-      "Harper Scott","Elijah Green","Evelyn Adams",
-      "Mason Baker","Abigail Nelson","Jacob Hill",
-      "Emily Rivera","William Torres","Ella Roberts",
-      "Benjamin Flores","Avery Mitchell","Henry Perez","Scarlett Cox"
-    ];
-    const name = names[i];
-    const email = name.toLowerCase().replace(" ", ".") + "@example.com";
-
-    return {
-      id: `u${i + 1}`,
-      name,
-      email,
-      avatar: `https://api.dicebear.com/7.x/avataaars/png?seed=${name}`,
-      section: i < 20 ? "recent" : "all",
-    };
-  });
-
-  // ✅ Only show recent 20 for dashboard
-  const recentUsers = mockUsers.filter(u => u.section === "recent");
-
-  const storeFilters = ["All Stores", "Active", "Deactivated"];
-
-  const mockStores = [
-    {
-      id: "s1",
-      name: "The Coffee Foundry",
-      location: "Brooklyn, NY",
-      owner: "David Miller",
-      staffCount: "4 Staff",
-      image:
-        "https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=300&auto=format&fit=crop&q=60",
-      status: "ACTIVE",
-      primaryAction: "Edit",
-      dangerAction: "Deactivate",
-    },
-    {
-      id: "s2",
-      name: "Brew & Bean Co.",
-      location: "Seattle, WA",
-      owner: "Jessica Wong",
-      staffCount: "2 Staff",
-      image:
-        "https://images.unsplash.com/photo-1445116572660-236099ec97a0?w=300&auto=format&fit=crop&q=60",
-      status: "PENDING",
-      primaryAction: "Approve",
-      dangerAction: "Reject",
-    },
-  ];
-
-  const notifications = [
-    { id: "n1", title: "New Registration", message: "Alex Morgan registered The Coffee Foundry", time: "2m ago" },
-    { id: "n2", title: "Action Required", message: "Brew & Bean Co. is waiting for your review", time: "1h ago" },
-    { id: "n3", title: "System Alert", message: "New security patches have been applied", time: "5h ago" },
-  ];
+  if (loading && !refreshing) {
+    return (
+      <View className="flex-1 justify-center items-center bg-background dark:bg-darkBackground">
+        <ActivityIndicator size="large" color="#FF6600" />
+      </View>
+    );
+  }
 
   return (
-    <SafeAreaView className="flex-1 bg-[#F8FAFC]" edges={["top", "left", "right"]}>
-      <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
+    <SafeAreaView className="flex-1 bg-background dark:bg-darkBackground" edges={["top", "left", "right"]}>
+      <ScrollView
+        className="flex-1"
+        contentContainerStyle={{ paddingBottom: 40 }}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#FF6600" />}
+      >
+        {/* Header Section */}
+        <View className="pt-4 pb-3">
+          <View className="px-6.5">
+            <View className="flex-row items-center justify-between">
+              <View className="flex-1 pl-2 pt-4 items-start">
+                <Text className="text-sm text-[#94A3B8] dark:text-darkTextSecondary font-[Poppins-Regular]">
+                    {translate("superAdmin.dashboard.welcome")}
+                    <Text className="text-orange-500 font-[Poppins-Bold]">
+                    {adminInfo?.username?.split(" ")[0] || "Admin"}
+                  </Text>!
+                </Text>
+                <Text className="text-2xl font-[Poppins-Bold] text-[#0F172A] dark:text-darkTextPrimary">
+                  {translate("superAdmin.dashboard.title")}
+                </Text>
+              </View>
 
-        {/* Header */}
-        <View className="bg-primary rounded-b-[30px] px-6 pt-2 pb-16 overflow-hidden">
-          <View className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-white/10" />
-          <View className="flex-row items-center justify-between mt-2">
-            <View className="w-8 h-8" />
-            <Text className="text-white text-base font-poppins-bold">Super Admin</Text>
-            <TouchableOpacity 
-              className="w-9 h-9 rounded-full bg-white/15 items-center justify-center relative"
-              onPress={() => setShowNotifications(true)}
-            >
-              <MaterialIcons name="notifications-none" size={18} color="#FFFFFF" />
-              <View className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full bg-danger border border-primary" />
-            </TouchableOpacity>
+              <Pressable
+                onPress={() => router.push("/(super_admin)/settings")}
+                className="relative mt-1"
+              >
+                <Image
+                  source={{ uri: (profile?.avatar_url || profile?.avatarUrl || profile?.logo || adminInfo?.avatar) ? `${(profile?.avatar_url || profile?.avatarUrl || profile?.logo || adminInfo?.avatar)}?t=${avatarKey}` : undefined }}
+                  style={{
+                    width: 48,
+                    height: 48,
+                    borderRadius: 24,
+                    borderWidth: 2,
+                    borderColor: "#F1F5F9",
+                  }}
+                />
+                <View className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-500 border-2 border-white rounded-full z-10" />
+              </Pressable>
+            </View>
           </View>
-          <View className="mt-6 mb-2">
-            <Text className="text-white text-2xl font-poppins-bold">Dashboard</Text>
-            <Text className="text-[11px] text-white/80 font-poppins uppercase tracking-wider">
-              Welcome back, Admin
+          <View className="px-2 mt-3">
+            <View className="h-[1px] w-full bg-[#E2E8F0] dark:bg-darkBorder" />
+          </View>
+        </View>
+
+        <View className="px-6 mb-6 mt-4">
+          <View className="flex-row gap-2">
+            <StatCard label={translate("superAdmin.dashboard.metrics.totalUsers")} val={users.length} Icon={Users} />
+            <StatCard label={translate("superAdmin.dashboard.metrics.totalStores")} val={stores.length} Icon={Store} />
+            <StatCard label={translate("superAdmin.dashboard.metrics.activeStores")} val={activeStoresCount} Icon={Store} />
+          </View>
+        </View>
+
+        {/* User Analytics Placeholder Section */}
+        <View className="mb-6 px-6">
+          <SectionHeader title={translate("superAdmin.dashboard.analytics.user.title")} onAction={() => { }} />
+          <View className="bg-white dark:bg-darkBackgroundMuted rounded-2xl p-8 border border-slate-100 dark:border-darkBorder items-center justify-center min-h-[220px]">
+            <Users size={48} color="#FF6600" />
+            <Text className="text-lg font-[Poppins-Bold] text-[#0F172A] dark:text-darkTextPrimary mt-3">
+              {translate("superAdmin.dashboard.analytics.user.insights")}
+            </Text>
+            <Text className="text-sm font-[Poppins-Regular] text-[#94A3B8] dark:text-darkTextSecondary text-center mt-2 px-6">
+              {translate("superAdmin.dashboard.analytics.user.desc")}
             </Text>
           </View>
         </View>
 
-        {/* Stats */}
-        <View className="px-6 -mt-10 mb-6">
-          <View style={{ flexDirection: "row", gap: 12 }}>
-            <View style={[softCardShadow, { flex: 1, backgroundColor: "#FFFFFF", borderRadius: 20, paddingVertical: 18, alignItems: "center" }]}>
-              <MaterialIcons name="groups" size={20} color="#3B82F6" />
-              <Text className="text-[22px] font-poppins-bold text-slate-900 mt-2">{mockUsers.length}</Text>
-              <Text className="text-[9px] font-poppins-bold text-slate-400">TOTAL USERS</Text>
-            </View>
-
-            <View style={[softCardShadow, { flex: 1, backgroundColor: "#FFFFFF", borderRadius: 20, paddingVertical: 18, alignItems: "center" }]}>
-              <MaterialIcons name="storefront" size={20} color="#22C55E" />
-              <Text className="text-[22px] font-poppins-bold text-slate-900 mt-2">{mockStores.length}</Text>
-              <Text className="text-[9px] font-poppins-bold text-slate-400">ACTIVE STORES</Text>
-            </View>
+        {/* Store Analytics Placeholder Section */}
+        <View className="mb-8 px-6">
+          <SectionHeader title={translate("superAdmin.dashboard.analytics.store.title")} onAction={() => { }} />
+          <View className="bg-white dark:bg-darkBackgroundMuted rounded-2xl p-8 border border-slate-100 dark:border-darkBorder items-center justify-center min-h-[220px]">
+            <BarChart3 size={48} color="#FF6600" />
+            <Text className="text-lg font-[Poppins-Bold] text-[#0F172A] dark:text-darkTextPrimary mt-3">
+              {translate("superAdmin.dashboard.analytics.store.insights")}
+            </Text>
+            <Text className="text-sm font-[Poppins-Regular] text-[#94A3B8] dark:text-darkTextSecondary text-center mt-2 px-6">
+              {translate("superAdmin.dashboard.analytics.store.desc")}
+            </Text>
           </View>
         </View>
-
-        {/* Notification Modal */}
-        <Modal visible={showNotifications} animationType="slide" transparent>
-          <View className="flex-1 bg-black/50 justify-end">
-            <View className="bg-white rounded-t-[30px] p-6 h-[70%]">
-              <View className="flex-row justify-between items-center mb-6">
-                <Text className="text-lg font-poppins-bold">Notifications</Text>
-                <TouchableOpacity onPress={() => setShowNotifications(false)}>
-                  <MaterialIcons name="close" size={24} color="#000" />
-                </TouchableOpacity>
-              </View>
-              <ScrollView showsVerticalScrollIndicator={false}>
-                {notifications.map((n) => (
-                  <View key={n.id} className="mb-4 p-4 bg-orange-50 rounded-2xl">
-                    <Text className="font-poppins-bold text-sm text-slate-800">{n.title}</Text>
-                    <Text className="text-slate-600 text-xs mt-1">{n.message}</Text>
-                    <Text className="text-slate-400 text-[10px] mt-2">{n.time}</Text>
-                  </View>
-                ))}
-              </ScrollView>
-            </View>
-          </View>
-        </Modal>
-
-        {/* Manage Users */}
-        <View className="px-6 mb-8">
-          <View className="flex-row justify-between items-center mb-3">
-            <Text className="text-lg font-poppins-bold text-slate-900">Manage Users</Text>
-            <TouchableOpacity className="flex-row items-center" onPress={() => router.push("/(super_admin)/users")}>
-              <Text className="text-[11px] font-poppins-bold text-primary mr-1">VIEW ALL</Text>
-              <MaterialIcons name="chevron-right" size={14} color="#FF6600" />
-            </TouchableOpacity>
-          </View>
-
-          {/* Scrollable Recent Users */}
-          <View style={[softCardShadow, { backgroundColor: "#FFFFFF", borderRadius: 20, overflow: "hidden", maxHeight: 300 }]}>
-            <ScrollView nestedScrollEnabled showsVerticalScrollIndicator={false}>
-              {recentUsers.map((user, index) => (
-                <View key={user.id} style={{ flexDirection: "row", alignItems: "center", padding: 14, borderTopWidth: index === 0 ? 0 : 1, borderTopColor: "#F1F5F9" }}>
-                  <Image source={{ uri: user.avatar }} style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: "#F1F5F9" }} />
-                  <View style={{ marginLeft: 12, flex: 1 }}>
-                    <Text className="text-[14px] font-poppins-bold text-slate-800">{user.name}</Text>
-                    <Text className="text-[12px] font-poppins text-slate-500">{user.email}</Text>
-                  </View>
-                  <TouchableOpacity className="bg-red-50 px-3 py-1.5 rounded-lg">
-                    <Text className="text-red-500 text-[11px] font-poppins-bold">Block</Text>
-                  </TouchableOpacity>
-                </View>
-              ))}
-            </ScrollView>
-          </View>
-        </View>
-
-        {/* Store Management */}
-        <View className="px-6 mb-6">
-          <View className="flex-row justify-between items-center mb-4">
-            <Text className="text-lg font-poppins-bold text-slate-900">Store Management</Text>
-            <TouchableOpacity onPress={() => router.push("/(super_admin)/stores")}>
-              <Text className="text-[11px] font-poppins-bold text-primary">VIEW ALL</Text>
-            </TouchableOpacity>
-          </View>
-
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mb-4">
-            {storeFilters.map((filter, index) => (
-              <TouchableOpacity key={filter} className={`px-4 py-2 rounded-full mr-2 border ${index === 0 ? "bg-primary border-primary" : "bg-white border-slate-200"}`}>
-                <Text className={`text-[12px] font-poppins-medium ${index === 0 ? "text-white" : "text-slate-600"}`}>{filter}</Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-
-          <View style={{ gap: 12 }}>
-            {mockStores.map((store) => (
-              <View key={store.id} style={[softCardShadow, { backgroundColor: "#FFFFFF", borderRadius: 20, padding: 16 }]}>
-                <View className="flex-row justify-between items-start mb-4">
-                  <View className="flex-row flex-1">
-                    <Image source={{ uri: store.image }} style={{ width: 50, height: 50, borderRadius: 12 }} />
-                    <View className="ml-3 flex-1 justify-center">
-                      <Text className="text-[14px] font-poppins-bold text-slate-800">{store.name}</Text>
-                      <Text className="text-[11px] font-poppins text-slate-500">{store.location}</Text>
-                    </View>
-                  </View>
-                  <View className={`px-2 py-1 rounded-md ${store.status === "ACTIVE" ? "bg-green-50" : "bg-amber-50"}`}>
-                    <Text className={`text-[9px] font-poppins-bold ${store.status === "ACTIVE" ? "text-green-600" : "text-amber-600"}`}>{store.status}</Text>
-                  </View>
-                </View>
-                <View className="flex-row gap-2">
-                  <TouchableOpacity className="flex-1 bg-slate-100 py-2.5 rounded-lg items-center">
-                    <Text className="text-[12px] font-poppins-bold text-slate-600">{store.primaryAction}</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity className="flex-1 border border-red-100 py-2.5 rounded-lg items-center">
-                    <Text className="text-[12px] font-poppins-bold text-red-500">{store.dangerAction}</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            ))}
-          </View>
-        </View>
-
       </ScrollView>
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  userContainer: {
+    backgroundColor: "#FFF",
+    borderRadius: 16,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "#F1F5F9",
+  },
+});
