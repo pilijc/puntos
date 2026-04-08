@@ -111,6 +111,13 @@
             "creating": "アカウントを作成中...",
             "continue": "次へ",
             "ownerPrompt": "店舗オーナーとして登録しますか？",
+            "roleSelect": {
+                "title": "アプリの使い方を選択してください",
+                "customerLabel": "お客様として利用する",
+                "customerDescription": "リワードを獲得して、ロイヤルティ機能を利用したい",
+                "ownerLabel": "店舗オーナーとして利用する",
+                "ownerDescription": "店舗・リワード・お客様の管理をしたい"
+            },
             "alreadyHaveAccount": "既にアカウントをお持ちですか？",
             "login": "ログイン",
             "success": "アカウントが作成されました！",

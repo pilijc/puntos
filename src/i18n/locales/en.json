@@ -110,6 +110,13 @@
             "creating": "Creating Account...",
             "continue": "Continue",
             "ownerPrompt": "Sign up as Store Owner?",
+            "roleSelect": {
+                "title": "Choose how you’ll use the app",
+                "customerLabel": "I’m a Customer",
+                "customerDescription": "I want to earn rewards and use loyalty features",
+                "ownerLabel": "I’m a Store Owner",
+                "ownerDescription": "I want to manage my store, rewards, and customers"
+            },
             "alreadyHaveAccount": "Already have an account?",
             "login": "Login",
             "success": "Account created!",
