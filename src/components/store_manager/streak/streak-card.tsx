@@ -191,7 +191,7 @@ export function StreakCard({
       )}
 
       {status === "active" && (
-        <View className="mx-4 my-3 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-700 px-3 py-2.5 flex-row items-center gap-x-2">
+        <View className="mx-4 my-3 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 px-3 py-2.5 flex-row items-center gap-x-2">
           <Check size={14} color="#10B981" />
           <Text className="text-xs font-poppins text-textSecondary flex-1">
             Users can earn today if they{streak.radius_meters ? ` are within ${streak.radius_meters}m and` : ""} haven't checked in yet today.

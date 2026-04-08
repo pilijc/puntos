@@ -39,6 +39,8 @@ export interface PasswordStepProps {
   confirmPassword: string;
   showPassword: boolean;
   showConfirmPassword: boolean;
+  setShowPassword: (value: boolean) => void;
+  setShowConfirmPassword: (value: boolean) => void;
   onPasswordChange: (value: string) => void;
   onConfirmPasswordChange: (value: string) => void;
   onTogglePassword: () => void;
