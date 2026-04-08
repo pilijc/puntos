@@ -25,7 +25,7 @@ export function AppHeader({
   const isDark = useColorScheme() === "dark";
 
   return (
-    <View className={`px-2 ${className}`} style={{ paddingVertical: 4 }}>
+    <View className={`px-2 py-2 ${className}`}>
       <View className="flex-row items-center mb-1">
         <TouchableOpacity
           className="w-10 h-10 rounded-full items-center justify-center -mt-0.5"
@@ -36,11 +36,11 @@ export function AppHeader({
         </TouchableOpacity>
 
         <View className="flex-1 px-2 py-1">
-          <Text className="text-md font-poppins-bold text-textPrimary dark:text-darkTextPrimary text-center">
+          <Text className="text-base font-poppins-bold text-textPrimary dark:text-darkTextPrimary text-center">
             {title}
           </Text>
           {description ? (
-            <Text className="text-xs font-poppins text-textMuted dark:text-darkTextMuted text-center -mt-1">
+            <Text className="text-xs font-poppins text-textMuted dark:text-darkTextMuted text-center -mt-0.5">
               {description}
             </Text>
           ) : null}
