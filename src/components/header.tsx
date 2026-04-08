@@ -25,7 +25,7 @@ export function AppHeader({
   const isDark = useColorScheme() === "dark";
 
   return (
-    <View className={`px-2 ${className}`} style={{ paddingTop, paddingBottom: 4 }}>
+    <View className={`px-2 ${className}`} style={{ paddingVertical: 4 }}>
       <View className="flex-row items-center mb-1">
         <TouchableOpacity
           className="w-10 h-10 rounded-full items-center justify-center -mt-0.5"

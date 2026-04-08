@@ -163,7 +163,6 @@ export default function StoreManagerStores() {
     return stores.filter(s => s.status === activeTab);
   }, [stores, activeTab]);
 
-  // Initial fetch — only fires when the tab has never loaded data yet
   React.useEffect(() => {
     if (!hasFetchedOnce) {
       fetchStores();

@@ -10,6 +10,9 @@ interface TextFieldProps {
   hint?: string;
   keyboardType?: KeyboardTypeOptions;
   required?: boolean;
+  multiline?: boolean;
+  numberOfLines?: number;
+  sanitize?: (value: string) => string;
   rightAccessory?: React.ReactNode;
   secureTextEntry?: boolean;
 }
@@ -22,6 +25,9 @@ export function TextField({
   hint,
   keyboardType = "default",
   required = false,
+  multiline = false,
+  numberOfLines,
+  sanitize = (v) => v.replace(/-/g, ""),
   rightAccessory,
   secureTextEntry = false,
 }: TextFieldProps) {
@@ -45,17 +51,20 @@ export function TextField({
           placeholder={placeholder}
           placeholderTextColor="#94A3B8"
           style={{
-            height: 45,
+            height: multiline ? 96 : 45,
             lineHeight: 20,
             paddingVertical: 0,
             paddingHorizontal: 12,
-            textAlignVertical: "center",
+            textAlignVertical: multiline ? "top" : "center",
             includeFontPadding: false,
+          paddingTop: multiline ? 12 : 0,
             fontSize: 13,
           }}
           keyboardType={keyboardType}
+        multiline={multiline}
+        numberOfLines={numberOfLines}
           value={value}
-          onChangeText={(v) => onChangeText(v.replace(/-/g, ""))}
+          onChangeText={(v) => onChangeText(sanitize(v))}
           secureTextEntry={secureTextEntry}
         />
         {hasRight ? (

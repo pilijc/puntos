@@ -2,7 +2,7 @@ import React, { useCallback, useEffect } from "react";
 import { useColorScheme, useWindowDimensions } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import { getStoreDetail } from "@/services/store-manager/detail-service";
-import { useDetailStore } from "@/store/store-manager/detail-store";
+import { useDetailViewStore } from "@/store/store-manager/detail-store";
 import { store_types_options } from "@/type/store-manager/store";
 import { STATUS_CONFIG } from "@/type/store-manager/detail";
 
@@ -11,7 +11,7 @@ export function useStoreDetail() {
   const colorScheme = useColorScheme();
   const { width: screenWidth } = useWindowDimensions();
 
-  const { detail, setDetail, reset } = useDetailStore();
+  const { detail, setDetail, reset } = useDetailViewStore();
   const [loading, setLoading] = React.useState(true);
   const [refreshing, setRefreshing] = React.useState(false);
 

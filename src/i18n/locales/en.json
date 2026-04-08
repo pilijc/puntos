@@ -216,7 +216,7 @@
             "nearby": "Nearby",
             "purchase": "Purchase",
             "viewAll": "View All",
-            "daysThisWeek": "{{current}}/{{target}} DAYS THIS WEEK",
+            "daysThisWeek": "{{current}}/{{target}} DAYS PROGRESS",
             "completed": "{{current}}/{{target}} COMPLETED",
             "noActiveStamps": "No Active Stamps",
             "visitStartStamps": "Visit a partner store to start your stamp log!",
@@ -238,7 +238,8 @@
             },
             "buttons": {
                 "stamp": "STAMP",
-                "stamped": "STAMPED"
+                "stamped": "STAMPED",
+                "claimRewards": "Claim Rewards"
             },
             "messages": {
                 "signInToStamp": "You must be logged in to stamp.",

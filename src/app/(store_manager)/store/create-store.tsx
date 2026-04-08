@@ -1,8 +1,9 @@
 import React, { useState } from "react";
-import { View, Text, SafeAreaView, TouchableOpacity, TextInput, ScrollView } from "@/tw";
+import { View, Text, SafeAreaView, TouchableOpacity, ScrollView } from "@/tw";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { router, useLocalSearchParams } from "expo-router";
 import { Button } from "@/components/button";
+import { TextField } from "@/components/text-field";
 import * as ImagePicker from "expo-image-picker";
 import { Modal, type ModalButton } from "@/components/modal";
 import { createStore, updateStore, uploadStoreImage, StoreImageKind } from "@/services/store-service";
@@ -16,20 +17,10 @@ import { aspect_ratios, type PickImageType, STEPS, store_types_options } from "@
 import * as Location from "expo-location";
 import Slider from "@react-native-community/slider";
 import * as turf from "@turf/turf";
+import { AppHeader } from "@/components/header";
+import { dateToTimeString, timeStringToDate } from "@/utils/date-helpers";
 
 Mapbox.setAccessToken(process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN);
-
-function timeStringToDate(s: string, fallbackHour = 9, fallbackMin = 0): Date {
-  const match = s.trim().match(/^(\d{1,2}):(\d{2})$/);
-  if (!match) return new Date(2000, 0, 1, fallbackHour, fallbackMin);
-  const h = Math.min(23, Math.max(0, parseInt(match[1], 10)));
-  const m = Math.min(59, Math.max(0, parseInt(match[2], 10)));
-  return new Date(2000, 0, 1, h, m);
-}
-
-function dateToTimeString(d: Date): string {
-  return `${d.getHours().toString().padStart(2, "0")}:${d.getMinutes().toString().padStart(2, "0")}`;
-}
 
 export default function CreateStore() {
   const isDark = useColorScheme() === "dark";
@@ -366,21 +357,11 @@ export default function CreateStore() {
         message={modal?.message}
         buttons={modal?.buttons}
       />
-      <View
-				className="bg-background dark:bg-[#111921] border-b border-slate-200 dark:border-slate-800 flex-row items-center h-15 px-2"
-			>
-				<TouchableOpacity
-					className="w-10 h-10 rounded-full items-center justify-center"
-					activeOpacity={0.7}
-					onPress={() => router.push("/(store_manager)/stores")}
-				>
-					<MaterialIcons name="chevron-left" size={22} color="#0F172A" />
-				</TouchableOpacity>
-	
-				<Text className="flex-1 text-center text-[17px] font-poppins-bold text-slate-900 dark:text-slate-100 pr-10">
-					Create Store
-				</Text>
-			</View>
+      <AppHeader
+        title="Create Store"
+        onBackPress={() => router.back()}
+        className="bg-background dark:bg-[#111921]"
+      />
 
       <ScrollView
         className="flex-1"
@@ -390,22 +371,15 @@ export default function CreateStore() {
       >
         {activeStep === "store" && (
           <View className="gap-2">
-            <Text className="text-slate-900 dark:text-slate-100 text-md font-poppins-bold">
-              Store Details
-            </Text>
-            <View className="gap-4">
-              <View className="flex flex-col gap-2">
-                <Text className="text-slate-700 dark:text-slate-300 text-sm font-poppins-medium">
-                  Store Name <Text className="text-red-500 dark:text-red-400">*</Text>
-                </Text>
-                <TextInput
-                  className="w-full rounded-xl bg-white dark:bg-slate-800/50 text-slate-900 dark:text-slate-100 h-12 px-4 font-poppins"
-                  placeholder="e.g. Blue Bottle Coffee"
-                  placeholderTextColor="#94A3B8"
-                  value={storeName}
-                  onChangeText={setStoreName}
-                />
-              </View>
+            <View className="bg-white dark:bg-neutral-800 rounded-xl border border-slate-100 dark:border-neutral-700 p-4 gap-4">
+              <TextField
+                label="Store Name"
+                required
+                placeholder="e.g. Blue Bottle Coffee"
+                value={storeName}
+                onChangeText={setStoreName}
+                sanitize={(v) => v}
+              />
 
               <View className="flex-1 flex-col gap-2 justify-start">
                 <Text className="text-slate-700 dark:text-slate-300 text-sm font-poppins-medium px-1">
@@ -419,10 +393,10 @@ export default function CreateStore() {
                         key={type.value}
                         activeOpacity={0.8}
                         onPress={() => setStoreType(type.value)}
-                        className={`px-3 py-1.5 rounded-full border ${
+                        className={`px-3 py-1.5 rounded-full border bg-white dark:bg-slate-800/50 ${
                           selected
-                            ? "bg-primary/10 dark:bg-primary/10 border-primary/10 dark:border-primary/10"
-                            : "bg-slate-200 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800/50"
+                            ? "border-primary dark:border-primary"
+                            : "border-slate-200 dark:border-slate-800/50"
                         }`}
                       >
                         <Text
@@ -524,40 +498,30 @@ export default function CreateStore() {
         )}
 
         {activeStep === "business" && (
-          <View className="gap-5">
-            <Text className="text-slate-900 dark:text-slate-100 text-base font-poppins-bold">
-              Business Details
-            </Text>
+          <View className="gap-2">
+            <View className="bg-white dark:bg-neutral-800 rounded-xl border border-slate-100 dark:border-neutral-700 p-4 gap-4">
+              <TextField
+                label="Phone Number"
+                placeholder="0912 - 234 - 5678"
+                keyboardType="phone-pad"
+                value={phone}
+                onChangeText={t => {
+                  if (t.length <= 11) {
+                    setPhone(t);
+                  } else if (t.length < (phone?.length ?? 0)) {
+                    setPhone(t);
+                  }
+                }}
+              />
 
-            <View className="gap-4">
-              <View className="flex flex-col gap-1.5">
-                <Text className="text-slate-700 dark:text-slate-300 text-sm font-poppins-medium px-1">
-                  Phone Number
-                </Text>
-                <View className="relative">
-                  <TextInput
-                    className="w-full rounded-xl bg-white dark:bg-slate-800/50 text-slate-900 dark:text-slate-100 h-12 pl-4 pr-4 font-poppins"
-                    placeholder="0912 - 234 - 5678"
-                    placeholderTextColor="#94A3B8"
-                    keyboardType="phone-pad"
-                    value={phone}
-                    onChangeText={setPhone}
-                  />
-                </View>
-              </View>
-
-              <View className="flex flex-col gap-1.5">
-                <Text className="text-slate-700 dark:text-slate-300 text-sm font-poppins-medium px-1">
-                  Business Registration Number <Text className="text-red-500 dark:text-red-400">*</Text>
-                </Text>
-                <TextInput
-                  className="w-full rounded-xl bg-white dark:bg-slate-800/50 text-slate-900 dark:text-slate-100 h-12 px-4 font-poppins"
-                  placeholder="e.g. TAX-ID-123456"
-                  placeholderTextColor="#94A3B8"
-                  value={registrationNumber}
-                  onChangeText={setRegistrationNumber}
-                />
-              </View>
+              <TextField
+                label="Business Registration Number"
+                required
+                placeholder="e.g. TAX-ID-123456"
+                value={registrationNumber}
+                onChangeText={setRegistrationNumber}
+                sanitize={(v) => v}
+              />
 
               <View className="flex flex-col gap-2">
                 <Text className="text-slate-700 dark:text-slate-300 text-sm font-poppins-medium px-1">
@@ -604,7 +568,7 @@ export default function CreateStore() {
                   </Text>
                   <TouchableOpacity
                     onPress={() => setShowOpenTimePicker(true)}
-                    className="w-full rounded-xl bg-white dark:bg-slate-800/50 h-12 px-4 justify-center"
+                    className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/50 h-12 px-4 justify-center"
                     activeOpacity={0.8}
                   >
                     <Text className="text-slate-900 dark:text-slate-100 font-poppins">
@@ -660,7 +624,7 @@ export default function CreateStore() {
                   </Text>
                   <TouchableOpacity
                     onPress={() => setShowCloseTimePicker(true)}
-                    className="w-full rounded-xl bg-white dark:bg-slate-800/50 h-12 px-4 justify-center"
+                    className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/50 h-12 px-4 justify-center"
                     activeOpacity={0.8}
                   >
                     <Text className="text-slate-900 dark:text-slate-100 font-poppins">
@@ -714,88 +678,81 @@ export default function CreateStore() {
         )}
 
         {activeStep === "location" && (
-          <View className="gap-5">
-            <Text className="text-slate-900 dark:text-slate-100 text-base font-poppins-bold">
-              Location Details
-            </Text>
-            <View className="flex-row items-center justify-between">
-              <Text className="text-xs font-poppins text-slate-500 dark:text-slate-400">
-                Tap the map to drop a pin.
-              </Text>
-              <TouchableOpacity
-                className="flex-row items-center gap-1"
-                activeOpacity={0.8}
-                onPress={handleGetCurrent}
-              >
-                <MaterialIcons name="my-location" size={16} color="#FF6600" />
-                <Text className="text-primary text-xs font-poppins-bold">
-                  Get Current
+          <View className="gap-2">
+            <View className="bg-white dark:bg-neutral-800 rounded-xl border border-slate-100 dark:border-neutral-700 p-4 gap-5">
+              <View className="flex-row items-center justify-between">
+                <Text className="text-xs font-poppins text-slate-500 dark:text-slate-400">
+                  Tap the map to drop a pin.
                 </Text>
-              </TouchableOpacity>
-            </View>
-
-            <View className="rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900">
-              <View pointerEvents="box-none">
-                <MapView
-                  style={{ height: 400, width: "100%" }}
-                  styleURL={
-                    isDark
-                      ? "mapbox://styles/mapbox/navigation-night-v1"
-                      : "mapbox://styles/mapbox/streets-v12"
-                  }
-                  onPress={(e) => {
-                    const coords = (e as any)?.geometry?.coordinates as [number, number] | undefined;
-                    if (!coords) return;
-                    const [lng, lat] = coords;
-                    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
-                    setPin(lat, lng);
-                  }}
-                  onTouchStart={() => setScrollEnabled(false)}
-                  onTouchEnd={() => setScrollEnabled(true)}
-                  onTouchCancel={() => setScrollEnabled(true)}
+                <TouchableOpacity
+                  className="flex-row items-center gap-1"
+                  activeOpacity={0.8}
+                  onPress={handleGetCurrent}
                 >
-                  <Camera
-                    zoomLevel={hasPin ? 14 : 12}
-                    centerCoordinate={hasPin ? [parsedLng, parsedLat] : [123.8854, 10.3157]}
-                  />
-                {hasPin && (
-                  <PointAnnotation
-                    id="storeLocation"
-                    coordinate={[parsedLng, parsedLat]}
-                  >
-                    <View className="w-4 h-4 bg-orange-500 rounded-full border-2 border-white" />
-                  </PointAnnotation>
-                )}
-
-                {radiusCircleFeature && (
-                  <Mapbox.ShapeSource id="storeRadius" shape={radiusCircleFeature}>
-                    <Mapbox.FillLayer
-                      id="storeRadiusFill"
-                      style={{
-                        fillColor: "#FF6600",
-                        fillOpacity: 0.14,
-                      }}
-                    />
-                  </Mapbox.ShapeSource>
-                )}
-                </MapView>
+                  <MaterialIcons name="my-location" size={16} color="#FF6600" />
+                  <Text className="text-primary text-xs font-poppins-bold">
+                    Get Current
+                  </Text>
+                </TouchableOpacity>
               </View>
-            </View>
 
-            <View className="flex flex-col gap-1.5">
-              <Text className="text-slate-700 dark:text-slate-300 text-sm font-poppins-medium px-1">
-                Landmark / Address <Text className="text-red-500 dark:text-red-400">*</Text>
-              </Text>
-              <TextInput
-                className="w-full rounded-xl bg-white dark:bg-slate-800/50 text-slate-900 dark:text-slate-100 px-4 py-3 font-poppins"
+              <View className="rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900">
+                <View pointerEvents="box-none">
+                  <MapView
+                    style={{ height: 400, width: "100%" }}
+                    styleURL={
+                      isDark
+                        ? "mapbox://styles/mapbox/navigation-night-v1"
+                        : "mapbox://styles/mapbox/streets-v12"
+                    }
+                    onPress={(e) => {
+                      const coords = (e as any)?.geometry?.coordinates as [number, number] | undefined;
+                      if (!coords) return;
+                      const [lng, lat] = coords;
+                      if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+                      setPin(lat, lng);
+                    }}
+                    onTouchStart={() => setScrollEnabled(false)}
+                    onTouchEnd={() => setScrollEnabled(true)}
+                    onTouchCancel={() => setScrollEnabled(true)}
+                  >
+                    <Camera
+                      zoomLevel={hasPin ? 14 : 12}
+                      centerCoordinate={hasPin ? [parsedLng, parsedLat] : [123.8854, 10.3157]}
+                    />
+                  {hasPin && (
+                    <PointAnnotation
+                      id="storeLocation"
+                      coordinate={[parsedLng, parsedLat]}
+                    >
+                      <View className="w-4 h-4 bg-orange-500 rounded-full border-2 border-white" />
+                    </PointAnnotation>
+                  )}
+
+                  {radiusCircleFeature && (
+                    <Mapbox.ShapeSource id="storeRadius" shape={radiusCircleFeature}>
+                      <Mapbox.FillLayer
+                        id="storeRadiusFill"
+                        style={{
+                          fillColor: "#FF6600",
+                          fillOpacity: 0.14,
+                        }}
+                      />
+                    </Mapbox.ShapeSource>
+                  )}
+                  </MapView>
+                </View>
+              </View>
+
+              <TextField
+                label="Landmark / Address"
+                required
                 placeholder="Enter full physical address"
-                placeholderTextColor="#94A3B8"
-                multiline
-                textAlignVertical="top"
                 value={address}
                 onChangeText={setAddress}
+                multiline
+                sanitize={(v) => v}
               />
-            </View>
 
             <View className="mt-2">
               <View className="flex-row justify-between items-center mb-2">
@@ -819,11 +776,12 @@ export default function CreateStore() {
                 <Text className="text-xs text-slate-500 font-poppins">500m</Text>
               </View>
             </View>
+            </View>
           </View>
         )}
       </ScrollView>
 
-      <View className="px-4 py-4">
+      <View className="px-4 py-4 bg-white">
         <View className="flex-row gap-3">
           {activeStep !== "store" && (
             <View className="flex-1">
