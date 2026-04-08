@@ -33,7 +33,7 @@ export default function UserStoreHeroCarousel({
     if (store.id && storeLogos[store.id.toString()]) {
       return storeLogos[store.id.toString()];
     }
-    // return require("../../../assets/images/rewards/coffee-shop.png");
+    // return require("../../assets/images/rewards/coffee-shop.png");
   };
 
   return (
