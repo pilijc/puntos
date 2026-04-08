@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { RefreshControl, useColorScheme, ActivityIndicator } from "react-native";
-import { View, Text, TouchableOpacity, ScrollView } from "@/tw";
+import { View, Text, TouchableOpacity, ScrollView, SafeAreaView } from "@/tw";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { getStoreStaff, deleteStoreStaff } from "@/services/store-manager/staff-service";
@@ -111,7 +111,7 @@ export default function ViewStaff() {
   };
 
   return (
-    <View className="flex-1 bg-backgroundMuted dark:bg-neutral-900">
+    <SafeAreaView edges={["top"]} className="flex-1 bg-backgroundMuted dark:bg-neutral-900">
       <Modal
         visible={!!modal}
         onClose={() => setModal(null)}
@@ -123,7 +123,7 @@ export default function ViewStaff() {
         title="Front desk staff"
         description="Frontdesk staff assigned to this store"
         paddingTop={insets.top + 8}
-        onBackPress={() => router.replace({ pathname: "/(store_manager)/staff", params: { storeId } })}
+        onBackPress={() => router.replace({ pathname: "/(store_manager)/view-store/[id]", params: { id: storeId } })}
       />
 
       <ScrollView
@@ -250,6 +250,6 @@ export default function ViewStaff() {
           </View>
         )}
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 }

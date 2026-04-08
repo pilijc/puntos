@@ -1,4 +1,5 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { useFocusEffect } from "expo-router";
 import { AdminStoreRow } from "@/services/store-service";
 import { useSuperAdminStoresStore } from "@/store/super-admin/super-admin-stores-store";
@@ -6,20 +7,22 @@ import { useSuperAdminStoresStore } from "@/store/super-admin/super-admin-stores
 export const FILTERS = ["All", "pending_review", "active", "inactive"] as const;
 export type Filter = typeof FILTERS[number];
 
-export const FILTER_LABELS: Record<Filter, string> = {
-	All: "All",
-	pending_review: "Pending",
-	active: "Active",
-	inactive: "Inactive",
-};
-
 export function useSuperAdminStores() {
+  const { t: translate } = useTranslation();
   const storeState = useSuperAdminStoresStore();
   const { stores, fetchStores, approveStore, rejectStore } = storeState;
+
+  const FILTER_LABELS: Record<Filter, string> = useMemo(() => ({
+    "All": translate("superAdmin.stores.filter.all"),
+    "pending_review": translate("superAdmin.stores.filter.pending"),
+    "active": translate("superAdmin.stores.filter.active"),
+    "inactive": translate("superAdmin.stores.filter.inactive"),
+  }), [translate]);
   
   const [activeFilter, setActiveFilter] = useState<Filter>("pending_review");
   const [refreshing, setRefreshing] = useState(false);
   const [selectedStore, setSelectedStore] = useState<AdminStoreRow | null>(null);
+  const [previewStore, setPreviewStore] = useState<AdminStoreRow | null>(null);
   const [confirmModal, setConfirmModal] = useState<{
     title: string;
     message: string;
@@ -38,18 +41,19 @@ export function useSuperAdminStores() {
 
   const handleApprove = (store: AdminStoreRow) => {
     setConfirmModal({
-      title: "Approve Store",
-      message: `Approve "${store.name}"? It will go live immediately.`,
-      label: "Approve",
+      title: translate("superAdmin.stores.modal.approveTitle"),
+      message: translate("superAdmin.stores.modal.approveMessage", { name: store.name }),
+      label: translate("superAdmin.stores.modal.approveAction"),
       variant: "primary",
       onConfirm: async () => {
         setConfirmModal(null);
         const success = await approveStore(store);
         if (success) {
+          setPreviewStore(null);
           useSuperAdminStoresStore.setState({
             errorModal: {
-              title: "Store Approved",
-              message: `"${store.name}" is now active and can begin operations.`,
+              title: translate("superAdmin.stores.modal.successTitle"),
+              message: translate("superAdmin.stores.modal.successMessage", { name: store.name }),
               type: "success"
             }
           });
@@ -60,9 +64,9 @@ export function useSuperAdminStores() {
 
   const handleReject = (store: AdminStoreRow) => {
     setConfirmModal({
-      title: "Reject Store",
-      message: `Reject "${store.name}"? The store-manager will need to resubmit.`,
-      label: "Reject",
+      title: translate("superAdmin.stores.modal.rejectTitle"),
+      message: translate("superAdmin.stores.modal.rejectMessage", { name: store.name }),
+      label: translate("superAdmin.stores.modal.rejectAction"),
       variant: "danger",
       onConfirm: async () => {
         setConfirmModal(null);
@@ -70,8 +74,8 @@ export function useSuperAdminStores() {
         if (success) {
           useSuperAdminStoresStore.setState({
             errorModal: {
-              title: "Application Rejected",
-              message: `The application for "${store.name}" has been rejected.`,
+              title: translate("superAdmin.stores.modal.errorTitle"),
+              message: translate("superAdmin.stores.modal.errorMessage", { name: store.name }),
               type: "error"
             }
           });
@@ -101,6 +105,8 @@ export function useSuperAdminStores() {
     refreshing,
     selectedStore,
     setSelectedStore,
+    previewStore,
+    setPreviewStore,
     confirmModal,
     setConfirmModal,
     onRefresh,
@@ -109,5 +115,6 @@ export function useSuperAdminStores() {
     getEffectiveStatus,
     filtered,
     pendingCount,
+    FILTER_LABELS,
   };
 }

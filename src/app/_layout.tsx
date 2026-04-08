@@ -10,6 +10,7 @@ import { useEffect, useState } from "react";
 import { Animated, Easing, StatusBar, StyleSheet, View, Alert } from "react-native";
 import { supabase } from "@/supabase/supabase";
 import React from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useAuthListener } from "@/hooks/auth-listener";
 import { useAnimatedStyle, useSharedValue, withRepeat, withSequence, withTiming } from "react-native-reanimated";
 import { Image } from "@/tw";
@@ -18,7 +19,6 @@ import { checkIfAccountDeletedService, checkIfAccountBlockedService, AccountDele
 import { Modal } from "@/components/modal";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { useAuthStore } from "@/store/auth-store";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { OneSignal } from "react-native-onesignal";
 import { useStamps } from "@/hooks/use-stamps";
 

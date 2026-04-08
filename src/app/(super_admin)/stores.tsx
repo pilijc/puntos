@@ -4,19 +4,21 @@ import {
 	RefreshControl,
 } from "react-native";
 import { View, Text, TouchableOpacity } from "@/tw";
+import { useTranslation } from "react-i18next";
 import { ScreenWrapper } from "@/components/ui/screen-wrapper";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { AdminStoreCard, AdminStoreSkeletonCard } from "@/components/users/stores/admin-store-card";
 import { AdminStoreDetails } from "@/components/users/stores/admin-store-details";
+import { AdminStorePreviewModal } from "@/components/users/stores/admin-store-preview-modal";
 import { Modal } from "@/components/modal";
 import {
 	useSuperAdminStores,
 	FILTERS,
-	FILTER_LABELS,
 } from "@/hooks/super-admin/use-super-admin-stores";
 
 // ── Screen ──────────────────────────────────────────────────────────────────
 export default function SuperAdminStores() {
+	const { t: translate } = useTranslation();
 	const {
 		stores,
 		loading,
@@ -28,6 +30,8 @@ export default function SuperAdminStores() {
 		refreshing,
 		selectedStore,
 		setSelectedStore,
+		previewStore,
+		setPreviewStore,
 		confirmModal,
 		setConfirmModal,
 		onRefresh,
@@ -36,6 +40,7 @@ export default function SuperAdminStores() {
 		getEffectiveStatus,
 		filtered,
 		pendingCount,
+		FILTER_LABELS,
 	} = useSuperAdminStores();
 
 	if (selectedStore) {
@@ -63,7 +68,7 @@ export default function SuperAdminStores() {
 				<View className="flex-row items-center gap-2 py-1">
 					<MaterialIcons name="storefront" size={22} color="black" className="mt-1" />
 					<Text className="text-2xl font-poppins-bold text-slate-900 dark:text-darkTextPrimary flex-1">
-						Store Approvals
+						{translate("superAdmin.stores.title")}
 					</Text>
 				</View>
 			</View>
@@ -118,7 +123,7 @@ export default function SuperAdminStores() {
 			<View className="flex-1">
 				<ScrollView
 					className="flex-1"
-					contentContainerStyle={{ padding: 16, paddingBottom: 110 }}
+					contentContainerStyle={{ padding: 16, paddingBottom: filtered.length === 0 ? 16 : 40 }}
 					showsVerticalScrollIndicator={false}
 					refreshControl={
 						<RefreshControl
@@ -150,7 +155,7 @@ export default function SuperAdminStores() {
 						store={store}
 						onApprove={handleApprove}
 						onReject={handleReject}
-						onSelect={(s) => setSelectedStore(s)}
+						onSelect={(s) => setPreviewStore(s)}
 					/>
 				))}
 
@@ -158,15 +163,30 @@ export default function SuperAdminStores() {
 						<View className="items-center pt-16 gap-3">
 							<MaterialIcons name="storefront" size={52} color="#CBD5E1" />
 							<Text className="text-base font-poppins-bold text-slate-600 dark:text-darkTextSecondary">
-								{activeFilter === "All" ? "No stores yet" : `No ${FILTER_LABELS[activeFilter]} stores`}
+								{activeFilter === "All" 
+									? translate("superAdmin.stores.noStores") 
+									: translate("superAdmin.stores.noFilteredStores", { status: FILTER_LABELS[activeFilter] })}
 							</Text>
 							<Text className="text-sm font-poppins text-slate-400 text-center px-8">
-								Pull down to refresh or try another category.
+								{translate("superAdmin.stores.pullToRefresh")}
 							</Text>
 						</View>
 					)}
 				</ScrollView>
 			</View>
+
+			<AdminStorePreviewModal
+				visible={!!previewStore}
+				store={previewStore}
+				onClose={() => setPreviewStore(null)}
+				onViewFullDetails={() => {
+					setSelectedStore(previewStore);
+					setPreviewStore(null);
+				}}
+				onApprove={() => {
+					if (previewStore) handleApprove(previewStore);
+				}}
+			/>
 
 			<Modal
 				visible={!!errorModal}
@@ -175,7 +195,7 @@ export default function SuperAdminStores() {
 				message={errorModal?.message ?? ""}
 				buttons={[
 					{
-						label: "OK",
+						label: translate("label.ok"),
 						onPress: dismissErrorModal,
 						variant: errorModal?.type === "success" ? "success" : "primary",
 					},
@@ -191,12 +211,12 @@ export default function SuperAdminStores() {
 				message={confirmModal?.message ?? ""}
 				buttons={[
 					{
-						label: "Cancel",
+						label: translate("label.cancel"),
 						onPress: () => setConfirmModal(null),
 						variant: "secondary",
 					},
 					{
-						label: confirmModal?.label ?? "Confirm",
+						label: confirmModal?.label ?? translate("label.confirm"),
 						onPress: confirmModal?.onConfirm ?? (() => {}),
 						variant: confirmModal?.variant ?? "primary",
 					},

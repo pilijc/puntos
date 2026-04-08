@@ -50,14 +50,12 @@ export const useSuperAdminStoresStore = create<SuperAdminStoresState>((set, get)
 
     approveStore: async (store: AdminStoreRow) => {
         try {
-            await updateAdminStoreStatus(store.id, "active", true);
+            const updatedStore = await updateAdminStoreStatus(store.id, "active", true);
             
-            // Optimistic update
+            // Replace the local store with the real updated DB row
             set((state) => ({
                 stores: state.stores.map((s) => 
-                    s.id === store.id 
-                        ? { ...s, status: "active", is_active: true } 
-                        : s
+                    s.id === store.id ? updatedStore : s
                 )
             }));
             return true;

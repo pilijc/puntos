@@ -22,21 +22,9 @@ import { TextField } from "@/components/text-field";
 import { getStoreDetail, updateStoreDetail, uploadDetailImage } from "@/services/store-manager/detail-service";
 import { useDetailStore, useDetailViewStore } from "@/store/store-manager/detail-store";
 import { store_types_options, aspect_ratios, type PickImageType } from "@/type/store-manager/store";
+import { dateToTimeString, timeStringToDate } from "@/utils/date-helpers";
 
 Mapbox.setAccessToken(process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN!);
-
-const MAX_PICTURES = 3;
-
-function timeStringToDate(s: string, fallbackHour = 9, fallbackMin = 0): Date {
-  const match = s.trim().match(/^(\d{1,2}):(\d{2})$/);
-  if (!match) return new Date(2000, 0, 1, fallbackHour, fallbackMin);
-  return new Date(2000, 0, 1, Math.min(23, parseInt(match[1])), Math.min(59, parseInt(match[2])));
-}
-
-function dateToTimeString(d: Date): string {
-  return `${d.getHours().toString().padStart(2, "0")}:${d.getMinutes().toString().padStart(2, "0")}`;
-}
-
 
 export default function EditDetails() {
   const router = useRouter();

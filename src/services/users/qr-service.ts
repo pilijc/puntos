@@ -1,13 +1,10 @@
 import { supabase } from "@/supabase/supabase";
 
 import { QRCodeState, QRTransaction } from "@/type/qr";
-import { VoucherTransaction, listenToVoucherTransaction } from "@/services/users/voucher-service";
+import {listenToVoucherTransaction } from "@/services/users/voucher-service";
 import { addStamp } from "@/services/stamp-service";
-
-
-//import { store } from "expo-router/build/global-state/router-store";
-
-
+import { VoucherTransaction } from "@/type/user/voucher";
+import {FinalCalculations} from "@/services/frontdesk/percentage-service";
 
 export async function getCurrentUser() {
 
@@ -85,44 +82,9 @@ export async function createQRTransaction(
     throw new Error('Failed to get store information for staff member');
   }
 
-  const storeId = staffData.store_id;
-
-  // Get points configuration for this store
-  console.log(`QR Service: Looking up points configuration for store_id: ${storeId}`);
-  console.log('QR Service: Store ID type:', typeof storeId, 'value:', storeId);
-  
-  // Debug: Check what's in store_qr_rewards table
-  const { data: allStoreRewards, error: allRewardsError } = await supabase
-    .from('store_qr')
-    .select('*')
-    .limit(10);
-  console.log('QR Service: All store_qr_rewards data:', allStoreRewards);
-  console.log('QR Service: All store_qr_rewards error:', allRewardsError);
-  
-  const { data: pointsData, error: pointsError } = await supabase
-    .from('store_qr')
-    .select('percentage')
-    .eq('store_id', storeId)
-    .single();
-
-  console.log('QR Service: Raw database response:');
-  console.log('- pointsData:', JSON.stringify(pointsData, null, 2));
-  console.log('- pointsError:', JSON.stringify(pointsError, null, 2));
-  console.log('- pointsData?.percentage:', pointsData?.percentage);
-  console.log('- typeof pointsData?.percentage:', typeof pointsData?.percentage);
-
-  // default 10% if no configuration is found
-  const percentage = pointsData?.percentage || 10;
-  
-  if (pointsError) {
-    console.warn(`QR Service: No points configuration found for store ${storeId}, using default 10%. Error:`, pointsError);
-  } else {
-    console.log(`QR Service: Using percentage ${percentage}% for store ${storeId}`);
-  }
-
-  //Calculate points for purchase amount and percentage
-  const pointsToAward = Math.ceil(purchaseAmount * (percentage / 100));
-  console.log(`QR Service: Calculated points: ${pointsToAward} (amount: ${purchaseAmount}, percentage: ${percentage}%)`);
+    const storeId = staffData.store_id;
+    const pointResult = await FinalCalculations(storeId, purchaseAmount);
+    const pointsEarned = pointResult.points;
 
   //Create purchase record first
   const { data: purchaseData, error: purchaseError } = await supabase
@@ -146,19 +108,17 @@ export async function createQRTransaction(
   const { error: updatePurchaseError } = await supabase
     .from('purchases')
     .update({
-      points_earned: pointsToAward,
+      points_earned: pointsEarned,
     })
     .eq('id', purchaseData.id);
 
   if (updatePurchaseError) {
-    console.error('Failed to update purchase record with points earned:', updatePurchaseError);
-  }
+   }
 
   // Decrease the stored_amount in points table
-   
 
   // Award a stamp if the store has the program enabled (do this BEFORE QR transaction so real-time listeners fetching stamps get the latest data)
-  await addStamp(userId, storeId);
+  await addStamp(userId, storeId, purchaseData.id);
 
   // Create the QR transaction
   const { data, error } = await supabase
@@ -167,7 +127,7 @@ export async function createQRTransaction(
       {
         user_id: userId,
         store_staff_id: storeStaffId,
-        points_earned: pointsToAward,
+        points_earned: pointsEarned,
         store_id: storeId,
         created_at: new Date().toISOString(),
       },
@@ -190,26 +150,19 @@ export function listenToQRTransaction(userId: string, onScanned: (transaction: Q
       table: 'qr_transactions',
       filter: `user_id=eq.${userId}`   
     }, (payload) => {
-      console.log("Realtime triggered:", payload);
-      const newRow = payload.new as QRTransaction;
+       const newRow = payload.new as QRTransaction;
       onScanned(newRow);
     })
     .subscribe((status) => {
-      console.log(`Customer QR listener status for user ${userId}:`, status);
-      if (status === 'SUBSCRIBED') {
-        //console.log(`Successfully subscribed to QR transactions for user ${userId}`);
+       if (status === 'SUBSCRIBED') {
       } else if (status === 'TIMED_OUT') {
-        //console.error(`QR listener subscription timed out for user ${userId}:`, status);
         // Retry connection after timeout
         setTimeout(() => {
-          //console.log(`Retrying QR listener connection for user ${userId}`);
           channel.subscribe();
         }, 3000);
       } else if (status === 'CLOSED') {
-        //console.log(`QR listener closed for user ${userId} - this is normal during cleanup`);
-      } else {
-        //console.warn(`QR listener unexpected status for user ${userId}:`, status);
-      }
+       } else {
+       }
     });
 
   return channel;
@@ -218,14 +171,12 @@ export function listenToQRTransaction(userId: string, onScanned: (transaction: Q
 export function setupQRListeners(userId: string, onQRTransaction: (transaction: QRTransaction) => void, onVoucherTransaction: (transaction: VoucherTransaction) => void) {
   // Listen to QR transactions
   const qrChannel = listenToQRTransaction(userId, (transaction) => {
-    console.log('Customer side: QR transaction received!', transaction);
-    onQRTransaction(transaction);
+     onQRTransaction(transaction);
   });
   
   // Listen to voucher transactions
   const voucherChannel = listenToVoucherTransaction(userId, (transaction) => {
-    console.log('Customer side: Voucher transaction received!', transaction);
-    onVoucherTransaction(transaction);
+     onVoucherTransaction(transaction);
   });
 
   return { qrChannel, voucherChannel };
@@ -234,12 +185,10 @@ export function setupQRListeners(userId: string, onQRTransaction: (transaction: 
 export function cleanupQRChannels(channels: { qrChannel: any; voucherChannel: any } | null) {
   if (channels?.qrChannel) {
     supabase.removeChannel(channels.qrChannel);
-    console.log('QR channel cleaned up');
-  }
+   }
   if (channels?.voucherChannel) {
     supabase.removeChannel(channels.voucherChannel);
-    console.log('Voucher channel cleaned up');
-  }
+   }
 }
 
 //HISTORY SIDE
@@ -259,16 +208,14 @@ export async function getUserTransactionHistory(userId: string): Promise<any[]> 
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('Error fetching transaction history:', error);
-      return [];
+       return [];
     }
 
     // Get store names separately (manual join)
     const storeIds = [...new Set(transactions.map(t => t.store_id).filter(id => id != null))];
     
     if (storeIds.length === 0) {
-      console.log('No store IDs found in transactions');
-      // Return transactions with unknown store names
+       // Return transactions with unknown store names
       return transactions.map((transaction: any) => ({
         id: transaction.id,
         section: formatDateSection(transaction.created_at),
@@ -289,8 +236,7 @@ export async function getUserTransactionHistory(userId: string): Promise<any[]> 
       .in('id', storeIds);
 
     if (storesError) {
-      console.error('Error fetching store names:', storesError);
-    }
+     }
 
     // Create store lookup map
     const storeMap = (stores || []).reduce((acc, store) => {
@@ -312,8 +258,7 @@ export async function getUserTransactionHistory(userId: string): Promise<any[]> 
       transactionType: 'qr', // Add identifier for QR transactions
     }));
   } catch (error) {
-    console.error('Error in getUserTransactionHistory:', error);
-    return [];
+     return [];
   }
 }
 

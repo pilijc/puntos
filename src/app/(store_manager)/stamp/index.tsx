@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, ScrollView, useColorScheme } from "react-native";
-import { View, Text, TouchableOpacity } from "@/tw";
+import { View, Text, TouchableOpacity, SafeAreaView } from "@/tw";
 import { Modal } from "@/components/modal";
 import { useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -153,7 +153,7 @@ export default function ViewStamp() {
   }, []);
 
   return (
-    <View className="flex-1 bg-backgroundMuted dark:bg-[#111921]">
+    <SafeAreaView edges={["top"]} className="flex-1 bg-backgroundMuted dark:bg-[#111921]">
       <Modal
         visible={!!modal}
         onClose={() => setModal(null)}
@@ -192,7 +192,7 @@ export default function ViewStamp() {
               </Text>
               {count > 0 && (
                 <View
-                  className={`rounded-full px-1.5 min-w-[18px] items-center ${isActive ? "bg-primary/10" : "bg-neutral-100 dark:bg-neutral-700"}`}
+                  className="rounded-full px-1.5 min-w-[18px] items-center bg-white"
                 >
                   <Text
                     className={`text-[9px] font-poppins-bold ${isActive ? "text-primary" : "text-neutral-500 dark:text-neutral-400"}`}
@@ -285,6 +285,6 @@ export default function ViewStamp() {
           <Plus size={26} color="#fff" />
         </TouchableOpacity>
       )}
-    </View>
+    </SafeAreaView>
   );
 }

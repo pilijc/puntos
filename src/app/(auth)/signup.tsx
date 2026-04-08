@@ -13,13 +13,14 @@ import { useAuthStore } from "../../store/auth-store";
 import signUpService, { GoogleSignInCancelledError } from "../../services/auth-service";
 import { signUpWithGoogleService, isEmailTaken } from "@/services/auth-service";
 import { NameStep, EmailStep, PasswordStep, TermsStep, RoleStep, StepHeader } from "../../components/stepper";
-import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 import TranslateButton from "@/components/ui/translate-button";
+import { AppHeader } from "@/components/header";
+import { Button } from "@/components/button";
 
 export default function SignUp() {
   const { t: translate } = useTranslation();
-  const [currentStep, setCurrentStep] = useState(1);
+  const [currentStep, setCurrentStep] = useState(0);
   const totalSteps = 4;
   const [loading, setLoading] = useState(false);
   const [loadingGoogle, setLoadingGoogle] = useState(false);
@@ -148,31 +149,31 @@ export default function SignUp() {
   };
 
   const handleNext = async () => {
+    if (currentStep === 0) {
+      setCurrentStep(1);
+      return;
+    }
+
     const isValid = await validateStep();
-    console.log("Validation result:", isValid);
     if (!isValid) return;
 
     if (currentStep < totalSteps) {
-      console.log("Moving to step:", currentStep + 1);
       setCurrentStep(currentStep + 1);
     } else {
-      console.log("Final step reached, calling signup");
-      console.log("Current role value:", role);
       if (role === 'manager') {
-        console.log("Calling handleStoreManagerSignup");
         handleStoreManagerSignup();
       } else {
-        console.log("Calling handleSignup for regular user");
         handleSignup();
       }
     }
-
   };
 
   const handleBack = () => {
-    if (currentStep > 1) {
-      setCurrentStep(currentStep - 1);
+    if (currentStep === 0) {
+      router.replace("/(onboarding)/welcome");
+      return;
     }
+    setCurrentStep(currentStep - 1);
   };
 
   const handleSignup = async () => {
@@ -322,26 +323,12 @@ export default function SignUp() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-background dark:bg-darkBackground">
-      <View className="flex-row items-center justify-center shadow-xs p-4 bg-background dark:bg-darkBackground">
-        <TouchableOpacity
-          onPress={
-            currentStep === 1
-              ? () => router.replace("/(onboarding)/welcome")
-              : handleBack
-          }
-          hitSlop={10}
-        >
-          <Ionicons name="chevron-back" size={18} color="#9ca3af" />
-        </TouchableOpacity>
-        <View className="flex-1 items-center ml-10">
-          <Text className="text-xl font-poppins-bold text-neutral-900 dark:text-darkTextPrimary">
-            {role === 'manager' ? translate("onboarding.signup.titleManager") : translate("onboarding.signup.title")}
-          </Text>
-        </View>
-        <TranslateButton />
-      </View>
-
+    <SafeAreaView className="flex-1 bg-white dark:bg-darkBackground">
+      <AppHeader
+        title={role === 'manager' ? translate("onboarding.signup.titleManager") : translate("onboarding.signup.title")}
+        onBackPress={handleBack}
+        rightIcon={<TranslateButton />}
+      />
       <View className="flex-1 justify-start p-6">
         <KeyboardAvoidingView
           behavior={Platform.OS === "android" ? "padding" : "height"}
@@ -351,60 +338,56 @@ export default function SignUp() {
             contentContainerStyle={{ flexGrow: 1 }}
             keyboardShouldPersistTaps="handled"
           >
-            <View className="flex-1 gap-y-6">
-              <View className="w-full">
-                <StepHeader currentStep={currentStep} />
-
-                {currentStep === 1 && (
-                  <NameStep
-                    value={name}
-                    onChange={setName}
-                    error={errors.name}
-                  />
-                )}
-                {currentStep === 2 && (
-                  <EmailStep
-                    value={email}
-                    onChange={setEmail}
-                    error={errors.email}
-                  />
-                )}
-                {currentStep === 3 && (
-                  <PasswordStep
-                    password={password}
-                    confirmPassword={confirmPassword}
-                    showPassword={showPassword}
-                    showConfirmPassword={showConfirmPassword}
-                    onPasswordChange={setPassword}
-                    onConfirmPasswordChange={setConfirmPassword}
-                    onTogglePassword={() => setShowPassword(!showPassword)}
-                    onToggleConfirmPassword={() =>
-                      setShowConfirmPassword(!showConfirmPassword)
-                    }
-                    errors={errors}
-                  />
-                )}
-                {currentStep === 4 && (
-                  <TermsStep
-                    accepted={acceptedTerms}
-                    onToggle={() => setAcceptedTerms(!acceptedTerms)}
-                    error={errors.terms}
-                  />
+            <View className="flex-1 gap-y-4">
+              <View>
+                {currentStep === 0 ? (
+                  <RoleStep value={role} onChange={setRole} error={errors.role} />
+                ) : (
+                  <>
+                    <StepHeader currentStep={currentStep} />
+                    {currentStep === 1 && (
+                      <NameStep value={name} onChange={setName} error={errors.name} />
+                    )}
+                    {currentStep === 2 && (
+                      <EmailStep value={email} onChange={setEmail} error={errors.email} />
+                    )}
+                    {currentStep === 3 && (
+                      <PasswordStep
+                        password={password}
+                        confirmPassword={confirmPassword}
+                        showPassword={showPassword}
+                        setShowPassword={setShowPassword}
+                        setShowConfirmPassword={setShowConfirmPassword}
+                        showConfirmPassword={showConfirmPassword}
+                        onPasswordChange={setPassword}
+                        onConfirmPasswordChange={setConfirmPassword}
+                        onTogglePassword={() => setShowPassword(!showPassword)}
+                        onToggleConfirmPassword={() => setShowConfirmPassword(!showConfirmPassword)}
+                        errors={errors}
+                      />
+                    )}
+                    {currentStep === 4 && (
+                      <TermsStep
+                        accepted={acceptedTerms}
+                        onToggle={() => setAcceptedTerms(!acceptedTerms)}
+                        error={errors.terms}
+                      />
+                    )}
+                  </>
                 )}
               </View>
 
-              <View className="mt-2 gap-y-4 w-full">
-                <TouchableOpacity
+              <View className="gap-y-4 w-full">
+                <Button
+                  label={loading ? translate("onboarding.signup.creating") : (currentStep === totalSteps ? translate("onboarding.signup.button") : translate("onboarding.signup.continue"))}
                   onPress={handleNext}
                   disabled={loading}
-                  className={`bg-primary py-4 rounded-xl items-center ${loading ? 'opacity-50' : ''}`}
-                >
-                  <Text className="text-white text-base font-poppins-semibold">
-                    {loading ? translate("onboarding.signup.creating") : (currentStep === totalSteps ? translate("onboarding.signup.button") : translate("onboarding.signup.continue"))}
-                  </Text>
-                </TouchableOpacity>
-
-                {currentStep === 1 && (
+                  loading={loading}
+                  fullWidth={true}
+                  authButton={true}
+                />
+                
+                {currentStep <= 1 && (
                   <>
                     <View className="flex-row items-center gap-x-4">
                       <View className="flex-1 h-px bg-neutral-200 dark:bg-darkBorder" />
@@ -414,58 +397,24 @@ export default function SignUp() {
                       <View className="flex-1 h-px bg-neutral-200 dark:bg-darkBorder" />
                     </View>
 
-                    <TouchableOpacity
+                    <Button
+                      label={translate("onboarding.signup.google")}
                       onPress={handleSignupWithGoogle}
-                      className="bg-transparent rounded-xl p-4 border border-neutral-200 dark:border-darkBorder flex-row items-center justify-center gap-x-3"
-                    >
-                      <Image
-                        source={require("../../assets/images/google-icon.png")}
-                        className="w-5 h-5"
-                      />
-                      <Text className="font-poppins-medium text-neutral-700 dark:text-darkTextSecondary">
-                        {translate("onboarding.signup.google")}
-                      </Text>
-                    </TouchableOpacity>
-
-                    <View className="flex-row justify-center mt-2">
-                      <Text className="font-poppins text-neutral-600 dark:text-darkTextSecondary">
-                        {translate("onboarding.signup.ownerPrompt")}
-                      </Text>
-
-                      <TouchableOpacity
-                        onPress={() => {
-                          console.log("Store Owner button clicked, setting role to manager");
-                          setRole("manager");
-                        }}
-                        className="flex-row items-center ml-1"
-                      >
-                        <Text
-                          className={`font-poppins-semibold ${role === "manager" ? "text-green-600" : "text-primary"
-                            }`}
-                        >
-                          {translate("onboarding.signup.button")}
-                        </Text>
-
-                        {role === "manager" && (
-                          <Ionicons
-                            name="checkmark-circle"
-                            size={16}
-                            color="#22C55E"
-                            style={{ marginLeft: 4 }}
-                          />
-                        )}
-                      </TouchableOpacity>
-                    </View>
-
+                      variant="secondary"
+                      fullWidth={true}
+                      authButton={true}
+                      leftImage={require("../../assets/images/google-icon.png")}
+                      leftImageSize={18}
+                    />
                   </>
                 )}
 
                 <View className="flex-row justify-center">
-                  <Text className="font-poppins text-neutral-600 dark:text-darkTextSecondary">
+                  <Text className="font-poppins text-neutral-600 dark:text-darkTextSecondary text-sm">
                     {translate("onboarding.signup.alreadyHaveAccount")}
                   </Text>
                   <TouchableOpacity onPress={() => router.replace("/login")}>
-                    <Text className="ml-1 font-poppins-semibold text-primary">
+                    <Text className="ml-1 font-poppins-semibold text-primary text-sm">
                       {translate("onboarding.signup.login")}
                     </Text>
                   </TouchableOpacity>

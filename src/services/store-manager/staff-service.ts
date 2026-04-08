@@ -100,6 +100,7 @@ export const createStoreStaff = async ( storeId: string, name: string, email: st
 				role_id: roleData.id,
 				is_active: true,
 				created_at: new Date().toISOString(),
+				password_updated_at: null,
 			})
 			.select()
 			.single();

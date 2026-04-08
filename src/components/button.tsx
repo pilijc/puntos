@@ -1,21 +1,24 @@
 import React from "react";
 import { ActivityIndicator, Keyboard } from "react-native";
-import { View, Text, TouchableOpacity } from "@/tw";
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { Text, TouchableOpacity } from "@/tw";
+import * as LucideIcons from "lucide-react-native";
+import { Image as ExpoImage, type ImageSource } from "expo-image";
 
 type ButtonVariant = "primary" | "success" | "danger" | "secondary" | "ghost";
-
-type IconName = React.ComponentProps<typeof MaterialIcons>["name"];
+type IconName = keyof typeof LucideIcons;
 
 interface ButtonProps {
   label: string;
   onPress: () => void;
   variant?: ButtonVariant;
   icon?: IconName;
+  leftImage?: ImageSource;
+  leftImageSize?: number;
   fullWidth?: boolean;
   loading?: boolean;
   disabled?: boolean;
   keyboardDismiss?: boolean;
+  authButton?: boolean;
 }
 
 const config: Record<
@@ -64,10 +67,13 @@ export function Button({
   onPress,
   variant = "primary",
   icon,
+  leftImage,
+  leftImageSize = 18,
   fullWidth = false,
   loading = false,
   disabled = false,
   keyboardDismiss = false,
+  authButton = false,
 }: ButtonProps) {
   let { container, text, iconColor, spinnerColor } = config[variant];
 
@@ -75,19 +81,39 @@ export function Button({
     container = container.replace("bg-primary", "bg-primary/50");
   }
 
+  if (authButton && variant === "secondary") {
+    container = "bg-transparent border border-slate-200 dark:border-slate-700";
+  }
+
+  const LucideIcon = icon ? (LucideIcons[icon] as React.ComponentType<{ size: number; color: string }>) : null;
+  const sizeClass = authButton
+    ? fullWidth
+      ? "w-full py-4 px-10"
+      : "w-fit py-3.5 px-10"
+    : fullWidth
+      ? "w-full py-3 px-10"
+      : "w-fit py-2.5 px-10";
+
   return (
     <TouchableOpacity
       activeOpacity={0.8}
       disabled={disabled || loading}
       onPress={onPress}
       onPressIn={keyboardDismiss ? () => { Keyboard.dismiss(); onPress(); } : undefined}
-      className={`${fullWidth ? "w-full" : "w-fit"} rounded-xl ${container} py-3 px-6 items-center flex-row justify-center gap-x-2`}
+      className={`${sizeClass} rounded-xl ${container} items-center flex-row justify-center gap-x-2`}
     >
       {loading ? (
         <ActivityIndicator size="small" color={spinnerColor} />
       ) : (
         <>
-          {icon && <MaterialIcons name={icon} size={16} color={iconColor} />}
+          {leftImage && (
+            <ExpoImage
+              source={leftImage}
+              style={{ width: leftImageSize, height: leftImageSize }}
+              contentFit="contain"
+            />
+          )}
+          {LucideIcon && <LucideIcon size={16} color={iconColor} />}
           <Text className={`text-sm font-poppins-semibold ${text}`}>{label}</Text>
         </>
       )}

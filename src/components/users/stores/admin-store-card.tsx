@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { ScrollView, TouchableOpacity as RNTouchableOpacity } from "react-native";
 import { View, Text, TouchableOpacity } from "@/tw";
+import { useTranslation } from "react-i18next";
 import { Image } from "expo-image";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { Modal } from "@/components/modal";
@@ -18,6 +19,7 @@ export function AdminStoreCard({
 	onReject: (store: AdminStoreRow) => void;
 	onSelect: (store: AdminStoreRow) => void;
 }) {
+	const { t: translate } = useTranslation();
 	const getEffectiveStatus = (s: AdminStoreRow) => {
 		if (s.status === "pending_review" || !s.status) return "pending_review";
 		if (s.status === "inactive") return "inactive";
@@ -59,7 +61,9 @@ export function AdminStoreCard({
 						</View>
 						<View className="flex-row items-center gap-1">
 							<MaterialIcons name="location-on" size={12} color="#94A3B8" />
-							<Text className="text-xs font-poppins text-slate-400 dark:text-darkTextMuted flex-1" numberOfLines={1}>{store.address ?? "No address provided"}</Text>
+							<Text className="text-xs font-poppins text-slate-400 dark:text-darkTextMuted flex-1" numberOfLines={1}>
+								{store.address ?? translate("superAdmin.stores.details.noAddress")}
+							</Text>
 						</View>
 						{store.type ? (
 							<View className="flex-row items-center gap-1">
@@ -73,7 +77,7 @@ export function AdminStoreCard({
 				{/* ── Visual Indicator for Tap ── */}
 				<View className="px-4 py-3 border-t border-slate-100 dark:border-darkBorder bg-slate-50 dark:bg-darkBackgroundMuted flex-row justify-between items-center">
 					<Text className="text-xs font-poppins-medium text-slate-500 dark:text-darkTextSecondary">
-						Tap to view details
+						{translate("superAdmin.stores.details.tapToView")}
 					</Text>
 					<MaterialIcons name="chevron-right" size={18} color="#94A3B8" />
 				</View>
