@@ -57,7 +57,7 @@ export function TextField({
             paddingHorizontal: 12,
             textAlignVertical: multiline ? "top" : "center",
             includeFontPadding: false,
-          paddingTop: multiline ? 12 : 0,
+            paddingTop: multiline ? 12 : 0,
             fontSize: 13,
           }}
           keyboardType={keyboardType}
