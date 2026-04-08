@@ -15,7 +15,7 @@
         "viewAll": "すべて表示",
         "somethingWentWrong": "問題が発生しました。もう一度お試しください。",
         "poweredBy": "PUNTOS 提供",
-        "termsAgreement": "続行することで、<tos>利用規約</tos>および<privacy>プライバシーポリシー</privacy>に同意したものとみなされます"
+        "termsAgreement": "続行することで、以下に同意したものとみなされます。\n<legal>利用規約およびプライバシーポリシー</legal>"
     },
     "onboarding": {
         "welcome": "<brand>{{appName}}</brand>へようこそ",
@@ -238,7 +238,8 @@
             },
             "buttons": {
                 "stamp": "スタンプ",
-                "stamped": "獲得済"
+                "stamped": "獲得済",
+                "claimRewards": "報酬を獲得"
             },
             "messages": {
                 "signInToStamp": "スタンプを押すにはログインが必要です。",

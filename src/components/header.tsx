@@ -25,7 +25,7 @@ export function AppHeader({
   const isDark = useColorScheme() === "dark";
 
   return (
-    <View className={`px-2 ${className}`} style={{ paddingTop, paddingBottom: 4 }}>
+    <View className={`px-2 ${className}`} style={{ paddingVertical: 4 }}>
       <View className="flex-row items-center mb-1">
         <TouchableOpacity
           className="w-10 h-10 rounded-full items-center justify-center -mt-0.5"
@@ -46,16 +46,19 @@ export function AppHeader({
           ) : null}
         </View>
 
-        <View className="w-10 h-10 items-center justify-center">
+        <View className="min-w-10 max-w-[140px] shrink-0 items-center justify-end pl-1">
           {rightIcon ? (
-            <TouchableOpacity
-              className="w-10 h-10 rounded-full items-center justify-center"
-              activeOpacity={0.7}
-              onPress={onRightIconPress}
-              disabled={!onRightIconPress}
-            >
-              {rightIcon}
-            </TouchableOpacity>
+            onRightIconPress ? (
+              <TouchableOpacity
+                className="items-center justify-center"
+                activeOpacity={0.7}
+                onPress={onRightIconPress}
+              >
+                {rightIcon}
+              </TouchableOpacity>
+            ) : (
+              rightIcon
+            )
           ) : null}
         </View>
       </View>

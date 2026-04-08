@@ -31,3 +31,5 @@ export const initialState = {
   loadingMore: false,
   refreshing: false,
 };
+
+export const type_badge: Record<TxType, string> = { qr: "QR", stamp: "Stamp", streak: "Streak" };

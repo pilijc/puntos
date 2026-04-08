@@ -5,6 +5,9 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { getStoreById } from "@/services/store-service";
+import { getTransactionsPageForStore } from "@/services/store-manager/transactions-service";
+import { TransactionItem, TxType, type_badge } from "@/type/store-manager/transaction";
+import { formatTxTime } from "@/utils/store_manager/transaction";
 import { Modal, ModalButton } from "@/components/modal";
 import { Building2, Gift, QrCode, UsersRound, Stamp, Flame } from "lucide-react-native";
 
@@ -19,6 +22,8 @@ export default function ViewStore() {
   const [store, setStore] = useState<Awaited<ReturnType<typeof getStoreById>> | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const [recentTxs, setRecentTxs] = useState<TransactionItem[]>([]);
+  const [txLoading, setTxLoading] = useState(true);
   const [modal, setModal] = useState<{
     title: string;
     message: string;
@@ -57,20 +62,34 @@ export default function ViewStore() {
     setStore(storeData);
   }, [storeId]);
 
+  const fetchRecentTransactions = useCallback(async () => {
+    if (!Number.isFinite(storeId) || storeId <= 0) return;
+    setTxLoading(true);
+    try {
+      const { items } = await getTransactionsPageForStore(storeId, "all", 1, 10);
+      setRecentTxs(items);
+    } catch {
+      setRecentTxs([]);
+    } finally {
+      setTxLoading(false);
+    }
+  }, [storeId]);
+
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
     try {
-      await fetchStore();
+      await Promise.all([fetchStore(), fetchRecentTransactions()]);
     } finally {
       setRefreshing(false);
     }
-  }, [fetchStore]);
+  }, [fetchStore, fetchRecentTransactions]);
 
   useEffect(() => {
     setStore(null);
     setActiveImageIndex(0);
     void fetchStore();
-  }, [fetchStore]);
+    void fetchRecentTransactions();
+  }, [fetchStore, fetchRecentTransactions]);
 
   return (
     <View className="flex-1 bg-backgroundMuted dark:bg-neutral-900">
@@ -184,18 +203,71 @@ export default function ViewStore() {
             <Text className="text-sm font-poppins-bold text-textSecondary dark:text-textSecondary ml-1">
               Recent Transactions
             </Text>
-            <TouchableOpacity activeOpacity={0.7} className="flex-row items-center gap-x-0.5">
+            <TouchableOpacity
+              activeOpacity={0.7}
+              className="flex-row items-center gap-x-0.5"
+              onPress={() =>
+                router.push({ pathname: "/(store_manager)/transactions", params: { storeId: String(storeId) } })
+              }
+            >
               <Text className="text-xs font-poppins text-primary">See all</Text>
               <MaterialIcons name="chevron-right" size={14} color="#FF6600" />
             </TouchableOpacity>
           </View>
 
-          <View className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 px-4 py-10 items-center gap-y-2">
-            <MaterialIcons name="receipt-long" size={32} color="#CBD5E1" />
-            <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">
-              No transactions yet
-            </Text>
-          </View>
+          {txLoading ? (
+            <View className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 px-4 py-8 items-center">
+              <MaterialIcons name="hourglass-empty" size={28} color="#CBD5E1" />
+            </View>
+          ) : recentTxs.length === 0 ? (
+            <View className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 px-4 py-10 items-center gap-y-2">
+              <MaterialIcons name="receipt-long" size={32} color="#CBD5E1" />
+              <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">
+                No transactions yet
+              </Text>
+            </View>
+          ) : (
+            <View className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 overflow-hidden">
+              {recentTxs.map((tx, idx) => (
+                <View
+                  key={tx.id}
+                  className={`flex-row items-center px-4 py-3 gap-x-3 ${
+                    idx < recentTxs.length - 1 ? "border-b border-slate-100 dark:border-slate-800" : ""
+                  }`}
+                >
+                  {tx.userAvatar ? (
+                    <Image
+                      source={{ uri: tx.userAvatar }}
+                      style={{ width: 36, height: 36, borderRadius: 18 }}
+                      contentFit="cover"
+                    />
+                  ) : (
+                    <View className="w-9 h-9 rounded-full bg-slate-200 dark:bg-slate-700 items-center justify-center">
+                      <Text className="text-xs font-poppins-bold text-slate-600 dark:text-slate-300">
+                        {(tx.userName || "?").charAt(0).toUpperCase()}
+                      </Text>
+                    </View>
+                  )}
+                  <View className="flex-1 min-w-0">
+                    <View className="flex-row items-center justify-between gap-x-2">
+                      <Text className="text-sm font-poppins-semibold text-slate-900 dark:text-slate-100" numberOfLines={1}>
+                        {tx.userName}
+                      </Text>
+                      <Text className="text-xs font-poppins-semibold text-primary shrink-0">{tx.detail}</Text>
+                    </View>
+                    <View className="flex-row items-center justify-between mt-0.5">
+                      <Text className="text-[10px] font-poppins text-slate-400 dark:text-slate-500">
+                        {type_badge[tx.type]}
+                      </Text>
+                      <Text className="text-[10px] font-poppins text-slate-400 dark:text-slate-500">
+                        {formatTxTime(tx.date)}
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+              ))}
+            </View>
+          )}
         </View>
       </ScrollView>
     </View>

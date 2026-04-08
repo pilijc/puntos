@@ -6,9 +6,9 @@ import {
   AnimatedView,
   Image,
 } from "@/tw";
-import { CalendarDays, ChevronDown, ChevronLeft, ChevronUp, CircleCheck, MapPinOff } from "lucide-react-native";
+import { CalendarDays, ChevronDown, ChevronLeft, ChevronUp, CircleCheck, Gift, MapPinOff } from "lucide-react-native";
 import React, { useCallback, useEffect, useState } from "react";
-import { FadeIn, FadeOut, Layout, Easing } from "react-native-reanimated";
+import Animated, { FadeIn, FadeOut, Layout, Easing, useSharedValue, useAnimatedStyle, withSpring, withTiming } from "react-native-reanimated";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import Carousel from "react-native-reanimated-carousel";
 import { Dimensions } from "react-native";
@@ -17,10 +17,12 @@ import { useTranslation } from "react-i18next";
 import UserStoreHeroCarousel from "@/components/users/stores/user-store-hero-carousel";
 import UserStreakCard from "@/components/rewards/user-streak-card";
 import UserStampLogCard from "@/components/rewards/user-stamp-log-card";
+import UpcomingProgramBanner from "@/components/rewards/upcoming-program-banner";
 import RewardCard from "@/components/rewards/reward-card";
 import SortPill from "@/components/rewards/sort-pill";
 import { storeLogos } from "@/data/rewards";
 import { useRewardsUiStore } from "@/store/user/rewards-ui-store";
+import { useRewardsDataStore } from "@/hooks/use-rewards-data";
 import { useStoreOverviewData } from "@/hooks/use-store-overview-data";
 import { ProgramSkeleton } from "@/components/skeleton/user/program-skeleton";
 import StoreScreenContainer from "@/components/ui/store-screen-container";
@@ -54,8 +56,9 @@ export default function StoreOverviewDetail() {
     setHeroIndex,
     setIsSwitchingStore,
     isStamping,
-    refreshing,
   } = useRewardsUiStore();
+  
+  const { fetchRewardsData } = useRewardsDataStore();
   
   const router = useRouter();
   
@@ -76,6 +79,7 @@ export default function StoreOverviewDetail() {
     isLoadingRewardsFeatures,
     fetchedStoreIds,
     refetchStreaks,
+    upcomingStreak,
   } = useStoreOverviewData(storeId);
 
   // If a specific store is requested, we don't necessarily need to snap the carousel 
@@ -102,6 +106,37 @@ export default function StoreOverviewDetail() {
     }
   }, [storeId, isStoreCached]);
 
+  const [isRefreshingLocal, setIsRefreshingLocal] = useState(false);
+
+  const onRefreshLocal = useCallback(async () => {
+    setIsRefreshingLocal(true);
+    
+    const promises: Promise<any>[] = [handleRefresh(storeId)];
+    if (refetchStreaks) promises.push(refetchStreaks());
+    
+    if (storeId) {
+      const numericStoreId = Number(storeId);
+      if (!isNaN(numericStoreId)) {
+        promises.push(fetchRewardsData([numericStoreId], [numericStoreId]));
+      }
+    }
+    
+    await Promise.all(promises);
+    setIsRefreshingLocal(false);
+  }, [handleRefresh, storeId, fetchRewardsData, refetchStreaks]);
+
+  const claimScale = useSharedValue(1);
+  const claimOpacity = useSharedValue(1);
+  const claimScaleStyle = useAnimatedStyle(() => ({ opacity: claimOpacity.value, transform: [{ scale: claimScale.value }] }));
+  const handleClaimPressIn = () => {
+    claimScale.value = withSpring(0.96, { damping: 15, stiffness: 200, mass: 1 });
+    claimOpacity.value = withTiming(0.7, { duration: 80 });
+  };
+  const handleClaimPressOut = () => {
+    claimScale.value = withSpring(1, { damping: 15, stiffness: 200, mass: 1 });
+    claimOpacity.value = withTiming(1, { duration: 80 });
+  };
+
   return (
     <StoreScreenContainer
       backgroundClassName="bg-backgroundMuted dark:bg-darkBackground"
@@ -110,8 +145,8 @@ export default function StoreOverviewDetail() {
       onTouchStart={handleCarouselInteraction}
       refreshControl={
         <RefreshControl
-          refreshing={refreshing}
-          onRefresh={() => handleRefresh()}
+          refreshing={isRefreshingLocal}
+          onRefresh={onRefreshLocal}
           tintColor="#FF6600"
           colors={["#FF6600"]}
         />
@@ -245,19 +280,15 @@ export default function StoreOverviewDetail() {
                   </View>
                   <View className="flex-row items-center gap-x-2">
                     <TouchableOpacity
-                      className={`px-3 py-1 rounded-full ${hasStampedToday(Number(store.id)) ? "bg-neutral-200 dark:bg-white/10" : "bg-primary"}`}
-                      onPress={() => router.push("/qr")}
-                      disabled={isStamping || hasStampedToday(Number(store.id))}
+                      className="px-3 py-1 rounded-full bg-primary"
+                      onPress={() => router.push("/(user)/qr")}
+                      disabled={isStamping}
                     >
                       {isStamping ? (
                         <ActivityIndicator size="small" color="#FF6600" />
                       ) : (
-                        <Text
-                          className={`text-[10px] font-poppins-semibold ${hasStampedToday(Number(store.id)) ? "text-neutral-500" : "text-white"}`}
-                        >
-                          {hasStampedToday(Number(store.id))
-                            ? translate("user.rewards.buttons.stamped")
-                            : translate("user.rewards.buttons.stamp")}
+                        <Text className="text-[10px] font-poppins-semibold text-white">
+                          {translate("user.rewards.buttons.stamp")}
                         </Text>
                       )}
                     </TouchableOpacity>
@@ -275,7 +306,8 @@ export default function StoreOverviewDetail() {
           <ProgramSkeleton />
         ) : (
           <>
-            {displayStreaks.length === 0 && displayStamps.length === 0 && (
+            {/* Generic empty state — only when NO programs at all (active OR upcoming) */}
+            {displayStreaks.length === 0 && displayStamps.length === 0 && !upcomingStreak && (
               <AnimatedView
                 entering={FadeIn.duration(400)}
                 className="bg-white dark:bg-darkBackgroundMuted rounded-xl p-8 items-center border border-neutral-100 dark:border-darkBorder mx-1 mb-3"
@@ -316,6 +348,21 @@ export default function StoreOverviewDetail() {
               </View>
             )}
 
+            {/* Upcoming streak banner — shown below the active streak card if present,
+                or alone when there is no active streak program */}
+            {upcomingStreak && displayStreaks.length === 0 && (
+              <View className="mb-3">
+                <UpcomingProgramBanner
+                  type="streak"
+                  title={upcomingStreak.title}
+                  startAt={upcomingStreak.start_at}
+                  endDate={upcomingStreak.end_date}
+                  programLength={upcomingStreak.streak_length}
+                  description={upcomingStreak.reward_description}
+                />
+              </View>
+            )}
+
             {displayStamps.length > 0 && (
               <View>
                 <Carousel
@@ -339,6 +386,7 @@ export default function StoreOverviewDetail() {
                       activeStampProgramRewards={activeStampProgramRewards}
                       isStampLogOpen={isStampLogOpen}
                       onToggleExpand={() => setIsStampLogOpen(!isStampLogOpen)}
+                      onForceExpand={() => setIsStampLogOpen(true)}
                     />
                   )}
                 />
@@ -366,6 +414,22 @@ export default function StoreOverviewDetail() {
           <Text className="text-lg font-poppins-semibold text-neutral-900 dark:text-darkTextPrimary">
             {translate("user.rewards.rewardCatalog")}
           </Text>
+          <Animated.View style={claimScaleStyle}>
+            <Pressable
+              onPressIn={handleClaimPressIn}
+              onPressOut={handleClaimPressOut}
+              className="flex-row items-center gap-x-1.5 bg-white dark:bg-darkBackgroundCard border border-primary px-3 py-1.5 rounded-full"
+              onPress={() => {
+                const found = storesWithLocation.find(s => s.id.toString() === storeId);
+                router.push({ pathname: "/store/claim-rewards", params: { storeName: found?.name, storeLogo: found?.logo ?? "", storeAddress: found?.address ?? "" } });
+              }}
+            >
+              <Gift size={14} color="#FF6600" />
+              <Text className="text-primary font-poppins-semibold text-xs">
+                {translate("user.rewards.buttons.claimRewards")}
+              </Text>
+            </Pressable>
+          </Animated.View>
         </View>
 
         <View className="gap-y-4">

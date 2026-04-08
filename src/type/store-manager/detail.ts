@@ -17,6 +17,59 @@ export interface StoreDetail {
   is_active: boolean | null;
 }
 
+export type DetailDraft = {
+  name: string;
+  type: string;
+  logo: string | null;
+  pictures: (string | null)[];
+  phone: string;
+  registrationNumber: string;
+  businessDoc: string | null;
+  storeOpen: string;
+  storeClose: string;
+  address: string;
+  latitude: string;
+  longitude: string;
+  radius: number;
+};
+
+export interface DetailDraftStore {
+  name: string;
+  type: string;
+  logo: string | null;
+  pictures: (string | null)[];
+  phone: string;
+  registrationNumber: string;
+  businessDoc: string | null;
+  storeOpen: string;
+  storeClose: string;
+  address: string;
+  latitude: string;
+  longitude: string;
+  radius: number;
+  setName: (name: string) => void;
+  setType: (type: string) => void;
+  setLogo: (logo: string | null) => void;
+  setPictures: (pictures: (string | null)[]) => void;
+  setPhone: (phone: string) => void;
+  setRegistrationNumber: (registrationNumber: string) => void;
+  setBusinessDoc: (businessDoc: string | null) => void;
+  setStoreOpen: (storeOpen: string) => void;
+  setStoreClose: (storeClose: string) => void;
+  setAddress: (address: string) => void;
+  setLatitude: (latitude: string) => void;
+  setLongitude: (longitude: string) => void;
+  setRadius: (radius: number) => void;
+  initFromDetail: (detail: StoreDetail | null) => void;
+  reset: () => void;
+}
+
+export interface DetailViewState {
+  detail: StoreDetail | null;
+  setDetail: (detail: StoreDetail | null) => void;
+  reset: () => void;
+}
+
 export const STATUS_CONFIG: Record<string, { label: string; bg: string; text: string; dot: string }> = {
   active: {
     label: "Active",

@@ -58,8 +58,9 @@ export function useRewardsActions() {
       } else {
         const messages: Record<string, string> = {
           already_stamped_today: "You have already collected a stamp today at this store.",
+          already_completed: "You've already completed your stamp card for this store! 🎉",
           stamp_not_enabled: "Stamping is currently disabled for this store.",
-          not_nearby: "You must be near the store to collect a stamp."
+          not_nearby: "You must be near the store to collect a stamp.",
         };
         Alert.alert("Notice", messages[result.reason || ""] || "Failed to collect stamp.");
       }
