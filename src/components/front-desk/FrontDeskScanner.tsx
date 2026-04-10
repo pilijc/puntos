@@ -87,6 +87,20 @@ export default function FrontDeskScanner({
                 enableTorch={false}
               >
                 <View className="absolute inset-0 bg-black/40" />
+                
+                {/* Overlay Back Button */}
+                <View className="absolute top-12 left-5 z-10 -mt-8">
+                  <TouchableOpacity
+                    onPress={() => setShowCamera(false)}
+                    className="flex-row items-center"
+                  >
+                    <MaterialIcons name="arrow-back-ios" size={16} color="#FF6600" />
+                    <Text className="text-sm font-poppins-medium text-orange-500 ml-1">
+                      Back
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+
                 {/* Corner guides */}
                 <View className="absolute top-1/2 left-1/2 -mt-28 -ml-28 w-56 h-56">
                   <View className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-orange-400 rounded-tl-xl" />
@@ -113,16 +127,7 @@ export default function FrontDeskScanner({
 
           {/* Camera footer */}
           <View className="px-5 py-4">
-            <TouchableOpacity
-              onPress={() => setShowCamera(false)}
-              className="flex-row items-center"
-            >
-              <MaterialIcons name="arrow-back-ios" size={16} color="#FF6600" />
-              <Text className="text-sm font-poppins-medium text-orange-500 ml-1">
-                Back
-              </Text>
-            </TouchableOpacity>
-            <View className="flex-row items-center justify-center mt-3">
+            <View className="flex-row items-center justify-center">
               <View className="w-2 h-2 bg-emerald-400 rounded-full mr-2" />
               <Text className="text-sm font-poppins-medium text-neutral-500 dark:text-darkTextSecondary">
                 {translate("frontdesk.transaction.camera.title")}

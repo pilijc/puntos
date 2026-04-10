@@ -1,13 +1,12 @@
 import { useRouter, useFocusEffect } from "expo-router";
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { Alert, useColorScheme } from "react-native";
-import { SafeAreaView, ScrollView, View, Text, TouchableOpacity, TextInput } from "@/tw";
-import { Animated, Dimensions, StatusBar } from "react-native";
-import { CameraView, useCameraPermissions } from "expo-camera";
+import { useColorScheme } from "react-native";
+import { ScrollView, View} from "@/tw";
+import { Animated} from "react-native";
+import { useCameraPermissions } from "expo-camera";
 import { processFrontDeskScan, getCurrentUserStore } from "@/services/frontdesk/scan-service";
 import { getCurrentStaffId } from "@/services/frontdesk/voucher-service";
 import { supabase } from "@/supabase/supabase";
-import { Button } from "@/components/button";
 import { Modal, type ModalButton } from "@/components/modal";
 import { useRecentTransactions } from "@/hooks/use-recent-transactions";
 import { useTranslation } from "react-i18next";

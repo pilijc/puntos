@@ -66,11 +66,10 @@ export default function CompactAmountInput({
               placeholder={placeholder}
               keyboardType="numeric"
               rightAccessory={
-                <View className="flex-row items-center">
-                  <Text className="text-sm font-poppins-bold text-orange-500 mr-2">₱</Text>
+                <View className="flex-row items-center pr-3">
                   {value.length > 0 && (
                     <TouchableOpacity onPress={() => onChangeText("")}>
-                      <MaterialIcons name="close" size={16} color="#94A3B8" />
+                      <MaterialIcons name="close" size={16} color="#FF6600" />
                     </TouchableOpacity>
                   )}
                 </View>
@@ -102,7 +101,7 @@ export default function CompactAmountInput({
             <Text className="text-xs font-poppins-semibold text-neutral-400 dark:text-darkTextSoft uppercase tracking-widest mb-2">
               {translate("frontdesk.transaction.transactionModal.title")}
             </Text>
-            <View className="relative">
+            <View className="relative -mt-4">
               <TextField
                 label=""
                 value={value}
@@ -110,11 +109,10 @@ export default function CompactAmountInput({
                 placeholder={placeholder}
                 keyboardType="numeric"
                 rightAccessory={
-                  <View className="flex-row items-center">
-                    <Text className="text-sm font-poppins-bold text-orange-500 mr-2">₱</Text>
-                    {value.length > 0 && (
+                  <View className="flex-row items-center -mt-2 pr-3">
+                     {value.length > 0 && (
                       <TouchableOpacity onPress={() => onChangeText("")}>
-                        <MaterialIcons name="close" size={16} color="#94A3B8" />
+                        <MaterialIcons name="close" size={16} color="#FF6600" />
                       </TouchableOpacity>
                     )}
                   </View>
