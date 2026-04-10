@@ -14,7 +14,7 @@ export const useProfile = () => {
 
     useEffect(() => {
         fetchProfile();
-    }, [user, loading, fetchProfile]);
+    }, [fetchProfile]);
 
     return{
         user,
