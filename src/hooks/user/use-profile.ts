@@ -13,10 +13,10 @@ export const useProfile = () => {
     } = useProfileStore();
 
     useEffect(() => {
-        if (!user) {
+        if (!user && !loading) {
             fetchProfile();
         }
-    }, [user, fetchProfile]);
+    }, [user, loading, fetchProfile]);
 
     return{
         user,

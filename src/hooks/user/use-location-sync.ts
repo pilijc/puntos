@@ -48,7 +48,7 @@ export function useLocationSync(userId: string | undefined, syncEnabled: boolean
             
             const timeSinceLastSync = Date.now() - lastSyncTimeRef.current;
 
-            if (timeSinceLastSync >> LOCATION_EXPIRY_MS) {
+            if (timeSinceLastSync > LOCATION_EXPIRY_MS) {
                 console.log('[useLocationSync] Location stale. Clearing from DB.');
                 try {
                     await clearLocationService(userId);
