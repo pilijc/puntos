@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { View, Text, AnimatedView, TouchableOpacity, Image } from "@/tw";
 import { Check, ExternalLink, Flame, Store } from "lucide-react-native";
 import Animated, { Layout, useAnimatedStyle, useSharedValue, withSpring, withTiming, withRepeat, withSequence } from "react-native-reanimated";
@@ -7,7 +7,7 @@ import { storeLogos } from "@/data/rewards";
 import { useTranslation } from "react-i18next";
 import { Alert, ActivityIndicator, Modal, Pressable, StyleSheet, View as RNView } from "react-native";
 import { useRouter } from "expo-router";
-import { recordUserStreak } from "@/services/streak-service";
+import { recordUserStreak, getStreakEarnedDates } from "@/services/streak-service";
 import { supabase } from "@/supabase/supabase";
 
 interface UserStreakCardProps {
@@ -28,6 +28,9 @@ export default function UserStreakCard({
   const [showStreakModal, setShowStreakModal] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [hasEarnedToday, setHasEarnedToday] = useState(false);
+  // Per-day earned dates from DB — avoids the streak_days window bug where
+  // non-consecutive earns (e.g. Wed ✓, Thu missed, Fri ✓) appear as "missed".
+  const [earnedWeekDates, setEarnedWeekDates] = useState<Set<string>>(new Set());
   const storeStr = streak.stores as any;
   const storeName = storeStr?.name ?? translate("user.rewards.store");
   const storeAddress = storeStr?.address ?? translate("user.rewards.unknownLocation");
@@ -46,6 +49,24 @@ export default function UserStreakCard({
   const today = formatLocalDate(new Date());
   const alreadyEarnedToday = streak.last_activity_date === today || hasEarnedToday;
   const shouldPulseCurrentDay = nearby && !alreadyEarnedToday;
+
+  // Fetch real per-day earned dates from the DB.
+  // Called on mount and after any successful streak recording so that the
+  // weekly circles always reflect actual visit history, not just a consecutive window.
+  const fetchEarnedDates = useCallback(async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user?.id) return;
+      const dates = await getStreakEarnedDates(user.id, Number(streak.store_id));
+      setEarnedWeekDates(dates);
+    } catch {
+      // silent: the fallback streak_days window (below) covers this case
+    }
+  }, [streak.store_id]);
+
+  useEffect(() => {
+    fetchEarnedDates();
+  }, [fetchEarnedDates]);
 
   // Real data from backend
   const streakProgram = streak.store_streaks as any;
@@ -99,6 +120,18 @@ export default function UserStreakCard({
     effectiveLastDateStr = today;
   }
 
+  // ─── Program start boundary ─────────────────────────────────────────────────
+  // IMPORTANT: Do NOT remove this. programStartStr is used below to distinguish
+  // days that fall BEFORE the streak program began ("pre-program") from days
+  // that are past-but-missed ("missed"). Without this, both states look the same.
+  const programStartRaw = streakProgram?.start_at ?? null;
+  let programStartStr: string | null = null;
+  if (programStartRaw) {
+    const d = new Date(programStartRaw);
+    d.setHours(0, 0, 0, 0);
+    programStartStr = formatLocalDate(d);
+  }
+
   // Display value for subtitle and completion modal
   const clampedCount = Math.min(
     (streak.total_earned_days ?? streak.streak_days ?? 0) +
@@ -117,45 +150,80 @@ export default function UserStreakCard({
     translate("user.rewards.days.sun"),
   ];
 
+  // ─── 5-State day classification — DO NOT simplify or collapse these states ──
+  //
+  //  STATE          WHEN                                 VISUAL
+  //  "pre-program"  Day < program start_at               White bg + grey solid border
+  //                 (e.g. Mon/Tue when program starts Wed) — signals "not part of program"
+  //
+  //  "completed"    Day is inside earned streak window   Orange fill + check icon + label
+  //                 (last_activity_date window)          — signals a successfully earned day
+  //
+  //  "current"      Next unclaimed target day            Orange tint + dashed orange border + pulse
+  //                 (today if not yet earned, or          — tappable to record a streak visit
+  //                  tomorrow if today is already earned)
+  //
+  //  "missed"       Past in-program day, not earned      Grey fill + strikethrough label
+  //                 (circleDateStr < today, not matched   — signals a skipped visit
+  //                  by any of the above)
+  //
+  //  "upcoming"     Future in-program days beyond        Grey fill, no border
+  //                 the next target                      — signals days still to come
+  //
+  // NOTE: "pre-program" and "upcoming" look different ON PURPOSE.
+  //   pre-program = transparent + border  (excluded from program entirely)
+  //   upcoming    = grey fill, no border  (part of program, just in the future)
+  // ─────────────────────────────────────────────────────────────────────────────
   const days = Array.from({ length: 7 }, (_, index) => {
     const circleDateStr = addDays(weekStartStr, index);
 
-    if (effectiveLastDateStr !== "") {
-      const daysSinceCircle = diffDays(effectiveLastDateStr, circleDateStr);
-      // It's completed if the date falls inside the active consecutive streak window
-      if (daysSinceCircle >= 0 && daysSinceCircle < effectiveStreakDays) {
-        return { label: streakDaysLabels[index], state: "completed" as const };
-      }
+    // ── 1. Before program start → pre-program (white bg, grey solid border) ──
+    if (programStartStr && circleDateStr < programStartStr) {
+      return { label: streakDaysLabels[index], state: "pre-program" as const };
     }
 
-    // --- IMPORTANT UI BEHAVIOR FOR AI / FUTURE DEVS ---
-    // The user specifically requested that when today is ALREADY earned,
-    // the NEXT day (tomorrow) should be visually emphasized as the "next target"
-    // by reusing the `state: "current"` stylistic wrapper (broken border, orange text).
-    // However, it intentionally does NOT pulse (since `!alreadyEarnedToday` evaluates to false for the animation).
-    // If the user clicks this emphasized "next target", the `onPress` wrapper catches `alreadyEarnedToday`
-    // and correctly shows the "Already earned for today, come back tomorrow" alert.
+    // ── 2. Earned days ──
+    // IMPORTANT: earnedWeekDates (real DB records) is the source of truth.
+    // The streak_days window fallback is WRONG when there are gaps:
+    //   e.g. Wed earned, Thu missed, Fri earned → streak_days=1 (only Fri),
+    //   so diffDays(Fri, Wed)=2 ≥ streak_days=1 fails → Wed shows as "missed".
+    // The hasEarnedToday flag covers the optimistic instant right after tapping.
+    const isThisDayEarned =
+      // Optimistic: user just earned today in this session (immediate UI)
+      (hasEarnedToday && circleDateStr === today) ||
+      // Real per-day data from DB (accurate for non-consecutive earns)
+      (earnedWeekDates.size > 0 && earnedWeekDates.has(circleDateStr)) ||
+      // Fallback: consecutive streak window (only used while earnedWeekDates loads)
+      (earnedWeekDates.size === 0 &&
+        effectiveLastDateStr !== "" &&
+        (() => {
+          const daysSinceCircle = diffDays(effectiveLastDateStr, circleDateStr);
+          return daysSinceCircle >= 0 && daysSinceCircle < effectiveStreakDays;
+        })());
+    if (isThisDayEarned) {
+      return { label: streakDaysLabels[index], state: "completed" as const };
+    }
+
+    // ── 3. Next-target emphasis ──
+    // When today is already earned, highlight tomorrow as the next goal (no pulse).
+    // When today is not yet earned, highlight today as the current goal (with pulse).
     if (alreadyEarnedToday && clampedCount < targetCount) {
       if (todayWeekdayIndex < 6 && index === todayWeekdayIndex + 1) {
         return { label: streakDaysLabels[index], state: "current" as const };
       }
     } else if (!alreadyEarnedToday && index === todayWeekdayIndex) {
-      // Emphasize today as the target
       if (clampedCount >= targetCount) {
-        return { label: streakDaysLabels[index], state: "inactive" as const };
+        return { label: streakDaysLabels[index], state: "upcoming" as const };
       }
       return { label: streakDaysLabels[index], state: "current" as const };
     }
 
+    // ── 4. Past in-program day not earned → missed (grey fill + strikethrough) ──
     if (index < todayWeekdayIndex) {
-      return { label: streakDaysLabels[index], state: "inactive" as const };
-    }
-    
-    // Future days past the cap should also be rendered as inactive
-    if (clampedCount >= targetCount) {
-      return { label: streakDaysLabels[index], state: "inactive" as const };
+      return { label: streakDaysLabels[index], state: "missed" as const };
     }
 
+    // ── 5. Future days (in-program, beyond the next target) ──
     return { label: streakDaysLabels[index], state: "upcoming" as const };
   });
 
@@ -295,26 +363,14 @@ export default function UserStreakCard({
         <View className="flex-row flex-wrap justify-between mt-2.5 gap-y-2 px-1">
           {days.map((day, index) => {
             const isCompleted = day.state === "completed";
-            const isCurrent = day.state === "current";
-            const isInactive = day.state === "inactive";
-            const circleClass = isCompleted
-              ? "w-10 h-10 rounded-full bg-primary items-center justify-center"
-              : isCurrent
-                ? "w-10 h-10 rounded-full items-center justify-center bg-white dark:bg-darkBackgroundMuted"
-                : isInactive
-                  ? "w-10 h-10 rounded-full bg-transparent border border-neutral-200 dark:border-darkBorder items-center justify-center"
-                  : "w-10 h-10 rounded-full bg-neutral-100 dark:bg-darkBackgroundCard items-center justify-center";
-            const textClass =
-              isCompleted || isCurrent
-                ? "text-primary font-poppins-semibold text-[10px]"
-                : isInactive
-                  ? "text-neutral-300 dark:text-neutral-500 font-poppins-semibold text-[10px]"
-                  : "text-neutral-400 font-poppins-semibold text-[10px]";
+            const isCurrent   = day.state === "current";
+            const isPreProg   = day.state === "pre-program";
+            const isMissed    = day.state === "missed";
+
+
+
             return (
-              <View
-                key={`${day.label}-${index}`}
-                className="items-center w-11"
-              >
+              <View key={`${day.label}-${index}`} className="items-center w-11">
                 {isCurrent ? (
                   <TouchableOpacity
                     activeOpacity={1}
@@ -333,7 +389,6 @@ export default function UserStreakCard({
                         Alert.alert("Not Nearby", "You need to be within range of this store to earn your streak.");
                         return;
                       }
-                      // Need a store_streak_id to record. If no program linked yet, show message.
                       const storeStreakId = streak.store_streak_id;
                       if (!storeStreakId) {
                         Alert.alert("No Program", "This store's streak program isn't fully set up yet.");
@@ -348,15 +403,15 @@ export default function UserStreakCard({
                           Number(streak.store_id),
                           storeStreakId,
                           streakProgram?.fixed_points_per_day ?? 0,
-                          targetCount, // ✅ pass streak_length so the service can block at cap
+                          targetCount,
                         );
                         if (result.alreadyRecorded) {
                           Alert.alert("Already Earned!", "You've already earned your streak for today. Come back tomorrow!");
                         } else if (result.justCompleted) {
-                          // ✅ Streak fully completed — celebrate!
                           setHasEarnedToday(true);
                           setShowStreakModal(true);
                           onStreakRecorded?.();
+                          fetchEarnedDates(); // sync per-day dots with real DB data
                           Alert.alert(
                             "🎉 Streak Complete!",
                             `You've completed the full ${targetCount}-day streak! Your reward is on its way.`,
@@ -365,6 +420,7 @@ export default function UserStreakCard({
                           setHasEarnedToday(true);
                           setShowStreakModal(true);
                           onStreakRecorded?.();
+                          fetchEarnedDates(); // sync per-day dots with real DB data
                         }
                       } catch (e) {
                         console.error("Failed to record streak:", e);
@@ -376,19 +432,33 @@ export default function UserStreakCard({
                   >
                     <Animated.View style={[pressAnimatedStyle, shouldPulseCurrentDay && pulseAnimatedStyle]}>
                       <View
-                        className={circleClass}
-                        style={{
-                          borderWidth: 1.5,
-                          borderColor: "#FF6600",
-                          borderStyle: "dashed",
-                        }}
+                        className="w-10 h-10 rounded-full items-center justify-center bg-white dark:bg-darkBackgroundMuted"
+                        style={{ borderWidth: 1.5, borderColor: "#FF6600", borderStyle: "dashed" }}
                       >
-                        <Text className={textClass}>{day.label}</Text>
+                        <Text className="text-primary font-poppins-semibold text-[10px]">{day.label}</Text>
                       </View>
                     </Animated.View>
                   </TouchableOpacity>
                 ) : (
-                  <View className={circleClass}>
+                  // ─── Circle style per state ────────────────────────────────
+                  // completed  → orange fill (bg-primary)
+                  // pre-program → transparent + grey border  ← DIFFERENT from upcoming on purpose
+                  //               signals days that predate the program (e.g. Mon/Tue when
+                  //               program starts Wed). Must NOT share style with "upcoming".
+                  // missed/upcoming → grey fill, no border
+                  //               missed = past in-program day not visited (has strikethrough)
+                  //               upcoming = future in-program day (plain grey)
+                  // ──────────────────────────────────────────────────────────
+                  <View
+                    className={
+                      isCompleted
+                        ? "w-10 h-10 rounded-full bg-primary items-center justify-center"
+                        : isPreProg
+                          ? "w-10 h-10 rounded-full bg-transparent border border-neutral-200 dark:border-darkBorder items-center justify-center"
+                          : "w-10 h-10 rounded-full bg-neutral-100 dark:bg-darkBackgroundCard items-center justify-center"
+                    }
+                  >
+                    {/* completed: orange circle → check icon + day label */}
                     {isCompleted ? (
                       <View className="items-center justify-center">
                         <Check size={12} color="#FFFFFF" />
@@ -396,8 +466,36 @@ export default function UserStreakCard({
                           {day.label}
                         </Text>
                       </View>
+                    ) : isMissed ? (
+                      // missed: grey fill → label with an absolutely-positioned 2px
+                      // strikethrough bar. textDecorationLine is intentionally NOT used
+                      // because it renders too thin at small font sizes in React Native.
+                      <RNView style={{ alignItems: "center", justifyContent: "center" }}>
+                        <Text className="text-neutral-400 font-poppins-semibold text-[10px]">
+                          {day.label}
+                        </Text>
+                        <RNView
+                          style={{
+                            position: "absolute",
+                            height: 2,
+                            left: 0,
+                            right: 0,
+                            backgroundColor: "#9ca3af",
+                            borderRadius: 1,
+                          }}
+                        />
+                      </RNView>
                     ) : (
-                      <Text className={textClass}>{day.label}</Text>
+                      // pre-program or upcoming: show label with appropriate text colour
+                      <Text
+                        className={
+                          isPreProg
+                            ? "text-neutral-300 dark:text-neutral-500 font-poppins-semibold text-[10px]"
+                            : "text-neutral-400 font-poppins-semibold text-[10px]"
+                        }
+                      >
+                        {day.label}
+                      </Text>
                     )}
                   </View>
                 )}
