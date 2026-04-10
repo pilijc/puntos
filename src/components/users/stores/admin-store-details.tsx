@@ -12,6 +12,7 @@ import { Button } from "@/components/button";
 import { AdminStoreRow } from "@/services/store-service";
 import { ImageViewerModal } from "@/components/ui/image-viewer-modal";
 import { getStoreCategoryBadge } from "@/type/super-admin/user";
+import { shouldUseInteractiveMapbox } from "@/utils/mapbox-platform";
 
 
 Mapbox.setAccessToken(process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN!);
@@ -30,7 +31,6 @@ const STATUS_CONFIG: Record<StatusKey, {
   inactive: { icon: "cancel", bg: "#ffffff", border: "#fecaca", badgeBg: "#fee2e2", text: twColors.danger },
 };
 
-// ─── Field helpers ────────────────────────────────────────────────────────────
 const SectionHeader = ({ title }: { title: string }) => (
   <Text className="text-base font-poppins-bold text-textPrimary dark:text-darkTextPrimary mb-3">{title}</Text>
 );
@@ -51,8 +51,6 @@ const ReadOnlyField = ({ label, value }: { label: string; value?: string | null 
   </View>
 );
 
-
-// ─── Main Screen ──────────────────────────────────────────────────────────────
 export function AdminStoreDetails({
   store,
   onBack,
@@ -106,9 +104,7 @@ export function AdminStoreDetails({
         showsVerticalScrollIndicator={false}
         bounces={false}
       >
-        {/* HERO HEADER */}
         <View className="relative w-full h-[170px] bg-slate-900 overflow-visible">
-          {/* Aligned Back Button */}
           <View className="absolute top-6 left-6 z-50">
             <TouchableOpacity
               onPress={onBack}
@@ -152,7 +148,6 @@ export function AdminStoreDetails({
           />
           <View className="absolute top-0 bottom-0 left-0 right-0 bg-black/25 dark:bg-black/45" pointerEvents="none" />
 
-          {/* STATUS BADGE Overlay */}
           <View className="absolute top-6 right-6 px-3.5 py-1.5 rounded-full flex-row items-center gap-1.5 bg-white/95 dark:bg-darkBackground/95 shadow-sm shadow-black/20 z-10">
             <View className={`w-2 h-2 rounded-full`} style={{ backgroundColor: statusCfg.text }} />
             <Text className="text-[10px] font-poppins-bold tracking-wider text-slate-800 dark:text-slate-200 mt-[1px] uppercase">
@@ -160,7 +155,6 @@ export function AdminStoreDetails({
             </Text>
           </View>
 
-          {/* LOGO AVATAR Overlay */}
           <TouchableOpacity 
             activeOpacity={0.8}
             onPress={() => store.logo && setViewingDocUri(store.logo)}
@@ -174,10 +168,8 @@ export function AdminStoreDetails({
           </TouchableOpacity>
         </View>
 
-        {/* DETAILS CARDS CONTAINER */}
         <View className="px-5 pt-[40px] space-y-3">
 
-          {/* CARD 1: Info */}
           <View className="bg-white dark:bg-darkBackgroundCard rounded-3xl p-4 shadow-sm shadow-slate-200/40 dark:shadow-none mb-4 border border-slate-100 dark:border-neutral-800/50">
             <View className="flex-row justify-between items-start mb-1">
               <Text className="flex-1 text-lg font-poppins-bold text-slate-800 dark:text-slate-100 leading-[26px]" numberOfLines={2}>
@@ -201,7 +193,6 @@ export function AdminStoreDetails({
               </Text>
             </View>
 
-            {/* Registration No. */}
             {store.registration_number && (
               <View className="mb-1.5">
                 <Text className="text-[10px] font-poppins-semibold tracking-wider text-[#94A3B8] uppercase mb-1">{translate("superAdmin.stores.details.registrationNumber", { defaultValue: "Registration No." })}</Text>
@@ -211,7 +202,6 @@ export function AdminStoreDetails({
               </View>
             )}
 
-            {/* Operating hours */}
             <View className="mb-1.5">
               <Text className="text-[10px] font-poppins-semibold tracking-wider text-[#94A3B8] uppercase mb-1.5">{translate("superAdmin.stores.details.operatingHours", { defaultValue: "Operating Hours" })}</Text>
               <View className="bg-[#F8FAFC] dark:bg-darkBackgroundMuted rounded-xl p-3 border border-slate-100 dark:border-neutral-800">
@@ -233,7 +223,6 @@ export function AdminStoreDetails({
               </View>
             </View>
 
-            {/* About */}
             <View>
               <Text className="text-[10px] font-poppins-semibold tracking-wider text-[#94A3B8] uppercase mb-1.5">About This Store</Text>
               <Text className="text-[11px] font-poppins text-slate-400 dark:text-slate-500 italic leading-5">
@@ -297,45 +286,51 @@ export function AdminStoreDetails({
             )}
           </View>
 
-          {/* CARD 2: Location & Contact */}
           <View className="bg-white dark:bg-darkBackgroundCard rounded-3xl p-6 shadow-sm shadow-slate-200/40 dark:shadow-none mb-4 border border-slate-100 dark:border-neutral-800/50">
             <View className="flex-row items-center gap-1.5 mb-5">
               <MaterialIcons name="location-on" size={18} color="#D93025" />
               <Text className="text-sm font-poppins-bold text-slate-800 dark:text-slate-100">Location & Contact</Text>
             </View>
 
-            {/* Mapbox section */}
-
             {(store.latitude !== null && store.longitude !== null && store.latitude !== undefined && store.longitude !== undefined) ? (
               <View style={{ width: "100%", height: 160, borderRadius: 16, overflow: "hidden", marginBottom: 20 }} className="bg-slate-50 dark:bg-neutral-800">
-                <MapView
-                  style={{ flex: 1, width: "100%", height: "100%" }}
-                  surfaceView={false}
-                  styleURL={
-                    isDark
-                      ? "mapbox://styles/mapbox/navigation-night-v1"
-                      : "mapbox://styles/mapbox/light-v11"
-                  }
-                  scrollEnabled={false}
-                  zoomEnabled={false}
-                  rotateEnabled={false}
-                  pitchEnabled={false}
-                  attributionEnabled={false}
-                  logoEnabled={false}
-                >
-                  <Camera centerCoordinate={[Number(store.longitude), Number(store.latitude)]} zoomLevel={14} animationMode="none" />
-                  <Mapbox.Images images={{ default: require("../../../assets/images/markers/default.png") }} />
-                  <Mapbox.ShapeSource
-                    id="storePinLocation"
-                    shape={{
-                      type: "Feature",
-                      geometry: { type: "Point", coordinates: [Number(store.longitude), Number(store.latitude)] },
-                      properties: { icon: "default" },
-                    }}
+                {shouldUseInteractiveMapbox() ? (
+                  <MapView
+                    style={{ flex: 1, width: "100%", height: "100%" }}
+                    surfaceView={false}
+                    styleURL={
+                      isDark
+                        ? "mapbox://styles/mapbox/navigation-night-v1"
+                        : "mapbox://styles/mapbox/light-v11"
+                    }
+                    scrollEnabled={false}
+                    zoomEnabled={false}
+                    rotateEnabled={false}
+                    pitchEnabled={false}
+                    attributionEnabled={false}
+                    logoEnabled={false}
                   >
-                    <Mapbox.SymbolLayer id="storePinLayerLoc" style={{ iconImage: ["get", "icon"], iconAllowOverlap: true, iconSize: 0.015 }} />
-                  </Mapbox.ShapeSource>
-                </MapView>
+                    <Camera centerCoordinate={[Number(store.longitude), Number(store.latitude)]} zoomLevel={14} animationMode="none" />
+                    <Mapbox.Images images={{ default: require("../../../assets/images/markers/default.png") }} />
+                    <Mapbox.ShapeSource
+                      id="storePinLocation"
+                      shape={{
+                        type: "Feature",
+                        geometry: { type: "Point", coordinates: [Number(store.longitude), Number(store.latitude)] },
+                        properties: { icon: "default" },
+                      }}
+                    >
+                      <Mapbox.SymbolLayer id="storePinLayerLoc" style={{ iconImage: ["get", "icon"], iconAllowOverlap: true, iconSize: 0.015 }} />
+                    </Mapbox.ShapeSource>
+                  </MapView>
+                ) : (
+                  <View className="flex-1 w-full h-full items-center justify-center gap-y-1">
+                    <MaterialIcons name="map" size={28} color={isDark ? "#525252" : "#CBD5E1"} />
+                    <Text className="text-[10px] font-poppins text-slate-400 dark:text-slate-500 px-3 text-center">
+                      Map only on Android & Web
+                    </Text>
+                  </View>
+                )}
               </View>
             ) : (
               <View className="h-[120px] bg-slate-50 dark:bg-neutral-800/50 rounded-2xl items-center justify-center mb-5 border border-slate-100 dark:border-neutral-800">
@@ -357,7 +352,6 @@ export function AdminStoreDetails({
             )}
           </View>
 
-          {/* CARD 3: Verification */}
           <View className="bg-white dark:bg-darkBackgroundCard rounded-3xl p-6 shadow-sm shadow-slate-200/40 dark:shadow-none mb-6 border border-slate-100 dark:border-neutral-800/50">
             <View className="flex-row items-center gap-1.5 mb-5">
               <MaterialIcons name="verified" size={18} color="#15803d" />
@@ -388,7 +382,6 @@ export function AdminStoreDetails({
 
           </View>
 
-          {/* Approve / Reject Actions */}
           {isPending && (
             <View className="flex-row gap-3 pt-2">
               <View className="flex-1">
@@ -403,7 +396,6 @@ export function AdminStoreDetails({
         </View>
       </ScrollView>
 
-      {/* Full-screen document viewer */}
       {viewingDocUri && (
         <ImageViewerModal
           uri={viewingDocUri}

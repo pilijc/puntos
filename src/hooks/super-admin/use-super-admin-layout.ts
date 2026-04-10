@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useRouter } from "expo-router";
 import { supabase } from "@/supabase/supabase";
-import { getRoleTypeForUser } from "@/services/access-service";
+import { getRoleTypeForUser, getWebAdjustedHomeRoute } from "@/services/access-service";
 
 export function useSuperAdminLayout() {
   const router = useRouter();
@@ -14,10 +14,10 @@ export function useSuperAdminLayout() {
 
         const roleType = await getRoleTypeForUser(user.id);
         if (roleType !== "super_admin") {
-          router.replace("/(user)");
+          router.replace(getWebAdjustedHomeRoute("/(user)") as any);
         }
       } catch {
-        router.replace("/(user)");
+        router.replace(getWebAdjustedHomeRoute("/(user)") as any);
       }
     };
     verifyAccess();
