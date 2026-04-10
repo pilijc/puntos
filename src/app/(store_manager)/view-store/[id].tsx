@@ -92,7 +92,7 @@ export default function ViewStore() {
   }, [fetchStore, fetchRecentTransactions]);
 
   return (
-    <View className="flex-1 bg-backgroundMuted dark:bg-neutral-900">
+    <SafeAreaView edges={["top"]} className="flex-1 bg-backgroundMuted dark:bg-neutral-900">
       <Modal
         visible={!!modal}
         onClose={() => setModal(null)}
@@ -107,8 +107,13 @@ export default function ViewStore() {
         onBackPress={() => router.push("/(store_manager)/stores")}
       />
 
+      <AppHeader
+        title={store?.name || "Store Details"}
+        description={store?.address || "View & manage store info"}
+        onBackPress={() => router.push("/(store_manager)/stores")}
+      />
       <ScrollView
-        className="flex-1 gap-y-4"
+        className="flex-1 gap-y-4 pt-4"
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 32 }}
         refreshControl={
@@ -364,6 +369,6 @@ export default function ViewStore() {
           </View>
         )}
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 }

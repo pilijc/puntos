@@ -8,7 +8,7 @@ import { useRewardsUiStore } from "@/store/user/rewards-ui-store";
 import { useRewardsDataStore } from "@/hooks/use-rewards-data";
 import { useStamps } from "@/hooks/use-stamps";
 import { useStampRewards } from "@/hooks/use-stamp-rewards";
-import { useLocation } from "@/hooks/use-location";
+import { useLocation } from "@/hooks/user/use-location";
 import UserStoreListItem from "@/components/users/stores/user-store-list-item";
 import StoreScreenContainer from "@/components/ui/store-screen-container";
 import { buildStampedStoreList } from "@/utils/store-helpers";
@@ -25,15 +25,7 @@ export default function StoreListScreen() {
   const { activeStampProgramRewards } = useRewardsDataStore();
   const { stamps, isLoading: stampsLoading, refetch: refetchStamps } = useStamps();
   const { stampRewards } = useStampRewards();
-  const { location, refreshLocation, startWatching, stopWatching } = useLocation();
-
-  React.useEffect(() => {
-    startWatching();
-    return () => {
-      stopWatching();
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const { location, refreshLocation } = useLocation();
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);

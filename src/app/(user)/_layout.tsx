@@ -4,12 +4,16 @@ import { useColorScheme, Platform } from 'react-native';
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 import { Compass, Store, History, Settings } from 'lucide-react-native';
+import { useProfile } from '@/hooks/user/use-profile';
+import { useLocationSync } from '@/hooks/user/use-location-sync';
 
 function UserTabs() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
   const { t: translate } = useTranslation();
   const insets = useSafeAreaInsets();
+  const { user, preferences } = useProfile();
+  useLocationSync(user?.id, preferences?.location_enabled ?? false);
 
   return (
     <Tabs
@@ -58,8 +62,8 @@ function UserTabs() {
         }}
       />
       <Tabs.Screen
-          name="qr"
-          options={{ href: null }}
+        name="qr"
+        options={{ href: null }}
       />
     </Tabs>
   );

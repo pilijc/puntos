@@ -26,7 +26,7 @@ export default function TranslateButton() {
                 color={i18n.language === "en" ? "#6b7280" : "#FF6600"}
             />
             <Text className="ml-1.5 text-xs font-poppins-semibold text-neutral-600 dark:text-darkTextSecondary uppercase">
-                {i18n.language === "en" ? "JP" : "EN"}
+                {i18n.language === "en" ? "EN" : "JP"}
             </Text>
         </TouchableOpacity>
     );

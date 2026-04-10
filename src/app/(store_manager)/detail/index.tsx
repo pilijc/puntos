@@ -1,18 +1,16 @@
 import React, { useState } from "react";
 import { RefreshControl } from "react-native";
 import { View, Text, TouchableOpacity, ScrollView, SafeAreaView } from "@/tw";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useRouter } from "expo-router";
 import { Image } from "expo-image";
 import Mapbox, { Camera, MapView } from "@rnmapbox/maps";
 import { formatTime } from "@/utils/store_manager/store-utils";
 import { useStoreDetail } from "@/hooks/store-manager/use-detail";
-import { FontAwesome, Ionicons } from "@expo/vector-icons";
 import { DetailsSkeleton } from "@/components/skeleton/store_manager/details-skeleton";
 import { OptionsMenu } from "@/components/options";
 import { AppHeader } from "@/components/header";
 import { shouldUseInteractiveMapbox } from "@/utils/mapbox-platform";
+import { Building2, Clock, File, MapPinOff, Pencil, Phone } from "lucide-react-native";
 
 export default function DetailIndex() {
   const router = useRouter();
@@ -40,7 +38,7 @@ export default function DetailIndex() {
           options={[
             {
               label: "Edit",
-              icon: <MaterialIcons name="edit" size={14} color="black" />,
+              icon: <Pencil size={14} color="text-primary" />,
               onPress: () => router.push({ pathname: "/(store_manager)/detail/edit-details", params: { storeId } }),
             },
           ]}
@@ -78,52 +76,62 @@ export default function DetailIndex() {
                   style={{ width: 60, height: 60, borderRadius: 14 }}
                   className="bg-orange-50 dark:bg-orange-950 border-2 border-dashed border-orange-200 dark:border-orange-800 items-center justify-center"
                 >
-                  <MaterialIcons name="storefront" size={24} color="#FF6600" />
+                  <Building2 size={24} color="text-primary" />
                 </View>
               )}
 
-              <View className="flex-1 items-start">
-                <Text className="text-base font-poppins-bold text-slate-800 dark:text-slate-100 text-left">
-                  {detail?.name || "Unnamed Store"}
-                </Text>
-                {(detail?.store_open || detail?.store_close) && (
-                  <Text className="text-xs font-poppins-semibold text-textMuted dark:text-slate-500">
-                    {formatTime(detail.store_open)} – {formatTime(detail.store_close)}
+              <View className="flex-1 items-start justify-start">
+                <View className="flex-row items-center w-full">
+                  <Text className="text-base font-poppins-bold text-slate-800 dark:text-slate-100 text-left mr-2">
+                    {detail?.name || "Unnamed Store"}
                   </Text>
-                )}
-                <Text className="text-xs font-poppins-semibold text-textMuted dark:text-slate-500">
+                  <View className={`flex-row items-center gap-x-1 px-2.5 py-1 rounded-full ${statusCfg.bg}`}>
+                    <View className={`w-1.5 h-1.5 rounded-full ${statusCfg.dot}`} />
+                    <Text className={`text-xs font-poppins-semibold ${statusCfg.text}`}>
+                      {statusCfg.label}
+                    </Text>
+                  </View>
+                </View>
+                <Text className="text-xs font-poppins-semibold text-textMuted dark:text-slate-500 mt-0.5">
                   {storeTypeLabelmap[detail?.type ?? ""] ?? detail?.type ?? "—"}
                 </Text>
               </View>
+            </View>
+         
 
-              <View className={`self-start flex-row items-center gap-x-1 px-2.5 py-1 rounded-full ${statusCfg.bg}`}>
-                <View className={`w-1.5 h-1.5 rounded-full ${statusCfg.dot}`} />
-                <Text className={`text-xs font-poppins-semibold ${statusCfg.text}`}>
-                  {statusCfg.label}
-                </Text>
+            <View className="px-4 pb-4">
+              <View className="flex-row gap-x-6">
+                <View className="flex-1 gap-y-2">
+                  <View className="flex-row items-center gap-x-2">
+                    <Phone size={12} color={isDark ? "#A3A3A3" : "#475569"} />
+                    <Text className="text-xs font-poppins-semibold text-textSecondary dark:text-slate-500">
+                      {detail?.phone ?? "Not set"}
+                    </Text>
+                  </View>
+                  <View className="flex-row items-center gap-x-2">
+                    <File size={12} color={isDark ? "#A3A3A3" : "#475569"} />
+                    <Text className="text-xs font-poppins-semibold text-textSecondary dark:text-slate-500">
+                      {detail?.registration_number ?? "Not set"}
+                    </Text>
+                  </View>
+                </View>
+
+                <View className="flex-1 gap-y-2">
+                  <View className="flex-row items-center gap-x-2">
+                    <Clock size={12} color={isDark ? "#A3A3A3" : "#475569"} />
+                    <Text className="text-xs font-poppins-semibold text-textSecondary dark:text-slate-500">
+                      Open: {detail?.store_open ? formatTime(detail.store_open) : "Not set"}
+                    </Text>
+                  </View>
+                  <View className="flex-row items-center gap-x-2">
+                    <Clock size={12} color={isDark ? "#A3A3A3" : "#475569"} />
+                    <Text className="text-xs font-poppins-semibold text-textSecondary dark:text-slate-500">
+                      Close: {detail?.store_close ? formatTime(detail.store_close) : "Not set"}
+                    </Text>
+                  </View>
+                </View>
               </View>
             </View>
-
-            {(detail?.phone || detail?.registration_number) && (
-              <View className="px-4 pb-4">
-                {detail?.phone && (
-                  <View className="flex-row items-center gap-x-2">
-                    <FontAwesome name="phone" size={12} color="text-textSecondary" />
-                    <Text className="text-xs font-poppins-semibold text-textSecondary dark:text-slate-500">
-                      {detail.phone}
-                    </Text>
-                  </View>
-                )}
-                {detail?.registration_number && (
-                  <View className="flex-row items-center gap-x-2">
-                    <Ionicons name="document" size={12} color="text-textSecondary" />
-                    <Text className="text-xs font-poppins-semibold text-textSecondary dark:text-slate-500">
-                      {detail.registration_number}
-                    </Text>
-                  </View>
-                )}
-              </View>
-            )}
             <View className="flex-row gap-x-2 p-4">
               {[0, 1, 2].map((i) => {
                 const uri = pictures[i];
@@ -232,7 +240,7 @@ export default function DetailIndex() {
                     style={{ borderRadius: 12 }}
                     className="h-32 bg-slate-50 dark:bg-neutral-700 items-center justify-center gap-y-1"
                   >
-                    <MaterialIcons name="location-off" size={24} color={isDark ? "#525252" : "#CBD5E1"} />
+                    <MapPinOff size={24} color={isDark ? "#525252" : "#CBD5E1"} />
                     <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">
                       No location set
                     </Text>

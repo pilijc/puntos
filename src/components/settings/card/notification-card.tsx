@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { Linking } from 'react-native';
 import { View, Text, TouchableOpacity } from "@/tw";
-import { Ionicons } from '@expo/vector-icons';
+import { ChevronRight, Bell } from "lucide-react-native";
 import { useTranslation } from "react-i18next";
-import { useProfile } from "@/hooks/use-profile";
+import { useProfile } from "@/hooks/user/use-profile";
 import { useNotifications } from "@/hooks/use-notifications";
 import { Modal, type ModalButton } from '@/components/modal';
 
@@ -64,16 +64,16 @@ export const NotificationCard = () => {
         <>
             <TouchableOpacity
                 onPress={handlePress}
-                className="flex-row p-4 bg-background dark:bg-darkBackgroundMuted items-center will-change-pressable"
+                className="flex-row p-3 bg-background dark:bg-darkBackgroundMuted items-center will-change-pressable"
             >
                 <View className="h-8 w-8 items-center justify-center rounded-lg bg-orange-50 dark:bg-orange-900/20">
-                    <Ionicons name="notifications-outline" size={18} color="#FF6600" />
+                    <Bell size={18} color="#FF6600" />
                 </View>
                 <View className="ml-3 flex-1">
-                    <Text className="text-base font-poppins-semibold text-neutral-800 dark:text-darkTextPrimary">
+                    <Text className="text-base font-poppins-semibold text-textPrimary dark:text-darkTextPrimary">
                         {translate('settings.notificationsPrivacy.alerts.title')}
                     </Text>
-                    <Text className="text-xs font-poppins-regular text-neutral-400 dark:text-darkTextMuted">
+                    <Text className="text-xs font-poppins-regular text-textMuted dark:text-darkTextMuted">
                         {notificationLoading
                             ? translate('settings.checking')
                             : hasPermission
@@ -82,7 +82,7 @@ export const NotificationCard = () => {
                     </Text>
                 </View>
                 <View className="flex-row items-center">
-                    <Ionicons name="chevron-forward-outline" size={15} color="#d4d4d4" />
+                    <ChevronRight size={15} color="#94a3b8" />
                 </View>
             </TouchableOpacity>
 

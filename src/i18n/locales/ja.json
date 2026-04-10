@@ -432,6 +432,7 @@
             "title": "アカウント設定",
             "security": {
                 "title": "セキュリティ",
+                "description": "パスワード、アカウントの削除",
                 "changePassword": {
                     "title": "パスワード変更",
                     "description": "現在のパスワードと新しいパスワードを入力してください",
