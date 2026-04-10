@@ -7,7 +7,7 @@ import {
     updateUserProfileService,
     updateUserSettingsService,
     deleteOldAvatar
-} from "@/services/settings-service";
+} from "@/services/user/settings-service";
 
 
 interface ProfileState {

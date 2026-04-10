@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { LayoutAnimation } from 'react-native';
 import { View, Text, TouchableOpacity } from "@/tw";
-import { Ionicons } from '@expo/vector-icons';
+import { Languages, Check, ChevronUp, ChevronDown } from "lucide-react-native";
 import { useTranslation } from "react-i18next";
 import { useLanguageStore } from "@/store/language-store";
 
@@ -22,65 +22,61 @@ export const LanguageCard = () => {
     };
 
     return (
-        <View className="bg-background dark:bg-darkBackgroundMuted p-4 border-t border-neutral-200 dark:border-darkBorder overflow-hidden">
+        <View className="bg-background dark:bg-darkBackgroundMuted p-3 overflow-hidden">
             <TouchableOpacity
                 onPress={toggleOpen}
                 className="flex-row items-center"
                 activeOpacity={0.7}
             >
                 <View className="h-8 w-8 rounded-lg bg-blue-50 dark:bg-blue-900/20 items-center justify-center">
-                    <Ionicons name="language-outline" size={15} color="#2563eb" />
+                    <Languages size={15} color="#2563eb" />
                 </View>
 
                 <View className="flex-1 ml-3">
-                    <Text className="text-base font-poppins-semibold text-neutral-800 dark:text-darkTextPrimary">
+                    <Text className="text-base font-poppins-semibold text-textPrimary dark:text-darkTextPrimary">
                         {translate('settings.account.language.title')}
                     </Text>
-                    <Text className="text-xs font-poppins-regular text-neutral-400 dark:text-darkTextMuted">
+                    <Text className="text-xs font-poppins-regular text-textMuted dark:text-darkTextMuted">
                         {language === 'ja' ? "日本語" : "English"}
                     </Text>
                 </View>
 
-                <Ionicons
-                    name={isOpen ? "chevron-up-outline" : "chevron-down-outline"}
-                    size={20}
-                    color="#94a3b8"
-                />
+                {isOpen ? <ChevronUp size={15} color="#94a3b8" /> : <ChevronDown size={15} color="#94a3b8" />}
             </TouchableOpacity>
 
             {isOpen && (
-                <View className="mt-2">
-                    {/* Divider */}
-                    <View className="h-[1px] bg-neutral-100 dark:bg-darkBorder mb-1 ml-12" />
+                <View className="mt-3">
+                    {/* divider */}
+                    <View className="h-[1px] bg-border dark:bg-darkBorder" />
 
-                    {/* English Row */}
+                    {/* english */}
                     <TouchableOpacity
                         onPress={() => handleSelectLanguage('en')}
                         className="flex-row items-center justify-between py-3 ml-12"
                         activeOpacity={0.6}
                     >
-                        <Text className={`text-sm font-poppins-medium ${language === 'en' ? 'text-primary' : 'text-neutral-600 dark:text-darkTextSecondary'}`}>
+                        <Text className={`text-sm font-poppins-medium ${language === 'en' ? 'text-primary' : 'text-textPrimary dark:text-darkTextSecondary'}`}>
                             English
                         </Text>
                         {language === 'en' && (
-                            <Ionicons name="checkmark" size={18} color="#FF6600" />
+                            <Check size={12} color="#FF6600" />
                         )}
                     </TouchableOpacity>
 
-                    {/* Divider */}
-                    <View className="h-[1px] bg-neutral-100 dark:bg-darkBorder ml-12" />
+                    {/* divider */}
+                    <View className="h-[1px] bg-border dark:bg-darkBorder opacity-25 ml-12" />
 
-                    {/* Japanese Row */}
+                    {/* japanese */}
                     <TouchableOpacity
                         onPress={() => handleSelectLanguage('ja')}
                         className="flex-row items-center justify-between py-3 ml-12"
                         activeOpacity={0.6}
                     >
-                        <Text className={`text-sm font-poppins-medium ${language === 'ja' ? 'text-primary' : 'text-neutral-600 dark:text-darkTextSecondary'}`}>
+                        <Text className={`text-sm font-poppins-medium ${language === 'ja' ? 'text-primary' : 'text-textPrimary dark:text-darkTextSecondary'}`}>
                             日本語
                         </Text>
                         {language === 'ja' && (
-                            <Ionicons name="checkmark" size={18} color="#FF6600" />
+                            <Check size={12} color="#FF6600" />
                         )}
                     </TouchableOpacity>
                 </View>

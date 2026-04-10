@@ -5,7 +5,7 @@ import { SafeAreaView, View, Text, TouchableOpacity } from '@/tw';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useRouter } from 'expo-router';
 import QRCode from 'react-native-qrcode-svg';
-import { getCurrentUser, getStaticQRCode, addAutoUser, setupQRListeners, cleanupQRChannels } from '@/services/users/qr-service';
+import { getCurrentUser, getStaticQRCode, addAutoUser, setupQRListeners, cleanupQRChannels } from '@/services/user/qr-service';
 import { useStamps } from '@/hooks/use-stamps';
 import { useStampRewards } from '@/hooks/use-stamp-rewards';
 import { VoucherGenerator } from '@/components/users/voucher';
@@ -42,7 +42,7 @@ export default function Qr() {
       const addUser = await addAutoUser();
       console.log('Add user:', addUser);
 
-    } 
+    }
     catch (err) {
       console.error('Error getting QR code:', err);
       setQrValue(null);
@@ -87,7 +87,7 @@ export default function Qr() {
     };
 
     let channels: { qrChannel: any; voucherChannel: any } | null = null;
-    
+
     setupQR().then((result) => {
       channels = result;
       return fetchQRCode();
