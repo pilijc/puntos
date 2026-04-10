@@ -33,7 +33,7 @@ export const SecurityCard: React.FC<SecurityCardProps> = ({ disabled = false, wa
 
     return (
         <>
-            <View className={`bg-background dark:bg-darkBackgroundMuted p-4 overflow-hidden ${disabled ? 'opacity-60' : ''}`}>
+            <View className={`bg-background dark:bg-darkBackgroundMuted p-3 overflow-hidden ${disabled ? 'opacity-60' : ''}`}>
                 <TouchableOpacity
                     onPress={toggleOpen}
                     className="flex-row items-center"
@@ -59,15 +59,15 @@ export const SecurityCard: React.FC<SecurityCardProps> = ({ disabled = false, wa
                     </View>
 
                     {isOpen ? (
-                        <ChevronUp size={20} color="#94a3b8" />
+                        <ChevronUp size={15} color="#94a3b8" />
                     ) : (
-                        <ChevronDown size={20} color="#94a3b8" />
+                        <ChevronDown size={15} color="#94a3b8" />
                     )}
                 </TouchableOpacity>
 
                 {isOpen && (
                     <View className="mt-2">
-                        {/* Divider */}
+                        {/* divider */}
                         <View className="h-[1px] bg-neutral-100 dark:bg-darkBorder mb-1 ml-12" />
 
                         {/* change password*/}
