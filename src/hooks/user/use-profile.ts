@@ -13,10 +13,8 @@ export const useProfile = () => {
     } = useProfileStore();
 
     useEffect(() => {
-        if (!user) {
-            fetchProfile();
-        }
-    }, [user, fetchProfile]);
+        fetchProfile();
+    }, [fetchProfile]);
 
     return{
         user,

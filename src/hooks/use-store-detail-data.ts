@@ -1,5 +1,5 @@
 import { rewards } from "@/data/rewards";
-import { useLocation } from "@/hooks/use-location";
+import { useLocation } from "@/hooks/user/use-location";
 import { useStamps } from "@/hooks/use-stamps";
 import { useStoreStore } from "@/store/user/store-store";
 import { useRewardsUiStore } from "@/store/user/rewards-ui-store";

@@ -1,6 +1,6 @@
 import { rewards } from "@/data/rewards";
 import { useCarouselAutoplayPause } from "@/hooks/use-carousel-autoplay-pause";
-import { useLocation } from "@/hooks/use-location";
+import { useLocation } from "@/hooks/user/use-location";
 import { useRewardsActions } from "@/hooks/use-rewards-actions";
 import { useStampRewards } from "@/hooks/use-stamp-rewards";
 import { useStamps } from "@/hooks/use-stamps";
@@ -63,7 +63,7 @@ export function useStoreOverviewData(storeId?: string) {
     upcomingStreakProgramMap,
   } = useRewardsDataStore();
   const { stores, setStores } = useStoreStore();
-  const { location, startWatching, stopWatching } = useLocation();
+  const { location } = useLocation();
   const { handleRefresh, hasStampedToday } = useRewardsActions();
   const { stamps } = useStamps();
   const { stampRewards } = useStampRewards();
@@ -84,14 +84,6 @@ export function useStoreOverviewData(storeId?: string) {
   useEffect(() => {
     fetchActiveStores();
   }, [fetchActiveStores]);
-
-  useEffect(() => {
-    startWatching();
-    return () => {
-      stopWatching();
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   const storesWithLocation = useMemo(
     () => getEnrichedStores(stores, location),

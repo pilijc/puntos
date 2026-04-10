@@ -49,6 +49,7 @@ export default function EditDetails() {
     longitude, setLongitude,
     radius, setRadius,
     initFromDetail,
+    reset,
   } = useDetailStore();
 
   const [scrollEnabled, setScrollEnabled] = useState(true);
@@ -57,8 +58,8 @@ export default function EditDetails() {
   const [isUploading, setIsUploading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [modal, setModal] = useState<{ title: string; message: string; buttons: ModalButton[] } | null>(null);
-
   const [loadingInitial, setLoadingInitial] = useState(!detail);
+
   useEffect(() => {
     let cancelled = false;
     const done = () => !cancelled && setLoadingInitial(false);
@@ -68,19 +69,30 @@ export default function EditDetails() {
       return done();
     }
 
+    reset();
+
     getStoreDetail(storeId)
       .then((data) => {
         if (cancelled) return;
         setDetail(data);
         initFromDetail(data);
       })
-      .catch(() => {})
+      .catch(() => {
+        if (cancelled) return;
+        setDetail(null);
+        reset();
+        setModal({
+          title: "Something went wrong",
+          message: "Failed to load store details. Please try again.",
+          buttons: [{ label: "OK", onPress: () => setModal(null), variant: "primary" }],
+        });
+      })
       .finally(done);
 
     return () => {
       cancelled = true;
     };
-  }, [storeId, detail, setDetail, initFromDetail]);
+  }, [storeId, detail, setDetail, initFromDetail, reset]);
 
   const showError = (message: string) =>
     setModal({

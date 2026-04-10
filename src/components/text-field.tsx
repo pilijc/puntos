@@ -45,9 +45,8 @@ export function TextField({
       )}
       <View className="relative justify-center">
         <TextInput
-          className={`w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 text-base font-poppins text-slate-900 dark:text-slate-100 ${
-            hasRight ? "pr-11" : "pr-4"
-          }`}
+          className={`w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 text-base font-poppins text-slate-900 dark:text-slate-100 ${hasRight ? "pr-11" : "pr-4"
+            }`}
           placeholder={placeholder}
           placeholderTextColor="#94A3B8"
           style={{
@@ -61,8 +60,8 @@ export function TextField({
             fontSize: 13,
           }}
           keyboardType={keyboardType}
-        multiline={multiline}
-        numberOfLines={numberOfLines}
+          multiline={multiline}
+          numberOfLines={numberOfLines}
           value={value}
           onChangeText={(v) => onChangeText(sanitize(v))}
           secureTextEntry={secureTextEntry}
