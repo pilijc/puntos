@@ -240,15 +240,17 @@ export function AdminStoreDetails({
                 No store information has been provided yet by the manager.
               </Text>
               {store.status !== 'pending_review' && (
-                <View className="mt-4 flex-row text-center items-center gap-2 self-start bg-emerald-50 dark:bg-emerald-900/10 px-3 py-2 rounded-xl border border-emerald-100 dark:border-emerald-800/30">
-                  <View className="w-5 h-5 rounded-full bg-emerald-500 items-center justify-center">
-                    <MaterialIcons name="verified" size={12} color="#ffffff" />
+                <View className={`mt-4 flex-row text-center items-center gap-2 self-start px-3 py-2 rounded-xl border ${statusKey === 'inactive' ? 'bg-red-50 dark:bg-red-900/10 border-red-100 dark:border-red-800/30' : 'bg-emerald-50 dark:bg-emerald-900/10 border-emerald-100 dark:border-emerald-800/30'}`}>
+                  <View className={`w-5 h-5 rounded-full items-center justify-center ${statusKey === 'inactive' ? 'bg-red-500' : 'bg-emerald-500'}`}>
+                    <MaterialIcons name={statusKey === 'inactive' ? 'refresh' : 'verified'} size={12} color="#ffffff" />
                   </View>
                   <Text
-                    className="text-[10px] font-poppins-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400"
+                    className={`text-[10px] font-poppins-bold uppercase tracking-wider ${statusKey === 'inactive' ? 'text-red-700 dark:text-red-400' : 'text-emerald-700 dark:text-emerald-400'}`}
                     style={{ lineHeight: 14, includeFontPadding: false } as any}
                   >
-                    Approved Date: {store.approved_at ? new Date(store.approved_at).toLocaleDateString("en-US", { year: 'numeric', month: 'short', day: 'numeric' }) : "N/A"}
+                    {statusKey === 'inactive'
+                      ? 'Requires Resubmission'
+                      : `Approved Date: ${store.approved_at ? new Date(store.approved_at).toLocaleDateString("en-US", { year: 'numeric', month: 'short', day: 'numeric' }) : "N/A"}`}
                   </Text>
                 </View>
               )}
