@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { RefreshControl, useColorScheme, NativeSyntheticEvent, NativeScrollEvent, useWindowDimensions } from "react-native";
-import { View, Text, TouchableOpacity, ScrollView, Image } from "@/tw";
+import { View, Text, TouchableOpacity, ScrollView, Image, SafeAreaView } from "@/tw";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -10,6 +10,7 @@ import { TransactionItem, TxType, type_badge } from "@/type/store-manager/transa
 import { formatTxTime } from "@/utils/store_manager/transaction";
 import { Modal, ModalButton } from "@/components/modal";
 import { Building2, Gift, QrCode, UsersRound, Stamp, Flame } from "lucide-react-native";
+import { AppHeader } from "@/components/header";
 
 export default function ViewStore() {
   const { id } = useLocalSearchParams();
@@ -92,7 +93,7 @@ export default function ViewStore() {
   }, [fetchStore, fetchRecentTransactions]);
 
   return (
-    <View className="flex-1 bg-backgroundMuted dark:bg-neutral-900">
+    <SafeAreaView edges={["top"]} className="flex-1 bg-backgroundMuted dark:bg-neutral-900">
       <Modal
         visible={!!modal}
         onClose={() => setModal(null)}
@@ -101,32 +102,14 @@ export default function ViewStore() {
         buttons={modal?.buttons}
         timer={modal?.timer ? 3000 : undefined}
       />
-      <View
-        className="border-b border-neutral-100 dark:border-neutral-700 bg-background dark:bg-neutral-800"
-        style={{ paddingTop: insets.top + 8, paddingBottom: 12 }}
-      >
-        <View className="flex-row items-center px-2">
-          <TouchableOpacity
-            onPress={() => router.push("/(store_manager)/stores")}
-            className="w-10 h-10 rounded-full items-center justify-center"
-            activeOpacity={0.7}
-          >
-            <MaterialIcons name="chevron-left" size={22} color={isDark ? "#F1F5F9" : "#0F172A"} />
-          </TouchableOpacity>
-          <View className="flex-1 items-center justify-center -ml-10">
-            <Text className="text-md font-poppins-bold text-textPrimary dark:text-textPrimary">
-              {store?.name || "Store Details"}
-            </Text>
-            <Text className="text-xs font-poppins text-textMuted dark:text-textMuted -mt-2">
-              {store?.address || "View & manage store info"}
-            </Text>
-          </View>
 
-        </View>
-      </View>
-
+      <AppHeader
+        title={store?.name || "Store Details"}
+        description={store?.address || "View & manage store info"}
+        onBackPress={() => router.push("/(store_manager)/stores")}
+      />
       <ScrollView
-        className="flex-1 gap-y-4"
+        className="flex-1 gap-y-4 pt-4"
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 32 }}
         refreshControl={
@@ -270,6 +253,6 @@ export default function ViewStore() {
           )}
         </View>
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 }

@@ -3,7 +3,6 @@ import { ActivityIndicator, ScrollView, useColorScheme } from "react-native";
 import { View, Text, TouchableOpacity, SafeAreaView } from "@/tw";
 import { Modal } from "@/components/modal";
 import { useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   getAllStampsByStoreId,
   getCollectorsByProgramId,
@@ -22,7 +21,6 @@ import { StampCard } from "@/components/store_manager/stamp/stamp-card";
 
 export default function ViewStamp() {
   const router = useRouter();
-  const insets = useSafeAreaInsets();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
   const { storeId } = useLocalSearchParams<{ storeId: string }>();
@@ -164,7 +162,7 @@ export default function ViewStamp() {
 
       <AppHeader
         title="Stamp Program"
-        paddingTop={insets.top + 8}
+        description="Reward customers with stamps"
         onBackPress={() => router.push({ pathname: "/(store_manager)/view-store/[id]", params: { id: storeId } })}
       />
 
