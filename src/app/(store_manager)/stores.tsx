@@ -446,7 +446,6 @@ export default function StoreManagerStores() {
                           </Text>
                         </View>
 
-                        <ChevronRight size={20} color="#94A3B8" />
                       </TouchableOpacity>
 
                       {idx < filtered.length - 1 ? (
