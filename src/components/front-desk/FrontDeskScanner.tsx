@@ -244,25 +244,28 @@ export default function FrontDeskScanner({
 
               {/* Manual Panel - Independent */}
               <View style={{ width: screenWidth }} className="pr-11">
-                <View className="items-center justify-center" style={{ height: 180, paddingLeft: 20, paddingRight: 20 }}>
-                  <View className="items-center">
+               
+                <View className="pt-23  items-center justify-center" style={{ height: 180, paddingLeft: 20, paddingRight: 20 }}>
+                  <View className="items-center pl-2 ">
                     {/* Voucher icon row */}
-                    <View className="flex-row items-center mb-4 -mt-6">
-                      <View className="w-10 h-10 bg-orange-50 dark:bg-orange-500/10 rounded-xl items-center justify-center mr-3 border border-orange-100 dark:border-orange-500/20">
-                        <MaterialIcons name="confirmation-number" size={20} color="#FF6600" />
+                    <View className="pl-3">
+                    <View className=" w-15 h-15 bg-orange-50 dark:bg-orange-500/10 rounded-xl items-center justify-center mr-3 border border-orange-100 dark:border-orange-500/20">
+                        <MaterialIcons name="confirmation-number" size={40} color="#FF6600" />
                       </View>
+                    </View>  
+                    <View className="flex-row items-center mb-4 pt-15 -mt-12 pr-3">
                       <View>
-                        <Text className="text-base font-poppins-bold text-neutral-900 dark:text-darkTextPrimary">
+                        <Text className="text-base font-poppins-bold text-neutral-900 dark:text-darkTextPrimary pl-15 ">
                           Enter Voucher Code
                         </Text>
-                        <Text className="text-xs font-poppins text-neutral-400 text-center">
+                        <Text className="text-xs font-poppins text-neutral-400 text-center pl-2">
                           Type the code from the customer's voucher
                         </Text>
                       </View>
                     </View>
 
                     {/* Code input */}
-                    <View className="w-72 -mt-3 pl-2">
+                    <View className="w-72 pl-2 -mt-7">
                       <TextField
                         label=""
                         value={voucherCode}

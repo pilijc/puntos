@@ -5,7 +5,7 @@ import { SafeAreaView, View, Text, TouchableOpacity } from '@/tw';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useRouter } from 'expo-router';
 import QRCode from 'react-native-qrcode-svg';
-import { getCurrentUser, getStaticQRCode, addAutoUser, setupQRListeners, cleanupQRChannels } from '@/services/users/qr-service';
+import { getCurrentUser, getStaticQRCode, addAutoUser, setupQRListeners, cleanupQRChannels } from '@/services/user/qr-service';
 import { supabase } from '@/supabase/supabase';
 import { useStamps } from '@/hooks/use-stamps';
 import { useStampRewards } from '@/hooks/use-stamp-rewards';
