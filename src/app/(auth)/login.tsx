@@ -127,11 +127,11 @@ export default function Login() {
         buttons={modal?.buttons}
       />
       <AppHeader
-        title={translate("onboarding.login.button")}
+        title={""}
         onBackPress={() => router.replace("/welcome")}
         rightIcon={<TranslateButton />}
       />
-      <View className="flex-1 justify-start p-4">
+      <View className="flex-1 justify-center pb-40 p-4">
         <KeyboardAvoidingView
           behavior={Platform.OS === "android" ? "padding" : "height"}
           className="flex-1"

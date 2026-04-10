@@ -3,8 +3,14 @@ import { Feather, Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { StepProps, PasswordStepProps, TermsStepProps, StepperProps, StepHeaderProps, RoleStepProps } from "@/type/auth";
 import { useTranslation } from "react-i18next";
+import LottieView from "lottie-react-native";
 import { TextField } from "./text-field";
-import { User, Store, Eye, LucideEye, LucideEyeOff } from "lucide-react-native";
+import { LucideEye, LucideEyeOff } from "lucide-react-native";
+
+const ROLE_LOTTIE_SOURCES = {
+  user: require("../assets/images/role-user.json"),
+  manager: require("../assets/images/role-store.json"),
+} as const;
 
 export const STEP_DATA = [
   {
@@ -194,54 +200,100 @@ export function RoleStep({ value, onChange, error }: RoleStepProps) {
   const roles = [
     {
       label: translate("onboarding.signup.roleSelect.customerLabel"),
-      value: "user",
+      value: "user" as const,
       description: translate("onboarding.signup.roleSelect.customerDescription"),
-      Icon: User,
     },
     {
       label: translate("onboarding.signup.roleSelect.ownerLabel"),
-      value: "manager",
+      value: "manager" as const,
       description: translate("onboarding.signup.roleSelect.ownerDescription"),
-      Icon: Store,
     },
   ];
 
   return (
-    <View className="gap-y-3 pr-0.5">
-      <Text className="text-sm font-poppins-medium text-neutral-700 dark:text-darkTextSecondary text-center">
-        {translate("onboarding.signup.roleSelect.title")}
-      </Text>
-      {roles.map((role) => {
-        const isSelected = value === role.value;
-
-        return (
-          <Pressable
-            key={role.value}
-            onPress={() => onChange(role.value)}
-            className={`px-4 py-6 rounded-2xl ${
-              isSelected ? "bg-primary/10 border border-slate-50 dark:border-slate-700" : "bg-white dark:bg-darkBackgroundMuted border border-slate-100 dark:border-darkBorder"
-            }`}
-          >
-            <View className="flex-row items-center gap-x-4">
-              <role.Icon size={20} color={isSelected ? "#FF6600" : "#9CA3AF"} />
-
-              <View className="flex-1">
-                <Text className="font-poppins-semibold text-neutral-900 dark:text-darkTextPrimary text-sm">
-                  {role.label}
-                </Text>
-                <Text className="font-poppins text-neutral-600 dark:text-darkTextSecondary text-xs mt-1">
-                  {role.description}
-                </Text>
-              </View>
-            </View>
-          </Pressable>
-        );
-      })}
-      {error && (
-        <Text className="text-red-500 dark:text-red-400 text-sm font-poppins rounded-xl p-4 text-center bg-red-50 dark:bg-red-900/20">
-          {error}
+    <View className="gap-y-5 pr-0.5">
+      <View className="gap-y-1.5 px-0.5">
+        <Text className="text-base font-poppins-semibold text-neutral-900 dark:text-darkTextPrimary text-center">
+          {translate("onboarding.signup.roleSelect.title")}
         </Text>
-      )}
+        <Text className="text-xs font-poppins text-neutral-500 dark:text-darkTextSecondary/90 text-center leading-relaxed px-1">
+          {translate("onboarding.signup.roleSelect.subtitle")}
+        </Text>
+      </View>
+
+      <View className="flex-row gap-3">
+        {roles.map((role) => {
+          const isSelected = value === role.value;
+
+          return (
+            <Pressable
+              key={role.value}
+              onPress={() => onChange(role.value)}
+              accessibilityRole="button"
+              accessibilityState={{ selected: isSelected }}
+              accessibilityLabel={`${role.label}. ${role.description}`}
+              android_ripple={{ color: "rgba(255, 102, 0, 0.12)" }}
+              className="flex-1 min-w-0 rounded-2xl"
+            >
+              <View
+                className={`flex-1 min-h-[168px] rounded-2xl px-3 pt-4 pb-3.5 ${
+                  isSelected
+                    ? "bg-white dark:bg-primary/15 border border-primary shadow-sm shadow-primary/20 dark:shadow-primary/10"
+                    : "bg-white dark:bg-darkBackgroundCard border border-neutral-200/90 dark:border-darkBorder shadow-sm shadow-slate-200/50 dark:shadow-none"
+                }`}
+              >
+                {isSelected ? (
+                  <View className="absolute top-2.5 right-2.5 z-10 w-6 h-6 rounded-full bg-primary items-center justify-center shadow-sm">
+                    <Ionicons name="checkmark" size={14} color="white" />
+                  </View>
+                ) : null}
+
+                <View className="items-center gap-y-2.5 flex-1 justify-center">
+                  <View
+                    className={`w-[68px] h-[68px] rounded-2xl items-center justify-center overflow-hidden`}
+                  >
+                    <View style={{ opacity: isSelected ? 1 : 0.72 }}>
+                      <LottieView
+                        source={ROLE_LOTTIE_SOURCES[role.value]}
+                        autoPlay
+                        loop
+                        style={{ width: 54, height: 54 }}
+                      />
+                    </View>
+                  </View>
+
+                  <View className="gap-y-1 px-0.5">
+                    <Text
+                      className={`font-poppins-semibold text-sm text-center leading-tight ${
+                        isSelected
+                          ? "text-neutral-900 dark:text-darkTextPrimary"
+                          : "text-neutral-800 dark:text-darkTextPrimary"
+                      }`}
+                      numberOfLines={2}
+                    >
+                      {role.label}
+                    </Text>
+                    <Text
+                      className="font-poppins text-[11px] leading-[15px] text-center text-neutral-500 dark:text-darkTextSecondary"
+                      numberOfLines={4}
+                    >
+                      {role.description}
+                    </Text>
+                  </View>
+                </View>
+              </View>
+            </Pressable>
+          );
+        })}
+      </View>
+
+      {error ? (
+        <View className="rounded-2xl px-4 py-3 bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800/40">
+          <Text className="text-red-600 dark:text-red-400 text-sm font-poppins text-center leading-snug">
+            {error}
+          </Text>
+        </View>
+      ) : null}
     </View>
   );
 }
