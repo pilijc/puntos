@@ -325,11 +325,11 @@ export default function SignUp() {
   return (
     <SafeAreaView className="flex-1 bg-white dark:bg-darkBackground">
       <AppHeader
-        title={role === 'manager' ? translate("onboarding.signup.titleManager") : translate("onboarding.signup.title")}
+        title={""}
         onBackPress={handleBack}
         rightIcon={<TranslateButton />}
       />
-      <View className="flex-1 justify-start p-6">
+      <View className="flex-1 justify-center pb-40 p-4">
         <KeyboardAvoidingView
           behavior={Platform.OS === "android" ? "padding" : "height"}
           className="flex-1"

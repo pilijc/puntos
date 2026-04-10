@@ -1,6 +1,6 @@
 import React, { useCallback, useRef } from "react";
 import { RefreshControl, useColorScheme, ActivityIndicator } from "react-native";
-import { View, Text, TouchableOpacity, ScrollView } from "@/tw";
+import { View, Text, TouchableOpacity, ScrollView, SafeAreaView } from "@/tw";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
 import { getQRConfig, toggleQREnabled } from "@/services/store-manager/qr-service";
@@ -11,6 +11,7 @@ import { ChevronLeft, QrCode, RefreshCcw } from "lucide-react-native";
 import { formatDate } from "@/utils/store_manager/streak-utils";
 import { useQRStore } from "@/store/store-manager/qr-store";
 import { QRSkeleton } from "@/components/skeleton/store_manager/qr-skeleton";
+import { AppHeader } from "@/components/header";
 
 export default function QRIndex() {
   const router = useRouter();
@@ -98,7 +99,7 @@ export default function QRIndex() {
   };
 
   return (
-    <View className="flex-1 bg-backgroundMuted dark:bg-neutral-900">
+    <SafeAreaView edges={["top"]} className="flex-1 bg-backgroundMuted dark:bg-neutral-900">
       <Modal
         visible={!!modal}
         onClose={() => setModal(null)}
@@ -106,33 +107,11 @@ export default function QRIndex() {
         message={modal?.message}
         buttons={modal?.buttons}
       />
-
-      <View
-        className="bg-background dark:bg-neutral-800 border-b border-neutral-100 dark:border-neutral-700"
-        style={{ paddingTop: insets.top + 8, paddingBottom: 12 }}
-      >
-        <View className="flex-row items-center px-2">
-          <TouchableOpacity
-            onPress={() =>
-              router.push({ pathname: "/(store_manager)/view-store/[id]", params: { id: storeIdForFetch } })
-            }
-            className="w-10 h-10 rounded-full items-center justify-center"
-            activeOpacity={0.7}
-          >
-            <ChevronLeft size={22} color={isDark ? "#F1F5F9" : "#0F172A"} />
-          </TouchableOpacity>
-
-          <View className="flex-1 items-center justify-center -ml-10">
-            <Text className="text-md font-poppins-bold text-textPrimary dark:text-textPrimary">
-                Scan Purchase
-            </Text>
-            <Text className="text-xs font-poppins text-textMuted dark:text-textMuted -mt-1">
-              Loyalty points on QR scan
-            </Text>
-          </View>
-        </View>
-      </View>
-
+      <AppHeader
+        title="Scan Purchase"
+        description="Customers scan to earn points"
+        onBackPress={() => router.push({ pathname: "/(store_manager)/view-store/[id]", params: { id: storeIdForFetch } })}
+      />
       <ScrollView
         className="flex-1"
         showsVerticalScrollIndicator={false}
@@ -290,6 +269,6 @@ export default function QRIndex() {
           </View>
         )}
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 }

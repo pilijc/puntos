@@ -112,6 +112,7 @@
             "ownerPrompt": "Sign up as Store Owner?",
             "roleSelect": {
                 "title": "Choose how you’ll use the app",
+                "subtitle": "Pick the option that fits you best. You can update this later in settings.",
                 "customerLabel": "I’m a Customer",
                 "customerDescription": "I want to earn rewards and use loyalty features",
                 "ownerLabel": "I’m a Store Owner",
