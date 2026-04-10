@@ -1,15 +1,13 @@
 import { View, Text, TextInput, Pressable, ScrollView, Image, TouchableOpacity } from "@/tw";
-import { Feather, Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { StepProps, PasswordStepProps, TermsStepProps, StepperProps, StepHeaderProps, RoleStepProps } from "@/type/auth";
 import { useTranslation } from "react-i18next";
-import LottieView from "lottie-react-native";
 import { TextField } from "./text-field";
-import { LucideEye, LucideEyeOff } from "lucide-react-native";
+import { CheckIcon, LucideEye, LucideEyeOff } from "lucide-react-native";
 
 const ROLE_LOTTIE_SOURCES = {
-  user: require("../assets/images/role-user.json"),
-  manager: require("../assets/images/role-store.json"),
+  user: require("../assets/images/role-user.png"),
+  manager: require("../assets/images/role-store.png"),
 } as const;
 
 export const STEP_DATA = [
@@ -244,7 +242,7 @@ export function RoleStep({ value, onChange, error }: RoleStepProps) {
               >
                 {isSelected ? (
                   <View className="absolute top-2.5 right-2.5 z-10 w-6 h-6 rounded-full bg-primary items-center justify-center shadow-sm">
-                    <Ionicons name="checkmark" size={14} color="white" />
+                    <CheckIcon size={14} color="white" />
                   </View>
                 ) : null}
 
@@ -253,10 +251,8 @@ export function RoleStep({ value, onChange, error }: RoleStepProps) {
                     className={`w-[68px] h-[68px] rounded-2xl items-center justify-center overflow-hidden`}
                   >
                     <View style={{ opacity: isSelected ? 1 : 0.72 }}>
-                      <LottieView
+                      <Image
                         source={ROLE_LOTTIE_SOURCES[role.value]}
-                        autoPlay
-                        loop
                         style={{ width: 54, height: 54 }}
                       />
                     </View>
@@ -313,7 +309,7 @@ export function TermsStep({ accepted, onToggle, error }: TermsStepProps) {
           className={`w-5 h-5 rounded border-2 ${accepted ? 'border-primary bg-primary' : 'border-neutral-300 dark:border-neutral-600'}`}
         >
           {accepted && (
-            <Ionicons name="checkmark" size={12} color="white" />
+            <CheckIcon size={12} color="white" />
           )}
         </View>
         <Text className="font-poppins text-neutral-700 dark:text-darkTextSecondary flex-1">
