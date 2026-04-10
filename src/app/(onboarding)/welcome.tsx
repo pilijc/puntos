@@ -3,21 +3,26 @@ import {
   SafeAreaView,
   View,
   Text,
-  TouchableOpacity,
   Image,
 } from "@/tw";
 import { router } from "expo-router";
-import { ActivityIndicator, Alert } from "react-native";
+import { Alert } from "react-native";
 import { signInWithGoogleLoginService } from "@/services/auth-service";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useTranslation, Trans } from "react-i18next";
 import TranslateButton from "@/components/ui/translate-button";
+import { Button } from "@/components/button";
+import { Modal, type ModalButton } from "@/components/modal";
 
 export default function OnboardingWelcome() {
   const [loadingGoogle, setLoadingGoogle] = useState(false);
   const { t: translate } = useTranslation();
   const appName = "Puntos";
-
+  const [modal, setModal] = useState<{
+    title: string;
+    message: string;
+    buttons: ModalButton[];
+  } | null>(null);
+  
   const handleLogin = () => {
     router.push("/login");
   };
@@ -48,12 +53,18 @@ export default function OnboardingWelcome() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-background dark:bg-darkBackground">
-      {/* Language Toggle */}
+    <SafeAreaView className="flex-1 bg-white dark:bg-darkBackground">
+      <Modal
+        visible={!!modal}
+        onClose={() => setModal(null)}
+        title={modal?.title ?? ""}
+        message={modal?.message}
+        buttons={modal?.buttons}
+      />
       <View className="absolute top-14 right-6 z-10">
         <TranslateButton />
       </View>
-      <View className="flex-1 w-full self-center bg-background dark:bg-darkBackground items-center justify-center">
+      <View className="flex-1 w-full self-center bg-white dark:bg-darkBackground items-center justify-center">
         <View className="w-full items-center px-6">
           <Image
             source={require("../../assets/images/puntos-person.png")}
@@ -76,50 +87,37 @@ export default function OnboardingWelcome() {
         </View>
         <View className="w-full items-center px-6 pt-6">
           <View className="flex-col gap-y-3 w-full items-center">
-            <TouchableOpacity
-              className="h-14 w-full px-5 rounded-xl bg-primary items-center justify-center"
-              activeOpacity={0.9}
+            <Button
+              label={translate("onboarding.login.button")}
               onPress={handleLogin}
-            >
-              <Text className="text-white text-md font-poppins-medium">
-                {translate("onboarding.login.button")}
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              className="h-14 w-full px-5 rounded-xl items-center justify-center border border-neutral-300 dark:border-darkBorder"
-              activeOpacity={0.9}
+              variant="primary"
+              fullWidth={true}
+              authButton={true}
+            />
+            <Button
+              label={translate("onboarding.signup.button")}
               onPress={handleSignup}
-            >
-              <Text className="text-neutral-600 dark:text-darkTextSecondary text-md font-poppins-medium">
-                {translate("onboarding.signup.button")}
-              </Text>
-            </TouchableOpacity>
-            <View className="flex-row items-center gap-x-4 my-3 w-full justify-center">
+              variant="secondary"
+              fullWidth={true}
+              authButton={true}
+            />
+            <View className="flex-row items-center gap-x-4 my-1 w-full justify-center">
               <View className="flex-1 h-px bg-neutral-300 dark:bg-darkBorder" />
               <Text className="text-neutral-500 dark:text-darkTextMuted font-poppins text-sm">
                 {translate("onboarding.signup.divider")}
               </Text>
               <View className="flex-1 h-px bg-neutral-300 dark:bg-darkBorder" />
             </View>
-            <TouchableOpacity
+            <Button
+              label={translate("onboarding.signup.google")}
               onPress={handleSignInWithGoogle}
-              className="h-14 w-full px-5 rounded-xl border border-neutral-300 dark:border-darkBorder bg-transparent flex-row items-center justify-center gap-x-3"
-              activeOpacity={0.9}
-            >
-              {loadingGoogle ? (
-                <ActivityIndicator size="small" color="gray" />
-              ) : (
-                <>
-                  <Image
-                    source={require("../../assets/images/google-icon.png")}
-                    className="w-5 h-5"
-                  />
-                  <Text className="text-neutral-600 dark:text-darkTextSecondary text-md font-poppins-medium mt-1">
-                    {translate("onboarding.signup.google")}
-                  </Text>
-                </>
-              )}
-            </TouchableOpacity>
+              variant="secondary"
+              fullWidth={true}
+              authButton={true}
+              leftImage={require("../../assets/images/google-icon.png")}
+              leftImageSize={14}
+              loading={loadingGoogle}
+            />
           </View>
         </View>
         <View className="px-8 pt-6 w-full items-center">
@@ -127,24 +125,28 @@ export default function OnboardingWelcome() {
             <Trans
               i18nKey="label.termsAgreement"
               components={{
-                tos: (
+                legal: (
                   <Text
-                    className="text-orange-500"
-                  // onPress={() => navigation.navigate("Terms")}
+                    className="text-primary font-poppins-semibold"
+                    onPress={() =>
+                      setModal({
+                        title: "Terms of Service",
+                        message:
+                          "By continuing, you agree to our Terms of Service and Privacy Policy.\n\nTerms of Service includes: account eligibility, acceptable use (no abuse/fraud), security responsibilities, and service changes/availability.\n\nPrivacy Policy includes: what data we collect, how we use it, when we share it, how we protect it, how long we keep it, and your privacy choices/rights.\n\nThese policies may change over time.",
+                        buttons: [
+                          {
+                            label: "OK",
+                            variant: "primary",
+                            onPress: () => setModal(null),
+                          },
+                        ],
+                      })
+                    }
                   />
                 ),
-                privacy: (
-                  <Text
-                    className="text-orange-500"
-                  // onPress={() => navigation.navigate("Privacy")}
-                  />
-                )
               }}
             />
           </Text>
-          <TouchableOpacity onPress={async () => await AsyncStorage.removeItem("hasSeenOnboarding")}>
-						<Text className="text-primary text-sm font-poppins">Testing here</Text>
-					</TouchableOpacity>
         </View>
       </View>
     </SafeAreaView>

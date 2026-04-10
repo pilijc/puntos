@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo } from "react";
-import { useFocusEffect } from "expo-router";
+import { useFocusEffect, useLocalSearchParams } from "expo-router";
 import { useStores } from "@/hooks/store-manager/use-stores";
 import { getTransactionsPageForStore } from "@/services/store-manager/transactions-service";
 import { useTransactionStore } from "@/store/store-manager/transaction";
@@ -8,6 +8,7 @@ import { buildListData } from "@/utils/store_manager/transaction";
 
 export function useTransactions() {
   const { stores, loading: storesLoading } = useStores();
+  const { storeId: storeIdParam } = useLocalSearchParams<{ storeId?: string }>();
 
   const {
     selectedStoreId,
@@ -28,10 +29,18 @@ export function useTransactions() {
   } = useTransactionStore();
 
   useEffect(() => {
-    if (stores.length > 0 && selectedStoreId === null) {
+    if (stores.length === 0) return;
+    if (storeIdParam) {
+      const id = Number(storeIdParam);
+      if (!Number.isNaN(id) && stores.some((s) => s.id === id)) {
+        setSelectedStoreId(id);
+        return;
+      }
+    }
+    if (selectedStoreId === null) {
       setSelectedStoreId(stores[0].id);
     }
-  }, [stores, selectedStoreId, setSelectedStoreId]);
+  }, [stores, storeIdParam, selectedStoreId, setSelectedStoreId]);
 
   const fetchPage = useCallback(
     async (storeId: number, filter: TypeFilter, pageNum: number, isRefresh = false) => {

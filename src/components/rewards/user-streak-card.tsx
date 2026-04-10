@@ -35,18 +35,79 @@ export default function UserStreakCard({
     nearbyStores.some((s) => Number(s.id) === Number(streak.store_id)) ||
     isStoreNearby(storeStr?.latitude, storeStr?.longitude);
 
+  const formatLocalDate = (date: Date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
+
   // Derive if already earned today from last_activity_date
-  const today = new Date().toISOString().split("T")[0];
+  const today = formatLocalDate(new Date());
   const alreadyEarnedToday = streak.last_activity_date === today || hasEarnedToday;
+  const shouldPulseCurrentDay = nearby && !alreadyEarnedToday;
 
   // Real data from backend
   const streakProgram = streak.store_streaks as any;
   const targetCount = streakProgram?.streak_length ?? 7;
-  // If earned today (optimistic or from DB), bump displayed count
-  const rawCount = streak.streak_days ?? 0;
-  const clampedCount = Math.min(alreadyEarnedToday ? rawCount : rawCount, targetCount);
 
-  const streakDays = [
+  // ─── Week-scoped circle fill ─────────────────────────────────────────────
+  // The 7 circles represent the CURRENT calendar week (Mon–Sun).
+  // We only count days earned *this* week so that last week's progress never
+  // bleeds into this week's circles and blocks today's "current" emphasis.
+
+  // Today's weekday index: Mon=0, Tue=1 … Sun=6
+  const todayWeekdayIndex = (new Date().getDay() + 6) % 7;
+
+  // Monday 00:00 of the current week (local time, compared as date strings)
+  const getMondayOfCurrentWeek = (): string => {
+    const d = new Date();
+    const offset = (d.getDay() + 6) % 7; // days since Monday
+    d.setDate(d.getDate() - offset);
+    return formatLocalDate(d); // "YYYY-MM-DD"
+  };
+  const weekStartStr = getMondayOfCurrentWeek(); // e.g. "2026-04-06" when today is Mon
+
+  // ─── Accurate computation of exactly WHICH days are completed ───
+  const addDays = (dateStr: string, d: number) => {
+    const [year, month, day] = dateStr.split("-").map(Number);
+    const date = new Date(year, month - 1, day);
+    date.setDate(date.getDate() + d);
+    return formatLocalDate(date);
+  };
+
+  const diffDays = (d1Str: string, d2Str: string) => {
+    const [y1, m1, day1] = d1Str.split("-").map(Number);
+    const [y2, m2, day2] = d2Str.split("-").map(Number);
+    const d1 = new Date(y1, m1 - 1, day1);
+    const d2 = new Date(y2, m2 - 1, day2);
+    return Math.round((d1.getTime() - d2.getTime()) / (1000 * 3600 * 24));
+  };
+
+  const lastActivityStr = streak.last_activity_date ?? "";
+  let effectiveLastDateStr = lastActivityStr;
+  let effectiveStreakDays = streak.streak_days ?? 0;
+
+  // Optimistic bump if the user just earned today in this session
+  if (hasEarnedToday && effectiveLastDateStr !== today) {
+    const yesterdayStr = addDays(today, -1);
+    if (effectiveLastDateStr === yesterdayStr) {
+      effectiveStreakDays += 1;
+    } else {
+      effectiveStreakDays = 1; // broken streak
+    }
+    effectiveLastDateStr = today;
+  }
+
+  // Display value for subtitle and completion modal
+  const clampedCount = Math.min(
+    (streak.total_earned_days ?? streak.streak_days ?? 0) +
+    (hasEarnedToday && lastActivityStr !== today ? 1 : 0),
+    targetCount,
+  );
+  const totalEarnedDisplay = clampedCount;
+
+  const streakDaysLabels = [
     translate("user.rewards.days.mon"),
     translate("user.rewards.days.tue"),
     translate("user.rewards.days.wed"),
@@ -56,17 +117,47 @@ export default function UserStreakCard({
     translate("user.rewards.days.sun"),
   ];
 
-  // Build exactly targetCount circles (or 7 if target is > 7 for safety)
-  const displayDayCount = Math.min(targetCount, 7);
-  const days = Array.from({ length: displayDayCount }, (_, index) => ({
-    label: streakDays[index % 7],
-    state:
-      index < clampedCount
-        ? "completed"
-        : index === clampedCount
-          ? "current"
-          : "upcoming",
-  }));
+  const days = Array.from({ length: 7 }, (_, index) => {
+    const circleDateStr = addDays(weekStartStr, index);
+
+    if (effectiveLastDateStr !== "") {
+      const daysSinceCircle = diffDays(effectiveLastDateStr, circleDateStr);
+      // It's completed if the date falls inside the active consecutive streak window
+      if (daysSinceCircle >= 0 && daysSinceCircle < effectiveStreakDays) {
+        return { label: streakDaysLabels[index], state: "completed" as const };
+      }
+    }
+
+    // --- IMPORTANT UI BEHAVIOR FOR AI / FUTURE DEVS ---
+    // The user specifically requested that when today is ALREADY earned,
+    // the NEXT day (tomorrow) should be visually emphasized as the "next target"
+    // by reusing the `state: "current"` stylistic wrapper (broken border, orange text).
+    // However, it intentionally does NOT pulse (since `!alreadyEarnedToday` evaluates to false for the animation).
+    // If the user clicks this emphasized "next target", the `onPress` wrapper catches `alreadyEarnedToday`
+    // and correctly shows the "Already earned for today, come back tomorrow" alert.
+    if (alreadyEarnedToday && clampedCount < targetCount) {
+      if (todayWeekdayIndex < 6 && index === todayWeekdayIndex + 1) {
+        return { label: streakDaysLabels[index], state: "current" as const };
+      }
+    } else if (!alreadyEarnedToday && index === todayWeekdayIndex) {
+      // Emphasize today as the target
+      if (clampedCount >= targetCount) {
+        return { label: streakDaysLabels[index], state: "inactive" as const };
+      }
+      return { label: streakDaysLabels[index], state: "current" as const };
+    }
+
+    if (index < todayWeekdayIndex) {
+      return { label: streakDaysLabels[index], state: "inactive" as const };
+    }
+    
+    // Future days past the cap should also be rendered as inactive
+    if (clampedCount >= targetCount) {
+      return { label: streakDaysLabels[index], state: "inactive" as const };
+    }
+
+    return { label: streakDaysLabels[index], state: "upcoming" as const };
+  });
 
   const pressScale = useSharedValue(1);
   const modalOpacity = useSharedValue(0);
@@ -83,7 +174,7 @@ export default function UserStreakCard({
   }));
 
   useEffect(() => {
-    if (nearby) {
+    if (shouldPulseCurrentDay) {
       pulseScale.value = withRepeat(
         withSequence(
           withTiming(1.08, { duration: 800 }),
@@ -95,7 +186,7 @@ export default function UserStreakCard({
     } else {
       pulseScale.value = withTiming(1);
     }
-  }, [nearby]);
+  }, [pulseScale, shouldPulseCurrentDay]);
 
   useEffect(() => {
     if (!showStreakModal) {
@@ -126,7 +217,7 @@ export default function UserStreakCard({
     if (store.id && storeLogos[store.id.toString()]) {
       return storeLogos[store.id.toString()];
     }
-    return require("../../assets/images/rewards/coffee-shop.png");
+    // return require("../../assets/images/rewards/coffee-shop.png");
   };
 
   return (
@@ -198,22 +289,27 @@ export default function UserStreakCard({
         </View>
 
         <Text className="text-[10px] font-poppins-medium text-neutral-400 mt-1">
-          {translate("user.rewards.daysThisWeek", { current: clampedCount, target: targetCount })}
+          {translate("user.rewards.daysThisWeek", { current: totalEarnedDisplay, target: targetCount })}
         </Text>
 
         <View className="flex-row flex-wrap justify-between mt-2.5 gap-y-2 px-1">
           {days.map((day, index) => {
             const isCompleted = day.state === "completed";
             const isCurrent = day.state === "current";
+            const isInactive = day.state === "inactive";
             const circleClass = isCompleted
               ? "w-10 h-10 rounded-full bg-primary items-center justify-center"
               : isCurrent
                 ? "w-10 h-10 rounded-full items-center justify-center bg-white dark:bg-darkBackgroundMuted"
-                : "w-10 h-10 rounded-full bg-neutral-100 dark:bg-darkBackgroundCard items-center justify-center";
+                : isInactive
+                  ? "w-10 h-10 rounded-full bg-transparent border border-neutral-200 dark:border-darkBorder items-center justify-center"
+                  : "w-10 h-10 rounded-full bg-neutral-100 dark:bg-darkBackgroundCard items-center justify-center";
             const textClass =
               isCompleted || isCurrent
                 ? "text-primary font-poppins-semibold text-[10px]"
-                : "text-neutral-400 font-poppins-semibold text-[10px]";
+                : isInactive
+                  ? "text-neutral-300 dark:text-neutral-500 font-poppins-semibold text-[10px]"
+                  : "text-neutral-400 font-poppins-semibold text-[10px]";
             return (
               <View
                 key={`${day.label}-${index}`}
@@ -252,9 +348,19 @@ export default function UserStreakCard({
                           Number(streak.store_id),
                           storeStreakId,
                           streakProgram?.fixed_points_per_day ?? 0,
+                          targetCount, // ✅ pass streak_length so the service can block at cap
                         );
                         if (result.alreadyRecorded) {
                           Alert.alert("Already Earned!", "You've already earned your streak for today. Come back tomorrow!");
+                        } else if (result.justCompleted) {
+                          // ✅ Streak fully completed — celebrate!
+                          setHasEarnedToday(true);
+                          setShowStreakModal(true);
+                          onStreakRecorded?.();
+                          Alert.alert(
+                            "🎉 Streak Complete!",
+                            `You've completed the full ${targetCount}-day streak! Your reward is on its way.`,
+                          );
                         } else {
                           setHasEarnedToday(true);
                           setShowStreakModal(true);
@@ -268,7 +374,7 @@ export default function UserStreakCard({
                       }
                     }}
                   >
-                    <Animated.View style={[pressAnimatedStyle, nearby && pulseAnimatedStyle]}>
+                    <Animated.View style={[pressAnimatedStyle, shouldPulseCurrentDay && pulseAnimatedStyle]}>
                       <View
                         className={circleClass}
                         style={{
@@ -318,7 +424,7 @@ export default function UserStreakCard({
               style={{ width: 220, height: 220 }}
             />
             <Text className="text-center text-white font-poppins-bold text-3xl mt-4">
-              1+
+              {effectiveStreakDays} {effectiveStreakDays === 1 ? 'Day' : 'Days'} Streak!
             </Text>
             <Text className="text-center text-white/90 font-poppins-medium text-base mt-2">
               {`Day ${clampedCount} / Day ${targetCount}`}

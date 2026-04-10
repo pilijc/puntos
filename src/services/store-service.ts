@@ -37,6 +37,7 @@ export interface StoreRow {
     store_open: string | null;
     store_close: string | null;
     created_at: string;
+    approved_at: string | null;
 }
 
 /**
@@ -186,8 +187,8 @@ export async function getAllStores(): Promise<AdminStoreRow[]> {
         .select(`
             id, name, type, address, latitude, longitude, radius,
             status, is_active, logo, owner_id,
-            phone, registration_number, business_document_image, store_pictures, store_open, store_close, created_at,
-            users ( name )
+            phone, registration_number, business_document_image, store_pictures, store_open, store_close, created_at, approved_at,
+            users!owner_id ( name )
         `)
         .order("created_at", { ascending: false });
 

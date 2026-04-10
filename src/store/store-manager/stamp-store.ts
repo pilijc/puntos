@@ -1,5 +1,5 @@
-import { StampConfigureViewState, StampStore, StampViewState } from "@/type/store-manager/stamp";
 import { create } from "zustand";
+import type { StampConfigureViewState, StampStore, StampViewState } from "@/type/store-manager/stamp";
 
 export const useStampStore = create<StampStore>((set) => ({
   total_stamps: 0,

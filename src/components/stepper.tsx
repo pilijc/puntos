@@ -1,8 +1,10 @@
-import { View, Text, TextInput, Pressable, ScrollView, Image } from "@/tw";
+import { View, Text, TextInput, Pressable, ScrollView, Image, TouchableOpacity } from "@/tw";
 import { Feather, Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { StepProps, PasswordStepProps, TermsStepProps, StepperProps, StepHeaderProps, RoleStepProps } from "@/type/auth";
 import { useTranslation } from "react-i18next";
+import { TextField } from "./text-field";
+import { User, Store, Eye, LucideEye, LucideEyeOff } from "lucide-react-native";
 
 export const STEP_DATA = [
   {
@@ -39,11 +41,11 @@ export function StepHeader({ currentStep }: StepHeaderProps) {
       </View>
 
       <View className="gap-y-1">
-        <Text className="text-2xl font-poppins-bold text-neutral-900 dark:text-darkTextPrimary text-center">
+        <Text className="text-xl font-poppins-bold text-neutral-900 dark:text-darkTextPrimary text-center">
           {translate(stepInfo.titleKey)}
         </Text>
 
-        <Text className="text-neutral-600 dark:text-darkTextSecondary font-poppins text-center">
+        <Text className="text-neutral-600 dark:text-darkTextSecondary font-poppins text-center text-sm">
           {translate(stepInfo.descriptionKey)}
         </Text>
       </View>
@@ -74,20 +76,16 @@ export function Stepper({ currentStep, totalSteps }: StepperProps) {
 export function NameStep({ value, onChange, error }: StepProps) {
   const { t: translate } = useTranslation();
   return (
-    <View className="gap-y-2">
-      <Text className="text-sm font-poppins-medium text-neutral-700 dark:text-darkTextSecondary">
-        {translate("onboarding.signup.stepper.label.name")}
-      </Text>
-      <TextInput
+    <View className="gap-y-4 pr-0.5">
+      <TextField
+        label={translate("onboarding.signup.stepper.label.name")}
         value={value}
         onChangeText={onChange}
         placeholder={translate("onboarding.signup.stepper.placeholder.name")}
-        placeholderTextColor="#9CA3AF"
-        className="border border-neutral-200 dark:border-darkBorder bg-neutral-50 dark:bg-darkBackgroundMuted rounded-xl px-4 py-4 font-poppins text-neutral-900 dark:text-darkTextPrimary"
-        autoFocus
+        keyboardType="default"
       />
       {error && (
-        <Text className="text-red-500 dark:text-red-400 text-sm font-poppins rounded-xl p-4 text-center bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-900/30">
+        <Text className="text-red-500 dark:text-red-400 text-sm font-poppins rounded-xl p-4 text-center bg-red-50 dark:bg-red-900/20">
           {error}
         </Text>
       )}
@@ -98,22 +96,16 @@ export function NameStep({ value, onChange, error }: StepProps) {
 export function EmailStep({ value, onChange, error }: StepProps) {
   const { t: translate } = useTranslation();
   return (
-    <View className="gap-y-2">
-      <Text className="text-sm font-poppins-medium text-neutral-700 dark:text-darkTextSecondary">
-        {translate("onboarding.signup.stepper.label.email")}
-      </Text>
-      <TextInput
+    <View className="gap-y-4 pr-0.5">
+      <TextField
+        label={translate("onboarding.signup.stepper.label.email")}
         value={value}
         onChangeText={onChange}
         placeholder={translate("onboarding.signup.stepper.placeholder.email")}
-        placeholderTextColor="#9CA3AF"
         keyboardType="email-address"
-        autoCapitalize="none"
-        className="border border-neutral-200 dark:border-darkBorder bg-neutral-50 dark:bg-darkBackgroundMuted rounded-xl px-4 py-4 font-poppins text-neutral-900 dark:text-darkTextPrimary"
-        autoFocus
       />
       {error && (
-        <Text className="text-red-500 dark:text-red-400 text-sm font-poppins rounded-xl p-4 text-center bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-900/30">
+        <Text className="text-red-500 dark:text-red-400 text-sm font-poppins rounded-xl p-4 text-center bg-red-50 dark:bg-red-900/20">
           {error}
         </Text>
       )}
@@ -126,6 +118,8 @@ export function PasswordStep({
   confirmPassword,
   showPassword,
   showConfirmPassword,
+  setShowPassword,
+  setShowConfirmPassword,
   onPasswordChange,
   onConfirmPasswordChange,
   onTogglePassword,
@@ -134,58 +128,59 @@ export function PasswordStep({
 }: PasswordStepProps) {
   const { t: translate } = useTranslation();
   return (
-    <View className="gap-y-2">
+    <View className="gap-y-4 pr-0.5">
       <View className="gap-y-2">
         <View className="gap-y-2">
-          <Text className="text-sm font-poppins-medium text-neutral-700 dark:text-darkTextSecondary">
-            {translate("onboarding.signup.stepper.label.password")}
-          </Text>
-          <View className="relative">
-            <TextInput
-              value={password}
-              onChangeText={onPasswordChange}
-              placeholder={translate("onboarding.signup.stepper.placeholder.password")}
-              secureTextEntry={!showPassword}
-              autoCapitalize="none"
-              className="border border-neutral-200 dark:border-darkBorder bg-neutral-50 dark:bg-darkBackgroundMuted rounded-xl px-4 py-4 pr-12 font-poppins text-neutral-900 dark:text-darkTextPrimary"
-              autoFocus={false}
-              placeholderTextColor="#9CA3AF"
-            />
-            <Pressable
-              onPress={onTogglePassword}
-              className="absolute right-4 top-4"
-            >
-              <Feather name={showPassword ? "eye" : "eye-off"} size={18} color="#9CA3AF" />
-            </Pressable>
-          </View>
+          <TextField
+            label={translate("onboarding.signup.stepper.label.password")}
+            value={password}
+            onChangeText={onPasswordChange}
+            placeholder={translate("onboarding.signup.stepper.placeholder.password")}
+            secureTextEntry={!showPassword}
+            rightAccessory={
+              <TouchableOpacity
+                onPress={() => setShowPassword(!showPassword)}
+                className="ml-[-32px] p-2"
+                activeOpacity={0.7}
+              >
+                {showPassword ? (
+                  <LucideEye color="#9ca3af" size={16} />
+                ) : (
+                  <LucideEyeOff color="#9ca3af" size={16} />
+                )}
+              </TouchableOpacity>
+            }
+  
+          />
         </View>
 
         <View className="mt-1 mb-2 gap-y-2">
-          <Text className="text-sm font-poppins-medium text-neutral-700 dark:text-darkTextSecondary">
-            {translate("onboarding.signup.stepper.label.confirmPassword")}
-          </Text>
-          <View className="relative">
-            <TextInput
-              value={confirmPassword}
-              onChangeText={onConfirmPasswordChange}
-              placeholder={translate("onboarding.signup.stepper.placeholder.confirmPassword")}
-              secureTextEntry={!showConfirmPassword}
-              autoCapitalize="none"
-              className="border border-neutral-200 dark:border-darkBorder bg-neutral-50 dark:bg-darkBackgroundMuted rounded-xl px-4 py-4 pr-12 font-poppins text-neutral-900 dark:text-darkTextPrimary"
-              placeholderTextColor="#9CA3AF"
-            />
-            <Pressable
-              onPress={onToggleConfirmPassword}
-              className="absolute right-4 top-4"
-            >
-              <Feather name={showConfirmPassword ? "eye" : "eye-off"} size={18} color="#9CA3AF" />
-            </Pressable>
-          </View>
+          <TextField
+            label={translate("onboarding.signup.stepper.label.confirmPassword")}
+            value={confirmPassword}
+            onChangeText={onConfirmPasswordChange}
+            placeholder={translate("onboarding.signup.stepper.placeholder.confirmPassword")}
+            secureTextEntry={!showConfirmPassword}
+  
+            rightAccessory={
+              <TouchableOpacity
+                onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                className="ml-[-32px] p-2"
+                activeOpacity={0.7}
+              >
+                {showConfirmPassword ? (
+                  <LucideEye color="#9ca3af" size={16} />
+                ) : (
+                  <LucideEyeOff color="#9ca3af" size={16} />
+                )}
+              </TouchableOpacity>
+            }
+          />
         </View>
       </View>
       <View className="justify-center">
         {(errors.confirmPassword || errors.password) && (
-          <Text className="text-red-500 dark:text-red-400 text-sm font-poppins rounded-xl p-4 text-center bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-900/30">
+          <Text className="text-red-500 dark:text-red-400 text-sm font-poppins rounded-xl p-4 text-center bg-red-50 dark:bg-red-900/20">
             {errors.confirmPassword || errors.password}
           </Text>
         )}
@@ -197,42 +192,53 @@ export function PasswordStep({
 export function RoleStep({ value, onChange, error }: RoleStepProps) {
   const { t: translate } = useTranslation();
   const roles = [
-    { label: translate("onboarding.signup.title"), value: "user", description: translate("onboarding.slide.subtitle1") },
-    { label: translate("onboarding.signup.titleManager"), value: "manager", description: translate("onboarding.signup.titleManager") },
+    {
+      label: translate("onboarding.signup.roleSelect.customerLabel"),
+      value: "user",
+      description: translate("onboarding.signup.roleSelect.customerDescription"),
+      Icon: User,
+    },
+    {
+      label: translate("onboarding.signup.roleSelect.ownerLabel"),
+      value: "manager",
+      description: translate("onboarding.signup.roleSelect.ownerDescription"),
+      Icon: Store,
+    },
   ];
 
   return (
-    <View className="gap-y-4">
-      <Text className="text-sm font-poppins-medium text-neutral-700 dark:text-darkTextSecondary">
-        {translate("onboarding.signup.ownerPrompt")}
+    <View className="gap-y-3 pr-0.5">
+      <Text className="text-sm font-poppins-medium text-neutral-700 dark:text-darkTextSecondary text-center">
+        {translate("onboarding.signup.roleSelect.title")}
       </Text>
-      {roles.map((role) => (
-        <Pressable
-          key={role.value}
-          onPress={() => onChange(role.value)}
-          className={`p-4 rounded-xl border ${value === role.value ? 'border-primary bg-primary/5 dark:bg-primary/10' : 'border-neutral-200 dark:border-darkBorder bg-neutral-50 dark:bg-darkBackgroundMuted'}`}
-        >
-          <View className="flex-row items-center gap-x-3">
-            <View
-              className={`w-4 h-4 rounded-full border-2 ${value === role.value ? 'border-primary bg-primary' : 'border-neutral-300 dark:border-neutral-600'}`}
-            >
-              {value === role.value && (
-                <View className="w-2 h-2 rounded-full bg-white dark:bg-darkTextPrimary m-0.5" />
-              )}
+      {roles.map((role) => {
+        const isSelected = value === role.value;
+
+        return (
+          <Pressable
+            key={role.value}
+            onPress={() => onChange(role.value)}
+            className={`px-4 py-6 rounded-2xl ${
+              isSelected ? "bg-primary/10 border border-slate-50 dark:border-slate-700" : "bg-white dark:bg-darkBackgroundMuted border border-slate-100 dark:border-darkBorder"
+            }`}
+          >
+            <View className="flex-row items-center gap-x-4">
+              <role.Icon size={20} color={isSelected ? "#FF6600" : "#9CA3AF"} />
+
+              <View className="flex-1">
+                <Text className="font-poppins-semibold text-neutral-900 dark:text-darkTextPrimary text-sm">
+                  {role.label}
+                </Text>
+                <Text className="font-poppins text-neutral-600 dark:text-darkTextSecondary text-xs mt-1">
+                  {role.description}
+                </Text>
+              </View>
             </View>
-            <View className="flex-1">
-              <Text className="font-poppins-semibold text-neutral-900 dark:text-darkTextPrimary">
-                {role.label}
-              </Text>
-              <Text className="font-poppins text-neutral-600 dark:text-darkTextSecondary text-sm">
-                {role.description}
-              </Text>
-            </View>
-          </View>
-        </Pressable>
-      ))}
+          </Pressable>
+        );
+      })}
       {error && (
-        <Text className="text-red-500 dark:text-red-400 text-sm font-poppins rounded-xl p-4 text-center bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-900/30">
+        <Text className="text-red-500 dark:text-red-400 text-sm font-poppins rounded-xl p-4 text-center bg-red-50 dark:bg-red-900/20">
           {error}
         </Text>
       )}
@@ -243,7 +249,7 @@ export function RoleStep({ value, onChange, error }: RoleStepProps) {
 export function TermsStep({ accepted, onToggle, error }: TermsStepProps) {
   const { t: translate } = useTranslation();
   return (
-    <View className="gap-y-2">
+    <View className="gap-y-4 pr-0.5">
       <Text className="text-sm font-poppins-medium text-neutral-700 dark:text-darkTextSecondary">
         {translate("onboarding.signup.stepper.label.terms")}
       </Text>
@@ -264,7 +270,7 @@ export function TermsStep({ accepted, onToggle, error }: TermsStepProps) {
       </Pressable>
 
       {error && (
-        <Text className="text-red-500 dark:text-red-400 text-sm font-poppins rounded-xl p-4 text-center bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-900/30">
+        <Text className="text-red-500 dark:text-red-400 text-sm font-poppins rounded-xl p-4 text-center bg-red-50 dark:bg-red-900/20">
           {error}
         </Text>
       )}

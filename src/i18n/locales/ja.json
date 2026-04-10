@@ -15,7 +15,7 @@
         "viewAll": "すべて表示",
         "somethingWentWrong": "問題が発生しました。もう一度お試しください。",
         "poweredBy": "PUNTOS 提供",
-        "termsAgreement": "続行することで、<tos>利用規約</tos>および<privacy>プライバシーポリシー</privacy>に同意したものとみなされます"
+        "termsAgreement": "続行することで、以下に同意したものとみなされます。\n<legal>利用規約およびプライバシーポリシー</legal>"
     },
     "onboarding": {
         "welcome": "<brand>{{appName}}</brand>へようこそ",
@@ -111,6 +111,13 @@
             "creating": "アカウントを作成中...",
             "continue": "次へ",
             "ownerPrompt": "店舗オーナーとして登録しますか？",
+            "roleSelect": {
+                "title": "アプリの使い方を選択してください",
+                "customerLabel": "お客様として利用する",
+                "customerDescription": "リワードを獲得して、ロイヤルティ機能を利用したい",
+                "ownerLabel": "店舗オーナーとして利用する",
+                "ownerDescription": "店舗・リワード・お客様の管理をしたい"
+            },
             "alreadyHaveAccount": "既にアカウントをお持ちですか？",
             "login": "ログイン",
             "success": "アカウントが作成されました！",
@@ -238,7 +245,8 @@
             },
             "buttons": {
                 "stamp": "スタンプ",
-                "stamped": "獲得済"
+                "stamped": "獲得済",
+                "claimRewards": "報酬を獲得"
             },
             "messages": {
                 "signInToStamp": "スタンプを押すにはログインが必要です。",

@@ -54,9 +54,9 @@ export const stores: StoreItem[] = [
 ];
 
 export const storeLogos: Record<string, any> = {
-  "coffee-foundry": require("../assets/images/rewards/store_logo/coffee-foundry-logo.png"),
-  "bean-lab": require("../assets/images/rewards/store_logo/bean-lab-logo.png"),
-  "harbor-roast": require("../assets/images/rewards/store_logo/harbor-roast-logo.png"),
+  // "coffee-foundry": require("../assets/images/rewards/store_logo/coffee-foundry-logo.png"),
+  // "bean-lab": require("../assets/images/rewards/store_logo/bean-lab-logo.png"),
+  // "harbor-roast": require("../assets/images/rewards/store_logo/harbor-roast-logo.png"),
 };
 
 export const rewards: RewardItem[] = [
