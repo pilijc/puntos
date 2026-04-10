@@ -189,7 +189,6 @@ export default function SuperAdminStores() {
 				onReject={() => {
 					if (previewStore) {
 						handleReject(previewStore);
-						setPreviewStore(null);
 					}
 				}}
 			/>
