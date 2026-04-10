@@ -1,7 +1,6 @@
 import React, { useCallback } from "react";
 import { FlatList, useColorScheme } from "react-native";
-import { View, Text, TouchableOpacity } from "@/tw";
-import { Button } from "@/components/button";
+import { View, Text, TouchableOpacity, SafeAreaView } from "@/tw";
 import { Modal } from "@/components/modal";
 import { useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -11,6 +10,7 @@ import { ChevronLeft, Flame, Plus } from "lucide-react-native";
 import { StreakCard } from "@/components/store_manager/streak/streak-card";
 import { StreakCardSkeleton } from "@/components/skeleton/store_manager/streak-skeleton";
 import { useStreakViewStore } from "@/store/store-manager/streak-store";
+import { AppHeader } from "@/components/header";
 
 export default function ViewStreak() {
   const PAGE_SIZE = 6;
@@ -189,7 +189,7 @@ export default function ViewStreak() {
   };
 
   return (
-    <View className="flex-1 bg-backgroundMuted dark:bg-[#111921]">
+    <SafeAreaView edges={["top"]} className="flex-1 bg-backgroundMuted dark:bg-[#111921]">
       <Modal
         visible={!!modal}
         onClose={() => setModal(null)}
@@ -198,21 +198,11 @@ export default function ViewStreak() {
         buttons={modal?.buttons}
       />
 
-      <View
-        className="bg-white dark:bg-[#111921] flex-row items-center px-2"
-        style={{ paddingTop: insets.top + 8, paddingBottom: 0 }}
-      >
-        <TouchableOpacity
-          className="w-10 h-10 rounded-full items-center justify-center"
-          activeOpacity={0.7}
-          onPress={() => router.push({ pathname: "/(store_manager)/view-store/[id]", params: { id: storeId } })}
-        >
-          <ChevronLeft size={22} color={isDark ? "#FFFFFF" : "#0F172A"} />
-        </TouchableOpacity>
-        <Text className="flex-1 text-center text-md font-poppins-bold text-textPrimary dark:text-darkTextPrimary pr-10 mb-3">
-          Streak Programs
-        </Text>
-      </View>
+      <AppHeader
+        title="Streak Programs"
+        description="Reward customers with streak points"
+        onBackPress={() => router.push({ pathname: "/(store_manager)/view-store/[id]", params: { id: storeId } })}
+      />
 
       <View className="bg-white dark:bg-neutral-800 border-b border-slate-100 dark:border-slate-800 flex-row px-6">
         {StreakTabs.map((tab) => {
@@ -307,6 +297,6 @@ export default function ViewStreak() {
           <Plus size={28} color="#fff" />
         </TouchableOpacity>
       )}
-    </View>
+    </SafeAreaView>
   );
 }
