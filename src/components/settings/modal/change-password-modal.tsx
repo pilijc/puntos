@@ -127,6 +127,7 @@ export default function ChangePasswordModal({ visible, onClose }: Props) {
                             value={currentPassword}
                             onChangeText={setCurrentPassword}
                             secureTextEntry={true}
+                            sanitize={(v) => v}
                         />
                         {/* New Password */}
                         <TextField
@@ -135,6 +136,7 @@ export default function ChangePasswordModal({ visible, onClose }: Props) {
                             value={newPassword}
                             onChangeText={setNewPassword}
                             secureTextEntry={true}
+                            sanitize={(v) => v}
                         />
 
                         {/* Repeat New Password */}
@@ -144,6 +146,7 @@ export default function ChangePasswordModal({ visible, onClose }: Props) {
                             value={repeatNewPassword}
                             onChangeText={setRepeatNewPassword}
                             secureTextEntry={true}
+                            sanitize={(v) => v}
                         />
                     </View>
                 </KeyboardAvoidingView>

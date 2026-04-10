@@ -115,6 +115,7 @@ export default function EditProfileModal({ visible, onClose }: Props) {
                             placeholder={translate("settings.profile.input.name")}
                             value={username}
                             onChangeText={setUsername}
+                            sanitize={(v) => v}
                         />
 
                         <View pointerEvents="none" className="opacity-60">
