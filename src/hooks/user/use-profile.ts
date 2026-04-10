@@ -13,9 +13,7 @@ export const useProfile = () => {
     } = useProfileStore();
 
     useEffect(() => {
-        if (!user && !loading) {
-            fetchProfile();
-        }
+        fetchProfile();
     }, [user, loading, fetchProfile]);
 
     return{
