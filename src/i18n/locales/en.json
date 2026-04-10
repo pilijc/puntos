@@ -112,6 +112,7 @@
             "ownerPrompt": "Sign up as Store Owner?",
             "roleSelect": {
                 "title": "Choose how you’ll use the app",
+                "subtitle": "Pick the option that fits you best. You can update this later in settings.",
                 "customerLabel": "I’m a Customer",
                 "customerDescription": "I want to earn rewards and use loyalty features",
                 "ownerLabel": "I’m a Store Owner",
@@ -426,9 +427,10 @@
             }
         },
         "account": {
-            "title": "ACCOUNT SETTINGS",
+            "title": "Account Settings",
             "security": {
                 "title": "Security",
+                "description": "Password, Delete Account",
                 "changePassword": {
                     "title": "Change Password",
                     "description": "Enter your current and new password",
@@ -470,7 +472,7 @@
             }
         },
         "notificationsPrivacy": {
-            "title": "NOTIFICATIONS & PRIVACY",
+            "title": "Notifications & Privacy",
             "alerts": {
                 "title": "Nearby Alerts",
                 "description": "Get notified when rewards are close"
@@ -485,7 +487,7 @@
                 "location": "location",
                 "notifications": "notification"
             },
-            "openSettings": "Open Settings"
+            "openSettings": "Settings"
         }
     },
     "storeManager": {

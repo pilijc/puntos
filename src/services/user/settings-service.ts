@@ -49,9 +49,18 @@ export async function updateUserSettingsService(userId: string, updates: Partial
 export async function syncLocationService(userId: string, latitude: number, longitude: number): Promise<void> {
     const { error } = await supabase
         .from("user_settings")
-        .update({ latitude, longitude })
+        .update({ location: `POINT(${longitude} ${latitude})` })
         .eq("user_id", userId);
 
+    if (error) throw error;
+}
+
+export async function clearLocationService(userId: string): Promise<void> {
+    const { error } = await supabase
+        .from("user_settings")
+        .update({ location: null })
+        .eq("user_id", userId);
+    
     if (error) throw error;
 }
 
@@ -86,4 +95,33 @@ export async function softDeleteUserAccountService(userId: string): Promise<void
         .eq("user_id", userId);
 
     if (error) throw error;
+}
+
+export async function deleteUserAccountService(): Promise<void> {
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+        throw new Error("Could not identify the current user.");
+    }
+
+    await softDeleteUserAccountService(user.id);
+    
+    await supabase.auth.signOut();
+}
+
+export async function getUsersNearStoreService(
+    storeId: number,
+    radiusMetres: number = 30
+): Promise<number> {
+    const { data, error } = await supabase.rpc('get_users_near_store', {
+        store_id_input: storeId,
+        radius_metres: radiusMetres,
+    });
+
+    if (error) {
+        console.error("get_users_near_store error:", error)
+        return 0;
+    }
+    
+    return (data ?? []).length;
 }

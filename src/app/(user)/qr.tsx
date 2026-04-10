@@ -51,7 +51,7 @@ export default function Qr() {
       const addUser = await addAutoUser();
       console.log('Add user:', addUser);
 
-    } 
+    }
     catch (err) {
       console.error('Error getting QR code:', err);
       setQrValue(null);
@@ -120,7 +120,7 @@ export default function Qr() {
     };
 
     let channels: { qrChannel: any; voucherChannel: any } | null = null;
-    
+
     setupQR().then((result) => {
       channels = result;
       return fetchQRCode();

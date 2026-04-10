@@ -26,32 +26,13 @@ export async function getStoreMetrics(
     let weeklyActivity = [0, 0, 0, 0, 0, 0, 0];
 
     try {
-        if (lat !== null && lng !== null) {
-            const { data: userLocs, error: locError } = await supabase
-                .from("user_settings")
-                .select(`
-                    latitude, 
-                    longitude, 
-                    user:user_id!inner (
-                        user_roles!inner ( role_id )
-                    )
-                `)
-                .is("deleted_at", null)
-                .eq("location_enabled", true)
-                .not("latitude", "is", null)
-                .not("longitude", "is", null)
-                .eq("user.user_roles.role_id", 4);
+        const { data, error } = await supabase.rpc('get_users_near_store', {
+            store_id_input: storeId,
+            radius_metres: radiusMeters,
+        });
 
-            if (!locError && userLocs) {
-                const storePoint = turf.point([lng, lat]);
-                userLocs.forEach(u => {
-                    const userPoint = turf.point([Number(u.longitude), Number(u.latitude)]);
-                    const distanceKm = turf.distance(storePoint, userPoint, { units: 'kilometers' });
-                    if (distanceKm <= (radiusMeters / 1000)) {
-                        activeUserCount++;
-                    }
-                });
-            }
+        if (!error && data) {
+            activeUserCount = data.length;
         }
 
         // weekly activity & todays scans

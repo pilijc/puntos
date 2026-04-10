@@ -1,7 +1,7 @@
 import { supabase } from "@/supabase/supabase";
 
 import { QRCodeState, QRTransaction } from "@/type/qr";
-import {listenToVoucherTransaction } from "@/services/users/voucher-service";
+import {listenToVoucherTransaction } from "@/services/user/voucher-service";
 import { addStamp } from "@/services/stamp-service";
 import { VoucherTransaction } from "@/type/user/voucher";
 import {FinalCalculations} from "@/services/frontdesk/percentage-service";
