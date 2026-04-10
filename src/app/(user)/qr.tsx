@@ -6,6 +6,7 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useRouter } from 'expo-router';
 import QRCode from 'react-native-qrcode-svg';
 import { getCurrentUser, getStaticQRCode, addAutoUser, setupQRListeners, cleanupQRChannels } from '@/services/users/qr-service';
+import { supabase } from '@/supabase/supabase';
 import { useStamps } from '@/hooks/use-stamps';
 import { useStampRewards } from '@/hooks/use-stamp-rewards';
 import { VoucherGenerator } from '@/components/users/voucher';
@@ -26,12 +27,20 @@ export default function Qr() {
   const fetchQRCode = async () => {
     setLoading(true);
     try {
+      // Check if user session exists first
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !session) {
+        console.error('No active session found:', sessionError);
+        setQrValue(null);
+        return;
+      }
 
       const user = await getCurrentUser();
 
       if (!user) {
         console.error('No logged-in user found');
-        setLoading(false);
+        setQrValue(null);
         return;
       }
 
@@ -46,6 +55,11 @@ export default function Qr() {
     catch (err) {
       console.error('Error getting QR code:', err);
       setQrValue(null);
+      
+      // If it's an auth session error, redirect to login
+      if (err instanceof Error && err.message.includes('Auth session missing')) {
+        router.replace('/(auth)/login');
+      }
     }
     finally {
       setLoading(false);
@@ -54,36 +68,55 @@ export default function Qr() {
 
   useEffect(() => {
     const setupQR = async () => {
-      const currentUser = await getCurrentUser();
-      if (!currentUser) return;
-
-      setUser(currentUser);
-      const qr = `puntos:user:${currentUser.id}`;
-      setQrValue(qr);
-      setLoading(false);
-
-      // Setup QR and voucher listeners using service
-      const channels = setupQRListeners(
-        currentUser.id,
-        (transaction) => {
-          console.log('Customer side: QR transaction received!', transaction);
-          Vibration.vibrate(500);
-          refetchStamps();
-          refetchStampRewards();
-          setEarnedPoints(transaction.points_earned);
-          setShowCongratsModal(true);
-        },
-        (transaction) => {
-          console.log('Customer side: Voucher transaction received!', transaction);
-          Vibration.vibrate(500);
-          refetchStamps();
-          refetchStampRewards();
-          setEarnedPoints(transaction.points_earned);
-          setShowCongratsModal(true);
+      try {
+        // Check if user session exists first
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError || !session) {
+           setLoading(false);
+          return null;
         }
-      );
 
-      return channels;
+        const currentUser = await getCurrentUser();
+        if (!currentUser) return null;
+
+        setUser(currentUser);
+        const qr = `puntos:user:${currentUser.id}`;
+        setQrValue(qr);
+        setLoading(false);
+
+        // Setup QR and voucher listeners using service
+        const channels = setupQRListeners(
+          currentUser.id,
+          (transaction) => {
+            console.log('Customer side: QR transaction received!', transaction);
+            Vibration.vibrate(500);
+            refetchStamps();
+            refetchStampRewards();
+            setEarnedPoints(transaction.points_earned);
+            setShowCongratsModal(true);
+          },
+          (transaction) => {
+            console.log('Customer side: Voucher transaction received!', transaction);
+            Vibration.vibrate(500);
+            refetchStamps();
+            refetchStampRewards();
+            setEarnedPoints(transaction.points_earned);
+            setShowCongratsModal(true);
+          }
+        );
+
+        return channels;
+      } catch (error) {
+         
+        // If it's an auth session error, redirect to login
+        if (error instanceof Error && error.message.includes('Auth session missing')) {
+          router.replace('/(auth)/login');
+        }
+        
+        setLoading(false);
+        return null;
+      }
     };
 
     let channels: { qrChannel: any; voucherChannel: any } | null = null;
@@ -92,8 +125,7 @@ export default function Qr() {
       channels = result;
       return fetchQRCode();
     }).catch((error) => {
-      console.error('Error setting up QR listeners:', error);
-    });
+     });
 
     return () => {
       if (channels) {
