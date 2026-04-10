@@ -97,6 +97,18 @@ export async function softDeleteUserAccountService(userId: string): Promise<void
     if (error) throw error;
 }
 
+export async function deleteUserAccountService(): Promise<void> {
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+        throw new Error("Could not identify the current user.");
+    }
+
+    await softDeleteUserAccountService(user.id);
+    
+    await supabase.auth.signOut();
+}
+
 export async function getUsersNearStoreService(
     storeId: number,
     radiusMetres: number = 30

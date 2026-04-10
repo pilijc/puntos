@@ -17,9 +17,19 @@ interface SharedSettingsLayoutProps {
     headerRight?: React.ReactNode;
     extraCards?: React.ReactNode;
     copyrightRole: string;
+    securityDisabled?: boolean;
+    securityWarning?: boolean;
+    banner?: React.ReactNode;
 }
 
-export const SharedSettingsLayout = ({ headerRight, extraCards, copyrightRole }: SharedSettingsLayoutProps) => {
+export const SharedSettingsLayout = ({
+    headerRight,
+    extraCards,
+    copyrightRole,
+    securityDisabled = false,
+    securityWarning = false,
+    banner
+}: SharedSettingsLayoutProps) => {
     const [editModalVisible, setEditModalVisible] = useState(false);
     const { t: translate } = useTranslation();
     const { user, profile, loading, refreshProfile } = useProfile();
@@ -54,9 +64,14 @@ export const SharedSettingsLayout = ({ headerRight, extraCards, copyrightRole }:
                     </View>
                 )}
 
+                {banner}
+
                 {/* account section */}
                 <View className="overflow-hidden bg-background dark:bg-darkBackgroundCard rounded-xl border border-border dark:border-darkBorder">
-                    <SecurityCard />
+                    <SecurityCard
+                        disabled={securityDisabled}
+                        warning={securityWarning}
+                    />
                     <View className="h-[1px] bg-border dark:bg-darkBorder" />
                     <LanguageCard />
                     <View className="h-[1px] bg-border dark:bg-darkBorder" />
