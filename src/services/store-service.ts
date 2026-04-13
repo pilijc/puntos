@@ -7,6 +7,7 @@ export interface CreateStorePayload {
     address: string;
     latitude?: number | null;
     longitude?: number | null;
+    timezone?: string | null;
     phone?: string;
     registrationNumber?: string;
     businessDocumentImage?: string | null;
@@ -25,6 +26,7 @@ export interface StoreRow {
     address: string | null;
     latitude: number | null;
     longitude: number | null;
+    timezone: string | null;
     radius: number | null;
     status: string;
     is_active: boolean;
@@ -38,6 +40,26 @@ export interface StoreRow {
     store_close: string | null;
     created_at: string;
     approved_at: string | null;
+}
+
+/**
+ * Calls the DB RPC to resolve a timezone string from a lon/lat point.
+ * Returns null if PostGIS boundary data hasn't been loaded yet or if no
+ * polygon covers the given coordinates.
+ */
+export async function resolveStoreTimezone(
+    longitude: number,
+    latitude: number
+): Promise<string | null> {
+    const { data, error } = await supabase.rpc('resolve_store_timezone', {
+        p_longitude: longitude,
+        p_latitude: latitude,
+    });
+    if (error) {
+        console.warn('[resolveStoreTimezone] RPC error:', error.message);
+        return null;
+    }
+    return (data as string | null) ?? null;
 }
 
 /**
@@ -55,6 +77,7 @@ export async function createStore(payload: CreateStorePayload): Promise<StoreRow
             address: payload.address,
             latitude: payload.latitude ?? null,
             longitude: payload.longitude ?? null,
+            timezone: payload.timezone ?? null,
             phone: payload.phone ?? null,
             registration_number: payload.registrationNumber ?? null,
             business_document_image: payload.businessDocumentImage ?? null,
