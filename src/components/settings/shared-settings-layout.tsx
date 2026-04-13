@@ -41,26 +41,6 @@ export const SharedSettingsLayout = ({
 
     const scrollBottom = Math.max(insets.bottom, 40);
 
-    if (loading && !user) {
-        return (
-            <SafeAreaView edges={["top", "left", "right"]} className="flex-1 bg-backgroundMuted dark:bg-darkBackground">
-                <View className="bg-white dark:bg-darkBackground border-b border-neutral-100 dark:border-darkBorder px-6 py-3 flex-row justify-between items-center">
-                    <Text className="text-xl font-poppins-bold text-textPrimary dark:text-darkTextPrimary py-1">
-                        {translate('settings.title')}
-                    </Text>
-                    {headerRight ? headerRight : <View className="w-10 h-10 opacity-0" />}
-                </View>
-                <View className={`flex-1 justify-center items-center px-6 ${isWeb ? "w-full" : ""}`}>
-                    <View className={isWeb ? "w-full max-w-4xl items-center" : "w-full items-center"}>
-                        <Text className="text-textMuted font-poppins-regular">
-                            {translate("user.discover.loadingProfile")}
-                        </Text>
-                    </View>
-                </View>
-            </SafeAreaView>
-        );
-    }
-
     return (
         <>
             <SafeAreaView edges={["top", "left", "right"]} className="flex-1 bg-backgroundMuted dark:bg-darkBackground">
@@ -83,11 +63,14 @@ export const SharedSettingsLayout = ({
                     showsVerticalScrollIndicator={false}
                 >
                     <View className={isWeb ? "w-full max-w-4xl gap-4" : "w-full gap-4"}>
-                        {user && (
-                            <View>
-                                <UserProfileCard user={user} profile={profile} onPress={() => setEditModalVisible(true)} />
-                            </View>
-                        )}
+                        <View>
+                            <UserProfileCard
+                                user={user}
+                                profile={profile}
+                                loading={loading && !user}
+                                onPress={() => setEditModalVisible(true)}
+                            />
+                        </View>
 
                         {banner}
 

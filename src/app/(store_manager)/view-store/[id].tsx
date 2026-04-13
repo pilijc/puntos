@@ -1,5 +1,12 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { RefreshControl, NativeSyntheticEvent, NativeScrollEvent, useWindowDimensions, Platform, useColorScheme } from "react-native";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  RefreshControl,
+  NativeSyntheticEvent,
+  NativeScrollEvent,
+  useWindowDimensions,
+  Platform,
+  ScrollView as RNScrollView,
+} from "react-native";
 import { View, Text, TouchableOpacity, ScrollView, Image, SafeAreaView } from "@/tw";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { getStoreById } from "@/services/store-service";
@@ -16,8 +23,6 @@ export default function ViewStore() {
   const { width: screenWidth } = useWindowDimensions();
   const router = useRouter();
   const isWeb = Platform.OS === "web";
-  const colorScheme = useColorScheme();
-  const isDarkHeader = colorScheme === "dark";
   const carouselCardPadding = isWeb ? 8 : 0;
   const carouselMaxWidth = isWeb ? 860 : screenWidth - 32;
   const carouselWidth = Math.max(0, Math.min(screenWidth - 32, carouselMaxWidth) - carouselCardPadding * 2);
@@ -35,12 +40,12 @@ export default function ViewStore() {
 
   const menuItems = useMemo(
     () => [
-      { key: "staff",   label: "Staff",       description: "Manage team",        icon: <UsersRound size={18} color="#FF6600" />, route: "/(store_manager)/staff"              as const },
-      { key: "streak",  label: "Streak",      description: "Daily rewards",      icon: <Flame      size={18} color="#FF6600" />, route: "/(store_manager)/streak" as const },
-      { key: "stamp",   label: "Stamp",       description: "Punch cards",        icon: <Stamp      size={18} color="#FF6600" />, route: "/(store_manager)/stamp/"   as const },
-      { key: "qr",      label: "QR Purchase", description: "Scan rewards",       icon: <QrCode     size={18} color="#FF6600" />, route: "/(store_manager)/qr"                 as const },
-      { key: "rewards", label: "Rewards",     description: "Redeemable items",   icon: <Gift       size={18} color="#FF6600" />, route: "/(store_manager)/reward"             as const },
-      { key: "media",   label: "Details",     description: "Manage Store",       icon: <Building2  size={18} color="#FF6600" />, route: "/(store_manager)/detail"             as const },
+      { key: "staff", label: "Staff", description: "Manage team", icon: <UsersRound size={18} color="#FF6600" />, route: "/(store_manager)/staff" as const },
+      { key: "streak", label: "Streak", description: "Daily rewards", icon: <Flame size={18} color="#FF6600" />, route: "/(store_manager)/streak" as const },
+      { key: "stamp", label: "Stamp", description: "Punch cards", icon: <Stamp size={18} color="#FF6600" />, route: "/(store_manager)/stamp/" as const },
+      { key: "qr", label: "QR Purchase", description: "Scan rewards", icon: <QrCode size={18} color="#FF6600" />, route: "/(store_manager)/qr" as const },
+      { key: "rewards", label: "Rewards", description: "Redeemable items", icon: <Gift size={18} color="#FF6600" />, route: "/(store_manager)/reward" as const },
+      { key: "media", label: "Details", description: "Manage Store", icon: <Building2 size={18} color="#FF6600" />, route: "/(store_manager)/detail" as const },
     ],
     []
   );
@@ -52,12 +57,23 @@ export default function ViewStore() {
     return [require("@/assets/images/puntos-icon.png")];
   }, [store?.store_pictures, store?.logo]);
 
+  const carouselRef = useRef<RNScrollView | null>(null);
+
   const onCarouselScroll = useCallback((e: NativeSyntheticEvent<NativeScrollEvent>) => {
-    const cardWidth = e.nativeEvent.layoutMeasurement.width;
+    const cardWidth = isWeb ? carouselWidth : e.nativeEvent.layoutMeasurement.width;
     if (!cardWidth) return;
     const nextIndex = Math.round(e.nativeEvent.contentOffset.x / cardWidth);
     setActiveImageIndex(nextIndex);
-  }, []);
+  }, [carouselWidth, isWeb]);
+
+  const scrollToCarouselIndex = useCallback(
+    (nextIndex: number) => {
+      const clamped = Math.max(0, Math.min(nextIndex, carouselImages.length - 1));
+      carouselRef.current?.scrollTo({ x: clamped * carouselWidth, y: 0, animated: true });
+      setActiveImageIndex(clamped);
+    },
+    [carouselImages.length, carouselWidth]
+  );
 
   const fetchStore = useCallback(async () => {
     const storeData = await getStoreById(storeId);
@@ -110,35 +126,9 @@ export default function ViewStore() {
           router.push("/(store_manager)/stores");
         }}
       />
-      {/* <View className="bg-white dark:bg-darkBackground border-b border-neutral-100 dark:border-darkBorder px-2 py-2">
-        <View className="flex-row items-center">
-          <TouchableOpacity
-            className="w-10 h-10 items-center justify-center rounded-full -mt-0.5"
-            activeOpacity={0.7}
-            onPress={() => {
-              if (router.canGoBack()) router.back();
-              else router.push("/(store_manager)/stores");
-            }}
-          >
-            <ChevronLeft size={20} color={isDarkHeader ? "#F1F5F9" : "#0F172A"} />
-          </TouchableOpacity>
-          <View className="min-w-0 flex-1 px-2 py-1">
-            <Text className="text-center text-base font-poppins-bold text-textPrimary dark:text-darkTextPrimary" numberOfLines={1}>
-              {store?.name || "Store Details"}
-            </Text>
-            <Text
-              className="-mt-0.5 text-center text-xs font-poppins text-textMuted dark:text-darkTextMuted"
-              numberOfLines={2}
-            >
-              {store?.address || "View & manage store info"}
-            </Text>
-          </View>
-          <View className="min-w-10" />
-        </View>
-      </View> */}
 
       <ScrollView
-        className="flex-1 gap-y-4 pt-4"
+        className="flex-1 gap-y-4 pt-2"
         showsVerticalScrollIndicator={false}
         contentInsetAdjustmentBehavior="never"
         contentContainerStyle={{ paddingBottom: 32 }}
@@ -154,27 +144,52 @@ export default function ViewStore() {
         <View className="items-center">
           <View className="w-full px-4 items-center">
             <View
-              className={isWeb ? "bg-white dark:bg-neutral-800 border border-slate-100 dark:border-neutral-700 rounded-xl overflow-hidden p-2" : ""}
+              className={isWeb ? "bg-white dark:bg-neutral-800 border border-slate-100 dark:border-neutral-700 rounded-xl p-2" : ""}
               style={isWeb ? { width: "100%", maxWidth: 860 } : undefined}
             >
               <View className="w-full h-40 rounded-xl overflow-hidden">
-                <ScrollView
+                <RNScrollView
+                  ref={carouselRef}
                   horizontal
-                  pagingEnabled
+                  pagingEnabled={!isWeb}
+                  snapToInterval={isWeb ? carouselWidth : undefined}
+                  snapToAlignment={isWeb ? "start" : undefined}
+                  decelerationRate={isWeb ? "fast" : undefined}
+                  disableIntervalMomentum={isWeb}
                   showsHorizontalScrollIndicator={false}
                   onScroll={onCarouselScroll}
                   scrollEventThrottle={16}
-                  className="w-full h-40"
+                  style={{ width: "100%", height: "100%" }}
                 >
                   {carouselImages.map((img, idx) => (
                     <Image
                       key={`${typeof img === "string" ? img : "default"}-${idx}`}
                       source={typeof img === "string" ? { uri: img } : img}
-                      style={{ width: carouselWidth, height: 144 }}
+                      style={{ width: carouselWidth, height: "100%" }}
                       contentFit="cover"
+                      pointerEvents="none"
                     />
                   ))}
-                </ScrollView>
+                </RNScrollView>
+
+                {Platform.OS === "web" && carouselImages.length > 1 && (
+                  <>
+                    <TouchableOpacity
+                      activeOpacity={0.8}
+                      onPress={() => scrollToCarouselIndex(activeImageIndex - 1)}
+                      className="absolute left-2 top-1/2 -mt-4 w-8 h-8 rounded-full bg-black/40 items-center justify-center"
+                    >
+                      <ChevronLeft size={18} color="#FFFFFF" />
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      activeOpacity={0.8}
+                      onPress={() => scrollToCarouselIndex(activeImageIndex + 1)}
+                      className="absolute right-2 top-1/2 -mt-4 w-8 h-8 rounded-full bg-black/40 items-center justify-center"
+                    >
+                      <ChevronRight size={18} color="#FFFFFF" />
+                    </TouchableOpacity>
+                  </>
+                )}
                 {carouselImages.length > 1 && (
                   <View
                     className="flex-row items-center justify-center gap-x-1.5 absolute bottom-4 left-0 right-0"

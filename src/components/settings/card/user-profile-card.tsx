@@ -4,19 +4,21 @@ import { ChevronRight, User } from "lucide-react-native";
 import { Image } from "expo-image";
 
 interface UserProfileCardProps {
-    user: any;
-    profile: any;
-    onPress: () => void;
+    user?: any;
+    profile?: any;
+    onPress?: () => void;
+    loading?: boolean;
 }
 
-export const UserProfileCard = ({ profile, user, onPress }: UserProfileCardProps) => {
+export const UserProfileCard = ({ profile, user, onPress, loading = false }: UserProfileCardProps) => {
     const displayName = profile?.name || user?.email?.split("@")[0] || "User";
     const email = user?.email || "";
     const avatarUrl = profile?.avatar_url || profile?.avatarUrl || profile?.logo;
 
     return (
         <TouchableOpacity
-            onPress={onPress}
+            onPress={loading ? undefined : onPress}
+            disabled={loading}
             className="bg-white dark:bg-darkBackground rounded-xl px-2.5 py-3 border border-slate-100 dark:border-slate-800 active:bg-slate-50 dark:active:bg-darkBackgroundCard"
         >
             <View className="flex-row items-center">
@@ -36,12 +38,21 @@ export const UserProfileCard = ({ profile, user, onPress }: UserProfileCardProps
 
                 {/* Info */}
                 <View className="flex-1">
-                    <Text className="text-lg font-poppins-bold text-textPrimary dark:text-darkTextPrimary" numberOfLines={1}>
-                        {displayName}
-                    </Text>
-                    <Text className="text-sm font-poppins-regular text-textSecondary dark:text-darkTextSecondary" numberOfLines={1}>
-                        {email}
-                    </Text>
+                    {loading ? (
+                        <View className="gap-y-2">
+                            <View className="h-5 w-40 rounded-md bg-slate-200 dark:bg-slate-700" />
+                            <View className="h-4 w-56 rounded-md bg-slate-200 dark:bg-slate-700" />
+                        </View>
+                    ) : (
+                        <>
+                            <Text className="text-lg font-poppins-bold text-textPrimary dark:text-darkTextPrimary" numberOfLines={1}>
+                                {displayName}
+                            </Text>
+                            <Text className="text-sm font-poppins-regular text-textSecondary dark:text-darkTextSecondary" numberOfLines={1}>
+                                {email}
+                            </Text>
+                        </>
+                    )}
                 </View>
 
                 {/* Edit Icon */}
