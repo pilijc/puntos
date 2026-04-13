@@ -166,11 +166,11 @@ export default function FrontDeskScanner({
               <MaterialIcons
                 name="qr-code-scanner"
                 size={16}
-                color={inputMode === "qr" ? "#FF6600" : isDark ? "#6B7280" : "#9CA3AF"}
+                color={inputMode === "qr" ? "#FF6600" : (isDark ? "#6B7280" : "#9CA3AF")}
               />
               <Text
                 className="will-change-variable ml-2 text-sm font-poppins-semibold"
-                style={{ color: inputMode === "qr" ? "#FF6600" : isDark ? "#6B7280" : "#9CA3AF" }}
+                style={{ color: inputMode === "qr" ? "#FF6600" : (isDark ? "#6B7280" : "#9CA3AF") }}
               >
                 QR Scan
               </Text>
@@ -189,11 +189,11 @@ export default function FrontDeskScanner({
               <MaterialIcons
                 name="confirmation-number"
                 size={16}
-                color={inputMode === "manual" ? "#FF6600" : isDark ? "#6B7280" : "#9CA3AF"}
+                color={inputMode === "manual" ? "#FF6600" : (isDark ? "#6B7280" : "#9CA3AF")}
               />
               <Text
                 className="will-change-variable ml-2 text-sm font-poppins-semibold"
-                style={{ color: inputMode === "manual" ? "#FF6600" : isDark ? "#6B7280" : "#9CA3AF" }}
+                style={{ color: inputMode === "manual" ? "#FF6600" : (isDark ? "#6B7280" : "#9CA3AF") }}
               >
                 Input Code
               </Text>
@@ -221,21 +221,20 @@ export default function FrontDeskScanner({
               <View style={{ width: screenWidth }} className="pl-20">
                 <View className="items-center justify-center" style={{ height: 260, paddingLeft: 20, paddingRight: 120 }}>
                   <View className="items-center -mt-4">
-                    <View className="w-24 h-24 bg-orange-50 dark:bg-orange-500/10 rounded-3xl items-center justify-center mb-5 border border-orange-100 dark:border-orange-500/20">
+                    <View className="w-24 h-24 bg-orange-50 dark:bg-orange-500/10 border-orange-100 dark:border-orange-500/20 rounded-3xl items-center justify-center mb-5 border">
                       <MaterialIcons name="qr-code-scanner" size={48} color="#FF6600" />
                     </View>
                     <Text className="text-lg font-poppins-bold text-neutral-900 dark:text-darkTextPrimary mb-2 -mt-2">
                       Scan QR Code
                     </Text>
                     <Text className="text-sm font-poppins text-neutral-400 dark:text-darkTextSoft text-center mb-6">
-                     Point the camera at the customer's QR  
+                     Point the camera at the customer's QR
                     </Text>
                     <View className="-mt-1">
                     <Button
                       label="Open Camera"
                       onPress={handleStartScanning}
                       icon="Camera"
-                      
                     />
                     </View>
                   </View>
@@ -249,13 +248,13 @@ export default function FrontDeskScanner({
                   <View className="items-center pl-2 ">
                     {/* Voucher icon row */}
                     <View className="pl-3">
-                    <View className=" w-15 h-15 bg-orange-50 dark:bg-orange-500/10 rounded-xl items-center justify-center mr-3 border border-orange-100 dark:border-orange-500/20">
+                    <View className="w-15 h-15 bg-orange-50 dark:bg-orange-500/10 border-orange-100 dark:border-orange-500/20 rounded-xl items-center justify-center mr-3 border">
                         <MaterialIcons name="confirmation-number" size={40} color="#FF6600" />
                       </View>
                     </View>  
                     <View className="flex-row items-center mb-4 pt-15 -mt-12 pr-3">
                       <View>
-                        <Text className="text-base font-poppins-bold text-neutral-900 dark:text-darkTextPrimary pl-15 ">
+                        <Text className="text-base font-poppins-bold text-neutral-900 dark:text-darkTextPrimary pl-15">
                           Enter Voucher Code
                         </Text>
                         <Text className="text-xs font-poppins text-neutral-400 text-center pl-2">
