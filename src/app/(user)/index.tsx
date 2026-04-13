@@ -172,11 +172,13 @@ export default function Discover() {
           setLocation(position);
 
           const { latitude: uLat, longitude: uLon } = position.coords;
+          const { mutedStoreIds } = useStoreStore.getState();
           const currentStores = useStoreStore.getState().stores;
 
           const nearbyStoreIds: number[] = [];
           for (const store of currentStores) {
             if (notifiedStoreIds.current.has(store.id)) continue;
+            if (mutedStoreIds.includes(store.id)) continue;
             if (!store.latitude || !store.longitude) continue;
 
             const nearby = isStoreNearby(

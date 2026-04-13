@@ -3,7 +3,9 @@ import { create } from "zustand";
 
 export const useStoreStore = create<StoreState>((set) => ({
   stores: [],
+  mutedStoreIds: [],
   setStores: (stores) => set({ stores }),
+  setMutedStoreIds: (mutedStoreIds) => set({ mutedStoreIds }),
   reset: () => set({ stores: [] }),
 }));
 
