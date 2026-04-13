@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { TouchableOpacity, Text } from "react-native";
 import { processVoucherCode } from "@/services/frontdesk/voucher-service";
+import { Button } from "@/components/button";
 
 type Props = {
   voucherCode: string;
@@ -52,19 +53,10 @@ export default function VoucherForm({
   };
 
   return (
-    <TouchableOpacity
+    <Button
+      label={loading ? "Processing..." : "Enter Code"}
       onPress={handleSubmit}
-      disabled={loading}
-      style={{
-        backgroundColor: "#FF6600",
-        padding: 12,
-        borderRadius: 10,
-        alignItems: "center",
-      }}
-    >
-      <Text style={{ color: "#fff", fontWeight: "bold" }}>
-        {loading ? "Processing..." : "Enter Code"}
-      </Text>
-    </TouchableOpacity>
+      loading={loading}
+     />
   );
 }
