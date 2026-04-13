@@ -24,22 +24,17 @@ export async function getStaffTransactions(
   const limit = pagination?.limit || 20;
   const offset = pagination?.offset || 0;
   
-  console.log("Fetching staff transactions for staffId:", staffId, "storeId:", storeId, "limit:", limit, "offset:", offset);
-  try {
-    // Get start of today in local timezone
+   try {
+    
     const startOfToday = new Date();
     startOfToday.setHours(0, 0, 0, 0);
 
-    // First, let's try a simpler query to get all purchases for this store
     const { data: allPurchases, error: allPurchasesError } = await supabase
       .from("purchases")
       .select("*")
       .eq("store_id", storeId)
       .order("created_at", { ascending: false });
       
-    console.log("All purchases for store:", allPurchases);
-    
-    // Now let's try to get purchases with frontdesk session join
     const { data: purchases, error: purchasesError } = await supabase
       .from("purchases")
       .select(`
@@ -58,13 +53,9 @@ export async function getStaffTransactions(
       .order("created_at", { ascending: false });
 
     if (purchasesError) {
-      console.error("Error fetching staff purchases:", purchasesError);
       return { transactions: [], hasMore: false };
     }
-    
-    console.log("Purchases data:", purchases);
 
-    // Get QR transactions for this staff member (this is likely where the staff info is stored)
     const { data: staffQRTransactions, error: qrError } = await supabase
       .from("qr_transactions")
       .select(`
@@ -79,34 +70,27 @@ export async function getStaffTransactions(
       .eq("store_staff_id", staffId)
       .eq("store_id", storeId)
       .order("created_at", { ascending: false });
-      
-    console.log("Staff QR transactions:", staffQRTransactions);
-    
+          
     if (qrError) {
       console.error("Error fetching staff QR transactions:", qrError);
     }
     
-    // Also check if there are any purchases with valid frontdesk sessions
+   
     const { data: staffSessions, error: sessionsError } = await supabase
       .from("frontdesk_sessions")
       .select("id")
       .eq("staff_id", staffId);
       
-    console.log("Staff sessions:", staffSessions);
-    
-    // Filter purchases by staff sessions (for traditional front desk transactions)
     const staffSessionIds = staffSessions?.map(s => s.id) || [];
     const filteredPurchases = purchases?.filter(p => p.fontdesk_session_id && staffSessionIds.includes(p.fontdesk_session_id)) || [];
     console.log("Filtered purchases for staff:", filteredPurchases);
 
-    // Also get purchases without frontdesk sessions that have staff tracking in metadata
     const voucherPurchases = purchases?.filter(p => 
         !p.fontdesk_session_id && 
         p.metadata && 
         p.metadata.transaction_type === "voucher" &&
         p.metadata.processed_by_staff === staffId
     ) || [];
-    console.log("Voucher purchases for staff:", voucherPurchases);
 
     // Query reward redemptions for this staff
     const { data: redemptions, error: redemptionsError } = await supabase

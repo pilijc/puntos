@@ -7,8 +7,7 @@ import {FrontDeskHeaderProps} from "@/type/frontdesk/header";
 export default function FrontDeskHeader({ storeInfo }: FrontDeskHeaderProps) {
   const { t: translate } = useTranslation();
 
-  // Get time-based greeting
-  const getGreeting = () => {
+   const getGreeting = () => {
     const hour = new Date().getHours();
     if (hour < 12) return { text: "Good morning!", icon: Sun, color: "#F59E0B" };
     if (hour < 17) return { text: "Good afternoon!", icon: Sun, color: "#FF6600" };
