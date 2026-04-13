@@ -2,9 +2,9 @@ import React, { useEffect, useState } from "react";
 import { ActivityIndicator, Alert } from "react-native";
 import { View, Text, TouchableOpacity } from "@/tw";
 import { VoucherGeneratorProps, Voucher } from "@/type/user/voucher";
-import { generateVoucherCode } from "@/services/users/voucher-service";
+import { generateVoucherCode } from "@/services/user/voucher-service";
 
- 
+
 export const VoucherGenerator: React.FC<VoucherGeneratorProps> = ({
   userId,
   durationMinutes = 5,
@@ -12,7 +12,7 @@ export const VoucherGenerator: React.FC<VoucherGeneratorProps> = ({
 }) => {
   const [voucher, setVoucher] = useState<Voucher | null>(null);
   const [loading, setLoading] = useState(false);
-  const [timeLeft, setTimeLeft] = useState<number>(0); 
+  const [timeLeft, setTimeLeft] = useState<number>(0);
 
   const generateVoucher = async () => {
     if (!userId) {
@@ -22,7 +22,7 @@ export const VoucherGenerator: React.FC<VoucherGeneratorProps> = ({
 
     setLoading(true);
     try {
-        
+
       const newVoucher = await generateVoucherCode(userId, durationMinutes);
       setVoucher(newVoucher);
       onVoucherReady?.(newVoucher);
@@ -39,7 +39,7 @@ export const VoucherGenerator: React.FC<VoucherGeneratorProps> = ({
 
   // Countdown timer
   useEffect(() => {
-    if(!voucher) return;
+    if (!voucher) return;
 
     const interval = setInterval(() => {
       if (voucher) {
@@ -47,10 +47,10 @@ export const VoucherGenerator: React.FC<VoucherGeneratorProps> = ({
         const secondsLeft = Math.max(Math.floor((expiresAt - Date.now()) / 1000), 0);
 
         if (secondsLeft === 0) {
-         setVoucher(null);
-         setTimeLeft(0);
-        }else{
-            setTimeLeft(secondsLeft);
+          setVoucher(null);
+          setTimeLeft(0);
+        } else {
+          setTimeLeft(secondsLeft);
         }
       }
     }, 1000);
@@ -58,7 +58,7 @@ export const VoucherGenerator: React.FC<VoucherGeneratorProps> = ({
     return () => clearInterval(interval);
   }, [voucher]);
 
-return (
+  return (
     <View className="items-center justify-center mt-8 p-4">
       {!voucher ? (
         <TouchableOpacity

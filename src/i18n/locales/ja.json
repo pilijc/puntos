@@ -113,6 +113,7 @@
             "ownerPrompt": "店舗オーナーとして登録しますか？",
             "roleSelect": {
                 "title": "アプリの使い方を選択してください",
+                "subtitle": "あなたに合う方を選んでください。後から設定で変更できます。",
                 "customerLabel": "お客様として利用する",
                 "customerDescription": "リワードを獲得して、ロイヤルティ機能を利用したい",
                 "ownerLabel": "店舗オーナーとして利用する",
@@ -430,6 +431,7 @@
             "title": "アカウント設定",
             "security": {
                 "title": "セキュリティ",
+                "description": "パスワード、アカウントの削除",
                 "changePassword": {
                     "title": "パスワード変更",
                     "description": "現在のパスワードと新しいパスワードを入力してください",

@@ -186,6 +186,11 @@ export default function SuperAdminStores() {
 				onApprove={() => {
 					if (previewStore) handleApprove(previewStore);
 				}}
+				onReject={() => {
+					if (previewStore) {
+						handleReject(previewStore);
+					}
+				}}
 			/>
 
 			<Modal

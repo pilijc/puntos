@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback } from "react";
 import { useRouter, useFocusEffect } from "expo-router";
 import { useDashboardStore } from "@/store/dashboard-store";
-import { useProfile } from "@/hooks/use-profile";
+import { useProfile } from "@/hooks/user/use-profile";
 
 export function useSuperAdminDashboard() {
   const router = useRouter();
