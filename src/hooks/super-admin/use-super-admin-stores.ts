@@ -70,6 +70,7 @@ export function useSuperAdminStores() {
       variant: "danger",
       onConfirm: async () => {
         setConfirmModal(null);
+        setPreviewStore(null);
         const success = await rejectStore(store);
         if (success) {
           useSuperAdminStoresStore.setState({

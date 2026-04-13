@@ -109,6 +109,7 @@
             "google": "Continue with Google",
             "creating": "Creating Account...",
             "continue": "Continue",
+            "back": "Back",
             "ownerPrompt": "Sign up as Store Owner?",
             "roleSelect": {
                 "title": "Choose how you’ll use the app",

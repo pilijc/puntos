@@ -2,7 +2,7 @@ import { supabase } from "@/supabase/supabase";
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
 import { Alert } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { getHomeRouteForUserId, getRoleTypeForUser } from "./access-service";
+import { getHomeRouteForUserId, getRoleTypeForUser, getWebAdjustedHomeRoute } from "./access-service";
 import { router } from "expo-router";
  
 export class AccountDeletedError extends Error {
@@ -12,9 +12,6 @@ export class AccountDeletedError extends Error {
   }
 }
 
-/**
- * Custom error thrown when an account has been blocked by super admin.
- */
 export class AccountBlockedError extends Error {
   constructor() {
     super("Your account has been restricted. To verify your account status, please contact support.");
@@ -22,10 +19,6 @@ export class AccountBlockedError extends Error {
   }
 }
 
-/**
- * Checks if a user's account has been soft-deleted.
- * If deleted, it signs the user out and throws an AccountDeletedError.
- */
 export async function checkIfAccountDeletedService(userId: string): Promise<void> {
   const { data: userSettings, error } = await supabase
     .from("user_settings")
@@ -41,10 +34,6 @@ export async function checkIfAccountDeletedService(userId: string): Promise<void
   }
 }
 
-/**
- * Checks if a user is blocked in public.users. If blocked, signs out and throws AccountBlockedError.
- * Blocked users cannot use their account.
- */
 export async function checkIfAccountBlockedService(userId: string): Promise<void> {
   const { data, error } = await supabase
     .from("users")
@@ -59,9 +48,6 @@ export async function checkIfAccountBlockedService(userId: string): Promise<void
   }
 }
 
-/**
- * Soft-deletes a user account by setting the deleted_at timestamp.
- */
 export async function softDeleteUserService(userId: string): Promise<void> {
   const { error } = await supabase
     .from("user_settings")
@@ -116,11 +102,9 @@ export default async function signUpService(email: string, password: string, nam
     });
 
     if (roleError) {
-      //console.error("Role insertion failed:", roleError);
       throw roleError;
     }
-    //console.log("Role insertion successful:", roleInsertData);
-    const homeRoute = await getHomeRouteForUserId(userId);
+    const homeRoute = getWebAdjustedHomeRoute(await getHomeRouteForUserId(userId));
     return { ...data, homeRoute};
   } catch (error) {
     throw error;
@@ -156,7 +140,9 @@ export async function signUpWithGoogleService() {
         token: idToken,
       });
 
-      const homeRoute = data?.user?.id ? await getHomeRouteForUserId(data.user.id) : "/(user)";
+      const homeRoute = getWebAdjustedHomeRoute(
+        data?.user?.id ? await getHomeRouteForUserId(data.user.id) : "/(user)",
+      );
 
       if (data.user) {
         await checkIfAccountBlockedService(data.user.id);
@@ -235,20 +221,16 @@ export async function loginService(email: string, password: string) {
             };
          }
 
-        // Check if password setup is required
         if (!storeStaff.password_updated_at) {
           return {
             success: true,
-            homeRoute: "/(front_desk)/setup-password",
+            homeRoute: getWebAdjustedHomeRoute("/(front_desk)/setup-password"),
             requiresPasswordSetup: true
           };
         }
       }
 
-    // if (res.data?.session?.access_token) {
-    //   await AsyncStorage.setItem('sessionToken', res.data.session.access_token);
-    // }
-    const homeRoute = userId ? await getHomeRouteForUserId(userId) : null;
+    const homeRoute = userId ? getWebAdjustedHomeRoute(await getHomeRouteForUserId(userId)) : null;
     return { success: true,
              homeRoute,
     }; 
@@ -283,7 +265,9 @@ export async function signInWithGoogleLoginService() {
         await AsyncStorage.setItem('sessionToken', idToken);
       } 
       const userId = response.data.user.id;
-      const homeRoute = userId ? await getHomeRouteForUserId(userId) : "/(user)";
+      const homeRoute = userId
+        ? getWebAdjustedHomeRoute(await getHomeRouteForUserId(userId))
+        : getWebAdjustedHomeRoute("/(user)");
 
       const { data, error } = await supabase.auth.signInWithIdToken({
         provider: 'google',

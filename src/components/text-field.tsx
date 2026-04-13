@@ -37,7 +37,7 @@ export function TextField({
 
   return (
     <View className="gap-y-1.5">
-      <Text className="text-sm font-poppins-semibold text-slate-700 dark:text-slate-300">
+      <Text className="text-sm font-poppins text-slate-700 dark:text-slate-300">
         {label} {required && <Text className="text-sm font-poppins text-red-500 dark:text-red-400 -mt-1">*</Text>}
       </Text>
       {hint && (

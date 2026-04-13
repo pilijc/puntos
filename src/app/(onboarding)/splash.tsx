@@ -1,8 +1,9 @@
 import React, { useEffect } from "react";
+import { Platform } from "react-native";
 import { SafeAreaView, View, Image } from "@/tw";
 import { router } from "expo-router";
 import { supabase } from "@/supabase/supabase";
-import { getHomeRouteForUserId } from "@/services/access-service";
+import { getHomeRouteForUserId, getWebAdjustedHomeRoute } from "@/services/access-service";
 
 export default function Splash() {
   useEffect(() => {
@@ -12,12 +13,14 @@ export default function Splash() {
       } = await supabase.auth.getSession();
 
       if (!session) {
-        router.replace("/(onboarding)");
+        router.replace(
+          Platform.OS === "web" ? "/(onboarding)/welcome" : "/(onboarding)",
+        );
         return;
       }
 
-      const nextRoute = await getHomeRouteForUserId(session.user.id);
-      router.replace(nextRoute);
+      const nextRoute = getWebAdjustedHomeRoute(await getHomeRouteForUserId(session.user.id));
+      router.replace(nextRoute as any);
     }, 1200);
 
     return () => clearTimeout(timer);

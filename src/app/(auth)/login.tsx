@@ -1,7 +1,7 @@
 import { View, Text, TouchableOpacity, ScrollView, Image, SafeAreaView } from "@/tw";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useState, useEffect } from "react";
-import {  KeyboardAvoidingView, Platform } from "react-native";
+import { KeyboardAvoidingView, Platform, useWindowDimensions } from "react-native";
 import { useAuthStore } from "../../store/auth-store";
 import { loginService, signInWithGoogleLoginService } from "@/services/auth-service";
 import { useTranslation, Trans } from "react-i18next";
@@ -20,6 +20,9 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [loadingGoogle, setLoadingGoogle] = useState(false);
   const { t: translate } = useTranslation();
+  const { width: windowWidth } = useWindowDimensions();
+  const isWeb = Platform.OS === "web";
+  const isWideWeb = isWeb && windowWidth >= 900;
   const [errors, setErrors] = useState(emptyState);
   const [modal, setModal] = useState<{
     title: string;
@@ -117,8 +120,98 @@ export default function Login() {
     }
   };
 
+  const LoginForm = (
+    <>
+      <View className="w-full items-center gap-y-3">
+        <View className="w-full">
+          <TextField
+            label={translate("onboarding.login.label.email")}
+            value={email}
+            onChangeText={setEmail}
+            placeholder={translate("onboarding.login.input.email")}
+            keyboardType="email-address"
+          />
+        </View>
+
+        <View className="w-full">
+          <TextField
+            label={translate("onboarding.login.label.password")}
+            value={password}
+            onChangeText={setPassword}
+            placeholder={translate("onboarding.login.input.password")}
+            keyboardType="default"
+            secureTextEntry={!showPassword}
+            rightAccessory={
+              <TouchableOpacity
+                onPress={() => setShowPassword(!showPassword)}
+                className="ml-[-32px] p-2"
+                activeOpacity={0.7}
+              >
+                {showPassword ? (
+                  <LucideEye color="#9ca3af" size={16} />
+                ) : (
+                  <LucideEyeOff color="#9ca3af" size={16} />
+                )}
+              </TouchableOpacity>
+            }
+          />
+        </View>
+        <View className="w-full">
+          {(errors.password || errors.email) ? (
+            <Text className="text-sm font-poppins text-red-500 dark:text-red-400 text-center bg-red-50 dark:bg-red-900/20 rounded-xl px-4 py-3 w-full">
+              {errors.password || errors.email}
+            </Text>
+          ) : null}
+        </View>
+      </View>
+
+      <Button
+        label={translate("onboarding.login.button")}
+        onPress={handleLogin}
+        loading={loading}
+        disabled={loading}
+        fullWidth={true}
+        authButton={true}
+      />
+
+      <View className="flex-row items-center gap-x-4 w-full max-w-md">
+        <View className="flex-1 h-px bg-neutral-100 dark:bg-darkBorder" />
+        <Text className="text-neutral-500 dark:text-darkTextMuted font-poppins text-sm text-center">
+          {translate("onboarding.signup.divider")}
+        </Text>
+        <View className="flex-1 h-px bg-neutral-100 dark:bg-darkBorder" />
+      </View>
+
+      <Button
+        label={translate("onboarding.signup.google")}
+        onPress={handleSignInWithGoogle}
+        variant="secondary"
+        fullWidth={true}
+        authButton={true}
+        leftImage={require("../../assets/images/google-icon.png")}
+        leftImageSize={14}
+      />
+
+      <View className="flex-row justify-center items-center w-full">
+        <Text className="text-sm font-poppins text-neutral-600 dark:text-darkTextSecondary text-center">
+          <Trans
+            i18nKey="onboarding.login.signup"
+            components={{
+              signup: (
+                <Text
+                  className="ml-1 font-poppins-semibold text-primary text-center"
+                  onPress={() => router.replace("/signup")}
+                />
+              )
+            }}
+          />
+        </Text>
+      </View>
+    </>
+  );
+
   return (
-    <SafeAreaView className="flex-1 bg-white dark:bg-darkBackground">
+    <SafeAreaView className={isWeb ? "flex-1 bg-slate-50 dark:bg-darkBackground" : "flex-1 bg-white dark:bg-darkBackground"}>
       <Modal
         visible={!!modal}
         onClose={() => setModal(null)}
@@ -131,122 +224,85 @@ export default function Login() {
         onBackPress={() => router.replace("/welcome")}
         rightIcon={<TranslateButton />}
       />
-      <View className="flex-1 justify-center pb-40 p-4">
-        <KeyboardAvoidingView
-          behavior={Platform.OS === "android" ? "padding" : "height"}
-          className="flex-1"
-        >
-          <ScrollView
-            contentContainerStyle={{ flexGrow: 1 }}
-            keyboardShouldPersistTaps="handled"
-          >
-            <View className="flex-1 gap-y-3 px-2">
-              <View className="items-center justify-center">
+      {isWeb ? (
+        <View className="flex-1 items-center justify-center p-4">
+          <View className="w-full max-w-4xl border border-slate-100 dark:border-neutral-700 rounded-xl bg-white dark:bg-darkBackground overflow-hidden">
+            <View
+              style={{ flexDirection: isWideWeb ? "row" : "column" }}
+              className="w-full"
+            >
+              <View className={isWideWeb ? "w-1/2 border-r border-slate-100 dark:border-neutral-700" : "border-b border-slate-100 dark:border-neutral-700"}>
                 <Image
-                  source={require("../../assets/images/puntos-icon.png")}
-                  className="w-16 h-16"
+                  source={require("../../assets/images/welcome-web.png")}
+                  className="w-full h-full min-h-[220px]"
+                  resizeMode="contain"
                 />
               </View>
-              <View className="gap-y-4 w-full items-center">
-                <View className="flex-col items-center justify-center gap-y-1">
-                  <Text className="text-2xl font-poppins-bold text-neutral-900 dark:text-darkTextPrimary text-center">
-                    {translate("onboarding.login.welcome")}
-                  </Text>
-                  <Text className="text-neutral-600 dark:text-darkTextSecondary font-poppins text-center text-sm">
-                    {translate("onboarding.login.subhead")}
-                  </Text>
-                </View>
-              </View>
-
-              <View className="w-full items-center gap-y-3">
-                <View className="w-full">
-                  <TextField
-                    label={translate("onboarding.login.label.email")}
-                    value={email}
-                    onChangeText={setEmail}
-                    placeholder={translate("onboarding.login.input.email")}
-                    keyboardType="email-address"
-                  />
-                </View>
-
-                <View className="w-full">
-                  <TextField
-                    label={translate("onboarding.login.label.password")}
-                    value={password}
-                    onChangeText={setPassword}
-                    placeholder={translate("onboarding.login.input.password")}
-                    keyboardType="default"
-                    secureTextEntry={!showPassword}
-                    rightAccessory={
-                      <TouchableOpacity
-                        onPress={() => setShowPassword(!showPassword)}
-                        className="ml-[-32px] p-2"
-                        activeOpacity={0.7}
-                      >
-                        {showPassword ? (
-                          <LucideEye color="#9ca3af" size={16} />
-                        ) : (
-                          <LucideEyeOff color="#9ca3af" size={16} />
-                        )}
-                      </TouchableOpacity>
-                    }
-                  />
-                </View>
-                <View className="w-full">
-                  {(errors.password || errors.email) ? (
-                    <Text className="text-sm font-poppins text-red-500 dark:text-red-400 text-center bg-red-50 dark:bg-red-900/20 rounded-xl px-4 py-3 w-full">
-                      {errors.password || errors.email}
-                    </Text>
-                  ) : null}
-                </View>
-              </View>
-
-              <Button
-                label={translate("onboarding.login.button")}
-                onPress={handleLogin}
-                loading={loading}
-                disabled={loading}
-                fullWidth={true}
-                authButton={true}
-              />
-
-              <View className="flex-row items-center gap-x-4 w-full max-w-md">
-                <View className="flex-1 h-px bg-neutral-200 dark:bg-darkBorder" />
-                <Text className="text-neutral-500 dark:text-darkTextMuted font-poppins text-sm text-center">
-                  {translate("onboarding.signup.divider")}
-                </Text>
-                <View className="flex-1 h-px bg-neutral-200 dark:bg-darkBorder" />
-              </View>
-
-              <Button
-                label={translate("onboarding.signup.google")}
-                onPress={handleSignInWithGoogle}
-                variant="secondary"
-                fullWidth={true}
-                authButton={true}
-                leftImage={require("../../assets/images/google-icon.png")}
-                leftImageSize={14}
-              />
-
-              <View className="flex-row justify-center items-center w-full">
-                <Text className="text-sm font-poppins text-neutral-600 dark:text-darkTextSecondary text-center">
-                  <Trans
-                    i18nKey="onboarding.login.signup"
-                    components={{
-                      signup: (
-                        <Text
-                          className="ml-1 font-poppins-semibold text-primary text-center"
-                          onPress={() => router.replace("/signup")}
+              <View className={isWideWeb ? "w-1/2 p-8" : "p-6"}>
+                <KeyboardAvoidingView
+                  behavior={Platform.OS === "android" ? "padding" : "height"}
+                  className="w-full"
+                >
+                  <ScrollView
+                    contentContainerStyle={{ flexGrow: 1 }}
+                    keyboardShouldPersistTaps="handled"
+                  >
+                    <View className="w-full gap-y-4">
+                      <View className="items-start">
+                        <Image
+                          source={require("../../assets/images/puntos-icon.png")}
+                          className="w-16 h-16"
                         />
-                      )
-                    }}
-                  />
-                </Text>
+                      </View>
+                      <View className="w-full">
+                        <Text className="text-lg font-poppins-bold text-textSecondary dark:text-darkTextPrimary">
+                          {translate("onboarding.login.welcome")}
+                        </Text>
+                        <Text className="text-sm font-poppins text-textMuted dark:text-darkTextSecondary">
+                          {translate("onboarding.login.subhead")}
+                        </Text>
+                      </View>
+                      {LoginForm}
+                    </View>
+                  </ScrollView>
+                </KeyboardAvoidingView>
               </View>
             </View>
-          </ScrollView>
-        </KeyboardAvoidingView>
-      </View>
+          </View>
+        </View>
+      ) : (
+        <View className="flex-1 justify-center pb-40 p-4">
+          <KeyboardAvoidingView
+            behavior={Platform.OS === "android" ? "padding" : "height"}
+            className="flex-1"
+          >
+            <ScrollView
+              contentContainerStyle={{ flexGrow: 1 }}
+              keyboardShouldPersistTaps="handled"
+            >
+              <View className="flex-1 gap-y-3 px-2">
+                <View className="items-center justify-center">
+                  <Image
+                    source={require("../../assets/images/puntos-icon.png")}
+                    className="w-16 h-16"
+                  />
+                </View>
+                <View className="gap-y-4 w-full items-center">
+                  <View className="flex-col items-center justify-center">
+                    <Text className="text-lg font-poppins-bold text-textSecondary dark:text-darkTextPrimary text-center">
+                      {translate("onboarding.login.welcome")}
+                    </Text>
+                    <Text className="text-textMuted dark:text-darkTextSecondary font-poppins text-center text-sm">
+                      {translate("onboarding.login.subhead")}
+                    </Text>
+                  </View>
+                </View>
+                {LoginForm}
+              </View>
+            </ScrollView>
+          </KeyboardAvoidingView>
+        </View>
+      )}
     </SafeAreaView>
   );
 }
