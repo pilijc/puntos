@@ -91,9 +91,6 @@ export default function FrontDeskHistory() {
     const [staffId, setStaffId] = useState<string>("");
     const [storeId, setStoreId] = useState<number | null>(null);
 
-    // Debug: Log the current state
-    console.log("History component - staffTransactions:", staffTransactions, "isLoading:", isLoading);
-
     // Filter state
     const { sortField, sortDirection, transactionType, activeFilterCount, resetFilters, setSortField, setSortDirection, setTransactionType } = useTransactionFilterStore();
     const filterCount = activeFilterCount();
@@ -104,18 +101,18 @@ export default function FrontDeskHistory() {
         const loadStaffInfo = async () => {
             try {
                 const currentStaffId = await getCurrentStaffId();
-                console.log("Current staffId:", currentStaffId);
+                
                 if (!currentStaffId) return;
                 
                 const storeInfo = await getCurrentUserStore();
-                console.log("Store info:", storeInfo);
+               
                 if (!storeInfo) return;
 
                 setStaffId(currentStaffId);
                 setStoreId(storeInfo.id);
                 fetchStaffTransactions(currentStaffId, storeInfo.id);
             } catch (error) {
-                console.error("Error loading staff info:", error);
+                console.log("Error loading staff info:", error);
             }
         };
 
@@ -124,7 +121,6 @@ export default function FrontDeskHistory() {
 
     // ── Filter + sort + section logic ─────────────────────────────────────────
     const listItems = useMemo<ListItem[]>(() => {
-        console.log("Processing listItems from staffTransactions:", staffTransactions);
         let transactions: Transaction[] = (staffTransactions as any[]).map((s, i) => ({
             id: s.id ?? String(i),
             timestamp: s.timestamp instanceof Date ? s.timestamp : new Date(s.timestamp),
@@ -156,7 +152,6 @@ export default function FrontDeskHistory() {
             }
             result.push({ kind: "tx", key: tx.id, tx });
         });
-        console.log("Final listItems:", result);
         return result;
     }, [staffTransactions, sortField, sortDirection, transactionType]);
 

@@ -23,9 +23,7 @@ export const useStaffHistory = create<StaffHistoryState>((set, get) => ({
   hasMore: true,
   currentOffset: 0,
 
-  fetchStaffTransactions: async (staffId: string, storeId: number, reset: boolean = true) => {
-    console.log("Hook: fetchStaffTransactions called with staffId:", staffId, "storeId:", storeId, "reset:", reset);
-    
+  fetchStaffTransactions: async (staffId: string, storeId: number, reset: boolean = true) => {    
     const isFirstLoad = !get().hasFetchedOnce;
     const offset = reset ? 0 : get().currentOffset;
     
@@ -36,9 +34,7 @@ export const useStaffHistory = create<StaffHistoryState>((set, get) => ({
     try {
       const pagination: PaginationOptions = { limit: PAGE_SIZE, offset };
       const result = await getStaffTransactions(staffId, storeId, pagination);
-      
-      console.log("Hook: Received transactions:", result.transactions.length, "hasMore:", result.hasMore);
-      
+            
       set({ 
         staffTransactions: reset ? result.transactions : [...get().staffTransactions, ...result.transactions], 
         isLoading: false,
@@ -63,9 +59,7 @@ export const useStaffHistory = create<StaffHistoryState>((set, get) => ({
     const { hasMore, isLoadingMore, currentOffset } = get();
     
     if (!hasMore || isLoadingMore) return;
-    
-    console.log("Hook: Loading more transactions from offset:", currentOffset);
-    set({ isLoadingMore: true });
+        set({ isLoadingMore: true });
     
     try {
       const pagination: PaginationOptions = { limit: PAGE_SIZE, offset: currentOffset };

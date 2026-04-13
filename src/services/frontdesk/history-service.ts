@@ -83,8 +83,6 @@ export async function getStaffTransactions(
       
     const staffSessionIds = staffSessions?.map(s => s.id) || [];
     const filteredPurchases = purchases?.filter(p => p.fontdesk_session_id && staffSessionIds.includes(p.fontdesk_session_id)) || [];
-    console.log("Filtered purchases for staff:", filteredPurchases);
-
     const voucherPurchases = purchases?.filter(p => 
         !p.fontdesk_session_id && 
         p.metadata && 
@@ -108,12 +106,9 @@ export async function getStaffTransactions(
       .order("created_at", { ascending: false });
 
     if (redemptionsError) {
-      console.error("Error fetching staff redemptions:", redemptionsError);
       return { transactions: [], hasMore: false };
     }
     
-    console.log("Redemptions data:", redemptions);
-
     // Format traditional purchases as earned transactions
     const formattedPurchases: StaffTransaction[] = (filteredPurchases || []).map((p: any) => ({
       id: p.id,
@@ -166,8 +161,6 @@ export async function getStaffTransactions(
     const allTransactions = [...formattedPurchases, ...formattedVoucherPurchases, ...formattedQRTransactions, ...formattedRedemptions].sort(
       (a, b) => b.timestamp.getTime() - a.timestamp.getTime()
     );
-
-    console.log("Final formatted transactions:", allTransactions);
     
     // Apply pagination - slice the array based on offset and limit
     const paginatedTransactions = allTransactions.slice(offset, offset + limit);
@@ -175,7 +168,6 @@ export async function getStaffTransactions(
     
     return { transactions: paginatedTransactions, hasMore };
   } catch (error) {
-    console.error("Exception fetching staff transactions:", error);
     return { transactions: [], hasMore: false };
   }
 }

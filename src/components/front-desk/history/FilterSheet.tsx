@@ -10,6 +10,7 @@ import { X, ArrowUpDown, Tag } from "lucide-react-native";
 import { useColorScheme } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Text } from "@/tw";
+import { Button } from "@/components/button";
 
 export type SortField = "date" | "amount";
 export type SortDirection = "asc" | "desc";
@@ -90,9 +91,11 @@ export default function FilterSheet({
                         <Text style={{ fontSize: 16, fontFamily: "Poppins-Bold", color: isDark ? "#F5F5F5" : "#1E293B" }}>Filter & Sort</Text>
                         <NativeView style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
                             {activeFilterCount > 0 && (
-                                <TouchableOpacity onPress={resetFilters}>
-                                    <Text style={{ fontSize: 12, fontFamily: "Poppins-SemiBold", color: "#FF6600" }}>Clear all ({activeFilterCount})</Text>
-                                </TouchableOpacity>
+                                <Button 
+                                    label={`Clear all (${activeFilterCount})`} 
+                                    onPress={resetFilters}
+                                    variant="ghost"
+                                />
                             )}
                             <TouchableOpacity onPress={onClose} style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: isDark ? "#262626" : "#F1F5F9", alignItems: "center", justifyContent: "center" }}>
                                 <X size={16} color={isDark ? "#A3A3A3" : "#64748B"} />
@@ -145,9 +148,12 @@ export default function FilterSheet({
                         />
                     </ScrollView>
 
-                    <TouchableOpacity onPress={onClose} style={{ backgroundColor: "#FF6600", borderRadius: 12, paddingVertical: 12, alignItems: "center", marginTop: 0 }}>
-                        <Text style={{ fontSize: 14, fontFamily: "Poppins-Bold", color: "#FFFFFF" }}>Apply Filters</Text>
-                    </TouchableOpacity>
+                    <Button 
+                        label="Apply Filters" 
+                        onPress={onClose}
+                        variant="primary"
+                        fullWidth
+                    />
                 </Pressable>
             </Pressable>
         </Modal>
