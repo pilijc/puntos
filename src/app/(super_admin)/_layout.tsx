@@ -2,7 +2,7 @@ import { Tabs } from "expo-router";
 import React from "react";
 import { useColorScheme } from "react-native";
 import { useSuperAdminLayout } from "@/hooks/super-admin/use-super-admin-layout";
-import { LayoutDashboard, Users, Store, Settings } from 'lucide-react-native';
+import { LayoutDashboard, Users, Store, Settings, CircleDollarSign } from 'lucide-react-native';
 
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -57,6 +57,15 @@ export default function SuperAdminLayout() {
           title: "Stores",
           tabBarIcon: ({ color }) => (
             <Store size={22} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="subscription-config"
+        options={{
+          title: "Subscription",
+          tabBarIcon: ({ color }) => (
+            <CircleDollarSign size={22} color={color} />
           ),
         }}
       />

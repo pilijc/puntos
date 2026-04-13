@@ -13,7 +13,7 @@ import { AdminStoreRow } from "@/services/store-service";
 import { ImageViewerModal } from "@/components/ui/image-viewer-modal";
 import { getStoreCategoryBadge } from "@/type/super-admin/user";
 import { shouldUseInteractiveMapbox } from "@/utils/mapbox-platform";
-import { SUB_CONFIG } from "@/app/(super_admin)/subscription-config";
+import { useSubscriptionConfigStore } from "@/store/super-admin/subscription-config";
 
 
 Mapbox.setAccessToken(process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN!);
@@ -66,6 +66,7 @@ export function AdminStoreDetails({
   onReject: (store: AdminStoreRow) => void;
 }) {
   const { t: translate, i18n } = useTranslation();
+  const config = useSubscriptionConfigStore();
 
   const STATUS_LABELS: Record<StatusKey, string> = {
     pending_review: translate("superAdmin.stores.status.pending"),
@@ -188,11 +189,11 @@ export function AdminStoreDetails({
             </Text>
 
             {/* SUBSCRIPTION INDICATOR */}
-            {(ownerActiveStoresCount + (statusKey === 'active' ? 1 : 0)) > SUB_CONFIG.FREE_STORES_LIMIT && (
+            {(ownerActiveStoresCount + (statusKey === 'active' ? 1 : 0)) > config.FREE_STORES_LIMIT && (
                <View className="flex-row items-center gap-1.5 self-start px-2.5 py-1 rounded-full bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 mb-3">
                  <MaterialIcons name="local-fire-department" size={12} color="#2563EB" />
                  <Text className="text-[10px] font-poppins-bold tracking-wider text-blue-700 dark:text-blue-400 uppercase">
-                    Premium Subscription Active
+                    Subscription Required
                  </Text>
                </View>
             )}

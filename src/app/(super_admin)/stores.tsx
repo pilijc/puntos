@@ -11,7 +11,6 @@ import { AdminStoreCard, AdminStoreSkeletonCard } from "@/components/users/store
 import { AdminStoreDetails } from "@/components/users/stores/admin-store-details";
 import { AdminStorePreviewModal } from "@/components/users/stores/admin-store-preview-modal";
 import { Modal } from "@/components/modal";
-import { Toggle } from "@/components/toggle";
 import {
 	useSuperAdminStores,
 	FILTERS,
@@ -42,8 +41,6 @@ export default function SuperAdminStores() {
 		filtered,
 		pendingCount,
 		FILTER_LABELS,
-		enforceSubscription,
-		setEnforceSubscription,
 	} = useSuperAdminStores();
 
 	const selectedOwnerActiveStoresCount = selectedStore 
@@ -75,7 +72,7 @@ export default function SuperAdminStores() {
 			<View className="bg-white border-b border-slate-100 dark:bg-darkBackgroundMuted dark:border-darkBorder px-6 py-4 flex-row items-center justify-start">
 				<View className="flex-row items-center gap-2 py-1">
 					<MaterialIcons name="storefront" size={22} color="black" className="mt-1" />
-					<Text className="text-2xl font-poppins-bold text-slate-900 dark:text-darkTextPrimary flex-1">
+					<Text className="text-1xl font-poppins-bold text-slate-900 dark:text-darkTextPrimary flex-1">
 						{translate("superAdmin.stores.title")}
 					</Text>
 				</View>
@@ -127,14 +124,6 @@ export default function SuperAdminStores() {
 				</ScrollView>
 			</View>
 
-			<View className="bg-white dark:bg-darkBackgroundMuted border-b border-slate-100 dark:border-darkBorder px-6 py-3 flex-row items-center justify-between">
-				<View className="flex-1 pr-4">
-					<Text className="text-sm font-poppins-semibold text-slate-800 dark:text-darkTextPrimary">Enforce Subscription</Text>
-					<Text className="text-[10px] font-poppins text-slate-500 dark:text-darkTextMuted leading-4 mt-0.5">Require store managers to pay after exceeding 2 active stores.</Text>
-				</View>
-				<Toggle size="sm" value={enforceSubscription} onValueChange={setEnforceSubscription} />
-			</View>
-
 			{/* ── Store list ── */}
 			<View className="flex-1">
 				<ScrollView
@@ -165,15 +154,22 @@ export default function SuperAdminStores() {
 					</>
 				)}
 
-				{!loading && filtered.map((store) => (
-					<AdminStoreCard
-						key={store.id}
-						store={store}
-						onApprove={handleApprove}
-						onReject={handleReject}
-						onSelect={(s) => setPreviewStore(s)}
-					/>
-				))}
+				{!loading && filtered.map((store) => {
+					const activeStoresCount = stores.filter(
+						s => s.owner_id === store.owner_id && s.id !== store.id && (s.status === "active" || s.is_active)
+					).length;
+
+					return (
+						<AdminStoreCard
+							key={store.id}
+							store={store}
+							ownerActiveStoresCount={activeStoresCount}
+							onApprove={handleApprove}
+							onReject={handleReject}
+							onSelect={(s) => setPreviewStore(s)}
+						/>
+					);
+				})}
 
 					{!loading && filtered.length === 0 && !error && (
 						<View className="items-center pt-16 gap-3">

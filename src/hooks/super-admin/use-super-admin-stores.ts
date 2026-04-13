@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useFocusEffect } from "expo-router";
 import { AdminStoreRow } from "@/services/store-service";
 import { useSuperAdminStoresStore } from "@/store/super-admin/super-admin-stores-store";
-import { SUB_CONFIG } from "@/app/(super_admin)/subscription-config";
+import { useSubscriptionConfigStore } from "@/store/super-admin/subscription-config";
 
 export const FILTERS = ["All", "pending_review", "active", "inactive"] as const;
 export type Filter = typeof FILTERS[number];
@@ -32,8 +32,6 @@ export function useSuperAdminStores() {
     label: string;
   } | null>(null);
 
-  const [enforceSubscription, setEnforceSubscription] = useState(true);
-
   useFocusEffect(useCallback(() => { fetchStores(); }, []));
 
   const onRefresh = async () => { 
@@ -51,21 +49,30 @@ export function useSuperAdminStores() {
     ).length;
 
     // Check if they exceed the free limit to update the warning message
-    const isExceedingFreeTier = ownerActiveStores >= SUB_CONFIG.FREE_STORES_LIMIT;
-    let customMessage = translate("superAdmin.stores.modal.approveMessage", { name: store.name });
+    const config = useSubscriptionConfigStore.getState();
+    const isEnforced = config.enforced_stores_ids.includes(store.id);
     
-    if (enforceSubscription && isExceedingFreeTier) {
-      customMessage += `\n\n⚠️ ${SUB_CONFIG.LIMIT_MESSAGE}`;
+    let customMessage = translate("superAdmin.stores.modal.approveMessage", { name: store.name });
+    let actionLabel = translate("superAdmin.stores.modal.approveAction");
+    
+    if (config.ENFORCE_SUBSCRIPTION && isEnforced) {
+      customMessage += `\n\n⚠️ ${config.LIMIT_MESSAGE}`;
+      actionLabel = "Agree";
     }
 
     setConfirmModal({
       title: translate("superAdmin.stores.modal.approveTitle"),
       message: customMessage,
-      label: translate("superAdmin.stores.modal.approveAction"),
+      label: actionLabel,
       variant: "primary",
       onConfirm: async () => {
         setConfirmModal(null);
-        const success = await approveStore(store, enforceSubscription);
+        if (config.ENFORCE_SUBSCRIPTION && isEnforced) {
+          // Do not turn as active store, just close the modal.
+          return;
+        }
+        
+        const success = await approveStore(store);
         if (success) {
           setPreviewStore(null);
           useSuperAdminStoresStore.setState({
@@ -76,7 +83,7 @@ export function useSuperAdminStores() {
             }
           });
         }
-      }
+      },
     });
   };
 
@@ -135,7 +142,5 @@ export function useSuperAdminStores() {
     filtered,
     pendingCount,
     FILTER_LABELS,
-    enforceSubscription,
-    setEnforceSubscription,
   };
 }
