@@ -519,6 +519,56 @@
                 "user": "人",
                 "users": "人"
             }
+        },
+        "transactions": {
+            "title": "取引履歴",
+            "types": {
+                "qr": "QR購入",
+                "stamp": "スタンプ",
+                "streak": "ストリーク"
+            },
+            "filters": {
+                "all": "すべて",
+                "qr": "QR購入",
+                "stamp": "スタンプ",
+                "streak": "ストリーク"
+            },
+            "empty": {
+                "noStoresTitle": "店舗が見つかりません",
+                "noStoresBody": "取引を記録するには、まず店舗を作成してください。",
+                "noTransactionsTitle": "取引がありません",
+                "noTransactionsBody": "お客様がポイントを獲得し始めると、ここに表示されます。"
+            },
+            "endOfList": "これ以上ありません"
+        },
+        "stores": {
+            "title": "加盟店ストア",
+            "tabs": {
+                "all": "すべて",
+                "active": "有効",
+                "pending": "審査待ち",
+                "inactive": "無効"
+            },
+            "badge": {
+                "active": "有効",
+                "pending_review": "審査待ち",
+                "inactive": "無効"
+            },
+            "noAddress": "住所未記入",
+            "empty": {
+                "allTitle": "まだ店舗がありません",
+                "activeTitle": "有効な店舗がありません",
+                "pendingTitle": "審査待ちの店舗がありません",
+                "inactiveTitle": "無効な店舗がありません",
+                "hintAll": "「+」ボタンから最初の店舗を作成してください。",
+                "hintFiltered": "別のタブを選ぶか、新しい店舗を追加してください。"
+            }
+        },
+        "tabs": {
+            "dashboard": "ダッシュボード",
+            "stores": "店舗",
+            "transactions": "取引履歴",
+            "settings": "設定"
         }
     },
     "superAdmin": {

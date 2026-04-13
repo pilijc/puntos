@@ -1,45 +1,48 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import { RefreshControl, Platform } from "react-native";
 import { View, Text, TouchableOpacity, ScrollView, SafeAreaView } from "@/tw";
 import { Image } from "expo-image";
 import { useRouter, useFocusEffect } from "expo-router";
+import { useTranslation } from "react-i18next";
 import { StoreRow } from "@/services/store-service";
 import { useManagerStoresStore } from "@/store/manager-stores-store";
 import { AlertCircle, ChartBarStacked, ChevronRight, MapPin, Plus, Store } from "lucide-react-native";
 
 type TabKey = "all" | "active" | "pending" | "inactive";
 
-const TABS: { key: TabKey; label: string }[] = [
-  { key: "all", label: "All" },
-  { key: "active", label: "Active" },
-  { key: "pending", label: "Pending" },
-  { key: "inactive", label: "Inactive" },
-];
-
-const STATUS_BADGE: Record<
-  string,
-  { label: string; bg: string; text: string }
+const STATUS_BADGE_STYLE: Record<
+  "active" | "pending_review" | "inactive",
+  { bg: string; text: string }
 > = {
   active: {
-    label: "Active",
     bg: "bg-green-100",
     text: "text-green-700",
   },
   pending_review: {
-    label: "Pending",
     bg: "bg-amber-100",
     text: "text-amber-700",
   },
   inactive: {
-    label: "Inactive",
     bg: "bg-slate-100",
     text: "text-slate-500",
   },
 };
 
+function storeStatusBadgeStyle(status: string) {
+  if (status === "active" || status === "pending_review" || status === "inactive") {
+    return STATUS_BADGE_STYLE[status];
+  }
+  return STATUS_BADGE_STYLE.inactive;
+}
+
 function StoreCard({ store, router }: { store: StoreRow; router: any }) {
+  const { t: translate } = useTranslation();
   const status = store.status ?? "inactive";
-  const badge = STATUS_BADGE[status] ?? STATUS_BADGE.inactive;
+  const badgeStyle = storeStatusBadgeStyle(status);
+  const badgeLabelKey =
+    status === "active" || status === "pending_review" || status === "inactive"
+      ? status
+      : "inactive";
 
   return (
     <TouchableOpacity
@@ -72,11 +75,11 @@ function StoreCard({ store, router }: { store: StoreRow; router: any }) {
             >
               {store.name}
             </Text>
-            <View className={`self-center h-5 px-2 rounded-full ${badge.bg} items-center justify-center`}>
+            <View className={`self-center h-5 px-2 rounded-full ${badgeStyle.bg} items-center justify-center`}>
               <Text
-                className={`text-[9px] leading-4 font-poppins-bold uppercase tracking-wider ${badge.text}`}
+                className={`text-[9px] leading-4 font-poppins-bold uppercase tracking-wider ${badgeStyle.text}`}
               >
-                {badge.label}
+                {translate(`storeManager.stores.badge.${badgeLabelKey}`)}
               </Text>
             </View>
           </View>
@@ -86,7 +89,7 @@ function StoreCard({ store, router }: { store: StoreRow; router: any }) {
               className="text-xs font-poppins text-slate-400 dark:text-slate-500 flex-1"
               numberOfLines={1}
             >
-              {store.address ?? "No address provided"}
+              {store.address ?? translate("storeManager.stores.noAddress")}
             </Text>
           </View>
           {store.type ? (
@@ -135,10 +138,20 @@ function SkeletonCard() {
 }
 
 export default function StoreManagerStores() {
+  const { t: translate } = useTranslation();
   const [activeTab, setActiveTab] = useState<TabKey>("all");
   const router = useRouter();
   const { stores, loading, error, hasFetchedOnce, fetchStores } = useManagerStoresStore();
   const [refreshing, setRefreshing] = useState(false);
+
+  const tabs = useMemo(
+    () =>
+      (["all", "active", "pending", "inactive"] as const).map((key) => ({
+        key,
+        label: translate(`storeManager.stores.tabs.${key}`),
+      })),
+    [translate],
+  );
 
   const filtered = React.useMemo(() => {
     if (activeTab === "all") return stores;
@@ -170,7 +183,7 @@ export default function StoreManagerStores() {
       <View className="bg-white border-b border-slate-100 dark:bg-slate-900 dark:border-slate-800 px-6 py-4 flex-row items-center justify-start">
         <View className="flex-row items-center gap-2">
           <Text className="text-xl font-poppins-bold text-slate-900 dark:text-slate-100">
-            Merchant Stores
+            {translate("storeManager.stores.title")}
           </Text>
         </View>
       </View>
@@ -178,7 +191,7 @@ export default function StoreManagerStores() {
       {Platform.OS === "web" ? (
         <View className="bg-backgroundMuted dark:bg-slate-950 px-4 pt-4 items-center">
           <View className="w-full max-w-4xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-xl overflow-hidden flex-row">
-            {TABS.map((tab) => {
+            {tabs.map((tab) => {
               const active = activeTab === tab.key;
               const count =
                 tab.key === "all"
@@ -194,7 +207,7 @@ export default function StoreManagerStores() {
                   key={tab.key}
                   className={[
                     "flex-1 py-3 items-center flex-row justify-center gap-1.5 rounded-xl mx-1 my-1",
-                    active && "bg-primary/10 p-1",
+                    active && "bg-primary",
                   ]
                     .filter(Boolean)
                     .join(" ")}
@@ -204,7 +217,7 @@ export default function StoreManagerStores() {
                   <Text
                     className={
                       active
-                        ? "text-xs font-poppins-bold text-primary"
+                        ? "text-xs font-poppins-bold text-white"
                         : "text-xs font-poppins-medium text-slate-400 dark:text-slate-500"
                     }
                   >
@@ -212,16 +225,9 @@ export default function StoreManagerStores() {
                   </Text>
                   {count > 0 && (
                     <View
-                      className={`rounded-full px-1.5 min-w-[18px] items-center ${active
-                          ? "bg-primary/10"
-                          : "bg-neutral-100 dark:bg-neutral-700"
-                        }`}
+                      className="rounded-full min-w-[18px] items-center bg-white/20"
                     >
-                      <Text
-                        className={`text-[9px] font-poppins-bold ${active ? "text-primary" : "text-neutral-500 dark:text-neutral-400"}`}
-                      >
-                        {count}
-                      </Text>
+                      <Text className="text-[10px] font-poppins-semibold text-white">{count}</Text>
                     </View>
                   )}
                 </TouchableOpacity>
@@ -232,7 +238,7 @@ export default function StoreManagerStores() {
       ) : (
         <View className="border-b border-slate-100 dark:border-slate-800 px-4 py-3">
           <View className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-xl overflow-hidden flex-row p-1">
-            {TABS.map((tab) => {
+            {tabs.map((tab) => {
               const active = activeTab === tab.key;
               const count =
                 tab.key === "all"
@@ -248,7 +254,7 @@ export default function StoreManagerStores() {
                   key={tab.key}
                   className={[
                     "flex-1 py-2 items-center flex-row justify-center gap-1.5 rounded-xl",
-                    active ? "bg-primary/5" : "bg-white",
+                    active ? "bg-primary" : "bg-white dark:bg-slate-900",
                   ]
                     .filter(Boolean)
                     .join(" ")}
@@ -258,7 +264,7 @@ export default function StoreManagerStores() {
                   <Text
                     className={
                       active
-                        ? "text-xs font-poppins-bold text-primary"
+                        ? "text-xs font-poppins-bold text-white"
                         : "text-xs font-poppins-medium text-slate-400 dark:text-slate-500"
                     }
                   >
@@ -266,10 +272,10 @@ export default function StoreManagerStores() {
                   </Text>
                   {count > 0 && (
                     <View
-                      className="rounded-full min-w-[18px] items-center"
+                      className={`rounded-full min-w-[18px] items-center px-1.5 ${active ? "bg-white/20" : ""}`}
                     >
                       <Text
-                        className={`text-[9px] font-poppins-bold ${active ? "text-primary" : "text-neutral-500 dark:text-neutral-400"}`}
+                        className={`text-[9px] font-poppins-bold ${active ? "text-white" : "text-neutral-500 dark:text-neutral-400"}`}
                       >
                         {count}
                       </Text>
@@ -325,7 +331,11 @@ export default function StoreManagerStores() {
               >
                 {filtered.map((store, idx) => {
                   const status = store.status ?? "inactive";
-                  const badge = STATUS_BADGE[status] ?? STATUS_BADGE.inactive;
+                  const badgeStyle = storeStatusBadgeStyle(status);
+                  const badgeLabelKey =
+                    status === "active" || status === "pending_review" || status === "inactive"
+                      ? status
+                      : "inactive";
 
                   return (
                     <View key={store.id}>
@@ -367,13 +377,13 @@ export default function StoreManagerStores() {
                               className="text-xs font-poppins text-slate-400 dark:text-slate-500 flex-1"
                               numberOfLines={1}
                             >
-                              {store.address ?? "No address provided"}
+                              {store.address ?? translate("storeManager.stores.noAddress")}
                             </Text>
                           </View>
                         </View>
-                        <View className={`h-5 px-2 rounded-full ${badge.bg} items-center justify-center`}>
-                          <Text className={`text-[10px] leading-4 font-poppins-semibold ${badge.text}`}>
-                            {badge.label}
+                        <View className={`h-5 px-2 rounded-full ${badgeStyle.bg} items-center justify-center`}>
+                          <Text className={`text-[10px] leading-4 font-poppins-semibold ${badgeStyle.text}`}>
+                            {translate(`storeManager.stores.badge.${badgeLabelKey}`)}
                           </Text>
                         </View>
                         <ChevronRight size={20} color="#94A3B8" />
@@ -393,7 +403,11 @@ export default function StoreManagerStores() {
               <View className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl overflow-hidden">
                 {filtered.map((store, idx) => {
                   const status = store.status ?? "inactive";
-                  const badge = STATUS_BADGE[status] ?? STATUS_BADGE.inactive;
+                  const badgeStyle = storeStatusBadgeStyle(status);
+                  const badgeLabelKey =
+                    status === "active" || status === "pending_review" || status === "inactive"
+                      ? status
+                      : "inactive";
 
                   return (
                     <View key={store.id}>
@@ -435,14 +449,14 @@ export default function StoreManagerStores() {
                               className="text-xs font-poppins text-slate-400 dark:text-slate-500 flex-1"
                               numberOfLines={1}
                             >
-                              {store.address ?? "No address provided"}
+                              {store.address ?? translate("storeManager.stores.noAddress")}
                             </Text>
                           </View>
                         </View>
 
-                        <View className={`h-5 px-2 rounded-full ${badge.bg} items-center justify-center`}>
-                          <Text className={`text-[10px] leading-4 font-poppins-semibold ${badge.text}`}>
-                            {badge.label}
+                        <View className={`h-5 px-2 rounded-full ${badgeStyle.bg} items-center justify-center`}>
+                          <Text className={`text-[10px] leading-4 font-poppins-semibold ${badgeStyle.text}`}>
+                            {translate(`storeManager.stores.badge.${badgeLabelKey}`)}
                           </Text>
                         </View>
 
@@ -470,13 +484,17 @@ export default function StoreManagerStores() {
               />
               <Text className="text-base font-poppins-bold text-slate-600 dark:text-slate-300">
                 {activeTab === "all"
-                  ? "No stores yet"
-                  : `No ${activeTab} stores`}
+                  ? translate("storeManager.stores.empty.allTitle")
+                  : activeTab === "active"
+                    ? translate("storeManager.stores.empty.activeTitle")
+                    : activeTab === "pending"
+                      ? translate("storeManager.stores.empty.pendingTitle")
+                      : translate("storeManager.stores.empty.inactiveTitle")}
               </Text>
               <Text className="text-sm font-poppins text-slate-400 text-center px-8">
                 {activeTab === "all"
-                  ? "Tap the + button to create your first store."
-                  : "Try a different tab or add a new store."}
+                  ? translate("storeManager.stores.empty.hintAll")
+                  : translate("storeManager.stores.empty.hintFiltered")}
               </Text>
             </View>
           )}

@@ -518,6 +518,56 @@
                 "user": "user",
                 "users": "users"
             }
+        },
+        "transactions": {
+            "title": "Transactions",
+            "types": {
+                "qr": "QR Purchase",
+                "stamp": "Stamp",
+                "streak": "Streak"
+            },
+            "filters": {
+                "all": "All",
+                "qr": "QR Purchase",
+                "stamp": "Stamp",
+                "streak": "Streak"
+            },
+            "empty": {
+                "noStoresTitle": "No Stores Found",
+                "noStoresBody": "Create a store to start tracking transactions.",
+                "noTransactionsTitle": "No Transactions Found",
+                "noTransactionsBody": "Transactions will appear here once customers start earning points."
+            },
+            "endOfList": "You've reached the end"
+        },
+        "stores": {
+            "title": "Merchant Stores",
+            "tabs": {
+                "all": "All",
+                "active": "Active",
+                "pending": "Pending",
+                "inactive": "Inactive"
+            },
+            "badge": {
+                "active": "Active",
+                "pending_review": "Pending",
+                "inactive": "Inactive"
+            },
+            "noAddress": "No address provided",
+            "empty": {
+                "allTitle": "No stores yet",
+                "activeTitle": "No active stores",
+                "pendingTitle": "No pending stores",
+                "inactiveTitle": "No inactive stores",
+                "hintAll": "Tap the + button to create your first store.",
+                "hintFiltered": "Try a different tab or add a new store."
+            }
+        },
+        "tabs": {
+            "dashboard": "Dashboard",
+            "stores": "Stores",
+            "transactions": "Transactions",
+            "settings": "Settings"
         }
     },
     "superAdmin": {

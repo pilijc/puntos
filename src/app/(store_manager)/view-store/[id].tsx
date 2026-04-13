@@ -1,14 +1,13 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { RefreshControl, NativeSyntheticEvent, NativeScrollEvent, useWindowDimensions, Platform } from "react-native";
-import { View, Text, TouchableOpacity, ScrollView, Image } from "@/tw";
+import { RefreshControl, NativeSyntheticEvent, NativeScrollEvent, useWindowDimensions, Platform, useColorScheme } from "react-native";
+import { View, Text, TouchableOpacity, ScrollView, Image, SafeAreaView } from "@/tw";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { getStoreById } from "@/services/store-service";
 import { getTransactionsPageForStore } from "@/services/store-manager/transactions-service";
 import { TransactionItem, type_badge } from "@/type/store-manager/transaction";
 import { formatTxTime } from "@/utils/store_manager/transaction";
 import { Modal, ModalButton } from "@/components/modal";
-import { Building2, Gift, QrCode, UsersRound, Stamp, Flame, ChevronRight, Loader2, ReceiptText } from "lucide-react-native";
-import { AppHeader } from "@/components/header";
+import { Building2, Gift, QrCode, UsersRound, Stamp, Flame, ChevronLeft, ChevronRight, Loader2, ReceiptText } from "lucide-react-native";
 
 export default function ViewStore() {
   const { id } = useLocalSearchParams();
@@ -16,6 +15,8 @@ export default function ViewStore() {
   const { width: screenWidth } = useWindowDimensions();
   const router = useRouter();
   const isWeb = Platform.OS === "web";
+  const colorScheme = useColorScheme();
+  const isDarkHeader = colorScheme === "dark";
   const carouselCardPadding = isWeb ? 8 : 0;
   const carouselMaxWidth = isWeb ? 860 : screenWidth - 32;
   const carouselWidth = Math.max(0, Math.min(screenWidth - 32, carouselMaxWidth) - carouselCardPadding * 2);
@@ -92,7 +93,7 @@ export default function ViewStore() {
   }, [fetchStore, fetchRecentTransactions]);
 
   return (
-    <SafeAreaView edges={["top"]} className="flex-1 bg-backgroundMuted dark:bg-neutral-900">
+    <SafeAreaView edges={["top", "left", "right"]} className="flex-1 bg-backgroundMuted dark:bg-darkBackground">
       <Modal
         visible={!!modal}
         onClose={() => setModal(null)}
@@ -101,20 +102,34 @@ export default function ViewStore() {
         buttons={modal?.buttons}
         timer={modal?.timer ? 3000 : undefined}
       />
-      <AppHeader
-        title={store?.name || "Store Details"}
-        description={store?.address || "View & manage store info"}
-        onBackPress={() => router.push("/(store_manager)/stores")}
-      />
+      <View className="bg-white dark:bg-darkBackground border-b border-neutral-100 dark:border-darkBorder px-2 py-2">
+        <View className="flex-row items-center">
+          <TouchableOpacity
+            className="w-10 h-10 items-center justify-center rounded-full -mt-0.5"
+            activeOpacity={0.7}
+            onPress={() => router.push("/(store_manager)/stores")}
+          >
+            <ChevronLeft size={20} color={isDarkHeader ? "#F1F5F9" : "#0F172A"} />
+          </TouchableOpacity>
+          <View className="min-w-0 flex-1 px-2 py-1">
+            <Text className="text-center text-base font-poppins-bold text-textPrimary dark:text-darkTextPrimary" numberOfLines={1}>
+              {store?.name || "Store Details"}
+            </Text>
+            <Text
+              className="-mt-0.5 text-center text-xs font-poppins text-textMuted dark:text-darkTextMuted"
+              numberOfLines={2}
+            >
+              {store?.address || "View & manage store info"}
+            </Text>
+          </View>
+          <View className="min-w-10" />
+        </View>
+      </View>
 
-      <AppHeader
-        title={store?.name || "Store Details"}
-        description={store?.address || "View & manage store info"}
-        onBackPress={() => router.push("/(store_manager)/stores")}
-      />
       <ScrollView
         className="flex-1 gap-y-4 pt-4"
         showsVerticalScrollIndicator={false}
+        contentInsetAdjustmentBehavior="never"
         contentContainerStyle={{ paddingBottom: 32 }}
         refreshControl={
           <RefreshControl
@@ -125,20 +140,20 @@ export default function ViewStore() {
           />
         }
       >
-        <View className="items-center gap-y-2 mt-4">
+        <View className="items-center">
           <View className="w-full px-4 items-center">
             <View
               className={isWeb ? "bg-white dark:bg-neutral-800 border border-slate-100 dark:border-neutral-700 rounded-xl overflow-hidden p-2" : ""}
               style={isWeb ? { width: "100%", maxWidth: 860 } : undefined}
             >
-              <View style={{ width: carouselWidth, height: 144, borderRadius: 12, overflow: "hidden" }}>
+              <View className="w-full h-40 rounded-xl overflow-hidden">
                 <ScrollView
                   horizontal
                   pagingEnabled
                   showsHorizontalScrollIndicator={false}
                   onScroll={onCarouselScroll}
                   scrollEventThrottle={16}
-                  style={{ width: carouselWidth, height: 144 }}
+                  className="w-full h-40"
                 >
                   {carouselImages.map((img, idx) => (
                     <Image

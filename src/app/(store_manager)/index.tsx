@@ -71,7 +71,42 @@ export default function StoreManagerDashboard() {
     const weekRange = useMemo(() => getWeekDateRange(), []);
 
     return (
-        <SafeAreaView edges={['top']} className="flex-1 bg-backgroundMuted dark:bg-darkBackground">
+        <SafeAreaView
+            edges={["top", "left", "right"]}
+            className="flex-1 bg-backgroundMuted dark:bg-darkBackground"
+        >
+            <View className="bg-white dark:bg-darkBackground border-b border-neutral-100 dark:border-darkBorder px-6 py-3">
+                <Text className="text-xl font-poppins-bold text-textPrimary dark:text-darkTextPrimary py-1">
+                    {translate("storeManager.dashboard.title")}
+                </Text>
+            </View>
+
+            <View className="bg-backgroundMuted dark:bg-darkBackground border-b border-neutral-100 dark:border-darkBorder px-6 pt-4 pb-3">
+                <View className="flex-row justify-between items-center gap-3">
+                    {selectedStore?.address ? (
+                        <View className="flex-1 flex-row items-center min-w-0 pr-2">
+                            <MapPin size={14} color="#94a3b8" />
+                            <Text
+                                className="text-xs font-poppins text-textMuted dark:text-darkTextMuted ml-[4px] flex-shrink"
+                                numberOfLines={3}
+                            >
+                                {selectedStore.address}
+                            </Text>
+                        </View>
+                    ) : (
+                        <View className="flex-1" />
+                    )}
+                    <StorePickerDropdown
+                        stores={stores}
+                        selectedStore={selectedStore}
+                        isVisible={isDropdownVisible}
+                        onOpen={() => setDropdownVisible(true)}
+                        onClose={() => setDropdownVisible(false)}
+                        onSelect={(id) => setSelectedStoreId(id)}
+                    />
+                </View>
+            </View>
+
             <ScrollView
                 className="flex-1"
                 contentContainerStyle={{ padding: 20 }}
@@ -85,31 +120,6 @@ export default function StoreManagerDashboard() {
                     />
                 }
             >
-                <View className="mb-[24px]">
-                    <View className="flex-row justify-between items-center mb-[4px]">
-                        <Text className="text-xl font-poppins-bold text-textPrimary dark:text-darkTextPrimary">
-                            {translate("storeManager.dashboard.title")}
-                        </Text>
-                        <StorePickerDropdown
-                            stores={stores}
-                            selectedStore={selectedStore}
-                            isVisible={isDropdownVisible}
-                            onOpen={() => setDropdownVisible(true)}
-                            onClose={() => setDropdownVisible(false)}
-                            onSelect={(id) => setSelectedStoreId(id)}
-                        />
-                    </View>
-
-                    {selectedStore?.address && (
-                        <View className="flex-row items-center">
-                            <MapPin size={14} color="#94a3b8" />
-                            <Text className="text-xs font-poppins text-textMuted dark:text-darkTextMuted ml-[4px]">
-                                {selectedStore.address}
-                            </Text>
-                        </View>
-                    )}
-                </View>
-
                 {selectedStore ? (
                     <View className="w-full mb-8">
                         <View className="flex-row gap-[10px] mb-[14px]">

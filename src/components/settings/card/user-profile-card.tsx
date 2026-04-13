@@ -17,11 +17,11 @@ export const UserProfileCard = ({ profile, user, onPress }: UserProfileCardProps
     return (
         <TouchableOpacity
             onPress={onPress}
-            className="bg-background dark:bg-darkBackgroundMuted rounded-xl p-3 border border-border dark:border-darkBorder active:bg-backgroundCard dark:active:bg-darkBackgroundCard"
+            className="bg-white dark:bg-darkBackground rounded-xl px-2.5 py-3 border border-slate-100 dark:border-slate-800 active:bg-slate-50 dark:active:bg-darkBackgroundCard"
         >
             <View className="flex-row items-center">
                 {/* Avatar */}
-                <View className="h-14 w-14 rounded-full bg-primary/10 items-center justify-center mr-4 overflow-hidden border border-border dark:border-darkBorder">
+                <View className="h-14 w-14 rounded-full bg-primary/10 items-center justify-center mr-4 overflow-hidden border border-slate-100 dark:border-slate-800">
                     {avatarUrl ? (
                         <Image
                             source={{ uri: avatarUrl }}

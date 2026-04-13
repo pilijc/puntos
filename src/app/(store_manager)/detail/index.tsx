@@ -1,16 +1,16 @@
-import React, { useState } from "react";
-import { RefreshControl } from "react-native";
-import { View, Text, TouchableOpacity, ScrollView, SafeAreaView } from "@/tw";
+import React from "react";
+import { RefreshControl, Platform } from "react-native";
+import { View, Text, ScrollView, SafeAreaView } from "@/tw";
 import { useRouter } from "expo-router";
 import { Image } from "expo-image";
-import Mapbox, { Camera, MapView } from "@rnmapbox/maps";
+import Mapbox, { Camera, MapView, MarkerView } from "@rnmapbox/maps";
 import { formatTime } from "@/utils/store_manager/store-utils";
 import { useStoreDetail } from "@/hooks/store-manager/use-detail";
 import { DetailsSkeleton } from "@/components/skeleton/store_manager/details-skeleton";
 import { OptionsMenu } from "@/components/options";
 import { AppHeader } from "@/components/header";
 import { shouldUseInteractiveMapbox } from "@/utils/mapbox-platform";
-import { Building2, Clock, File, MapPinOff, Pencil, Phone } from "lucide-react-native";
+import { Building2, Clock, File, MapPin, MapPinOff, Pencil, Phone } from "lucide-react-native";
 
 export default function DetailIndex() {
   const router = useRouter();
@@ -177,59 +177,91 @@ export default function DetailIndex() {
                 )}
                 {hasCoords ? (
                   shouldUseInteractiveMapbox() ? (
-                    <View style={{ width: mapWidth - 32, height: 180, borderRadius: 10, overflow: "hidden" }}>
-                      <MapView
-                        style={{ width: mapWidth - 32, height: 180 }}
-                        styleURL={
-                          isDark
-                            ? "mapbox://styles/mapbox/navigation-night-v1"
-                            : "mapbox://styles/mapbox/streets-v12"
-                        }
-                        scrollEnabled={false}
-                        zoomEnabled={false}
-                        rotateEnabled={false}
-                        pitchEnabled={false}
-                        attributionEnabled={false}
-                        logoEnabled={false}
+                    <View
+                      style={
+                        Platform.OS === "web"
+                          ? { paddingRight: 16, alignSelf: "stretch" }
+                          : undefined
+                      }
+                    >
+                      <View
+                        style={{
+                          height: 180,
+                          borderRadius: 10,
+                          overflow: "hidden",
+                          width: Platform.OS === "web" ? "100%" : mapWidth - 32,
+                        }}
                       >
-                        <Camera
-                          centerCoordinate={[Number(detail.longitude), Number(detail.latitude)]}
-                          zoomLevel={15}
-                          animationMode="none"
-                        />
-                        <Mapbox.Images
-                          images={{
-                            default: require("../../../assets/images/markers/default.png"),
-                          }}
-                        />
-                        <Mapbox.ShapeSource
-                          id="storePin"
-                          shape={{
-                            type: "Feature",
-                            geometry: {
-                              type: "Point",
-                              coordinates: [Number(detail.longitude), Number(detail.latitude)],
-                            },
-                            properties: { icon: "default" },
-                          }}
+                        <MapView
+                          style={{ width: "100%", height: 180 }}
+                          styleURL={
+                            isDark
+                              ? "mapbox://styles/mapbox/navigation-night-v1"
+                              : "mapbox://styles/mapbox/streets-v12"
+                          }
+                          scrollEnabled={false}
+                          zoomEnabled={false}
+                          rotateEnabled={false}
+                          pitchEnabled={false}
+                          attributionEnabled={false}
+                          logoEnabled={false}
                         >
-                          <Mapbox.SymbolLayer
-                            id="storePinLayer"
-                            style={{
-                              iconImage: ["get", "icon"],
-                              iconAllowOverlap: true,
-                              iconSize: 0.015,
-                            }}
+                          <Camera
+                            centerCoordinate={[Number(detail.longitude), Number(detail.latitude)]}
+                            zoomLevel={15}
+                            animationMode="none"
                           />
-                        </Mapbox.ShapeSource>
-                      </MapView>
+                          {Platform.OS === "web" ? (
+                            <MarkerView
+                              coordinate={[Number(detail.longitude), Number(detail.latitude)]}
+                              anchor={{ x: 0.5, y: 1 }}
+                            >
+                              <View className="items-center justify-end">
+                                <Image
+                                  source={require("../../../assets/images/markers/default.png")}
+                                  style={{ width: 36, height: 36 }}
+                                  contentFit="contain"
+                                />
+                              </View>
+                            </MarkerView>
+                          ) : (
+                            <>
+                              <Mapbox.Images
+                                images={{
+                                  default: require("../../../assets/images/markers/default.png"),
+                                }}
+                              />
+                              <Mapbox.ShapeSource
+                                id="storePin"
+                                shape={{
+                                  type: "Feature",
+                                  geometry: {
+                                    type: "Point",
+                                    coordinates: [Number(detail.longitude), Number(detail.latitude)],
+                                  },
+                                  properties: { icon: "default" },
+                                }}
+                              >
+                                <Mapbox.SymbolLayer
+                                  id="storePinLayer"
+                                  style={{
+                                    iconImage: ["get", "icon"],
+                                    iconAllowOverlap: true,
+                                    iconSize: 0.015,
+                                  }}
+                                />
+                              </Mapbox.ShapeSource>
+                            </>
+                          )}
+                        </MapView>
+                      </View>
                     </View>
                   ) : (
                     <View
                       style={{ borderRadius: 12 }}
                       className="h-32 bg-slate-50 dark:bg-neutral-700 items-center justify-center gap-y-1"
                     >
-                      <MaterialIcons name="map" size={24} color={isDark ? "#525252" : "#CBD5E1"} />
+                      <MapPin size={24} color={isDark ? "#525252" : "#CBD5E1"} />
                       <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">
                         Map only available on Android & Web
                       </Text>
