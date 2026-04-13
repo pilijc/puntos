@@ -1,7 +1,14 @@
+import { Platform } from "react-native";
 import { supabase } from "@/supabase/supabase";
 import { OneSignal } from "react-native-onesignal";
 
+export function isOneSignalNativeAvailable(): boolean {
+  return Platform.OS !== "web";
+}
+
 export async function upsertPushId() {
+  if (!isOneSignalNativeAvailable()) return;
+
   const { data: auth } = await supabase.auth.getUser();
   const user = auth.user;
   if (!user) return;
@@ -19,6 +26,7 @@ export async function upsertPushId() {
 }
 
 export async function getOneSignalId(): Promise<string | null> {
+  if (!isOneSignalNativeAvailable()) return null;
   await OneSignal.Notifications.requestPermission(true);
   return OneSignal.User.pushSubscription.getIdAsync();
 }

@@ -1,8 +1,8 @@
 import { View, Text, TouchableOpacity, SafeAreaView, ScrollView, Image } from "@/tw";
 import { SlideProps } from "@/type/auth";
-import { useRouter } from "expo-router";
+import { Redirect, useRouter } from "expo-router";
 import React, { useState } from "react";
-import { useWindowDimensions } from "react-native";
+import { Platform, useWindowDimensions } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/button";
@@ -49,6 +49,10 @@ function Slide({ title, subtitle, width, image }: SlideProps) {
 }
 
 export default function Welcome() {
+  if (Platform.OS === "web") {
+    return <Redirect href="/(onboarding)/welcome" />;
+  }
+
   const router = useRouter();
   const [currentIndex, setCurrentIndex] = useState(0);
   const { width: windowWidth } = useWindowDimensions();
