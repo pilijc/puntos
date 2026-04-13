@@ -14,7 +14,7 @@ interface SuperAdminStoresState {
     isFetching: boolean;
 
     fetchStores: (forceRefresh?: boolean) => Promise<void>;
-    approveStore: (store: AdminStoreRow) => Promise<boolean>;
+    approveStore: (store: AdminStoreRow, enforceSubscription?: boolean) => Promise<boolean>;
     rejectStore: (store: AdminStoreRow) => Promise<boolean>;
     dismissErrorModal: () => void;
 }
@@ -49,7 +49,7 @@ export const useSuperAdminStoresStore = create<SuperAdminStoresState>((set, get)
         }
     },
 
-    approveStore: async (store: AdminStoreRow) => {
+    approveStore: async (store: AdminStoreRow, enforceSubscription = true) => {
         try {
             const state = get();
             
@@ -60,7 +60,7 @@ export const useSuperAdminStoresStore = create<SuperAdminStoresState>((set, get)
                (s.status === "active" || s.is_active)
             ).length;
 
-            if (activeOwnerStores >= SUB_CONFIG.FREE_STORES_LIMIT) {
+            if (enforceSubscription && activeOwnerStores >= SUB_CONFIG.FREE_STORES_LIMIT) {
                 // Block activation and require payment first
                 set({ 
                     errorModal: {

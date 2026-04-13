@@ -11,6 +11,7 @@ import { AdminStoreCard, AdminStoreSkeletonCard } from "@/components/users/store
 import { AdminStoreDetails } from "@/components/users/stores/admin-store-details";
 import { AdminStorePreviewModal } from "@/components/users/stores/admin-store-preview-modal";
 import { Modal } from "@/components/modal";
+import { Toggle } from "@/components/toggle";
 import {
 	useSuperAdminStores,
 	FILTERS,
@@ -41,6 +42,8 @@ export default function SuperAdminStores() {
 		filtered,
 		pendingCount,
 		FILTER_LABELS,
+		enforceSubscription,
+		setEnforceSubscription,
 	} = useSuperAdminStores();
 
 	const selectedOwnerActiveStoresCount = selectedStore 
@@ -122,6 +125,14 @@ export default function SuperAdminStores() {
 					);
 				})}
 				</ScrollView>
+			</View>
+
+			<View className="bg-white dark:bg-darkBackgroundMuted border-b border-slate-100 dark:border-darkBorder px-6 py-3 flex-row items-center justify-between">
+				<View className="flex-1 pr-4">
+					<Text className="text-sm font-poppins-semibold text-slate-800 dark:text-darkTextPrimary">Enforce Subscription</Text>
+					<Text className="text-[10px] font-poppins text-slate-500 dark:text-darkTextMuted leading-4 mt-0.5">Require store managers to pay after exceeding 2 active stores.</Text>
+				</View>
+				<Toggle size="sm" value={enforceSubscription} onValueChange={setEnforceSubscription} />
 			</View>
 
 			{/* ── Store list ── */}

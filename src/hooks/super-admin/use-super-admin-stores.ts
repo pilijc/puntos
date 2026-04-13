@@ -32,6 +32,8 @@ export function useSuperAdminStores() {
     label: string;
   } | null>(null);
 
+  const [enforceSubscription, setEnforceSubscription] = useState(true);
+
   useFocusEffect(useCallback(() => { fetchStores(); }, []));
 
   const onRefresh = async () => { 
@@ -52,7 +54,7 @@ export function useSuperAdminStores() {
     const isExceedingFreeTier = ownerActiveStores >= SUB_CONFIG.FREE_STORES_LIMIT;
     let customMessage = translate("superAdmin.stores.modal.approveMessage", { name: store.name });
     
-    if (isExceedingFreeTier) {
+    if (enforceSubscription && isExceedingFreeTier) {
       customMessage += `\n\n⚠️ ${SUB_CONFIG.LIMIT_MESSAGE}`;
     }
 
@@ -63,7 +65,7 @@ export function useSuperAdminStores() {
       variant: "primary",
       onConfirm: async () => {
         setConfirmModal(null);
-        const success = await approveStore(store);
+        const success = await approveStore(store, enforceSubscription);
         if (success) {
           setPreviewStore(null);
           useSuperAdminStoresStore.setState({
@@ -133,5 +135,7 @@ export function useSuperAdminStores() {
     filtered,
     pendingCount,
     FILTER_LABELS,
+    enforceSubscription,
+    setEnforceSubscription,
   };
 }
