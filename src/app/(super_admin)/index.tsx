@@ -1,5 +1,5 @@
 import React from "react";
-import { ScrollView, ActivityIndicator, RefreshControl, Image, StyleSheet, Pressable } from "react-native";
+import { ScrollView, ActivityIndicator, RefreshControl } from "react-native";
 import { SafeAreaView, Text, View } from "@/tw";
 import { useSuperAdminDashboard } from "@/hooks/super-admin/use-super-admin-dashboard";
 import { SectionHeader } from "@/components/ui/section-header";
@@ -42,35 +42,16 @@ export default function SuperAdminDashboard() {
         {/* Header Section */}
         <View className="pt-4 pb-3">
           <View className="px-6.5">
-            <View className="flex-row items-center justify-between">
-              <View className="flex-1 pl-2 pt-4 items-start">
-                <Text className="text-sm text-[#94A3B8] dark:text-darkTextSecondary font-[Poppins-Regular]">
-                    {translate("superAdmin.dashboard.welcome")}
-                    <Text className="text-orange-500 font-[Poppins-Bold]">
-                    {adminInfo?.username?.split(" ")[0] || "Admin"}
-                  </Text>!
-                </Text>
-                <Text className="text-2xl font-[Poppins-Bold] text-[#0F172A] dark:text-darkTextPrimary">
-                  {translate("superAdmin.dashboard.title")}
-                </Text>
-              </View>
-
-              <Pressable
-                onPress={() => router.push("/(super_admin)/settings")}
-                className="relative mt-1"
-              >
-                <Image
-                  source={{ uri: (profile?.avatar_url || profile?.avatarUrl || profile?.logo || adminInfo?.avatar) ? `${(profile?.avatar_url || profile?.avatarUrl || profile?.logo || adminInfo?.avatar)}?t=${avatarKey}` : undefined }}
-                  style={{
-                    width: 48,
-                    height: 48,
-                    borderRadius: 24,
-                    borderWidth: 2,
-                    borderColor: "#F1F5F9",
-                  }}
-                />
-                <View className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-500 border-2 border-white rounded-full z-10" />
-              </Pressable>
+            <View className="pl-2 pt-4">
+              <Text className="text-sm text-[#94A3B8] dark:text-darkTextSecondary font-[Poppins-Regular]">
+                  {translate("superAdmin.dashboard.welcome")}
+                  <Text className="text-orange-500 font-[Poppins-Bold]">
+                  {adminInfo?.username?.split(" ")[0] || "Admin"}
+                </Text>!
+              </Text>
+              <Text className="text-2xl font-[Poppins-Bold] text-[#0F172A] dark:text-darkTextPrimary">
+                {translate("superAdmin.dashboard.title")}
+              </Text>
             </View>
           </View>
           <View className="px-2 mt-3">
@@ -118,12 +99,4 @@ export default function SuperAdminDashboard() {
   );
 }
 
-const styles = StyleSheet.create({
-  userContainer: {
-    backgroundColor: "#FFF",
-    borderRadius: 16,
-    overflow: "hidden",
-    borderWidth: 1,
-    borderColor: "#F1F5F9",
-  },
-});
+
