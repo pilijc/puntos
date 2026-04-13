@@ -169,72 +169,67 @@ export default function Discover() {
         },
         async (position) => {
           if (cancelled) return;
-          setLocation(position);
-
-          const { latitude: uLat, longitude: uLon } = position.coords;
-          const { mutedStoreIds } = useStoreStore.getState();
-          const currentStores = useStoreStore.getState().stores;
-
-          const nearbyStoreIds: number[] = [];
-          for (const store of currentStores) {
-            if (notifiedStoreIds.current.has(store.id)) continue;
-            if (mutedStoreIds.includes(store.id)) continue;
-            if (!store.latitude || !store.longitude) continue;
-
-            const nearby = isStoreNearby(
-              uLat,
-              uLon,
-              store.latitude,
-              store.longitude,
-              store.radius!
-            );
-
-            if (nearby) nearbyStoreIds.push(store.id);
-          }
-
-          const nearbyCount = nearbyStoreIds.length;
-          if (nearbyCount === 0) {
-            return;
-          }
-
-          let title: string;
-          let body: string;
-
-          if (nearbyCount === 1) {
-            const onlyStoreId = nearbyStoreIds[0];
-            const onlyStore = currentStores.find((s) => s.id === onlyStoreId);
-            const storeName = onlyStore?.name ?? "A store";
-            title = translate("user.discover.geofence.singleTitle", { name: storeName });
-            body = translate("user.discover.geofence.singleBody", { name: storeName });
-          } else {
-            title = translate("user.discover.geofence.multiTitle", { count: nearbyCount });
-            body = translate("user.discover.geofence.multiBody");
-          }
 
           try {
+            setLocation(position);
+
+            const { latitude: uLat, longitude: uLon } = position.coords;
+            const { mutedStoreIds } = useStoreStore.getState();
+            const currentStores = useStoreStore.getState().stores;
+
+            const nearbyStoreIds: number[] = [];
+            for (const store of currentStores) {
+              if (notifiedStoreIds.current.has(store.id)) continue;
+              if (Array.isArray(mutedStoreIds) && mutedStoreIds.includes(store.id)) continue;
+              if (!store.latitude || !store.longitude) continue;
+              if (!store.radius) continue;
+
+              const nearby = isStoreNearby(
+                uLat,
+                uLon,
+                store.latitude,
+                store.longitude,
+                store.radius
+              );
+
+              if (nearby) nearbyStoreIds.push(store.id);
+            }
+
+            const nearbyCount = nearbyStoreIds.length;
+            if (nearbyCount === 0) return;
+
+            let title: string;
+            let body: string;
+
+            if (nearbyCount === 1) {
+              const onlyStoreId = nearbyStoreIds[0];
+              const onlyStore = currentStores.find((s) => s.id === onlyStoreId);
+              const storeName = onlyStore?.name ?? "A store";
+              title = translate("user.discover.geofence.singleTitle", { name: storeName });
+              body = translate("user.discover.geofence.singleBody", { name: storeName });
+            } else {
+              title = translate("user.discover.geofence.multiTitle", { count: nearbyCount });
+              body = translate("user.discover.geofence.multiBody");
+            }
+
             const subscriptionId = await getOneSignalId();
             if (!subscriptionId) return;
 
-            const res = await sendPushNotification(
-              subscriptionId,
-              title,
-              body,
-              {
-                store_ids: nearbyStoreIds,
-              },
-            );
+            const res = await sendPushNotification(subscriptionId, title, body, {
+              store_ids: nearbyStoreIds,
+            });
+
             if (res instanceof Response) {
-              console.log(
-                `[Geofence] Push sent (${nearbyCount} nearby stores):`,
-                res.status
-              );
+              console.log(`[Geofence] Push sent (${nearbyCount} nearby stores):`, res.status);
             }
 
             nearbyStoreIds.forEach((id) => notifiedStoreIds.current.add(id));
+
           } catch (err) {
-            console.error("[Geofence] Failed to send push notification:", err);
+            console.error("[Geofence] Error in location callback:", err);
           }
         }
+
       );
 
       if (!cancelled) {
@@ -263,13 +258,11 @@ export default function Discover() {
     hasCenteredOnUserRef.current = true;
   }, [mapReady, location]);
 
-  // Localize Mapbox Labels
   useEffect(() => {
     if (!mapReady) return;
 
     const localizeMap = async () => {
       try {
-        // Mapbox supports these language codes
         const mapboxLanguage = language === 'ja' ? 'ja' : 'en';
 
         const labelLayerPatterns = [

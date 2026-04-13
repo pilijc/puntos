@@ -10,7 +10,7 @@ export async function getMutedStores(): Promise<number[]> {
         .eq("user_id", auth.user.id);
     
     if (error) throw error;
-    return data.map((row: any) => Number(row.store_id));
+    return (data || []).map((row: any) => Number(row.store_id));
 }
 
 export async function muteStore(storeId: number): Promise<void> {

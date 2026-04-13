@@ -1,11 +1,13 @@
 import { Tabs } from 'expo-router';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useColorScheme, Platform } from 'react-native';
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 import { Compass, Store, History, Settings } from 'lucide-react-native';
 import { useProfile } from '@/hooks/user/use-profile';
 import { useLocationSync } from '@/hooks/user/use-location-sync';
+import { getMutedStores } from '@/services/user/mute-service';
+import { useStoreStore } from '@/store/user/store-store';
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
@@ -14,6 +16,15 @@ export default function TabLayout() {
   const insets = useSafeAreaInsets();
   const { user, preferences } = useProfile();
   useLocationSync(user?.id, preferences?.location_enabled ?? false);
+  const { setMutedStoreIds } = useStoreStore();
+
+  useEffect(() => {
+    if (user?.id) {
+      getMutedStores()
+        .then(setMutedStoreIds)
+        .catch(console.error);
+    }
+  }, [user?.id]);
 
   return (
     <Tabs
