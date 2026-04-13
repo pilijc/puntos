@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useFocusEffect } from "expo-router";
 import { AdminStoreRow } from "@/services/store-service";
 import { useSuperAdminStoresStore } from "@/store/super-admin/super-admin-stores-store";
+import { SUB_CONFIG } from "@/app/(super_admin)/subscription-config";
 
 export const FILTERS = ["All", "pending_review", "active", "inactive"] as const;
 export type Filter = typeof FILTERS[number];
@@ -40,9 +41,24 @@ export function useSuperAdminStores() {
   };
 
   const handleApprove = (store: AdminStoreRow) => {
+    // Count how many ACTIVE stores this exact owner currently has
+    const ownerActiveStores = stores.filter(s => 
+      s.owner_id === store.owner_id && 
+      s.id !== store.id && 
+      (s.status === "active" || s.is_active)
+    ).length;
+
+    // Check if they exceed the free limit to update the warning message
+    const isExceedingFreeTier = ownerActiveStores >= SUB_CONFIG.FREE_STORES_LIMIT;
+    let customMessage = translate("superAdmin.stores.modal.approveMessage", { name: store.name });
+    
+    if (isExceedingFreeTier) {
+      customMessage += `\n\n⚠️ ${SUB_CONFIG.LIMIT_MESSAGE}`;
+    }
+
     setConfirmModal({
       title: translate("superAdmin.stores.modal.approveTitle"),
-      message: translate("superAdmin.stores.modal.approveMessage", { name: store.name }),
+      message: customMessage,
       label: translate("superAdmin.stores.modal.approveAction"),
       variant: "primary",
       onConfirm: async () => {

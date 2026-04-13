@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { AdminStoreRow } from "@/services/store-service";
 import { getAllStoresForAdmin, updateAdminStoreStatus } from "@/services/super-admin/store-admin-service";
+import { SUB_CONFIG } from "@/app/(super_admin)/subscription-config";
 
 type AlertModal = { title: string; message: string; type?: "success" | "error" } | null;
 
@@ -50,6 +51,22 @@ export const useSuperAdminStoresStore = create<SuperAdminStoresState>((set, get)
 
     approveStore: async (store: AdminStoreRow) => {
         try {
+            const state = get();
+            
+            // Check current active stores before approving this one
+            const activeOwnerStores = state.stores.filter(s => 
+               s.owner_id === store.owner_id && 
+               s.id !== store.id && 
+               (s.status === "active" || s.is_active)
+            ).length;
+
+            if (activeOwnerStores >= SUB_CONFIG.FREE_STORES_LIMIT) {
+                // TODO: Backend / Stripe Integration
+                // Here is where you would call your Edge Function to charge the customer
+                // e.g. await supabase.functions.invoke('charge-subscription', { body: { owner_id: store.owner_id }})
+                console.log(`[Subscription Worker] Charging Store Manager for Store # ${activeOwnerStores + 1}. Over ${SUB_CONFIG.FREE_STORES_LIMIT} limit.`);
+            }
+
             const updatedStore = await updateAdminStoreStatus(store.id, "active", true);
             
             // Replace the local store with the real updated DB row
