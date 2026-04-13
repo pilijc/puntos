@@ -4,6 +4,7 @@ import { StepProps, PasswordStepProps, TermsStepProps, StepperProps, StepHeaderP
 import { useTranslation } from "react-i18next";
 import { TextField } from "./text-field";
 import { CheckIcon, LucideEye, LucideEyeOff } from "lucide-react-native";
+import { Platform } from "react-native";
 
 const ROLE_LOTTIE_SOURCES = {
   user: require("../assets/images/role-user.png"),
@@ -32,11 +33,13 @@ export const STEP_DATA = [
 export function StepHeader({ currentStep }: StepHeaderProps) {
   const { t: translate } = useTranslation();
   const stepInfo = STEP_DATA[currentStep - 1];
+  const align = Platform.OS === "web" ? "text-left" : "text-center";
+  const items = Platform.OS === "web" ? "items-start" : "items-center";
 
   return (
-    <View className="gap-y-4 mb-6">
-      <View className="items-center justify-center">
-        <View className="w-16 h-16 rounded-full items-center justify-center">
+    <View className="gap-y-4 mb-4">
+      <View className={`${items} justify-center`}>
+        <View className={`w-16 h-16 rounded-full ${items} justify-center`}>
           <Image
             source={require("../assets/images/puntos-icon.png")}
             className="w-16 h-16"
@@ -44,12 +47,12 @@ export function StepHeader({ currentStep }: StepHeaderProps) {
         </View>
       </View>
 
-      <View className="gap-y-1">
-        <Text className="text-xl font-poppins-bold text-neutral-900 dark:text-darkTextPrimary text-center">
+      <View>
+        <Text className={`text-lg font-poppins-bold text-textSecondary dark:text-darkTextPrimary ${align}`}>
           {translate(stepInfo.titleKey)}
         </Text>
 
-        <Text className="text-neutral-600 dark:text-darkTextSecondary font-poppins text-center text-sm">
+        <Text className={`text-textMuted dark:text-darkTextSecondary font-poppins ${align} text-sm`}>
           {translate(stepInfo.descriptionKey)}
         </Text>
       </View>
@@ -132,7 +135,7 @@ export function PasswordStep({
 }: PasswordStepProps) {
   const { t: translate } = useTranslation();
   return (
-    <View className="gap-y-4 pr-0.5">
+    <View className=" pr-0.5">
       <View className="gap-y-2">
         <View className="gap-y-2">
           <TextField
@@ -154,7 +157,6 @@ export function PasswordStep({
                 )}
               </TouchableOpacity>
             }
-  
           />
         </View>
 
@@ -195,26 +197,34 @@ export function PasswordStep({
 
 export function RoleStep({ value, onChange, error }: RoleStepProps) {
   const { t: translate } = useTranslation();
-  const roles = [
-    {
-      label: translate("onboarding.signup.roleSelect.customerLabel"),
-      value: "user" as const,
-      description: translate("onboarding.signup.roleSelect.customerDescription"),
-    },
-    {
-      label: translate("onboarding.signup.roleSelect.ownerLabel"),
-      value: "manager" as const,
-      description: translate("onboarding.signup.roleSelect.ownerDescription"),
-    },
-  ];
+  const roles = Platform.OS === "web"
+    ? [
+        {
+          label: translate("onboarding.signup.roleSelect.ownerLabel"),
+          value: "manager" as const,
+          description: translate("onboarding.signup.roleSelect.ownerDescription"),
+        },
+      ]
+    : [
+        {
+          label: translate("onboarding.signup.roleSelect.customerLabel"),
+          value: "user" as const,
+          description: translate("onboarding.signup.roleSelect.customerDescription"),
+        },
+        {
+          label: translate("onboarding.signup.roleSelect.ownerLabel"),
+          value: "manager" as const,
+          description: translate("onboarding.signup.roleSelect.ownerDescription"),
+        },
+      ];
 
   return (
     <View className="gap-y-5 pr-0.5">
-      <View className="gap-y-1.5 px-0.5">
-        <Text className="text-base font-poppins-semibold text-neutral-900 dark:text-darkTextPrimary text-center">
+      <View>
+        <Text className="text-base font-poppins-semibold text-textSecondary dark:text-darkTextPrimary text-start">
           {translate("onboarding.signup.roleSelect.title")}
         </Text>
-        <Text className="text-xs font-poppins text-neutral-500 dark:text-darkTextSecondary/90 text-center leading-relaxed px-1">
+        <Text className="text-xs font-poppins text-textMuted dark:text-darkTextSecondary/90 text-start leading-relaxed">
           {translate("onboarding.signup.roleSelect.subtitle")}
         </Text>
       </View>
@@ -236,12 +246,12 @@ export function RoleStep({ value, onChange, error }: RoleStepProps) {
               <View
                 className={`flex-1 min-h-[168px] rounded-2xl px-3 pt-4 pb-3.5 ${
                   isSelected
-                    ? "bg-white dark:bg-primary/15 border border-primary shadow-sm shadow-primary/20 dark:shadow-primary/10"
-                    : "bg-white dark:bg-darkBackgroundCard border border-neutral-200/90 dark:border-darkBorder shadow-sm shadow-slate-200/50 dark:shadow-none"
+                    ? "bg-white dark:bg-primary/15 border border-primary"
+                    : "bg-white dark:bg-darkBackgroundCard border border-neutral-200/90 dark:border-darkBorder"
                 }`}
               >
                 {isSelected ? (
-                  <View className="absolute top-2.5 right-2.5 z-10 w-6 h-6 rounded-full bg-primary items-center justify-center shadow-sm">
+                  <View className="absolute top-2.5 right-2.5 z-10 w-6 h-6 rounded-full bg-primary items-center justify-center">
                     <CheckIcon size={14} color="white" />
                   </View>
                 ) : null}

@@ -3,7 +3,7 @@ import { StyleSheet, useColorScheme, Platform, Text } from "react-native";
 import React, { useEffect } from "react";
 import { usePathname, useRouter } from "expo-router";
 import { supabase } from "@/supabase/supabase";
-import { getRoleTypeForUser } from "@/services/access-service";
+import { getRoleTypeForUser, getWebAdjustedHomeRoute } from "@/services/access-service";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LayoutDashboard, Store, ArrowLeftRight, Settings } from 'lucide-react-native';
 
@@ -48,13 +48,13 @@ export default function StoreManagerLayout() {
                     if (roleType === "super_admin") {
                         router.replace("/(super_admin)");
                     } else if (roleType === "front_desk") {
-                        router.replace("/(front_desk)");
+                        router.replace(getWebAdjustedHomeRoute("/(front_desk)") as any);
                     } else {
-                        router.replace("/(user)");
+                        router.replace(getWebAdjustedHomeRoute("/(user)") as any);
                     }
                 }
             } catch {
-                router.replace("/(user)");
+                router.replace(getWebAdjustedHomeRoute("/(user)") as any);
             }
         };
         verifyAccess();

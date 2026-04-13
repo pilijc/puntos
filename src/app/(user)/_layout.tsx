@@ -1,4 +1,4 @@
-import { Tabs } from 'expo-router';
+import { Tabs, Redirect } from 'expo-router';
 import React, { useEffect } from 'react';
 import { useColorScheme, Platform } from 'react-native';
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -9,7 +9,7 @@ import { useLocationSync } from '@/hooks/user/use-location-sync';
 import { getMutedStores } from '@/services/user/mute-service';
 import { useStoreStore } from '@/store/user/store-store';
 
-export default function TabLayout() {
+function UserTabs() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
   const { t: translate } = useTranslation();
@@ -80,3 +80,9 @@ export default function TabLayout() {
   );
 }
 
+export default function TabLayout() {
+  if (Platform.OS === "web") {
+    return <Redirect href="/web-unavailable" />;
+  }
+  return <UserTabs />;
+}

@@ -1,11 +1,11 @@
 import { useEffect } from 'react';
 import { useRouter, usePathname } from 'expo-router';
 import { supabase } from '@/supabase/supabase';
-import { getHomeRouteForUserId } from '@/services/access-service';
+import { getHomeRouteForUserId, getWebAdjustedHomeRoute } from '@/services/access-service';
 import { checkIfAccountDeletedService, checkIfAccountBlockedService, AccountDeletedError, AccountBlockedError } from '@/services/auth-service';
 import { Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { upsertPushId } from '@/services/push-notif';
+import { upsertPushId, isOneSignalNativeAvailable } from '@/services/push-notif';
 import { useAuthStore } from '@/store/auth-store';
 import { OneSignal } from 'react-native-onesignal';
 
@@ -16,7 +16,6 @@ export function useAuthListener() {
   useEffect(() => {
     const { data: listener } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        // Get current route to check if we're on signup flow
         const isOnSignupFlow = pathname?.includes('/signup');
         
         if (event === 'PASSWORD_RECOVERY' && session) {
@@ -44,10 +43,12 @@ export function useAuthListener() {
               await checkIfAccountBlockedService(session.user.id);
 
               const userId = session.user.id;
-              const nextRoute = await getHomeRouteForUserId(userId);
+              const nextRoute = getWebAdjustedHomeRoute(await getHomeRouteForUserId(userId));
 
-              await OneSignal.login(userId);
-              await upsertPushId();
+              if (isOneSignalNativeAvailable()) {
+                await OneSignal.login(userId);
+                await upsertPushId();
+              }
 
               router.replace(nextRoute as any);
               } catch (err: any) {
