@@ -10,6 +10,8 @@ import { AlertCircle, ChartBarStacked, ChevronRight, MapPin, Plus, Store } from 
 
 type TabKey = "all" | "active" | "pending" | "inactive";
 
+const WEB_MAX_WIDTH = 896;
+
 const STATUS_BADGE_STYLE: Record<
   "active" | "pending_review" | "inactive",
   { bg: string; text: string }
@@ -491,14 +493,32 @@ export default function StoreManagerStores() {
           )}
         </ScrollView>
 
-        <TouchableOpacity
-          className="absolute bottom-5 right-6 w-14 h-14 rounded-full bg-primary items-center justify-center"
-          onPress={() => {
-            router.push("/(store_manager)/store/create-store");
-          }}
-        >
-          <Plus size={28} color="#fff" />
-        </TouchableOpacity>
+        {Platform.OS === "web" ? (
+          <View
+            pointerEvents="box-none"
+            style={{ position: "absolute", left: 0, right: 0, bottom: 60, alignItems: "center" }}
+          >
+            <View style={{ width: "100%", maxWidth: WEB_MAX_WIDTH, paddingHorizontal: 16, alignItems: "flex-end" }}>
+              <TouchableOpacity
+                className="w-14 h-14 rounded-full bg-primary items-center justify-center"
+                onPress={() => {
+                  router.push("/(store_manager)/store/create-store");
+                }}
+              >
+                <Plus size={28} color="#fff" />
+              </TouchableOpacity>
+            </View>
+          </View>
+        ) : (
+          <TouchableOpacity
+            className="absolute bottom-5 right-6 w-14 h-14 rounded-full bg-primary items-center justify-center"
+            onPress={() => {
+              router.push("/(store_manager)/store/create-store");
+            }}
+          >
+            <Plus size={28} color="#fff" />
+          </TouchableOpacity>
+        )}
       </View>
     </SafeAreaView>
   );
