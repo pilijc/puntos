@@ -2,33 +2,21 @@ import { supabase } from "@/supabase/supabase";
 
 import { QRCodeState, QRTransaction } from "@/type/qr";
 import {listenToVoucherTransaction } from "@/services/user/voucher-service";
-import { addStamp } from "@/services/stamp-service";
+import { issueStampForPurchase } from "@/services/stamp-service";
 import { VoucherTransaction } from "@/type/user/voucher";
 import {FinalCalculations} from "@/services/frontdesk/percentage-service";
 
 export async function getCurrentUser() {
-  try {
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-    
-    if (sessionError) {
-      throw sessionError;
-    }
-    
-    if (!session) {
-      throw new Error('Auth session missing!');
-    }
 
-    const { data: { user }, error } = await supabase.auth.getUser();
+  const { data: { user }, error } = await supabase.auth.getUser();
 
-    if (error) throw error;
+  if (error) throw error;
 
-    return user; 
-  } catch (error) {
-    throw error;
-  }
+  return user; 
+
 }
 
-//Add auto user into qr_codes table
+//Add auto user to qr_codes table
 export async function addAutoUser(){
   
   const {
@@ -129,8 +117,10 @@ export async function createQRTransaction(
 
   // Decrease the stored_amount in points table
 
-  // Award a stamp if the store has the program enabled (do this BEFORE QR transaction so real-time listeners fetching stamps get the latest data)
-  await addStamp(userId, storeId, purchaseData.id);
+  // Award a stamp for the verified purchase via server-authoritative RPC.
+  // The RPC uses DB now() for timestamps and enforces purchase_id uniqueness
+  // so the same QR scan can never mint more than one stamp.
+  await issueStampForPurchase(purchaseData.id);
 
   // Create the QR transaction
   const { data, error } = await supabase
