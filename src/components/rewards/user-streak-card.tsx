@@ -449,12 +449,8 @@ export default function UserStreakCard({
                           setHasEarnedToday(true);
                           setShowStreakModal(true);
                           onStreakRecorded?.();
-<<<<<<< Updated upstream
                           fetchEarnedDates(); // sync per-day dots with real DB data
-                          Alert.alert(
-=======
                           showModal(
->>>>>>> Stashed changes
                             "🎉 Streak Complete!",
                             `You've completed the full ${targetCount}-day streak! Your reward is on its way.`,
                             [{ label: "Awesome!", onPress: closeModal, variant: "primary" }],
