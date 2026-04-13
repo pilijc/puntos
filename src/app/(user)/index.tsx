@@ -11,7 +11,7 @@ import { getRouteService, getSearchResultsService } from "@/services/discover-se
 import { useStoreStore } from "@/store/user/store-store";
 import { Store } from "@/type/user/store";
 import type * as GeoJSON from "geojson";
-import { getOneSignalId, sendPushNotification } from "@/services/push-notif";
+import { getOneSignalId, sendPushNotification, isOneSignalNativeAvailable } from "@/services/push-notif";
 import { isStoreNearby } from "@/services/user/location-service";
 import * as turf from "@turf/turf";
 import { getStores } from "@/services/store-service";
@@ -82,6 +82,8 @@ export default function Discover() {
   }, [searchQuery]);
 
   useEffect(() => {
+    if (!isOneSignalNativeAvailable()) return;
+
     const handleNotificationClick = (event: any) => {
       (async () => {
         try {
@@ -261,13 +263,11 @@ export default function Discover() {
     hasCenteredOnUserRef.current = true;
   }, [mapReady, location]);
 
-  // Localize Mapbox Labels
   useEffect(() => {
     if (!mapReady) return;
 
     const localizeMap = async () => {
       try {
-        // Mapbox supports these language codes
         const mapboxLanguage = language === 'ja' ? 'ja' : 'en';
 
         const labelLayerPatterns = [
@@ -436,7 +436,6 @@ export default function Discover() {
         />
         <Mapbox.Camera
           ref={cameraRef}
-          // followUserLocation={searchQuery ? false : true}
           followUserMode={Mapbox.UserTrackingMode.FollowWithHeading}
           followZoomLevel={16}
           animationMode="easeTo"
@@ -488,7 +487,6 @@ export default function Discover() {
           />
         </Mapbox.ShapeSource>
 
-        {/* Animated route line */}
         {routeGeoJSON && !searchQuery && (() => {
           const coords = routeGeoJSON.coordinates;
           const total = coords.length;
@@ -689,7 +687,6 @@ export default function Discover() {
                               {s.address}
                             </Text>
                           </View>
-                          {/* meters + chevron stacked vertically centered */}
                           <View style={{ flexDirection: "row", alignItems: "center", marginLeft: 4 }}>
                             <Text
                               style={{

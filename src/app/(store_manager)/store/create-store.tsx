@@ -19,6 +19,7 @@ import Slider from "@react-native-community/slider";
 import * as turf from "@turf/turf";
 import { AppHeader } from "@/components/header";
 import { dateToTimeString, timeStringToDate } from "@/utils/date-helpers";
+import { shouldUseInteractiveMapbox } from "@/utils/mapbox-platform";
 
 Mapbox.setAccessToken(process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN);
 
@@ -742,22 +743,39 @@ export default function CreateStore() {
                       id="storeLocation"
                       coordinate={[parsedLng, parsedLat]}
                     >
-                      <View className="w-4 h-4 bg-orange-500 rounded-full border-2 border-white" />
-                    </PointAnnotation>
-                  )}
-
-                  {radiusCircleFeature && (
-                    <Mapbox.ShapeSource id="storeRadius" shape={radiusCircleFeature}>
-                      <Mapbox.FillLayer
-                        id="storeRadiusFill"
-                        style={{
-                          fillColor: "#FF6600",
-                          fillOpacity: 0.14,
-                        }}
+                      <Camera
+                        zoomLevel={hasPin ? 14 : 12}
+                        centerCoordinate={hasPin ? [parsedLng, parsedLat] : [123.8854, 10.3157]}
                       />
-                    </Mapbox.ShapeSource>
+                      {hasPin && (
+                        <PointAnnotation
+                          id="storeLocation"
+                          coordinate={[parsedLng, parsedLat]}
+                        >
+                          <View className="w-4 h-4 bg-orange-500 rounded-full border-2 border-white" />
+                        </PointAnnotation>
+                      )}
+
+                      {radiusCircleFeature && (
+                        <Mapbox.ShapeSource id="storeRadius" shape={radiusCircleFeature}>
+                          <Mapbox.FillLayer
+                            id="storeRadiusFill"
+                            style={{
+                              fillColor: "#FF6600",
+                              fillOpacity: 0.14,
+                            }}
+                          />
+                        </Mapbox.ShapeSource>
+                      )}
+                    </MapView>
+                  ) : (
+                    <View className="h-[400px] items-center justify-center gap-y-2 px-6 bg-slate-50 dark:bg-slate-900">
+                      <MaterialIcons name="map" size={32} color={isDark ? "#525252" : "#94A3B8"} />
+                      <Text className="text-xs font-poppins text-center text-slate-500 dark:text-slate-400">
+                        Map only on Android & Web — use Get Current or enter address below.
+                      </Text>
+                    </View>
                   )}
-                  </MapView>
                 </View>
               </View>
 

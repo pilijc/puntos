@@ -1,5 +1,5 @@
 import React, { useCallback, useRef, useState } from "react";
-import { FlatList, ScrollView, Modal, Pressable, StyleSheet, useColorScheme, RefreshControl, ActivityIndicator, ListRenderItemInfo, TouchableOpacity, View as NativeView, Dimensions } from "react-native";
+import { FlatList, ScrollView, Modal, Pressable, StyleSheet, useColorScheme, RefreshControl, ActivityIndicator, ListRenderItemInfo, TouchableOpacity, View as NativeView, Dimensions, Platform } from "react-native";
 import { TransactionSkeleton, StoresAndFunnelSkeleton } from "@/components/skeleton/store_manager/transaction-skeleton";
 import { View, Text, SafeAreaView } from "@/tw";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -8,7 +8,6 @@ import { Image } from "expo-image";
 import { useTransactions } from "@/hooks/store-manager/transaction";
 import { TxType, TypeFilter, ListItem } from "@/type/store-manager/transaction";
 import { formatTxTime } from "@/utils/store_manager/transaction";
-
 
 const TYPE_CONFIG: Record<
   TxType,
@@ -46,20 +45,10 @@ function AvatarInitials({ name, size = 38 }: { name: string; size?: number }) {
   );
 }
 
-function EmptyState({ icon, title, subtitle }: { icon: React.ReactNode; title: string; subtitle: string }) {
-  return (
-    <View className="flex-1 items-center justify-center gap-y-3">
-      {icon}
-      <Text className="text-base font-poppins-bold text-textSecondary dark:text-darkTextSecondary">{title}</Text>
-      <Text className="text-sm font-poppins text-textMuted dark:text-darkTextMuted text-center px-10">{subtitle}</Text>
-    </View>
-  );
-}
-
-
 export default function TransactionsScreen() {
   const isDark = useColorScheme() === "dark";
-  const insets = useSafeAreaInsets();
+  const isWeb = Platform.OS === "web";
+  const maxWidth = 860;
   const {
     stores, storesLoading,
     selectedStoreId, selectStore,
@@ -96,10 +85,12 @@ export default function TransactionsScreen() {
     ({ item, index }: ListRenderItemInfo<ListItem>) => {
       if (item.kind === "header") {
         return (
-          <View className="px-6 pt-3 pb-2">
-            <Text className="text-xs font-poppins-semibold text-textMuted dark:text-darkTextMuted">
-              {item.label}
-            </Text>
+          <View className={isWeb ? "px-4 pt-3 pb-2 items-center" : "px-6 pt-3 pb-2"}>
+            <View style={isWeb ? { width: "100%", maxWidth } : undefined}>
+              <Text className="text-xs font-poppins-semibold text-textMuted dark:text-darkTextMuted">
+                {item.label}
+              </Text>
+            </View>
           </View>
         );
       }
@@ -111,75 +102,62 @@ export default function TransactionsScreen() {
       const borderColor = isDark ? "#262626" : "#F1F5F9";
       
       return (
-        <View
-          className={[
-            "flex-row items-center px-4 py-3 bg-background dark:bg-darkBackground mx-4 border-l border-r border-b",
-            isFirst && "border-t rounded-tl-[12px] rounded-tr-[12px]",
-            isLast && "rounded-bl-[12px] rounded-br-[12px]",
-          ]
-            .filter(Boolean)
-            .join(" ")}
-          style={{ borderColor }}
-        >
-          <NativeView style={{ position: "relative", marginRight: 12 }}>
-            {tx.userAvatar ? (
-              <Image
-                source={{ uri: tx.userAvatar }}
-                style={{ width: 40, height: 40, borderRadius: 20 }}
-                contentFit="cover"
-              />
-            ) : (
-              <AvatarInitials name={tx.userName} size={40} />
-            )}
-      
-            <NativeView
-              style={{
-                position: "absolute",
-                bottom: -2,
-                right: -2,
-                width: 18,
-                height: 18,
-                borderRadius: 9,
-                backgroundColor: isDark ? cfg.bgDark : cfg.bgLight,
-                alignItems: "center",
-                justifyContent: "center",
-                borderWidth: 1.5,
-                borderColor: isDark ? "#171717" : "#FFFFFF",
-              }}
+        <View className={isWeb ? "px-4" : ""}>
+          <View style={isWeb ? { width: "100%", maxWidth, alignSelf: "center" } : undefined}>
+            <View
+              className={[
+                "flex-row items-center px-4 py-3 bg-background dark:bg-darkBackground border-l border-r border-b",
+                !isWeb && "mx-4",
+                isFirst && "border-t rounded-tl-[12px] rounded-tr-[12px]",
+                isLast && "rounded-bl-[12px] rounded-br-[12px]",
+              ]
+                .filter(Boolean)
+                .join(" ")}
+              style={{ borderColor }}
             >
-              {cfg.icon(cfg.color)}
-            </NativeView>
-          </NativeView>
-      
-          <View className="flex-1">
-            <View className="flex-row items-start justify-between">
-              <Text
-                className="text-sm font-poppins-bold text-textPrimary dark:text-darkTextPrimary"
-                numberOfLines={1}
-                style={{ flex: 1 }}
-              >
-                {tx.userName}
-              </Text>
-              <Text
-                className="text-sm font-poppins-bold text-primary dark:text-primary"
-                numberOfLines={1}
-              >
-                {tx.detail}
-              </Text>
-            </View>
-            <View className="flex-row items-center justify-between">
-              <Text className="text-xs font-poppins text-textMuted dark:text-darkTextMuted">
-                {cfg.label}
-              </Text>
-              <Text className="text-[10px] font-poppins text-textMuted dark:text-darkTextMuted">
-                {formatTxTime(tx.date)}
-              </Text>
+              <NativeView style={{ position: "relative", marginRight: 12 }}>
+                {tx.userAvatar ? (
+                  <Image
+                    source={{ uri: tx.userAvatar }}
+                    style={{ width: 40, height: 40, borderRadius: 20 }}
+                    contentFit="cover"
+                  />
+                ) : (
+                  <AvatarInitials name={tx.userName} size={40} />
+                )}
+              </NativeView>
+
+              <View className="flex-1">
+                <View className="flex-row items-start justify-between">
+                  <Text
+                    className="text-sm font-poppins-bold text-textPrimary dark:text-darkTextPrimary"
+                    numberOfLines={1}
+                    style={{ flex: 1 }}
+                  >
+                    {tx.userName}
+                  </Text>
+                  <Text
+                    className="text-sm font-poppins-bold text-primary dark:text-primary"
+                    numberOfLines={1}
+                  >
+                    {tx.detail}
+                  </Text>
+                </View>
+                <View className="flex-row items-center justify-between">
+                  <Text className="text-xs font-poppins text-textMuted dark:text-darkTextMuted">
+                    {cfg.label}
+                  </Text>
+                  <Text className="text-[10px] font-poppins text-textMuted dark:text-darkTextMuted">
+                    {formatTxTime(tx.date)}
+                  </Text>
+                </View>
+              </View>
             </View>
           </View>
         </View>
       );
     },
-    [isDark, listItems, typeFilter]
+    [isDark, isWeb, listItems]
   );
 
   const emptyIcon = <ReceiptText size={40} color={isDark ? "#404040" : "#E2E8F0"} strokeWidth={1.5} />;
@@ -202,63 +180,151 @@ export default function TransactionsScreen() {
       {storesLoading ? (
         <StoresAndFunnelSkeleton />
       ) : stores.length > 1 ? (
-        <View className="flex-row items-center bg-background dark:bg-darkBackground border-b border-neutral-100 dark:border-darkBorder pl-5">
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 10, gap: 8}}
+        <View className={isWeb ? "bg-backgroundMuted dark:bg-darkBackground px-4 pt-4 pb-3 items-center" : "flex-row items-center bg-background dark:bg-darkBackground border-b border-neutral-100 dark:border-darkBorder pl-5"}>
+          
+          {isWeb ? (
+            <View
+              className="w-full bg-white dark:bg-darkBackground border border-neutral-100 dark:border-darkBorder rounded-xl overflow-hidden flex-row items-center"
+              style={{ maxWidth }}
             >
-              {stores.map((store) => {
-                const active = store.id === selectedStoreId;
-                return (
-                  <TouchableOpacity
-                    key={store.id}
-                    onPress={() => selectStore(store.id)}
-                    activeOpacity={0.75}
-                    style={{
-                      paddingHorizontal: 10,
-                      paddingVertical: 4,
-                      borderRadius: 99,
-                      backgroundColor: active ? "#FF6600" : isDark ? "#262626" : "#F1F5F9",
-                    }}
-                  >
-                    <Text
-                      className={`text-xs font-poppins-semibold ${active ? "text-white" : "text-textMuted dark:text-darkTextMuted"}`}
-                      numberOfLines={1}
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 10, gap: 8 }}
+              >
+                {stores.map((store) => {
+                  const storeId = Number(store.id);
+                  const active = selectedStoreId !== null && storeId === selectedStoreId;
+                  return (
+                    <TouchableOpacity
+                      key={store.id}
+                      onPress={() => selectStore(storeId)}
+                      activeOpacity={0.75}
+                      style={{
+                        paddingHorizontal: 10,
+                        paddingVertical: 4,
+                        borderRadius: 99,
+                        backgroundColor: active ? "#FF6600" : isDark ? "#262626" : "#F1F5F9",
+                      }}
                     >
-                      {store.name}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </ScrollView>
+                      <Text
+                        className={`text-xs font-poppins-semibold ${active ? "text-white" : "text-textMuted dark:text-darkTextMuted"}`}
+                        numberOfLines={1}
+                      >
+                        {store.name}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </ScrollView>
 
-          <NativeView ref={funnelRef} collapsable={false}>
-            <TouchableOpacity
-              onPress={handleFunnelOpen}
-              activeOpacity={0.7}
-              style={{
-                alignSelf: "stretch",
-                alignItems: "center",
-                justifyContent: "center",
-                paddingHorizontal: 14,
-                paddingVertical: 10,
-                borderLeftWidth: 1,
-                borderLeftColor: isDark ? "#262626" : "#F1F5F9",
-              }}
-            >
-              {triggerIcon}
-            </TouchableOpacity>
-          </NativeView>
+              <NativeView ref={funnelRef} collapsable={false}>
+                <TouchableOpacity
+                  onPress={handleFunnelOpen}
+                  activeOpacity={0.7}
+                  style={{
+                    alignSelf: "stretch",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    paddingHorizontal: 14,
+                    paddingVertical: 10,
+                    borderLeftWidth: 1,
+                    borderLeftColor: isDark ? "#262626" : "#F1F5F9",
+                  }}
+                >
+                  {triggerIcon}
+                </TouchableOpacity>
+              </NativeView>
+            </View>
+          ) : (
+            <>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 10, gap: 8}}
+              >
+                {stores.map((store) => {
+                  const storeId = Number(store.id);
+                  const active = selectedStoreId !== null && storeId === selectedStoreId;
+                  return (
+                    <TouchableOpacity
+                      key={store.id}
+                      onPress={() => selectStore(storeId)}
+                      activeOpacity={0.75}
+                      style={{
+                        paddingHorizontal: 10,
+                        paddingVertical: 4,
+                        borderRadius: 99,
+                        backgroundColor: active ? "#FF6600" : isDark ? "#262626" : "#F1F5F9",
+                      }}
+                    >
+                      <Text
+                        className={`text-xs font-poppins-semibold ${active ? "text-white" : "text-textMuted dark:text-darkTextMuted"}`}
+                        numberOfLines={1}
+                      >
+                        {store.name}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </ScrollView>
+
+              <NativeView ref={funnelRef} collapsable={false}>
+                <TouchableOpacity
+                  onPress={handleFunnelOpen}
+                  activeOpacity={0.7}
+                  style={{
+                    alignSelf: "stretch",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    paddingHorizontal: 14,
+                    paddingVertical: 10,
+                    borderLeftWidth: 1,
+                    borderLeftColor: isDark ? "#262626" : "#F1F5F9",
+                  }}
+                >
+                  {triggerIcon}
+                </TouchableOpacity>
+              </NativeView>
+            </>
+          )}
         </View>
       ) : null}
 
       {loading || storesLoading ? (
         <TransactionSkeleton />
       ) : stores.length === 0 ? (
-        <EmptyState icon={emptyIcon} title="No stores found" subtitle="Create a store to start tracking transactions." />
+        <View className={isWeb ? "px-4 pb-4 items-center" : "px-4 pb-4"}>
+          <View
+            className={`w-full bg-white dark:bg-darkBackground rounded-xl overflow-hidden justify-start ${isWeb ? "p-4" : "p-3"}`}
+            style={isWeb ? { maxWidth } : undefined}
+          >
+            <View className="items-center justify-center gap-y-3">
+              {emptyIcon}
+              <Text className="text-base font-poppins-bold text-textSecondary dark:text-darkTextSecondary">No Stores Found</Text>
+              <Text className="text-sm font-poppins text-textMuted dark:text-darkTextMuted text-center px-10">
+                Create a store to start tracking transactions.
+              </Text>
+            </View>
+          </View>
+        </View>
       ) : listItems.length === 0 ? (
-        <EmptyState icon={emptyIcon} title="No transactions yet" subtitle="Transactions will appear here once customers start earning points." />
+        <View className={isWeb ? "px-4 pb-4 items-center" : "px-4 pb-4 mt-4"}>
+          <View
+            className={`w-full bg-white dark:bg-darkBackground rounded-xl overflow-hidden justify-start ${isWeb ? "p-6 py-10" : "p-3"}`}
+            style={isWeb ? { maxWidth } : undefined}
+          >
+            <View className="items-center justify-center gap-y-4">
+              {emptyIcon}
+              <View className="items-center justify-center">
+                <Text className="text-base font-poppins-bold text-textSecondary dark:text-darkTextSecondary">No Transactions Found</Text>
+                <Text className="text-sm font-poppins text-textMuted dark:text-darkTextMuted text-center px-10">
+                  Transactions will appear here once customers start earning points.
+                </Text>
+              </View>
+            </View>
+          </View>
+        </View>
       ) : (
         <FlatList
           data={listItems}

@@ -1,5 +1,5 @@
 import React from "react";
-import { SafeAreaView, View, Text, TouchableOpacity, Alert } from "react-native";
+import { SafeAreaView, View, Text, TouchableOpacity, Alert, Platform } from "react-native";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { router } from "expo-router";
 import { supabase } from "@/supabase/supabase";
@@ -13,7 +13,11 @@ export default function StoreManagerProfile() {
                 style: "destructive",
                 onPress: async () => {
                     await supabase.auth.signOut();
-                    router.replace("/(onboarding)/index");
+                    router.replace(
+                      Platform.OS === "web"
+                        ? "/(onboarding)/welcome"
+                        : "/(onboarding)/index",
+                    );
                 },
             },
         ]);

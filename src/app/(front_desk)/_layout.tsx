@@ -1,4 +1,4 @@
-import { Tabs, usePathname } from "expo-router";
+import { Tabs, usePathname, Redirect } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { useRouter } from "expo-router";
 import { Platform, View, StyleSheet, useColorScheme } from "react-native";
@@ -10,7 +10,7 @@ import { checkPasswordSetupRequired } from "@/services/frontdesk/password-servic
 import { useTranslation } from "react-i18next";
 import { History, Settings, Home } from 'lucide-react-native';
 
-export default function FrontDeskLayout() {
+function FrontDeskTabs() {
     const router = useRouter();
     const pathname = usePathname();
     const insets = useSafeAreaInsets();
@@ -19,7 +19,6 @@ export default function FrontDeskLayout() {
     const isDark = colorScheme === 'dark';
     const { t: translate } = useTranslation();
 
-    // Check if we're on the setup password page
     const isOnPasswordSetup = pathname.includes('setup-password');
 
     useEffect(() => {
@@ -48,7 +47,6 @@ export default function FrontDeskLayout() {
                         return;
                     }
 
-                    // Check if password setup is required
                     const requiresPasswordSetup = await checkPasswordSetupRequired(user.id);
                     if (requiresPasswordSetup) {
                         router.replace("/(front_desk)/setup-password");
@@ -76,7 +74,6 @@ export default function FrontDeskLayout() {
                     return;
                 }
 
-                // Check if password setup is required
                 const requiresPasswordSetup = await checkPasswordSetupRequired(user.id);
                 if (requiresPasswordSetup) {
                     router.replace("/(front_desk)/setup-password");
@@ -112,8 +109,6 @@ export default function FrontDeskLayout() {
                 },
             }}
         >
-
-            {/* Only show History and Dashboard tabs when NOT on password setup page */}
             <Tabs.Screen
                 name="history"
                 options={{
@@ -134,7 +129,6 @@ export default function FrontDeskLayout() {
                     href: isOnPasswordSetup ? null : undefined,
                 }}
             />
-            {/* Always show Settings tab */}
             <Tabs.Screen
                 name="settings"
                 options={{
@@ -144,7 +138,6 @@ export default function FrontDeskLayout() {
                     ),
                 }}
             />
-            {/* Hide setup-password from tab navigation */}
             <Tabs.Screen
                 name="setup-password"
                 options={{
@@ -153,6 +146,13 @@ export default function FrontDeskLayout() {
             />
         </Tabs>
     );
+}
+
+export default function FrontDeskLayout() {
+    if (Platform.OS === "web") {
+        return <Redirect href="/web-unavailable" />;
+    }
+    return <FrontDeskTabs />;
 }
 
 const styles = StyleSheet.create({
