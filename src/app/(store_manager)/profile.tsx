@@ -13,7 +13,7 @@ export default function StoreManagerProfile() {
                 style: "destructive",
                 onPress: async () => {
                     await supabase.auth.signOut();
-                    router.replace(
+                    router.push(
                       Platform.OS === "web"
                         ? "/(onboarding)/welcome"
                         : "/(onboarding)/index",

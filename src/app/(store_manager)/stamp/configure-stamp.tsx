@@ -223,7 +223,9 @@ export default function ConfigureStamp() {
       <AppHeader
         title={isEdit ? "Edit Stamp Program" : "New Stamp Program"}
         paddingTop={insets.top + 8}
-        onBackPress={() => router.push({ pathname: "/(store_manager)/stamp", params: { storeId } })}
+        onBackPress={() => {
+          router.push({ pathname: "/(store_manager)/stamp", params: { storeId } });
+        }}
       />
 
       <ScrollView
@@ -425,7 +427,9 @@ export default function ConfigureStamp() {
             />
             <Button
               label="Cancel"
-              onPress={() => router.push({ pathname: "/(store_manager)/stamp", params: { storeId } })}
+              onPress={() => {
+                router.push({ pathname: "/(store_manager)/stamp", params: { storeId } });
+              }}
               variant="secondary"
             />
           </View>

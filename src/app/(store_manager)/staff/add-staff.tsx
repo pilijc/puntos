@@ -109,7 +109,7 @@ export default function AddStaff() {
         ],
       });
       resetStaff();
-      router.replace({
+      router.push({
         pathname: "/(store_manager)/staff",
         params: { storeId },
       });
@@ -142,7 +142,9 @@ export default function AddStaff() {
       <AppHeader
         title={isEditMode ? "Edit staff" : "Add staff"}
         paddingTop={insets.top + 8}
-        onBackPress={() => router.replace({ pathname: "/(store_manager)/staff", params: { storeId } })}
+        onBackPress={() => {
+          router.push(`/(store_manager)/view-store/${storeId}/staff`);
+        }}
       />
 
       <ScrollView
@@ -248,12 +250,9 @@ export default function AddStaff() {
           />
           <Button
             label="Cancel"
-            onPress={() =>
-              router.replace({
-                pathname: "/(store_manager)/staff",
-                params: { storeId },
-              })
-            }
+            onPress={() => {
+              router.push(`/(store_manager)/view-store/${storeId}/staff`);
+            }}
             disabled={isSubmitting}
             fullWidth={true}
             variant="secondary"

@@ -1,16 +1,18 @@
 import React, { useCallback } from "react";
-import { FlatList, useColorScheme } from "react-native";
+import { FlatList, useColorScheme, Platform } from "react-native";
 import { View, Text, TouchableOpacity, SafeAreaView } from "@/tw";
 import { Modal } from "@/components/modal";
 import { useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { getAllStreaksByStoreId, endStreakProgram, publishStreakProgram, activateStreakProgram, deleteStreakProgram } from "@/services/store-manager/streak-service";
 import { Streak, StreakTabs } from "@/type/store-manager/streak";
-import { ChevronLeft, Flame, Plus } from "lucide-react-native";
+import { Flame, Plus } from "lucide-react-native";
 import { StreakCard } from "@/components/store_manager/streak/streak-card";
 import { StreakCardSkeleton } from "@/components/skeleton/store_manager/streak-skeleton";
 import { useStreakViewStore } from "@/store/store-manager/streak-store";
 import { AppHeader } from "@/components/header";
+
+const WEB_MAX_WIDTH = 896;
 
 export default function ViewStreak() {
   const PAGE_SIZE = 6;
@@ -201,38 +203,98 @@ export default function ViewStreak() {
       <AppHeader
         title="Streak Programs"
         description="Reward customers with streak points"
-        onBackPress={() => router.push({ pathname: "/(store_manager)/view-store/[id]", params: { id: storeId } })}
+        onBackPress={() => {
+          router.push(`/(store_manager)/view-store/${storeId}`);
+        }}
       />
 
-      <View className="bg-white dark:bg-neutral-800 border-b border-slate-100 dark:border-slate-800 flex-row px-6">
-        {StreakTabs.map((tab) => {
-          const isActive = activeTab === tab.key;
-          const count =
-            tab.key === "active" ? activeStreaks.length
-            : tab.key === "upcoming" ? upcomingStreaks.length
-            : endedStreaks.length;
-          return (
-            <TouchableOpacity
-              key={tab.key}
-              className="flex-1 py-3 items-center flex-row justify-center gap-1.5"
-              style={{ borderBottomWidth: 2, borderBottomColor: isActive ? "#FF6600" : "transparent" }}
-              onPress={() => setActiveTab(tab.key)}
-              activeOpacity={0.7}
-            >
-              <Text className={isActive ? "text-xs font-poppins-bold text-primary" : "text-xs font-poppins-medium text-slate-400 dark:text-slate-500"}>
-                {tab.label}
-              </Text>
-              {count > 0 && (
-                <View className={`rounded-full px-1.5 min-w-[18px] items-center ${isActive ? "bg-primary/10" : "bg-neutral-100 dark:bg-neutral-700"}`}>
-                  <Text className={`text-[9px] font-poppins-bold ${isActive ? "text-primary" : "text-neutral-500 dark:text-neutral-400"}`}>
-                    {count}
+      {Platform.OS === "web" ? (
+        <View className="bg-white dark:bg-neutral-800 border-b border-slate-100 dark:border-slate-800 px-4 pt-4 items-center">
+          <View className="w-full max-w-4xl flex-row px-2">
+            {StreakTabs.map((tab) => {
+              const isActive = activeTab === tab.key;
+              const count =
+                tab.key === "active" ? activeStreaks.length : tab.key === "upcoming" ? upcomingStreaks.length : endedStreaks.length;
+              return (
+                <TouchableOpacity
+                  key={tab.key}
+                  className="flex-1 py-3 items-center flex-row justify-center gap-1.5"
+                  style={{ borderBottomWidth: 2, borderBottomColor: isActive ? "#FF6600" : "transparent" }}
+                  onPress={() => setActiveTab(tab.key)}
+                  activeOpacity={0.7}
+                >
+                  <Text
+                    className={
+                      isActive
+                        ? "text-xs font-poppins-bold text-primary"
+                        : "text-xs font-poppins-medium text-slate-400 dark:text-slate-500"
+                    }
+                  >
+                    {tab.label}
                   </Text>
-                </View>
-              )}
-            </TouchableOpacity>
-          );
-        })}
-      </View>
+                  {count > 0 && (
+                    <View
+                      className={`rounded-full px-1.5 min-w-[18px] items-center ${
+                        isActive ? "bg-primary/10" : "bg-neutral-100 dark:bg-neutral-700"
+                      }`}
+                    >
+                      <Text
+                        className={`text-[9px] font-poppins-bold ${
+                          isActive ? "text-primary" : "text-neutral-500 dark:text-neutral-400"
+                        }`}
+                      >
+                        {count}
+                      </Text>
+                    </View>
+                  )}
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </View>
+      ) : (
+        <View className="bg-white dark:bg-neutral-800 border-b border-slate-100 dark:border-slate-800 flex-row px-6">
+          {StreakTabs.map((tab) => {
+            const isActive = activeTab === tab.key;
+            const count =
+              tab.key === "active" ? activeStreaks.length : tab.key === "upcoming" ? upcomingStreaks.length : endedStreaks.length;
+            return (
+              <TouchableOpacity
+                key={tab.key}
+                className="flex-1 py-3 items-center flex-row justify-center gap-1.5"
+                style={{ borderBottomWidth: 2, borderBottomColor: isActive ? "#FF6600" : "transparent" }}
+                onPress={() => setActiveTab(tab.key)}
+                activeOpacity={0.7}
+              >
+                <Text
+                  className={
+                    isActive
+                      ? "text-xs font-poppins-bold text-primary"
+                      : "text-xs font-poppins-medium text-slate-400 dark:text-slate-500"
+                  }
+                >
+                  {tab.label}
+                </Text>
+                {count > 0 && (
+                  <View
+                    className={`rounded-full px-1.5 min-w-[18px] items-center ${
+                      isActive ? "bg-primary/10" : "bg-neutral-100 dark:bg-neutral-700"
+                    }`}
+                  >
+                    <Text
+                      className={`text-[9px] font-poppins-bold ${
+                        isActive ? "text-primary" : "text-neutral-500 dark:text-neutral-400"
+                      }`}
+                    >
+                      {count}
+                    </Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      )}
 
       {loading ? (
         <View className="flex-1 p-4">
@@ -264,7 +326,11 @@ export default function ViewStreak() {
         <FlatList
           data={tabStreaks}
           keyExtractor={(item, index) => `${item.id ?? index}`}
-          contentContainerStyle={{ padding: 16, gap: 12 }}
+          contentContainerStyle={{
+            padding: 16,
+            gap: 12,
+            ...(Platform.OS === "web" ? { width: "100%", maxWidth: WEB_MAX_WIDTH, alignSelf: "center" } : null),
+          }}
           showsVerticalScrollIndicator={false}
           onEndReached={handleLoadMore}
           onEndReachedThreshold={0.35}

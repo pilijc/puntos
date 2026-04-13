@@ -20,6 +20,9 @@ import * as turf from "@turf/turf";
 import { AppHeader } from "@/components/header";
 import { dateToTimeString, timeStringToDate } from "@/utils/date-helpers";
 import { shouldUseInteractiveMapbox } from "@/utils/mapbox-platform";
+import { WebMapboxPicker } from "@/components/map/web-mapbox-picker";
+
+const WEB_MAX_WIDTH = 896;
 
 Mapbox.setAccessToken(process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN);
 
@@ -31,7 +34,7 @@ export default function CreateStore() {
   const [scrollEnabled, setScrollEnabled] = useState(true);
   const [showOpenTimePicker, setShowOpenTimePicker] = useState(false);
   const [showCloseTimePicker, setShowCloseTimePicker] = useState(false);
-  const { storeId } = useLocalSearchParams<{ storeId?: string }>();
+  const { storeId } = useLocalSearchParams<{ storeId: string }>();
   const {
     storeName,
     storeType,
@@ -333,7 +336,7 @@ export default function CreateStore() {
               variant: "primary",
               onPress: () => {
                 setModal(null);
-                router.replace(`/(store_manager)/view-store/${newStore.id}`);
+                router.push(`/(store_manager)/view-store/${newStore.id}`);
               },
             },
           ],
@@ -360,17 +363,359 @@ export default function CreateStore() {
       />
       <AppHeader
         title="Create Store"
-        onBackPress={() => router.back()}
-        className="bg-background dark:bg-[#111921]"
+        onBackPress={() => {
+          router.push("/(store_manager)/stores");
+        }}
       />
 
       <ScrollView
         className="flex-1"
-        contentContainerStyle={{ padding: 16, paddingBottom: 24 }}
+        contentContainerStyle={{
+          padding: 16,
+          paddingBottom: 24,
+          ...(Platform.OS === "web" ? { width: "100%", alignItems: "center" } : null),
+        }}
         showsVerticalScrollIndicator={false}
         scrollEnabled={scrollEnabled}
       >
-        {activeStep === "store" && (
+        {Platform.OS === "web" ? (
+          <View style={{ width: "100%", maxWidth: WEB_MAX_WIDTH }}>
+            {activeStep === "store" && (
+              <View className="gap-2">
+                <View className="w-full bg-white dark:bg-neutral-800 rounded-xl border border-slate-100 dark:border-neutral-700 p-4 gap-4 overflow-hidden">
+                  <TextField
+                    label="Store Name"
+                    required
+                    placeholder="e.g. Blue Bottle Coffee"
+                    value={storeName}
+                    onChangeText={setStoreName}
+                    sanitize={(v) => v}
+                  />
+    
+                  <View className="flex-col gap-2 justify-start">
+                    <Text className="text-slate-700 dark:text-slate-300 text-sm font-poppins-medium px-1">
+                      Store Type <Text className="text-red-500 dark:text-red-400">*</Text>
+                    </Text>
+                    <View className="flex-row flex-wrap gap-2 mt-1">
+                      {store_types_options.map((type) => {
+                        const selected = storeType === type.value;
+                        return (
+                          <TouchableOpacity
+                            key={type.value}
+                            activeOpacity={0.8}
+                            onPress={() => setStoreType(type.value)}
+                            className={`px-3 py-1.5 rounded-full border bg-white dark:bg-slate-800/50 ${
+                              selected
+                                ? "border-primary dark:border-primary"
+                                : "border-slate-200 dark:border-slate-800/50"
+                            }`}
+                          >
+                            <Text
+                              className={`text-xs font-poppins-medium ${
+                                selected ? "text-primary dark:text-slate-100" : "text-slate-600 dark:text-slate-300"
+                              }`}
+                            >
+                              {type.label}
+                            </Text>
+                          </TouchableOpacity>
+                        );
+                      })}
+                    </View>
+                  </View>
+    
+                  <View className="flex-row gap-4 gap-y-2">
+                    <View className="flex-1 flex-col gap-2">
+                      <Text className="text-slate-700 dark:text-slate-300 text-sm font-poppins-medium px-1">
+                        Store Logo <Text className="text-red-500 dark:text-red-400">*</Text>
+                      </Text>
+                      <TouchableOpacity
+                        onPress={() => pickImage("logo")}
+                        disabled={isUploadingImage}
+                        className="relative w-32 h-32 rounded-xl border border-dashed border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/30 flex flex-col items-center justify-center gap-1 overflow-hidden"
+                      >
+                        {logo ? (
+                          <>
+                            <Image source={{ uri: logo }} style={{ width: "100%", height: "100%" }} contentFit="cover" />
+                            <TouchableOpacity
+                              onPress={() => setLogo(null)}
+                              className="absolute top-1 right-1 w-6 h-6 rounded-full bg-black/60 items-center justify-center"
+                              activeOpacity={0.8}
+                            >
+                              <MaterialIcons name="close" size={14} color="#fff" />
+                            </TouchableOpacity>
+                          </>
+                        ) : (
+                          <>
+                            <MaterialIcons name="add-a-photo" size={18} color="#94A3B8" />
+                            <Text className="text-[10px] text-slate-500 font-poppins">Logo</Text>
+                          </>
+                        )}
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+    
+                  <View className="flex-col gap-2">
+                    <Text className="text-slate-700 dark:text-slate-300 text-sm font-poppins-medium px-1">
+                      Store Pictures <Text className="text-red-500 dark:text-red-400">*</Text>
+                    </Text>
+                    <Text className="text-slate-600 dark:text-slate-400 text-xs font-poppins mb-3 px-1">
+                      You must add at least 3, and up to 6, store pictures. Tap any box to add or replace a photo.
+                    </Text>
+                    <View className="flex-row flex-wrap gap-2">
+                      {[0, 1, 2, 3, 4, 5].map((index) => {
+                        const uri = pictures?.[index];
+                        return (
+                          <View
+                            key={index}
+                            style={{ flexBasis: "32%", aspectRatio: 1 }}
+                            className="min-w-[96px]"
+                          >
+                            {uri ? (
+                              <View className="flex-1 rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 relative">
+                                <Image source={{ uri }} style={{ width: "100%", height: "100%" }} contentFit="cover" />
+                                <TouchableOpacity
+                                  onPress={() => {
+                                    const next = (pictures ?? []).filter((_, i) => i !== index);
+                                    setPictures(next.length > 0 ? next : null);
+                                  }}
+                                  className="absolute top-1 right-1 w-6 h-6 rounded-full bg-black/50 items-center justify-center"
+                                >
+                                  <MaterialIcons name="close" size={14} color="#fff" />
+                                </TouchableOpacity>
+                              </View>
+                            ) : (
+                              <TouchableOpacity
+                                onPress={() => pickImage("picture", index)}
+                                disabled={isUploadingImage || (pictures?.length ?? 0) >= 6}
+                                className="flex-1 rounded-xl border border-dashed border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/30 items-center justify-center min-h-[80px]"
+                              >
+                                <MaterialIcons name="add-a-photo" size={20} color="#94A3B8" />
+                                <Text className="text-[10px] text-slate-500 font-poppins mt-0.5">Add</Text>
+                              </TouchableOpacity>
+                            )}
+                          </View>
+                        );
+                      })}
+                    </View>
+                  </View>
+                </View>
+              </View>
+            )}
+    
+            {activeStep === "business" && (
+              <View className="gap-2">
+                <View className="bg-white dark:bg-neutral-800 rounded-xl border border-slate-100 dark:border-neutral-700 p-4 gap-4">
+                  <TextField
+                    label="Phone Number"
+                    placeholder="0912 - 234 - 5678"
+                    keyboardType="phone-pad"
+                    value={phone}
+                    onChangeText={(t) => {
+                      if (t.length <= 11) {
+                        setPhone(t);
+                      } else if (t.length < (phone?.length ?? 0)) {
+                        setPhone(t);
+                      }
+                    }}
+                  />
+    
+                  <TextField
+                    label="Business Registration Number"
+                    required
+                    placeholder="e.g. TAX-ID-123456"
+                    value={registrationNumber}
+                    onChangeText={setRegistrationNumber}
+                    sanitize={(v) => v}
+                  />
+    
+                  <View className="flex flex-col gap-2">
+                    <Text className="text-slate-700 dark:text-slate-300 text-sm font-poppins-medium px-1">
+                      Business Document <Text className="text-red-500 dark:text-red-400">*</Text>
+                    </Text>
+                    <TouchableOpacity
+                      onPress={() => {
+                        if (!businessDocumentImage) pickImage("business_document");
+                      }}
+                      disabled={isUploadingImage || !!businessDocumentImage}
+                      className="w-full rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/30 items-center justify-center overflow-hidden"
+                      style={{ height: 220 }}
+                    >
+                      {businessDocumentImage ? (
+                        <>
+                          <Image
+                            source={{ uri: businessDocumentImage }}
+                            style={{ width: "100%", height: "100%", resizeMode: "cover" }}
+                            contentFit="contain"
+                          />
+                          <TouchableOpacity
+                            onPress={() => setBusinessDocumentImage(null)}
+                            className="absolute top-2 right-2 w-7 h-7 rounded-full bg-black/65 items-center justify-center"
+                            activeOpacity={0.8}
+                          >
+                            <MaterialIcons name="close" size={16} color="gray" />
+                          </TouchableOpacity>
+                        </>
+                      ) : (
+                        <>
+                          <MaterialIcons name="description" size={24} color="#94A3B8" />
+                          <Text className="text-xs text-slate-500 font-poppins mt-1">Upload document image</Text>
+                        </>
+                      )}
+                    </TouchableOpacity>
+                  </View>
+    
+                  <View className="flex-row gap-3">
+                    <View className="flex-1 flex-col gap-1.5">
+                      <Text className="text-slate-700 dark:text-slate-300 text-sm font-poppins-medium px-1">Opening time</Text>
+                      <TouchableOpacity
+                        onPress={() => setShowOpenTimePicker(true)}
+                        className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/50 h-12 px-4 justify-center"
+                        activeOpacity={0.8}
+                      >
+                        <Text className="text-slate-900 dark:text-slate-100 font-poppins">{storeOpen || "09:00"}</Text>
+                      </TouchableOpacity>
+                      {showOpenTimePicker && (
+                        <RNModal visible transparent animationType="slide">
+                          <TouchableOpacity
+                            className="flex-1 bg-black/40 justify-end"
+                            activeOpacity={1}
+                            onPress={() => setShowOpenTimePicker(false)}
+                          >
+                            <TouchableOpacity
+                              activeOpacity={1}
+                              onPress={(e) => e.stopPropagation()}
+                              className="bg-white dark:bg-slate-800 rounded-t-2xl pb-8 pt-2"
+                            >
+                              <DateTimePicker
+                                value={timeStringToDate(storeOpen || "09:00", 9, 0)}
+                                mode="time"
+                                onChange={(_, d) => {
+                                  if (d) setStoreOpen(dateToTimeString(d));
+                                }}
+                              />
+                              <View className="px-4">
+                                <Button
+                                  label="Done"
+                                  onPress={() => setShowOpenTimePicker(false)}
+                                  variant="primary"
+                                  fullWidth
+                                />
+                              </View>
+                            </TouchableOpacity>
+                          </TouchableOpacity>
+                        </RNModal>
+                      )}
+                    </View>
+                    <View className="flex-1 flex-col gap-1.5">
+                      <Text className="text-slate-700 dark:text-slate-300 text-sm font-poppins-medium px-1">Closing time</Text>
+                      <TouchableOpacity
+                        onPress={() => setShowCloseTimePicker(true)}
+                        className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/50 h-12 px-4 justify-center"
+                        activeOpacity={0.8}
+                      >
+                        <Text className="text-slate-900 dark:text-slate-100 font-poppins">{storeClose || "21:00"}</Text>
+                      </TouchableOpacity>
+                      {showCloseTimePicker && (
+                        <RNModal visible transparent animationType="slide">
+                          <TouchableOpacity
+                            className="flex-1 bg-black/40 justify-end"
+                            activeOpacity={1}
+                            onPress={() => setShowCloseTimePicker(false)}
+                          >
+                            <TouchableOpacity
+                              activeOpacity={1}
+                              onPress={(e) => e.stopPropagation()}
+                              className="bg-white dark:bg-slate-800 rounded-t-2xl pb-8 pt-2"
+                            >
+                              <DateTimePicker
+                                value={timeStringToDate(storeClose || "21:00", 21, 0)}
+                                mode="time"
+                                onChange={(_, d) => {
+                                  if (d) setStoreClose(dateToTimeString(d));
+                                }}
+                              />
+                              <Button label="Done" onPress={() => setShowCloseTimePicker(false)} variant="primary" fullWidth />
+                            </TouchableOpacity>
+                          </TouchableOpacity>
+                        </RNModal>
+                      )}
+                    </View>
+                  </View>
+                </View>
+              </View>
+            )}
+    
+            {activeStep === "location" && (
+              <View className="gap-2">
+                <View className="bg-white dark:bg-neutral-800 rounded-xl border border-slate-100 dark:border-neutral-700 p-4 gap-5">
+                  <View className="flex-row items-center justify-between">
+                    <Text className="text-xs font-poppins text-slate-500 dark:text-slate-400">Tap the map to drop a pin.</Text>
+                    <TouchableOpacity className="flex-row items-center gap-1" activeOpacity={0.8} onPress={handleGetCurrent}>
+                      <MaterialIcons name="my-location" size={16} color="#FF6600" />
+                      <Text className="text-primary text-xs font-poppins-bold">Get Current</Text>
+                    </TouchableOpacity>
+                  </View>
+    
+                  <View className="rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900">
+                    <View pointerEvents="box-none" style={{ minHeight: 400 }}>
+                      <WebMapboxPicker
+                        latitude={Number.isFinite(parsedLat) ? parsedLat : null}
+                        longitude={Number.isFinite(parsedLng) ? parsedLng : null}
+                        isDark={isDark}
+                        height={400}
+                        markerColor="#FF6600"
+                        onChange={({ latitude: lat, longitude: lng }) => setPin(lat, lng)}
+                      />
+                      {shouldUseInteractiveMapbox() ? null : (
+                        <View className="h-[400px] items-center justify-center gap-y-2 px-6 bg-slate-50 dark:bg-slate-900">
+                          <MaterialIcons name="map" size={32} color={isDark ? "#525252" : "#94A3B8"} />
+                          <Text className="text-xs font-poppins text-center text-slate-500 dark:text-slate-400">
+                            Map only on Android & Web — use Get Current or enter address below.
+                          </Text>
+                        </View>
+                      )}
+                    </View>
+                  </View>
+    
+                  <TextField
+                    label="Landmark / Address"
+                    required
+                    placeholder="Enter full physical address"
+                    value={address}
+                    onChangeText={setAddress}
+                    multiline
+                    sanitize={(v) => v}
+                  />
+    
+                  <View className="mt-2">
+                    <View className="flex-row justify-between items-center mb-2">
+                      <Text className="text-slate-700 dark:text-slate-300 text-sm font-poppins-medium">
+                        Store Radius <Text className="text-red-500 dark:text-red-400">*</Text>
+                      </Text>
+                      <Text className="text-primary text-sm font-poppins-bold">{radius || 50}m</Text>
+                    </View>
+                    <Slider
+                      minimumValue={50}
+                      maximumValue={500}
+                      step={1}
+                      value={radius || 50}
+                      onValueChange={(v) => setRadius(Math.round(v))}
+                      minimumTrackTintColor="#FF6600"
+                      maximumTrackTintColor={isDark ? "#334155" : "#E2E8F0"}
+                      thumbTintColor="#FF6600"
+                    />
+                    <View className="flex-row justify-between mt-1">
+                      <Text className="text-xs text-slate-500 font-poppins">50m</Text>
+                      <Text className="text-xs text-slate-500 font-poppins">500m</Text>
+                    </View>
+                  </View>
+                </View>
+              </View>
+            )}
+          </View>
+        ) : null}
+
+        {Platform.OS !== "web" && activeStep === "store" && (
           <View className="gap-2">
             <View className="bg-white dark:bg-neutral-800 rounded-xl border border-slate-100 dark:border-neutral-700 p-4 gap-4">
               <TextField
@@ -498,7 +843,7 @@ export default function CreateStore() {
           </View>
         )}
 
-        {activeStep === "business" && (
+        {Platform.OS !== "web" && activeStep === "business" && (
           <View className="gap-2">
             <View className="bg-white dark:bg-neutral-800 rounded-xl border border-slate-100 dark:border-neutral-700 p-4 gap-4">
               <TextField
@@ -678,7 +1023,7 @@ export default function CreateStore() {
           </View>
         )}
 
-        {activeStep === "location" && (
+        {Platform.OS !== "web" && activeStep === "location" && (
           <View className="gap-2">
             <View className="bg-white dark:bg-neutral-800 rounded-xl border border-slate-100 dark:border-neutral-700 p-4 gap-5">
               <View className="flex-row items-center justify-between">
@@ -792,33 +1137,34 @@ export default function CreateStore() {
       </ScrollView>
 
       <View className="px-4 py-4 bg-white">
-        <View className="flex-row gap-3">
-          {activeStep !== "store" && (
-            <View className="flex-1">
-              <Button
-                label="Back"
-                onPress={goBack}
-                variant="secondary"
-                loading={false}
-                fullWidth={true}
-              />
+        <View
+          className={Platform.OS === "web" ? "items-center" : ""}
+          style={Platform.OS === "web" ? { width: "100%" } : undefined}
+        >
+          <View style={Platform.OS === "web" ? { width: "100%", maxWidth: WEB_MAX_WIDTH } : undefined}>
+            <View className="flex-row gap-3">
+              {activeStep !== "store" && (
+                <View className="flex-1">
+                  <Button label="Back" onPress={goBack} variant="secondary" loading={false} fullWidth />
+                </View>
+              )}
+              <View className="flex-1">
+                <Button
+                  label={activeStep === "location" ? "Create Store" : "Continue"}
+                  onPress={goNext}
+                  variant="primary"
+                  loading={isSubmitting}
+                  fullWidth
+                  disabled={
+                    isUploadingImage ||
+                    isSubmitting ||
+                    (activeStep === "store" && !isStoreStepValid) ||
+                    (activeStep === "business" && !isBusinessStepValid) ||
+                    (activeStep === "location" && !isFormValid)
+                  }
+                />
+              </View>
             </View>
-          )}
-          <View className="flex-1">
-            <Button
-              label={activeStep === "location" ? "Create Store" : "Continue"}
-              onPress={goNext}
-              variant="primary"
-              loading={isSubmitting}
-              fullWidth={true}
-              disabled={
-                isUploadingImage ||
-                isSubmitting ||
-                (activeStep === "store" && !isStoreStepValid) ||
-                (activeStep === "business" && !isBusinessStepValid) ||
-                (activeStep === "location" && !isFormValid)
-              }
-            />
           </View>
         </View>
       </View>

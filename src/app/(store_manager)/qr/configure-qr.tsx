@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { KeyboardAvoidingView, Platform, ScrollView, useColorScheme } from "react-native";
 import { View, Text, TouchableOpacity } from "@/tw";
-import { Check} from "lucide-react-native";
+import { Check } from "lucide-react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Button } from "@/components/button";
@@ -11,6 +11,8 @@ import { EarningType } from "@/type/store-manager/qr.purchase";
 import { useQRStore } from "@/store/store-manager/qr-store";
 import { createQRService, getQRConfig } from "@/services/store-manager/qr-service";
 import { AppHeader } from "@/components/header";
+
+const WEB_MAX_WIDTH = 896;
 
 export default function ConfigureStreaks() {
   const router = useRouter();
@@ -44,7 +46,7 @@ export default function ConfigureStreaks() {
     setMinimumSpend,
     max_points_per_txn,
     setMaxPointsPerTxn,
-		reset
+    reset,
   } = useQRStore();
 
 	const showError = (message: string) =>
@@ -197,16 +199,26 @@ export default function ConfigureStreaks() {
       <AppHeader
         title="QR Earning Rules"
         paddingTop={insets.top + 8}
-        onBackPress={() => router.push({ pathname: "/(store_manager)/qr", params: { storeId: storeIdParam } })}
+        onBackPress={() => {
+          router.push({ pathname: "/(store_manager)/qr", params: { storeId: storeIdParam } });
+        }}
       />
 
       <ScrollView
         style={{ flex: 1 }}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
-        contentContainerStyle={{ padding: 16, paddingBottom: 32, gap: 20 }}
+        contentContainerStyle={{
+          padding: 16,
+          paddingBottom: 32,
+          gap: 20,
+          ...(Platform.OS === "web" ? { width: "100%", alignItems: "center" } : null),
+        }}
       >
-        <View className="bg-white rounded-xl p-4 flex-col gap-y-5">
+        <View
+          className="bg-white rounded-xl p-4 flex-col gap-y-5"
+          style={Platform.OS === "web" ? { width: "100%", maxWidth: WEB_MAX_WIDTH } : undefined}
+        >
           <View>
             <Text className="text-md font-poppins-bold text-slate-900 dark:text-slate-100">
             Set how QR scans earn points
@@ -363,7 +375,9 @@ export default function ConfigureStreaks() {
           />
           <Button
             label="Cancel"
-            onPress={() => router.push({ pathname: "/(store_manager)/view-store/[id]", params: { id: storeIdParam } })}
+            onPress={() => {
+              router.push({ pathname: "/(store_manager)/qr", params: { storeId: storeIdParam } });
+            }}
             fullWidth={true}
             variant="secondary"
           />

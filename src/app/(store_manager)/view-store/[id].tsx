@@ -8,6 +8,7 @@ import { TransactionItem, type_badge } from "@/type/store-manager/transaction";
 import { formatTxTime } from "@/utils/store_manager/transaction";
 import { Modal, ModalButton } from "@/components/modal";
 import { Building2, Gift, QrCode, UsersRound, Stamp, Flame, ChevronLeft, ChevronRight, Loader2, ReceiptText } from "lucide-react-native";
+import { AppHeader } from "@/components/header";
 
 export default function ViewStore() {
   const { id } = useLocalSearchParams();
@@ -102,12 +103,22 @@ export default function ViewStore() {
         buttons={modal?.buttons}
         timer={modal?.timer ? 3000 : undefined}
       />
-      <View className="bg-white dark:bg-darkBackground border-b border-neutral-100 dark:border-darkBorder px-2 py-2">
+      <AppHeader
+        title={store?.name || "Store Details"}
+        description={store?.address || "View & manage store info"}
+        onBackPress={() => {
+          router.push("/(store_manager)/stores");
+        }}
+      />
+      {/* <View className="bg-white dark:bg-darkBackground border-b border-neutral-100 dark:border-darkBorder px-2 py-2">
         <View className="flex-row items-center">
           <TouchableOpacity
             className="w-10 h-10 items-center justify-center rounded-full -mt-0.5"
             activeOpacity={0.7}
-            onPress={() => router.push("/(store_manager)/stores")}
+            onPress={() => {
+              if (router.canGoBack()) router.back();
+              else router.push("/(store_manager)/stores");
+            }}
           >
             <ChevronLeft size={20} color={isDarkHeader ? "#F1F5F9" : "#0F172A"} />
           </TouchableOpacity>
@@ -124,7 +135,7 @@ export default function ViewStore() {
           </View>
           <View className="min-w-10" />
         </View>
-      </View>
+      </View> */}
 
       <ScrollView
         className="flex-1 gap-y-4 pt-4"

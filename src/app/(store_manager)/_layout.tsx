@@ -243,15 +243,15 @@ export default function StoreManagerLayout() {
                 const roleType = await getRoleTypeForUser(user.id);
                 if (roleType !== "manager" && roleType !== "store_owner") {
                     if (roleType === "super_admin") {
-                        router.replace("/(super_admin)");
+                        router.push("/(super_admin)");
                     } else if (roleType === "front_desk") {
-                        router.replace(getWebAdjustedHomeRoute("/(front_desk)") as any);
+                        router.push(getWebAdjustedHomeRoute("/(front_desk)") as any);
                     } else {
-                        router.replace(getWebAdjustedHomeRoute("/(user)") as any);
+                        router.push(getWebAdjustedHomeRoute("/(user)") as any);
                     }
                 }
             } catch {
-                router.replace(getWebAdjustedHomeRoute("/(user)") as any);
+                router.push(getWebAdjustedHomeRoute("/(user)") as any);
             }
         };
         verifyAccess();

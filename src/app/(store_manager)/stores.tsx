@@ -49,10 +49,7 @@ function StoreCard({ store, router }: { store: StoreRow; router: any }) {
       className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl overflow-hidden mb-3"
       activeOpacity={0.95}
       onPress={() =>
-        router.push({
-          pathname: `/(store_manager)/view-store/${store.id}`,
-          params: { storeId: store.id },
-        })
+        router.push(`/(store_manager)/view-store/${store.id}`)
       }
     >
       <View className="p-4 flex-row gap-3">
@@ -342,10 +339,7 @@ export default function StoreManagerStores() {
                       <TouchableOpacity
                         activeOpacity={0.95}
                         onPress={() =>
-                          router.push({
-                            pathname: `/(store_manager)/view-store/${store.id}`,
-                            params: { storeId: store.id },
-                          })
+                          router.push(`/(store_manager)/view-store/${store.id}`)
                         }
                         className="flex-row items-center gap-x-3 px-4 py-4"
                       >
@@ -414,10 +408,7 @@ export default function StoreManagerStores() {
                       <TouchableOpacity
                         activeOpacity={0.95}
                         onPress={() =>
-                          router.push({
-                            pathname: `/(store_manager)/view-store/${store.id}`,
-                            params: { storeId: store.id },
-                          })
+                          router.push(`/(store_manager)/view-store/${store.id}`)
                         }
                         className="flex-row items-center gap-x-3 px-4 py-4"
                       >

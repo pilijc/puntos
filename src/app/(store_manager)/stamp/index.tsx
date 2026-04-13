@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, ScrollView, useColorScheme } from "react-native";
+import { ActivityIndicator, ScrollView, useColorScheme, Platform } from "react-native";
 import { View, Text, TouchableOpacity, SafeAreaView } from "@/tw";
 import { Modal } from "@/components/modal";
 import { useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
@@ -18,6 +18,8 @@ import { AppHeader } from "@/components/header";
 import { useStampViewStore } from "@/store/store-manager/stamp-store";
 import { getRewardsByStoreId } from "@/services/store-manager/reward-service";
 import { StampCard } from "@/components/store_manager/stamp/stamp-card";
+
+const WEB_MAX_WIDTH = 896;
 
 export default function ViewStamp() {
   const router = useRouter();
@@ -163,46 +165,90 @@ export default function ViewStamp() {
       <AppHeader
         title="Stamp Program"
         description="Reward customers with stamps"
-        onBackPress={() => router.push({ pathname: "/(store_manager)/view-store/[id]", params: { id: storeId } })}
+        onBackPress={() => {
+          router.push(`/(store_manager)/view-store/${storeId}`);
+        }}
       />
 
-      <View className="bg-white dark:bg-neutral-800 border-b border-slate-100 dark:border-slate-800 flex-row px-6">
-        {Tabs.map((tab) => {
-          const isActive = activeTab === tab.key;
-          const count =
-            tab.key === "draft" ? draftStamps.length : tab.key === "active" ? activeStamps.length : endedStamps.length;
-          return (
-            <TouchableOpacity
-              key={tab.key}
-              className="flex-1 py-3 items-center flex-row justify-center gap-1.5"
-              style={{ borderBottomWidth: 2, borderBottomColor: isActive ? "#FF6600" : "transparent" }}
-              onPress={() => setActiveTab(tab.key)}
-              activeOpacity={0.7}
-            >
-              <Text
-                className={
-                  isActive
-                    ? "text-xs font-poppins-bold text-primary"
-                    : "text-xs font-poppins-medium text-slate-400 dark:text-slate-500"
-                }
-              >
-                {tab.label}
-              </Text>
-              {count > 0 && (
-                <View
-                  className="rounded-full px-1.5 min-w-[18px] items-center bg-white"
+      {Platform.OS === "web" ? (
+        <View className="bg-white dark:bg-neutral-800 border-b border-slate-100 dark:border-slate-800 px-4 pt-4 items-center">
+          <View className="w-full max-w-4xl flex-row px-2">
+            {Tabs.map((tab) => {
+              const isActive = activeTab === tab.key;
+              const count =
+                tab.key === "draft" ? draftStamps.length : tab.key === "active" ? activeStamps.length : endedStamps.length;
+              return (
+                <TouchableOpacity
+                  key={tab.key}
+                  className="flex-1 py-3 items-center flex-row justify-center gap-1.5"
+                  style={{ borderBottomWidth: 2, borderBottomColor: isActive ? "#FF6600" : "transparent" }}
+                  onPress={() => setActiveTab(tab.key)}
+                  activeOpacity={0.7}
                 >
                   <Text
-                    className={`text-[9px] font-poppins-bold ${isActive ? "text-primary" : "text-neutral-500 dark:text-neutral-400"}`}
+                    className={
+                      isActive
+                        ? "text-xs font-poppins-bold text-primary"
+                        : "text-xs font-poppins-medium text-slate-400 dark:text-slate-500"
+                    }
                   >
-                    {count}
+                    {tab.label}
                   </Text>
-                </View>
-              )}
-            </TouchableOpacity>
-          );
-        })}
-      </View>
+                  {count > 0 && (
+                    <View className="rounded-full px-1.5 min-w-[18px] items-center bg-white">
+                      <Text
+                        className={`text-[9px] font-poppins-bold ${
+                          isActive ? "text-primary" : "text-neutral-500 dark:text-neutral-400"
+                        }`}
+                      >
+                        {count}
+                      </Text>
+                    </View>
+                  )}
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </View>
+      ) : (
+        <View className="bg-white dark:bg-neutral-800 border-b border-slate-100 dark:border-slate-800 flex-row px-6">
+          {Tabs.map((tab) => {
+            const isActive = activeTab === tab.key;
+            const count =
+              tab.key === "draft" ? draftStamps.length : tab.key === "active" ? activeStamps.length : endedStamps.length;
+            return (
+              <TouchableOpacity
+                key={tab.key}
+                className="flex-1 py-3 items-center flex-row justify-center gap-1.5"
+                style={{ borderBottomWidth: 2, borderBottomColor: isActive ? "#FF6600" : "transparent" }}
+                onPress={() => setActiveTab(tab.key)}
+                activeOpacity={0.7}
+              >
+                <Text
+                  className={
+                    isActive
+                      ? "text-xs font-poppins-bold text-primary"
+                      : "text-xs font-poppins-medium text-slate-400 dark:text-slate-500"
+                  }
+                >
+                  {tab.label}
+                </Text>
+                {count > 0 && (
+                  <View className="rounded-full px-1.5 min-w-[18px] items-center bg-white">
+                    <Text
+                      className={`text-[9px] font-poppins-bold ${
+                        isActive ? "text-primary" : "text-neutral-500 dark:text-neutral-400"
+                      }`}
+                    >
+                      {count}
+                    </Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      )}
 
       {loading ? (
         <View className="flex-1 items-center justify-center">
@@ -231,7 +277,14 @@ export default function ViewStamp() {
           </View>
         </View>
       ) : (
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 16, gap: 12 }}>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{
+            padding: 16,
+            gap: 12,
+            ...(Platform.OS === "web" ? { width: "100%", maxWidth: WEB_MAX_WIDTH, alignSelf: "center" } : null),
+          }}
+        >
           {tabStamps.map((stamp) => {
             const reward = rewards.find((r) => r.id === stamp.reward_id) ?? null;
             const pid = stamp.id!;

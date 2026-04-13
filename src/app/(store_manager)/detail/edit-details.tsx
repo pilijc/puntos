@@ -24,8 +24,12 @@ import { useDetailStore, useDetailViewStore } from "@/store/store-manager/detail
 import { store_types_options, aspect_ratios, type PickImageType } from "@/type/store-manager/store";
 import { dateToTimeString, timeStringToDate } from "@/utils/date-helpers";
 import { shouldUseInteractiveMapbox } from "@/utils/mapbox-platform";
+import { AppHeader } from "@/components/header";
+import { WebMapboxPicker } from "@/components/map/web-mapbox-picker";
 
 Mapbox.setAccessToken(process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN!);
+
+const WEB_MAX_WIDTH = 896;
 
 export default function EditDetails() {
   const router = useRouter();
@@ -59,6 +63,7 @@ export default function EditDetails() {
   const [isSaving, setIsSaving] = useState(false);
   const [modal, setModal] = useState<{ title: string; message: string; buttons: ModalButton[] } | null>(null);
   const [loadingInitial, setLoadingInitial] = useState(!detail);
+  const isWeb = Platform.OS === "web";
 
   useEffect(() => {
     let cancelled = false;
@@ -143,9 +148,22 @@ export default function EditDetails() {
 
   const handleGetCurrentLocation = async () => {
     const { status } = await Location.requestForegroundPermissionsAsync();
-    if (status !== "granted") { showError("Location permission is required."); return; }
-    const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced }).catch(() => null);
-    if (!loc) { showError("Could not get location."); return; }
+    if (status !== "granted") {
+      showError("Location permission is required.");
+      return;
+    }
+
+    const loc =
+      (await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Balanced,
+      }).catch(() => null)) ??
+      (await Location.getLastKnownPositionAsync({}).catch(() => null));
+
+    if (!loc) {
+      showError("Could not get location. Please try again.");
+      return;
+    }
+
     setLatitude(String(loc.coords.latitude));
     setLongitude(String(loc.coords.longitude));
   };
@@ -200,7 +218,16 @@ export default function EditDetails() {
       setModal({
         title: "Saved",
         message: "Store details updated successfully.",
-        buttons: [{ label: "Done", onPress: () => { setModal(null); router.back(); }, variant: "primary" }],
+        buttons: [
+          {
+            label: "Done",
+            onPress: () => {
+              setModal(null);
+              router.push({ pathname: "/(store_manager)/detail", params: { storeId } });
+            },
+            variant: "primary",
+          },
+        ],
       });
     } catch (err: any) {
       showError(err?.message ?? "Failed to save. Please try again.");
@@ -228,36 +255,29 @@ export default function EditDetails() {
         buttons={modal?.buttons}
       />
 
-      <View
-        className="bg-background dark:bg-neutral-800 border-b border-neutral-100 dark:border-neutral-700"
-        style={{ paddingTop: insets.top + 8, paddingBottom: 12 }}
-      >
-        <View className="flex-row items-center px-2">
-          <TouchableOpacity
-            onPress={() => router.back()}
-            className="w-10 h-10 rounded-full items-center justify-center"
-            activeOpacity={0.7}
-          >
-            <MaterialIcons name="chevron-left" size={22} color={isDark ? "#F1F5F9" : "#0F172A"} />
-          </TouchableOpacity>
-          <View className="flex-1 items-center justify-center -ml-10">
-            <Text className="text-md font-poppins-bold text-textPrimary dark:text-textPrimary">
-              Edit Details
-            </Text>
-            <Text className="text-xs font-poppins text-textMuted dark:text-textMuted -mt-1">
-              Store, business & location
-            </Text>
-          </View>
-        </View>
-      </View>
+      <AppHeader
+        title="Edit Details"
+        description="Store, business & location"
+        onBackPress={() => {
+          router.push({ pathname: "/(store_manager)/detail", params: { storeId } });
+        }}
+      />
 
       <ScrollView
         className="flex-1"
         showsVerticalScrollIndicator={false}
         scrollEnabled={scrollEnabled}
-        contentContainerStyle={{ padding: 16, paddingBottom: 40, gap: 20 }}
+        contentContainerStyle={{
+          padding: 16,
+          paddingBottom: 40,
+          gap: 20,
+          ...(isWeb ? { width: "100%", alignItems: "center" } : null),
+        }}
       >
-        <View className="bg-white dark:bg-neutral-800 rounded-2xl border border-slate-100 dark:border-neutral-700 p-4 gap-y-4">
+        <View
+          className="bg-white dark:bg-neutral-800 rounded-2xl border border-slate-100 dark:border-neutral-700 p-4 gap-y-4"
+          style={isWeb ? { width: "100%", maxWidth: WEB_MAX_WIDTH } : undefined}
+        >
           <View className="gap-y-4">
             <TextField
               label="Store Name"
@@ -301,28 +321,48 @@ export default function EditDetails() {
             <View className="flex-row gap-x-3">
               <View className="flex-1">
                 <Text className="text-sm font-poppins-semibold text-textSecondary dark:text-textSecondary mb-1.5">Opening Time</Text>
-                <TouchableOpacity
-                  onPress={() => setShowOpenPicker(true)}
-                  activeOpacity={0.8}
-                  className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 justify-center h-[45px]"
-                >
-                  <Text className="font-poppins text-slate-900 dark:text-slate-100">{storeOpen || "09:00"}</Text>
-                </TouchableOpacity>
+                {isWeb ? (
+                  <TextField
+                    label=""
+                    placeholder="09:00"
+                    value={storeOpen ?? ""}
+                    onChangeText={setStoreOpen}
+                    sanitize={(v) => v}
+                  />
+                ) : (
+                  <TouchableOpacity
+                    onPress={() => setShowOpenPicker(true)}
+                    activeOpacity={0.8}
+                    className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 justify-center h-[45px]"
+                  >
+                    <Text className="font-poppins text-slate-900 dark:text-slate-100">{storeOpen || "09:00"}</Text>
+                  </TouchableOpacity>
+                )}
               </View>
 
               <View className="flex-1">
                 <Text className="text-sm font-poppins-semibold text-textSecondary dark:text-textSecondary mb-1.5">Closing Time</Text>
-                <TouchableOpacity
-                  onPress={() => setShowClosePicker(true)}
-                  activeOpacity={0.8}
-                  className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 justify-center h-[45px]"
-                >
-                  <Text className="font-poppins text-slate-900 dark:text-slate-100">{storeClose || "21:00"}</Text>
-                </TouchableOpacity>
+                {isWeb ? (
+                  <TextField
+                    label=""
+                    placeholder="21:00"
+                    value={storeClose ?? ""}
+                    onChangeText={setStoreClose}
+                    sanitize={(v) => v}
+                  />
+                ) : (
+                  <TouchableOpacity
+                    onPress={() => setShowClosePicker(true)}
+                    activeOpacity={0.8}
+                    className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 justify-center h-[45px]"
+                  >
+                    <Text className="font-poppins text-slate-900 dark:text-slate-100">{storeClose || "21:00"}</Text>
+                  </TouchableOpacity>
+                )}
               </View>
             </View>
 
-            {showOpenPicker && (
+            {!isWeb && showOpenPicker && (
               Platform.OS === "android" ? (
                 <DateTimePicker
                   value={timeStringToDate(storeOpen || "09:00", 9, 0)}
@@ -341,7 +381,7 @@ export default function EditDetails() {
               )
             )}
 
-            {showClosePicker && (
+            {!isWeb && showClosePicker && (
               Platform.OS === "android" ? (
                 <DateTimePicker
                   value={timeStringToDate(storeClose || "21:00", 21, 0)}
@@ -491,18 +531,31 @@ export default function EditDetails() {
             <Text className="text-sm font-poppins-semibold text-textSecondary dark:text-textSecondary">
               Location
             </Text>
-            <TouchableOpacity
-              onPress={handleGetCurrentLocation}
-              className="flex-row items-center gap-x-1"
-              activeOpacity={0.8}
-            >
-              <MaterialIcons name="my-location" size={14} color="#FF6600" />
-              <Text className="text-xs font-poppins-semibold text-textPrimary dark:text-textPrimary">Use Current</Text>
-            </TouchableOpacity>
+            {!isWeb && (
+              <TouchableOpacity
+                onPress={handleGetCurrentLocation}
+                className="flex-row items-center gap-x-1"
+                activeOpacity={0.8}
+              >
+                <MaterialIcons name="my-location" size={14} color="#FF6600" />
+                <Text className="text-xs font-poppins-semibold text-textPrimary dark:text-textPrimary">Use Current</Text>
+              </TouchableOpacity>
+            )}
           </View>
 
           <View className="rounded-xl overflow-hidden border border-slate-200 dark:border-neutral-700" style={{ height: 280 }}>
-            {shouldUseInteractiveMapbox() ? (
+            {isWeb ? (
+              <WebMapboxPicker
+                latitude={Number.isFinite(parsedLat) ? parsedLat : null}
+                longitude={Number.isFinite(parsedLng) ? parsedLng : null}
+                isDark={isDark}
+                height={280}
+                onChange={({ latitude: lat, longitude: lng }) => {
+                  setLatitude(String(lat));
+                  setLongitude(String(lng));
+                }}
+              />
+            ) : shouldUseInteractiveMapbox() ? (
               <>
                 <MapView
                   style={{ height: 280, width: "100%" }}
@@ -544,7 +597,7 @@ export default function EditDetails() {
               <View className="flex-1 h-full bg-slate-50 dark:bg-neutral-800 items-center justify-center gap-y-1 px-4">
                 <MaterialIcons name="map" size={28} color={isDark ? "#525252" : "#CBD5E1"} />
                 <Text className="text-xs font-poppins text-center text-slate-400 dark:text-slate-500">
-                  Map only available on Android & Web — use “Use Current” or enter coordinates below.
+                  Map only available on Android & Web — use “Use Current” or enter address below.
                 </Text>
               </View>
             )}
@@ -564,16 +617,27 @@ export default function EditDetails() {
               <Text className="text-sm font-poppins-semibold text-textSecondary dark:text-textSecondary mb-1.5">Store Radius</Text>
               <Text className="text-sm font-poppins-bold text-primary">{radius}m</Text>
             </View>
-            <Slider
-              minimumValue={50}
-              maximumValue={500}
-              step={1}
-              value={radius}
-              onValueChange={(v) => setRadius(Math.round(v))}
-              minimumTrackTintColor="#FF6600"
-              maximumTrackTintColor={isDark ? "#334155" : "#E2E8F0"}
-              thumbTintColor="#FF6600"
-            />
+            {isWeb ? (
+              <TextField
+                label=""
+                placeholder="50"
+                keyboardType="numeric"
+                value={radius ? String(radius) : ""}
+                onChangeText={(v) => setRadius(Math.max(50, Math.min(500, parseInt(v, 10) || 50)))}
+                sanitize={(v) => v}
+              />
+            ) : (
+              <Slider
+                minimumValue={50}
+                maximumValue={500}
+                step={1}
+                value={radius}
+                onValueChange={(v) => setRadius(Math.round(v))}
+                minimumTrackTintColor="#FF6600"
+                maximumTrackTintColor={isDark ? "#334155" : "#E2E8F0"}
+                thumbTintColor="#FF6600"
+              />
+            )}
             <View className="flex-row justify-between">
               <Text className="text-xs font-poppins text-slate-400">50m</Text>
               <Text className="text-xs font-poppins text-slate-400">500m</Text>
@@ -592,7 +656,9 @@ export default function EditDetails() {
             />
             <Button
               label="Cancel"
-              onPress={() => router.back()}
+              onPress={() => {
+                router.push({ pathname: "/(store_manager)/detail", params: { storeId } });
+              }}
               variant="secondary"
               fullWidth
               disabled={isSaving}

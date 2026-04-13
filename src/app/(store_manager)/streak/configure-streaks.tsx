@@ -281,7 +281,9 @@ export default function ConfigureStreaks() {
         <AppHeader
           title={isEditMode ? "Edit Streak Program" : "New Streak Program"}
           paddingTop={insets.top + 8}
-          onBackPress={() => router.push({ pathname: "/(store_manager)/streak", params: { storeId } })}
+          onBackPress={() => {
+            router.push({ pathname: "/(store_manager)/streak", params: { storeId } });
+          }}
         />
         <ScrollView
           style={{ flex: 1 }}
@@ -519,7 +521,9 @@ export default function ConfigureStreaks() {
             />
             <Button
               label="Cancel"
-              onPress={() => router.push({ pathname: "/(store_manager)/view-store/[id]", params: { id: storeId } })}
+              onPress={() => {
+                router.push({ pathname: "/(store_manager)/streak", params: { storeId } });
+              }}
               disabled={isSubmitting}
               fullWidth={true}
               variant="secondary"

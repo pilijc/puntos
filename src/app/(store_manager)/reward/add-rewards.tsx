@@ -18,6 +18,8 @@ import { Modal, type ModalButton } from "@/components/modal";
 import { AppHeader } from "@/components/header";
 import { TextField } from "@/components/text-field";
 
+const WEB_MAX_WIDTH = 896;
+
 export default function Rewards() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -202,18 +204,25 @@ export default function Rewards() {
 			/>
       <AppHeader
         title={isEditMode ? "Edit Reward" : "Create New Reward"}
-        paddingTop={insets.top + 8}
-        onBackPress={() => router.push({ pathname: "/(store_manager)/reward", params: { storeId } })}
-        className="bg-background dark:bg-[#111921]"
+        onBackPress={() => {
+          router.push({ pathname: "/(store_manager)/reward", params: { storeId } });
+        }}
       />
 
       <ScrollView
         style={{ flex: 1 }}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
-        contentContainerStyle={{ padding: 16, paddingBottom: 120 }}
+        contentContainerStyle={{
+          padding: 16,
+          paddingBottom: 120,
+          ...(Platform.OS === "web" ? { width: "100%", alignItems: "center" } : null),
+        }}
       >
-        <View className="bg-white dark:bg-neutral-800 rounded-xl p-4 gap-y-4">
+        <View
+          className="bg-white dark:bg-neutral-800 rounded-xl p-4 gap-y-4"
+          style={Platform.OS === "web" ? { width: "100%", maxWidth: WEB_MAX_WIDTH } : undefined}
+        >
           <View>
             <Text className="text-md font-poppins-semibold text-slate-900 dark:text-white">
               Reward Details
