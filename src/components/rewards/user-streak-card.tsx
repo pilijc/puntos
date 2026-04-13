@@ -29,11 +29,9 @@ export default function UserStreakCard({
   const [showStreakModal, setShowStreakModal] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [hasEarnedToday, setHasEarnedToday] = useState(false);
-<<<<<<< Updated upstream
   // Per-day earned dates from DB — avoids the streak_days window bug where
   // non-consecutive earns (e.g. Wed ✓, Thu missed, Fri ✓) appear as "missed".
   const [earnedWeekDates, setEarnedWeekDates] = useState<Set<string>>(new Set());
-=======
   const [modalConfig, setModalConfig] = useState<{
     visible: boolean;
     title: string;
@@ -47,7 +45,6 @@ export default function UserStreakCard({
   const closeModal = () => setModalConfig((c) => ({ ...c, visible: false }));
   const showModal = (title: string, message: string, buttons?: ModalButton[]) =>
     setModalConfig({ visible: true, title, message, buttons });
->>>>>>> Stashed changes
   const storeStr = streak.stores as any;
   const storeName = storeStr?.name ?? translate("user.rewards.store");
   const storeAddress = storeStr?.address ?? translate("user.rewards.unknownLocation");
