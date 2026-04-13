@@ -14,8 +14,13 @@ PointsResult {
         const percentage = config.percentage || 10;
         const baseAmount = config.baseAmount || 100;
 
-        calculatedPoints = (purchaseAmount / baseAmount) * percentage;
-        calculation = `${purchaseAmount} / ${baseAmount} × ${percentage}% = ${calculatedPoints.toFixed(2)}`;
+        if(purchaseAmount >= baseAmount){
+            calculatedPoints = (purchaseAmount * percentage) / 100;
+            calculation = `${purchaseAmount} × ${percentage}% = ${calculatedPoints.toFixed(2)}`;
+        }else{
+            calculatedPoints = 0;
+            calculation = `${purchaseAmount} < ${baseAmount} → No points (minimum not met)`;
+        }
     }
     else {
         const fixedPoints = config.fixedPoints || 0;
@@ -25,8 +30,8 @@ PointsResult {
             calculatedPoints = fixedPoints;
             calculation = purchaseAmount + " ≥ " + minimumSpend + " → Fixed Points: " + fixedPoints;
         }else{
-            calculatedPoints = fixedPoints / 2;
-            calculation = purchaseAmount + " < " + minimumSpend + " → Half of Fixed Points";
+            calculatedPoints = fixedPoints / 0;
+            calculation = purchaseAmount + " < " + minimumSpend + " → No Points";
         }
     }
 

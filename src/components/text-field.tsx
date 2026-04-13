@@ -15,6 +15,7 @@ interface TextFieldProps {
   sanitize?: (value: string) => string;
   rightAccessory?: React.ReactNode;
   secureTextEntry?: boolean;
+  editable?: boolean;
 }
 
 export function TextField({
@@ -30,6 +31,7 @@ export function TextField({
   sanitize = (v) => v.replace(/-/g, ""),
   rightAccessory,
   secureTextEntry = false,
+  editable = true,
 }: TextFieldProps) {
   const hasRight = !!rightAccessory;
 
@@ -65,6 +67,7 @@ export function TextField({
           value={value}
           onChangeText={(v) => onChangeText(sanitize(v))}
           secureTextEntry={secureTextEntry}
+          editable={editable}
         />
         {hasRight ? (
           <View
