@@ -61,10 +61,19 @@ export const useSuperAdminStoresStore = create<SuperAdminStoresState>((set, get)
             ).length;
 
             if (activeOwnerStores >= SUB_CONFIG.FREE_STORES_LIMIT) {
-                // TODO: Backend / Stripe Integration
-                // Here is where you would call your Edge Function to charge the customer
-                // e.g. await supabase.functions.invoke('charge-subscription', { body: { owner_id: store.owner_id }})
-                console.log(`[Subscription Worker] Charging Store Manager for Store # ${activeOwnerStores + 1}. Over ${SUB_CONFIG.FREE_STORES_LIMIT} limit.`);
+                // Block activation and require payment first
+                set({ 
+                    errorModal: {
+                        title: "Subscription Required",
+                        message: `This Store Manager has ${activeOwnerStores} active stores. The free limit is ${SUB_CONFIG.FREE_STORES_LIMIT}.\n\nAn invoice must be paid by the manager before this store can be activated.`,
+                        type: "error"
+                    }
+                });
+                
+                // TODO: Call Edge Function to send an invoice/payment link to the store manager.
+                // e.g. await supabase.functions.invoke('create-invoice', { body: { store_id: store.id } })
+                console.log("[Subscription] Blocked activation. Payment required first.");
+                return false;
             }
 
             const updatedStore = await updateAdminStoreStatus(store.id, "active", true);

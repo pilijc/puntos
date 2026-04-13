@@ -13,6 +13,7 @@ import { AdminStoreRow } from "@/services/store-service";
 import { ImageViewerModal } from "@/components/ui/image-viewer-modal";
 import { getStoreCategoryBadge } from "@/type/super-admin/user";
 import { shouldUseInteractiveMapbox } from "@/utils/mapbox-platform";
+import { SUB_CONFIG } from "@/app/(super_admin)/subscription-config";
 
 
 Mapbox.setAccessToken(process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN!);
@@ -53,11 +54,13 @@ const ReadOnlyField = ({ label, value }: { label: string; value?: string | null 
 
 export function AdminStoreDetails({
   store,
+  ownerActiveStoresCount = 0,
   onBack,
   onApprove,
   onReject,
 }: {
   store: AdminStoreRow;
+  ownerActiveStoresCount?: number;
   onBack: () => void;
   onApprove: (store: AdminStoreRow) => void;
   onReject: (store: AdminStoreRow) => void;
@@ -180,9 +183,19 @@ export function AdminStoreDetails({
               </View>
             </View>
 
-            <Text className="text-xs font-poppins-medium text-slate-500 mb-1.5">
+            <Text className="text-xs font-poppins-medium text-slate-500 mb-2">
               {store.owner_name ? `By: ${store.owner_name}` : "By: Not specified"}
             </Text>
+
+            {/* SUBSCRIPTION INDICATOR */}
+            {(ownerActiveStoresCount + (statusKey === 'active' ? 1 : 0)) > SUB_CONFIG.FREE_STORES_LIMIT && (
+               <View className="flex-row items-center gap-1.5 self-start px-2.5 py-1 rounded-full bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 mb-3">
+                 <MaterialIcons name="local-fire-department" size={12} color="#2563EB" />
+                 <Text className="text-[10px] font-poppins-bold tracking-wider text-blue-700 dark:text-blue-400 uppercase">
+                    Premium Subscription Active
+                 </Text>
+               </View>
+            )}
 
             <View className={`self-start px-2 py-0.5 rounded-full ${getStoreCategoryBadge(store.type).bg} mb-1.5 flex-row items-center justify-center`}>
               <Text

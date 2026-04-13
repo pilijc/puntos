@@ -43,10 +43,15 @@ export default function SuperAdminStores() {
 		FILTER_LABELS,
 	} = useSuperAdminStores();
 
+	const selectedOwnerActiveStoresCount = selectedStore 
+		? stores.filter(s => s.owner_id === selectedStore.owner_id && s.id !== selectedStore.id && (s.status === "active" || s.is_active)).length 
+		: 0;
+
 	if (selectedStore) {
 		return (
 			<AdminStoreDetails 
 				store={selectedStore} 
+				ownerActiveStoresCount={selectedOwnerActiveStoresCount}
 				onBack={() => setSelectedStore(null)} 
 				onApprove={(store) => {
 					handleApprove(store);
