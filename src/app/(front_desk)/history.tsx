@@ -83,7 +83,7 @@ const SectionHeader = React.memo(function SectionHeader({ label }: { label: stri
 // ---------------------------------------------------------------------------
 
 export default function FrontDeskHistory() {
-    const { staffTransactions, isLoading, fetchStaffTransactions } = useStaffHistory();
+    const { staffTransactions, isLoading, isLoadingMore, hasMore, fetchStaffTransactions, loadMoreTransactions } = useStaffHistory();
     const isDark = useColorScheme() === "dark";
     const { t: translate } = useTranslation();
     const insets = useSafeAreaInsets();
@@ -241,6 +241,20 @@ export default function FrontDeskHistory() {
                     data={listItems}
                     keyExtractor={keyExtractor}
                     renderItem={renderItem}
+                    onEndReached={() => {
+                        if (staffId && storeId && hasMore && !isLoadingMore) {
+                            loadMoreTransactions(staffId, storeId);
+                        }
+                    }}
+                    onEndReachedThreshold={0.5}
+                    ListFooterComponent={isLoadingMore ? (
+                        <View style={{ paddingVertical: 20, alignItems: 'center' }}>
+                            <ActivityIndicator size="small" color={isDark ? "#FF6600" : "#FF6600"} />
+                            <Text className="text-xs font-poppins text-textMuted dark:text-darkTextMuted mt-2">
+                                Loading more...
+                            </Text>
+                        </View>
+                    ) : null}
                     contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, 20) }}
                     showsVerticalScrollIndicator={false}
                     removeClippedSubviews

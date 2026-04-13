@@ -49,11 +49,6 @@ export default function RecentTransactions({ recentScans }: RecentTransactionsPr
             className="bg-white dark:bg-darkBackgroundCard rounded-2xl border border-neutral-100 dark:border-darkBorder mb-3 overflow-hidden"
           >
             <View className="flex-row items-center px-4 py-4">
-              {/* Left accent bar */}
-              <View className="w-1 h-10 bg-emerald-400 rounded-full mr-4" />
-              <View className="w-10 h-10 bg-emerald-50 dark:bg-emerald-500/10 rounded-xl items-center justify-center mr-3">
-                <MaterialIcons name="check" size={18} color="#10B981" />
-              </View>
               <View className="flex-1">
                 <Text className="text-sm font-poppins-semibold text-neutral-800 dark:text-darkTextPrimary">
                   ₱{scan.amount.toFixed(2)} {translate("frontdesk.transaction.recent.purchase")}

@@ -11,8 +11,20 @@ export interface StaffTransaction {
   customer_id?: string;
 }
 
-export async function getStaffTransactions(staffId: string, storeId: number): Promise<StaffTransaction[]> {
-  console.log("Fetching staff transactions for staffId:", staffId, "storeId:", storeId);
+export interface PaginationOptions {
+  limit: number;
+  offset: number;
+}
+
+export async function getStaffTransactions(
+  staffId: string, 
+  storeId: number, 
+  pagination?: PaginationOptions
+): Promise<{ transactions: StaffTransaction[]; hasMore: boolean }> {
+  const limit = pagination?.limit || 20;
+  const offset = pagination?.offset || 0;
+  
+  console.log("Fetching staff transactions for staffId:", staffId, "storeId:", storeId, "limit:", limit, "offset:", offset);
   try {
     // Get start of today in local timezone
     const startOfToday = new Date();
@@ -47,7 +59,7 @@ export async function getStaffTransactions(staffId: string, storeId: number): Pr
 
     if (purchasesError) {
       console.error("Error fetching staff purchases:", purchasesError);
-      return [];
+      return { transactions: [], hasMore: false };
     }
     
     console.log("Purchases data:", purchases);
@@ -113,7 +125,7 @@ export async function getStaffTransactions(staffId: string, storeId: number): Pr
 
     if (redemptionsError) {
       console.error("Error fetching staff redemptions:", redemptionsError);
-      return [];
+      return { transactions: [], hasMore: false };
     }
     
     console.log("Redemptions data:", redemptions);
@@ -172,9 +184,14 @@ export async function getStaffTransactions(staffId: string, storeId: number): Pr
     );
 
     console.log("Final formatted transactions:", allTransactions);
-    return allTransactions;
+    
+    // Apply pagination - slice the array based on offset and limit
+    const paginatedTransactions = allTransactions.slice(offset, offset + limit);
+    const hasMore = allTransactions.length > offset + limit;
+    
+    return { transactions: paginatedTransactions, hasMore };
   } catch (error) {
     console.error("Exception fetching staff transactions:", error);
-    return [];
+    return { transactions: [], hasMore: false };
   }
 }

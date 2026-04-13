@@ -4,6 +4,7 @@ import { useColorScheme } from "react-native";
 import { ScrollView, View, Text } from "@/tw";
 import { Animated} from "react-native";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { Lock } from "lucide-react-native";
 import { useCameraPermissions } from "expo-camera";
 import { processFrontDeskScan, getCurrentUserStore } from "@/services/frontdesk/scan-service";
 import { getCurrentStaffId } from "@/services/frontdesk/voucher-service";
@@ -202,33 +203,38 @@ export default function FrontDeskScan() {
           { useNativeDriver: false }
         )}
         scrollEventThrottle={16}
+        contentContainerStyle={{ flexGrow: 1 }}
       >
         {qrAccessEnabled === null ? (
           // Loading state
-          <View className="mx-4 mt-4 bg-white dark:bg-darkBackgroundCard rounded-2xl border border-neutral-100 dark:border-darkBorder overflow-hidden shadow-sm p-8 items-center justify-center">
-            <View className="w-12 h-12 bg-gray-100 dark:bg-gray-800 rounded-full items-center justify-center mb-3">
-              <MaterialIcons name="hourglass-empty" size={24} color="#9CA3AF" />
+          <View className="flex-1 items-center justify-center px-4">
+            <View className="bg-white dark:bg-darkBackgroundCard rounded-2xl border border-neutral-100 dark:border-darkBorder shadow-sm p-8 items-center">
+              <View className="w-12 h-12 bg-gray-100 dark:bg-gray-800 rounded-full items-center justify-center mb-3">
+                <MaterialIcons name="hourglass-empty" size={24} color="#9CA3AF" />
+              </View>
+              <Text className="text-sm font-poppins-medium text-gray-500 dark:text-gray-400">
+                Checking QR access...
+              </Text>
             </View>
-            <Text className="text-sm font-poppins-medium text-gray-500 dark:text-gray-400">
-              Checking QR access...
-            </Text>
           </View>
         ) : !qrAccessEnabled ? (
-          // QR Disabled state - clean message only
-          <View className="mx-4 mt-4 bg-white dark:bg-darkBackgroundCard rounded-2xl border border-neutral-100 dark:border-darkBorder overflow-hidden shadow-sm p-8">
-            <View className="items-center">
-              <View className="w-16 h-16 bg-amber-50 dark:bg-amber-900/20 rounded-full items-center justify-center mb-4">
-                <MaterialIcons name="lock" size={32} color="#F59E0B" />
+          // QR Disabled state - clean message only, centered
+          <View className="flex-1 items-center justify-center px-4">
+            <View className="bg-white dark:bg-darkBackgroundCard rounded-2xl border border-neutral-100 dark:border-darkBorder shadow-sm p-8">
+              <View className="items-center">
+                <View className="w-16 h-16 bg-amber-50 dark:bg-amber-900/20 rounded-full items-center justify-center mb-4">
+                  <Lock size={32} color="#F59E0B" />
+                </View>
+                <Text className="text-lg font-poppins-bold text-gray-900 dark:text-gray-100 mb-2">
+                  QR Access Disabled
+                </Text>
+                <Text className="text-sm font-poppins text-gray-500 dark:text-gray-400 text-center mb-4">
+                  Only the store manager can enable QR scanning.
+                </Text>
+                <Text className="text-xs font-poppins text-gray-400 dark:text-gray-500 text-center">
+                  Please wait for the store manager to enable this feature.
+                </Text>
               </View>
-              <Text className="text-lg font-poppins-bold text-gray-900 dark:text-gray-100 mb-2">
-                QR Access Disabled
-              </Text>
-              <Text className="text-sm font-poppins text-gray-500 dark:text-gray-400 text-center mb-4">
-                Only the store manager can enable QR scanning.
-              </Text>
-              <Text className="text-xs font-poppins text-gray-400 dark:text-gray-500 text-center">
-                Please wait for the store manager to enable this feature.
-              </Text>
             </View>
           </View>
         ) : (
