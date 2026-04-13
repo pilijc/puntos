@@ -9,6 +9,8 @@ interface CreateStoreState {
     address: string;
     latitude: string;
     longitude: string;
+    /** IANA timezone identifier, e.g. "Asia/Manila". Auto-filled from PostGIS or typed manually. */
+    timezone: string;
     phone: string;
     registrationNumber: string;
     businessDocumentImage: string | null;
@@ -24,6 +26,7 @@ interface CreateStoreState {
     setAddress: (val: string) => void;
     setLatitude: (val: string) => void;
     setLongitude: (val: string) => void;
+    setTimezone: (val: string) => void;
     setPhone: (val: string) => void;
     setRegistrationNumber: (val: string) => void;
     setBusinessDocumentImage: (val: string | null) => void;
@@ -42,6 +45,7 @@ export const useCreateStoreStore = create<CreateStoreState>((set) => ({
     address: "",
     latitude: "",
     longitude: "",
+    timezone: "",
     phone: "",
     registrationNumber: "",
     businessDocumentImage: null,
@@ -57,6 +61,7 @@ export const useCreateStoreStore = create<CreateStoreState>((set) => ({
     setAddress: (address) => set({ address }),
     setLatitude: (latitude) => set({ latitude }),
     setLongitude: (longitude) => set({ longitude }),
+    setTimezone: (timezone) => set({ timezone }),
     setPhone: (phone) => set({ phone }),
     setRegistrationNumber: (registrationNumber) => set({ registrationNumber }),
     setBusinessDocumentImage: (businessDocumentImage) => set({ businessDocumentImage }),
@@ -72,6 +77,7 @@ export const useCreateStoreStore = create<CreateStoreState>((set) => ({
         address: "",
         latitude: "",
         longitude: "",
+        timezone: "",
         phone: "",
         registrationNumber: "",
         businessDocumentImage: null,

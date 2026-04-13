@@ -5,10 +5,11 @@ import Animated, { Layout, useAnimatedStyle, useSharedValue, withSpring, withTim
 import LottieView from "lottie-react-native";
 import { storeLogos } from "@/data/rewards";
 import { useTranslation } from "react-i18next";
-import { Alert, ActivityIndicator, Modal, Pressable, StyleSheet, View as RNView } from "react-native";
+import { ActivityIndicator, Modal as RNModal, Pressable, StyleSheet, View as RNView } from "react-native";
 import { useRouter } from "expo-router";
 import { recordUserStreak, getStreakEarnedDates } from "@/services/streak-service";
 import { supabase } from "@/supabase/supabase";
+import { Modal, type ModalButton } from "@/components/modal";
 
 interface UserStreakCardProps {
   streak: any;
@@ -28,9 +29,25 @@ export default function UserStreakCard({
   const [showStreakModal, setShowStreakModal] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [hasEarnedToday, setHasEarnedToday] = useState(false);
+<<<<<<< Updated upstream
   // Per-day earned dates from DB — avoids the streak_days window bug where
   // non-consecutive earns (e.g. Wed ✓, Thu missed, Fri ✓) appear as "missed".
   const [earnedWeekDates, setEarnedWeekDates] = useState<Set<string>>(new Set());
+=======
+  const [modalConfig, setModalConfig] = useState<{
+    visible: boolean;
+    title: string;
+    message: string;
+    buttons?: ModalButton[];
+  }>({
+    visible: false,
+    title: "",
+    message: "",
+  });
+  const closeModal = () => setModalConfig((c) => ({ ...c, visible: false }));
+  const showModal = (title: string, message: string, buttons?: ModalButton[]) =>
+    setModalConfig({ visible: true, title, message, buttons });
+>>>>>>> Stashed changes
   const storeStr = streak.stores as any;
   const storeName = storeStr?.name ?? translate("user.rewards.store");
   const storeAddress = storeStr?.address ?? translate("user.rewards.unknownLocation");
@@ -46,7 +63,11 @@ export default function UserStreakCard({
   };
 
   // Derive if already earned today from last_activity_date
-  const today = formatLocalDate(new Date());
+  // NOTE: This is DISPLAY-ONLY optimistic state. The authoritative "already earned"
+  // check lives in the record_user_streak RPC (DB time, store timezone). Device
+  // date is not trusted for eligibility. If the RPC returns alreadyRecorded: true,
+  // we set hasEarnedToday=true so the UI reflects it immediately.
+  const today = formatLocalDate(new Date()); // used only for calendar display
   const alreadyEarnedToday = streak.last_activity_date === today || hasEarnedToday;
   const shouldPulseCurrentDay = nearby && !alreadyEarnedToday;
 
@@ -381,17 +402,33 @@ export default function UserStreakCard({
                       pressScale.value = withSpring(1, { damping: 14, stiffness: 220 });
                     }}
                     onPress={async () => {
-                      if (alreadyEarnedToday) {
-                        Alert.alert("Already Earned!", "You've already earned your streak for today. Come back tomorrow!");
+                      // Phase 1: client-side nearby gate only.
+                      // Server-side location enforcement is deferred to Phase 2.
+                      if (!nearby) {
+                        showModal(
+                          "Not Nearby",
+                          "You need to be within range of this store to earn your streak.",
+                          [{ label: "OK", onPress: closeModal, variant: "primary" }],
+                        );
                         return;
                       }
-                      if (!nearby) {
-                        Alert.alert("Not Nearby", "You need to be within range of this store to earn your streak.");
+                      // If already earned today (optimistic state), show feedback.
+                      // The RPC will also block it server-side if the state is stale.
+                      if (alreadyEarnedToday) {
+                        showModal(
+                          "Already Earned!",
+                          "You've already earned your streak for today. Come back tomorrow!",
+                          [{ label: "OK", onPress: closeModal, variant: "primary" }],
+                        );
                         return;
                       }
                       const storeStreakId = streak.store_streak_id;
                       if (!storeStreakId) {
-                        Alert.alert("No Program", "This store's streak program isn't fully set up yet.");
+                        showModal(
+                          "No Program",
+                          "This store's streak program isn't fully set up yet.",
+                          [{ label: "OK", onPress: closeModal, variant: "primary" }],
+                        );
                         return;
                       }
                       try {
@@ -406,15 +443,24 @@ export default function UserStreakCard({
                           targetCount,
                         );
                         if (result.alreadyRecorded) {
-                          Alert.alert("Already Earned!", "You've already earned your streak for today. Come back tomorrow!");
+                          showModal(
+                            "Already Earned!",
+                            "You've already earned your streak for today. Come back tomorrow!",
+                            [{ label: "OK", onPress: closeModal, variant: "primary" }],
+                          );
                         } else if (result.justCompleted) {
                           setHasEarnedToday(true);
                           setShowStreakModal(true);
                           onStreakRecorded?.();
+<<<<<<< Updated upstream
                           fetchEarnedDates(); // sync per-day dots with real DB data
                           Alert.alert(
+=======
+                          showModal(
+>>>>>>> Stashed changes
                             "🎉 Streak Complete!",
                             `You've completed the full ${targetCount}-day streak! Your reward is on its way.`,
+                            [{ label: "Awesome!", onPress: closeModal, variant: "primary" }],
                           );
                         } else {
                           setHasEarnedToday(true);
@@ -424,7 +470,11 @@ export default function UserStreakCard({
                         }
                       } catch (e) {
                         console.error("Failed to record streak:", e);
-                        Alert.alert("Error", "Something went wrong. Please try again.");
+                        showModal(
+                          "Error",
+                          "Something went wrong. Please try again.",
+                          [{ label: "OK", onPress: closeModal, variant: "secondary" }],
+                        );
                       } finally {
                         setIsRecording(false);
                       }
@@ -506,6 +556,14 @@ export default function UserStreakCard({
       </View>
 
       <Modal
+        visible={modalConfig.visible}
+        onClose={closeModal}
+        title={modalConfig.title}
+        message={modalConfig.message}
+        buttons={modalConfig.buttons}
+      />
+
+      <RNModal
         visible={showStreakModal}
         transparent
         animationType="none"
@@ -529,7 +587,7 @@ export default function UserStreakCard({
             </Text>
           </RNView>
         </Animated.View>
-      </Modal>
+      </RNModal>
     </AnimatedView>
   );
 }
