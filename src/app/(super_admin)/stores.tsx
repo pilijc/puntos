@@ -41,22 +41,47 @@ export default function SuperAdminStores() {
 		filtered,
 		pendingCount,
 		FILTER_LABELS,
+		subscriptions,
 	} = useSuperAdminStores();
 
+	const selectedOwnerActiveStoresCount = selectedStore 
+		? stores.filter(s => s.owner_id === selectedStore.owner_id && s.id !== selectedStore.id && (s.status === "active" || s.is_active)).length 
+		: 0;
+
 	if (selectedStore) {
+		const sub = subscriptions.find(s => s.store_id === selectedStore.id);
 		return (
-			<AdminStoreDetails 
-				store={selectedStore} 
-				onBack={() => setSelectedStore(null)} 
-				onApprove={(store) => {
-					handleApprove(store);
-					setSelectedStore(null); 
-				}} 
-				onReject={(store) => {
-					handleReject(store);
-					setSelectedStore(null);
-				}} 
-			/>
+			<>
+				<AdminStoreDetails 
+					store={selectedStore} 
+					subscription={sub}
+					ownerActiveStoresCount={selectedOwnerActiveStoresCount}
+					onBack={() => setSelectedStore(null)} 
+					onApprove={(store) => { handleApprove(store); }} 
+					onReject={(store) => { handleReject(store); setSelectedStore(null); }} 
+				/>
+				<Modal
+					visible={!!errorModal}
+					onClose={dismissErrorModal}
+					title={errorModal?.title ?? (errorModal?.type === "success" ? "Success" : "Error")}
+					message={errorModal?.message ?? ""}
+					buttons={[{ label: translate("label.ok"), onPress: dismissErrorModal, variant: errorModal?.type === "success" ? "success" : "primary" }]}
+					showCloseButton={false}
+					dismissOnBackdrop
+				/>
+				<Modal
+					visible={!!confirmModal}
+					onClose={() => setConfirmModal(null)}
+					title={confirmModal?.title ?? ""}
+					message={confirmModal?.message ?? ""}
+					buttons={[
+						{ label: translate("label.cancel"), onPress: () => setConfirmModal(null), variant: "secondary" },
+						{ label: confirmModal?.label ?? translate("label.confirm"), onPress: confirmModal?.onConfirm ?? (() => {}), variant: confirmModal?.variant ?? "primary" },
+					]}
+					showCloseButton={false}
+					dismissOnBackdrop
+				/>
+			</>
 		);
 	}
 
@@ -67,7 +92,7 @@ export default function SuperAdminStores() {
 			<View className="bg-white border-b border-slate-100 dark:bg-darkBackgroundMuted dark:border-darkBorder px-6 py-4 flex-row items-center justify-start">
 				<View className="flex-row items-center gap-2 py-1">
 					<MaterialIcons name="storefront" size={22} color="black" className="mt-1" />
-					<Text className="text-2xl font-poppins-bold text-slate-900 dark:text-darkTextPrimary flex-1">
+					<Text className="text-1xl font-poppins-bold text-slate-900 dark:text-darkTextPrimary flex-1">
 						{translate("superAdmin.stores.title")}
 					</Text>
 				</View>
@@ -149,15 +174,22 @@ export default function SuperAdminStores() {
 					</>
 				)}
 
-				{!loading && filtered.map((store) => (
-					<AdminStoreCard
-						key={store.id}
-						store={store}
-						onApprove={handleApprove}
-						onReject={handleReject}
-						onSelect={(s) => setPreviewStore(s)}
-					/>
-				))}
+				{!loading && filtered.map((store) => {
+					const activeStoresCount = stores.filter(
+						s => s.owner_id === store.owner_id && s.id !== store.id && (s.status === "active" || s.is_active)
+					).length;
+
+					return (
+						<AdminStoreCard
+							key={store.id}
+							store={store}
+							ownerActiveStoresCount={activeStoresCount}
+							onApprove={handleApprove}
+							onReject={handleReject}
+							onSelect={(s) => setPreviewStore(s)}
+						/>
+					);
+				})}
 
 					{!loading && filtered.length === 0 && !error && (
 						<View className="items-center pt-16 gap-3">

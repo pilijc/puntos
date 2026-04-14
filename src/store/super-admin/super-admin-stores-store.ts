@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { AdminStoreRow } from "@/services/store-service";
 import { getAllStoresForAdmin, updateAdminStoreStatus } from "@/services/super-admin/store-admin-service";
+import { useSubscriptionConfigStore } from "@/store/super-admin/subscription-config";
 
 type AlertModal = { title: string; message: string; type?: "success" | "error" } | null;
 
@@ -13,7 +14,7 @@ interface SuperAdminStoresState {
     isFetching: boolean;
 
     fetchStores: (forceRefresh?: boolean) => Promise<void>;
-    approveStore: (store: AdminStoreRow) => Promise<boolean>;
+    approveStore: (store: AdminStoreRow, forceBypass?: boolean) => Promise<boolean>;
     rejectStore: (store: AdminStoreRow) => Promise<boolean>;
     dismissErrorModal: () => void;
 }
@@ -48,8 +49,12 @@ export const useSuperAdminStoresStore = create<SuperAdminStoresState>((set, get)
         }
     },
 
-    approveStore: async (store: AdminStoreRow) => {
+    approveStore: async (store: AdminStoreRow, forceBypass = false) => {
         try {
+            const state = get();
+            
+            // Note: Since the admin clicked "Agree" on the modal acknowledging the payment,
+            // we proceed to activate it. The billing occurs asynchronously via our systems.
             const updatedStore = await updateAdminStoreStatus(store.id, "active", true);
             
             // Replace the local store with the real updated DB row
