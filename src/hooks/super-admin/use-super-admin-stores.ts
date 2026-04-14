@@ -2,6 +2,7 @@ import { useState, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useFocusEffect } from "expo-router";
 import { AdminStoreRow } from "@/services/store-service";
+import { supabase } from "@/supabase/supabase";
 import { useSuperAdminStoresStore } from "@/store/super-admin/super-admin-stores-store";
 import { useSubscriptionConfigStore } from "@/store/super-admin/subscription-config";
 
@@ -31,31 +32,39 @@ export function useSuperAdminStores() {
     variant: "primary" | "danger";
     label: string;
   } | null>(null);
+  const [subscriptions, setSubscriptions] = useState<any[]>([]);
 
-  useFocusEffect(useCallback(() => { fetchStores(); }, []));
+  useFocusEffect(useCallback(() => { 
+    fetchStores(); 
+    fetchSubscriptions();
+  }, []));
+
+  const fetchSubscriptions = async () => {
+    const { data } = await supabase.from("store_subscriptions").select("*");
+    if (data) setSubscriptions(data);
+  };
 
   const onRefresh = async () => { 
     setRefreshing(true); 
     await fetchStores(true); 
+    await fetchSubscriptions();
     setRefreshing(false);
   };
 
   const handleApprove = (store: AdminStoreRow) => {
-    // Count how many ACTIVE stores this exact owner currently has
     const ownerActiveStores = stores.filter(s => 
       s.owner_id === store.owner_id && 
       s.id !== store.id && 
       (s.status === "active" || s.is_active)
     ).length;
 
-    // Check if they exceed the free limit to update the warning message
     const config = useSubscriptionConfigStore.getState();
-    const isEnforced = config.enforced_stores_ids.includes(store.id);
+    const exceedsLimit = ownerActiveStores >= config.FREE_STORES_LIMIT;
     
     let customMessage = translate("superAdmin.stores.modal.approveMessage", { name: store.name });
     let actionLabel = translate("superAdmin.stores.modal.approveAction");
     
-    if (config.ENFORCE_SUBSCRIPTION && isEnforced) {
+    if (exceedsLimit) {
       customMessage += `\n\n⚠️ ${config.LIMIT_MESSAGE}`;
       actionLabel = "Agree";
     }
@@ -67,14 +76,14 @@ export function useSuperAdminStores() {
       variant: "primary",
       onConfirm: async () => {
         setConfirmModal(null);
-        if (config.ENFORCE_SUBSCRIPTION && isEnforced) {
-          // Do not turn as active store, just close the modal.
-          return;
-        }
+
+        // If limit exceeded, just acknowledge — do not approve
+        if (exceedsLimit) return;
         
         const success = await approveStore(store);
         if (success) {
           setPreviewStore(null);
+          setSelectedStore(null);
           useSuperAdminStoresStore.setState({
             errorModal: {
               title: translate("superAdmin.stores.modal.successTitle"),
@@ -142,5 +151,6 @@ export function useSuperAdminStores() {
     filtered,
     pendingCount,
     FILTER_LABELS,
+    subscriptions,
   };
 }

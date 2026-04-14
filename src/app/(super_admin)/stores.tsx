@@ -41,6 +41,7 @@ export default function SuperAdminStores() {
 		filtered,
 		pendingCount,
 		FILTER_LABELS,
+		subscriptions,
 	} = useSuperAdminStores();
 
 	const selectedOwnerActiveStoresCount = selectedStore 
@@ -48,20 +49,39 @@ export default function SuperAdminStores() {
 		: 0;
 
 	if (selectedStore) {
+		const sub = subscriptions.find(s => s.store_id === selectedStore.id);
 		return (
-			<AdminStoreDetails 
-				store={selectedStore} 
-				ownerActiveStoresCount={selectedOwnerActiveStoresCount}
-				onBack={() => setSelectedStore(null)} 
-				onApprove={(store) => {
-					handleApprove(store);
-					setSelectedStore(null); 
-				}} 
-				onReject={(store) => {
-					handleReject(store);
-					setSelectedStore(null);
-				}} 
-			/>
+			<>
+				<AdminStoreDetails 
+					store={selectedStore} 
+					subscription={sub}
+					ownerActiveStoresCount={selectedOwnerActiveStoresCount}
+					onBack={() => setSelectedStore(null)} 
+					onApprove={(store) => { handleApprove(store); }} 
+					onReject={(store) => { handleReject(store); setSelectedStore(null); }} 
+				/>
+				<Modal
+					visible={!!errorModal}
+					onClose={dismissErrorModal}
+					title={errorModal?.title ?? (errorModal?.type === "success" ? "Success" : "Error")}
+					message={errorModal?.message ?? ""}
+					buttons={[{ label: translate("label.ok"), onPress: dismissErrorModal, variant: errorModal?.type === "success" ? "success" : "primary" }]}
+					showCloseButton={false}
+					dismissOnBackdrop
+				/>
+				<Modal
+					visible={!!confirmModal}
+					onClose={() => setConfirmModal(null)}
+					title={confirmModal?.title ?? ""}
+					message={confirmModal?.message ?? ""}
+					buttons={[
+						{ label: translate("label.cancel"), onPress: () => setConfirmModal(null), variant: "secondary" },
+						{ label: confirmModal?.label ?? translate("label.confirm"), onPress: confirmModal?.onConfirm ?? (() => {}), variant: confirmModal?.variant ?? "primary" },
+					]}
+					showCloseButton={false}
+					dismissOnBackdrop
+				/>
+			</>
 		);
 	}
 

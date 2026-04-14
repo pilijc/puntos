@@ -15,12 +15,13 @@ interface SubscriptionConfigState {
   updateEndDate: (date: string) => void;
   toggleEnforce: (enforce: boolean) => void;
   toggleStoreEnforcement: (storeId: number, enforced: boolean) => void;
+  setEnforcedStores: (storeIds: number[]) => void;
 }
 
 export const useSubscriptionConfigStore = create<SubscriptionConfigState>((set) => ({
   ENFORCE_SUBSCRIPTION: true,
   FREE_STORES_LIMIT: 2,
-  LIMIT_MESSAGE: "This Store Manager has reached the limit of free stores. Approving this store will generate a subscription charge.",
+  LIMIT_MESSAGE: "This Store Manager has reached the limit of free stores. Approving this store will require a subscription charge.",
   SUBSCRIPTION_PRICE_PHP: 500,
   SUBSCRIPTION_START: "",
   SUBSCRIPTION_END: "",
@@ -36,4 +37,5 @@ export const useSubscriptionConfigStore = create<SubscriptionConfigState>((set) 
       ? [...state.enforced_stores_ids.filter(id => id !== storeId), storeId]
       : state.enforced_stores_ids.filter(id => id !== storeId)
   })),
+  setEnforcedStores: (storeIds) => set({ enforced_stores_ids: storeIds }),
 }));

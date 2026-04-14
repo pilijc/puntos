@@ -54,12 +54,14 @@ const ReadOnlyField = ({ label, value }: { label: string; value?: string | null 
 
 export function AdminStoreDetails({
   store,
+  subscription,
   ownerActiveStoresCount = 0,
   onBack,
   onApprove,
   onReject,
 }: {
   store: AdminStoreRow;
+  subscription?: any;
   ownerActiveStoresCount?: number;
   onBack: () => void;
   onApprove: (store: AdminStoreRow) => void;
@@ -189,10 +191,17 @@ export function AdminStoreDetails({
             </Text>
 
             {/* SUBSCRIPTION INDICATOR */}
-            {(ownerActiveStoresCount + (statusKey === 'active' ? 1 : 0)) > config.FREE_STORES_LIMIT && (
-               <View className="flex-row items-center gap-1.5 self-start px-2.5 py-1 rounded-full bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 mb-3">
-                 <MaterialIcons name="local-fire-department" size={12} color="#2563EB" />
-                 <Text className="text-[10px] font-poppins-bold tracking-wider text-blue-700 dark:text-blue-400 uppercase">
+            {subscription ? (
+               <View className={`flex-row items-center gap-1 self-start px-2 py-0.5 rounded-full border mb-3 ${subscription.payment_status === 'paid' ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-100 dark:border-emerald-800' : 'bg-red-50 dark:bg-red-900/20 border-red-100 dark:border-red-800'}`}>
+                 <MaterialIcons name={subscription.payment_status === 'paid' ? "verified" : "warning"} size={10} color={subscription.payment_status === 'paid' ? "#10B981" : "#EF4444"} />
+                 <Text className={`text-[9px] font-poppins-bold tracking-wider uppercase ${subscription.payment_status === 'paid' ? 'text-emerald-700 dark:text-emerald-400' : 'text-red-700 dark:text-red-400'}`}>
+                    Subscription {subscription.payment_status}
+                 </Text>
+               </View>
+            ) : ((ownerActiveStoresCount + (statusKey === 'active' ? 1 : 0)) > config.FREE_STORES_LIMIT) && (
+               <View className="flex-row items-center gap-1 self-start px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 mb-3">
+                 <MaterialIcons name="local-fire-department" size={10} color="#2563EB" />
+                 <Text className="text-[9px] font-poppins-bold tracking-wider text-blue-700 dark:text-blue-400 uppercase">
                     Subscription Required
                  </Text>
                </View>

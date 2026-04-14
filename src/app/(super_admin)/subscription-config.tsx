@@ -5,7 +5,7 @@ import { View, Text } from "@/tw";
 import { useSubscriptionConfigStore } from "@/store/super-admin/subscription-config";
 import { useSuperAdminStoresStore } from "@/store/super-admin/super-admin-stores-store";
 import { AdminStoreRow } from "@/services/store-service";
-import { CircleDollarSign, AlertTriangle } from "lucide-react-native";
+import { CircleDollarSign, AlertTriangle, CalendarDays } from "lucide-react-native";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { Toggle } from "@/components/toggle";
 import { Button } from "@/components/button";
@@ -17,14 +17,24 @@ export default function SubscriptionConfig() {
   const config = useSubscriptionConfigStore();
   const { stores, fetchStores } = useSuperAdminStoresStore();
 
-  React.useEffect(() => {
-    fetchStores();
-  }, []);
-
   const [limit, setLimit] = useState(config.FREE_STORES_LIMIT.toString());
   const [price, setPrice] = useState(config.SUBSCRIPTION_PRICE_PHP.toString());
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [subscriptions, setSubscriptions] = useState<any[]>([]);
+
+  const fetchSubscriptions = async () => {
+    const { data, error } = await supabase.from('store_subscriptions').select('*');
+    if (!error && data) {
+      setSubscriptions(data);
+      config.setEnforcedStores(data.filter(s => s.is_enforced).map(s => s.store_id));
+    }
+  };
+
+  React.useEffect(() => {
+    fetchStores();
+    fetchSubscriptions();
+  }, []);
 
   const handleSave = async () => {
     setIsSaving(true);
@@ -32,23 +42,33 @@ export default function SubscriptionConfig() {
     config.updatePrice(parseFloat(price));
 
     try {
-      const targetStores = ownersOverLimit.flatMap(manager => manager.stores);
-      const recordsToUpsert = targetStores.map(storeObj => {
-        const isEnabled = config.enforced_stores_ids.includes(storeObj.id);
-        return {
-          store_id: storeObj.id,
-          owner_id: storeObj.owner_id,
-          is_enforced: isEnabled,
+      const targetStores = ownersOverLimit.flatMap(manager => manager.stores).filter(s => s.owner_id);
+      const enabledStores = targetStores.filter(s => config.enforced_stores_ids.includes(s.id));
+      const disabledStores = targetStores.filter(s => !config.enforced_stores_ids.includes(s.id));
+
+      // Upsert only the enabled stores
+      if (enabledStores.length > 0) {
+        const recordsToUpsert = enabledStores.map(s => ({
+          store_id: s.id,
+          owner_id: s.owner_id,
+          is_enforced: true,
           amount_paid: parseFloat(price),
           payment_status: 'unpaid',
-        };
-      }).filter(r => r.owner_id);
+        }));
+        const { error } = await supabase
+          .from('store_subscriptions')
+          .upsert(recordsToUpsert, { onConflict: 'store_id' });
+        if (error) console.error("Error upserting subscriptions:", error.message);
+      }
 
-      if (recordsToUpsert.length > 0) {
-        const storeIdsToRefresh = recordsToUpsert.map(r => r.store_id);
-        await supabase.from('store_subscriptions').delete().in('store_id', storeIdsToRefresh);
-        const { error } = await supabase.from('store_subscriptions').insert(recordsToUpsert);
-        if (error) console.error("Error saving subscriptions:", error.message);
+      // Delete disabled stores from store_subscriptions
+      if (disabledStores.length > 0) {
+        const idsToDelete = disabledStores.map(s => s.id);
+        const { error } = await supabase
+          .from('store_subscriptions')
+          .delete()
+          .in('store_id', idsToDelete);
+        if (error) console.error("Error deleting subscriptions:", error.message);
       }
     } catch (e) {
       console.error(e);
@@ -56,7 +76,19 @@ export default function SubscriptionConfig() {
 
     setIsSaving(false);
     setShowSuccessModal(true);
+    fetchSubscriptions();
   };
+
+  const subscribedStores = React.useMemo(() => {
+    return subscriptions.map(sub => {
+      const store = stores.find(s => s.id === sub.store_id);
+      return {
+        ...sub,
+        store_name: store?.name || "Unknown Store",
+        owner_name: store?.owner_name || "Unknown Owner",
+      };
+    });
+  }, [subscriptions, stores]);
 
   const ownersOverLimit = React.useMemo(() => {
     const ownerStoreMap: Record<string, { owner_name: string; activeCount: number; stores: AdminStoreRow[] }> = {};
@@ -140,15 +172,85 @@ export default function SubscriptionConfig() {
           </View>
         </View>
 
+        {/* ── Stores with Subscriptions ── */}
+        {subscribedStores.length > 0 && (
+          <View className="bg-white dark:bg-darkBackgroundCard rounded-2xl border border-slate-100 dark:border-neutral-800 p-4 mb-4">
+            <View className="flex-row items-center gap-2 mb-2">
+              <CalendarDays size={16} color="#10B981" />
+              <Text className="text-sm font-poppins-semibold text-slate-800 dark:text-slate-100">
+                Stores with Subscriptions
+              </Text>
+            </View>
+
+            <Text className="text-[10px] font-poppins text-slate-500 dark:text-darkTextMuted leading-4 mb-4 px-0.5">
+              Stores currently monitored under the subscription policy.
+            </Text>
+
+            <View className="bg-slate-50 dark:bg-darkBackgroundMuted rounded-xl border border-slate-100 dark:border-neutral-800 px-4">
+              {subscribedStores.map((sub, i) => {
+                const isLast = i === subscribedStores.length - 1;
+                const isPaid = sub.payment_status === 'paid';
+                return (
+                  <View
+                    key={sub.id || sub.store_id}
+                    className={`py-3 ${!isLast ? "border-b border-slate-200 dark:border-neutral-700" : ""}`}
+                  >
+                    <View className="flex-row items-center justify-between mb-1">
+                      <Text className="text-[13px] font-poppins-medium text-slate-800 dark:text-slate-100" numberOfLines={1}>
+                        {sub.store_name}
+                      </Text>
+                      <View className={`px-2 py-0.5 rounded-full ${isPaid ? 'bg-emerald-100/50 border border-emerald-200' : 'bg-red-100/50 border border-red-200'}`}>
+                        <Text className={`text-[8px] font-poppins-bold uppercase tracking-wider ${isPaid ? 'text-emerald-700' : 'text-red-700'}`}>
+                          {sub.payment_status || 'unpaid'}
+                        </Text>
+                      </View>
+                    </View>
+                    
+                    <View className="flex-row items-center justify-between">
+                      <Text className="text-[10px] font-poppins-medium text-slate-500 dark:text-darkTextMuted">
+                        {sub.owner_name}
+                      </Text>
+                      {isPaid && sub.current_period_end && (
+                        <Text className="text-[9px] font-poppins text-slate-400 mt-1">
+                          Ends: {new Date(sub.current_period_end).toLocaleDateString()}
+                        </Text>
+                      )}
+                    </View>
+                  </View>
+                );
+              })}
+            </View>
+          </View>
+        )}
+
         {/* ── Exceeded managers card ── */}
         {ownersOverLimit.length > 0 && (
           <View className="bg-white dark:bg-darkBackgroundCard rounded-2xl border border-slate-100 dark:border-neutral-800 p-4 mb-4">
 
-            <View className="flex-row items-center gap-2 mb-2">
-              <AlertTriangle size={16} color="#EF4444" />
-              <Text className="text-sm font-poppins-semibold text-slate-800 dark:text-slate-100">
-                Exceeded Store Managers
-              </Text>
+            <View className="flex-row items-center justify-between mb-2 pr-5">
+              <View className="flex-row items-center gap-2">
+                <AlertTriangle size={16} color="#EF4444" />
+                <Text className="text-sm font-poppins-semibold text-slate-800 dark:text-slate-100">
+                  Exceeded Store Managers
+                </Text>
+              </View>
+              <Toggle
+                size="sm"
+                value={(() => {
+                  const allStores = ownersOverLimit.flatMap(m => m.stores);
+                  return allStores.length > 0 && allStores.every(s => config.enforced_stores_ids.includes(s.id));
+                })()}
+                onValueChange={(val) => {
+                  const allStores = ownersOverLimit.flatMap(m => m.stores);
+                  if (val) {
+                    const newIds = allStores.map(s => s.id).filter(id => !config.enforced_stores_ids.includes(id));
+                    if(newIds.length > 0) config.setEnforcedStores([...config.enforced_stores_ids, ...newIds]);
+                  } else {
+                    const idsToRemove = allStores.map(s => s.id);
+                    config.setEnforcedStores(config.enforced_stores_ids.filter(id => !idsToRemove.includes(id)));
+                  }
+                }}
+              />
             </View>
 
             <Text className="text-[10px] font-poppins text-slate-500 dark:text-darkTextMuted leading-4 mb-4 px-0.5">
