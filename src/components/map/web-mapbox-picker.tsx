@@ -8,9 +8,24 @@ type Props = {
   height?: number;
   isDark?: boolean;
   markerColor?: string;
+<<<<<<< Updated upstream
 };
 
 export function WebMapboxPicker({ latitude, longitude, onChange, height = 280, isDark, markerColor }: Props) {
+=======
+  radiusMeters?: number | null;
+};
+
+export function WebMapboxPicker({
+  latitude,
+  longitude,
+  onChange,
+  height = 280,
+  isDark,
+  markerColor,
+  radiusMeters,
+}: Props) {
+>>>>>>> Stashed changes
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<any>(null);
   const markerRef = useRef<any>(null);
@@ -80,6 +95,69 @@ export function WebMapboxPicker({ latitude, longitude, onChange, height = 280, i
     map.easeTo({ center: next, duration: 250 });
   }, [hasCoords, latitude, longitude]);
 
+<<<<<<< Updated upstream
+=======
+  useEffect(() => {
+    if (Platform.OS !== "web") return;
+    const map = mapRef.current;
+    if (!map) return;
+
+    const fillColor = markerColor ?? "#FF6600";
+
+    const updateRadiusCircle = () => {
+      if (!map.isStyleLoaded()) return;
+
+      const r = radiusMeters != null ? Number(radiusMeters) : NaN;
+      const show =
+        hasCoords &&
+        Number.isFinite(r) &&
+        r > 0 &&
+        Number.isFinite(Number(latitude)) &&
+        Number.isFinite(Number(longitude));
+
+      const removeCircle = () => {
+        if (map.getLayer("puntos-radius-fill")) map.removeLayer("puntos-radius-fill");
+        if (map.getSource("puntos-radius")) map.removeSource("puntos-radius");
+      };
+
+      if (!show) {
+        removeCircle();
+        return;
+      }
+
+      const turf = require("@turf/turf");
+      const lng = Number(longitude);
+      const lat = Number(latitude);
+      const km = r / 1000;
+      const circle = turf.circle([lng, lat], km, { steps: 64, units: "kilometers" });
+
+      const existing = map.getSource("puntos-radius") as { setData?: (d: unknown) => void } | undefined;
+      if (existing?.setData) {
+        existing.setData(circle);
+        return;
+      }
+
+      removeCircle();
+      map.addSource("puntos-radius", { type: "geojson", data: circle });
+      map.addLayer({
+        id: "puntos-radius-fill",
+        type: "fill",
+        source: "puntos-radius",
+        paint: {
+          "fill-color": fillColor,
+          "fill-opacity": 0.14,
+        },
+      });
+    };
+
+    if (map.isStyleLoaded()) {
+      updateRadiusCircle();
+    } else {
+      map.once("load", updateRadiusCircle);
+    }
+  }, [hasCoords, latitude, longitude, radiusMeters, markerColor]);
+
+>>>>>>> Stashed changes
   if (Platform.OS !== "web") return null;
 
   if (!token) {

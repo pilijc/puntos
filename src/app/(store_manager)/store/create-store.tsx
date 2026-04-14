@@ -666,6 +666,10 @@ export default function CreateStore() {
                         isDark={isDark}
                         height={400}
                         markerColor="#FF6600"
+<<<<<<< Updated upstream
+=======
+                        radiusMeters={hasPin ? radius || 50 : null}
+>>>>>>> Stashed changes
                         onChange={({ latitude: lat, longitude: lng }) => setPin(lat, lng)}
                       />
                       {shouldUseInteractiveMapbox() ? null : (
@@ -1032,6 +1036,7 @@ export default function CreateStore() {
                 <Text className="text-xs font-poppins text-slate-500 dark:text-slate-400">
                   {t("storeManager.createStore.tapMapPin")}
                 </Text>
+<<<<<<< Updated upstream
                 <TouchableOpacity
                   className="flex-row items-center gap-1"
                   activeOpacity={0.8}
@@ -1042,6 +1047,21 @@ export default function CreateStore() {
                     {t("storeManager.createStore.getCurrent")}
                   </Text>
                 </TouchableOpacity>
+=======
+                
+                { Platform.OS === "android" && (
+                  <TouchableOpacity
+                    className="flex-row items-center gap-1"
+                    activeOpacity={0.8}
+                    onPress={handleGetCurrent}
+                  >
+                    <MaterialIcons name="my-location" size={16} color="#FF6600" />
+                    <Text className="text-primary text-xs font-poppins-bold">
+                      {t("storeManager.createStore.getCurrent")}
+                    </Text>
+                  </TouchableOpacity>
+                )}
+>>>>>>> Stashed changes
               </View>
 
               <View className="rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900">
@@ -1054,12 +1074,20 @@ export default function CreateStore() {
                           ? "mapbox://styles/mapbox/navigation-night-v1"
                           : "mapbox://styles/mapbox/streets-v12"
                       }
+<<<<<<< Updated upstream
                       onPress={(e) => {
+=======
+                      onPress={async (e) => {
+>>>>>>> Stashed changes
                         const coords = (e as any)?.geometry?.coordinates as [number, number] | undefined;
                         if (!coords) return;
                         const [lng, lat] = coords;
                         if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+<<<<<<< Updated upstream
                         setPin(lat, lng);
+=======
+                        await setPin(lat, lng);
+>>>>>>> Stashed changes
                       }}
                       onTouchStart={() => setScrollEnabled(false)}
                       onTouchEnd={() => setScrollEnabled(true)}
@@ -1070,14 +1098,10 @@ export default function CreateStore() {
                         centerCoordinate={hasPin ? [parsedLng, parsedLat] : [123.8854, 10.3157]}
                       />
                       {hasPin && (
-                        <PointAnnotation
-                          id="storeLocation"
-                          coordinate={[parsedLng, parsedLat]}
-                        >
+                        <PointAnnotation id="storeLocation" coordinate={[parsedLng, parsedLat]}>
                           <View className="w-4 h-4 bg-orange-500 rounded-full border-2 border-white" />
                         </PointAnnotation>
                       )}
-
                       {radiusCircleFeature && (
                         <Mapbox.ShapeSource id="storeRadius" shape={radiusCircleFeature}>
                           <Mapbox.FillLayer
@@ -1111,6 +1135,39 @@ export default function CreateStore() {
                 sanitize={(v) => v}
               />
 
+<<<<<<< Updated upstream
+=======
+              {/* Timezone — auto-filled from PostGIS when boundary data is loaded; manual entry otherwise */}
+              <View className="flex-col gap-1.5 mt-1">
+                <View className="flex-row items-center gap-2">
+                  <Text className="text-slate-700 dark:text-slate-300 text-sm font-poppins-medium px-1">
+                    Store Timezone{" "}
+                    <Text className="text-red-500 dark:text-red-400">*</Text>
+                  </Text>
+                  {isResolvingTimezone && (
+                    <Text className="text-xs text-slate-400 font-poppins italic">Detecting…</Text>
+                  )}
+                </View>
+                <TextField
+                  label={t("storeManager.createStore.timezone")}
+                  placeholder={t("storeManager.createStore.timezonePlaceholder")}
+                  value={timezone}
+                  onChangeText={setTimezone}
+                  sanitize={(v) => v}
+                />
+                {!isResolvingTimezone && !timezone.trim() && hasPin && (
+                  <Text className="text-xs text-amber-600 dark:text-amber-400 font-poppins px-1">
+                    Could not auto-detect timezone. Please enter it manually (e.g. Asia/Manila, America/New_York).
+                  </Text>
+                )}
+                {timezone.trim() && (
+                  <Text className="text-xs text-slate-400 dark:text-slate-500 font-poppins px-1">
+                    Timezone locked in. You can correct it if needed.
+                  </Text>
+                )}
+              </View>
+
+>>>>>>> Stashed changes
             <View className="mt-2">
               <View className="flex-row justify-between items-center mb-2">
                 <Text className="text-slate-700 dark:text-slate-300 text-sm font-poppins-medium">
