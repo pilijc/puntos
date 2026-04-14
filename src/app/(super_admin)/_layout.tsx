@@ -1,10 +1,18 @@
 import { Tabs } from "expo-router";
+<<<<<<< HEAD
 import { useColorScheme, Platform, Text, View, Image } from "react-native";
 import React, { useCallback } from "react";
 import { usePathname } from "expo-router";
 import { BottomTabBar, type BottomTabBarButtonProps, type BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import { PlatformPressable } from "@react-navigation/elements";
 import { useRoute } from "@react-navigation/native";
+=======
+import React from "react";
+import { useColorScheme } from "react-native";
+import { useSuperAdminLayout } from "@/hooks/super-admin/use-super-admin-layout";
+import { LayoutDashboard, Users, Store, Settings, CircleDollarSign } from 'lucide-react-native';
+
+>>>>>>> origin/develop
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 import { LayoutDashboard, Users, Store, Settings } from 'lucide-react-native';
@@ -284,6 +292,15 @@ export default function SuperAdminLayout() {
                         />
                     )
                 : undefined,
+        }}
+      />
+      <Tabs.Screen
+        name="subscription-config"
+        options={{
+          title: "Subscription",
+          tabBarIcon: ({ color }) => (
+            <CircleDollarSign size={22} color={color} />
+          ),
         }}
       />
       <Tabs.Screen

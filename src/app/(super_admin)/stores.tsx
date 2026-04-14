@@ -35,28 +35,64 @@ export default function SuperAdminStores() {
 		confirmModal,
 		setConfirmModal,
 		onRefresh,
+		loadMore,
 		handleApprove,
 		handleReject,
 		getEffectiveStatus,
 		filtered,
 		pendingCount,
 		FILTER_LABELS,
+		subscriptions,
+		hasMore,
+		isFetching,
 	} = useSuperAdminStores();
 
+	const selectedOwnerActiveStoresCount = selectedStore 
+		? stores.filter(s => s.owner_id === selectedStore.owner_id && s.id !== selectedStore.id && (s.status === "active" || s.is_active)).length 
+		: 0;
+
 	if (selectedStore) {
+		const sub = subscriptions.find(s => s.store_id === selectedStore.id);
 		return (
-			<AdminStoreDetails 
-				store={selectedStore} 
-				onBack={() => setSelectedStore(null)} 
-				onApprove={(store) => {
-					handleApprove(store);
-					setSelectedStore(null); 
-				}} 
-				onReject={(store) => {
-					handleReject(store);
-					setSelectedStore(null);
-				}} 
-			/>
+			<>
+				<AdminStoreDetails 
+					store={selectedStore} 
+					subscription={sub}
+					ownerActiveStoresCount={selectedOwnerActiveStoresCount}
+					onBack={() => setSelectedStore(null)} 
+					onApprove={(store) => { handleApprove(store); }} 
+					onReject={(store) => { handleReject(store); setSelectedStore(null); }} 
+				/>
+				<Modal
+					visible={!!errorModal}
+					onClose={dismissErrorModal}
+					title={errorModal?.title ?? (errorModal?.type === "success" ? "Success" : "Error")}
+					message={errorModal?.message ?? ""}
+					buttons={[{ label: translate("label.ok"), onPress: dismissErrorModal, variant: errorModal?.type === "success" ? "success" : "primary" }]}
+					showCloseButton={false}
+					dismissOnBackdrop
+				/>
+				<Modal
+					visible={!!confirmModal}
+					onClose={() => setConfirmModal(null)}
+					title={confirmModal?.title ?? ""}
+					message={confirmModal?.message ?? ""}
+					buttons={[
+						!confirmModal?.hideCancel && {
+							label: translate("label.cancel"),
+							onPress: () => setConfirmModal(null),
+							variant: "secondary",
+						},
+						{
+							label: confirmModal?.label ?? translate("label.confirm"),
+							onPress: confirmModal?.onConfirm ?? (() => {}),
+							variant: confirmModal?.variant ?? "primary",
+						},
+					].filter(Boolean) as any}
+					showCloseButton={false}
+					dismissOnBackdrop
+				/>
+			</>
 		);
 	}
 
@@ -67,7 +103,7 @@ export default function SuperAdminStores() {
 			<View className="bg-white border-b border-slate-100 dark:bg-darkBackgroundMuted dark:border-darkBorder px-6 py-4 flex-row items-center justify-start">
 				<View className="flex-row items-center gap-2 py-1">
 					<MaterialIcons name="storefront" size={22} color="black" className="mt-1" />
-					<Text className="text-2xl font-poppins-bold text-slate-900 dark:text-darkTextPrimary flex-1">
+					<Text className="text-1xl font-poppins-bold text-slate-900 dark:text-darkTextPrimary flex-1">
 						{translate("superAdmin.stores.title")}
 					</Text>
 				</View>
@@ -149,15 +185,22 @@ export default function SuperAdminStores() {
 					</>
 				)}
 
-				{!loading && filtered.map((store) => (
-					<AdminStoreCard
-						key={store.id}
-						store={store}
-						onApprove={handleApprove}
-						onReject={handleReject}
-						onSelect={(s) => setPreviewStore(s)}
-					/>
-				))}
+				{!loading && filtered.map((store) => {
+					const activeStoresCount = stores.filter(
+						s => s.owner_id === store.owner_id && s.id !== store.id && (s.status === "active" || s.is_active)
+					).length;
+
+					return (
+						<AdminStoreCard
+							key={store.id}
+							store={store}
+							ownerActiveStoresCount={activeStoresCount}
+							onApprove={handleApprove}
+							onReject={handleReject}
+							onSelect={(s) => setPreviewStore(s)}
+						/>
+					);
+				})}
 
 					{!loading && filtered.length === 0 && !error && (
 						<View className="items-center pt-16 gap-3">
@@ -170,10 +213,31 @@ export default function SuperAdminStores() {
 							<Text className="text-sm font-poppins text-slate-400 text-center px-8">
 								{translate("superAdmin.stores.pullToRefresh")}
 							</Text>
-						</View>
-					)}
-				</ScrollView>
-			</View>
+					</View>
+				)}
+
+				{!loading && hasMore && (
+					<View className="mt-4 mb-8 items-center">
+						<TouchableOpacity
+							className="bg-white dark:bg-darkBackgroundCard border border-slate-200 dark:border-neutral-800 px-6 py-2.5 rounded-full flex-row items-center gap-2"
+							onPress={loadMore}
+							disabled={isFetching}
+						>
+							{isFetching ? (
+								<View className="animate-spin">
+									<MaterialIcons name="refresh" size={16} color="#64748B" />
+								</View>
+							) : (
+								<MaterialIcons name="expand-more" size={18} color="#64748B" />
+							)}
+							<Text className="text-[13px] font-poppins-semibold text-slate-600 dark:text-darkTextSecondary">
+								{isFetching ? "Loading..." : "Load More Stores"}
+							</Text>
+						</TouchableOpacity>
+					</View>
+				)}
+			</ScrollView>
+		</View>
 
 			<AdminStorePreviewModal
 				visible={!!previewStore}
@@ -215,7 +279,7 @@ export default function SuperAdminStores() {
 				title={confirmModal?.title ?? ""}
 				message={confirmModal?.message ?? ""}
 				buttons={[
-					{
+					!confirmModal?.hideCancel && {
 						label: translate("label.cancel"),
 						onPress: () => setConfirmModal(null),
 						variant: "secondary",
@@ -225,7 +289,7 @@ export default function SuperAdminStores() {
 						onPress: confirmModal?.onConfirm ?? (() => {}),
 						variant: confirmModal?.variant ?? "primary",
 					},
-				]}
+				].filter(Boolean) as any}
 				showCloseButton={false}
 				dismissOnBackdrop
 			/>
