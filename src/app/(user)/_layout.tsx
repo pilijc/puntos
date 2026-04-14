@@ -1,11 +1,13 @@
 import { Tabs, Redirect } from 'expo-router';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useColorScheme, Platform } from 'react-native';
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 import { Compass, Store, History, Settings } from 'lucide-react-native';
 import { useProfile } from '@/hooks/user/use-profile';
 import { useLocationSync } from '@/hooks/user/use-location-sync';
+import { getMutedStores } from '@/services/user/mute-service';
+import { useStoreStore } from '@/store/user/store-store';
 
 function UserTabs() {
   const colorScheme = useColorScheme();
@@ -14,6 +16,30 @@ function UserTabs() {
   const insets = useSafeAreaInsets();
   const { user, preferences } = useProfile();
   useLocationSync(user?.id, preferences?.location_enabled ?? false);
+  const { setMutedStoreIds, setMutedStoresHydrated } = useStoreStore();
+
+  useEffect(() => {
+    let isActive = true;
+    if (user?.id) {
+      setMutedStoresHydrated(false);
+      getMutedStores()
+        .then((ids) => {
+          if (isActive) {
+            setMutedStoreIds(ids);
+            setMutedStoresHydrated(true);
+          }
+        })
+        .catch((err) => {
+          console.error("[Mute] fetch failed:", err);
+          if (isActive) setMutedStoresHydrated(true);
+        });
+    } else {
+      setMutedStoresHydrated(false);
+    }
+    return () => {
+      isActive = false;
+    };
+  }, [user?.id]);
 
   return (
     <Tabs

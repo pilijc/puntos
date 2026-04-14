@@ -2,7 +2,9 @@ import { useState, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useFocusEffect } from "expo-router";
 import { AdminStoreRow } from "@/services/store-service";
+import { supabase } from "@/supabase/supabase";
 import { useSuperAdminStoresStore } from "@/store/super-admin/super-admin-stores-store";
+import { useSubscriptionConfigStore } from "@/store/super-admin/subscription-config";
 
 export const FILTERS = ["All", "pending_review", "active", "inactive"] as const;
 export type Filter = typeof FILTERS[number];
@@ -29,27 +31,75 @@ export function useSuperAdminStores() {
     onConfirm: () => void;
     variant: "primary" | "danger";
     label: string;
+    hideCancel?: boolean;
   } | null>(null);
+  const [subscriptions, setSubscriptions] = useState<any[]>([]);
 
-  useFocusEffect(useCallback(() => { fetchStores(); }, []));
+  useFocusEffect(useCallback(() => { 
+    fetchStores({ forceRefresh: true }); 
+    fetchSubscriptions();
+  }, []));
+
+  const fetchSubscriptions = async () => {
+    const { data } = await supabase.from("store_subscriptions").select("*");
+    if (data) setSubscriptions(data);
+  };
 
   const onRefresh = async () => { 
     setRefreshing(true); 
-    await fetchStores(true); 
+    await fetchStores({ forceRefresh: true }); 
+    await fetchSubscriptions();
     setRefreshing(false);
   };
 
+  const loadMore = async () => {
+    if (storeState.isFetching || !storeState.hasMore) return;
+    await fetchStores({ loadMore: true });
+  };
+
   const handleApprove = (store: AdminStoreRow) => {
+    const ownerActiveStores = stores.filter(s => 
+      s.owner_id === store.owner_id && 
+      s.id !== store.id && 
+      (s.status === "active" || s.is_active)
+    ).length;
+
+    const config = useSubscriptionConfigStore.getState();
+
+    // Check if there's already a paid subscription for this specific store
+    const hasPaidSubscription = subscriptions.some(sub => 
+      sub.store_id === store.id && 
+      sub.payment_status === 'paid'
+    );
+
+    // Only exceeds limit if enforcement is ON, owner is beyond free limit, and no paid subscription exists yet
+    const exceedsLimit = config.ENFORCE_SUBSCRIPTION && 
+                        ownerActiveStores >= config.FREE_STORES_LIMIT && 
+                        !hasPaidSubscription;
+    
+    let customMessage = exceedsLimit 
+      ? `⚠️ ${config.LIMIT_MESSAGE || "Approving this store will require a subscription charge"}`
+      : translate("superAdmin.stores.modal.approveMessage", { name: store.name });
+    
+    let actionLabel = exceedsLimit 
+      ? "Agree" 
+      : translate("superAdmin.stores.modal.approveAction");
+
     setConfirmModal({
-      title: translate("superAdmin.stores.modal.approveTitle"),
-      message: translate("superAdmin.stores.modal.approveMessage", { name: store.name }),
-      label: translate("superAdmin.stores.modal.approveAction"),
+      title: exceedsLimit ? "Limit Reached" : translate("superAdmin.stores.modal.approveTitle"),
+      message: customMessage,
+      label: actionLabel,
       variant: "primary",
+      hideCancel: exceedsLimit,
       onConfirm: async () => {
         setConfirmModal(null);
+        
+        if (exceedsLimit) return;
+        
         const success = await approveStore(store);
         if (success) {
           setPreviewStore(null);
+          setSelectedStore(null);
           useSuperAdminStoresStore.setState({
             errorModal: {
               title: translate("superAdmin.stores.modal.successTitle"),
@@ -58,7 +108,7 @@ export function useSuperAdminStores() {
             }
           });
         }
-      }
+      },
     });
   };
 
@@ -111,11 +161,13 @@ export function useSuperAdminStores() {
     confirmModal,
     setConfirmModal,
     onRefresh,
+    loadMore,
     handleApprove,
     handleReject,
     getEffectiveStatus,
     filtered,
     pendingCount,
     FILTER_LABELS,
+    subscriptions,
   };
 }

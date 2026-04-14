@@ -13,6 +13,7 @@ import { AdminStoreRow } from "@/services/store-service";
 import { ImageViewerModal } from "@/components/ui/image-viewer-modal";
 import { getStoreCategoryBadge } from "@/type/super-admin/user";
 import { shouldUseInteractiveMapbox } from "@/utils/mapbox-platform";
+import { useSubscriptionConfigStore } from "@/store/super-admin/subscription-config";
 
 
 Mapbox.setAccessToken(process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN!);
@@ -53,16 +54,21 @@ const ReadOnlyField = ({ label, value }: { label: string; value?: string | null 
 
 export function AdminStoreDetails({
   store,
+  subscription,
+  ownerActiveStoresCount = 0,
   onBack,
   onApprove,
   onReject,
 }: {
   store: AdminStoreRow;
+  subscription?: any;
+  ownerActiveStoresCount?: number;
   onBack: () => void;
   onApprove: (store: AdminStoreRow) => void;
   onReject: (store: AdminStoreRow) => void;
 }) {
   const { t: translate, i18n } = useTranslation();
+  const config = useSubscriptionConfigStore();
 
   const STATUS_LABELS: Record<StatusKey, string> = {
     pending_review: translate("superAdmin.stores.status.pending"),
@@ -180,9 +186,26 @@ export function AdminStoreDetails({
               </View>
             </View>
 
-            <Text className="text-xs font-poppins-medium text-slate-500 mb-1.5">
+            <Text className="text-xs font-poppins-medium text-slate-500 mb-2">
               {store.owner_name ? `By: ${store.owner_name}` : "By: Not specified"}
             </Text>
+
+            {/* SUBSCRIPTION INDICATOR */}
+            {subscription ? (
+               <View className={`flex-row items-center gap-1 self-start px-2 py-0.5 rounded-full border mb-3 ${subscription.payment_status === 'paid' ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-100 dark:border-emerald-800' : 'bg-red-50 dark:bg-red-900/20 border-red-100 dark:border-red-800'}`}>
+                 <MaterialIcons name={subscription.payment_status === 'paid' ? "verified" : "warning"} size={10} color={subscription.payment_status === 'paid' ? "#10B981" : "#EF4444"} />
+                 <Text className={`text-[9px] font-poppins-bold tracking-wider uppercase ${subscription.payment_status === 'paid' ? 'text-emerald-700 dark:text-emerald-400' : 'text-red-700 dark:text-red-400'}`}>
+                    Subscription {subscription.payment_status}
+                 </Text>
+               </View>
+            ) : ((ownerActiveStoresCount + (statusKey === 'active' ? 1 : 0)) > config.FREE_STORES_LIMIT) && (
+               <View className="flex-row items-center gap-1 self-start px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 mb-3">
+                 <MaterialIcons name="local-fire-department" size={10} color="#2563EB" />
+                 <Text className="text-[9px] font-poppins-bold tracking-wider text-blue-700 dark:text-blue-400 uppercase">
+                    Subscription Required
+                 </Text>
+               </View>
+            )}
 
             <View className={`self-start px-2 py-0.5 rounded-full ${getStoreCategoryBadge(store.type).bg} mb-1.5 flex-row items-center justify-center`}>
               <Text

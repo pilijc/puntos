@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { View, Text, SafeAreaView, TouchableOpacity, ScrollView } from "@/tw";
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { router, useLocalSearchParams } from "expo-router";
 import { Button } from "@/components/button";
 import { TextField } from "@/components/text-field";
@@ -22,13 +21,14 @@ import { dateToTimeString, timeStringToDate } from "@/utils/date-helpers";
 import { shouldUseInteractiveMapbox } from "@/utils/mapbox-platform";
 import { WebMapboxPicker } from "@/components/map/web-mapbox-picker";
 import { useTranslation } from "react-i18next";
+import { CircleX, FileText, ImagePlus, MapPin } from "lucide-react-native";
 
 const WEB_MAX_WIDTH = 896;
-
 Mapbox.setAccessToken(process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN);
 
 export default function CreateStore() {
   const { t } = useTranslation();
+  const isWeb = Platform.OS === "web";
   const isDark = useColorScheme() === "dark";
   const [activeStep, setActiveStep] = useState<(typeof STEPS)[number]["key"]>("store");
   const [isUploadingImage, setIsUploadingImage] = useState(false);
@@ -223,7 +223,7 @@ export default function CreateStore() {
       if (tz) setTimezone(tz);
       // If null, leave the current value in place so a manual override is preserved.
     } catch (e) {
-      console.warn('[create-store] timezone resolve failed:', e);
+      console.warn("[create-store] timezone resolve failed:", e);
     } finally {
       setIsResolvingTimezone(false);
     }
@@ -459,12 +459,12 @@ export default function CreateStore() {
                               className="absolute top-1 right-1 w-6 h-6 rounded-full bg-black/60 items-center justify-center"
                               activeOpacity={0.8}
                             >
-                              <MaterialIcons name="close" size={14} color="#fff" />
+                              <CircleX size={14} color="#fff" />
                             </TouchableOpacity>
                           </>
                         ) : (
                           <>
-                            <MaterialIcons name="add-a-photo" size={18} color="#94A3B8" />
+                            <ImagePlus size={18} color="#94A3B8" />
                             <Text className="text-[10px] text-slate-500 font-poppins">{t("storeManager.createStore.logo")}</Text>
                           </>
                         )}
@@ -498,7 +498,7 @@ export default function CreateStore() {
                                   }}
                                   className="absolute top-1 right-1 w-6 h-6 rounded-full bg-black/50 items-center justify-center"
                                 >
-                                  <MaterialIcons name="close" size={14} color="#fff" />
+                                  <CircleX size={14} color="#fff" />
                                 </TouchableOpacity>
                               </View>
                             ) : (
@@ -507,7 +507,7 @@ export default function CreateStore() {
                                 disabled={isUploadingImage || (pictures?.length ?? 0) >= 6}
                                 className="flex-1 rounded-xl border border-dashed border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/30 items-center justify-center min-h-[80px]"
                               >
-                                <MaterialIcons name="add-a-photo" size={20} color="#94A3B8" />
+                                <ImagePlus size={20} color="#94A3B8" />
                                 <Text className="text-[10px] text-slate-500 font-poppins mt-0.5">{t("storeManager.detailEdit.add")}</Text>
                               </TouchableOpacity>
                             )}
@@ -570,12 +570,12 @@ export default function CreateStore() {
                             className="absolute top-2 right-2 w-7 h-7 rounded-full bg-black/65 items-center justify-center"
                             activeOpacity={0.8}
                           >
-                            <MaterialIcons name="close" size={16} color="gray" />
+                            <CircleX size={16} color="gray" />
                           </TouchableOpacity>
                         </>
                       ) : (
                         <>
-                          <MaterialIcons name="description" size={24} color="#94A3B8" />
+                          <FileText size={24} color="#94A3B8" />
                           <Text className="text-xs text-slate-500 font-poppins mt-1">{t("storeManager.createStore.uploadDocumentImage")}</Text>
                         </>
                       )}
@@ -668,10 +668,13 @@ export default function CreateStore() {
                 <View className="bg-white dark:bg-neutral-800 rounded-xl border border-slate-100 dark:border-neutral-700 p-4 gap-5">
                   <View className="flex-row items-center justify-between">
                     <Text className="text-xs font-poppins text-slate-500 dark:text-slate-400">{t("storeManager.createStore.tapMapPin")}</Text>
-                    <TouchableOpacity className="flex-row items-center gap-1" activeOpacity={0.8} onPress={handleGetCurrent}>
-                      <MaterialIcons name="my-location" size={16} color="#FF6600" />
-                      <Text className="text-primary text-xs font-poppins-bold">{t("storeManager.createStore.getCurrent")}</Text>
-                    </TouchableOpacity>
+                    
+                    { isWeb && (
+                      <TouchableOpacity className="flex-row items-center gap-1" activeOpacity={0.8} onPress={handleGetCurrent}>
+                        <MapPin color="#FF6600" />
+                        <Text className="text-primary text-xs font-poppins-bold">{t("storeManager.createStore.getCurrent")}</Text>
+                      </TouchableOpacity>
+                    )}
                   </View>
     
                   <View className="rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900">
@@ -682,11 +685,12 @@ export default function CreateStore() {
                         isDark={isDark}
                         height={400}
                         markerColor="#FF6600"
+                        radiusMeters={hasPin ? radius || 50 : null}
                         onChange={({ latitude: lat, longitude: lng }) => setPin(lat, lng)}
                       />
                       {shouldUseInteractiveMapbox() ? null : (
                         <View className="h-[400px] items-center justify-center gap-y-2 px-6 bg-slate-50 dark:bg-slate-900">
-                          <MaterialIcons name="map" size={32} color={isDark ? "#525252" : "#94A3B8"} />
+                          <MapPin color={isDark ? "#525252" : "#94A3B8"} />
                           <Text className="text-xs font-poppins text-center text-slate-500 dark:text-slate-400">
                             {t("storeManager.createStore.mapFallbackWeb")}
                           </Text>
@@ -733,7 +737,7 @@ export default function CreateStore() {
           </View>
         ) : null}
 
-        {Platform.OS !== "web" && activeStep === "store" && (
+        {!isWeb && activeStep === "store" && (
           <View className="gap-2">
             <View className="bg-white dark:bg-neutral-800 rounded-xl border border-slate-100 dark:border-neutral-700 p-4 gap-4">
               <TextField
@@ -800,12 +804,12 @@ export default function CreateStore() {
                           className="absolute top-1 right-1 w-6 h-6 rounded-full bg-black/60 items-center justify-center"
                           activeOpacity={0.8}
                         >
-                          <MaterialIcons name="close" size={14} color="#fff" />
+                          <CircleX size={14} color="#fff" />
                         </TouchableOpacity>
                       </>
                     ) : (
                       <>
-                        <MaterialIcons name="add-a-photo" size={18} color="#94A3B8" />
+                        <ImagePlus size={18} color="#94A3B8" />
                         <Text className="text-[10px] text-slate-500 font-poppins">{t("storeManager.createStore.logo")}</Text>
                       </>
                     )}
@@ -839,7 +843,7 @@ export default function CreateStore() {
                               }}
                               className="absolute top-1 right-1 w-6 h-6 rounded-full bg-black/50 items-center justify-center"
                             >
-                              <MaterialIcons name="close" size={14} color="#fff" />
+                              <CircleX size={14} color="#fff" />
                             </TouchableOpacity>
                           </View>
                         ) : (
@@ -848,7 +852,7 @@ export default function CreateStore() {
                             disabled={isUploadingImage || (pictures?.length ?? 0) >= 6}
                             className="flex-1 rounded-xl border border-dashed border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/30 items-center justify-center min-h-[80px]"
                           >
-                            <MaterialIcons name="add-a-photo" size={20} color="#94A3B8" />
+                            <ImagePlus size={20} color="#94A3B8" />
                             <Text className="text-[10px] text-slate-500 font-poppins mt-0.5">{t("storeManager.createStore.add")}</Text>
                           </TouchableOpacity>
                         )}
@@ -861,7 +865,7 @@ export default function CreateStore() {
           </View>
         )}
 
-        {Platform.OS !== "web" && activeStep === "business" && (
+        {!isWeb && activeStep === "business" && (
           <View className="gap-2">
             <View className="bg-white dark:bg-neutral-800 rounded-xl border border-slate-100 dark:border-neutral-700 p-4 gap-4">
               <TextField
@@ -911,12 +915,12 @@ export default function CreateStore() {
                         className="absolute top-2 right-2 w-7 h-7 rounded-full bg-black/65 items-center justify-center"
                         activeOpacity={0.8}
                       >
-                        <MaterialIcons name="close" size={16} color="gray" />
+                        <CircleX size={16} color="gray" />
                       </TouchableOpacity>
                     </>
                   ) : (
                     <>
-                      <MaterialIcons name="description" size={24} color="#94A3B8" />
+                      <FileText size={24} color="#94A3B8" />
                       <Text className="text-xs text-slate-500 font-poppins mt-1">
                         {t("storeManager.detailEdit.uploadDocumentImage")}
                       </Text>
@@ -1041,67 +1045,58 @@ export default function CreateStore() {
           </View>
         )}
 
-        {Platform.OS !== "web" && activeStep === "location" && (
+        {!isWeb && activeStep === "location" && (
           <View className="gap-2">
             <View className="bg-white dark:bg-neutral-800 rounded-xl border border-slate-100 dark:border-neutral-700 p-4 gap-5">
               <View className="flex-row items-center justify-between">
                 <Text className="text-xs font-poppins text-slate-500 dark:text-slate-400">
                   {t("storeManager.createStore.tapMapPin")}
                 </Text>
-                <TouchableOpacity
-                  className="flex-row items-center gap-1"
-                  activeOpacity={0.8}
-                  onPress={handleGetCurrent}
-                >
-                  <MaterialIcons name="my-location" size={16} color="#FF6600" />
-                  <Text className="text-primary text-xs font-poppins-bold">
-                    {t("storeManager.createStore.getCurrent")}
-                  </Text>
-                </TouchableOpacity>
+                
+                { isWeb && (
+                  <TouchableOpacity
+                    className="flex-row items-center gap-1"
+                    activeOpacity={0.8}
+                    onPress={handleGetCurrent}
+                  >
+                    <MapPin size={16} color="#FF6600" />
+                    <Text className="text-primary text-xs font-poppins-bold">
+                      {t("storeManager.createStore.getCurrent")}
+                    </Text>
+                  </TouchableOpacity>
+                )}
               </View>
 
               <View className="rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900">
-                <View pointerEvents="box-none">
-                  <MapView
-                    style={{ height: 400, width: "100%" }}
-                    styleURL={
-                      isDark
-                        ? "mapbox://styles/mapbox/navigation-night-v1"
-                        : "mapbox://styles/mapbox/streets-v12"
-                    }
-                    onPress={async (e) => {
-                      const coords = (e as any)?.geometry?.coordinates as [number, number] | undefined;
-                      if (!coords) return;
-                      const [lng, lat] = coords;
-                      if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
-                      await setPin(lat, lng);
-                    }}
-                    onTouchStart={() => setScrollEnabled(false)}
-                    onTouchEnd={() => setScrollEnabled(true)}
-                    onTouchCancel={() => setScrollEnabled(true)}
-                  >
-                    <Camera
-                      zoomLevel={hasPin ? 14 : 12}
-                      centerCoordinate={hasPin ? [parsedLng, parsedLat] : [123.8854, 10.3157]}
-                    />
-                  {hasPin && (
-                    <PointAnnotation
-                      id="storeLocation"
-                      coordinate={[parsedLng, parsedLat]}
+                <View pointerEvents="box-none" style={{ minHeight: 400 }}>
+                  {shouldUseInteractiveMapbox() ? (
+                    <MapView
+                      style={{ height: 400, width: "100%" }}
+                      styleURL={
+                        isDark
+                          ? "mapbox://styles/mapbox/navigation-night-v1"
+                          : "mapbox://styles/mapbox/streets-v12"
+                      }
+                      onPress={async (e) => {
+                        const coords = (e as any)?.geometry?.coordinates as [number, number] | undefined;
+                        if (!coords) return;
+                        const [lng, lat] = coords;
+                        if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+                        await setPin(lat, lng);
+                      }}
+                      onTouchStart={() => setScrollEnabled(false)}
+                      onTouchEnd={() => setScrollEnabled(true)}
+                      onTouchCancel={() => setScrollEnabled(true)}
                     >
                       <Camera
                         zoomLevel={hasPin ? 14 : 12}
                         centerCoordinate={hasPin ? [parsedLng, parsedLat] : [123.8854, 10.3157]}
                       />
                       {hasPin && (
-                        <PointAnnotation
-                          id="storeLocation"
-                          coordinate={[parsedLng, parsedLat]}
-                        >
+                        <PointAnnotation id="storeLocation" coordinate={[parsedLng, parsedLat]}>
                           <View className="w-4 h-4 bg-orange-500 rounded-full border-2 border-white" />
                         </PointAnnotation>
                       )}
-
                       {radiusCircleFeature && (
                         <Mapbox.ShapeSource id="storeRadius" shape={radiusCircleFeature}>
                           <Mapbox.FillLayer
@@ -1116,7 +1111,7 @@ export default function CreateStore() {
                     </MapView>
                   ) : (
                     <View className="h-[400px] items-center justify-center gap-y-2 px-6 bg-slate-50 dark:bg-slate-900">
-                      <MaterialIcons name="map" size={32} color={isDark ? "#525252" : "#94A3B8"} />
+                      <MapPin color={isDark ? "#525252" : "#94A3B8"} />
                       <Text className="text-xs font-poppins text-center text-slate-500 dark:text-slate-400">
                         {t("storeManager.createStore.mapFallbackWeb")}
                       </Text>
@@ -1147,12 +1142,11 @@ export default function CreateStore() {
                   )}
                 </View>
                 <TextField
-                  placeholder="e.g. Asia/Manila"
+                  label={t("storeManager.createStore.timezone")}
+                  placeholder={t("storeManager.createStore.timezonePlaceholder")}
                   value={timezone}
                   onChangeText={setTimezone}
                   sanitize={(v) => v}
-                  autoCapitalize="none"
-                  autoCorrect={false}
                 />
                 {!isResolvingTimezone && !timezone.trim() && hasPin && (
                   <Text className="text-xs text-amber-600 dark:text-amber-400 font-poppins px-1">
@@ -1169,9 +1163,13 @@ export default function CreateStore() {
             <View className="mt-2">
               <View className="flex-row justify-between items-center mb-2">
                 <Text className="text-slate-700 dark:text-slate-300 text-sm font-poppins-medium">
-                 {t("storeManager.createStore.storeRadius")} <Text className="text-red-500 dark:text-red-400">*</Text>
+                  {t("storeManager.createStore.storeRadius")}{" "}
+                  <Text className="text-red-500 dark:text-red-400">*</Text>
                 </Text>
-                <Text className="text-primary text-sm font-poppins-bold">{t("storeManager.detailEdit.radiusMeters", { meters: radius || 50 })}</Text>
+                <Text className="text-primary text-sm font-poppins font-bold">
+           
+                  {t("storeManager.detailEdit.radiusMeters", { meters: radius || 50 })}
+                </Text>
               </View>
               <Slider
                 minimumValue={50}

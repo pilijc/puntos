@@ -282,7 +282,6 @@ export default function ConfigureStreaks() {
       />
         <AppHeader
           title={isEditMode ? t("storeManager.streakConfigure.editTitle") : t("storeManager.streakConfigure.newTitle")}
-          paddingTop={insets.top + 8}
           onBackPress={() => {
             router.push({ pathname: "/(store_manager)/streak", params: { storeId } });
           }}

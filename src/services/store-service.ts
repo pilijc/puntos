@@ -7,9 +7,9 @@ export interface CreateStorePayload {
     address: string;
     latitude?: number | null;
     longitude?: number | null;
-    timezone?: string | null;
     phone?: string;
     registrationNumber?: string;
+    timezone?: string | null;
     businessDocumentImage?: string | null;
     storeOpen?: string | null;
     storeClose?: string | null;
@@ -26,10 +26,10 @@ export interface StoreRow {
     address: string | null;
     latitude: number | null;
     longitude: number | null;
-    timezone: string | null;
     radius: number | null;
     status: string;
     is_active: boolean;
+    timezone: string | null;
     logo: string | null;
     owner_id: string | null;
     phone: string | null;
