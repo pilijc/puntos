@@ -180,6 +180,114 @@
     "foreign_column_name": null
   },
   {
+    "table_name": "payments",
+    "column_name": "id",
+    "data_type": "uuid",
+    "is_primary_key": "YES",
+    "is_foreign_key": "NO",
+    "foreign_table_name": null,
+    "foreign_column_name": null
+  },
+  {
+    "table_name": "payments",
+    "column_name": "user_id",
+    "data_type": "uuid",
+    "is_primary_key": "NO",
+    "is_foreign_key": "NO",
+    "foreign_table_name": null,
+    "foreign_column_name": null
+  },
+  {
+    "table_name": "payments",
+    "column_name": "store_name",
+    "data_type": "text",
+    "is_primary_key": "NO",
+    "is_foreign_key": "NO",
+    "foreign_table_name": null,
+    "foreign_column_name": null
+  },
+  {
+    "table_name": "payments",
+    "column_name": "amount",
+    "data_type": "integer",
+    "is_primary_key": "NO",
+    "is_foreign_key": "NO",
+    "foreign_table_name": null,
+    "foreign_column_name": null
+  },
+  {
+    "table_name": "payments",
+    "column_name": "status",
+    "data_type": "text",
+    "is_primary_key": "NO",
+    "is_foreign_key": "NO",
+    "foreign_table_name": null,
+    "foreign_column_name": null
+  },
+  {
+    "table_name": "payments",
+    "column_name": "checkout_id",
+    "data_type": "text",
+    "is_primary_key": "NO",
+    "is_foreign_key": "NO",
+    "foreign_table_name": null,
+    "foreign_column_name": null
+  },
+  {
+    "table_name": "payments",
+    "column_name": "created_at",
+    "data_type": "timestamp without time zone",
+    "is_primary_key": "NO",
+    "is_foreign_key": "NO",
+    "foreign_table_name": null,
+    "foreign_column_name": null
+  },
+  {
+    "table_name": "puntos_events",
+    "column_name": "event_name",
+    "data_type": "text",
+    "is_primary_key": "NO",
+    "is_foreign_key": "NO",
+    "foreign_table_name": null,
+    "foreign_column_name": null
+  },
+  {
+    "table_name": "puntos_events",
+    "column_name": "user_id",
+    "data_type": "uuid",
+    "is_primary_key": "NO",
+    "is_foreign_key": "NO",
+    "foreign_table_name": null,
+    "foreign_column_name": null
+  },
+  {
+    "table_name": "puntos_events",
+    "column_name": "store_id",
+    "data_type": "uuid",
+    "is_primary_key": "NO",
+    "is_foreign_key": "NO",
+    "foreign_table_name": null,
+    "foreign_column_name": null
+  },
+  {
+    "table_name": "puntos_events",
+    "column_name": "metadata",
+    "data_type": "jsonb",
+    "is_primary_key": "NO",
+    "is_foreign_key": "NO",
+    "foreign_table_name": null,
+    "foreign_column_name": null
+  },
+  {
+    "table_name": "puntos_events",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone",
+    "is_primary_key": "NO",
+    "is_foreign_key": "NO",
+    "foreign_table_name": null,
+    "foreign_column_name": null
+  },
+  {
     "table_name": "purchases",
     "column_name": "id",
     "data_type": "bigint",
@@ -355,18 +463,18 @@
     "column_name": "user_id",
     "data_type": "uuid",
     "is_primary_key": "NO",
-    "is_foreign_key": "YES",
-    "foreign_table_name": "users",
-    "foreign_column_name": "id"
+    "is_foreign_key": "NO",
+    "foreign_table_name": null,
+    "foreign_column_name": null
   },
   {
     "table_name": "qr_codes",
     "column_name": "user_id",
     "data_type": "uuid",
     "is_primary_key": "NO",
-    "is_foreign_key": "NO",
-    "foreign_table_name": null,
-    "foreign_column_name": null
+    "is_foreign_key": "YES",
+    "foreign_table_name": "users",
+    "foreign_column_name": "id"
   },
   {
     "table_name": "qr_codes",
@@ -796,18 +904,18 @@
     "column_name": "store_id",
     "data_type": "bigint",
     "is_primary_key": "NO",
-    "is_foreign_key": "YES",
-    "foreign_table_name": "stores",
-    "foreign_column_name": "id"
+    "is_foreign_key": "NO",
+    "foreign_table_name": null,
+    "foreign_column_name": null
   },
   {
     "table_name": "stamp_rewards",
     "column_name": "store_id",
     "data_type": "bigint",
     "is_primary_key": "NO",
-    "is_foreign_key": "NO",
-    "foreign_table_name": null,
-    "foreign_column_name": null
+    "is_foreign_key": "YES",
+    "foreign_table_name": "stores",
+    "foreign_column_name": "id"
   },
   {
     "table_name": "stamp_rewards",
@@ -868,18 +976,18 @@
     "column_name": "store_id",
     "data_type": "bigint",
     "is_primary_key": "NO",
-    "is_foreign_key": "YES",
-    "foreign_table_name": "stores",
-    "foreign_column_name": "id"
+    "is_foreign_key": "NO",
+    "foreign_table_name": null,
+    "foreign_column_name": null
   },
   {
     "table_name": "store_daily_metrics",
     "column_name": "store_id",
     "data_type": "bigint",
     "is_primary_key": "NO",
-    "is_foreign_key": "NO",
-    "foreign_table_name": null,
-    "foreign_column_name": null
+    "is_foreign_key": "YES",
+    "foreign_table_name": "stores",
+    "foreign_column_name": "id"
   },
   {
     "table_name": "store_daily_metrics",
@@ -1512,6 +1620,15 @@
     "foreign_column_name": null
   },
   {
+    "table_name": "store_stamps",
+    "column_name": "timezone",
+    "data_type": "text",
+    "is_primary_key": "NO",
+    "is_foreign_key": "NO",
+    "foreign_table_name": null,
+    "foreign_column_name": null
+  },
+  {
     "table_name": "store_streaks",
     "column_name": "id",
     "data_type": "integer",
@@ -1659,6 +1776,15 @@
     "table_name": "store_streaks",
     "column_name": "start_at",
     "data_type": "timestamp with time zone",
+    "is_primary_key": "NO",
+    "is_foreign_key": "NO",
+    "foreign_table_name": null,
+    "foreign_column_name": null
+  },
+  {
+    "table_name": "store_streaks",
+    "column_name": "timezone",
+    "data_type": "text",
     "is_primary_key": "NO",
     "is_foreign_key": "NO",
     "foreign_table_name": null,
@@ -1890,6 +2016,15 @@
     "foreign_column_name": null
   },
   {
+    "table_name": "stores",
+    "column_name": "timezone",
+    "data_type": "text",
+    "is_primary_key": "NO",
+    "is_foreign_key": "NO",
+    "foreign_table_name": null,
+    "foreign_column_name": null
+  },
+  {
     "table_name": "streak_events",
     "column_name": "id",
     "data_type": "bigint",
@@ -1956,6 +2091,24 @@
     "table_name": "streak_events",
     "column_name": "earned_date",
     "data_type": "date",
+    "is_primary_key": "NO",
+    "is_foreign_key": "NO",
+    "foreign_table_name": null,
+    "foreign_column_name": null
+  },
+  {
+    "table_name": "user_growth_analytics",
+    "column_name": "event_date",
+    "data_type": "date",
+    "is_primary_key": "NO",
+    "is_foreign_key": "NO",
+    "foreign_table_name": null,
+    "foreign_column_name": null
+  },
+  {
+    "table_name": "user_growth_analytics",
+    "column_name": "total_signups",
+    "data_type": "bigint",
     "is_primary_key": "NO",
     "is_foreign_key": "NO",
     "foreign_table_name": null,

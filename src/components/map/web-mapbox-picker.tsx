@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef } from "react";
 import { Platform } from "react-native";
+import { circle as turfCircle } from "@turf/circle";
 
 type Props = {
   latitude: number | null;
@@ -117,15 +118,15 @@ export function WebMapboxPicker({
         return;
       }
 
-      const turf = require("@turf/turf");
       const lng = Number(longitude);
       const lat = Number(latitude);
       const km = r / 1000;
-      const circle = turf.circle([lng, lat], km, { steps: 64, units: "kilometers" });
+      const circle = turfCircle([lng, lat], km, { steps: 64, units: "kilometers" });
 
       const existing = map.getSource("puntos-radius") as { setData?: (d: unknown) => void } | undefined;
       if (existing?.setData) {
         existing.setData(circle);
+        map.triggerRepaint();
         return;
       }
 
@@ -140,13 +141,25 @@ export function WebMapboxPicker({
           "fill-opacity": 0.14,
         },
       });
+      map.triggerRepaint();
     };
 
-    if (map.isStyleLoaded()) {
+    const apply = () => {
       updateRadiusCircle();
-    } else {
-      map.once("load", updateRadiusCircle);
+    };
+
+    apply();
+    if (!map.isStyleLoaded()) {
+      map.once("load", apply);
     }
+    const raf = requestAnimationFrame(() => {
+      apply();
+    });
+
+    return () => {
+      cancelAnimationFrame(raf);
+      map.off("load", apply);
+    };
   }, [hasCoords, latitude, longitude, radiusMeters, markerColor]);
 
   if (Platform.OS !== "web") return null;

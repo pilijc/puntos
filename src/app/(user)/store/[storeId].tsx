@@ -26,6 +26,7 @@ import { useRewardsDataStore } from "@/hooks/use-rewards-data";
 import { useStoreOverviewData } from "@/hooks/use-store-overview-data";
 import { ProgramSkeleton } from "@/components/skeleton/user/program-skeleton";
 import StoreScreenContainer from "@/components/ui/store-screen-container";
+import { MuteStoreButton } from "@/components/users/stores/mute-store-button";
 
 const { width: screenWidth } = Dimensions.get("window");
 
@@ -152,16 +153,18 @@ export default function StoreOverviewDetail() {
         />
       }
     >
-      <View className="flex-row items-center gap-x-4 mb-[-12px] z-50 pt-2 pl-2">
+      <View className="flex-row items-center justify-between gap-x-4 mb-[-12px] z-50 px-2">
         <TouchableOpacity 
           onPress={() => router.back()}
-          className="p-1 -ml-1"
+          className="p-1 -ml-1 bg-black/30 rounded-full"
         >
           <ChevronLeft
             size={36}
             color="#FFFFFF"
           />
         </TouchableOpacity>
+
+        <MuteStoreButton storeId={Number(storeId)} />
       </View>
 
       <View className="gap-y-0 -mt-16">

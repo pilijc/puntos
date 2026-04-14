@@ -200,7 +200,6 @@ export default function ConfigureStreaks() {
       
       <AppHeader
         title={t("storeManager.qrConfigure.title")}
-        paddingTop={insets.top + 8}
         onBackPress={() => {
           router.push({ pathname: "/(store_manager)/qr", params: { storeId: storeIdParam } });
         }}

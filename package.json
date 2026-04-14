@@ -25,6 +25,7 @@
     "@rnmapbox/maps": "^10.2.10",
     "@supabase/supabase-js": "^2.96.0",
     "@tailwindcss/postcss": "^4.1.18",
+    "@turf/circle": "^7.3.4",
     "@turf/turf": "^7.3.4",
     "expo": "^54.0.33",
     "expo-auth-session": "~7.0.10",

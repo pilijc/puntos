@@ -8,7 +8,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { getCurrentUserIsActive } from "@/services/frontdesk/scan-service";
 import { checkPasswordSetupRequired } from "@/services/frontdesk/password-service";
 import { useTranslation } from "react-i18next";
-import { History, Settings, Home } from 'lucide-react-native';
+import { History, Settings, ScanLine } from 'lucide-react-native';
 
 function FrontDeskTabs() {
     const router = useRouter();
@@ -122,9 +122,9 @@ function FrontDeskTabs() {
             <Tabs.Screen
                 name="index"
                 options={{
-                    title: "Dashboard",
+                    title: "Scan",
                     tabBarIcon: ({color}) => (
-                        <Home size={24} color={color} />
+                        <ScanLine size={24} color={color} />
                     ),
                     href: isOnPasswordSetup ? null : undefined,
                 }}
