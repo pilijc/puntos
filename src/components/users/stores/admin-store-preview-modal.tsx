@@ -15,6 +15,7 @@ interface AdminStorePreviewModalProps {
   onClose: () => void;
   onViewFullDetails: () => void;
   onApprove: () => void;
+  onReject: () => void;
 }
 
 export function AdminStorePreviewModal({
@@ -23,6 +24,7 @@ export function AdminStorePreviewModal({
   onClose,
   onViewFullDetails,
   onApprove,
+  onReject,
 }: AdminStorePreviewModalProps) {
   const { t: translate } = useTranslation();
 
@@ -141,13 +143,22 @@ export function AdminStorePreviewModal({
           />
         </View>
         {status === "pending_review" && (
-          <TouchableOpacity
-            onPress={onApprove}
-            activeOpacity={0.7}
-            className="w-[42px] h-[42px] items-center justify-center rounded-[14px] bg-green-50 dark:bg-green-900/20 border border-green-100 dark:border-green-900/30"
-          >
-            <MaterialIcons name="verified" size={22} color="#16A34A" />
-          </TouchableOpacity>
+          <>
+            <TouchableOpacity
+              onPress={onReject}
+              activeOpacity={0.7}
+              className="w-[42px] h-[42px] items-center justify-center rounded-[14px] bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-900/30"
+            >
+              <MaterialIcons name="cancel" size={22} color="#DC2626" />
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={onApprove}
+              activeOpacity={0.7}
+              className="w-[42px] h-[42px] items-center justify-center rounded-[14px] bg-green-50 dark:bg-green-900/20 border border-green-100 dark:border-green-900/30"
+            >
+              <MaterialIcons name="verified" size={22} color="#16A34A" />
+            </TouchableOpacity>
+          </>
         )}
       </View>
     </Modal>

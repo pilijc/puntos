@@ -23,6 +23,7 @@ import { getStoreDetail, updateStoreDetail, uploadDetailImage } from "@/services
 import { useDetailStore, useDetailViewStore } from "@/store/store-manager/detail-store";
 import { store_types_options, aspect_ratios, type PickImageType } from "@/type/store-manager/store";
 import { dateToTimeString, timeStringToDate } from "@/utils/date-helpers";
+import { shouldUseInteractiveMapbox } from "@/utils/mapbox-platform";
 
 Mapbox.setAccessToken(process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN!);
 
@@ -227,7 +228,6 @@ export default function EditDetails() {
         buttons={modal?.buttons}
       />
 
-      {/* Header */}
       <View
         className="bg-background dark:bg-neutral-800 border-b border-neutral-100 dark:border-neutral-700"
         style={{ paddingTop: insets.top + 8, paddingBottom: 12 }}
@@ -298,7 +298,6 @@ export default function EditDetails() {
               </View>
             </View>
 
-            {/* Opening / Closing times */}
             <View className="flex-row gap-x-3">
               <View className="flex-1">
                 <Text className="text-sm font-poppins-semibold text-textSecondary dark:text-textSecondary mb-1.5">Opening Time</Text>
@@ -323,7 +322,6 @@ export default function EditDetails() {
               </View>
             </View>
 
-            {/* Opening time picker */}
             {showOpenPicker && (
               Platform.OS === "android" ? (
                 <DateTimePicker
@@ -343,7 +341,6 @@ export default function EditDetails() {
               )
             )}
 
-            {/* Closing time picker */}
             {showClosePicker && (
               Platform.OS === "android" ? (
                 <DateTimePicker
@@ -394,7 +391,6 @@ export default function EditDetails() {
             </View>
           </View>
 
-          {/* Pictures */}
           <View>
             <View className="flex-row items-center justify-between mb-1.5">
               <Text className="text-sm font-poppins-semibold text-textSecondary dark:text-textSecondary mb-1.5">Store Pictures</Text>
@@ -506,41 +502,52 @@ export default function EditDetails() {
           </View>
 
           <View className="rounded-xl overflow-hidden border border-slate-200 dark:border-neutral-700" style={{ height: 280 }}>
-            <MapView
-              style={{ height: 280, width: "100%" }}
-              styleURL={isDark ? "mapbox://styles/mapbox/navigation-night-v1" : "mapbox://styles/mapbox/streets-v12"}
-              onPress={(e) => {
-                const coords = (e as any)?.geometry?.coordinates as [number, number] | undefined;
-                if (!coords) return;
-                const [lng, lat] = coords;
-                if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
-                setLatitude(String(lat));
-                setLongitude(String(lng));
-              }}
-              onTouchStart={() => setScrollEnabled(false)}
-              onTouchEnd={() => setScrollEnabled(true)}
-              onTouchCancel={() => setScrollEnabled(true)}
-            >
-              <Camera
-                zoomLevel={hasPin ? 14 : 12}
-                centerCoordinate={hasPin ? [parsedLng, parsedLat] : [123.8854, 10.3157]}
-              />
-              {hasPin && (
-                <PointAnnotation id="pin" coordinate={[parsedLng, parsedLat]}>
-                  <View className="w-4 h-4 bg-orange-500 rounded-full border-2 border-white" />
-                </PointAnnotation>
-              )}
-              {radiusCircle && (
-                <Mapbox.ShapeSource id="radius" shape={radiusCircle}>
-                  <Mapbox.FillLayer id="radiusFill" style={{ fillColor: "#FF6600", fillOpacity: 0.14 }} />
-                </Mapbox.ShapeSource>
-              )}
-            </MapView>
-            <View className="absolute bottom-2 left-2 bg-black/50 rounded-lg px-2 py-1">
-              <Text style={{ color: "#fff", fontSize: 10, fontFamily: "Poppins-Regular" }}>
-                Tap map to move pin
-              </Text>
-            </View>
+            {shouldUseInteractiveMapbox() ? (
+              <>
+                <MapView
+                  style={{ height: 280, width: "100%" }}
+                  styleURL={isDark ? "mapbox://styles/mapbox/navigation-night-v1" : "mapbox://styles/mapbox/streets-v12"}
+                  onPress={(e) => {
+                    const coords = (e as any)?.geometry?.coordinates as [number, number] | undefined;
+                    if (!coords) return;
+                    const [lng, lat] = coords;
+                    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+                    setLatitude(String(lat));
+                    setLongitude(String(lng));
+                  }}
+                  onTouchStart={() => setScrollEnabled(false)}
+                  onTouchEnd={() => setScrollEnabled(true)}
+                  onTouchCancel={() => setScrollEnabled(true)}
+                >
+                  <Camera
+                    zoomLevel={hasPin ? 14 : 12}
+                    centerCoordinate={hasPin ? [parsedLng, parsedLat] : [123.8854, 10.3157]}
+                  />
+                  {hasPin && (
+                    <PointAnnotation id="pin" coordinate={[parsedLng, parsedLat]}>
+                      <View className="w-4 h-4 bg-orange-500 rounded-full border-2 border-white" />
+                    </PointAnnotation>
+                  )}
+                  {radiusCircle && (
+                    <Mapbox.ShapeSource id="radius" shape={radiusCircle}>
+                      <Mapbox.FillLayer id="radiusFill" style={{ fillColor: "#FF6600", fillOpacity: 0.14 }} />
+                    </Mapbox.ShapeSource>
+                  )}
+                </MapView>
+                <View className="absolute bottom-2 left-2 bg-black/50 rounded-lg px-2 py-1">
+                  <Text style={{ color: "#fff", fontSize: 10, fontFamily: "Poppins-Regular" }}>
+                    Tap map to move pin
+                  </Text>
+                </View>
+              </>
+            ) : (
+              <View className="flex-1 h-full bg-slate-50 dark:bg-neutral-800 items-center justify-center gap-y-1 px-4">
+                <MaterialIcons name="map" size={28} color={isDark ? "#525252" : "#CBD5E1"} />
+                <Text className="text-xs font-poppins text-center text-slate-400 dark:text-slate-500">
+                  Map only available on Android & Web — use “Use Current” or enter coordinates below.
+                </Text>
+              </View>
+            )}
           </View>
 
           <TextField
