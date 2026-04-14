@@ -1,21 +1,13 @@
 import { Tabs } from "expo-router";
-<<<<<<< HEAD
 import { useColorScheme, Platform, Text, View, Image } from "react-native";
 import React, { useCallback } from "react";
 import { usePathname } from "expo-router";
 import { BottomTabBar, type BottomTabBarButtonProps, type BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import { PlatformPressable } from "@react-navigation/elements";
 import { useRoute } from "@react-navigation/native";
-=======
-import React from "react";
-import { useColorScheme } from "react-native";
-import { useSuperAdminLayout } from "@/hooks/super-admin/use-super-admin-layout";
-import { LayoutDashboard, Users, Store, Settings, CircleDollarSign } from 'lucide-react-native';
-
->>>>>>> origin/develop
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
-import { LayoutDashboard, Users, Store, Settings } from 'lucide-react-native';
+import { LayoutDashboard, Users, Store, Settings, CircleDollarSign } from 'lucide-react-native';
 import { useSuperAdminLayout } from "@/hooks/super-admin/use-super-admin-layout";
 
 const WEB_SIDEBAR_WIDTH = 260;
@@ -29,7 +21,7 @@ const WEB_SIDEBAR_BORDER_LIGHT = "#F1F5F9";
 const WEB_SIDEBAR_BORDER_DARK = "#404040";
 const TAB_ACCENT = "#FF6600";
 
-type SidebarTabId = "index" | "users" | "stores" | "settings";
+type SidebarTabId = "index" | "users" | "stores" | "settings" | "subscription-config";
 type TabLabelPosition = "beside-icon" | "below-icon";
 
 function withTrailingSlash(pathname: string) {
@@ -49,6 +41,10 @@ function activeSidebarTabFromPath(path: string): SidebarTabId {
 
     if (p.includes("/settings/") || p.endsWith("/settings/")) {
         return "settings";
+    }
+
+    if (p.includes("/subscription-config/") || p.endsWith("/subscription-config/")) {
+        return "subscription-config";
     }
 
     return "index";
@@ -298,9 +294,22 @@ export default function SuperAdminLayout() {
         name="subscription-config"
         options={{
           title: "Subscription",
-          tabBarIcon: ({ color }) => (
-            <CircleDollarSign size={22} color={color} />
+          tabBarIcon: ({ color, size }) => (
+            <CircleDollarSign 
+                size={isWeb ? WEB_TAB_ICON_SIZE : size} 
+                color={isWeb && activeTab === "subscription-config" ? TAB_ACCENT : color} 
+            />
           ),
+          tabBarLabel: isWeb
+            ? ({ color, position }) => (
+                    <WebSidebarTabLabel
+                        text="Subscription"
+                        navColor={color}
+                        position={position}
+                        isRowActive={activeTab === "subscription-config"}
+                    />
+                )
+            : undefined,
         }}
       />
       <Tabs.Screen

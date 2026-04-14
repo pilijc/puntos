@@ -11,10 +11,14 @@ export function useSuperAdminDashboard() {
   const [refreshing, setRefreshing] = useState(false);
   const [avatarKey, setAvatarKey] = useState(Date.now());
 
-  const activeStoresCount = useMemo(() =>
-    (stores || []).filter(s => s.status?.toString().toUpperCase().trim() === "ACTIVE").length,
-    [stores]
-  );
+  const activeStoresCount = useMemo(() => {
+    return (stores || []).filter(s => {
+      const status = (s.status || "").toString().toLowerCase().trim();
+      if (status === "pending_review" || !status) return false;
+      if (status === "inactive") return false;
+      return Boolean(s.is_active);
+    }).length;
+  }, [stores]);
 
   const initData = async () => {
     await Promise.all([fetchAdminSession(), fetchDashboardData()]);
