@@ -6,7 +6,7 @@ import { Button } from "@/components/button";
 import { TextField } from "@/components/text-field";
 import * as ImagePicker from "expo-image-picker";
 import { Modal, type ModalButton } from "@/components/modal";
-import { createStore, updateStore, uploadStoreImage, StoreImageKind } from "@/services/store-service";
+import { createStore, updateStore, uploadStoreImage, StoreImageKind, resolveStoreTimezone } from "@/services/store-service";
 import { supabase } from "@/supabase/supabase";
 import Mapbox, { MapView, Camera, PointAnnotation } from "@rnmapbox/maps";
 import { useColorScheme, Platform, Modal as RNModal } from "react-native";
@@ -42,6 +42,7 @@ export default function CreateStore() {
     storeType,
     latitude,
     longitude,
+    timezone,
     radius,
     logo,
     pictures,
@@ -58,6 +59,7 @@ export default function CreateStore() {
     setAddress,
     setLatitude,
     setLongitude,
+    setTimezone,
     setPhone,
     setRegistrationNumber,
     setBusinessDocumentImage,
@@ -66,6 +68,7 @@ export default function CreateStore() {
     setRadius,
     resetForm,
   } = useCreateStoreStore();
+  const [isResolvingTimezone, setIsResolvingTimezone] = useState(false);
   const [modal, setModal] = useState<{
     title: string;
     message: string;
@@ -209,9 +212,21 @@ export default function CreateStore() {
     return circle;
   }, [hasPin, parsedLat, parsedLng, radius]);
 
-  const setPin = (lat: number, lng: number) => {
+  const setPin = async (lat: number, lng: number) => {
     setLatitude(String(lat));
     setLongitude(String(lng));
+    // Auto-resolve timezone from the new pin location.
+    // resolveStoreTimezone calls the DB RPC; returns null when boundary data isn't loaded.
+    setIsResolvingTimezone(true);
+    try {
+      const tz = await resolveStoreTimezone(lng, lat);
+      if (tz) setTimezone(tz);
+      // If null, leave the current value in place so a manual override is preserved.
+    } catch (e) {
+      console.warn('[create-store] timezone resolve failed:', e);
+    } finally {
+      setIsResolvingTimezone(false);
+    }
   };
 
   const handleGetCurrent = async () => {
@@ -236,7 +251,7 @@ export default function CreateStore() {
       return;
     }
 
-    setPin(loc.coords.latitude, loc.coords.longitude);
+    await setPin(loc.coords.latitude, loc.coords.longitude);
   };
 
   const goBack = () => {
@@ -298,6 +313,7 @@ export default function CreateStore() {
           address: address.trim(),
           latitude: hasPin ? parsedLat : null,
           longitude: hasPin ? parsedLng : null,
+          timezone: timezone.trim() || null,
           phone: phone.trim() || undefined,
           registrationNumber: registrationNumber.trim() || undefined,
           storeOpen: storeOpen.trim() || null,
@@ -1045,25 +1061,33 @@ export default function CreateStore() {
               </View>
 
               <View className="rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900">
-                <View pointerEvents="box-none" style={{ minHeight: 400 }}>
-                  {shouldUseInteractiveMapbox() ? (
-                    <MapView
-                      style={{ height: 400, width: "100%" }}
-                      styleURL={
-                        isDark
-                          ? "mapbox://styles/mapbox/navigation-night-v1"
-                          : "mapbox://styles/mapbox/streets-v12"
-                      }
-                      onPress={(e) => {
-                        const coords = (e as any)?.geometry?.coordinates as [number, number] | undefined;
-                        if (!coords) return;
-                        const [lng, lat] = coords;
-                        if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
-                        setPin(lat, lng);
-                      }}
-                      onTouchStart={() => setScrollEnabled(false)}
-                      onTouchEnd={() => setScrollEnabled(true)}
-                      onTouchCancel={() => setScrollEnabled(true)}
+                <View pointerEvents="box-none">
+                  <MapView
+                    style={{ height: 400, width: "100%" }}
+                    styleURL={
+                      isDark
+                        ? "mapbox://styles/mapbox/navigation-night-v1"
+                        : "mapbox://styles/mapbox/streets-v12"
+                    }
+                    onPress={async (e) => {
+                      const coords = (e as any)?.geometry?.coordinates as [number, number] | undefined;
+                      if (!coords) return;
+                      const [lng, lat] = coords;
+                      if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+                      await setPin(lat, lng);
+                    }}
+                    onTouchStart={() => setScrollEnabled(false)}
+                    onTouchEnd={() => setScrollEnabled(true)}
+                    onTouchCancel={() => setScrollEnabled(true)}
+                  >
+                    <Camera
+                      zoomLevel={hasPin ? 14 : 12}
+                      centerCoordinate={hasPin ? [parsedLng, parsedLat] : [123.8854, 10.3157]}
+                    />
+                  {hasPin && (
+                    <PointAnnotation
+                      id="storeLocation"
+                      coordinate={[parsedLng, parsedLat]}
                     >
                       <Camera
                         zoomLevel={hasPin ? 14 : 12}
@@ -1110,6 +1134,37 @@ export default function CreateStore() {
                 multiline
                 sanitize={(v) => v}
               />
+
+              {/* Timezone — auto-filled from PostGIS when boundary data is loaded; manual entry otherwise */}
+              <View className="flex-col gap-1.5 mt-1">
+                <View className="flex-row items-center gap-2">
+                  <Text className="text-slate-700 dark:text-slate-300 text-sm font-poppins-medium px-1">
+                    Store Timezone{" "}
+                    <Text className="text-red-500 dark:text-red-400">*</Text>
+                  </Text>
+                  {isResolvingTimezone && (
+                    <Text className="text-xs text-slate-400 font-poppins italic">Detecting…</Text>
+                  )}
+                </View>
+                <TextField
+                  placeholder="e.g. Asia/Manila"
+                  value={timezone}
+                  onChangeText={setTimezone}
+                  sanitize={(v) => v}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                />
+                {!isResolvingTimezone && !timezone.trim() && hasPin && (
+                  <Text className="text-xs text-amber-600 dark:text-amber-400 font-poppins px-1">
+                    Could not auto-detect timezone. Please enter it manually (e.g. Asia/Manila, America/New_York).
+                  </Text>
+                )}
+                {timezone.trim() && (
+                  <Text className="text-xs text-slate-400 dark:text-slate-500 font-poppins px-1">
+                    Timezone locked in. You can correct it if needed.
+                  </Text>
+                )}
+              </View>
 
             <View className="mt-2">
               <View className="flex-row justify-between items-center mb-2">

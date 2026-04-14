@@ -39,8 +39,52 @@ export interface UpcomingStreakProgram {
 
 export type StampResult = {
   success: boolean;
-  reason?: "already_stamped_today" | "already_completed" | "stamp_not_enabled" | "card_expired" | "error";
+  reason?: "already_stamped_today" | "already_completed" | "stamp_not_enabled" | "card_expired" | "timezone_missing" | "duplicate" | "error";
 };
+
+/**
+ * Issues a stamp for a verified purchase via a server-authoritative DB RPC.
+ * This is the canonical way to award stamps. The RPC uses DB time (now()) for
+ * all timestamps and enforces the uniqueness constraint on purchase_id so the
+ * same purchase can never mint more than one stamp.
+ *
+ * @param purchaseId - The `purchases.id` of the completed, verified purchase.
+ */
+export async function issueStampForPurchase(purchaseId: number | string): Promise<StampResult> {
+  try {
+    const { data, error } = await supabase.rpc('issue_stamp_for_purchase', {
+      p_purchase_id: Number(purchaseId),
+    });
+
+    if (error) {
+      console.error('[issueStampForPurchase] RPC error:', error.message);
+      return { success: false, reason: 'error' };
+    }
+
+    const result = data as {
+      success: boolean;
+      duplicate?: boolean;
+      reason?: string;
+    };
+
+    if (result.duplicate) {
+      // Same purchase already stamped — idempotent, treat as success
+      return { success: true, reason: 'duplicate' };
+    }
+
+    if (!result.success) {
+      return {
+        success: false,
+        reason: (result.reason as StampResult['reason']) ?? 'error',
+      };
+    }
+
+    return { success: true };
+  } catch (err) {
+    console.error('[issueStampForPurchase] Exception:', err);
+    return { success: false, reason: 'error' };
+  }
+}
 
 export async function getUserStamps(userId: string): Promise<StampProgress[]> {
   try {
@@ -102,6 +146,11 @@ function todayLocalDate(): string {
   return `${year}-${month}-${day}`;
 }
 
+/**
+ * @deprecated Stamps must come from verified purchases only. Use
+ * `issueStampForPurchase(purchaseId)` in the QR/purchase flow instead.
+ * This function is kept temporarily for backward compat but will be removed.
+ */
 export async function addStamp(
   userId: string,
   storeId: number | string,
