@@ -159,8 +159,8 @@ export default function SuperAdminLayout() {
   const isDark = colorScheme === 'dark';
   const insets = useSafeAreaInsets();
   
-  // Robust web detection including SSR support
-  const isWeb = Platform.OS === "web" || (typeof window !== 'undefined' && window.location);
+  // Standard React Native platform detection
+  const isWeb = Platform.OS === "web";
   
   const pathname = usePathname() || "/";
   const activeTab = activeSidebarTabFromPath(withTrailingSlash(pathname));
