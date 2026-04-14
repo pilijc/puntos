@@ -1,72 +1,311 @@
 import { Tabs } from "expo-router";
-import React from "react";
-import { useColorScheme } from "react-native";
-import { useSuperAdminLayout } from "@/hooks/super-admin/use-super-admin-layout";
-import { LayoutDashboard, Users, Store, Settings } from 'lucide-react-native';
-
+import { useColorScheme, Platform, Text, View, Image } from "react-native";
+import React, { useCallback } from "react";
+import { usePathname } from "expo-router";
+import { BottomTabBar, type BottomTabBarButtonProps, type BottomTabBarProps } from "@react-navigation/bottom-tabs";
+import { PlatformPressable } from "@react-navigation/elements";
+import { useRoute } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useTranslation } from "react-i18next";
+import { LayoutDashboard, Users, Store, Settings } from 'lucide-react-native';
+import { useSuperAdminLayout } from "@/hooks/super-admin/use-super-admin-layout";
+
+const WEB_SIDEBAR_WIDTH = 260;
+const WEB_SIDEBAR_INSET_X = 16;
+const WEB_SIDEBAR_BRAND_PADDING_X = 24;
+const WEB_TAB_ICON_SIZE = 18;
+const WEB_TAB_ACTIVE_MARGIN_END = 100;
+const WEB_TAB_ACTIVE_BG_LIGHT = "#F3F4F6";
+const WEB_TAB_ACTIVE_BG_DARK = "#431407";
+const WEB_SIDEBAR_BORDER_LIGHT = "#F1F5F9";
+const WEB_SIDEBAR_BORDER_DARK = "#404040";
+const TAB_ACCENT = "#FF6600";
+
+type SidebarTabId = "index" | "users" | "stores" | "settings";
+type TabLabelPosition = "beside-icon" | "below-icon";
+
+function withTrailingSlash(pathname: string) {
+    return pathname.endsWith("/") ? pathname : `${pathname}/`;
+}
+
+function activeSidebarTabFromPath(path: string): SidebarTabId {
+    const p = withTrailingSlash(path);
+
+    if (p.includes("/users/") || p.endsWith("/users/")) {
+        return "users";
+    }
+
+    if (p.includes("/stores/") || p.endsWith("/stores/")) {
+        return "stores";
+    }
+
+    if (p.includes("/settings/") || p.endsWith("/settings/")) {
+        return "settings";
+    }
+
+    return "index";
+}
+
+function WebSidebarTabLabel(props: {
+    text: string;
+    navColor: string;
+    position: TabLabelPosition;
+    isRowActive: boolean;
+}) {
+    const { text, navColor, position, isRowActive } = props;
+    return (
+        <Text
+            style={{
+                fontSize: 12,
+                fontFamily: "Poppins-Medium",
+                marginBottom: 0,
+                marginStart: position === "beside-icon" ? 10 : 0,
+                paddingRight: 8,
+                color: isRowActive ? TAB_ACCENT : navColor,
+            }}
+        >
+            {text}
+        </Text>
+    );
+}
+
+function WebSuperAdminTabBarButton(props: BottomTabBarButtonProps) {
+    const route = useRoute();
+    const pathname = usePathname() || "/";
+    const colorScheme = useColorScheme();
+    const isDark = colorScheme === "dark";
+
+    const activeTab = activeSidebarTabFromPath(withTrailingSlash(pathname));
+    const isThisRow = activeTab === route.name;
+    const activeBackground = isDark ? WEB_TAB_ACTIVE_BG_DARK : WEB_TAB_ACTIVE_BG_LIGHT;
+
+    return (
+        <View
+            style={{
+                alignSelf: "stretch",
+                ...(isThisRow ? { marginRight: WEB_TAB_ACTIVE_MARGIN_END } : null),
+            }}
+        >
+            <PlatformPressable
+                {...props}
+                hoverEffect={undefined}
+                aria-selected={isThisRow}
+                accessibilityState={{
+                    ...props.accessibilityState,
+                    selected: isThisRow,
+                }}
+                style={[props.style, isThisRow ? { backgroundColor: activeBackground } : null]}
+            />
+        </View>
+    );
+}
+
+function WebSuperAdminSidebarTabBar({ isDark, ...props }: BottomTabBarProps & { isDark: boolean }) {
+    const chromeBg = isDark ? "#262626" : "#FFFFFF";
+
+    return (
+        <View
+            style={{
+                alignSelf: "stretch",
+                width: WEB_SIDEBAR_WIDTH,
+                minWidth: WEB_SIDEBAR_WIDTH,
+                maxWidth: WEB_SIDEBAR_WIDTH,
+                flex: 1,
+                flexDirection: "column",
+                backgroundColor: chromeBg,
+                borderRightWidth: 1,
+                borderRightColor: isDark ? WEB_SIDEBAR_BORDER_DARK : WEB_SIDEBAR_BORDER_LIGHT,
+                zIndex: 10,
+            }}
+        >
+            <View
+                style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 10,
+                    paddingHorizontal: WEB_SIDEBAR_BRAND_PADDING_X,
+                    paddingTop: 14,
+                    paddingBottom: 20,
+                }}
+            >
+                <Image
+                    source={require("@/assets/images/puntos-icon.png")}
+                    style={{ width: 36, height: 36 }}
+                    resizeMode="contain"
+                />
+                <Text
+                    style={{
+                        fontSize: 18,
+                        fontFamily: "Poppins-Bold",
+                        color: isDark ? "#FFFFFF" : TAB_ACCENT,
+                    }}
+                >
+                    PUNTOS
+                </Text>
+            </View>
+
+            <View style={{ flex: 1, minHeight: 0 }}>
+                <BottomTabBar {...props} />
+            </View>
+        </View>
+    );
+}
 
 export default function SuperAdminLayout() {
   useSuperAdminLayout();
 
+  const { t: translate } = useTranslation();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
   const insets = useSafeAreaInsets();
+  
+  // Robust web detection including SSR support
+  const isWeb = Platform.OS === "web" || (typeof window !== 'undefined' && window.location);
+  
+  const pathname = usePathname() || "/";
+  const activeTab = activeSidebarTabFromPath(withTrailingSlash(pathname));
+
+  const renderWebTabBar = useCallback(
+    (barProps: BottomTabBarProps) => (
+      <WebSuperAdminSidebarTabBar {...barProps} isDark={isDark} />
+    ),
+    [isDark],
+  );
 
   return (
     <Tabs
-      screenOptions={{
-        headerShown: false,
-        tabBarActiveTintColor: "#FF6600",
-        tabBarInactiveTintColor: isDark ? "#737373" : "#8B8D98",
-        tabBarLabelStyle: { 
-          fontSize: 10, 
-          fontFamily: "Poppins-Medium",
-          marginBottom: insets.bottom > 0 ? 0 : 5 
-        },
-        tabBarStyle: { 
-          backgroundColor: isDark ? "#171717" : "#FFFFFF", 
-          borderTopWidth: 1,
-          borderTopColor: isDark ? "#404040" : "#F3F4F6",
-          height: 60 + insets.bottom, 
-          paddingBottom: insets.bottom > 0 ? insets.bottom : 8, 
-        },
-      }}
+        tabBar={isWeb ? renderWebTabBar : undefined}
+        screenOptions={{
+            headerShown: false,
+            tabBarPosition: isWeb ? "left" : "bottom",
+            tabBarLabelPosition: isWeb ? "beside-icon" : undefined,
+            ...(isWeb ? { animation: "none" as const } : {}),
+            tabBarActiveBackgroundColor: isWeb
+                ? isDark
+                    ? WEB_TAB_ACTIVE_BG_DARK
+                    : WEB_TAB_ACTIVE_BG_LIGHT
+                : undefined,
+            tabBarInactiveBackgroundColor: isWeb ? "transparent" : undefined,
+            tabBarStyle: isWeb
+                ? {
+                        backgroundColor: "transparent",
+                        borderTopWidth: 0,
+                        borderRightWidth: 0,
+                        flex: 1,
+                        width: "100%",
+                        elevation: 0,
+                        paddingLeft: WEB_SIDEBAR_INSET_X,
+                        paddingRight: WEB_SIDEBAR_INSET_X,
+                    }
+                : {
+                        backgroundColor: isDark ? "#171717" : "#FFFFFF",
+                        borderTopColor: isDark ? "#404040" : "#F3F4F6",
+                        height: 60 + insets.bottom,
+                        paddingBottom: insets.bottom > 0 ? insets.bottom : 8,
+                        elevation: 0,
+                    },
+            tabBarActiveTintColor: TAB_ACCENT,
+            tabBarInactiveTintColor: isDark ? "#737373" : "#8B8D98",
+            tabBarButton: isWeb
+                ? (btnProps) => <WebSuperAdminTabBarButton {...btnProps} />
+                : undefined,
+            tabBarItemStyle: isWeb
+                ? { alignSelf: "stretch", width: "100%" }
+                : undefined,
+            tabBarLabelStyle: {
+                fontSize: isWeb ? 12 : 10,
+                fontFamily: "Poppins-Medium",
+                marginBottom: isWeb ? 0 : insets.bottom > 0 ? 0 : 4,
+                ...(isWeb ? { paddingRight: 8 } : {}),
+            },
+        }}
     >
       <Tabs.Screen
         name="index"
         options={{
-          title: "Overview",
-          tabBarIcon: ({ color }) => (
-            <LayoutDashboard size={22} color={color} />
-          ),
+            title: "Overview",
+            tabBarIcon: ({ color, size }) => (
+                <LayoutDashboard 
+                    size={isWeb ? WEB_TAB_ICON_SIZE : size} 
+                    color={isWeb && activeTab === "index" ? TAB_ACCENT : color} 
+                />
+            ),
+            tabBarLabel: isWeb
+                ? ({ color, position }) => (
+                        <WebSidebarTabLabel
+                            text="Overview"
+                            navColor={color}
+                            position={position}
+                            isRowActive={activeTab === "index"}
+                        />
+                    )
+                : undefined,
         }}
       />
       <Tabs.Screen
         name="users"
         options={{
-          title: "Users",
-          tabBarIcon: ({ color }) => (
-            <Users size={22} color={color} />
-          ),
+            title: "Users",
+            tabBarIcon: ({ color, size }) => (
+                <Users 
+                    size={isWeb ? WEB_TAB_ICON_SIZE : size} 
+                    color={isWeb && activeTab === "users" ? TAB_ACCENT : color} 
+                />
+            ),
+            tabBarLabel: isWeb
+                ? ({ color, position }) => (
+                        <WebSidebarTabLabel
+                            text="Users"
+                            navColor={color}
+                            position={position}
+                            isRowActive={activeTab === "users"}
+                        />
+                    )
+                : undefined,
         }}
       />
       <Tabs.Screen
         name="stores"
         options={{
-          title: "Stores",
-          tabBarIcon: ({ color }) => (
-            <Store size={22} color={color} />
-          ),
+            title: "Stores",
+            tabBarIcon: ({ color, size }) => (
+                <Store 
+                    size={isWeb ? WEB_TAB_ICON_SIZE : size} 
+                    color={isWeb && activeTab === "stores" ? TAB_ACCENT : color} 
+                />
+            ),
+            tabBarLabel: isWeb
+                ? ({ color, position }) => (
+                        <WebSidebarTabLabel
+                            text="Stores"
+                            navColor={color}
+                            position={position}
+                            isRowActive={activeTab === "stores"}
+                        />
+                    )
+                : undefined,
         }}
       />
       <Tabs.Screen
         name="settings"
         options={{
-          title: "Settings",
-          tabBarIcon: ({ color }) => (
-              <Settings size={22} color={color} />
-          ),
+            title: "Settings",
+            tabBarIcon: ({ color, size }) => (
+                <Settings 
+                    size={isWeb ? WEB_TAB_ICON_SIZE : size} 
+                    color={isWeb && activeTab === "settings" ? TAB_ACCENT : color} 
+                />
+            ),
+            tabBarLabel: isWeb
+                ? ({ color, position }) => (
+                        <WebSidebarTabLabel
+                            text="Settings"
+                            navColor={color}
+                            position={position}
+                            isRowActive={activeTab === "settings"}
+                        />
+                    )
+                : undefined,
         }}
       />
     </Tabs>
