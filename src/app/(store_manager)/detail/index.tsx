@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { RefreshControl, Platform } from "react-native";
 import { View, Text, ScrollView, SafeAreaView } from "@/tw";
 import { useRouter } from "expo-router";
@@ -11,6 +11,9 @@ import { OptionsMenu } from "@/components/options";
 import { AppHeader } from "@/components/header";
 import { shouldUseInteractiveMapbox } from "@/utils/mapbox-platform";
 import { Building2, Clock, File, MapPin, MapPinOff, Pencil, Phone } from "lucide-react-native";
+import { useTranslation } from "react-i18next";
+import { store_types_options } from "@/type/store-manager/store";
+import { STATUS_CONFIG } from "@/type/store-manager/detail";
 
 function webContainerStyle(paddingTop = 16, paddingBottom = 48) {
   return {
@@ -23,6 +26,7 @@ function webContainerStyle(paddingTop = 16, paddingBottom = 48) {
 
 export default function DetailIndex() {
   const router = useRouter();
+  const { t } = useTranslation();
   const {
     storeId,
     detail,
@@ -30,18 +34,35 @@ export default function DetailIndex() {
     refreshing,
     handleRefresh,
     pictures,
-    storeTypeLabelmap,
-    statusCfg,
     hasCoords,
     isDark,
     mapWidth,
   } = useStoreDetail();
 
+  const statusKey =
+    detail?.status && detail.status in STATUS_CONFIG ? detail.status : "pending_review";
+  const statusCfg = STATUS_CONFIG[statusKey] ?? STATUS_CONFIG.pending_review;
+  const statusLabel = t(`storeManager.detail.status.${statusKey}`);
+
+  const storeTypeLabel = useMemo(() => {
+    if (!detail?.type) return "—";
+    if (store_types_options.some((o) => o.value === detail.type)) {
+      return t(`storeManager.storeTypes.${detail.type}`);
+    }
+    return detail.type;
+  }, [detail?.type, t]);
+
+  const notSet = t("storeManager.detail.notSet");
+  const openLine = (time: string | null | undefined) =>
+    t("storeManager.detail.open", { time: time ? formatTime(time) : notSet });
+  const closeLine = (time: string | null | undefined) =>
+    t("storeManager.detail.close", { time: time ? formatTime(time) : notSet });
+
   return (
     <SafeAreaView edges={["top"]} className="flex-1 bg-backgroundMuted dark:bg-neutral-900">
       <AppHeader
-        title={detail?.name || "Store Details"}
-        description={detail?.address || "View & manage store info"}
+        title={detail?.name || t("storeManager.viewStore.fallbackTitle")}
+        description={detail?.address || t("storeManager.detail.headerDefaultDescription")}
         onBackPress={() => {
           router.push(`/(store_manager)/view-store/${storeId}`);
         }}
@@ -49,7 +70,7 @@ export default function DetailIndex() {
           <OptionsMenu
             options={[
               {
-                label: "Edit",
+                label: t("storeManager.detail.edit"),
                 icon: <Pencil size={14} color="text-primary" />,
                 onPress: () => router.push({ pathname: "/(store_manager)/detail/edit-details", params: { storeId } }),
               },
@@ -98,15 +119,15 @@ export default function DetailIndex() {
                   <View className="flex-1 items-start justify-start">
                     <View className="flex-row items-center w-full">
                       <Text className="text-base font-poppins-bold text-slate-800 dark:text-slate-100 text-left mr-2">
-                        {detail?.name || "Unnamed Store"}
+                        {detail?.name || t("storeManager.detail.unnamedStore")}
                       </Text>
                       <View className={`flex-row items-center gap-x-1 px-2.5 py-1 rounded-full ${statusCfg.bg}`}>
                         <View className={`w-1.5 h-1.5 rounded-full ${statusCfg.dot}`} />
-                        <Text className={`text-xs font-poppins-semibold ${statusCfg.text}`}>{statusCfg.label}</Text>
+                        <Text className={`text-xs font-poppins-semibold ${statusCfg.text}`}>{statusLabel}</Text>
                       </View>
                     </View>
                     <Text className="text-xs font-poppins-semibold text-textMuted dark:text-slate-500 mt-0.5">
-                      {storeTypeLabelmap[detail?.type ?? ""] ?? detail?.type ?? "—"}
+                      {storeTypeLabel}
                     </Text>
                   </View>
                 </View>
@@ -117,13 +138,13 @@ export default function DetailIndex() {
                       <View className="flex-row items-center gap-x-2">
                         <Phone size={12} color={isDark ? "#A3A3A3" : "#475569"} />
                         <Text className="text-xs font-poppins-semibold text-textSecondary dark:text-slate-500">
-                          {detail?.phone ?? "Not set"}
+                          {detail?.phone ?? notSet}
                         </Text>
                       </View>
                       <View className="flex-row items-center gap-x-2">
                         <File size={12} color={isDark ? "#A3A3A3" : "#475569"} />
                         <Text className="text-xs font-poppins-semibold text-textSecondary dark:text-slate-500">
-                          {detail?.registration_number ?? "Not set"}
+                          {detail?.registration_number ?? notSet}
                         </Text>
                       </View>
                     </View>
@@ -132,13 +153,13 @@ export default function DetailIndex() {
                       <View className="flex-row items-center gap-x-2">
                         <Clock size={12} color={isDark ? "#A3A3A3" : "#475569"} />
                         <Text className="text-xs font-poppins-semibold text-textSecondary dark:text-slate-500">
-                          Open: {detail?.store_open ? formatTime(detail.store_open) : "Not set"}
+                          {openLine(detail?.store_open)}
                         </Text>
                       </View>
                       <View className="flex-row items-center gap-x-2">
                         <Clock size={12} color={isDark ? "#A3A3A3" : "#475569"} />
                         <Text className="text-xs font-poppins-semibold text-textSecondary dark:text-slate-500">
-                          Close: {detail?.store_close ? formatTime(detail.store_close) : "Not set"}
+                          {closeLine(detail?.store_close)}
                         </Text>
                       </View>
                     </View>
@@ -167,7 +188,7 @@ export default function DetailIndex() {
                     <View className="h-px bg-slate-100 dark:bg-neutral-700 mx-4" />
                     <View className="px-4 py-3.5">
                       <Text className="text-xs font-poppins text-textMuted dark:text-slate-500 mb-2">
-                        Business Document
+                        {t("storeManager.detail.businessDocument")}
                       </Text>
                       <Image
                         source={{ uri: detail.business_document_image }}
@@ -181,7 +202,7 @@ export default function DetailIndex() {
 
                 <View className="h-px bg-slate-100 dark:bg-neutral-700 mx-4" />
                 <View className="px-4 pb-4 py-4 gap-y-4">
-                  <Text className="text-xs font-poppins text-textMuted dark:text-slate-500">Location</Text>
+                  <Text className="text-xs font-poppins text-textMuted dark:text-slate-500">{t("storeManager.detail.location")}</Text>
                   {detail?.address && (
                     <Text className="text-xs font-poppins-semibold text-textPrimary dark:text-textPrimary -mt-4">
                       {detail.address}
@@ -233,14 +254,14 @@ export default function DetailIndex() {
                       <View style={{ borderRadius: 12 }} className="h-32 bg-slate-50 dark:bg-neutral-700 items-center justify-center gap-y-1">
                         <MapPin size={24} color={isDark ? "#525252" : "#CBD5E1"} />
                         <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">
-                          Map only available on Android & Web
+                          {t("storeManager.detail.mapOnlyAndroidWeb")}
                         </Text>
                       </View>
                     )
                   ) : (
                     <View style={{ borderRadius: 12 }} className="h-32 bg-slate-50 dark:bg-neutral-700 items-center justify-center gap-y-1">
                       <MapPinOff size={24} color={isDark ? "#525252" : "#CBD5E1"} />
-                      <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">No location set</Text>
+                      <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">{t("storeManager.detail.noLocationSet")}</Text>
                     </View>
                   )}
                 </View>
@@ -268,17 +289,17 @@ export default function DetailIndex() {
               <View className="flex-1 items-start justify-start">
                 <View className="flex-row items-center w-full">
                   <Text className="text-base font-poppins-bold text-slate-800 dark:text-slate-100 text-left mr-2">
-                    {detail?.name || "Unnamed Store"}
+                    {detail?.name || t("storeManager.detail.unnamedStore")}
                   </Text>
                   <View className={`flex-row items-center gap-x-1 px-2.5 py-1 rounded-full ${statusCfg.bg}`}>
                     <View className={`w-1.5 h-1.5 rounded-full ${statusCfg.dot}`} />
                     <Text className={`text-xs font-poppins-semibold ${statusCfg.text}`}>
-                      {statusCfg.label}
+                      {statusLabel}
                     </Text>
                   </View>
                 </View>
                 <Text className="text-xs font-poppins-semibold text-textMuted dark:text-slate-500 mt-0.5">
-                  {storeTypeLabelmap[detail?.type ?? ""] ?? detail?.type ?? "—"}
+                  {storeTypeLabel}
                 </Text>
               </View>
             </View>
@@ -290,13 +311,13 @@ export default function DetailIndex() {
                   <View className="flex-row items-center gap-x-2">
                     <Phone size={12} color={isDark ? "#A3A3A3" : "#475569"} />
                     <Text className="text-xs font-poppins-semibold text-textSecondary dark:text-slate-500">
-                      {detail?.phone ?? "Not set"}
+                      {detail?.phone ?? notSet}
                     </Text>
                   </View>
                   <View className="flex-row items-center gap-x-2">
                     <File size={12} color={isDark ? "#A3A3A3" : "#475569"} />
                     <Text className="text-xs font-poppins-semibold text-textSecondary dark:text-slate-500">
-                      {detail?.registration_number ?? "Not set"}
+                      {detail?.registration_number ?? notSet}
                     </Text>
                   </View>
                 </View>
@@ -305,13 +326,13 @@ export default function DetailIndex() {
                   <View className="flex-row items-center gap-x-2">
                     <Clock size={12} color={isDark ? "#A3A3A3" : "#475569"} />
                     <Text className="text-xs font-poppins-semibold text-textSecondary dark:text-slate-500">
-                      Open: {detail?.store_open ? formatTime(detail.store_open) : "Not set"}
+                      {openLine(detail?.store_open)}
                     </Text>
                   </View>
                   <View className="flex-row items-center gap-x-2">
                     <Clock size={12} color={isDark ? "#A3A3A3" : "#475569"} />
                     <Text className="text-xs font-poppins-semibold text-textSecondary dark:text-slate-500">
-                      Close: {detail?.store_close ? formatTime(detail.store_close) : "Not set"}
+                      {closeLine(detail?.store_close)}
                     </Text>
                   </View>
                 </View>
@@ -339,7 +360,7 @@ export default function DetailIndex() {
                 <View className="h-px bg-slate-100 dark:bg-neutral-700 mx-4" />
                 <View className="px-4 py-3.5">
                   <Text className="text-xs font-poppins text-textMuted dark:text-slate-500 mb-2">
-                    Business Document
+                    {t("storeManager.detail.businessDocument")}
                   </Text>
                   <Image
                     source={{ uri: detail.business_document_image }}
@@ -352,7 +373,7 @@ export default function DetailIndex() {
             )}
             <View className="h-px bg-slate-100 dark:bg-neutral-700 mx-4" />
               <View className="px-4 pb-4 py-4 gap-y-4">
-                <Text className="text-xs font-poppins text-textMuted dark:text-slate-500">Location</Text>
+                <Text className="text-xs font-poppins text-textMuted dark:text-slate-500">{t("storeManager.detail.location")}</Text>
                 {detail?.address && (
                   <>
                     <Text className="text-xs font-poppins-semibold text-textPrimary dark:text-textPrimary -mt-4">
@@ -425,7 +446,7 @@ export default function DetailIndex() {
                     >
                       <MapPin size={24} color={isDark ? "#525252" : "#CBD5E1"} />
                       <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">
-                        Map only available on Android & Web
+                        {t("storeManager.detail.mapOnlyAndroidWeb")}
                       </Text>
                     </View>
                   )
@@ -436,7 +457,7 @@ export default function DetailIndex() {
                   >
                     <MapPinOff size={24} color={isDark ? "#525252" : "#CBD5E1"} />
                     <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">
-                      No location set
+                      {t("storeManager.detail.noLocationSet")}
                     </Text>
                   </View>
                 )}

@@ -17,10 +17,12 @@ import { Button } from "@/components/button";
 import { Modal, type ModalButton } from "@/components/modal";
 import { AppHeader } from "@/components/header";
 import { TextField } from "@/components/text-field";
+import { useTranslation } from "react-i18next";
 
 const WEB_MAX_WIDTH = 896;
 
 export default function Rewards() {
+  const { t } = useTranslation();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { storeId, rewardId } = useLocalSearchParams<{ storeId: string; rewardId?: string }>();
@@ -58,10 +60,10 @@ export default function Rewards() {
         if (cancelled) return;
         if (!row) {
           setModal({
-            title: "Error",
-            message: "Reward not found.",
+            title: t("storeManager.rewardForm.notFoundTitle"),
+            message: t("storeManager.rewardForm.notFoundMessage"),
             buttons: [{
-              label: "OK",
+              label: t("label.ok"),
               onPress: () => {
                 setModal(null);
                 router.push({ pathname: "/(store_manager)/reward", params: { storeId } });
@@ -79,10 +81,10 @@ export default function Rewards() {
       })
       .catch(() => {
         setModal({
-          title: "Error",
-          message: "Could not load this reward.",
+          title: t("storeManager.rewardForm.loadErrorTitle"),
+          message: t("storeManager.rewardForm.loadErrorMessage"),
           buttons: [{
-            label: "OK",
+            label: t("label.ok"),
             onPress: () => {
               setModal(null);
               router.push({ pathname: "/(store_manager)/reward", params: { storeId } });
@@ -94,15 +96,15 @@ export default function Rewards() {
     return () => {
       cancelled = true;
     };
-  }, [storeId, rewardId, setTitle, setDescription, setPointsCost, setStock, setImageUrl, reset, router]);
+  }, [storeId, rewardId, setTitle, setDescription, setPointsCost, setStock, setImageUrl, reset, router, t]);
 
   const pickImage = async () => {
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (permissionResult.granted === false) {
       setModal({
-        title: "Permission Required",
-        message: "We need access to your photos to upload images.",
-        buttons: [{ label: "OK", onPress: () => setModal(null), variant: "secondary" }],
+        title: t("storeManager.rewardForm.permissionTitle"),
+        message: t("storeManager.rewardForm.permissionMessage"),
+        buttons: [{ label: t("label.ok"), onPress: () => setModal(null), variant: "secondary" }],
       });
       return;
     }
@@ -119,9 +121,9 @@ export default function Rewards() {
     const asset = pickerResult.assets[0];
     if (!asset.base64) {
       setModal({
-        title: "Oops!",
-        message: "Could not read image data. Please try again.",
-        buttons: [{ label: "OK", onPress: () => setModal(null), variant: "secondary" }],
+        title: t("storeManager.rewardForm.readImageErrorTitle"),
+        message: t("storeManager.rewardForm.readImageErrorMessage"),
+        buttons: [{ label: t("label.ok"), onPress: () => setModal(null), variant: "secondary" }],
       });
       return;
     }
@@ -133,9 +135,9 @@ export default function Rewards() {
       setImageUrl(publicUrl);
     } catch (err: any) {
       setModal({
-        title: "Oops!",
-        message: err?.message ?? "Could not upload image.",
-        buttons: [{ label: "OK", onPress: () => setModal(null), variant: "secondary" }],
+        title: t("storeManager.rewardForm.uploadErrorTitle"),
+        message: err?.message ?? t("storeManager.rewardForm.uploadImageError"),
+        buttons: [{ label: t("label.ok"), onPress: () => setModal(null), variant: "secondary" }],
       });
     } finally {
       setIsUploadingImage(false);
@@ -145,9 +147,9 @@ export default function Rewards() {
   const handleSave = async () => {
     if (!title.trim() || !description?.trim() || !image_url) {
       setModal({
-        title: "Almost there!",
-        message: "Please fill out all required fields and upload an image.",
-        buttons: [{ label: "OK", onPress: () => setModal(null), variant: "secondary" }],
+        title: t("storeManager.rewardForm.almostThere"),
+        message: t("storeManager.rewardForm.fillRequired"),
+        buttons: [{ label: t("label.ok"), onPress: () => setModal(null), variant: "secondary" }],
       });
       return;
     }
@@ -172,17 +174,17 @@ export default function Rewards() {
         });
       }
       setModal({
-        title: "Success",
-        message: isEditMode ? "Reward updated successfully" : "Reward created successfully",
-        buttons: [{ label: "OK", onPress: () => setModal(null), variant: "secondary" }],
+        title: t("label.success"),
+        message: isEditMode ? t("storeManager.rewardForm.successUpdate") : t("storeManager.rewardForm.successCreate"),
+        buttons: [{ label: t("label.ok"), onPress: () => setModal(null), variant: "secondary" }],
       });
       reset();
       router.push({ pathname: "/(store_manager)/reward", params: { storeId } });
     } catch (error) {
       setModal({
-        title: "Error",
-        message: (error as Error).message ?? (isEditMode ? "Failed to update reward" : "Failed to create reward"),
-        buttons: [{ label: "OK", onPress: () => setModal(null), variant: "secondary" }],
+        title: t("label.error"),
+        message: (error as Error).message ?? (isEditMode ? t("storeManager.rewardForm.errorUpdate") : t("storeManager.rewardForm.errorCreate")),
+        buttons: [{ label: t("label.ok"), onPress: () => setModal(null), variant: "secondary" }],
       });
     } finally {
       setIsSubmitting(false);
@@ -203,7 +205,7 @@ export default function Rewards() {
 				buttons={modal?.buttons}
 			/>
       <AppHeader
-        title={isEditMode ? "Edit Reward" : "Create New Reward"}
+        title={isEditMode ? t("storeManager.rewardForm.editTitle") : t("storeManager.rewardForm.createTitle")}
         onBackPress={() => {
           router.push({ pathname: "/(store_manager)/reward", params: { storeId } });
         }}
@@ -225,16 +227,16 @@ export default function Rewards() {
         >
           <View>
             <Text className="text-md font-poppins-semibold text-slate-900 dark:text-white">
-              Reward Details
+              {t("storeManager.rewardForm.rewardDetails")}
             </Text>
             <Text className="text-sm font-poppins text-slate-500 dark:text-slate-400">
-              Provide an overview of your reward. Explain the benefits for customers and specify any important details or terms of use.
+              {t("storeManager.rewardForm.rewardDetailsBody")}
             </Text>
           </View>
 
           <TextField
-            label="Title"
-            placeholder="e.g. Free Signature Coffee"
+            label={t("storeManager.rewardForm.title")}
+            placeholder={t("storeManager.rewardForm.titlePlaceholder")}
             value={title}
             onChangeText={setTitle}
             required
@@ -243,7 +245,7 @@ export default function Rewards() {
           <View className="flex-row gap-x-3">
             <View className="flex-1">
               <TextField
-                label="Points Cost"
+                label={t("storeManager.rewardForm.pointsCost")}
                 placeholder="0"
                 keyboardType="numeric"
                 value={points_cost ? String(points_cost) : ""}
@@ -266,12 +268,12 @@ export default function Rewards() {
           <View className="gap-y-2">
             <View className="flex-row items-center gap-x-0.5">
               <Text className="text-sm font-poppins-semibold text-slate-700 dark:text-slate-300">
-                Description
+                {t("storeManager.rewardForm.description")}
               </Text>
             </View>
             <TextInput
 							className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 text-base font-poppins text-slate-900 dark:text-slate-100 pr-12"
-							placeholder="Describe the benefit to the user"
+							placeholder={t("storeManager.rewardForm.descriptionPlaceholder")}
               placeholderTextColor="#94A3B8"
               multiline
               numberOfLines={4}
@@ -284,7 +286,7 @@ export default function Rewards() {
           <View className="gap-y-2">
             <View className="flex-row items-center gap-x-0.5">
               <Text className="text-sm font-poppins-semibold text-slate-700 dark:text-slate-300">
-                Reward Image
+                {t("storeManager.rewardForm.rewardImage")}
               </Text>
               <Text className="text-xs font-poppins-bold text-red-500">*</Text>
             </View>
@@ -298,7 +300,7 @@ export default function Rewards() {
                 <>
                   <ActivityIndicator size="large" color="#94A3B8" />
                   <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500 mt-2">
-                    Uploading image...
+                    {t("storeManager.rewardForm.uploadingImage")}
                   </Text>
                 </>
               ) : image_url ? (
@@ -311,7 +313,7 @@ export default function Rewards() {
                 <>
                   <MaterialIcons name="image" size={32} color="#94A3B8" />
                   <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500 mt-1">
-                    Upload or tap to choose a photo
+                    {t("storeManager.rewardForm.uploadPhotoHint")}
                   </Text>
                 </>
               )}
@@ -320,7 +322,7 @@ export default function Rewards() {
 
           <View style={{ paddingBottom: insets.bottom }}>
             <Button
-              label={isEditMode ? "Save changes" : "Save Reward"}
+              label={isEditMode ? t("storeManager.rewardForm.saveChanges") : t("storeManager.rewardForm.saveReward")}
               onPress={handleSave}
               disabled={isSubmitting || isUploadingImage}
               loading={isSubmitting}

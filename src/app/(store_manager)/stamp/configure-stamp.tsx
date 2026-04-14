@@ -20,8 +20,10 @@ import { Modal } from "@/components/modal";
 import { RewardPickerModal } from "@/components/store_manager/stamp/reward-picker-modal";
 import { Info, Gift, Check, ChevronRight } from "lucide-react-native";
 import { TextField } from "@/components/text-field";
+import { useTranslation } from "react-i18next";
 
 export default function ConfigureStamp() {
+  const { t } = useTranslation();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { storeId, stampId } = useLocalSearchParams<{ storeId: string; stampId?: string }>();
@@ -102,11 +104,11 @@ export default function ConfigureStamp() {
         })
         .catch((e) => {
           setModal({
-            title: "Cannot Edit",
-            message: (e as Error).message ?? "This stamp program cannot be edited.",
+            title: t("storeManager.stampConfigure.cannotEditTitle"),
+            message: (e as Error).message ?? t("storeManager.stampConfigure.cannotEditDefault"),
             buttons: [
               {
-                label: "OK",
+                label: t("label.ok"),
                 onPress: () => {
                   setModal(null);
                   router.push({ pathname: "/(store_manager)/stamp", params: { storeId } });
@@ -134,25 +136,25 @@ export default function ConfigureStamp() {
   const handleSave = async () => {
     if (!total_stamps || total_stamps < 1) {
       setModal({
-        title: "Almost there!",
-        message: "Please enter a valid number of stamps required.",
-        buttons: [{ label: "OK", onPress: () => setModal(null) }],
+        title: t("storeManager.stampConfigure.almostThere"),
+        message: t("storeManager.stampConfigure.stampsRequiredInvalid"),
+        buttons: [{ label: t("label.ok"), onPress: () => setModal(null) }],
       });
       return;
     }
     if (!reward_id) {
       setModal({
-        title: "Almost there!",
-        message: "Please select a reward for this stamp program.",
-        buttons: [{ label: "OK", onPress: () => setModal(null) }],
+        title: t("storeManager.stampConfigure.almostThere"),
+        message: t("storeManager.stampConfigure.selectReward"),
+        buttons: [{ label: t("label.ok"), onPress: () => setModal(null) }],
       });
       return;
     }
     if (expiration_mode === "card" && (!expiration_days || expiration_days < 1)) {
       setModal({
-        title: "Almost there!",
-        message: "Please enter a valid number of days for card expiration.",
-        buttons: [{ label: "OK", onPress: () => setModal(null) }],
+        title: t("storeManager.stampConfigure.almostThere"),
+        message: t("storeManager.stampConfigure.expirationDaysInvalid"),
+        buttons: [{ label: t("label.ok"), onPress: () => setModal(null) }],
       });
       return;
     }
@@ -178,10 +180,10 @@ export default function ConfigureStamp() {
       reset();
       setSelectedReward(null);
       setModal({
-        title: "Success",
-        message: isEdit ? "Stamp program updated successfully!" : "Stamp program created successfully!",
+        title: t("label.success"),
+        message: isEdit ? t("storeManager.stampConfigure.successUpdate") : t("storeManager.stampConfigure.successCreate"),
         buttons: [{
-          label: "OK",
+          label: t("label.ok"),
           onPress: () => {
             setModal(null);
             router.push({ pathname: "/(store_manager)/stamp", params: { storeId } });
@@ -190,9 +192,9 @@ export default function ConfigureStamp() {
       });
     } catch (error) {
       setModal({
-        title: "Error",
-        message: (error as Error).message ?? "Failed to create stamp program.",
-        buttons: [{ label: "OK", onPress: () => setModal(null) }],
+        title: t("label.error"),
+        message: (error as Error).message ?? t("storeManager.stampConfigure.saveFailed"),
+        buttons: [{ label: t("label.ok"), onPress: () => setModal(null) }],
       });
     } finally {
       setIsSubmitting(false);
@@ -221,7 +223,7 @@ export default function ConfigureStamp() {
         buttons={modal?.buttons}
       />
       <AppHeader
-        title={isEdit ? "Edit Stamp Program" : "New Stamp Program"}
+        title={isEdit ? t("storeManager.stampConfigure.editTitle") : t("storeManager.stampConfigure.newTitle")}
         paddingTop={insets.top + 8}
         onBackPress={() => {
           router.push({ pathname: "/(store_manager)/stamp", params: { storeId } });
@@ -238,23 +240,23 @@ export default function ConfigureStamp() {
           <View className="gap-y-4">
             <View className="gap-y-1">
               <Text className="text-base font-poppins-bold text-slate-900 dark:text-slate-100">
-                Stamp Details
+                {t("storeManager.stampConfigure.stampDetails")}
               </Text>
               <Text className="text-sm font-poppins text-slate-500 dark:text-slate-400">
-                Set the rules for your digital loyalty card.
+                {t("storeManager.stampConfigure.stampDetailsBody")}
               </Text>
             </View>
 
             <View className="rounded-xl bg-amber-50 dark:bg-amber-900/20 p-4">
               <View className="flex-row items-center gap-x-2">
                 <Text className="text-sm font-poppins-bold text-amber-700 dark:text-amber-400">
-                  Before You Start
+                  {t("storeManager.stampConfigure.beforeYouStart")}
                 </Text>
               </View>
               <View>
                 {[
-                  "Only 1 stamp program can be active per store at a time.",
-                  "When you end a program, users cannot earn new stamps, but can still redeem during the grace period.",
+                  t("storeManager.stampConfigure.rule1"),
+                  t("storeManager.stampConfigure.rule2"),
                 ].map((rule, i) => (
                   <View
                     key={i}
@@ -272,8 +274,8 @@ export default function ConfigureStamp() {
 
             <View className="gap-y-1.5">
               <TextField
-                label="Stamps Required to Redeem"
-                placeholder="e.g. 10"
+                label={t("storeManager.stampConfigure.stampsToRedeem")}
+                placeholder={t("storeManager.stampConfigure.stampsPlaceholder")}
                 keyboardType="decimal-pad"
                 value={total_stamps > 0 ? String(total_stamps) : ""}
                 onChangeText={(v) => setTotalStamps(parseInt(v) || 0)}
@@ -285,7 +287,7 @@ export default function ConfigureStamp() {
               <View className="flex-row items-center justify-between">
                 <View className="flex-row items-center gap-x-1">
                   <Text className="text-sm font-poppins-semibold text-slate-700 dark:text-slate-300">
-                    Reward
+                    {t("storeManager.stampConfigure.reward")}
                   </Text>
                   <Text className="text-sm font-poppins text-red-500 dark:text-red-400 ">*</Text>
                 </View>
@@ -299,7 +301,7 @@ export default function ConfigureStamp() {
                     className="px-2 py-1"
                     hitSlop={8 as any}
                   >
-                    <Text className="text-xs font-poppins-semibold text-primary">Clear</Text>
+                    <Text className="text-xs font-poppins-semibold text-primary">{t("storeManager.stampConfigure.clear")}</Text>
                   </TouchableOpacity>
                 )}
               </View>
@@ -308,10 +310,10 @@ export default function ConfigureStamp() {
                   <Gift size={26} color="#94A3B8" />
                   <View className="items-center gap-y-1">
                     <Text className="text-sm font-poppins-semibold text-slate-600 dark:text-slate-400">
-                      No rewards yet
+                      {t("storeManager.stampConfigure.noRewardsTitle")}
                     </Text>
                     <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500 text-center">
-                      You need at least one reward before launching a stamp program.
+                      {t("storeManager.stampConfigure.noRewardsBody")}
                     </Text>
                   </View>
                   <TouchableOpacity
@@ -321,7 +323,7 @@ export default function ConfigureStamp() {
                       router.push({ pathname: "/(store_manager)/reward", params: { storeId } })
                     }
                   >
-                    <Text className="text-white text-xs font-poppins-bold">Create a Reward</Text>
+                    <Text className="text-white text-xs font-poppins-bold">{t("storeManager.stampConfigure.createReward")}</Text>
                   </TouchableOpacity>
                 </View>
               ) : (
@@ -343,10 +345,10 @@ export default function ConfigureStamp() {
                   )}
                   <View className="flex-1">
                     <Text className="text-sm font-poppins-semibold text-slate-900 dark:text-slate-100">
-                      {selectedReward?.title ?? (reward_id ? "Loading reward…" : "Tap to choose a reward")}
+                      {selectedReward?.title ?? (reward_id ? t("storeManager.stampConfigure.loadingReward") : t("storeManager.stampConfigure.chooseReward"))}
                     </Text>
                     <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500 mt-0.5">
-                      {selectedReward ? `${selectedReward.points_cost} pts` : "Opens a searchable list"}
+                      {selectedReward ? t("storeManager.reward.pts", { points: selectedReward.points_cost }) : t("storeManager.stampConfigure.opensList")}
                     </Text>
                   </View>
                   <ChevronRight size={20} color="#94A3B8" />
@@ -359,12 +361,12 @@ export default function ConfigureStamp() {
             <View className="gap-y-1">
               <View className="flex-row items-center gap-x-1">
                 <Text className="text-sm font-poppins-semibold text-slate-700 dark:text-slate-300">
-                  Expiration Mode
+                  {t("storeManager.stampConfigure.expirationMode")}
                 </Text>
                 <Text className="text-sm font-poppins text-red-500 dark:text-red-400 ">*</Text>
               </View>
               <Text className="text-xs font-poppins text-slate-500 dark:text-slate-400">
-                Choose how stamp cards expire for your customers.
+                {t("storeManager.stampConfigure.expirationModeHint")}
               </Text>
             </View>
 
@@ -384,12 +386,12 @@ export default function ConfigureStamp() {
                   <View className="flex-row items-center justify-between">
                     <View className="flex-1 pr-3">
                       <Text className="text-sm font-poppins pr-8 text-textSecondary dark:text-darkTextSecondary mt-1 font-poppins-semibold">
-                        {opt.label}
+                        {t(`storeManager.stampConfigure.expiration.${opt.key}.label`)}
                       </Text>
                       <Text
                         className="text-xs font-poppins pr-8 text-textMuted dark:text-darkTextMuted mt-1"
                       >
-                        {opt.description}
+                        {t(`storeManager.stampConfigure.expiration.${opt.key}.description`)}
                       </Text>
                     </View>
                     <View
@@ -407,8 +409,8 @@ export default function ConfigureStamp() {
             {expiration_mode === "card" && (
               <View className="gap-y-1.5 pl-1">
                 <TextField
-                  label="Expiration Period (days)"
-                  placeholder="e.g. 30"
+                  label={t("storeManager.stampConfigure.expirationDays")}
+                  placeholder={t("storeManager.stampConfigure.expirationDaysPlaceholder")}
                   keyboardType="numeric"
                   value={expiration_days > 0 ? String(expiration_days) : ""}
                   onChangeText={(v) => setExpirationDays(parseInt(v) || 0)}
@@ -420,13 +422,13 @@ export default function ConfigureStamp() {
 
           <View className="gap-y-3">
             <Button
-              label={isEdit ? "Save Changes" : "Launch Stamp Program"}
+              label={isEdit ? t("storeManager.stampConfigure.saveChanges") : t("storeManager.stampConfigure.launchProgram")}
               onPress={handleSave}
               disabled={isSubmitting}
               variant="primary"
             />
             <Button
-              label="Cancel"
+              label={t("storeManager.stampConfigure.cancel")}
               onPress={() => {
                 router.push({ pathname: "/(store_manager)/stamp", params: { storeId } });
               }}

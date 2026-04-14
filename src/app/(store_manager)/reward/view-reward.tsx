@@ -11,10 +11,12 @@ import { Modal, type ModalButton } from "@/components/modal";
 import { AppHeader } from "@/components/header";
 import { Button } from "@/components/button";
 import { Gift } from "lucide-react-native";
+import { useTranslation } from "react-i18next";
 
 const WEB_MAX_WIDTH = 896;
 
 export default function ViewReward() {
+  const { t } = useTranslation();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { storeId, rewardId } = useLocalSearchParams<{ storeId: string; rewardId: string }>();
@@ -61,29 +63,28 @@ export default function ViewReward() {
       const linkedToStamp = await isStoreRewardLinkedToStampProgram(storeId, rewardId);
       if (linkedToStamp && reward.stock > 0) {
         setModal({
-          title: "Oops!",
-          message:
-            "This reward is currently being used as a prize in an active stamp program and cannot be deleted while it has remaining stock. Please deplete the reward's stock or update the stamp program before trying again.",
-          buttons: [{ label: "OK", variant: "secondary", onPress: () => setModal(null) }],
+          title: t("storeManager.rewardView.deleteBlockedTitle"),
+          message: t("storeManager.rewardView.deleteBlockedMessage"),
+          buttons: [{ label: t("label.ok"), variant: "secondary", onPress: () => setModal(null) }],
         });
         return;
       }
     } catch (e) {
       setModal({
-        title: "Error",
-        message: (e as Error).message ?? "Could not verify stamp program link.",
-        buttons: [{ label: "OK", onPress: () => setModal(null), variant: "secondary" }],
+        title: t("label.error"),
+        message: (e as Error).message ?? t("storeManager.rewardView.verifyStampError"),
+        buttons: [{ label: t("label.ok"), onPress: () => setModal(null), variant: "secondary" }],
       });
       return;
     }
 
     setModal({
-      title: "Delete reward?",
-      message: `"${reward.title}" will be removed. This cannot be undone.`,
+      title: t("storeManager.rewardView.deleteTitle"),
+      message: t("storeManager.rewardView.deleteMessage", { title: reward.title }),
       buttons: [
-        { label: "Cancel", variant: "secondary", onPress: () => setModal(null) },
+        { label: t("label.cancel"), variant: "secondary", onPress: () => setModal(null) },
         {
-          label: "Delete",
+          label: t("label.delete"),
           variant: "danger",
           onPress: async () => {
             setModal(null);
@@ -93,9 +94,9 @@ export default function ViewReward() {
               router.push({ pathname: "/(store_manager)/reward", params: { storeId } });
             } catch (e) {
               setModal({
-                title: "Error",
-                message: (e as Error).message ?? "Could not delete reward.",
-                buttons: [{ label: "OK", onPress: () => setModal(null), variant: "secondary" }],
+                title: t("label.error"),
+                message: (e as Error).message ?? t("storeManager.rewardView.deleteError"),
+                buttons: [{ label: t("label.ok"), onPress: () => setModal(null), variant: "secondary" }],
               });
             } finally {
               setDeleting(false);
@@ -117,8 +118,8 @@ export default function ViewReward() {
       />
 
       <AppHeader
-        title="Reward"
-        description="Redeemable item details"
+        title={t("storeManager.rewardView.title")}
+        description={t("storeManager.rewardView.description")}
         paddingTop={insets.top + 8}
         onBackPress={() => {
           router.push({ pathname: "/(store_manager)/reward", params: { storeId } });
@@ -147,12 +148,12 @@ export default function ViewReward() {
             {loading ? (
               <View className="items-center justify-center py-20">
                 <ActivityIndicator size="large" color="#FF6600" />
-                <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500 mt-3">Loading reward...</Text>
+                <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500 mt-3">{t("storeManager.rewardView.loading")}</Text>
               </View>
             ) : !reward ? (
               <View className="mx-4 bg-white dark:bg-neutral-800 rounded-xl border border-slate-100 dark:border-neutral-700 px-4 py-14 items-center gap-y-2">
                 <Gift size={36} color="#CBD5E1" />
-                <Text className="text-sm font-poppins-semibold text-slate-400 dark:text-slate-500">Reward not found</Text>
+                <Text className="text-sm font-poppins-semibold text-slate-400 dark:text-slate-500">{t("storeManager.rewardView.notFoundTitle")}</Text>
               </View>
             ) : (
               <View className="mx-4 bg-white dark:bg-neutral-800 rounded-xl border border-slate-100 dark:border-neutral-700 p-4 gap-y-4">
@@ -173,15 +174,15 @@ export default function ViewReward() {
 
                 <View className="flex-row border-t border-slate-100 dark:border-neutral-700 pt-2 gap-y-2">
                   <View className="flex-1 border-r border-slate-100 dark:border-neutral-700 pr-3">
-                    <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">Points cost</Text>
+                    <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">{t("storeManager.rewardView.pointsCost")}</Text>
                     <View className="flex-row items-center gap-x-1 mt-0.5">
-                      <Text className="text-sm font-poppins-semibold text-textPrimary">{formatPoints(reward.points_cost)} pts</Text>
+                      <Text className="text-sm font-poppins-semibold text-textPrimary">{t("storeManager.reward.pts", { points: formatPoints(reward.points_cost) })}</Text>
                     </View>
                   </View>
                   <View className="flex-1 pl-3">
-                    <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">Stock</Text>
+                    <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">{t("storeManager.rewardView.stock")}</Text>
                     <Text className="text-sm font-poppins-semibold text-slate-800 dark:text-slate-100 mt-0.5">
-                      {reward.stock > 0 ? `${reward.stock} left` : "Out of stock"}
+                      {reward.stock > 0 ? t("storeManager.reward.stockLeft", { count: reward.stock }) : t("storeManager.reward.outOfStock")}
                     </Text>
                   </View>
                 </View>
@@ -189,7 +190,7 @@ export default function ViewReward() {
                 <View className="flex-row gap-x-2 pt-2">
                   <View className="flex-1">
                     <Button
-                      label="Delete"
+                      label={t("storeManager.rewardView.delete")}
                       onPress={handleDelete}
                       variant="danger"
                       fullWidth
@@ -199,7 +200,7 @@ export default function ViewReward() {
                   </View>
                   <View className="flex-1">
                     <Button
-                      label="Edit"
+                      label={t("storeManager.rewardView.edit")}
                       onPress={() =>
                         router.push({
                           pathname: "/(store_manager)/reward/add-rewards",

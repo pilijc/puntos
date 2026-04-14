@@ -18,10 +18,12 @@ import { AppHeader } from "@/components/header";
 import { useStampViewStore } from "@/store/store-manager/stamp-store";
 import { getRewardsByStoreId } from "@/services/store-manager/reward-service";
 import { StampCard } from "@/components/store_manager/stamp/stamp-card";
+import { useTranslation } from "react-i18next";
 
 const WEB_MAX_WIDTH = 896;
 
 export default function ViewStamp() {
+  const { t } = useTranslation();
   const router = useRouter();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
@@ -66,9 +68,9 @@ export default function ViewStamp() {
       load();
     } catch (e) {
       setModal({
-        title: "Error",
-        message: (e as Error).message ?? "Failed to end program.",
-        buttons: [{ label: "OK", variant: "secondary", onPress: () => setModal(null) }],
+        title: t("label.error"),
+        message: (e as Error).message ?? t("storeManager.stamp.endFailed"),
+        buttons: [{ label: t("label.ok"), variant: "secondary", onPress: () => setModal(null) }],
       });
     } finally {
       setEndingId(null);
@@ -81,9 +83,9 @@ export default function ViewStamp() {
       load();
     } catch (e) {
       setModal({
-        title: "Error",
-        message: (e as Error).message ?? "Failed to delete program.",
-        buttons: [{ label: "OK", variant: "secondary", onPress: () => setModal(null) }],
+        title: t("label.error"),
+        message: (e as Error).message ?? t("storeManager.stamp.deleteFailed"),
+        buttons: [{ label: t("label.ok"), variant: "secondary", onPress: () => setModal(null) }],
       });
     }
   };
@@ -94,9 +96,9 @@ export default function ViewStamp() {
       load();
     } catch (e) {
       setModal({
-        title: "Error",
-        message: (e as Error).message ?? "Failed to activate program.",
-        buttons: [{ label: "OK", variant: "secondary", onPress: () => setModal(null) }],
+        title: t("label.error"),
+        message: (e as Error).message ?? t("storeManager.stamp.activateFailed"),
+        buttons: [{ label: t("label.ok"), variant: "secondary", onPress: () => setModal(null) }],
       });
     }
   };
@@ -163,8 +165,8 @@ export default function ViewStamp() {
       />
 
       <AppHeader
-        title="Stamp Program"
-        description="Reward customers with stamps"
+        title={t("storeManager.stamp.title")}
+        description={t("storeManager.stamp.description")}
         onBackPress={() => {
           router.push(`/(store_manager)/view-store/${storeId}`);
         }}
@@ -198,7 +200,7 @@ export default function ViewStamp() {
                         : "text-xs font-poppins-medium text-slate-400 dark:text-slate-500"
                     }
                   >
-                    {tab.label}
+                    {t(`storeManager.stamp.tabs.${tab.key}`)}
                   </Text>
                   {count > 0 && (
                     <View className="rounded-full min-w-[18px] items-center bg-white/20">
@@ -238,7 +240,7 @@ export default function ViewStamp() {
                         : "text-xs font-poppins-medium text-slate-400 dark:text-slate-500"
                     }
                   >
-                    {tab.label}
+                    {t(`storeManager.stamp.tabs.${tab.key}`)}
                   </Text>
                   {count > 0 && (
                     <View className={`rounded-full min-w-[18px] items-center px-1.5 ${active ? "bg-white/20" : ""}`}>
@@ -266,17 +268,17 @@ export default function ViewStamp() {
             </View>
             <Text className="text-sm font-poppins-bold text-slate-500 dark:text-slate-300">
               {activeTab === "draft"
-                ? "No Draft Stamp Program"
+                ? t("storeManager.stamp.emptyDraftTitle")
                 : activeTab === "active"
-                  ? "No Active Program"
-                  : "No Ended Programs"}
+                  ? t("storeManager.stamp.emptyActiveTitle")
+                  : t("storeManager.stamp.emptyEndedTitle")}
             </Text>
             <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500 text-center">
               {activeTab === "active"
-                ? "Launch a stamp program to start rewarding your customers."
+                ? t("storeManager.stamp.emptyActiveBody")
                 : activeTab === "draft"
-                  ? "Draft stamp programs will appear here."
-                  : "Ended stamp programs will appear here."}
+                  ? t("storeManager.stamp.emptyDraftBody")
+                  : t("storeManager.stamp.emptyEndedBody")}
             </Text>
           </View>
         </View>
@@ -322,7 +324,7 @@ export default function ViewStamp() {
 
           {activeTab === "active" && activeStamps.length === 0 && (
             <Button
-              label="Create New Program"
+              label={t("storeManager.stamp.createProgram")}
               onPress={() => router.push({ pathname: "/(store_manager)/stamp/configure-stamp", params: { storeId } })}
               variant="primary"
               fullWidth

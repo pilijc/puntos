@@ -10,10 +10,12 @@ import { ChevronRight, UsersRound, Pencil, Trash, UserRoundX } from "lucide-reac
 import StaffSkeleton from "@/components/skeleton/store_manager/staff-skeleton";
 import { getInitials } from "@/utils/store_manager/staff-utils";
 import { AppHeader } from "@/components/header";
+import { useTranslation } from "react-i18next";
 
 const WEB_MAX_WIDTH = 896;
 
 export default function ViewStaff() {
+  const { t } = useTranslation();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { storeId } = useLocalSearchParams<{ storeId: string }>();
@@ -59,33 +61,34 @@ export default function ViewStaff() {
   }, [fetchStaff, setRefreshing]);
 
   const confirmDelete = (staffId: string, name: string | null) => {
+    const displayName = name ?? t("storeManager.staff.removeFallbackName");
     setModal({
-      title: "Remove Staff",
-      message: `Are you sure you want to remove ${name ?? "this staff member"}? This action cannot be undone.`,
+      title: t("storeManager.staff.removeTitle"),
+      message: t("storeManager.staff.removeMessage", { name: displayName }),
       buttons: [
         {
-          label: "Cancel",
+          label: t("label.cancel"),
           onPress: () => setModal(null),
           variant: "secondary",
           disabled: deleting === staffId,
         },
         {
-          label: "Remove",
+          label: t("storeManager.staff.removeAction"),
           variant: "primary",
           onPress: async () => {
             setDeleting(staffId);
             setModal({
-              title: "Remove Staff",
-              message: `Are you sure you want to remove ${name ?? "this staff member"}? This action cannot be undone.`,
+              title: t("storeManager.staff.removeTitle"),
+              message: t("storeManager.staff.removeMessage", { name: displayName }),
               buttons: [
                 {
-                  label: "Cancel",
+                  label: t("label.cancel"),
                   onPress: () => setModal(null),
                   variant: "secondary",
                   disabled: true,
                 },
                 {
-                  label: "Remove",
+                  label: t("storeManager.staff.removeAction"),
                   onPress: async () => {},
                   variant: "primary",
                   loading: true,
@@ -99,9 +102,9 @@ export default function ViewStaff() {
               setModal(null);
             } catch {
               setModal({
-                title: "Unable to Remove Staff",
-                message: "Failed to remove staff member. Please try again.",
-                buttons: [{ label: "OK", onPress: () => setModal(null), variant: "secondary" }],
+                title: t("storeManager.staff.removeFailedTitle"),
+                message: t("storeManager.staff.removeFailedMessage"),
+                buttons: [{ label: t("label.ok"), onPress: () => setModal(null), variant: "secondary" }],
               });
             } finally {
               setDeleting(null);
@@ -122,8 +125,8 @@ export default function ViewStaff() {
         buttons={modal?.buttons}
       />
       <AppHeader
-        title="Front desk staff"
-        description="Frontdesk staff assigned to this store"
+        title={t("storeManager.staff.title")}
+        description={t("storeManager.staff.description")}
         onBackPress={() => {
           router.push(`/(store_manager)/view-store/${storeId}`);
         }}
@@ -154,9 +157,9 @@ export default function ViewStaff() {
               </View>
               <View className="flex-1">
                 <Text className="text-sm font-poppins-bold text-slate-800 dark:text-slate-100">
-                  {loading ? "—" : `${staff.length} member${staff.length !== 1 ? "s" : ""}`}
+                  {loading ? "—" : t("storeManager.staff.memberCount", { count: staff.length })}
                 </Text>
-                <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">Frontdesk staff assigned to this store</Text>
+                <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">{t("storeManager.staff.subtitle")}</Text>
               </View>
               {staff.length > 0 && (
                 <TouchableOpacity
@@ -169,7 +172,7 @@ export default function ViewStaff() {
                   className="flex-row items-center gap-x-0.5"
                   activeOpacity={0.7}
                 >
-                  <Text className="text-xs font-poppins-semibold text-primary">Add</Text>
+                  <Text className="text-xs font-poppins-semibold text-primary">{t("storeManager.staff.add")}</Text>
                   <ChevronRight size={14} color="#FF6600" />
                 </TouchableOpacity>
               )}
@@ -180,9 +183,9 @@ export default function ViewStaff() {
             ) : staff.length === 0 ? (
               <View className="mx-4 bg-white dark:bg-neutral-800 rounded-xl border border-slate-100 dark:border-neutral-700 px-4 py-14 items-center gap-y-2">
                 <UserRoundX size={36} color="#CBD5E1" />
-                <Text className="text-sm font-poppins-semibold text-slate-400 dark:text-slate-500">No staff yet</Text>
+                <Text className="text-sm font-poppins-semibold text-slate-400 dark:text-slate-500">{t("storeManager.staff.emptyTitle")}</Text>
                 <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500 text-center px-6">
-                  Add frontdesk staff who can assist customers and handle daily store tasks.
+                  {t("storeManager.staff.emptyBody")}
                 </Text>
                 <TouchableOpacity
                   onPress={() =>
@@ -194,7 +197,7 @@ export default function ViewStaff() {
                   className="mt-2 bg-primary px-5 py-2.5 rounded-xl"
                   activeOpacity={0.85}
                 >
-                  <Text className="text-xs font-poppins-semibold text-white">Add First Staff</Text>
+                  <Text className="text-xs font-poppins-semibold text-white">{t("storeManager.staff.addFirst")}</Text>
                 </TouchableOpacity>
               </View>
             ) : (

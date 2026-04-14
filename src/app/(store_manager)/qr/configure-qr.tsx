@@ -11,10 +11,12 @@ import { EarningType } from "@/type/store-manager/qr.purchase";
 import { useQRStore } from "@/store/store-manager/qr-store";
 import { createQRService, getQRConfig } from "@/services/store-manager/qr-service";
 import { AppHeader } from "@/components/header";
+import { useTranslation } from "react-i18next";
 
 const WEB_MAX_WIDTH = 896;
 
 export default function ConfigureStreaks() {
+  const { t } = useTranslation();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { storeId, id } = useLocalSearchParams<{ storeId?: string; id?: string }>();
@@ -50,21 +52,21 @@ export default function ConfigureStreaks() {
   } = useQRStore();
 
 	const showError = (message: string) =>
-		setModal({ title: "Almost there!", message, buttons: [{ label: "OK", onPress: () => setModal(null) }] });
+		setModal({ title: t("storeManager.qrConfigure.almostThere"), message, buttons: [{ label: t("label.ok"), onPress: () => setModal(null), variant: "secondary" }] });
 
 	const validate = (): boolean => {
 		if (earning_type === "percentage") {
 			const pct = parseFloat(percentageInput);
 			const base = parseFloat(baseAmountInput);
-			if (!percentageInput || isNaN(pct) || pct <= 0) { showError("Please enter a valid percentage."); return false; }
-			if (pct > 100) { showError("Percentage cannot exceed 100%."); return false; }
-			if (baseAmountInput && (isNaN(base) || base <= 0)) { showError("Please enter a valid base amount."); return false; }
+			if (!percentageInput || isNaN(pct) || pct <= 0) { showError(t("storeManager.qrConfigure.validPercentage")); return false; }
+			if (pct > 100) { showError(t("storeManager.qrConfigure.percentageOver100")); return false; }
+			if (baseAmountInput && (isNaN(base) || base <= 0)) { showError(t("storeManager.qrConfigure.validBaseAmount")); return false; }
 		} else {
 			const pts = parseFloat(fixedPointsInput);
-			if (!fixedPointsInput || isNaN(pts) || pts <= 0) { showError("Please enter a valid fixed points amount."); return false; }
+			if (!fixedPointsInput || isNaN(pts) || pts <= 0) { showError(t("storeManager.qrConfigure.validFixedPoints")); return false; }
       const maxTxn = maxPointsInput ? parseFloat(maxPointsInput) : NaN;
       if (!isNaN(maxTxn) && maxTxn > 0 && maxTxn < pts) {
-        showError("Max points per transaction cannot be lower than the fixed points amount.");
+        showError(t("storeManager.qrConfigure.maxLowerThanFixed"));
         return false;
       }
 		}
@@ -120,10 +122,9 @@ export default function ConfigureStreaks() {
       .catch((error) => {
         if (cancelled) return;
         setModal({
-          title: "Couldn’t load QR rules",
-          message:
-            "We couldn’t load this store’s QR earning rules right now. Please try again in a moment.",
-          buttons: [{ label: "OK", onPress: () => setModal(null), variant: "secondary" }],
+          title: t("storeManager.qrConfigure.loadErrorTitle"),
+          message: t("storeManager.qrConfigure.loadErrorMessage"),
+          buttons: [{ label: t("label.ok"), onPress: () => setModal(null), variant: "secondary" }],
         });
       });
 
@@ -139,6 +140,7 @@ export default function ConfigureStreaks() {
     setMinimumSpend,
     setMaxPointsPerTxn,
     reset,
+    t,
   ]);
 
 	const handleSave = async () => {
@@ -146,9 +148,9 @@ export default function ConfigureStreaks() {
     const storeIdForDb = storeIdParam && storeIdParam !== "undefined" ? storeIdParam : null;
     if (!storeIdForDb) {
       setModal({
-        title: "Invalid Store",
-        message: "Missing store id. Please go back and try again.",
-        buttons: [{ label: "OK", onPress: () => setModal(null), variant: "secondary" }],
+        title: t("storeManager.qrConfigure.invalidStoreTitle"),
+        message: t("storeManager.qrConfigure.invalidStoreMessage"),
+        buttons: [{ label: t("label.ok"), onPress: () => setModal(null), variant: "secondary" }],
       });
       return;
     }
@@ -167,15 +169,15 @@ export default function ConfigureStreaks() {
 			});
 			reset();
 			setModal({
-				title: "Success",
-				message: "QR purchase rules saved successfully",
-        buttons: [{ label: "OK", onPress: () => router.push({ pathname: "/(store_manager)/qr", params: { storeId: storeIdForDb } }) }],
+				title: t("label.success"),
+				message: t("storeManager.qrConfigure.successMessage"),
+        buttons: [{ label: t("label.ok"), onPress: () => router.push({ pathname: "/(store_manager)/qr", params: { storeId: storeIdForDb } }), variant: "secondary" }],
 			});
 		} catch (error) {
 			setModal({
-				title: "Error",
-				message: (error as Error).message ?? "Failed to save QR purchase rules",
-				buttons: [{ label: "OK", onPress: () => setModal(null) }],
+				title: t("label.error"),
+				message: (error as Error).message ?? t("storeManager.qrConfigure.saveFailed"),
+				buttons: [{ label: t("label.ok"), onPress: () => setModal(null), variant: "secondary" }],
 			});
 		} finally {
 			setIsSubmitting(false);
@@ -197,7 +199,7 @@ export default function ConfigureStreaks() {
       />
       
       <AppHeader
-        title="QR Earning Rules"
+        title={t("storeManager.qrConfigure.title")}
         paddingTop={insets.top + 8}
         onBackPress={() => {
           router.push({ pathname: "/(store_manager)/qr", params: { storeId: storeIdParam } });
@@ -221,19 +223,21 @@ export default function ConfigureStreaks() {
         >
           <View>
             <Text className="text-md font-poppins-bold text-slate-900 dark:text-slate-100">
-            Set how QR scans earn points
+            {t("storeManager.qrConfigure.heading")}
             </Text>
             <Text className="text-sm font-poppins text-slate-500 dark:text-slate-400">
-              Choose between percentage or fixed points and define when customers start earning.
+              {t("storeManager.qrConfigure.subheading")}
             </Text>
           </View>
         <View className="gap-y-2">
           <Text className="text-sm font-poppins-semibold text-slate-700 dark:text-slate-300">
-            Points Type
+            {t("storeManager.qrConfigure.pointsType")}
           </Text>
           <View className="flex-row gap-x-2">
-            {[{key: "percentage" as EarningType, label: "Percentage", desc: "Earn points by Purchase Percentage"},
-              {key: "fixed" as EarningType, label: "Fixed", desc: "Earn a fixed number of points per transaction"}]
+            {([
+              { key: "percentage" as EarningType, label: t("storeManager.qrConfigure.percentageOptionTitle"), desc: t("storeManager.qrConfigure.percentageOptionDesc") },
+              { key: "fixed" as EarningType, label: t("storeManager.qrConfigure.fixedOptionTitle"), desc: t("storeManager.qrConfigure.fixedOptionDesc") },
+            ] as const)
               .map((opt) => {
               const selected = earning_type === opt.key;
               return (
@@ -269,8 +273,8 @@ export default function ConfigureStreaks() {
             <View className="flex-row gap-x-3">
               <View className="flex-1">
                 <TextField
-                  label="Percentage (%)"
-                  placeholder="e.g. 10"
+                  label={t("storeManager.qrConfigure.percentageLabel")}
+                  placeholder={t("storeManager.qrConfigure.percentagePlaceholder")}
                   keyboardType="decimal-pad"
                   value={percentageInput}
                   onChangeText={(v) => {
@@ -283,8 +287,8 @@ export default function ConfigureStreaks() {
               </View>
               <View className="flex-1">
                 <TextField
-                  label="Base Amount"
-                  placeholder="e.g. 10"
+                  label={t("storeManager.qrConfigure.baseAmount")}
+                  placeholder={t("storeManager.qrConfigure.baseAmountPlaceholder")}
                   keyboardType="decimal-pad"
                   value={baseAmountInput}
                   onChangeText={(v) => {
@@ -299,8 +303,7 @@ export default function ConfigureStreaks() {
 
             <View className="bg-yellow-50 dark:bg-yellow-900/20 rounded-xl px-4 py-3">
               <Text className="text-xs font-poppins text-yellow-800 dark:text-yellow-200">
-                Customers earn points based on a <Text className="font-poppins-semibold text-yellow-900 dark:text-yellow-300">percentage</Text> of their purchase.
-                The <Text className="font-poppins-semibold text-yellow-900 dark:text-yellow-300">Base Amount</Text> helps determine how points are calculated for every amount spent.
+                {t("storeManager.qrConfigure.percentageHint")}
               </Text>
             </View>
           </View>
@@ -312,8 +315,8 @@ export default function ConfigureStreaks() {
 						<View className="flex-row gap-x-3">
 							<View className="flex-1">
 								<TextField
-									label="Fixed Points"
-									placeholder="e.g. 5"
+									label={t("storeManager.qrConfigure.fixedPoints")}
+									placeholder={t("storeManager.qrConfigure.fixedPointsPlaceholder")}
 									keyboardType="decimal-pad"
 									value={fixedPointsInput}
 									onChangeText={(v) => {
@@ -326,8 +329,8 @@ export default function ConfigureStreaks() {
 							</View>
 							<View className="flex-1">
 								<TextField
-									label="Minimum Spend"
-									placeholder="e.g. 3"
+									label={t("storeManager.qrConfigure.minimumSpend")}
+									placeholder={t("storeManager.qrConfigure.minimumSpendPlaceholder")}
 									keyboardType="decimal-pad"
 									value={minimumSpendInput}
 									onChangeText={(v) => {
@@ -342,8 +345,7 @@ export default function ConfigureStreaks() {
 
             <View className="bg-yellow-50 dark:bg-yellow-900/20 rounded-xl px-4 py-3">
               <Text className="text-xs font-poppins text-yellow-800 dark:text-yellow-200">
-                With <Text className="font-poppins-semibold text-yellow-900 dark:text-yellow-300">Fixed Points</Text>, customers earn the same number of points every time they make a purchase.
-                The <Text className="font-poppins-semibold text-yellow-900 dark:text-yellow-300">Minimum Spend</Text> is the amount they need to spend before they can start earning points.
+                {t("storeManager.qrConfigure.fixedHint")}
               </Text>
             </View>
 					</>
@@ -351,9 +353,9 @@ export default function ConfigureStreaks() {
 
         {/* Max points per transaction — shared */}
         <TextField
-          label="Max Points per Transaction"
-          hint="Leave blank for no cap."
-          placeholder="e.g. 50"
+          label={t("storeManager.qrConfigure.maxPointsPerTxn")}
+          hint={t("storeManager.qrConfigure.maxPointsHint")}
+          placeholder={t("storeManager.qrConfigure.maxPointsPlaceholder")}
           keyboardType="decimal-pad"
           value={maxPointsInput}
           onChangeText={(v) => {
@@ -366,7 +368,7 @@ export default function ConfigureStreaks() {
         {/* Actions */}
         <View className="gap-y-3">
           <Button
-            label="Save Rules"
+            label={t("storeManager.qrConfigure.saveRules")}
             onPress={handleSave}
             disabled={isSubmitting}
             loading={isSubmitting}
@@ -374,7 +376,7 @@ export default function ConfigureStreaks() {
             variant="primary"
           />
           <Button
-            label="Cancel"
+            label={t("label.cancel")}
             onPress={() => {
               router.push({ pathname: "/(store_manager)/qr", params: { storeId: storeIdParam } });
             }}

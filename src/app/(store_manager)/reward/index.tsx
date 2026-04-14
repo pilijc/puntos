@@ -8,10 +8,12 @@ import { Reward } from "@/type/store-manager/reward";
 import { Modal, type ModalButton } from "@/components/modal";
 import { AppHeader } from "@/components/header";
 import { ChevronRight, CircleStar, Gift } from "lucide-react-native";
+import { useTranslation } from "react-i18next";
 
 const WEB_MAX_WIDTH = 896;
 
 export default function RewardIndex() {
+  const { t } = useTranslation();
   const router = useRouter();
   const { storeId } = useLocalSearchParams<{ storeId: string }>();
 
@@ -58,8 +60,8 @@ export default function RewardIndex() {
       />
 
       <AppHeader
-        title="Rewards"
-        description="Redeemable items for your customers"
+        title={t("storeManager.reward.title")}
+        description={t("storeManager.reward.description")}
         onBackPress={() => {
           router.push(`/(store_manager)/view-store/${storeId}`);
         }}
@@ -90,10 +92,10 @@ export default function RewardIndex() {
               </View>
               <View className="flex-1">
                 <Text className="text-sm font-poppins-bold text-slate-800 dark:text-slate-100">
-                  {loading ? "—" : `${rewards.length} reward${rewards.length !== 1 ? "s" : ""}`}
+                  {loading ? "—" : t("storeManager.reward.rewardCount", { count: rewards.length })}
                 </Text>
                 <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">
-                  Items customers can redeem with points
+                  {t("storeManager.reward.subtitle")}
                 </Text>
               </View>
               <TouchableOpacity
@@ -106,7 +108,7 @@ export default function RewardIndex() {
                 className="flex-row items-center gap-x-0.5"
                 activeOpacity={0.7}
               >
-                <Text className="text-xs font-poppins-semibold text-primary">Add</Text>
+                <Text className="text-xs font-poppins-semibold text-primary">{t("storeManager.reward.add")}</Text>
                 <ChevronRight size={14} color="#FF6600" />
               </TouchableOpacity>
             </View>
@@ -114,14 +116,14 @@ export default function RewardIndex() {
             {loading ? (
               <View className="items-center justify-center py-20">
                 <ActivityIndicator size="large" color="#FF6600" />
-                <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500 mt-3">Loading rewards...</Text>
+                <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500 mt-3">{t("storeManager.reward.loading")}</Text>
               </View>
             ) : rewards.length === 0 ? (
               <View className="mx-4 bg-white dark:bg-neutral-800 rounded-xl border border-slate-100 dark:border-neutral-700 px-4 py-14 items-center gap-y-2">
                 <Gift size={36} color="#CBD5E1" />
-                <Text className="text-sm font-poppins-semibold text-slate-400 dark:text-slate-500">No rewards yet</Text>
+                <Text className="text-sm font-poppins-semibold text-slate-400 dark:text-slate-500">{t("storeManager.reward.emptyTitle")}</Text>
                 <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500 text-center px-8">
-                  Create redeemable rewards that customers can claim using their loyalty points.
+                  {t("storeManager.reward.emptyBody")}
                 </Text>
                 <TouchableOpacity
                   onPress={() =>
@@ -133,7 +135,7 @@ export default function RewardIndex() {
                   className="mt-3 bg-primary px-6 py-2.5 rounded-xl"
                   activeOpacity={0.85}
                 >
-                  <Text className="text-xs font-poppins-semibold text-white">Add First Reward</Text>
+                  <Text className="text-xs font-poppins-semibold text-white">{t("storeManager.reward.addFirst")}</Text>
                 </TouchableOpacity>
               </View>
             ) : (
@@ -179,12 +181,12 @@ export default function RewardIndex() {
                       <View className="flex-row items-center justify-between mt-1">
                         <View className="flex-row items-center gap-x-1">
                           <CircleStar size={13} color="#FF6600" />
-                          <Text className="text-xs font-poppins-semibold text-primary">{formatPoints(reward.points_cost)} pts</Text>
+                          <Text className="text-xs font-poppins-semibold text-primary">{t("storeManager.reward.pts", { points: formatPoints(reward.points_cost) })}</Text>
                         </View>
 
                         <View className="flex-row items-center gap-x-1 px-2 py-0.5 rounded-full">
                           <Text className="text-xs font-poppins text-textMuted dark:text-textMuted">
-                            {reward.stock > 0 ? `${reward.stock} left` : "Out of stock"}
+                            {reward.stock > 0 ? t("storeManager.reward.stockLeft", { count: reward.stock }) : t("storeManager.reward.outOfStock")}
                           </Text>
                         </View>
                       </View>

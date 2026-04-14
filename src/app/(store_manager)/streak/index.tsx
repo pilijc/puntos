@@ -11,10 +11,12 @@ import { StreakCard } from "@/components/store_manager/streak/streak-card";
 import { StreakCardSkeleton } from "@/components/skeleton/store_manager/streak-skeleton";
 import { useStreakViewStore } from "@/store/store-manager/streak-store";
 import { AppHeader } from "@/components/header";
+import { useTranslation } from "react-i18next";
 
 const WEB_MAX_WIDTH = 896;
 
 export default function ViewStreak() {
+  const { t } = useTranslation();
   const PAGE_SIZE = 6;
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -67,7 +69,7 @@ export default function ViewStreak() {
     : visibleEndedStreaks;
 
   const showError = (message: string) =>
-    setModal({ title: "Error", message, buttons: [{ label: "OK", onPress: () => setModal(null) }] });
+    setModal({ title: t("storeManager.streak.error"), message, buttons: [{ label: t("label.ok"), onPress: () => setModal(null) }] });
 
   const handlePublish = (streak: Streak) => {
     const hasOtherUpcoming = streaks.some(
@@ -75,19 +77,19 @@ export default function ViewStreak() {
     );
     if (hasOtherUpcoming) {
       setModal({
-        title: "Upcoming Program Exists",
-        message: "There is already an upcoming streak program for this store. End or activate it first before publishing another one.",
-        buttons: [{ label: "OK", onPress: () => setModal(null) }],
+        title: t("storeManager.streak.upcomingExistsTitle"),
+        message: t("storeManager.streak.upcomingExistsMessage"),
+        buttons: [{ label: t("label.ok"), onPress: () => setModal(null) }],
       });
       return;
     }
 
     setModal({
-      title: "Publish Streak Program",
-      message: "Users will be able to see this program is coming. You can activate it when you're ready.",
+      title: t("storeManager.streak.publishTitle"),
+      message: t("storeManager.streak.publishMessage"),
       buttons: [
-        { label: "Cancel",  variant: "secondary", onPress: () => setModal(null) },
-        { label: "Publish", variant: "primary", onPress: () => { setModal(null); doPublish(streak.id!); } },
+        { label: t("label.cancel"),  variant: "secondary", onPress: () => setModal(null) },
+        { label: t("storeManager.streak.publish"), variant: "primary", onPress: () => { setModal(null); doPublish(streak.id!); } },
       ],
     });
   };
@@ -105,7 +107,7 @@ export default function ViewStreak() {
       await publishStreakProgram(programId);
       load();
     } catch (e) {
-      showError((e as Error).message ?? "Failed to publish program.");
+      showError((e as Error).message ?? t("storeManager.streak.publishFailed"));
     } finally {
       setActing(null);
     }
@@ -113,11 +115,11 @@ export default function ViewStreak() {
 
   const handleActivate = (streak: Streak) => {
     setModal({
-      title: "Activate Streak Program",
-      message: "Users will be able to start earning streak points immediately.",
+      title: t("storeManager.streak.activateTitle"),
+      message: t("storeManager.streak.activateMessage"),
       buttons: [
-        { label: "Cancel",   variant: "secondary", onPress: () => setModal(null) },
-        { label: "Activate", variant: "primary", onPress: () => { setModal(null); doActivate(streak.id!); } },
+        { label: t("label.cancel"),   variant: "secondary", onPress: () => setModal(null) },
+        { label: t("storeManager.streak.activate"), variant: "primary", onPress: () => { setModal(null); doActivate(streak.id!); } },
       ],
     });
   };
@@ -128,7 +130,7 @@ export default function ViewStreak() {
       await activateStreakProgram(programId);
       load();
     } catch (e) {
-      showError((e as Error).message ?? "Failed to activate program.");
+      showError((e as Error).message ?? t("storeManager.streak.activateFailed"));
     } finally {
       setActing(null);
     }
@@ -136,22 +138,22 @@ export default function ViewStreak() {
 
   const handleEnd = (streak: Streak) => {
     setModal({
-      title: "End Streak Program",
-      message: "This will immediately stop earning for all users. This action cannot be undone.",
+      title: t("storeManager.streak.endTitle"),
+      message: t("storeManager.streak.endMessage"),
       buttons: [
-        { label: "Cancel",      variant: "secondary", onPress: () => setModal(null) },
-        { label: "End Program", variant: "danger",   onPress: () => { setModal(null); doEnd(streak.id!); } },
+        { label: t("label.cancel"),      variant: "secondary", onPress: () => setModal(null) },
+        { label: t("storeManager.streak.endProgram"), variant: "danger",   onPress: () => { setModal(null); doEnd(streak.id!); } },
       ],
     });
   };
 
   const handleDelete = (streak: Streak) => {
     setModal({
-      title: "Delete Streak Program",
-      message: "This will permanently delete this program. This action cannot be undone.",
+      title: t("storeManager.streak.deleteTitle"),
+      message: t("storeManager.streak.deleteMessage"),
       buttons: [
-        { label: "Cancel", variant: "secondary", onPress: () => setModal(null) },
-				{ label: "Delete Program", variant: "danger", onPress: () => { setModal(null); doDelete(streak.id!); } },
+        { label: t("label.cancel"), variant: "secondary", onPress: () => setModal(null) },
+				{ label: t("storeManager.streak.deleteProgram"), variant: "danger", onPress: () => { setModal(null); doDelete(streak.id!); } },
       ],
     });
   };
@@ -162,7 +164,7 @@ export default function ViewStreak() {
       await endStreakProgram(programId);
       load();
     } catch (e) {
-      showError((e as Error).message ?? "Failed to end program.");
+      showError((e as Error).message ?? t("storeManager.streak.endFailed"));
     } finally {
       setActing(null);
     }
@@ -174,7 +176,7 @@ export default function ViewStreak() {
       await deleteStreakProgram(programId);
       load();
     } catch (e) {
-      showError((e as Error).message ?? "Failed to delete program.");
+      showError((e as Error).message ?? t("storeManager.streak.deleteFailed"));
     } finally {
       setActing(null);
     }
@@ -201,8 +203,8 @@ export default function ViewStreak() {
       />
 
       <AppHeader
-        title="Streak Programs"
-        description="Reward customers with streak points"
+        title={t("storeManager.streak.title")}
+        description={t("storeManager.streak.description")}
         onBackPress={() => {
           router.push(`/(store_manager)/view-store/${storeId}`);
         }}
@@ -235,7 +237,7 @@ export default function ViewStreak() {
                         : "text-xs font-poppins-medium text-slate-400 dark:text-slate-500"
                     }
                   >
-                    {tab.label}
+                    {t(`storeManager.streak.tabs.${tab.key}`)}
                   </Text>
                   {count > 0 && (
                     <View className="rounded-full min-w-[18px] items-center bg-white/20">
@@ -305,17 +307,17 @@ export default function ViewStreak() {
           <View className="items-center gap-y-1 -mt-4">
             <Text className="text-sm font-poppins-semibold text-textMuted">
               {activeTab === "active"
-                ? "No Active Program"
+                ? t("storeManager.streak.emptyActiveTitle")
                 : activeTab === "upcoming"
-                ? "No Upcoming Programs"
-                : "No Past Programs"}
+                ? t("storeManager.streak.emptyUpcomingTitle")
+                : t("storeManager.streak.emptyEndedTitle")}
             </Text>
             <Text className="text-sm font-poppins text-textMuted text-center">
               {activeTab === "active"
-                ? "Activate a streak program to start rewarding daily visitors."
+                ? t("storeManager.streak.emptyActiveBody")
                 : activeTab === "upcoming"
-                ? "Create and publish a program so users can see it's coming."
-                : "Ended streak programs will appear here."}
+                ? t("storeManager.streak.emptyUpcomingBody")
+                : t("storeManager.streak.emptyEndedBody")}
             </Text>
           </View>
         </View>

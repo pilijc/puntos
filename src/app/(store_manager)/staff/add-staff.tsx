@@ -11,10 +11,12 @@ import { generateRandomPassword } from "@/utils/store_manager/staff-utils";
 import { TextField } from "@/components/text-field";
 import { RefreshCcw } from "lucide-react-native";
 import { AppHeader } from "@/components/header";
+import { useTranslation } from "react-i18next";
 
 const WEB_MAX_WIDTH = 896;
 
 export default function AddStaff() {
+  const { t } = useTranslation();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { storeId, staffId } = useLocalSearchParams<{ storeId: string; staffId?: string }>();
@@ -50,14 +52,14 @@ export default function AddStaff() {
 
     init().catch(() => {
       setModal({
-        title: "Error",
-        message: "Failed to load staff details.",
-        buttons: [{ label: "OK", onPress: () => setModal(null), variant: "secondary" }],
+        title: t("storeManager.staffForm.loadErrorTitle"),
+        message: t("storeManager.staffForm.loadErrorMessage"),
+        buttons: [{ label: t("label.ok"), onPress: () => setModal(null), variant: "secondary" }],
       });
     });
 
     return () => resetStaff();
-  }, [isEditMode, staffId, setName, setEmail, setPassword, setModal, resetStaff]);
+  }, [isEditMode, staffId, setName, setEmail, setPassword, setModal, resetStaff, t]);
 
   const openConfirm = () => {
     const trimmedName = name.trim();
@@ -65,9 +67,9 @@ export default function AddStaff() {
 
     if (!trimmedName || !trimmedEmail) {
       setModal({
-        title: "Validation Error",
-        message: "Please enter both name and email.",
-        buttons: [{ label: "OK", onPress: () => setModal(null), variant: "secondary" }],
+        title: t("storeManager.staffForm.validationTitle"),
+        message: t("storeManager.staffForm.nameEmailRequired"),
+        buttons: [{ label: t("label.ok"), onPress: () => setModal(null), variant: "secondary" }],
       });
       return;
     }
@@ -75,9 +77,9 @@ export default function AddStaff() {
     const emailPattern = /\S+@\S+\.\S+/;
     if (!emailPattern.test(trimmedEmail)) {
       setModal({
-        title: "Invalid Email",
-        message: "Please enter a valid email address.",
-        buttons: [{ label: "OK", onPress: () => setModal(null), variant: "secondary" }],
+        title: t("storeManager.staffForm.invalidEmailTitle"),
+        message: t("storeManager.staffForm.invalidEmailMessage"),
+        buttons: [{ label: t("label.ok"), onPress: () => setModal(null), variant: "secondary" }],
       });
       return;
     }
@@ -95,13 +97,13 @@ export default function AddStaff() {
       }
 
       setModal({
-        title: isEditMode ? "Staff Updated" : "Staff Added",
+        title: isEditMode ? t("storeManager.staffForm.updatedTitle") : t("storeManager.staffForm.addedTitle"),
         message: isEditMode
-          ? "The staff member details were updated successfully."
-          : "The staff member has been added successfully.",
+          ? t("storeManager.staffForm.updatedMessage")
+          : t("storeManager.staffForm.addedMessage"),
         buttons: [
           {
-            label: "OK",
+            label: t("label.ok"),
             onPress: () => {
               setModal(null);
             },
@@ -116,9 +118,9 @@ export default function AddStaff() {
       });
     } catch (error) {
       setModal({
-        title: "Error",
-        message: (error as Error).message ?? "Failed to save staff member.",
-        buttons: [{ label: "OK", onPress: () => setModal(null), variant: "secondary" }],
+        title: t("label.error"),
+        message: (error as Error).message ?? t("storeManager.staffForm.saveError"),
+        buttons: [{ label: t("label.ok"), onPress: () => setModal(null), variant: "secondary" }],
       });
     } finally {
       setIsSubmitting(false);
@@ -137,11 +139,11 @@ export default function AddStaff() {
       />
 
       <AppHeader
-        title={isEditMode ? "Edit staff" : "Add staff"}
+        title={isEditMode ? t("storeManager.staffForm.editTitle") : t("storeManager.staffForm.addTitle")}
         description={
           isEditMode
-            ? "Update name or email for this front desk account"
-            : "Create a front desk login for this store"
+            ? t("storeManager.staffForm.editDescription")
+            : t("storeManager.staffForm.addDescription")
         }
         onBackPress={() => {
           router.push({
@@ -173,48 +175,48 @@ export default function AddStaff() {
               <View className="mx-4 mt-2 mb-4 gap-y-4 rounded-xl border border-slate-100 bg-white p-4 dark:border-neutral-700 dark:bg-neutral-800">
                 <View>
                   <Text className="text-sm font-poppins-bold text-slate-800 dark:text-slate-100">
-                    {isEditMode ? "Profile & login" : "Front desk access"}
+                    {isEditMode ? t("storeManager.staffForm.profileSectionEdit") : t("storeManager.staffForm.profileSectionAdd")}
                   </Text>
                   <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">
                     {isEditMode
-                      ? "Change this person's name or email for their store account."
-                      : "They'll use this account at the front desk. You'll share a temporary password after you save."}
+                      ? t("storeManager.staffForm.profileHintEdit")
+                      : t("storeManager.staffForm.profileHintAdd")}
                   </Text>
                 </View>
 
                 {!isEditMode && (
                   <View className="rounded-xl bg-primary/5 p-4 dark:bg-primary-800">
-                    <Text className="text-sm font-poppins-semibold text-primary">Staff Login Information</Text>
+                    <Text className="text-sm font-poppins-semibold text-primary">{t("storeManager.staffForm.loginInfoTitle")}</Text>
                     <View className="mt-1 gap-y-1">
                       <Text className="text-xs font-poppins text-primary">
-                        • A temporary password will be created automatically.
+                        • {t("storeManager.staffForm.loginBullet1")}
                       </Text>
                       <Text className="text-xs font-poppins text-primary">
-                        • Please share this password with the front desk staff.
+                        • {t("storeManager.staffForm.loginBullet2")}
                       </Text>
                       <Text className="text-xs font-poppins text-primary">
-                        • They will use it to log in for the first time.
+                        • {t("storeManager.staffForm.loginBullet3")}
                       </Text>
                       <Text className="text-xs font-poppins text-primary">
-                        • After logging in, they will be asked to set a new password.
+                        • {t("storeManager.staffForm.loginBullet4")}
                       </Text>
                     </View>
                   </View>
                 )}
 
                 <TextField
-                  label="Full Name"
+                  label={t("storeManager.staffForm.fullName")}
                   value={name}
                   onChangeText={setName}
-                  placeholder="e.g. Jane Doe"
+                  placeholder={t("storeManager.staffForm.fullNamePlaceholder")}
                   required={true}
                 />
 
                 <TextField
-                  label="Email"
+                  label={t("storeManager.staffForm.email")}
                   value={email}
                   onChangeText={setEmail}
-                  placeholder="e.g. jane@example.com"
+                  placeholder={t("storeManager.staffForm.emailPlaceholder")}
                   required={true}
                 />
 
@@ -223,7 +225,7 @@ export default function AddStaff() {
                     <View className="flex-row items-center justify-between gap-x-0.5">
                       <View className="flex-row items-center gap-x-0.5">
                         <Text className="text-sm font-poppins-semibold text-slate-700 dark:text-slate-300">
-                          Password
+                          {t("storeManager.staffForm.password")}
                         </Text>
                         <Text className="text-xs font-poppins-bold text-red-500">*</Text>
                       </View>
@@ -244,7 +246,7 @@ export default function AddStaff() {
                         includeFontPadding: false,
                       }}
                       keyboardType="default"
-                      placeholder="Default password is autogenerated"
+                      placeholder={t("storeManager.staffForm.passwordPlaceholder")}
                       placeholderTextColor="#94A3B8"
                       value={password}
                     />
@@ -253,7 +255,7 @@ export default function AddStaff() {
 
                 <View className="gap-y-3" style={{ paddingBottom: insets.bottom }}>
                   <Button
-                    label={isEditMode ? "Save Changes" : "Confirm"}
+                    label={isEditMode ? t("storeManager.staffForm.saveChanges") : t("storeManager.staffForm.confirm")}
                     onPress={openConfirm}
                     disabled={isSubmitting}
                     loading={isSubmitting}
@@ -262,7 +264,7 @@ export default function AddStaff() {
                     keyboardDismiss={true}
                   />
                   <Button
-                    label="Cancel"
+                    label={t("storeManager.staffForm.cancel")}
                     onPress={() => {
                       router.push({
                         pathname: "/(store_manager)/staff",
@@ -287,17 +289,17 @@ export default function AddStaff() {
         >
           <View className="w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl dark:border-slate-700 dark:bg-slate-900">
             <Text className="mb-2 text-base font-poppins-bold text-slate-900 dark:text-slate-100">
-              {isEditMode ? "Confirm Changes" : "Confirm Staff Details"}
+              {isEditMode ? t("storeManager.staffForm.confirmEditTitle") : t("storeManager.staffForm.confirmAddTitle")}
             </Text>
 
             <Text className="mb-4 text-sm font-poppins text-slate-500 dark:text-slate-400">
               {isEditMode
-                ? "Please review the details below before saving."
-                : "Please review the login details below. Take a screenshot and share them with your frontdesk staff."}
+                ? t("storeManager.staffForm.confirmEditBody")
+                : t("storeManager.staffForm.confirmAddBody")}
             </Text>
 
             <View className="mb-3 gap-y-1.5">
-              <Text className="text-xs font-poppins text-slate-500 dark:text-slate-400">Email</Text>
+              <Text className="text-xs font-poppins text-slate-500 dark:text-slate-400">{t("storeManager.staffForm.emailLabel")}</Text>
               <View className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 dark:border-slate-700 dark:bg-slate-800">
                 <Text className="text-sm font-poppins-bold text-slate-900 dark:text-slate-100">{email}</Text>
               </View>
@@ -305,7 +307,7 @@ export default function AddStaff() {
 
             {!isEditMode && (
               <View className="mb-4 gap-y-1.5">
-                <Text className="text-xs font-poppins text-slate-500 dark:text-slate-400">Temporary Password</Text>
+                <Text className="text-xs font-poppins text-slate-500 dark:text-slate-400">{t("storeManager.staffForm.tempPassword")}</Text>
                 <View className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 dark:border-slate-700 dark:bg-slate-800">
                   <Text className="text-sm font-poppins-bold text-slate-900 dark:text-slate-100">{password}</Text>
                 </View>
@@ -318,7 +320,7 @@ export default function AddStaff() {
                 activeOpacity={0.8}
                 onPress={() => setShowConfirm(false)}
               >
-                <Text className="text-xs font-poppins-semibold text-slate-600 dark:text-slate-200">Cancel</Text>
+                <Text className="text-xs font-poppins-semibold text-slate-600 dark:text-slate-200">{t("label.cancel")}</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -330,7 +332,7 @@ export default function AddStaff() {
                 }}
               >
                 <Text className="text-xs font-poppins-semibold text-white">
-                  {isEditMode ? "Save Changes" : "Create Frontdesk Staff"}
+                  {isEditMode ? t("storeManager.staffForm.saveChanges") : t("storeManager.staffForm.createStaff")}
                 </Text>
               </TouchableOpacity>
             </View>
