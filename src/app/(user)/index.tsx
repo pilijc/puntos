@@ -174,7 +174,10 @@ export default function Discover() {
             setLocation(position);
 
             const { latitude: uLat, longitude: uLon } = position.coords;
-            const { mutedStoreIds } = useStoreStore.getState();
+            const { mutedStoreIds, isMutedStoresHydrated } = useStoreStore.getState();
+            
+            if (!isMutedStoresHydrated) return;
+
             const currentStores = useStoreStore.getState().stores;
 
             const nearbyStoreIds: number[] = [];

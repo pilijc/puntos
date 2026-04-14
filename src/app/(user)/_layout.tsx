@@ -16,14 +16,29 @@ export default function TabLayout() {
   const insets = useSafeAreaInsets();
   const { user, preferences } = useProfile();
   useLocationSync(user?.id, preferences?.location_enabled ?? false);
-  const { setMutedStoreIds } = useStoreStore();
+  const { setMutedStoreIds, setMutedStoresHydrated } = useStoreStore();
 
   useEffect(() => {
+    let isActive = true;
     if (user?.id) {
+      setMutedStoresHydrated(false);
       getMutedStores()
-        .then(setMutedStoreIds)
-        .catch(console.error);
+        .then((ids) => {
+          if (isActive) {
+            setMutedStoreIds(ids);
+            setMutedStoresHydrated(true);
+          }
+        })
+        .catch((err) => {
+          console.error("[Mute] fetch failed:", err);
+          if (isActive) setMutedStoresHydrated(true);
+        });
+    } else {
+      setMutedStoresHydrated(false);
     }
+    return () => {
+      isActive = false;
+    };
   }, [user?.id]);
 
   return (

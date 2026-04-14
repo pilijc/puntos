@@ -8,28 +8,24 @@ export function useMuteStore(storeId?: number) {
 
     const isMuted = storeId ? mutedStoreIds.includes(storeId) : false;
 
-    useEffect(() => {
-        if (mutedStoreIds.length === 0) {
-            getMutedStores().then(setMutedStoreIds).catch(console.error);
-        }
-    }, []);
+
 
     const toggleMute = async () => {
         if (!storeId || isLoading) return;
 
         setIsLoading(true);
         try {
-            if(isMuted) {
+            if (isMuted) {
                 await unmuteStore(storeId);
-                setMutedStoreIds(mutedStoreIds.filter(id => id !== storeId));
+                setMutedStoreIds(prev => prev.filter(id => id !== storeId));
             } else {
                 await muteStore(storeId);
-                setMutedStoreIds([...mutedStoreIds, storeId]);
+                setMutedStoreIds(prev => [...prev, storeId]);
             }
         } catch (error) {
             console.error("Failed to toggle mute state:", error);
         } finally {
-            setIsLoading(false)
+            setIsLoading(false);
         }
     };
 
