@@ -224,7 +224,6 @@ export default function ConfigureStamp() {
       />
       <AppHeader
         title={isEdit ? t("storeManager.stampConfigure.editTitle") : t("storeManager.stampConfigure.newTitle")}
-        paddingTop={insets.top + 8}
         onBackPress={() => {
           router.push({ pathname: "/(store_manager)/stamp", params: { storeId } });
         }}

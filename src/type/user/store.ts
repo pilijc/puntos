@@ -20,7 +20,11 @@ export interface Store {
 
 export type StoreState = {
   stores: Store[];
+  mutedStoreIds: number[];
+  isMutedStoresHydrated: boolean;
   setStores: (stores: Store[]) => void;
+  setMutedStoreIds: (ids: number[] | ((prev: number[]) => number[])) => void;
+  setMutedStoresHydrated: (hydrated: boolean) => void;
   reset: () => void;
 };
 
