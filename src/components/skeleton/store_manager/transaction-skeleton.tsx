@@ -1,113 +1,69 @@
 import React, { useEffect, useRef } from "react";
-import { Animated, useColorScheme, Platform } from "react-native";
+import { Animated, Platform } from "react-native";
 import { View } from "@/tw";
 
 const ROWS_PER_GROUP = [3, 4, 2];
 
 const DETAIL_WIDTH_PX: number[] = [92, 110, 98, 124, 104, 90, 116, 106];
-const LABEL_RADIUS = 6;
 const TIME_WIDTHS: number[] = [44, 56, 48, 60, 52];
 
 function SkeletonTxRow({
   opacity,
-  bg,
-  borderColor,
-  cardBg,
   rowIndex,
   isFirst,
   isLast,
 }: {
   opacity: Animated.Value;
-  bg: string;
-  borderColor: string;
-  cardBg: string;
   rowIndex: number;
   isFirst: boolean;
   isLast: boolean;
 }) {
   const detailW = DETAIL_WIDTH_PX[rowIndex % DETAIL_WIDTH_PX.length];
+  const timeW = TIME_WIDTHS[rowIndex % TIME_WIDTHS.length];
   const isWeb = Platform.OS === "web";
 
   return (
     <View
       className={[
-        "flex-row items-center px-4 py-3 border-l border-r border-b",
+        "flex-row items-center px-4 py-3 bg-background dark:bg-darkBackground border-l border-r border-b border-slate-100 dark:border-[#262626]",
         !isWeb && "mx-4",
         isFirst && "border-t rounded-tl-[12px] rounded-tr-[12px]",
         isLast && "rounded-bl-[12px] rounded-br-[12px]",
       ]
         .filter(Boolean)
         .join(" ")}
-      style={{ borderColor, backgroundColor: cardBg }}
     >
       <View className="relative mr-3">
         <Animated.View
-          style={{
-            width: 40,
-            height: 40,
-            borderRadius: 20,
-            backgroundColor: bg,
-            opacity,
-          }}
+          className="size-10 rounded-full bg-slate-200 dark:bg-neutral-700"
+          style={{ opacity }}
         />
         <Animated.View
-          style={{
-            position: "absolute",
-            bottom: -2,
-            right: -2,
-            width: 18,
-            height: 18,
-            borderRadius: 9,
-            backgroundColor: bg,
-            opacity,
-            borderWidth: 1.5,
-            borderColor,
-          }}
+          className="absolute -bottom-0.5 -right-0.5 size-[18px] rounded-full border-[1.5px] border-slate-100 dark:border-[#262626] bg-slate-200 dark:bg-neutral-700"
+          style={{ opacity }}
         />
       </View>
 
       <View className="flex-1">
         <View className="flex-row items-start justify-between">
           <Animated.View
-            style={{
-              flex: 1,
-              marginRight: 8,
-              height: 13,
-              borderRadius: LABEL_RADIUS,
-              backgroundColor: bg,
-              opacity,
-            }}
+            className="mr-2 h-[13px] flex-1 rounded-md bg-slate-200 dark:bg-neutral-700"
+            style={{ opacity }}
           />
           <Animated.View
-            style={{
-              width: detailW,
-              height: 13,
-              borderRadius: LABEL_RADIUS,
-              backgroundColor: bg,
-              opacity,
-            }}
+            className="h-[13px] rounded-md bg-slate-200 dark:bg-neutral-700"
+            style={{ opacity, width: detailW }}
           />
         </View>
 
-        <View className="flex-row items-center justify-between mt-2">
+        <View className="mt-2 flex-row items-center justify-between">
           <Animated.View
-            style={{
-              flex: 1,
-              marginRight: 8,
-              height: 10,
-              borderRadius: 5,
-              backgroundColor: bg,
-              opacity,
-            }}
+            className="mr-2 h-[10px] flex-1 rounded-[5px] bg-slate-200 dark:bg-neutral-700"
+            style={{ opacity }}
           />
           <Animated.View
-            style={{
-              width: TIME_WIDTHS[rowIndex % TIME_WIDTHS.length],
-              height: 10,
-              borderRadius: 5,
-              backgroundColor: bg,
-              opacity,
-            }}
+            className="h-[10px] rounded-[5px] bg-slate-200 dark:bg-neutral-700"
+            style={{ opacity, width: timeW }}
           />
         </View>
       </View>
@@ -117,13 +73,7 @@ function SkeletonTxRow({
 
 export function TransactionSkeleton() {
   const opacity = useRef(new Animated.Value(0.4)).current;
-  const isDark = useColorScheme() === "dark";
   const isWeb = Platform.OS === "web";
-  const maxWidth = 860;
-
-  const bg = isDark ? "#2a2a2a" : "#E2E8F0";
-  const borderColor = isDark ? "#262626" : "#F1F5F9";
-  const cardBg = isDark ? "#1c1c1c" : "#ffffff";
 
   useEffect(() => {
     Animated.loop(
@@ -140,10 +90,11 @@ export function TransactionSkeleton() {
     <View className="flex-1">
       {ROWS_PER_GROUP.map((rowCount, groupIndex) => (
         <View key={groupIndex}>
-          <View className={isWeb ? "px-4 pt-3 pb-2 items-center" : "px-6 pt-3 pb-2"}>
-            <View style={isWeb ? { width: "100%", maxWidth } : undefined}>
+          <View className={isWeb ? "items-center px-4 pb-2 pt-3" : "px-6 pb-2 pt-3"}>
+            <View className={isWeb ? "w-full max-w-4xl self-center" : ""}>
               <Animated.View
-                style={{ width: 96, height: 9, borderRadius: 5, backgroundColor: bg, opacity }}
+                className="h-[9px] w-24 rounded-[5px] bg-slate-200 dark:bg-neutral-700"
+                style={{ opacity }}
               />
             </View>
           </View>
@@ -152,12 +103,9 @@ export function TransactionSkeleton() {
             const idx = absoluteRowIndex++;
             return (
               <View key={i} className={isWeb ? "px-4" : ""}>
-                <View style={isWeb ? { width: "100%", maxWidth, alignSelf: "center" } : undefined}>
+                <View className={isWeb ? "w-full max-w-4xl self-center" : ""}>
                   <SkeletonTxRow
                     opacity={opacity}
-                    bg={bg}
-                    borderColor={borderColor}
-                    cardBg={cardBg}
                     rowIndex={idx}
                     isFirst={i === 0}
                     isLast={i === rowCount - 1}
@@ -172,27 +120,18 @@ export function TransactionSkeleton() {
   );
 }
 
-function SkeletonPill({ opacity, bg, w }: { opacity: Animated.Value; bg: string; w: number }) {
+function SkeletonPill({ opacity, className }: { opacity: Animated.Value; className: string }) {
   return (
     <Animated.View
-      className="h-7 rounded-full"
-      style={{
-        width: w,
-        backgroundColor: bg,
-        opacity,
-      }}
+      className={`h-7 rounded-full bg-slate-200 dark:bg-neutral-700 ${className}`}
+      style={{ opacity }}
     />
   );
 }
 
 export function StoresAndFunnelSkeleton() {
   const opacity = useRef(new Animated.Value(0.4)).current;
-  const isDark = useColorScheme() === "dark";
   const isWeb = Platform.OS === "web";
-  const maxWidth = 860;
-
-  const pillBg = isDark ? "#262626" : "#F1F5F9";
-  const borderColor = isDark ? "#262626" : "#E2E8F0";
 
   useEffect(() => {
     Animated.loop(
@@ -203,62 +142,41 @@ export function StoresAndFunnelSkeleton() {
     ).start();
   }, [opacity]);
 
-  return (
-    isWeb ? (
-      <View className="bg-backgroundMuted dark:bg-darkBackground px-4 pt-4 pb-3 items-center">
-        <View
-          className="w-full bg-white dark:bg-darkBackground border border-neutral-100 dark:border-darkBorder rounded-xl overflow-hidden flex-row items-center"
-          style={{ maxWidth }}
-        >
-          <View className="flex-1 pl-1 pr-4 py-[10px]">
-            <View className="flex-row items-center gap-2">
-              <SkeletonPill opacity={opacity} bg={pillBg} w={92} />
-              <SkeletonPill opacity={opacity} bg={pillBg} w={78} />
-              <SkeletonPill opacity={opacity} bg={pillBg} w={102} />
-            </View>
-          </View>
-
-          <View
-            className="self-stretch items-center justify-center px-[14px] py-[10px] border-l bg-white dark:bg-darkBackground"
-            style={{
-              borderLeftColor: borderColor,
-            }}
-          >
-            <Animated.View
-              className="w-4 h-4 rounded"
-              style={{
-                backgroundColor: pillBg,
-                opacity,
-              }}
-            />
-          </View>
-        </View>
-      </View>
-    ) : (
-      <View className="flex-row items-center bg-background dark:bg-darkBackground border-b border-neutral-100 dark:border-darkBorder">
-        <View className="flex-1 pl-1 pr-4 py-[10px]">
+  return isWeb ? (
+    <View className="bg-backgroundMuted dark:bg-darkBackground px-4 pb-3 pt-4 items-center">
+      <View className="w-full max-w-4xl flex-row items-center overflow-hidden rounded-xl border border-neutral-100 bg-white dark:border-darkBorder dark:bg-darkBackground">
+        <View className="flex-1 py-[10px] pl-1 pr-4">
           <View className="flex-row items-center gap-2">
-            <SkeletonPill opacity={opacity} bg={pillBg} w={92} />
-            <SkeletonPill opacity={opacity} bg={pillBg} w={78} />
-            <SkeletonPill opacity={opacity} bg={pillBg} w={102} />
+            <SkeletonPill opacity={opacity} className="w-[92px]" />
+            <SkeletonPill opacity={opacity} className="w-[78px]" />
+            <SkeletonPill opacity={opacity} className="w-[102px]" />
           </View>
         </View>
 
-        <View
-          className="self-stretch items-center justify-center px-[14px] py-[10px] border-l bg-background dark:bg-darkBackground"
-          style={{
-            borderLeftColor: borderColor,
-          }}
-        >
+        <View className="self-stretch items-center justify-center border-l border-slate-100 bg-white px-[14px] py-[10px] dark:border-[#262626] dark:bg-darkBackground">
           <Animated.View
-            className="w-4 h-4 rounded"
-            style={{
-              backgroundColor: pillBg,
-              opacity,
-            }}
+            className="size-4 rounded bg-slate-200 dark:bg-neutral-700"
+            style={{ opacity }}
           />
         </View>
       </View>
-    )
+    </View>
+  ) : (
+    <View className="flex-row items-center border-b border-neutral-100 bg-background dark:border-darkBorder dark:bg-darkBackground">
+      <View className="flex-1 py-[10px] pl-1 pr-4">
+        <View className="flex-row items-center gap-2">
+          <SkeletonPill opacity={opacity} className="w-[92px]" />
+          <SkeletonPill opacity={opacity} className="w-[78px]" />
+          <SkeletonPill opacity={opacity} className="w-[102px]" />
+        </View>
+      </View>
+
+      <View className="self-stretch items-center justify-center border-l border-slate-100 bg-background px-[14px] py-[10px] dark:border-[#262626] dark:bg-darkBackground">
+        <Animated.View
+          className="size-4 rounded bg-slate-200 dark:bg-neutral-700"
+          style={{ opacity }}
+        />
+      </View>
+    </View>
   );
 }

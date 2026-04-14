@@ -1,31 +1,32 @@
-import React, { useCallback, useRef, useState } from "react";
-import { FlatList, ScrollView, Modal, Pressable, StyleSheet, useColorScheme, RefreshControl, ActivityIndicator, ListRenderItemInfo, TouchableOpacity, View as NativeView, Dimensions, Platform } from "react-native";
+import React, { useCallback, useMemo, useRef, useState } from "react";
+import { Modal, useColorScheme, RefreshControl, ActivityIndicator, ListRenderItemInfo, Dimensions, Platform, View as RNView } from "react-native";
 import { TransactionSkeleton, StoresAndFunnelSkeleton } from "@/components/skeleton/store_manager/transaction-skeleton";
-import { View, Text, SafeAreaView } from "@/tw";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import {
+  View,
+  Text,
+  SafeAreaView,
+  FlatList,
+  ScrollView,
+  TouchableOpacity,
+  Pressable,
+  Image,
+} from "@/tw";
 import { QrCode, Stamp, Flame, ReceiptText, Funnel, Check } from "lucide-react-native";
-import { Image } from "expo-image";
 import { useTransactions } from "@/hooks/store-manager/transaction";
 import { TxType, TypeFilter, ListItem } from "@/type/store-manager/transaction";
 import { formatTxTime } from "@/utils/store_manager/transaction";
+import { useTranslation } from "react-i18next";
 
-const TYPE_CONFIG: Record<
+const TYPE_META: Record<
   TxType,
-  { label: string; color: string; bgLight: string; bgDark: string; icon: (c: string) => React.ReactNode }
+  { color: string; bgLight: string; bgDark: string; icon: (c: string) => React.ReactNode }
 > = {
-  qr: { label: "QR Purchase", color: "#FF6600", bgLight: "#FFF3E0", bgDark: "#431407", icon: (c) => <QrCode size={11} color={c} /> },
-  stamp: { label: "Stamp", color: "#3B82F6", bgLight: "#EFF6FF", bgDark: "#1E3A5F", icon: (c) => <Stamp size={11} color={c} /> },
-  streak: { label: "Streak", color: "#8B5CF6", bgLight: "#F5F3FF", bgDark: "#2D1B69", icon: (c) => <Flame size={11} color={c} /> },
+  qr: { color: "#FF6600", bgLight: "#FFF3E0", bgDark: "#431407", icon: (c) => <QrCode size={11} color={c} /> },
+  stamp: { color: "#3B82F6", bgLight: "#EFF6FF", bgDark: "#1E3A5F", icon: (c) => <Stamp size={11} color={c} /> },
+  streak: { color: "#8B5CF6", bgLight: "#F5F3FF", bgDark: "#2D1B69", icon: (c) => <Flame size={11} color={c} /> },
 };
 
-const FILTER_OPTIONS: {label: string; value: TypeFilter; icon?: (c: string) => React.ReactNode; color?: string}[] = [
-  {label: "All", value: "all"},
-  {label: "QR Purchase", value: "qr", icon: TYPE_CONFIG.qr.icon, color: TYPE_CONFIG.qr.color},
-  {label: "Stamp", value: "stamp", icon: TYPE_CONFIG.stamp.icon, color: TYPE_CONFIG.stamp.color},
-  {label: "Streak", value: "streak", icon: TYPE_CONFIG.streak.icon, color: TYPE_CONFIG.streak.color},
-];
-
-function AvatarInitials({ name, size = 38 }: { name: string; size?: number }) {
+function AvatarInitials({ name }: { name: string }) {
   const initials = name
     .split(" ")
     .slice(0, 2)
@@ -34,11 +35,8 @@ function AvatarInitials({ name, size = 38 }: { name: string; size?: number }) {
     .toUpperCase();
 
   return (
-    <View
-      style={{ width: size, height: size, borderRadius: size / 2 }}
-      className="bg-backgroundMuted dark:bg-darkBackgroundCard items-center justify-center"
-    >
-      <Text style={{ fontSize: size * 0.34 }} className="font-poppins-bold text-textMuted dark:text-darkTextSecondary">
+    <View className="size-10 rounded-full bg-backgroundMuted dark:bg-darkBackgroundCard items-center justify-center">
+      <Text className="text-[13px] font-poppins-bold text-textMuted dark:text-darkTextSecondary">
         {initials}
       </Text>
     </View>
@@ -46,9 +44,9 @@ function AvatarInitials({ name, size = 38 }: { name: string; size?: number }) {
 }
 
 export default function TransactionsScreen() {
+  const { t: translate } = useTranslation();
   const isDark = useColorScheme() === "dark";
   const isWeb = Platform.OS === "web";
-  const maxWidth = 860;
   const {
     stores, storesLoading,
     selectedStoreId, selectStore,
@@ -58,7 +56,7 @@ export default function TransactionsScreen() {
     hasMore, loadMore,
     handleRefresh,
   } = useTransactions();
-  const funnelRef = useRef<NativeView>(null);
+  const funnelRef = useRef<RNView>(null);
   const [funnelOpen, setFunnelOpen] = useState(false);
   const [funnelAnchor, setFunnelAnchor] = useState({
     top: 0,
@@ -81,12 +79,38 @@ export default function TransactionsScreen() {
     });
   }, []);
 
+  const filterOptions = useMemo(
+    () =>
+      [
+        { label: translate("storeManager.transactions.filters.all"), value: "all" as const },
+        {
+          label: translate("storeManager.transactions.filters.qr"),
+          value: "qr" as const,
+          icon: TYPE_META.qr.icon,
+          color: TYPE_META.qr.color,
+        },
+        {
+          label: translate("storeManager.transactions.filters.stamp"),
+          value: "stamp" as const,
+          icon: TYPE_META.stamp.icon,
+          color: TYPE_META.stamp.color,
+        },
+        {
+          label: translate("storeManager.transactions.filters.streak"),
+          value: "streak" as const,
+          icon: TYPE_META.streak.icon,
+          color: TYPE_META.streak.color,
+        },
+      ] as const,
+    [translate],
+  );
+
   const renderItem = useCallback(
     ({ item, index }: ListRenderItemInfo<ListItem>) => {
       if (item.kind === "header") {
         return (
-          <View className={isWeb ? "px-4 pt-3 pb-2 items-center" : "px-6 pt-3 pb-2"}>
-            <View style={isWeb ? { width: "100%", maxWidth } : undefined}>
+          <View className={isWeb ? "pt-3 pb-2 w-full" : "px-6 pt-3 pb-2"}>
+            <View className={isWeb ? "w-full max-w-4xl self-center" : ""}>
               <Text className="text-xs font-poppins-semibold text-textMuted dark:text-darkTextMuted">
                 {item.label}
               </Text>
@@ -96,43 +120,38 @@ export default function TransactionsScreen() {
       }
 
       const { tx } = item;
-      const cfg     = TYPE_CONFIG[tx.type];
       const isFirst = listItems[index - 1]?.kind === "header";
       const isLast  = index === listItems.length - 1 || listItems[index + 1]?.kind === "header";
-      const borderColor = isDark ? "#262626" : "#F1F5F9";
-      
+
       return (
-        <View className={isWeb ? "px-4" : ""}>
-          <View style={isWeb ? { width: "100%", maxWidth, alignSelf: "center" } : undefined}>
+        <View className={isWeb ? "w-full max-w-4xl self-center" : ""}>
             <View
               className={[
-                "flex-row items-center px-4 py-3 bg-background dark:bg-darkBackground border-l border-r border-b",
+                "flex-row items-center px-4 py-3 bg-background dark:bg-darkBackground border-l border-r border-b border-slate-100 dark:border-[#262626]",
                 !isWeb && "mx-4",
                 isFirst && "border-t rounded-tl-[12px] rounded-tr-[12px]",
                 isLast && "rounded-bl-[12px] rounded-br-[12px]",
               ]
                 .filter(Boolean)
                 .join(" ")}
-              style={{ borderColor }}
             >
-              <NativeView style={{ position: "relative", marginRight: 12 }}>
+              <View className="relative mr-3">
                 {tx.userAvatar ? (
                   <Image
                     source={{ uri: tx.userAvatar }}
-                    style={{ width: 40, height: 40, borderRadius: 20 }}
+                    className="size-10 rounded-full"
                     contentFit="cover"
                   />
                 ) : (
-                  <AvatarInitials name={tx.userName} size={40} />
+                  <AvatarInitials name={tx.userName} />
                 )}
-              </NativeView>
+              </View>
 
               <View className="flex-1">
                 <View className="flex-row items-start justify-between">
                   <Text
-                    className="text-sm font-poppins-bold text-textPrimary dark:text-darkTextPrimary"
+                    className="flex-1 text-sm font-poppins-bold text-textPrimary dark:text-darkTextPrimary"
                     numberOfLines={1}
-                    style={{ flex: 1 }}
                   >
                     {tx.userName}
                   </Text>
@@ -145,7 +164,7 @@ export default function TransactionsScreen() {
                 </View>
                 <View className="flex-row items-center justify-between">
                   <Text className="text-xs font-poppins text-textMuted dark:text-darkTextMuted">
-                    {cfg.label}
+                    {translate(`storeManager.transactions.types.${tx.type}`)}
                   </Text>
                   <Text className="text-[10px] font-poppins text-textMuted dark:text-darkTextMuted">
                     {formatTxTime(tx.date)}
@@ -153,11 +172,10 @@ export default function TransactionsScreen() {
                 </View>
               </View>
             </View>
-          </View>
         </View>
       );
     },
-    [isDark, isWeb, listItems]
+    [isDark, isWeb, listItems, translate]
   );
 
   const emptyIcon = <ReceiptText size={40} color={isDark ? "#404040" : "#E2E8F0"} strokeWidth={1.5} />;
@@ -173,8 +191,10 @@ export default function TransactionsScreen() {
 
   return (
     <SafeAreaView edges={["top", "left", "right"]} className="flex-1 bg-backgroundMuted dark:bg-darkBackground">
-        <View className="bg-background dark:bg-darkBackground border-b border-neutral-100 dark:border-darkBorder px-6 py-3 flex-row items-center justify-between">
-        <Text className="text-xl font-poppins-bold text-textPrimary dark:text-darkTextPrimary py-1">Transactions</Text>
+        <View className="bg-white dark:bg-darkBackground border-b border-neutral-100 dark:border-darkBorder px-6 py-3 flex-row items-center justify-between">
+        <Text className="text-xl font-poppins-bold text-textPrimary dark:text-darkTextPrimary py-1">
+          {translate("storeManager.transactions.title")}
+        </Text>
       </View>
 
       {storesLoading ? (
@@ -183,14 +203,11 @@ export default function TransactionsScreen() {
         <View className={isWeb ? "bg-backgroundMuted dark:bg-darkBackground px-4 pt-4 pb-3 items-center" : "flex-row items-center bg-background dark:bg-darkBackground border-b border-neutral-100 dark:border-darkBorder pl-5"}>
           
           {isWeb ? (
-            <View
-              className="w-full bg-white dark:bg-darkBackground border border-neutral-100 dark:border-darkBorder rounded-xl overflow-hidden flex-row items-center"
-              style={{ maxWidth }}
-            >
+            <View className="w-full max-w-4xl bg-white dark:bg-darkBackground border border-neutral-100 dark:border-darkBorder rounded-xl overflow-hidden flex-row items-center">
               <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
-                contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 10, gap: 8 }}
+                contentContainerClassName="px-4 py-2.5 gap-x-2"
               >
                 {stores.map((store) => {
                   const storeId = Number(store.id);
@@ -200,12 +217,7 @@ export default function TransactionsScreen() {
                       key={store.id}
                       onPress={() => selectStore(storeId)}
                       activeOpacity={0.75}
-                      style={{
-                        paddingHorizontal: 10,
-                        paddingVertical: 4,
-                        borderRadius: 99,
-                        backgroundColor: active ? "#FF6600" : isDark ? "#262626" : "#F1F5F9",
-                      }}
+                      className={`rounded-full px-2.5 py-1 ${active ? "bg-primary" : "bg-slate-100 dark:bg-neutral-800"}`}
                     >
                       <Text
                         className={`text-xs font-poppins-semibold ${active ? "text-white" : "text-textMuted dark:text-darkTextMuted"}`}
@@ -218,30 +230,22 @@ export default function TransactionsScreen() {
                 })}
               </ScrollView>
 
-              <NativeView ref={funnelRef} collapsable={false}>
+              <RNView ref={funnelRef} collapsable={false} className="self-stretch">
                 <TouchableOpacity
                   onPress={handleFunnelOpen}
                   activeOpacity={0.7}
-                  style={{
-                    alignSelf: "stretch",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    paddingHorizontal: 14,
-                    paddingVertical: 10,
-                    borderLeftWidth: 1,
-                    borderLeftColor: isDark ? "#262626" : "#F1F5F9",
-                  }}
+                  className="self-stretch items-center justify-center px-3.5 py-2.5 border-l border-slate-100 dark:border-[#262626]"
                 >
                   {triggerIcon}
                 </TouchableOpacity>
-              </NativeView>
+              </RNView>
             </View>
           ) : (
             <>
               <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
-                contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 10, gap: 8}}
+                contentContainerClassName="px-4 py-2.5 gap-x-2"
               >
                 {stores.map((store) => {
                   const storeId = Number(store.id);
@@ -251,12 +255,7 @@ export default function TransactionsScreen() {
                       key={store.id}
                       onPress={() => selectStore(storeId)}
                       activeOpacity={0.75}
-                      style={{
-                        paddingHorizontal: 10,
-                        paddingVertical: 4,
-                        borderRadius: 99,
-                        backgroundColor: active ? "#FF6600" : isDark ? "#262626" : "#F1F5F9",
-                      }}
+                      className={`rounded-full px-2.5 py-1 ${active ? "bg-primary" : "bg-slate-100 dark:bg-neutral-800"}`}
                     >
                       <Text
                         className={`text-xs font-poppins-semibold ${active ? "text-white" : "text-textMuted dark:text-darkTextMuted"}`}
@@ -269,23 +268,15 @@ export default function TransactionsScreen() {
                 })}
               </ScrollView>
 
-              <NativeView ref={funnelRef} collapsable={false}>
+              <RNView ref={funnelRef} collapsable={false} className="self-stretch">
                 <TouchableOpacity
                   onPress={handleFunnelOpen}
                   activeOpacity={0.7}
-                  style={{
-                    alignSelf: "stretch",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    paddingHorizontal: 14,
-                    paddingVertical: 10,
-                    borderLeftWidth: 1,
-                    borderLeftColor: isDark ? "#262626" : "#F1F5F9",
-                  }}
+                  className="self-stretch items-center justify-center px-3.5 py-2.5 border-l border-slate-100 dark:border-[#262626]"
                 >
                   {triggerIcon}
                 </TouchableOpacity>
-              </NativeView>
+              </RNView>
             </>
           )}
         </View>
@@ -294,16 +285,17 @@ export default function TransactionsScreen() {
       {loading || storesLoading ? (
         <TransactionSkeleton />
       ) : stores.length === 0 ? (
-        <View className={isWeb ? "px-4 pb-4 items-center" : "px-4 pb-4"}>
+        <View className={isWeb ? "px-4 pb-4 items-center mt-4" : "px-4 pb-4"}>
           <View
-            className={`w-full bg-white dark:bg-darkBackground rounded-xl overflow-hidden justify-start ${isWeb ? "p-4" : "p-3"}`}
-            style={isWeb ? { maxWidth } : undefined}
+            className={`w-full bg-white dark:bg-darkBackground rounded-xl overflow-hidden justify-start ${isWeb ? "max-w-4xl p-4" : "p-3"}`}
           >
             <View className="items-center justify-center gap-y-3">
               {emptyIcon}
-              <Text className="text-base font-poppins-bold text-textSecondary dark:text-darkTextSecondary">No Stores Found</Text>
+              <Text className="text-base font-poppins-bold text-textSecondary dark:text-darkTextSecondary">
+                {translate("storeManager.transactions.empty.noStoresTitle")}
+              </Text>
               <Text className="text-sm font-poppins text-textMuted dark:text-darkTextMuted text-center px-10">
-                Create a store to start tracking transactions.
+                {translate("storeManager.transactions.empty.noStoresBody")}
               </Text>
             </View>
           </View>
@@ -311,15 +303,16 @@ export default function TransactionsScreen() {
       ) : listItems.length === 0 ? (
         <View className={isWeb ? "px-4 pb-4 items-center" : "px-4 pb-4 mt-4"}>
           <View
-            className={`w-full bg-white dark:bg-darkBackground rounded-xl overflow-hidden justify-start ${isWeb ? "p-6 py-10" : "p-3"}`}
-            style={isWeb ? { maxWidth } : undefined}
+            className={`w-full bg-white dark:bg-darkBackground rounded-xl overflow-hidden justify-start ${isWeb ? "max-w-4xl p-6 py-10" : "p-3"}`}
           >
             <View className="items-center justify-center gap-y-4">
               {emptyIcon}
               <View className="items-center justify-center">
-                <Text className="text-base font-poppins-bold text-textSecondary dark:text-darkTextSecondary">No Transactions Found</Text>
+                <Text className="text-base font-poppins-bold text-textSecondary dark:text-darkTextSecondary">
+                  {translate("storeManager.transactions.empty.noTransactionsTitle")}
+                </Text>
                 <Text className="text-sm font-poppins text-textMuted dark:text-darkTextMuted text-center px-10">
-                  Transactions will appear here once customers start earning points.
+                  {translate("storeManager.transactions.empty.noTransactionsBody")}
                 </Text>
               </View>
             </View>
@@ -340,7 +333,7 @@ export default function TransactionsScreen() {
             ) : !hasMore && listItems.length > 0 ? (
               <View className="items-center py-2">
                 <Text className="text-xs font-poppins text-textMuted dark:text-darkTextMuted py-3">
-                  You’ve reached the end
+                  {translate("storeManager.transactions.endOfList")}
                 </Text>
               </View>
             ) : null
@@ -353,36 +346,27 @@ export default function TransactionsScreen() {
               tintColor="#FF6600"
             />
           }
-          contentContainerStyle={{ paddingBottom: 0 }}
+          contentContainerClassName={isWeb ? "px-4 pb-0" : "pb-0"}
           showsVerticalScrollIndicator={false}
         />
       )}
 
       <Modal visible={funnelOpen} transparent animationType="fade" statusBarTranslucent onRequestClose={() => setFunnelOpen(false)}>
-        <Pressable style={StyleSheet.absoluteFill} onPress={() => setFunnelOpen(false)} />
+        <Pressable className="absolute inset-0" onPress={() => setFunnelOpen(false)} />
 
-        <NativeView
+        <View
+          className="absolute z-50 w-[140px] overflow-hidden rounded-[10px] border border-slate-200 bg-white shadow-md shadow-black/10 dark:border-[#2a2a2a] dark:bg-[#1c1c1c] dark:shadow-lg dark:shadow-black/35"
           style={{
-            position: "absolute",
             top: funnelAnchor.top,
             left: Math.min(
               funnelAnchor.left,
               Dimensions.get("window").width - 140 - 10
             ),
-            width: 140,
-            backgroundColor: isDark ? "#1c1c1c" : "#FFFFFF",
-            borderRadius: 10,
-            borderWidth: 1,
-            borderColor: isDark ? "#2a2a2a" : "#E2E8F0",
-            overflow: "hidden",
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: isDark ? 0.35 : 0.07,
           }}
         >
-          {FILTER_OPTIONS.map((opt, idx) => {
+          {filterOptions.map((opt, idx) => {
             const isActive = opt.value === typeFilter;
-            const isLast   = idx === FILTER_OPTIONS.length - 1;
+            const isLast   = idx === filterOptions.length - 1;
 
             return (
               <TouchableOpacity
@@ -392,15 +376,7 @@ export default function TransactionsScreen() {
                   setFunnelOpen(false);
                 }}
                 activeOpacity={0.7}
-                style={{
-                  paddingHorizontal: 12,
-                  paddingVertical: 8,
-                  flexDirection: "row",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  borderBottomWidth: isLast ? 0 : 1,
-                  borderBottomColor: isDark ? "bg-darkBackgroundCard" : "#F1F5F9",
-                }}
+                className={`flex-row items-center justify-between px-3 py-2 ${!isLast ? "border-b border-slate-100 dark:border-neutral-800" : ""}`}
               >
                 <Text
                   className={
@@ -415,7 +391,7 @@ export default function TransactionsScreen() {
               </TouchableOpacity>
             );
           })}
-        </NativeView>
+        </View>
       </Modal>
     </SafeAreaView>
   );
