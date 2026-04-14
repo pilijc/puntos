@@ -6,7 +6,7 @@ import { Button } from "@/components/button";
 import { TextField } from "@/components/text-field";
 import * as ImagePicker from "expo-image-picker";
 import { Modal, type ModalButton } from "@/components/modal";
-import { createStore, updateStore, uploadStoreImage, StoreImageKind } from "@/services/store-service";
+import { createStore, updateStore, uploadStoreImage, StoreImageKind, resolveStoreTimezone } from "@/services/store-service";
 import { supabase } from "@/supabase/supabase";
 import Mapbox, { MapView, Camera, PointAnnotation } from "@rnmapbox/maps";
 import { useColorScheme, Platform, Modal as RNModal } from "react-native";
@@ -42,6 +42,7 @@ export default function CreateStore() {
     storeType,
     latitude,
     longitude,
+    timezone,
     radius,
     logo,
     pictures,
@@ -58,6 +59,7 @@ export default function CreateStore() {
     setAddress,
     setLatitude,
     setLongitude,
+    setTimezone,
     setPhone,
     setRegistrationNumber,
     setBusinessDocumentImage,
@@ -66,6 +68,7 @@ export default function CreateStore() {
     setRadius,
     resetForm,
   } = useCreateStoreStore();
+  const [isResolvingTimezone, setIsResolvingTimezone] = useState(false);
   const [modal, setModal] = useState<{
     title: string;
     message: string;
@@ -209,9 +212,21 @@ export default function CreateStore() {
     return circle;
   }, [hasPin, parsedLat, parsedLng, radius]);
 
-  const setPin = (lat: number, lng: number) => {
+  const setPin = async (lat: number, lng: number) => {
     setLatitude(String(lat));
     setLongitude(String(lng));
+    // Auto-resolve timezone from the new pin location.
+    // resolveStoreTimezone calls the DB RPC; returns null when boundary data isn't loaded.
+    setIsResolvingTimezone(true);
+    try {
+      const tz = await resolveStoreTimezone(lng, lat);
+      if (tz) setTimezone(tz);
+      // If null, leave the current value in place so a manual override is preserved.
+    } catch (e) {
+      console.warn('[create-store] timezone resolve failed:', e);
+    } finally {
+      setIsResolvingTimezone(false);
+    }
   };
 
   const handleGetCurrent = async () => {
@@ -236,7 +251,7 @@ export default function CreateStore() {
       return;
     }
 
-    setPin(loc.coords.latitude, loc.coords.longitude);
+    await setPin(loc.coords.latitude, loc.coords.longitude);
   };
 
   const goBack = () => {
@@ -298,6 +313,7 @@ export default function CreateStore() {
           address: address.trim(),
           latitude: hasPin ? parsedLat : null,
           longitude: hasPin ? parsedLng : null,
+          timezone: timezone.trim() || null,
           phone: phone.trim() || undefined,
           registrationNumber: registrationNumber.trim() || undefined,
           storeOpen: storeOpen.trim() || null,
@@ -666,10 +682,7 @@ export default function CreateStore() {
                         isDark={isDark}
                         height={400}
                         markerColor="#FF6600"
-<<<<<<< Updated upstream
-=======
                         radiusMeters={hasPin ? radius || 50 : null}
->>>>>>> Stashed changes
                         onChange={({ latitude: lat, longitude: lng }) => setPin(lat, lng)}
                       />
                       {shouldUseInteractiveMapbox() ? null : (
@@ -1036,18 +1049,6 @@ export default function CreateStore() {
                 <Text className="text-xs font-poppins text-slate-500 dark:text-slate-400">
                   {t("storeManager.createStore.tapMapPin")}
                 </Text>
-<<<<<<< Updated upstream
-                <TouchableOpacity
-                  className="flex-row items-center gap-1"
-                  activeOpacity={0.8}
-                  onPress={handleGetCurrent}
-                >
-                  <MaterialIcons name="my-location" size={16} color="#FF6600" />
-                  <Text className="text-primary text-xs font-poppins-bold">
-                    {t("storeManager.createStore.getCurrent")}
-                  </Text>
-                </TouchableOpacity>
-=======
                 
                 { Platform.OS === "android" && (
                   <TouchableOpacity
@@ -1061,7 +1062,6 @@ export default function CreateStore() {
                     </Text>
                   </TouchableOpacity>
                 )}
->>>>>>> Stashed changes
               </View>
 
               <View className="rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900">
@@ -1074,20 +1074,12 @@ export default function CreateStore() {
                           ? "mapbox://styles/mapbox/navigation-night-v1"
                           : "mapbox://styles/mapbox/streets-v12"
                       }
-<<<<<<< Updated upstream
-                      onPress={(e) => {
-=======
                       onPress={async (e) => {
->>>>>>> Stashed changes
                         const coords = (e as any)?.geometry?.coordinates as [number, number] | undefined;
                         if (!coords) return;
                         const [lng, lat] = coords;
                         if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
-<<<<<<< Updated upstream
-                        setPin(lat, lng);
-=======
                         await setPin(lat, lng);
->>>>>>> Stashed changes
                       }}
                       onTouchStart={() => setScrollEnabled(false)}
                       onTouchEnd={() => setScrollEnabled(true)}
@@ -1135,8 +1127,6 @@ export default function CreateStore() {
                 sanitize={(v) => v}
               />
 
-<<<<<<< Updated upstream
-=======
               {/* Timezone — auto-filled from PostGIS when boundary data is loaded; manual entry otherwise */}
               <View className="flex-col gap-1.5 mt-1">
                 <View className="flex-row items-center gap-2">
@@ -1167,7 +1157,6 @@ export default function CreateStore() {
                 )}
               </View>
 
->>>>>>> Stashed changes
             <View className="mt-2">
               <View className="flex-row justify-between items-center mb-2">
                 <Text className="text-slate-700 dark:text-slate-300 text-sm font-poppins-medium">

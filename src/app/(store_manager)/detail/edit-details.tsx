@@ -552,10 +552,7 @@ export default function EditDetails() {
                 longitude={Number.isFinite(parsedLng) ? parsedLng : null}
                 isDark={isDark}
                 height={280}
-<<<<<<< Updated upstream
-=======
                 radiusMeters={hasPin ? (radius ?? 50) || 50 : null}
->>>>>>> Stashed changes
                 onChange={({ latitude: lat, longitude: lng }) => {
                   setLatitude(String(lat));
                   setLongitude(String(lng));

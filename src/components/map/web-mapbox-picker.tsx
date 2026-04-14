@@ -8,11 +8,6 @@ type Props = {
   height?: number;
   isDark?: boolean;
   markerColor?: string;
-<<<<<<< Updated upstream
-};
-
-export function WebMapboxPicker({ latitude, longitude, onChange, height = 280, isDark, markerColor }: Props) {
-=======
   radiusMeters?: number | null;
 };
 
@@ -25,7 +20,6 @@ export function WebMapboxPicker({
   markerColor,
   radiusMeters,
 }: Props) {
->>>>>>> Stashed changes
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<any>(null);
   const markerRef = useRef<any>(null);
@@ -95,8 +89,6 @@ export function WebMapboxPicker({
     map.easeTo({ center: next, duration: 250 });
   }, [hasCoords, latitude, longitude]);
 
-<<<<<<< Updated upstream
-=======
   useEffect(() => {
     if (Platform.OS !== "web") return;
     const map = mapRef.current;
@@ -157,7 +149,6 @@ export function WebMapboxPicker({
     }
   }, [hasCoords, latitude, longitude, radiusMeters, markerColor]);
 
->>>>>>> Stashed changes
   if (Platform.OS !== "web") return null;
 
   if (!token) {

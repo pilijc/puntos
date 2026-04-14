@@ -9,6 +9,7 @@ export interface CreateStorePayload {
     longitude?: number | null;
     phone?: string;
     registrationNumber?: string;
+    timezone?: string | null;
     businessDocumentImage?: string | null;
     storeOpen?: string | null;
     storeClose?: string | null;
@@ -28,6 +29,7 @@ export interface StoreRow {
     radius: number | null;
     status: string;
     is_active: boolean;
+    timezone: string | null;
     logo: string | null;
     owner_id: string | null;
     phone: string | null;
@@ -59,6 +61,7 @@ export async function createStore(payload: CreateStorePayload): Promise<StoreRow
             registration_number: payload.registrationNumber ?? null,
             business_document_image: payload.businessDocumentImage ?? null,
             store_open: payload.storeOpen ?? null,
+            timezone: payload.timezone ?? null,
             store_close: payload.storeClose ?? null,
             logo: payload.storeLogo ?? null,
             radius: payload.radius ?? null,
