@@ -6,7 +6,7 @@ function sumPoints(arr: any[], key: string) {
 }
 
 export async function getUserPoints(userId: string, storeId?: string): Promise<UserPointsSummary> {
-    // Build queries with optional store filter
+ 
     let purchasesQuery = supabase
         .from("purchases")
         .select("points_earned")
@@ -22,7 +22,7 @@ export async function getUserPoints(userId: string, storeId?: string): Promise<U
         .select("points_spent")
         .eq("user_id", userId);
 
-    // Apply store filter if provided
+    //store filtering, points by specific store
     if (storeId) {
         purchasesQuery = purchasesQuery.eq("store_id", storeId);
         streaksQuery = streaksQuery.eq("store_id", storeId);
