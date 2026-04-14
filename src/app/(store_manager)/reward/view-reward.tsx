@@ -120,7 +120,6 @@ export default function ViewReward() {
       <AppHeader
         title={t("storeManager.rewardView.title")}
         description={t("storeManager.rewardView.description")}
-        paddingTop={insets.top + 8}
         onBackPress={() => {
           router.push({ pathname: "/(store_manager)/reward", params: { storeId } });
         }}
