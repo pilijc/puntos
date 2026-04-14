@@ -234,6 +234,7 @@ export async function getStoreById(storeId: number) {
 				.from("stores")
 				.select("*")
 				.eq("id", storeId);
+			if (error) throw new Error(error.message);
 			return data?.[0] ?? null;
     } catch (error) {
         throw error;
