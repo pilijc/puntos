@@ -3,6 +3,7 @@ import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import React from "react";
 import type { RewardItem } from "@/data/rewards";
 import { useTranslation } from "react-i18next";
+import {Button} from "@/components/button"
 
 type RewardCardProps = {
   reward: RewardItem;
@@ -60,9 +61,7 @@ export default function RewardCard({
             {reward.points.toLocaleString()} {translate("user.rewards.rewardCard.pointsSuffix")}
           </Text>
           <View className={`px-3 py-1 rounded-full ${badgeClass}`}>
-            <Text
-              className={`text-[10px] font-poppins-semibold ${badgeTextClass}`}
-            >
+            <Text className={`text-[10px] font-poppins-semibold ${badgeTextClass}`}>
               {isRedeemable ? translate("user.rewards.rewardCard.redeem") : translate("user.rewards.rewardCard.insufficient")}
             </Text>
           </View>

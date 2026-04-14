@@ -234,6 +234,9 @@
                 "subtitle": "This store doesn't have active rewards right now. Check back soon for stamps and streaks!"
             },
             "rewardCatalog": "Reward Catalog",
+            "loading": "Loading rewards...",
+            "noRewards": "No rewards available",
+            "noRewardsSubtitle": "Check back later for new rewards",
             "points": "Points",
             "unlocked": "UNLOCKED!",
             "reward": "REWARD",

@@ -81,6 +81,7 @@ export default function StoreOverviewDetail() {
     fetchedStoreIds,
     refetchStreaks,
     upcomingStreak,
+    isLoadingRewards,
   } = useStoreOverviewData(storeId);
 
   // If a specific store is requested, we don't necessarily need to snap the carousel 
@@ -424,7 +425,15 @@ export default function StoreOverviewDetail() {
               className="flex-row items-center gap-x-1.5 bg-white dark:bg-darkBackgroundCard border border-primary px-3 py-1.5 rounded-full"
               onPress={() => {
                 const found = storesWithLocation.find(s => s.id.toString() === storeId);
-                router.push({ pathname: "/store/claim-rewards", params: { storeName: found?.name, storeLogo: found?.logo ?? "", storeAddress: found?.address ?? "" } });
+                router.push({
+                  pathname: "/store/claim-rewards",
+                  params: {
+                    storeId,
+                    storeName: found?.name,
+                    storeLogo: found?.logo ?? "",
+                    storeAddress: found?.address ?? ""
+                  }
+                });
               }}
             >
               <Gift size={14} color="#FF6600" />
@@ -436,19 +445,38 @@ export default function StoreOverviewDetail() {
         </View>
 
         <View className="gap-y-4">
-          {sortedRewards.map((item) => {
-            const store = storesWithLocation.find(
-              (entry) => entry.id.toString() === item.storeId,
-            );
-            return (
-              <RewardCard
-                key={item.id}
-                reward={item}
-                storeName={store?.name}
-                storeLocation={store?.address}
-              />
-            );
-          })}
+          {isLoadingRewards ? (
+            <View className="items-center py-8">
+              <ActivityIndicator size="small" color="#FF6600" />
+              <Text className="text-neutral-400 font-poppins text-sm mt-2">
+                {translate("user.rewards.loading")}
+              </Text>
+            </View>
+          ) : sortedRewards.length === 0 ? (
+            <View className="items-center py-8 bg-white dark:bg-darkBackgroundMuted rounded-xl">
+              <Gift size={40} color="#9CA3AF" />
+              <Text className="text-neutral-500 font-poppins-semibold text-sm mt-3">
+                {translate("user.rewards.noRewards")}
+              </Text>
+              <Text className="text-neutral-400 font-poppins text-xs mt-1 text-center px-4">
+                {translate("user.rewards.noRewardsSubtitle")}
+              </Text>
+            </View>
+          ) : (
+            sortedRewards.map((item) => {
+              const store = storesWithLocation.find(
+                (entry) => entry.id.toString() === item.storeId,
+              );
+              return (
+                <RewardCard
+                  key={item.id}
+                  reward={item}
+                  storeName={store?.name}
+                  storeLocation={store?.address}
+                />
+              );
+            })
+          )}
         </View>
       </View>
 
