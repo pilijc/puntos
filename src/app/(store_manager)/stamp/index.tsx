@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, ScrollView, useColorScheme } from "react-native";
+import { ActivityIndicator, ScrollView, useColorScheme, Platform } from "react-native";
 import { View, Text, TouchableOpacity, SafeAreaView } from "@/tw";
 import { Modal } from "@/components/modal";
 import { useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
@@ -18,8 +18,12 @@ import { AppHeader } from "@/components/header";
 import { useStampViewStore } from "@/store/store-manager/stamp-store";
 import { getRewardsByStoreId } from "@/services/store-manager/reward-service";
 import { StampCard } from "@/components/store_manager/stamp/stamp-card";
+import { useTranslation } from "react-i18next";
+
+const WEB_MAX_WIDTH = 896;
 
 export default function ViewStamp() {
+  const { t } = useTranslation();
   const router = useRouter();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
@@ -64,9 +68,9 @@ export default function ViewStamp() {
       load();
     } catch (e) {
       setModal({
-        title: "Error",
-        message: (e as Error).message ?? "Failed to end program.",
-        buttons: [{ label: "OK", variant: "secondary", onPress: () => setModal(null) }],
+        title: t("label.error"),
+        message: (e as Error).message ?? t("storeManager.stamp.endFailed"),
+        buttons: [{ label: t("label.ok"), variant: "secondary", onPress: () => setModal(null) }],
       });
     } finally {
       setEndingId(null);
@@ -79,9 +83,9 @@ export default function ViewStamp() {
       load();
     } catch (e) {
       setModal({
-        title: "Error",
-        message: (e as Error).message ?? "Failed to delete program.",
-        buttons: [{ label: "OK", variant: "secondary", onPress: () => setModal(null) }],
+        title: t("label.error"),
+        message: (e as Error).message ?? t("storeManager.stamp.deleteFailed"),
+        buttons: [{ label: t("label.ok"), variant: "secondary", onPress: () => setModal(null) }],
       });
     }
   };
@@ -92,9 +96,9 @@ export default function ViewStamp() {
       load();
     } catch (e) {
       setModal({
-        title: "Error",
-        message: (e as Error).message ?? "Failed to activate program.",
-        buttons: [{ label: "OK", variant: "secondary", onPress: () => setModal(null) }],
+        title: t("label.error"),
+        message: (e as Error).message ?? t("storeManager.stamp.activateFailed"),
+        buttons: [{ label: t("label.ok"), variant: "secondary", onPress: () => setModal(null) }],
       });
     }
   };
@@ -161,48 +165,96 @@ export default function ViewStamp() {
       />
 
       <AppHeader
-        title="Stamp Program"
-        description="Reward customers with stamps"
-        onBackPress={() => router.push({ pathname: "/(store_manager)/view-store/[id]", params: { id: storeId } })}
+        title={t("storeManager.stamp.title")}
+        description={t("storeManager.stamp.description")}
+        onBackPress={() => {
+          router.push(`/(store_manager)/view-store/${storeId}`);
+        }}
       />
 
-      <View className="bg-white dark:bg-neutral-800 border-b border-slate-100 dark:border-slate-800 flex-row px-6">
-        {Tabs.map((tab) => {
-          const isActive = activeTab === tab.key;
-          const count =
-            tab.key === "draft" ? draftStamps.length : tab.key === "active" ? activeStamps.length : endedStamps.length;
-          return (
-            <TouchableOpacity
-              key={tab.key}
-              className="flex-1 py-3 items-center flex-row justify-center gap-1.5"
-              style={{ borderBottomWidth: 2, borderBottomColor: isActive ? "#FF6600" : "transparent" }}
-              onPress={() => setActiveTab(tab.key)}
-              activeOpacity={0.7}
-            >
-              <Text
-                className={
-                  isActive
-                    ? "text-xs font-poppins-bold text-primary"
-                    : "text-xs font-poppins-medium text-slate-400 dark:text-slate-500"
-                }
-              >
-                {tab.label}
-              </Text>
-              {count > 0 && (
-                <View
-                  className="rounded-full px-1.5 min-w-[18px] items-center bg-white"
+      {Platform.OS === "web" ? (
+        <View className="bg-backgroundMuted dark:bg-slate-950 pt-4 items-center">
+          <View style={{ width: "100%", maxWidth: WEB_MAX_WIDTH, paddingHorizontal: 16 }}>
+            <View className="w-full bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-xl overflow-hidden flex-row">
+            {Tabs.map((tab) => {
+              const active = activeTab === tab.key;
+              const count =
+                tab.key === "draft" ? draftStamps.length : tab.key === "active" ? activeStamps.length : endedStamps.length;
+
+              return (
+                <TouchableOpacity
+                  key={tab.key}
+                  className={[
+                    "flex-1 py-3 items-center flex-row justify-center gap-1.5 rounded-xl mx-1 my-1",
+                    active && "bg-primary",
+                  ]
+                    .filter(Boolean)
+                    .join(" ")}
+                  onPress={() => setActiveTab(tab.key)}
+                  activeOpacity={0.7}
                 >
                   <Text
-                    className={`text-[9px] font-poppins-bold ${isActive ? "text-primary" : "text-neutral-500 dark:text-neutral-400"}`}
+                    className={
+                      active
+                        ? "text-xs font-poppins-bold text-white"
+                        : "text-xs font-poppins-medium text-slate-400 dark:text-slate-500"
+                    }
                   >
-                    {count}
+                    {t(`storeManager.stamp.tabs.${tab.key}`)}
                   </Text>
-                </View>
-              )}
-            </TouchableOpacity>
-          );
-        })}
-      </View>
+                  {count > 0 && (
+                    <View className="rounded-full min-w-[18px] items-center bg-white/20">
+                      <Text className="text-[10px] font-poppins-semibold text-white">{count}</Text>
+                    </View>
+                  )}
+                </TouchableOpacity>
+              );
+            })}
+            </View>
+          </View>
+        </View>
+      ) : (
+        <View className="border-b border-slate-100 dark:border-slate-800 px-4 py-3">
+          <View className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-xl overflow-hidden flex-row p-1 px-4">
+            {Tabs.map((tab) => {
+              const active = activeTab === tab.key;
+              const count =
+                tab.key === "draft" ? draftStamps.length : tab.key === "active" ? activeStamps.length : endedStamps.length;
+
+              return (
+                <TouchableOpacity
+                  key={tab.key}
+                  className={[
+                    "flex-1 py-2 items-center flex-row justify-center gap-1.5 rounded-xl",
+                    active ? "bg-primary" : "bg-white dark:bg-slate-900",
+                  ]
+                    .filter(Boolean)
+                    .join(" ")}
+                  onPress={() => setActiveTab(tab.key)}
+                  activeOpacity={0.7}
+                >
+                  <Text
+                    className={
+                      active
+                        ? "text-xs font-poppins-bold text-white"
+                        : "text-xs font-poppins-medium text-slate-400 dark:text-slate-500"
+                    }
+                  >
+                    {t(`storeManager.stamp.tabs.${tab.key}`)}
+                  </Text>
+                  {count > 0 && (
+                    <View className={`rounded-full min-w-[18px] items-center px-1.5 ${active ? "bg-white/20" : ""}`}>
+                      <Text className={`text-[9px] font-poppins-bold ${active ? "text-white" : "text-neutral-500 dark:text-neutral-400"}`}>
+                        {count}
+                      </Text>
+                    </View>
+                  )}
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </View>
+      )}
 
       {loading ? (
         <View className="flex-1 items-center justify-center">
@@ -216,22 +268,29 @@ export default function ViewStamp() {
             </View>
             <Text className="text-sm font-poppins-bold text-slate-500 dark:text-slate-300">
               {activeTab === "draft"
-                ? "No Draft Stamp Program"
+                ? t("storeManager.stamp.emptyDraftTitle")
                 : activeTab === "active"
-                  ? "No Active Program"
-                  : "No Ended Programs"}
+                  ? t("storeManager.stamp.emptyActiveTitle")
+                  : t("storeManager.stamp.emptyEndedTitle")}
             </Text>
             <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500 text-center">
               {activeTab === "active"
-                ? "Launch a stamp program to start rewarding your customers."
+                ? t("storeManager.stamp.emptyActiveBody")
                 : activeTab === "draft"
-                  ? "Draft stamp programs will appear here."
-                  : "Ended stamp programs will appear here."}
+                  ? t("storeManager.stamp.emptyDraftBody")
+                  : t("storeManager.stamp.emptyEndedBody")}
             </Text>
           </View>
         </View>
       ) : (
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 16, gap: 12 }}>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{
+            padding: 16,
+            gap: 12,
+            ...(Platform.OS === "web" ? { width: "100%", maxWidth: WEB_MAX_WIDTH, alignSelf: "center" } : null),
+          }}
+        >
           {tabStamps.map((stamp) => {
             const reward = rewards.find((r) => r.id === stamp.reward_id) ?? null;
             const pid = stamp.id!;
@@ -265,7 +324,7 @@ export default function ViewStamp() {
 
           {activeTab === "active" && activeStamps.length === 0 && (
             <Button
-              label="Create New Program"
+              label={t("storeManager.stamp.createProgram")}
               onPress={() => router.push({ pathname: "/(store_manager)/stamp/configure-stamp", params: { storeId } })}
               variant="primary"
               fullWidth
@@ -275,13 +334,30 @@ export default function ViewStamp() {
       )}
 
       {activeTab === "draft" && (
-        <TouchableOpacity
-          className="absolute bottom-6 right-6 w-14 h-14 rounded-full bg-primary items-center justify-center"
-          activeOpacity={0.85}
-          onPress={() => router.push({ pathname: "/(store_manager)/stamp/configure-stamp", params: { storeId } })}
-        >
-          <Plus size={26} color="#fff" />
-        </TouchableOpacity>
+        Platform.OS === "web" ? (
+          <View
+            pointerEvents="box-none"
+            style={{ position: "absolute", left: 0, right: 0, bottom: 60, alignItems: "center" }}
+          >
+            <View style={{ width: "100%", maxWidth: WEB_MAX_WIDTH, paddingHorizontal: 16, alignItems: "flex-end" }}>
+              <TouchableOpacity
+                className="w-14 h-14 rounded-full bg-primary items-center justify-center"
+                activeOpacity={0.85}
+                onPress={() => router.push({ pathname: "/(store_manager)/stamp/configure-stamp", params: { storeId } })}
+              >
+                <Plus size={26} color="#fff" />
+              </TouchableOpacity>
+            </View>
+          </View>
+        ) : (
+          <TouchableOpacity
+            className="absolute bottom-6 right-6 w-14 h-14 rounded-full bg-primary items-center justify-center"
+            activeOpacity={0.85}
+            onPress={() => router.push({ pathname: "/(store_manager)/stamp/configure-stamp", params: { storeId } })}
+          >
+            <Plus size={26} color="#fff" />
+          </TouchableOpacity>
+        )
       )}
     </SafeAreaView>
   );

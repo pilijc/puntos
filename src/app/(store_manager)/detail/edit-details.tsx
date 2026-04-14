@@ -24,10 +24,16 @@ import { useDetailStore, useDetailViewStore } from "@/store/store-manager/detail
 import { store_types_options, aspect_ratios, type PickImageType } from "@/type/store-manager/store";
 import { dateToTimeString, timeStringToDate } from "@/utils/date-helpers";
 import { shouldUseInteractiveMapbox } from "@/utils/mapbox-platform";
+import { AppHeader } from "@/components/header";
+import { WebMapboxPicker } from "@/components/map/web-mapbox-picker";
+import { useTranslation } from "react-i18next";
 
 Mapbox.setAccessToken(process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN!);
 
+const WEB_MAX_WIDTH = 896;
+
 export default function EditDetails() {
+  const { t } = useTranslation();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { storeId } = useLocalSearchParams<{ storeId: string }>();
@@ -59,6 +65,7 @@ export default function EditDetails() {
   const [isSaving, setIsSaving] = useState(false);
   const [modal, setModal] = useState<{ title: string; message: string; buttons: ModalButton[] } | null>(null);
   const [loadingInitial, setLoadingInitial] = useState(!detail);
+  const isWeb = Platform.OS === "web";
 
   useEffect(() => {
     let cancelled = false;
@@ -82,9 +89,9 @@ export default function EditDetails() {
         setDetail(null);
         reset();
         setModal({
-          title: "Something went wrong",
-          message: "Failed to load store details. Please try again.",
-          buttons: [{ label: "OK", onPress: () => setModal(null), variant: "primary" }],
+          title: t("storeManager.detailEdit.loadFailedTitle"),
+          message: t("storeManager.detailEdit.loadFailedMessage"),
+          buttons: [{ label: t("label.ok"), onPress: () => setModal(null), variant: "primary" }],
         });
       })
       .finally(done);
@@ -92,19 +99,19 @@ export default function EditDetails() {
     return () => {
       cancelled = true;
     };
-  }, [storeId, detail, setDetail, initFromDetail, reset]);
+  }, [storeId, detail, setDetail, initFromDetail, reset, t]);
 
   const showError = (message: string) =>
     setModal({
-      title: "Something went wrong",
+      title: t("storeManager.detailEdit.errorTitle"),
       message,
-      buttons: [{ label: "OK", onPress: () => setModal(null), variant: "primary" }],
+      buttons: [{ label: t("label.ok"), onPress: () => setModal(null), variant: "primary" }],
     });
 
   const pickImage = async (kind: PickImageType, index?: number) => {
     const { granted } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!granted) {
-      showError("Photo library permission is required.");
+      showError(t("storeManager.detailEdit.photoLibraryPermission"));
       return;
     }
 
@@ -117,7 +124,7 @@ export default function EditDetails() {
 
     if (result.canceled || !result.assets?.[0]) return;
     const asset = result.assets[0];
-    if (!asset.base64) { showError("Could not read image."); return; }
+    if (!asset.base64) { showError(t("storeManager.detailEdit.couldNotReadImage")); return; }
 
     const dataUri = `data:${asset.mimeType ?? "image/jpeg"};base64,${asset.base64}`;
 
@@ -143,9 +150,22 @@ export default function EditDetails() {
 
   const handleGetCurrentLocation = async () => {
     const { status } = await Location.requestForegroundPermissionsAsync();
-    if (status !== "granted") { showError("Location permission is required."); return; }
-    const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced }).catch(() => null);
-    if (!loc) { showError("Could not get location."); return; }
+    if (status !== "granted") {
+      showError(t("storeManager.detailEdit.locationPermission"));
+      return;
+    }
+
+    const loc =
+      (await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Balanced,
+      }).catch(() => null)) ??
+      (await Location.getLastKnownPositionAsync({}).catch(() => null));
+
+    if (!loc) {
+      showError(t("storeManager.detailEdit.couldNotGetLocation"));
+      return;
+    }
+
     setLatitude(String(loc.coords.latitude));
     setLongitude(String(loc.coords.longitude));
   };
@@ -162,14 +182,14 @@ export default function EditDetails() {
 
   const handleSave = async () => {
     if (!logo) {
-      showError("Store logo is required. Please upload a logo before saving.");
+      showError(t("storeManager.detailEdit.logoRequired"));
       return;
     }
-    if (!name.trim()) { showError("Store name is required."); return; }
-    if (!type) { showError("Please select a store type."); return; }
+    if (!name.trim()) { showError(t("storeManager.detailEdit.nameRequired")); return; }
+    if (!type) { showError(t("storeManager.detailEdit.typeRequired")); return; }
 
     const validPics = pictures.filter(Boolean) as string[];
-    if (validPics.length === 0) { showError("Please upload at least 1 store picture."); return; }
+    if (validPics.length === 0) { showError(t("storeManager.detailEdit.picturesRequired")); return; }
 
     setIsSaving(true);
     try {
@@ -198,12 +218,21 @@ export default function EditDetails() {
       setDetail(null);
       initFromDetail(null);
       setModal({
-        title: "Saved",
-        message: "Store details updated successfully.",
-        buttons: [{ label: "Done", onPress: () => { setModal(null); router.back(); }, variant: "primary" }],
+        title: t("storeManager.detailEdit.savedTitle"),
+        message: t("storeManager.detailEdit.savedMessage"),
+        buttons: [
+          {
+            label: t("storeManager.detailEdit.done"),
+            onPress: () => {
+              setModal(null);
+              router.push({ pathname: "/(store_manager)/detail", params: { storeId } });
+            },
+            variant: "primary",
+          },
+        ],
       });
     } catch (err: any) {
-      showError(err?.message ?? "Failed to save. Please try again.");
+      showError(err?.message ?? t("storeManager.detailEdit.saveFailed"));
     } finally {
       setIsSaving(false);
       setIsUploading(false);
@@ -228,47 +257,40 @@ export default function EditDetails() {
         buttons={modal?.buttons}
       />
 
-      <View
-        className="bg-background dark:bg-neutral-800 border-b border-neutral-100 dark:border-neutral-700"
-        style={{ paddingTop: insets.top + 8, paddingBottom: 12 }}
-      >
-        <View className="flex-row items-center px-2">
-          <TouchableOpacity
-            onPress={() => router.back()}
-            className="w-10 h-10 rounded-full items-center justify-center"
-            activeOpacity={0.7}
-          >
-            <MaterialIcons name="chevron-left" size={22} color={isDark ? "#F1F5F9" : "#0F172A"} />
-          </TouchableOpacity>
-          <View className="flex-1 items-center justify-center -ml-10">
-            <Text className="text-md font-poppins-bold text-textPrimary dark:text-textPrimary">
-              Edit Details
-            </Text>
-            <Text className="text-xs font-poppins text-textMuted dark:text-textMuted -mt-1">
-              Store, business & location
-            </Text>
-          </View>
-        </View>
-      </View>
+      <AppHeader
+        title={t("storeManager.detailEdit.title")}
+        description={t("storeManager.detailEdit.description")}
+        onBackPress={() => {
+          router.push({ pathname: "/(store_manager)/detail", params: { storeId } });
+        }}
+      />
 
       <ScrollView
         className="flex-1"
         showsVerticalScrollIndicator={false}
         scrollEnabled={scrollEnabled}
-        contentContainerStyle={{ padding: 16, paddingBottom: 40, gap: 20 }}
+        contentContainerStyle={{
+          padding: 16,
+          paddingBottom: 40,
+          gap: 20,
+          ...(isWeb ? { width: "100%", alignItems: "center" } : null),
+        }}
       >
-        <View className="bg-white dark:bg-neutral-800 rounded-2xl border border-slate-100 dark:border-neutral-700 p-4 gap-y-4">
+        <View
+          className="bg-white dark:bg-neutral-800 rounded-2xl border border-slate-100 dark:border-neutral-700 p-4 gap-y-4"
+          style={isWeb ? { width: "100%", maxWidth: WEB_MAX_WIDTH } : undefined}
+        >
           <View className="gap-y-4">
             <TextField
-              label="Store Name"
-              placeholder="e.g. Blue Bottle Coffee"
+              label={t("storeManager.detailEdit.storeName")}
+              placeholder={t("storeManager.detailEdit.storeNamePlaceholder")}
               value={name}
               onChangeText={setName}
               sanitize={(v) => v}
             />
 
             <View className="gap-y-2">
-              <Text className="text-sm font-poppins-semibold text-textSecondary dark:text-textSecondary mb-1.5">Store Type</Text>
+              <Text className="text-sm font-poppins-semibold text-textSecondary dark:text-textSecondary mb-1.5">{t("storeManager.detailEdit.storeType")}</Text>
               <View className="flex-row flex-wrap gap-2">
                 {store_types_options.map((opt) => {
                   const selected = type === opt.value;
@@ -290,7 +312,7 @@ export default function EditDetails() {
                             : 'text-textSecondary dark:text-textSecondary'
                         }`}
                       >
-                        {opt.label}
+                        {t(`storeManager.storeTypes.${opt.value}`)}
                       </Text>
                     </TouchableOpacity>
                   );
@@ -300,29 +322,49 @@ export default function EditDetails() {
 
             <View className="flex-row gap-x-3">
               <View className="flex-1">
-                <Text className="text-sm font-poppins-semibold text-textSecondary dark:text-textSecondary mb-1.5">Opening Time</Text>
-                <TouchableOpacity
-                  onPress={() => setShowOpenPicker(true)}
-                  activeOpacity={0.8}
-                  className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 justify-center h-[45px]"
-                >
-                  <Text className="font-poppins text-slate-900 dark:text-slate-100">{storeOpen || "09:00"}</Text>
-                </TouchableOpacity>
+                <Text className="text-sm font-poppins-semibold text-textSecondary dark:text-textSecondary mb-1.5">{t("storeManager.detailEdit.openingTime")}</Text>
+                {isWeb ? (
+                  <TextField
+                    label=""
+                    placeholder={t("storeManager.detailEdit.timePlaceholderOpen")}
+                    value={storeOpen ?? ""}
+                    onChangeText={setStoreOpen}
+                    sanitize={(v) => v}
+                  />
+                ) : (
+                  <TouchableOpacity
+                    onPress={() => setShowOpenPicker(true)}
+                    activeOpacity={0.8}
+                    className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 justify-center h-[45px]"
+                  >
+                    <Text className="font-poppins text-slate-900 dark:text-slate-100">{storeOpen || "09:00"}</Text>
+                  </TouchableOpacity>
+                )}
               </View>
 
               <View className="flex-1">
-                <Text className="text-sm font-poppins-semibold text-textSecondary dark:text-textSecondary mb-1.5">Closing Time</Text>
-                <TouchableOpacity
-                  onPress={() => setShowClosePicker(true)}
-                  activeOpacity={0.8}
-                  className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 justify-center h-[45px]"
-                >
-                  <Text className="font-poppins text-slate-900 dark:text-slate-100">{storeClose || "21:00"}</Text>
-                </TouchableOpacity>
+                <Text className="text-sm font-poppins-semibold text-textSecondary dark:text-textSecondary mb-1.5">{t("storeManager.detailEdit.closingTime")}</Text>
+                {isWeb ? (
+                  <TextField
+                    label=""
+                    placeholder={t("storeManager.detailEdit.timePlaceholderClose")}
+                    value={storeClose ?? ""}
+                    onChangeText={setStoreClose}
+                    sanitize={(v) => v}
+                  />
+                ) : (
+                  <TouchableOpacity
+                    onPress={() => setShowClosePicker(true)}
+                    activeOpacity={0.8}
+                    className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 justify-center h-[45px]"
+                  >
+                    <Text className="font-poppins text-slate-900 dark:text-slate-100">{storeClose || "21:00"}</Text>
+                  </TouchableOpacity>
+                )}
               </View>
             </View>
 
-            {showOpenPicker && (
+            {!isWeb && showOpenPicker && (
               Platform.OS === "android" ? (
                 <DateTimePicker
                   value={timeStringToDate(storeOpen || "09:00", 9, 0)}
@@ -334,14 +376,14 @@ export default function EditDetails() {
                   <TouchableOpacity className="flex-1 bg-black/40 justify-end" activeOpacity={1} onPress={() => setShowOpenPicker(false)}>
                     <TouchableOpacity activeOpacity={1} onPress={(e) => e.stopPropagation()} className="bg-white dark:bg-slate-800 rounded-t-2xl pb-8 pt-2">
                       <DateTimePicker value={timeStringToDate(storeOpen || "09:00", 9, 0)} mode="time" onChange={(_, d) => { if (d) setStoreOpen(dateToTimeString(d)); }} />
-                      <View className="px-4"><Button label="Done" onPress={() => setShowOpenPicker(false)} variant="primary" fullWidth /></View>
+                      <View className="px-4"><Button label={t("storeManager.detailEdit.done")} onPress={() => setShowOpenPicker(false)} variant="primary" fullWidth /></View>
                     </TouchableOpacity>
                   </TouchableOpacity>
                 </RNModal>
               )
             )}
 
-            {showClosePicker && (
+            {!isWeb && showClosePicker && (
               Platform.OS === "android" ? (
                 <DateTimePicker
                   value={timeStringToDate(storeClose || "21:00", 21, 0)}
@@ -353,7 +395,7 @@ export default function EditDetails() {
                   <TouchableOpacity className="flex-1 bg-black/40 justify-end" activeOpacity={1} onPress={() => setShowClosePicker(false)}>
                     <TouchableOpacity activeOpacity={1} onPress={(e) => e.stopPropagation()} className="bg-white dark:bg-slate-800 rounded-t-2xl pb-8 pt-2">
                       <DateTimePicker value={timeStringToDate(storeClose || "21:00", 21, 0)} mode="time" onChange={(_, d) => { if (d) setStoreClose(dateToTimeString(d)); }} />
-                      <View className="px-4"><Button label="Done" onPress={() => setShowClosePicker(false)} variant="primary" fullWidth /></View>
+                      <View className="px-4"><Button label={t("storeManager.detailEdit.done")} onPress={() => setShowClosePicker(false)} variant="primary" fullWidth /></View>
                     </TouchableOpacity>
                   </TouchableOpacity>
                 </RNModal>
@@ -362,7 +404,7 @@ export default function EditDetails() {
           </View>
           <View className="h-px bg-slate-100 dark:bg-neutral-700" />
           <View>
-            <Text className="text-sm font-poppins-semibold text-textSecondary dark:text-textSecondary mb-1.5">Store Logo</Text>
+            <Text className="text-sm font-poppins-semibold text-textSecondary dark:text-textSecondary mb-1.5">{t("storeManager.detailEdit.storeLogo")}</Text>
             <View className="flex-row items-center gap-x-3">
               <TouchableOpacity
                 onPress={() => pickImage("logo")}
@@ -384,7 +426,7 @@ export default function EditDetails() {
                 ) : (
                   <View className="flex-1 items-center justify-center gap-y-1">
                     <MaterialIcons name="add-a-photo" size={20} color="#94A3B8" />
-                    <Text className="text-[9px] font-poppins text-slate-400">Logo</Text>
+                    <Text className="text-[9px] font-poppins text-slate-400">{t("storeManager.detailEdit.logo")}</Text>
                   </View>
                 )}
               </TouchableOpacity>
@@ -425,7 +467,7 @@ export default function EditDetails() {
                         activeOpacity={0.8}
                       >
                         <MaterialIcons name="add-a-photo" size={20} color="#94A3B8" />
-                        <Text className="text-[9px] font-poppins text-slate-400 mt-0.5">Add</Text>
+                        <Text className="text-[9px] font-poppins text-slate-400 mt-0.5">{t("storeManager.detailEdit.add")}</Text>
                       </TouchableOpacity>
                     )}
                   </View>
@@ -435,23 +477,23 @@ export default function EditDetails() {
           </View>
           <View className="h-px bg-slate-100 dark:bg-neutral-700" />
           <TextField
-            label="Phone Number"
-            placeholder="0912 - 234 - 5678"
+            label={t("storeManager.detailEdit.phoneNumber")}
+            placeholder={t("storeManager.detailEdit.phonePlaceholder")}
             keyboardType="phone-pad"
             value={phone}
             onChangeText={setPhone}
           />
 
           <TextField
-            label="Business Registration Number"
-            placeholder="e.g. TAX-ID-123456"
+            label={t("storeManager.detailEdit.registrationNumber")}
+            placeholder={t("storeManager.detailEdit.registrationPlaceholder")}
             value={registrationNumber}
             onChangeText={setRegistrationNumber}
             sanitize={(v) => v}
           />
 
           <View>
-            <Text className="text-sm font-poppins-semibold text-textSecondary dark:text-textSecondary mb-1.5">Business Document</Text>
+            <Text className="text-sm font-poppins-semibold text-textSecondary dark:text-textSecondary mb-1.5">{t("storeManager.detailEdit.businessDocument")}</Text>
             <TouchableOpacity
               onPress={() => { if (!businessDoc) pickImage("business_document"); }}
               disabled={!!businessDoc}
@@ -480,7 +522,7 @@ export default function EditDetails() {
               ) : (
                 <>
                   <MaterialIcons name="description" size={26} color="#94A3B8" />
-                  <Text className="text-xs font-poppins text-slate-400 mt-1.5">Upload document image</Text>
+                  <Text className="text-xs font-poppins text-slate-400 mt-1.5">{t("storeManager.detailEdit.uploadDocumentImage")}</Text>
                 </>
               )}
             </TouchableOpacity>
@@ -489,20 +531,33 @@ export default function EditDetails() {
 
           <View className="flex-row items-center justify-between">
             <Text className="text-sm font-poppins-semibold text-textSecondary dark:text-textSecondary">
-              Location
+              {t("storeManager.detailEdit.location")}
             </Text>
-            <TouchableOpacity
-              onPress={handleGetCurrentLocation}
-              className="flex-row items-center gap-x-1"
-              activeOpacity={0.8}
-            >
-              <MaterialIcons name="my-location" size={14} color="#FF6600" />
-              <Text className="text-xs font-poppins-semibold text-textPrimary dark:text-textPrimary">Use Current</Text>
-            </TouchableOpacity>
+            {!isWeb && (
+              <TouchableOpacity
+                onPress={handleGetCurrentLocation}
+                className="flex-row items-center gap-x-1"
+                activeOpacity={0.8}
+              >
+                <MaterialIcons name="my-location" size={14} color="#FF6600" />
+                <Text className="text-xs font-poppins-semibold text-textPrimary dark:text-textPrimary">{t("storeManager.detailEdit.useCurrent")}</Text>
+              </TouchableOpacity>
+            )}
           </View>
 
           <View className="rounded-xl overflow-hidden border border-slate-200 dark:border-neutral-700" style={{ height: 280 }}>
-            {shouldUseInteractiveMapbox() ? (
+            {isWeb ? (
+              <WebMapboxPicker
+                latitude={Number.isFinite(parsedLat) ? parsedLat : null}
+                longitude={Number.isFinite(parsedLng) ? parsedLng : null}
+                isDark={isDark}
+                height={280}
+                onChange={({ latitude: lat, longitude: lng }) => {
+                  setLatitude(String(lat));
+                  setLongitude(String(lng));
+                }}
+              />
+            ) : shouldUseInteractiveMapbox() ? (
               <>
                 <MapView
                   style={{ height: 280, width: "100%" }}
@@ -536,7 +591,7 @@ export default function EditDetails() {
                 </MapView>
                 <View className="absolute bottom-2 left-2 bg-black/50 rounded-lg px-2 py-1">
                   <Text style={{ color: "#fff", fontSize: 10, fontFamily: "Poppins-Regular" }}>
-                    Tap map to move pin
+                    {t("storeManager.detailEdit.tapMapMovePin")}
                   </Text>
                 </View>
               </>
@@ -544,15 +599,15 @@ export default function EditDetails() {
               <View className="flex-1 h-full bg-slate-50 dark:bg-neutral-800 items-center justify-center gap-y-1 px-4">
                 <MaterialIcons name="map" size={28} color={isDark ? "#525252" : "#CBD5E1"} />
                 <Text className="text-xs font-poppins text-center text-slate-400 dark:text-slate-500">
-                  Map only available on Android & Web — use “Use Current” or enter coordinates below.
+                  {t("storeManager.detailEdit.mapFallbackMessage")}
                 </Text>
               </View>
             )}
           </View>
 
           <TextField
-            label="Address / Landmark"
-            placeholder="Enter full physical address"
+            label={t("storeManager.detailEdit.addressLandmark")}
+            placeholder={t("storeManager.detailEdit.addressPlaceholder")}
             value={address}
             onChangeText={setAddress}
             multiline
@@ -561,29 +616,40 @@ export default function EditDetails() {
 
           <View>
             <View className="flex-row justify-between items-center mb-1">
-              <Text className="text-sm font-poppins-semibold text-textSecondary dark:text-textSecondary mb-1.5">Store Radius</Text>
-              <Text className="text-sm font-poppins-bold text-primary">{radius}m</Text>
+              <Text className="text-sm font-poppins-semibold text-textSecondary dark:text-textSecondary mb-1.5">{t("storeManager.detailEdit.storeRadius")}</Text>
+              <Text className="text-sm font-poppins-bold text-primary">{t("storeManager.detailEdit.radiusMeters", { meters: radius })}</Text>
             </View>
-            <Slider
-              minimumValue={50}
-              maximumValue={500}
-              step={1}
-              value={radius}
-              onValueChange={(v) => setRadius(Math.round(v))}
-              minimumTrackTintColor="#FF6600"
-              maximumTrackTintColor={isDark ? "#334155" : "#E2E8F0"}
-              thumbTintColor="#FF6600"
-            />
+            {isWeb ? (
+              <TextField
+                label=""
+                placeholder="50"
+                keyboardType="numeric"
+                value={radius ? String(radius) : ""}
+                onChangeText={(v) => setRadius(Math.max(50, Math.min(500, parseInt(v, 10) || 50)))}
+                sanitize={(v) => v}
+              />
+            ) : (
+              <Slider
+                minimumValue={50}
+                maximumValue={500}
+                step={1}
+                value={radius}
+                onValueChange={(v) => setRadius(Math.round(v))}
+                minimumTrackTintColor="#FF6600"
+                maximumTrackTintColor={isDark ? "#334155" : "#E2E8F0"}
+                thumbTintColor="#FF6600"
+              />
+            )}
             <View className="flex-row justify-between">
-              <Text className="text-xs font-poppins text-slate-400">50m</Text>
-              <Text className="text-xs font-poppins text-slate-400">500m</Text>
+              <Text className="text-xs font-poppins text-slate-400">{t("storeManager.detailEdit.radiusMin")}</Text>
+              <Text className="text-xs font-poppins text-slate-400">{t("storeManager.detailEdit.radiusMax")}</Text>
             </View>
           </View>
           <View className="h-px bg-slate-100 dark:bg-neutral-700" />
 
           <View className="gap-y-3">
             <Button
-              label={isUploading ? "Uploading images…" : "Save Changes"}
+              label={isUploading ? t("storeManager.detailEdit.uploadingImages") : t("storeManager.detailEdit.saveChanges")}
               onPress={handleSave}
               variant="primary"
               loading={isSaving}
@@ -591,8 +657,10 @@ export default function EditDetails() {
               disabled={isSaving}
             />
             <Button
-              label="Cancel"
-              onPress={() => router.back()}
+              label={t("storeManager.detailEdit.cancel")}
+              onPress={() => {
+                router.push({ pathname: "/(store_manager)/detail", params: { storeId } });
+              }}
               variant="secondary"
               fullWidth
               disabled={isSaving}

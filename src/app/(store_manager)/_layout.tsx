@@ -1,46 +1,243 @@
 import { Tabs } from "expo-router";
-import { StyleSheet, useColorScheme, Platform, Text } from "react-native";
-import React, { useEffect } from "react";
+import { useColorScheme, Platform, Text, View, Image,} from "react-native";
+import React, { useCallback, useEffect } from "react";
 import { usePathname, useRouter } from "expo-router";
+import { BottomTabBar, type BottomTabBarButtonProps, type BottomTabBarProps,} from "@react-navigation/bottom-tabs";
+import { PlatformPressable } from "@react-navigation/elements";
+import { useRoute } from "@react-navigation/native";
 import { supabase } from "@/supabase/supabase";
 import { getRoleTypeForUser, getWebAdjustedHomeRoute } from "@/services/access-service";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { LayoutDashboard, Store, ArrowLeftRight, Settings } from 'lucide-react-native';
+import { useTranslation } from "react-i18next";
+import { LayoutDashboard, Store, ArrowLeftRight, Settings } from "lucide-react-native";
+
+const WEB_SIDEBAR_WIDTH = 260;
+const WEB_SIDEBAR_INSET_X = 16;
+const WEB_SIDEBAR_BRAND_PADDING_X = 24;
+const WEB_TAB_ICON_SIZE = 18;
+const WEB_TAB_ACTIVE_MARGIN_END = 100;
+const WEB_TAB_ACTIVE_BG_LIGHT = "#F3F4F6";
+const WEB_TAB_ACTIVE_BG_DARK = "#431407";
+const WEB_SIDEBAR_BORDER_LIGHT = "#F1F5F9";
+const WEB_SIDEBAR_BORDER_DARK = "#404040";
+const TAB_ACCENT = "#FF6600";
+
+type SidebarTabId = "index" | "stores" | "transactions" | "settings";
+type TabLabelPosition = "beside-icon" | "below-icon";
+
+function withTrailingSlash(pathname: string) {
+    return pathname.endsWith("/") ? pathname : `${pathname}/`;
+}
+
+const STORES_SECTION_PREFIXES = [
+    "/(store_manager)/stores/",
+    "/(store_manager)/view-store/",
+    "/(store_manager)/store/",
+    "/(store_manager)/reward/",
+    "/(store_manager)/stamp/",
+    "/(store_manager)/streak/",
+    "/(store_manager)/qr/",
+    "/(store_manager)/staff/",
+    "/(store_manager)/detail/",
+    "/stores/",
+    "/view-store/",
+    "/store/",
+    "/reward/",
+    "/stamp/",
+    "/streak/",
+    "/qr/",
+    "/staff/",
+    "/detail/",
+] as const;
+
+function pathStartsWithAny(path: string, prefixes: readonly string[]) {
+    return prefixes.some((prefix) => path.startsWith(prefix));
+}
+
+function activeSidebarTabFromPath(path: string): SidebarTabId {
+    const p = withTrailingSlash(path);
+
+    if (pathStartsWithAny(p, STORES_SECTION_PREFIXES)) {
+        return "stores";
+    }
+
+    if (
+        p.startsWith("/(store_manager)/transactions/") ||
+        p === "/(store_manager)/transactions/" ||
+        p.startsWith("/transactions/")
+    ) {
+        return "transactions";
+    }
+
+    if (
+        p.startsWith("/(store_manager)/settings/") ||
+        p === "/(store_manager)/settings/" ||
+        p.startsWith("/settings/") ||
+        p.includes("/(store_manager)/profile")
+    ) {
+        return "settings";
+    }
+
+    return "index";
+}
+
+function WebSidebarTabLabel(props: {
+    text: string;
+    navColor: string;
+    position: TabLabelPosition;
+    isRowActive: boolean;
+}) {
+    const { text, navColor, position, isRowActive } = props;
+    return (
+        <Text
+            style={{
+                fontSize: 12,
+                fontFamily: "Poppins-Medium",
+                marginBottom: 0,
+                marginStart: position === "beside-icon" ? 10 : 0,
+                paddingRight: 8,
+                color: isRowActive ? TAB_ACCENT : navColor,
+            }}
+        >
+            {text}
+        </Text>
+    );
+}
+
+function StoresTabLabel(props: {
+    text: string;
+    navColor: string;
+    position: TabLabelPosition;
+    isRowActive: boolean;
+    isWeb: boolean;
+    insetBottom: number;
+}) {
+    const { text, navColor, position, isRowActive, isWeb, insetBottom } = props;
+    return (
+        <Text
+            style={{
+                fontSize: isWeb ? 12 : 10,
+                fontFamily: "Poppins-Medium",
+                marginBottom: isWeb ? 0 : insetBottom > 0 ? 0 : 4,
+                marginStart: position === "beside-icon" ? (isWeb ? 10 : 5) : 0,
+                paddingRight: isWeb ? 8 : 0,
+                color: isRowActive ? TAB_ACCENT : navColor,
+            }}
+        >
+            {text}
+        </Text>
+    );
+}
+
+function webSidebarIconColor(
+    isWeb: boolean,
+    activeTab: SidebarTabId,
+    thisTab: SidebarTabId,
+    navigationTint: string,
+) {
+    return isWeb && activeTab === thisTab ? TAB_ACCENT : navigationTint;
+}
+
+function WebStoreManagerTabBarButton(props: BottomTabBarButtonProps) {
+    const route = useRoute();
+    const pathname = usePathname();
+    const colorScheme = useColorScheme();
+    const isDark = colorScheme === "dark";
+
+    const activeTab = activeSidebarTabFromPath(withTrailingSlash(pathname));
+    const isThisRow = activeTab === route.name;
+    const activeBackground = isDark ? WEB_TAB_ACTIVE_BG_DARK : WEB_TAB_ACTIVE_BG_LIGHT;
+
+    return (
+        <View
+            style={{
+                alignSelf: "stretch",
+                ...(isThisRow ? { marginRight: WEB_TAB_ACTIVE_MARGIN_END } : null),
+            }}
+        >
+            <PlatformPressable
+                {...props}
+                hoverEffect={undefined}
+                aria-selected={isThisRow}
+                accessibilityState={{
+                    ...props.accessibilityState,
+                    selected: isThisRow,
+                }}
+                style={[props.style, isThisRow ? { backgroundColor: activeBackground } : null]}
+            />
+        </View>
+    );
+}
+
+type WebStoreManagerSidebarTabBarProps = BottomTabBarProps & { isDark: boolean };
+
+function WebStoreManagerSidebarTabBar({ isDark, ...props }: WebStoreManagerSidebarTabBarProps) {
+    const chromeBg = isDark ? "#262626" : "#FFFFFF";
+
+    return (
+        <View
+            style={{
+                alignSelf: "stretch",
+                width: WEB_SIDEBAR_WIDTH,
+                minWidth: WEB_SIDEBAR_WIDTH,
+                maxWidth: WEB_SIDEBAR_WIDTH,
+                flex: 1,
+                flexDirection: "column",
+                backgroundColor: chromeBg,
+                borderRightWidth: 1,
+                borderRightColor: isDark ? WEB_SIDEBAR_BORDER_DARK : WEB_SIDEBAR_BORDER_LIGHT,
+            }}
+        >
+            <View
+                style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 10,
+                    paddingHorizontal: WEB_SIDEBAR_BRAND_PADDING_X,
+                    paddingTop: 14,
+                }}
+            >
+                <Image
+                    source={require("@/assets/images/puntos-icon.png")}
+                    style={{ width: 36, height: 36 }}
+                    resizeMode="contain"
+                />
+                <Text
+                    style={{
+                        fontSize: 18,
+                        fontFamily: "Poppins-Bold",
+                        color: isDark ? "#FFFFFF" : TAB_ACCENT,
+                    }}
+                >
+                    PUNTOS
+                </Text>
+            </View>
+
+            <View style={{ flex: 1, minHeight: 0 }}>
+                <BottomTabBar {...props} />
+            </View>
+        </View>
+    );
+}
 
 export default function StoreManagerLayout() {
+    const { t: translate } = useTranslation();
     const colorScheme = useColorScheme();
-    const isDark = colorScheme === 'dark';
+    const isDark = colorScheme === "dark";
     const router = useRouter();
     const insets = useSafeAreaInsets();
     const pathname = usePathname();
-    const path = pathname.endsWith("/") ? pathname : `${pathname}/`;
+    const path = withTrailingSlash(pathname);
 
-    const activeColor = "#FF6600";
-
-    const isStoresSection =
-        path.startsWith("/(store_manager)/stores/") ||
-        path.startsWith("/(store_manager)/view-store/") ||
-        path.startsWith("/(store_manager)/store/") ||
-        path.startsWith("/(store_manager)/reward/") ||
-        path.startsWith("/(store_manager)/stamp/") ||
-        path.startsWith("/(store_manager)/streak/") ||
-        path.startsWith("/(store_manager)/qr/") ||
-        path.startsWith("/(store_manager)/staff/") ||
-        path.startsWith("/(store_manager)/detail/") ||
-        path.startsWith("/stores/") ||
-        path.startsWith("/view-store/") ||
-        path.startsWith("/store/") ||
-        path.startsWith("/reward/") ||
-        path.startsWith("/stamp/") ||
-        path.startsWith("/streak/") ||
-        path.startsWith("/qr/") ||
-        path.startsWith("/staff/") ||
-        path.startsWith("/detail/");
+    const activeTab = activeSidebarTabFromPath(path);
+    const storesRowActive = activeTab === "stores";
 
     useEffect(() => {
         const verifyAccess = async () => {
             try {
-                const { data: { user } } = await supabase.auth.getUser();
+                const {
+                    data: { user },
+                } = await supabase.auth.getUser();
                 if (!user) return;
 
                 const roleType = await getRoleTypeForUser(user.id);
@@ -60,143 +257,178 @@ export default function StoreManagerLayout() {
         verifyAccess();
     }, [router]);
 
+    const isWeb = Platform.OS === "web";
+
+    const renderWebTabBar = useCallback(
+        (barProps: BottomTabBarProps) => (
+            <WebStoreManagerSidebarTabBar {...barProps} isDark={isDark} />
+        ),
+        [isDark],
+    );
+
     return (
         <Tabs
+            tabBar={isWeb ? renderWebTabBar : undefined}
             screenOptions={{
                 headerShown: false,
-                tabBarStyle: {
-                    backgroundColor: isDark ? "#262626" : "#FFFFFF",
-                    borderTopColor: isDark ? "#404040" : "#e5e5e5",
-                    height: Platform.OS === 'ios' ? 88 : 60 + insets.bottom,
-                    paddingBottom: insets.bottom > 0 ? insets.bottom : 8,
-                    elevation: 0,
-                },
-                tabBarActiveTintColor: "#FF6600",
+                tabBarPosition: isWeb ? "left" : "bottom",
+                tabBarLabelPosition: isWeb ? "beside-icon" : undefined,
+                ...(isWeb ? { animation: "none" as const } : {}),
+                tabBarActiveBackgroundColor: isWeb
+                    ? isDark
+                        ? WEB_TAB_ACTIVE_BG_DARK
+                        : WEB_TAB_ACTIVE_BG_LIGHT
+                    : undefined,
+                tabBarInactiveBackgroundColor: isWeb ? "transparent" : undefined,
+                tabBarStyle: isWeb
+                    ? {
+                          backgroundColor: "transparent",
+                          borderTopWidth: 0,
+                          borderRightWidth: 0,
+                          flex: 1,
+                          width: "100%",
+                          elevation: 0,
+                          paddingLeft: WEB_SIDEBAR_INSET_X,
+                          paddingRight: WEB_SIDEBAR_INSET_X,
+                      }
+                    : {
+                          backgroundColor: isDark ? "#262626" : "#FFFFFF",
+                          borderTopColor: isDark ? "#404040" : "#e5e5e5",
+                          height: Platform.OS === "ios" ? 88 : 60 + insets.bottom,
+                          paddingBottom: insets.bottom > 0 ? insets.bottom : 8,
+                          elevation: 0,
+                      },
+                tabBarActiveTintColor: TAB_ACCENT,
                 tabBarInactiveTintColor: isDark ? "#737373" : "#8B8D98",
+                tabBarButton: isWeb
+                    ? (btnProps) => <WebStoreManagerTabBarButton {...btnProps} />
+                    : undefined,
+                tabBarItemStyle: isWeb
+                    ? { alignSelf: "stretch", width: "100%" }
+                    : undefined,
                 tabBarLabelStyle: {
-                    fontSize: 10,
+                    fontSize: isWeb ? 12 : 10,
                     fontFamily: "Poppins-Medium",
-                    marginBottom: insets.bottom > 0 ? 0 : 4
+                    marginBottom: isWeb ? 0 : insets.bottom > 0 ? 0 : 4,
+                    ...(isWeb ? { paddingRight: 8 } : {}),
                 },
             }}
         >
             <Tabs.Screen
                 name="index"
                 options={{
-                    title: "Dashboard",
-                    tabBarIcon: ({ color }) => (
-                        <LayoutDashboard size={22} color={color} />
+                    title: translate("storeManager.tabs.dashboard"),
+                    tabBarIcon: ({ color, size }) => (
+                        <LayoutDashboard
+                            size={isWeb ? WEB_TAB_ICON_SIZE : size}
+                            color={webSidebarIconColor(isWeb, activeTab, "index", color)}
+                        />
                     ),
+                    tabBarLabel: isWeb
+                        ? ({ color, position }) => (
+                              <WebSidebarTabLabel
+                                  text={translate("storeManager.tabs.dashboard")}
+                                  navColor={color}
+                                  position={position}
+                                  isRowActive={activeTab === "index"}
+                              />
+                          )
+                        : undefined,
                 }}
             />
             <Tabs.Screen
                 name="stores"
                 options={{
-                    title: "Stores",
-                    tabBarIcon: ({ color }) => (
-                        <Store size={22} color={isStoresSection ? activeColor : color} />
+                    title: translate("storeManager.tabs.stores"),
+                    tabBarIcon: ({ color, size }) => (
+                        <Store
+                            size={isWeb ? WEB_TAB_ICON_SIZE : size}
+                            color={storesRowActive ? TAB_ACCENT : color}
+                        />
                     ),
-                    tabBarLabel: ({ color }) => (
-                        <Text
-                            style={{
-                                fontSize: 10,
-                                fontFamily: "Poppins-Medium",
-                                marginBottom: insets.bottom > 0 ? 0 : 4,
-                                color: isStoresSection ? activeColor : color,
-                            }}
-                        >
-                            Stores
-                        </Text>
+                    tabBarLabel: ({ color, position }) => (
+                        <StoresTabLabel
+                            text={translate("storeManager.tabs.stores")}
+                            navColor={color}
+                            position={position}
+                            isRowActive={storesRowActive}
+                            isWeb={isWeb}
+                            insetBottom={insets.bottom}
+                        />
                     ),
                 }}
             />
             <Tabs.Screen
                 name="transactions"
                 options={{
-                    title: "Transactions",
-                    tabBarIcon: ({ color }) => (
-                        <ArrowLeftRight size={22} color={color} />
+                    title: translate("storeManager.tabs.transactions"),
+                    tabBarIcon: ({ color, size }) => (
+                        <ArrowLeftRight
+                            size={isWeb ? WEB_TAB_ICON_SIZE : size}
+                            color={webSidebarIconColor(
+                                isWeb,
+                                activeTab,
+                                "transactions",
+                                color,
+                            )}
+                        />
                     ),
+                    tabBarLabel: isWeb
+                        ? ({ color, position }) => (
+                              <WebSidebarTabLabel
+                                  text={translate("storeManager.tabs.transactions")}
+                                  navColor={color}
+                                  position={position}
+                                  isRowActive={activeTab === "transactions"}
+                              />
+                          )
+                        : undefined,
                 }}
             />
             <Tabs.Screen
                 name="settings"
                 options={{
-                    title: "Settings",
-                    tabBarIcon: ({ color }) => (
-                        <Settings size={22} color={color} />
+                    title: translate("storeManager.tabs.settings"),
+                    tabBarIcon: ({ color, size }) => (
+                        <Settings
+                            size={isWeb ? WEB_TAB_ICON_SIZE : size}
+                            color={webSidebarIconColor(
+                                isWeb,
+                                activeTab,
+                                "settings",
+                                color,
+                            )}
+                        />
                     ),
+                    tabBarLabel: isWeb
+                        ? ({ color, position }) => (
+                              <WebSidebarTabLabel
+                                  text={translate("storeManager.tabs.settings")}
+                                  navColor={color}
+                                  position={position}
+                                  isRowActive={activeTab === "settings"}
+                              />
+                          )
+                        : undefined,
                 }}
             />
-            <Tabs.Screen
-                name="profile"
-                options={{ href: null }}
-            />
-            <Tabs.Screen
-                name="store/create-store"
-                options={{ href: null }}
-            />
-            <Tabs.Screen
-                name="view-store/[id]"
-                options={{ href: null }}
-            />
-            <Tabs.Screen
-                name="streak/index"
-                options={{ href: null }}
-            />
-            <Tabs.Screen
-                name="streak/configure-streaks"
-                options={{ href: null }}
-            />
-            <Tabs.Screen
-                name="stamp/configure-stamp"
-                options={{ href: null }}
-            />
-            <Tabs.Screen
-                name="stamp/index"
-                options={{ href: null }}
-            />
-            <Tabs.Screen
-                name="reward/rewards"
-                options={{ href: null }}
-            />
-            <Tabs.Screen
-                name="reward/index"
-                options={{ href: null }}
-            />
-            <Tabs.Screen
-                name="reward/add-rewards"
-                options={{ href: null }}
-            />
-            <Tabs.Screen
-                name="reward/view-reward"
-                options={{ href: null }}
-            />
-            <Tabs.Screen
-                name="qr/index"
-                options={{ href: null }}
-            />
-            <Tabs.Screen
-                name="qr/configure-qr"
-                options={{ href: null }}
-            />
-            <Tabs.Screen
-                name="staff/index"
-                options={{ href: null }}
-            />
-
-            <Tabs.Screen
-                name="staff/add-staff"
-                options={{ href: null }}
-            />
-            <Tabs.Screen
-                name="detail/index"
-                options={{ href: null }}
-            />
-            <Tabs.Screen
-                name="detail/edit-details"
-                options={{ href: null }}
-            />
+            <Tabs.Screen name="profile" options={{ href: null }} />
+            <Tabs.Screen name="store/create-store" options={{ href: null }} />
+            <Tabs.Screen name="view-store/[id]" options={{ href: null }} />
+            <Tabs.Screen name="streak/index" options={{ href: null }} />
+            <Tabs.Screen name="streak/configure-streaks" options={{ href: null }} />
+            <Tabs.Screen name="stamp/configure-stamp" options={{ href: null }} />
+            <Tabs.Screen name="stamp/index" options={{ href: null }} />
+            <Tabs.Screen name="reward/rewards" options={{ href: null }} />
+            <Tabs.Screen name="reward/index" options={{ href: null }} />
+            <Tabs.Screen name="reward/add-rewards" options={{ href: null }} />
+            <Tabs.Screen name="reward/view-reward" options={{ href: null }} />
+            <Tabs.Screen name="qr/index" options={{ href: null }} />
+            <Tabs.Screen name="qr/configure-qr" options={{ href: null }} />
+            <Tabs.Screen name="staff/index" options={{ href: null }} />
+            <Tabs.Screen name="staff/add-staff" options={{ href: null }} />
+            <Tabs.Screen name="detail/index" options={{ href: null }} />
+            <Tabs.Screen name="detail/edit-details" options={{ href: null }} />
         </Tabs>
     );
 }

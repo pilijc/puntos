@@ -33,7 +33,7 @@ export const SecurityCard: React.FC<SecurityCardProps> = ({ disabled = false, wa
 
     return (
         <>
-            <View className={`bg-background dark:bg-darkBackgroundMuted p-3 overflow-hidden ${disabled ? 'opacity-60' : ''}`}>
+            <View className={`bg-white dark:bg-darkBackground px-2.5 py-3 overflow-hidden ${disabled ? 'opacity-60' : ''}`}>
                 <TouchableOpacity
                     onPress={toggleOpen}
                     className="flex-row items-center"
