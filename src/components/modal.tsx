@@ -143,6 +143,7 @@ export function Modal({
                       variant={buttons[0].variant ?? "secondary"}
                       loading={buttons[0].loading}
                       disabled={buttons[0].disabled}
+                      fullWidth
                     />
                   </View>
                   <View style={{ marginBottom: 8 }}>
@@ -152,6 +153,7 @@ export function Modal({
                       variant={buttons[1].variant ?? "primary"}
                       loading={buttons[1].loading}
                       disabled={buttons[1].disabled}
+                      fullWidth
                     />
                   </View>
                   <View>
@@ -161,6 +163,7 @@ export function Modal({
                       variant={buttons[2].variant ?? "primary"}
                       loading={buttons[2].loading}
                       disabled={buttons[2].disabled}
+                      fullWidth
                     />
                   </View>
                 </View>
@@ -181,6 +184,7 @@ export function Modal({
                         variant={btn.variant ?? (i === 0 && buttons.length === 2 ? "secondary" : "primary")}
                         loading={btn.loading}
                         disabled={btn.disabled}
+                        fullWidth
                       />
                     </View>
                   ))}
@@ -223,5 +227,6 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: "row",
     alignItems: "center",
+    width: "100%",
   },
 });

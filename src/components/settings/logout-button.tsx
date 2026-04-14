@@ -1,10 +1,8 @@
 import React, { useState } from 'react';
-import { Linking } from 'react-native';
-import { Text, TouchableOpacity, View } from "@/tw";
 import { useAuthActions } from '@/hooks/use-auth-actions';
-import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from "react-i18next";
 import { Modal, type ModalButton } from "@/components/modal";
+import { Button } from "@/components/button";
 
 interface LogoutButtonProps {
     showIcon?: boolean;
@@ -44,20 +42,15 @@ export const LogoutButton = ({ showIcon = true }: LogoutButtonProps) => {
 
     return (
         <>
-            <TouchableOpacity
+            <Button
+                label={translate("settings.logout.title")}
                 onPress={handlePress}
-                activeOpacity={0.7}
-                className="mx-4 bg-primary py-4 rounded-xl items-center flex-row will-change-pressable justify-center border border-neutral-100 dark:border-darkBorder"
-            >
-                {showIcon && (
-                    <View className="h-5 w-5 items-center mr-2">
-                        <Ionicons name="log-out-outline" size={15} color="#FFFFFF" />
-                    </View>
-                )}
-                <Text className="text-white text-base font-poppins-semibold">
-                    {translate("settings.logout.title")}
-                </Text>
-            </TouchableOpacity>
+                variant="primary"
+                fullWidth
+                authButton
+                dense
+                icon={showIcon ? "LogOut" : undefined}
+            />
 
             <Modal
                 visible={!!modal}
