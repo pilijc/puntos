@@ -265,7 +265,7 @@ export default function SubscriptionConfig() {
               >
                 <Text className="font-poppins-bold text-slate-700 dark:text-slate-200 text-xs tracking-wider uppercase ml-0.5 mb-2">
                   {manager.owner_name}{" "}
-                  <Text className="font-poppins-medium text-[#FF6600]">
+                  <Text className="font-poppins-medium text-[#FF6600] text-[10px]">
                     ({manager.activeCount} Active)
                   </Text>
                 </Text>

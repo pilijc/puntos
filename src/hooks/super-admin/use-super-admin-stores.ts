@@ -31,11 +31,12 @@ export function useSuperAdminStores() {
     onConfirm: () => void;
     variant: "primary" | "danger";
     label: string;
+    hideCancel?: boolean;
   } | null>(null);
   const [subscriptions, setSubscriptions] = useState<any[]>([]);
 
   useFocusEffect(useCallback(() => { 
-    fetchStores(); 
+    fetchStores({ forceRefresh: true }); 
     fetchSubscriptions();
   }, []));
 
@@ -46,9 +47,14 @@ export function useSuperAdminStores() {
 
   const onRefresh = async () => { 
     setRefreshing(true); 
-    await fetchStores(true); 
+    await fetchStores({ forceRefresh: true }); 
     await fetchSubscriptions();
     setRefreshing(false);
+  };
+
+  const loadMore = async () => {
+    if (storeState.isFetching || !storeState.hasMore) return;
+    await fetchStores({ loadMore: true });
   };
 
   const handleApprove = (store: AdminStoreRow) => {
@@ -59,25 +65,35 @@ export function useSuperAdminStores() {
     ).length;
 
     const config = useSubscriptionConfigStore.getState();
-    const exceedsLimit = ownerActiveStores >= config.FREE_STORES_LIMIT;
+
+    // Check if there's already a paid subscription for this specific store
+    const hasPaidSubscription = subscriptions.some(sub => 
+      sub.store_id === store.id && 
+      sub.payment_status === 'paid'
+    );
+
+    // Only exceeds limit if enforcement is ON, owner is beyond free limit, and no paid subscription exists yet
+    const exceedsLimit = config.ENFORCE_SUBSCRIPTION && 
+                        ownerActiveStores >= config.FREE_STORES_LIMIT && 
+                        !hasPaidSubscription;
     
-    let customMessage = translate("superAdmin.stores.modal.approveMessage", { name: store.name });
-    let actionLabel = translate("superAdmin.stores.modal.approveAction");
+    let customMessage = exceedsLimit 
+      ? `⚠️ ${config.LIMIT_MESSAGE || "Approving this store will require a subscription charge"}`
+      : translate("superAdmin.stores.modal.approveMessage", { name: store.name });
     
-    if (exceedsLimit) {
-      customMessage += `\n\n⚠️ ${config.LIMIT_MESSAGE}`;
-      actionLabel = "Agree";
-    }
+    let actionLabel = exceedsLimit 
+      ? "Agree" 
+      : translate("superAdmin.stores.modal.approveAction");
 
     setConfirmModal({
-      title: translate("superAdmin.stores.modal.approveTitle"),
+      title: exceedsLimit ? "Limit Reached" : translate("superAdmin.stores.modal.approveTitle"),
       message: customMessage,
       label: actionLabel,
       variant: "primary",
+      hideCancel: exceedsLimit,
       onConfirm: async () => {
         setConfirmModal(null);
-
-        // If limit exceeded, just acknowledge — do not approve
+        
         if (exceedsLimit) return;
         
         const success = await approveStore(store);
@@ -145,6 +161,7 @@ export function useSuperAdminStores() {
     confirmModal,
     setConfirmModal,
     onRefresh,
+    loadMore,
     handleApprove,
     handleReject,
     getEffectiveStatus,
