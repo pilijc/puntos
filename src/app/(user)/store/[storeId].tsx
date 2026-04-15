@@ -60,11 +60,11 @@ export default function StoreOverviewDetail() {
     setIsSwitchingStore,
     isStamping,
   } = useRewardsUiStore();
-  
+
   const { fetchRewardsData } = useRewardsDataStore();
-  
+
   const router = useRouter();
-  
+
   const {
     activeStampProgramRewards,
     handleCarouselInteraction,
@@ -88,7 +88,7 @@ export default function StoreOverviewDetail() {
 
   // If a specific store is requested, we don't necessarily need to snap the carousel 
   // unless we want to show it in context. For now, let's keep it simple.
-  
+
   const handleHeroSnap = useCallback((index: number) => {
     setHeroIndex(index);
     setIsSwitchingStore(true);
@@ -139,17 +139,17 @@ export default function StoreOverviewDetail() {
 
   const onRefreshLocal = useCallback(async () => {
     setIsRefreshingLocal(true);
-    
+
     const promises: Promise<any>[] = [handleRefresh(storeId)];
     if (refetchStreaks) promises.push(refetchStreaks());
-    
+
     if (storeId) {
       const numericStoreId = Number(storeId);
       if (!isNaN(numericStoreId)) {
         promises.push(fetchRewardsData([numericStoreId], [numericStoreId]));
       }
     }
-    
+
     await Promise.all(promises);
     setIsRefreshingLocal(false);
   }, [handleRefresh, storeId, fetchRewardsData, refetchStreaks]);
@@ -182,7 +182,7 @@ export default function StoreOverviewDetail() {
       }
     >
       <View className="flex-row items-center justify-between gap-x-4 mb-[-12px] z-50 px-2">
-        <TouchableOpacity 
+        <TouchableOpacity
           onPress={() => router.back()}
           className="p-1 -ml-1 bg-black/30 rounded-full"
         >
@@ -367,7 +367,7 @@ export default function StoreOverviewDetail() {
                   onScrollStart={handleCarouselInteraction}
                   onSnapToItem={(index) => setCarouselIndex(index)}
                   renderItem={({ item: streak }) => (
-                     <UserStreakCard
+                    <UserStreakCard
                       key={streak.store_id}
                       streak={streak}
                       nearbyStores={nearbyStores}
@@ -491,15 +491,10 @@ export default function StoreOverviewDetail() {
             </View>
           ) : (
             sortedRewards.slice(0, 3).map((item) => {
-              const store = storesWithLocation.find(
-                (entry) => entry.id.toString() === item.storeId,
-              );
               return (
                 <RewardCard
                   key={item.id}
                   reward={item}
-                  storeName={store?.name}
-                  storeLocation={store?.address}
                 />
               );
             })
