@@ -1,13 +1,12 @@
 import React from "react";
-import { ScrollView, ActivityIndicator, RefreshControl, Platform } from "react-native";
+import { ScrollView, ActivityIndicator, RefreshControl, Platform, useColorScheme } from "react-native";
 import { SafeAreaView, Text, View } from "@/tw";
 import { useSuperAdminDashboard } from "@/hooks/super-admin/use-super-admin-dashboard";
 import { SectionHeader } from "@/components/ui/section-header";
-import { UserRow } from "@/components/users/UserRow";
 import { StatCard } from "@/components/ui/stat-card";
-import { Modal } from "@/components/modal";
 import { Users, Store, BarChart3 } from "lucide-react-native";
 import { useTranslation } from "react-i18next";
+import { WEB_PAGE_PADDING, WEB_CARD_PADDING, WEB_CARD_MAX_WIDTH } from "@/type/super-admin/layout";
 
 const isWeb = Platform.OS === "web";
 
@@ -25,6 +24,8 @@ export default function SuperAdminDashboard() {
     onRefresh,
   } = useSuperAdminDashboard();
   const { t: translate } = useTranslation();
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
 
   if (loading && !refreshing) {
     return (
@@ -43,14 +44,14 @@ export default function SuperAdminDashboard() {
       >
         {/* ── Web Header (left-aligned, matches "Store Approvals") ── */}
         {isWeb ? (
-          <View style={{ paddingTop: 24, paddingBottom: 16, paddingHorizontal: 50 }}>
-            <Text style={{ fontSize: 13, color: '#94A3B8', fontFamily: 'Poppins-Regular', marginBottom: 2 }}>
+          <View style={{ paddingTop: 24, paddingBottom: 16, paddingHorizontal: WEB_PAGE_PADDING }}>
+            <Text style={{ fontSize: 13, color: isDark ? '#94A3B8' : '#94A3B8', fontFamily: 'Poppins-Regular', marginBottom: 2 }}>
               {translate("superAdmin.dashboard.welcome")}
               <Text style={{ color: '#FF6600', fontFamily: 'Poppins-Bold' }}>
                 {adminInfo?.username?.split(" ")[0] || "Admin"}
               </Text>!
             </Text>
-            <Text style={{ fontSize: 22, fontFamily: 'Poppins-Bold', color: '#0f172a' }}>
+            <Text style={{ fontSize: 22, fontFamily: 'Poppins-Bold', color: isDark ? '#e2e8f0' : '#0f172a' }}>
               {translate("superAdmin.dashboard.title")}
             </Text>
           </View>
@@ -75,7 +76,7 @@ export default function SuperAdminDashboard() {
 
         {/* ── Stat Cards (centered on web) ── */}
         <View
-          style={isWeb ? { maxWidth: 1000, width: '100%', alignSelf: 'center', paddingHorizontal: 24 } : {}}
+          style={isWeb ? { maxWidth: WEB_CARD_MAX_WIDTH, width: '100%', alignSelf: 'center', paddingHorizontal: WEB_CARD_PADDING } : {}}
           className="px-6 mb-6 mt-4"
         >
           <View className="flex-row gap-2">
@@ -88,13 +89,13 @@ export default function SuperAdminDashboard() {
         {/* ── User Analytics ── */}
         {/* Label: left-aligned on web */}
         {isWeb ? (
-          <View style={{ paddingHorizontal: 50, marginBottom: 8 }}>
+          <View style={{ paddingHorizontal: WEB_PAGE_PADDING, marginBottom: 8 }}>
             <SectionHeader title={translate("superAdmin.dashboard.analytics.user.title")} onAction={() => { }} />
           </View>
         ) : null}
         {/* Card: centered on web */}
         <View
-          style={isWeb ? { maxWidth: 1000, width: '100%', alignSelf: 'center', paddingHorizontal: 24 } : {}}
+          style={isWeb ? { maxWidth: WEB_CARD_MAX_WIDTH, width: '100%', alignSelf: 'center', paddingHorizontal: WEB_CARD_PADDING } : {}}
           className={isWeb ? 'mb-6' : 'mb-6 px-6'}
         >
           {!isWeb && <SectionHeader title={translate("superAdmin.dashboard.analytics.user.title")} onAction={() => { }} />}
@@ -112,13 +113,13 @@ export default function SuperAdminDashboard() {
         {/* ── Store Analytics ── */}
         {/* Label: left-aligned on web */}
         {isWeb ? (
-          <View style={{ paddingHorizontal: 50, marginBottom: 8 }}>
+          <View style={{ paddingHorizontal: WEB_PAGE_PADDING, marginBottom: 8 }}>
             <SectionHeader title={translate("superAdmin.dashboard.analytics.store.title")} onAction={() => { }} />
           </View>
         ) : null}
         {/* Card: centered on web */}
         <View
-          style={isWeb ? { maxWidth: 1000, width: '100%', alignSelf: 'center', paddingHorizontal: 24 } : {}}
+          style={isWeb ? { maxWidth: WEB_CARD_MAX_WIDTH, width: '100%', alignSelf: 'center', paddingHorizontal: WEB_CARD_PADDING } : {}}
           className={isWeb ? 'mb-8' : 'mb-8 px-6'}
         >
           {!isWeb && <SectionHeader title={translate("superAdmin.dashboard.analytics.store.title")} onAction={() => { }} />}

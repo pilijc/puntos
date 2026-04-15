@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { View, Text, TouchableOpacity } from "@/tw";
 import { Feather } from "@expo/vector-icons";
 import { TYPO, COLORS } from "@/type/super-admin/user";
+import { WEB_PAGE_PADDING } from "@/type/super-admin/layout";
 import type { UserRoleTab, AccountStatusFilter } from "@/store/super-admin/user-store";
 
 interface UsersSearchHeaderProps {
@@ -39,7 +40,7 @@ export function UsersSearchHeader({
             alignItems: "flex-start",
             paddingTop: 20,
             paddingBottom: 20,
-            paddingHorizontal: 50,
+            paddingHorizontal: WEB_PAGE_PADDING,
             backgroundColor: "#fcfdfeff",
             borderBottomWidth: 1,
             borderBottomColor: "#f1f5f9",
