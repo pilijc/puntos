@@ -1,202 +1,117 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useEffect } from "react";
 import { View, Text, TouchableOpacity } from "@/tw";
 import { Share } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ChevronLeft, Share2, X, Clock, CheckCircle } from "lucide-react-native";
 import QRCode from "react-native-qrcode-svg";
-import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
-import { supabase } from "@/supabase/supabase";
-import { generateRedemptionCode, listenToRedemptionStatus, cancelRedemptionCode, getQRCodeData } from "@/services/user/rewards-redemption";
-import { RedemptionCode, RedemptionUpdate } from "@/type/user/reward-redemption";
+import Animated, { FadeIn } from "react-native-reanimated";
+import { getQRCodeData } from "@/services/user/rewards-redemption";
+import { useRedemptionCode } from "@/hooks/useRedemptionCode";
 
-export default function RedemptionCodeScreen() {
-  const { rewardId, storeId, rewardTitle, rewardDescription, rewardImage, pointsCost } = useLocalSearchParams<{
-    rewardId?: string;
-    storeId?: string;
-    rewardTitle?: string;
-    rewardDescription?: string;
-    rewardImage?: string;
-    pointsCost?: string;
-  }>();
+const REDIRECT_DELAY = {
+  REDEEMED: 2000,
+  CANCELLED: 1500,
+  EXPIRED: 2000,
+} as const;
 
-  const [redemptionCode, setRedemptionCode] = useState<RedemptionCode | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [timeRemaining, setTimeRemaining] = useState<number>(0);
-  const [isRedeemed, setIsRedeemed] = useState(false);
-  const [isCancelled, setIsCancelled] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const router = useRouter();
-  const insets = useSafeAreaInsets();
-  const channelRef = useRef<any | null>(null);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
+function formatTime(seconds: number): string {
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${mins}:${secs.toString().padStart(2, "0")}`;
+}
 
-  useEffect(() => {
-    if (!rewardId || !storeId) {
-      router.back();
-      return;
-    }
+function LoadingState() {
+  return (
+    <View className="flex-1 bg-white dark:bg-darkBackground items-center justify-center">
+      <Text className="text-neutral-500 dark:text-neutral-400">Generating code...</Text>
+    </View>
+  );
+}
 
-    generateCode();
-  }, [rewardId, storeId]);
+function ErrorState({ message }: { message: string | null }) {
+  return (
+    <View className="flex-1 bg-white dark:bg-darkBackground items-center justify-center px-6">
+      <Text className="text-red-500 font-poppins-bold text-lg mb-2">
+        Failed to generate code
+      </Text>
+      {message && (
+        <Text className="text-neutral-500 dark:text-neutral-400 text-center text-sm">
+          {message}
+        </Text>
+      )}
+    </View>
+  );
+}
 
-  useEffect(() => {
-    if (redemptionCode && redemptionCode.status === "active") {
-      channelRef.current = listenToRedemptionStatus(redemptionCode.id, (update: RedemptionUpdate) => {
-        if (update.status === "redeemed") {
-          setIsRedeemed(true);
-          setTimeout(() => {
-            router.back();
-          }, 2000);
-        }
-      });
-    }
+function SuccessState() {
+  return (
+    <View className="flex-1 bg-white dark:bg-darkBackground items-center justify-center">
+      <Animated.View entering={FadeIn} className="items-center">
+        <CheckCircle size={64} color="#10B981" />
+        <Text className="text-green-600 font-poppins-bold text-lg mt-4">
+          Successfully Redeemed!
+        </Text>
+      </Animated.View>
+    </View>
+  );
+}
 
-    return () => {
-      if (channelRef.current) {
-        channelRef.current.unsubscribe();
-      }
-    };
-  }, [redemptionCode]);
-
-  useEffect(() => {
-    if (redemptionCode && redemptionCode.status === "active") {
-      const updateTimer = () => {
-        const now = new Date().getTime();
-        const expiry = new Date(redemptionCode.expires_at).getTime();
-        const remaining = Math.max(0, Math.floor((expiry - now) / 1000));
-        setTimeRemaining(remaining);
-
-        if (remaining === 0) {
-          setIsCancelled(true);
-          setTimeout(() => {
-            router.back();
-          }, 2000);
-        }
-      };
-
-      updateTimer();
-      timerRef.current = setInterval(updateTimer, 1000);
-
-      return () => {
-        if (timerRef.current) {
-          clearInterval(timerRef.current);
-        }
-      };
-    }
-  }, [redemptionCode]);
-
-  const generateCode = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user?.id) return;
-
-      const result = await generateRedemptionCode(user.id, rewardId!, storeId!);
-      if (result.success && result.code) {
-        setRedemptionCode(result.code);
-      } else {
-        setErrorMessage(result.message || "Failed to generate code");
-      }
-    } catch (error) {
-      console.error("Error generating redemption code:", error);
-      setErrorMessage("An error occurred");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleCancel = async () => {
-    if (redemptionCode) {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user?.id) {
-          await cancelRedemptionCode(redemptionCode.id, user.id);
-          setIsCancelled(true);
-          setTimeout(() => {
-            router.back();
-          }, 1500);
-        }
-      } catch (error) {
-        console.error("Error cancelling redemption code:", error);
-      }
-    }
-  };
-
-  const handleShare = async () => {
-    if (redemptionCode) {
-      try {
-        await Share.share({
-          message: `Redemption Code: ${redemptionCode.code}`,
-        });
-      } catch (error) {
-        console.error("Error sharing redemption code:", error);
-      }
-    }
-  };
-
-  const formatTime = (seconds: number): string => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
-
-  if (loading) {
-    return (
-      <View className="flex-1 bg-white dark:bg-darkBackground items-center justify-center">
-        <Text className="text-neutral-500 dark:text-neutral-400">Generating code...</Text>
-      </View>
-    );
-  }
-
-  if (!redemptionCode) {
-    return (
-      <View className="flex-1 bg-white dark:bg-darkBackground items-center justify-center px-6">
-        <Text className="text-red-500 font-poppins-bold text-lg mb-2">Failed to generate code</Text>
-        {errorMessage && (
-          <Text className="text-neutral-500 dark:text-neutral-400 text-center text-sm">
-            {errorMessage}
-          </Text>
-        )}
-      </View>
-    );
-  }
-
-  if (isRedeemed) {
-    return (
-      <View className="flex-1 bg-white dark:bg-darkBackground items-center justify-center">
-        <Animated.View entering={FadeIn} className="items-center">
-          <CheckCircle size={64} color="#10B981" />
-          <Text className="text-green-600 font-poppins-bold text-lg mt-4">Successfully Redeemed!</Text>
-        </Animated.View>
-      </View>
-    );
-  }
-
-  if (isCancelled) {
-    return (
-      <View className="flex-1 bg-white dark:bg-darkBackground items-center justify-center">
-        <Animated.View entering={FadeIn} className="items-center">
+function CancelledState() {
+  return (
+    <View className="flex-1 bg-white dark:bg-darkBackground items-center justify-center">
+      <Animated.View entering={FadeIn} className="items-center">
+        <View className="w-24 h-24 items-center justify-center pl-13">
           <X size={64} color="#EF4444" />
-          <Text className="text-red-500 font-poppins-bold text-lg mt-4">Code Cancelled</Text>
-        </Animated.View>
-      </View>
-    );
-  }
+        </View>
+        <Text className="text-red-500 font-poppins-bold text-lg mt-4">Code Cancelled</Text>
+      </Animated.View>
+    </View>
+  );
+}
+
+interface ActiveStateProps {
+  rewardTitle?: string;
+  rewardDescription?: string;
+  redemptionCode: { code: string; expires_at: string };
+  timeRemaining: number;
+  onShare: () => void;
+  onCancel: () => void;
+  onBack: () => void;
+  insets: { top: number };
+}
+
+function ActiveState({
+  rewardTitle,
+  rewardDescription,
+  redemptionCode,
+  timeRemaining,
+  onShare,
+  onCancel,
+  onBack,
+  insets,
+}: ActiveStateProps) {
+  const isExpiringSoon = timeRemaining < 60;
 
   return (
     <View className="flex-1 bg-white dark:bg-darkBackground">
-      {/* Header */}
-      <View style={{ paddingTop: insets.top, paddingHorizontal: 20, paddingBottom: 20 }}>
+      <View
+        style={{
+          paddingTop: insets.top,
+          paddingHorizontal: 20,
+          paddingBottom: 20,
+        }}
+      >
         <View className="flex-row items-center justify-between">
           <TouchableOpacity
-            onPress={() => router.back()}
+            onPress={onBack}
             className="w-10 h-10 rounded-full bg-neutral-100 dark:bg-neutral-800 items-center justify-center"
           >
             <ChevronLeft size={20} color="#FF6600" />
           </TouchableOpacity>
-          
+
           <TouchableOpacity
-            onPress={handleShare}
+            onPress={onShare}
             className="w-10 h-10 rounded-full bg-neutral-100 dark:bg-neutral-800 items-center justify-center"
           >
             <Share2 size={20} color="#FF6600" />
@@ -204,9 +119,7 @@ export default function RedemptionCodeScreen() {
         </View>
       </View>
 
-      {/* Content */}
       <View className="flex-1 px-6">
-        {/* Reward Info */}
         <View className="items-center mb-8">
           <Text className="text-2xl font-poppins-bold text-neutral-900 dark:text-white mb-2">
             {rewardTitle}
@@ -216,8 +129,7 @@ export default function RedemptionCodeScreen() {
           </Text>
         </View>
 
-        {/* QR Code */}
-        <View className="bg-white dark:bg-neutral-800 rounded-2xl p-6 shadow-lg mb-6">
+        <View className="bg-white dark:bg-neutral-800 rounded-2xl p-6 drop-shadow-sm mb-6">
           <View className="items-center">
             <QRCode
               value={getQRCodeData(redemptionCode.code)}
@@ -228,7 +140,6 @@ export default function RedemptionCodeScreen() {
           </View>
         </View>
 
-        {/* Voucher Code */}
         <View className="bg-orange-50 dark:bg-orange-900/20 rounded-2xl p-6 mb-6">
           <Text className="text-center text-neutral-600 dark:text-neutral-400 mb-2 font-poppins-medium">
             Voucher Code
@@ -238,19 +149,21 @@ export default function RedemptionCodeScreen() {
           </Text>
         </View>
 
-        {/* Timer */}
         <View className="flex-row items-center justify-center mb-8">
-          <Clock size={16} color={timeRemaining < 60 ? "#EF4444" : "#6B7280"} />
-          <Text className={`ml-2 font-poppins-medium ${
-            timeRemaining < 60 ? "text-red-500" : "text-neutral-500 dark:text-neutral-400"
-          }`}>
+          <Clock size={16} color={isExpiringSoon ? "#EF4444" : "#6B7280"} />
+          <Text
+            className={`ml-2 font-poppins-medium ${
+              isExpiringSoon
+                ? "text-red-500"
+                : "text-neutral-500 dark:text-neutral-400"
+            }`}
+          >
             Expires in {formatTime(timeRemaining)}
           </Text>
         </View>
 
-        {/* Cancel Button */}
         <TouchableOpacity
-          onPress={handleCancel}
+          onPress={onCancel}
           className="bg-red-50 dark:bg-red-900/20 rounded-2xl p-4 items-center"
         >
           <Text className="text-red-600 dark:text-red-400 font-poppins-semibold">
@@ -259,5 +172,79 @@ export default function RedemptionCodeScreen() {
         </TouchableOpacity>
       </View>
     </View>
+  );
+}
+
+export default function RedemptionCodeScreen() {
+  const router = useRouter();
+  const insets = useSafeAreaInsets();
+  const { rewardId, storeId, rewardTitle, rewardDescription } =
+    useLocalSearchParams<{
+      rewardId?: string;
+      storeId?: string;
+      rewardTitle?: string;
+      rewardDescription?: string;
+    }>();
+
+  const {
+    redemptionCode,
+    status,
+    errorMessage,
+    timeRemaining,
+    generateCode,
+    cancelCode,
+  } = useRedemptionCode(rewardId, storeId);
+
+
+  useEffect(() => {
+    if (!rewardId || !storeId) {
+      router.back();
+      return;
+    }
+    generateCode();
+  }, [rewardId, storeId, router, generateCode]);
+
+  // Handle auto-redirect on terminal states
+  useEffect(() => {
+    if (status === "redeemed") {
+      setTimeout(() => router.back(), REDIRECT_DELAY.REDEEMED);
+    } else if (status === "cancelled") {
+      setTimeout(() => router.back(), REDIRECT_DELAY.CANCELLED);
+    } else if (status === "expired") {
+      setTimeout(() => router.back(), REDIRECT_DELAY.EXPIRED);
+    }
+  }, [status, router]);
+
+  const handleShare = async () => {
+    if (!redemptionCode) return;
+    try {
+      await Share.share({
+        message: `Redemption Code: ${redemptionCode.code}`,
+      });
+    } catch (error) {
+      console.error("Error sharing redemption code:", error);
+    }
+  };
+
+  const handleBack = () => router.back();
+
+  // Render states
+  if (status === "loading") return <LoadingState />;
+  if (status === "error") return <ErrorState message={errorMessage} />;
+  if (status === "redeemed") return <SuccessState />;
+  if (status === "cancelled" || status === "expired") return <CancelledState />;
+  if (!redemptionCode) return <ErrorState message="No redemption code available" />;
+
+  return (
+    <ActiveState
+      rewardTitle={rewardTitle}
+      rewardDescription={rewardDescription}
+      redemptionCode={redemptionCode}
+      timeRemaining={timeRemaining}
+      onShare={handleShare}
+      onCancel={cancelCode}
+      onBack={handleBack}
+      insets={insets}
+    />
   );
 }

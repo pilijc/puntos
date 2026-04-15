@@ -76,7 +76,6 @@ export async function processRedemption(
       return { success: false, message: "Failed to record redemption" };
     }
 
-    // Import and use the points service
     const { deductPoints } = await import("@/services/user/rewards-redemption");
     
     const pointsResult = await deductPoints(
