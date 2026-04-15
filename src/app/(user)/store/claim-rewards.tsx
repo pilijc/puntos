@@ -209,7 +209,7 @@ export default function ClaimRewardsScreen() {
           contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 0, paddingBottom: 60, gap: 16 }}
         >
           {/* ── Drag handle */}
-          <RNView style={{ alignItems: "center", paddingTop: 10, marginBottom: 4 }}>
+          <RNView style={{ alignItems: "center", paddingTop: 10, marginBottom: -10 }}>
             <RNView style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: dark ? "#525252" : "#E0E0E0" }} />
           </RNView>
 
@@ -255,7 +255,7 @@ export default function ClaimRewardsScreen() {
             </RNView>
           </Animated.View>
 
-          {/* ── Tier Progress ─────────────────────────────────────────── */}
+          {/* ── Replacement Content ── */}
           <Animated.View
             entering={FadeInDown.delay(180).duration(360)}
             style={{
@@ -264,21 +264,23 @@ export default function ClaimRewardsScreen() {
               padding: 16,
             }}
           >
-            <RNView style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-              <RNView style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-                <Trophy size={15} color="#FF6600" />
-                <Text className="text-sm font-poppins-bold text-neutral-800">Next Tier</Text>
+            <RNView style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+              <RNView style={{
+                width: 38, height: 38, borderRadius: 19,
+                backgroundColor: dark ? "#9A3412" : "#FFE4CC",
+                alignItems: "center", justifyContent: "center",
+              }}>
+                <Sparkles size={16} color="#FF6600" />
               </RNView>
-              <Text className="text-xs font-poppins-bold text-primary">
-                {userPoints} / {STATIC_NEXT_TIER} pts
-              </Text>
+              <RNView style={{ flex: 1 }}>
+                <Text className="text-neutral-800 font-poppins-semibold text-xs">
+                  Earn more points
+                </Text>
+                <Text className="text-neutral-500 font-poppins text-[11px] mt-0.5">
+                  Scan the QR code at checkout on your next visit
+                </Text>
+              </RNView>
             </RNView>
-            <RNView style={{ height: 8, backgroundColor: progTrack, borderRadius: 4, overflow: "hidden" }}>
-              <RNView style={{ height: "100%", width: `${progressPercent}%`, backgroundColor: "#FF6600", borderRadius: 4 }} />
-            </RNView>
-            <Text style={{ marginTop: 6, fontSize: 11, color: "#9CA3AF", fontFamily: "Poppins_400Regular" }}>
-              {Math.max(0, STATIC_NEXT_TIER - userPoints)} pts until your next reward tier unlocks
-            </Text>
           </Animated.View>
 
           {/* ── Redeem Now ────────────────────────────────────────────── */}
@@ -435,38 +437,6 @@ export default function ClaimRewardsScreen() {
               </Animated.View>
             ))}
           </Animated.View>
-
-
-          {/* ── Earn Tip ──────────────────────────────────────────────── */}
-          <Animated.View
-            entering={FadeInDown.delay(600).duration(360)}
-            style={{
-              backgroundColor: tipBg,
-              borderWidth: 1, borderColor: tipBorder,
-              borderRadius: 18,
-              padding: 16,
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 12,
-            }}
-          >
-            <RNView style={{
-              width: 38, height: 38, borderRadius: 19,
-              backgroundColor: dark ? "#9A3412" : "#FFE4CC",
-              alignItems: "center", justifyContent: "center",
-            }}>
-              <Sparkles size={16} color="#FF6600" />
-            </RNView>
-            <RNView style={{ flex: 1 }}>
-              <Text className="text-neutral-800 font-poppins-semibold text-xs">
-                Earn more points
-              </Text>
-              <Text className="text-neutral-500 font-poppins text-[11px] mt-0.5">
-                Scan the QR code at checkout on your next visit
-              </Text>
-            </RNView>
-          </Animated.View>
-
 
           {/* Footer */}
           <RNView style={{ alignItems: "center", paddingTop: 4 }}>
