@@ -484,19 +484,41 @@ export async function getStoresWithEnabledStreaks(
   }
 }
 
+export interface ActiveStreakProgram {
+  id: number;
+  store_id: number;
+  title: string | null;
+  start_at: string | null;
+  end_date: string | null;
+  streak_length: number | null;
+  max_days_cap: number | null;
+  fixed_points_per_day: number | null;
+  points_mode: string | null;
+  starting_points: number | null;
+  increment_value: number | null;
+  completion_bonus_points: number | null;
+  reward_description: string | null;
+  status: string | null;
+}
+
 /**
- * Returns a map of storeId → active store_streaks.id for the given stores.
- * Used to populate store_streak_id in virtual (first-time) streak entries.
+ * Returns a map of storeId → full active store_streaks program for the given stores.
+ * Used to populate store_streak_id AND program boundary data (start_at, end_date)
+ * in virtual (first-time) streak entries so circle classifiers work correctly.
  */
 export async function getActiveStreakProgramsByStore(
   storeIds: number[],
-): Promise<Map<number, number>> {
+): Promise<Map<number, ActiveStreakProgram>> {
   if (storeIds.length === 0) return new Map();
 
   try {
     const { data, error } = await supabase
       .from("store_streaks")
-      .select("id, store_id")
+      .select(`
+        id, store_id, title, start_at, end_date, streak_length, max_days_cap,
+        fixed_points_per_day, points_mode, starting_points, increment_value,
+        completion_bonus_points, reward_description, status
+      `)
       .in("store_id", storeIds)
       .eq("status", "active");
 
@@ -505,9 +527,24 @@ export async function getActiveStreakProgramsByStore(
       return new Map();
     }
 
-    const map = new Map<number, number>();
+    const map = new Map<number, ActiveStreakProgram>();
     for (const row of data ?? []) {
-      map.set(Number(row.store_id), Number(row.id));
+      map.set(Number(row.store_id), {
+        id: Number(row.id),
+        store_id: Number(row.store_id),
+        title: row.title ?? null,
+        start_at: row.start_at ?? null,
+        end_date: row.end_date ?? null,
+        streak_length: row.streak_length ?? null,
+        max_days_cap: row.max_days_cap ?? null,
+        fixed_points_per_day: row.fixed_points_per_day ?? null,
+        points_mode: row.points_mode ?? null,
+        starting_points: row.starting_points ?? null,
+        increment_value: row.increment_value ?? null,
+        completion_bonus_points: row.completion_bonus_points ?? null,
+        reward_description: row.reward_description ?? null,
+        status: row.status ?? null,
+      });
     }
     return map;
   } catch (error) {

@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { ActiveStampProgramReward, getActiveStampProgramRewards, getActiveStreakProgramsByStore, getStoresWithEnabledActiveStampProgram, getStoresWithEnabledStreaks, getUpcomingStreakProgramsByStore, UpcomingStreakProgram } from "@/services/stamp-service";
+import { ActiveStampProgramReward, ActiveStreakProgram, getActiveStampProgramRewards, getActiveStreakProgramsByStore, getStoresWithEnabledActiveStampProgram, getStoresWithEnabledStreaks, getUpcomingStreakProgramsByStore, UpcomingStreakProgram } from "@/services/stamp-service";
 import { supabase } from "@/supabase/supabase";
 import { Reward, getRewards, RewardSortOrder, PointsOrder } from "@/services/reward-service";
 import { enrichStoresWithLocation, EnrichedStore } from "@/utils/store-location";
@@ -10,7 +10,7 @@ interface RewardsDataState {
   enabledStampFeatureStoreIds: number[];
   eligibleStreakStoreIds: number[];
   activeStampProgramRewards: ActiveStampProgramReward[];
-  activeStreakProgramMap: Map<number, number>; // storeId → streakProgramId
+  activeStreakProgramMap: Map<number, ActiveStreakProgram>; // storeId → full program
   upcomingStreakProgramMap: Map<number, UpcomingStreakProgram>; // storeId → upcoming streak
   backendRewards: Reward[];
   isLoadingRewardsFeatures: boolean;
@@ -21,7 +21,7 @@ interface RewardsDataState {
   setEligibleStreakStoreIds: (ids: number[]) => void;
   setActiveStampProgramRewards: (rewards: ActiveStampProgramReward[]) => void;
   setBackendRewards: (rewards: Reward[]) => void;
-  setActiveStreakProgramMap: (map: Map<number, number>) => void;
+  setActiveStreakProgramMap: (map: Map<number, ActiveStreakProgram>) => void;
   setUpcomingStreakProgramMap: (map: Map<number, UpcomingStreakProgram>) => void;
   
   fetchRewardsData: (nearbyStoreIds: number[], displayStampStoreIds: number[]) => Promise<void>;
@@ -110,11 +110,11 @@ export const useRewardsDataStore = create<RewardsDataState>((set, get) => ({
 
       // Merge streak program map
       const { activeStreakProgramMap: currentMap, upcomingStreakProgramMap: currentUpcomingStreak } = get();
-      const newStreakMap = new Map<number, number>(currentMap);
+      const newStreakMap = new Map<number, ActiveStreakProgram>(currentMap);
       // Clear requested IDs to remove stale programs (e.g. if a feature was disabled)
       allRequestedIds.forEach((id) => newStreakMap.delete(id));
-      const fetchedStreakMap = results[4] as Map<number, number>;
-      fetchedStreakMap.forEach((programId, storeId) => newStreakMap.set(storeId, programId));
+      const fetchedStreakMap = results[4] as Map<number, ActiveStreakProgram>;
+      fetchedStreakMap.forEach((program, storeId) => newStreakMap.set(storeId, program));
 
       // Merge upcoming streak program map
       const newUpcomingStreakMap = new Map<number, UpcomingStreakProgram>(currentUpcomingStreak);

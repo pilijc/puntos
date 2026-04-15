@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { ScrollView, TouchableOpacity, View as RNView, useColorScheme, Dimensions, ActivityIndicator } from "react-native";
+import { ScrollView, TouchableOpacity, View as RNView, useColorScheme, Dimensions } from "react-native";
 import { View, Text, Image } from "@/tw";
 import { ChevronLeft, Gift, Gem, Star, Lock, Trophy, Sparkles, CheckCircle2 } from "lucide-react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
@@ -39,32 +39,20 @@ export default function ClaimRewardsScreen() {
 
   useEffect(() => {
     async function loadData() {
-      if (!storeId) {
-        setIsLoading(false);
-        return;
-      }
+      if (!storeId) return;
 
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user?.id) {
-          setIsLoading(false);
-          return;
-        }
-        setUserId(user.id);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user?.id) return;
+      setUserId(user.id);
 
-        const [storeRewards, points] = await Promise.all([
-          getRewards({ storeId: storeId as string, limit: 20 }),
-          getUserAvailablePoints(user.id, storeId)
-        ]);
+      const [storeRewards, points] = await Promise.all([
+        getRewards({ storeId: storeId as string, limit: 20 }),
+        getUserAvailablePoints(user.id)
+      ]);
 
-        setRewards(storeRewards);
-        setUserPoints(points);
-      } catch (error) {
-        console.error("Failed to load rewards:", error);
-        setRewards([]);
-      } finally {
-        setIsLoading(false);
-      }
+      setRewards(storeRewards);
+      setUserPoints(points);
+      setIsLoading(false);
     }
 
     loadData();
@@ -300,36 +288,17 @@ export default function ClaimRewardsScreen() {
               <Text className="text-neutral-800 font-poppins-bold text-sm">
                 Ready to Claim
               </Text>
-              {!isLoading && (
-                <RNView style={{
-                  backgroundColor: "#FF6600", borderRadius: 99,
-                  paddingHorizontal: 8, paddingVertical: 2,
-                }}>
-                  <Text className="text-white font-poppins-bold text-[10px]">
-                    {redeemable.length}
-                  </Text>
-                </RNView>
-              )}
+              <RNView style={{
+                backgroundColor: "#FF6600", borderRadius: 99,
+                paddingHorizontal: 8, paddingVertical: 2,
+              }}>
+                <Text className="text-white font-poppins-bold text-[10px]">
+                  {redeemable.length}
+                </Text>
+              </RNView>
             </RNView>
 
-            {isLoading ? (
-              <RNView style={{ alignItems: "center", paddingVertical: 24 }}>
-                <ActivityIndicator size="small" color="#FF6600" />
-                <Text className="text-neutral-400 font-poppins text-sm mt-2">Loading rewards...</Text>
-              </RNView>
-            ) : rewards.length === 0 ? (
-              <RNView style={{ alignItems: "center", paddingVertical: 24, backgroundColor: cardBg, borderRadius: 18 }}>
-                <Gift size={40} color="#9CA3AF" />
-                <Text className="text-neutral-500 font-poppins-semibold text-sm mt-3">No rewards available</Text>
-                <Text className="text-neutral-400 font-poppins text-xs mt-1 text-center px-4">Check back later for new rewards</Text>
-              </RNView>
-            ) : redeemable.length === 0 ? (
-              <RNView style={{ alignItems: "center", paddingVertical: 16 }}>
-                <Text className="text-neutral-400 font-poppins text-xs">No rewards ready to claim yet</Text>
-                <Text className="text-primary font-poppins-semibold text-xs mt-1">Earn more points to unlock rewards!</Text>
-              </RNView>
-            ) : (
-              redeemable.map((item, i) => (
+            {redeemable.map((item, i) => (
               <Animated.View
                 key={item.id}
                 entering={FadeInDown.delay(300 + i * 80).duration(360)}
