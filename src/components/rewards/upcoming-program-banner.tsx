@@ -26,6 +26,26 @@ function formatDate(dateStr: string | null | undefined): string | null {
   }
 }
 
+function formatDateTime(dateStr: string | null | undefined): string | null {
+  if (!dateStr) return null;
+  try {
+    const d = new Date(dateStr);
+    const datePart = d.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+    const timePart = d.toLocaleTimeString("en-US", {
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    });
+    return `${datePart}, ${timePart}`;
+  } catch {
+    return null;
+  }
+}
+
 export default function UpcomingProgramBanner({
   type,
   title,
@@ -38,7 +58,7 @@ export default function UpcomingProgramBanner({
   const Icon = isStreak ? Flame : Sparkles;
   const iconColor = "#6366f1"; // indigo — distinct from orange (active) and grey (empty)
 
-  const formattedStart = formatDate(startAt);
+  const formattedStart = formatDateTime(startAt);
   const formattedEnd = formatDate(endDate);
 
   const programLabel = isStreak
@@ -89,7 +109,7 @@ export default function UpcomingProgramBanner({
               <CalendarClock size={12} color="#6366f1" />
               <Text className="text-[11px] font-poppins text-neutral-500 dark:text-neutral-400">
                 {formattedStart && formattedEnd
-                  ? `${formattedStart} – ${formattedEnd}`
+                  ? `${formattedStart} – ends ${formattedEnd}`
                   : formattedStart
                   ? `Starts ${formattedStart}`
                   : `Ends ${formattedEnd}`}
