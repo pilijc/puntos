@@ -65,5 +65,6 @@ export async function getUserAvailablePoints(userId: string, storeId?: string): 
     return summary.availablePoints;
 }
 
+ 
 
 

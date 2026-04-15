@@ -367,6 +367,19 @@ export default function ClaimRewardsScreen() {
                       </Text>
                     </RNView>
                     <TouchableOpacity
+                      onPress={() => {
+                        router.push({
+                          pathname: "/(user)/store/redemption-code",
+                          params: {
+                            rewardId: item.id.toString(),
+                            storeId: storeId,
+                            rewardTitle: item.title,
+                            rewardDescription: item.description,
+                            rewardImage: item.image_url,
+                            pointsCost: item.points_cost.toString(),
+                          },
+                        });
+                      }}
                       style={{
                         flexDirection: "row", alignItems: "center", gap: 4,
                         backgroundColor: "#FF6600",
