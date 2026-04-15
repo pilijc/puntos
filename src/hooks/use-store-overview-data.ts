@@ -1,4 +1,8 @@
-import { rewards } from "@/data/rewards";
+import { RewardItem, rewards } from "@/data/rewards";
+import { getRewards } from "@/services/reward-service";
+import { getUserAvailablePoints } from "@/services/user/points-service";
+import { mapBackendRewardsToRewardItems } from "@/utils/user/reward-mappers";
+import { supabase } from "@/supabase/supabase";
 import { useCarouselAutoplayPause } from "@/hooks/use-carousel-autoplay-pause";
 import { useLocation } from "@/hooks/user/use-location";
 import { useRewardsActions } from "@/hooks/use-rewards-actions";
@@ -10,9 +14,9 @@ import { StampProgress } from "@/services/stamp-service";
 import { useRewardsDataStore } from "@/hooks/use-rewards-data";
 import { useRewardsUiStore } from "@/store/user/rewards-ui-store";
 import { useStoreStore } from "@/store/user/store-store";
-import { sortRewards } from "@/utils/store-helpers";
+import { getHasStampedToday, sortRewards } from "@/utils/store-helpers";
 import { distance, point } from "@turf/turf";
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   useAnimatedStyle,
   useSharedValue,
@@ -64,10 +68,15 @@ export function useStoreOverviewData(storeId?: string) {
   } = useRewardsDataStore();
   const { stores, setStores } = useStoreStore();
   const { location } = useLocation();
-  const { handleRefresh, hasStampedToday } = useRewardsActions();
+  const { handleRefresh } = useRewardsActions();
   const { stamps } = useStamps();
   const { stampRewards } = useStampRewards();
   const { streaks: userStreaks, refetch: refetchStreaks } = useStreaks();
+
+  // State for dynamic rewards
+  const [storeRewards, setStoreRewards] = useState<RewardItem[]>([]);
+  const [userPoints, setUserPoints] = useState<number>(0);
+  const [isLoadingRewards, setIsLoadingRewards] = useState(false);
 
   const handleCarouselInteraction = useCarouselAutoplayPause(setIsAutoPlayEnabled);
   const swipeIndicatorOpacity = useSharedValue(0);
@@ -141,10 +150,44 @@ export function useStoreOverviewData(storeId?: string) {
     });
   }, [location, stamps]);
 
-  const sortedRewards = useMemo(
-    () => sortRewards(rewards, rewardSort, rewardPointsOrder).slice(0, 3),
-    [rewardPointsOrder, rewardSort],
-  );
+  // Fetch rewards and user points
+  useEffect(() => {
+    async function fetchStoreRewards() {
+      if (!storeId) return;
+
+      setIsLoadingRewards(true);
+      try {
+        // Fetch rewards for this store
+        const rewards = await getRewards({
+          storeId,
+          sortBy: rewardSort,
+          pointsOrder: rewardPointsOrder,
+          limit: 3,
+        });
+
+        // Fetch user points for this specific store
+        let points = 0;
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user?.id) {
+          points = await getUserAvailablePoints(user.id, storeId);
+          setUserPoints(points);
+        }
+
+        // Map to RewardItem with status
+        const mappedRewards = mapBackendRewardsToRewardItems(rewards, points);
+        setStoreRewards(mappedRewards);
+      } catch (error) {
+        console.error("Failed to fetch store rewards:", error);
+        setStoreRewards([]);
+      } finally {
+        setIsLoadingRewards(false);
+      }
+    }
+
+    fetchStoreRewards();
+  }, [storeId, rewardSort, rewardPointsOrder]);
+
+  const sortedRewards = useMemo(() => storeRewards, [storeRewards]);
 
   const isStoreNearby = useCallback((storeLat?: number | null, storeLon?: number | null) => {
     if (!location || storeLat == null || storeLon == null) return false;
@@ -358,6 +401,16 @@ export function useStoreOverviewData(storeId?: string) {
     };
   });
 
+  // Compute hasStampedToday for the focused store
+  const hasStampedToday = useMemo(() => {
+    const focusedStore = storeId
+      ? storesWithLocation.find((s) => s.id.toString() === storeId)
+      : nearbyStores[heroIndex];
+    if (!focusedStore) return false;
+    const storeStamp = stamps.find((s) => Number(s.store_id) === Number(focusedStore.id));
+    return getHasStampedToday(storeStamp?.last_stamp_at);
+  }, [stamps, storeId, nearbyStores, heroIndex, storesWithLocation]);
+
   return {
     activeStampProgramRewards,
     handleCarouselInteraction,
@@ -376,5 +429,7 @@ export function useStoreOverviewData(storeId?: string) {
     fetchedStoreIds,
     refetchStreaks,
     upcomingStreak,
+    isLoadingRewards,
+    userPoints,
   };
 }
