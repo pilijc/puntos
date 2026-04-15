@@ -50,3 +50,15 @@ export async function updateAdminStoreStatus(
         users: undefined,
     } as AdminStoreRow;
 }
+
+/**
+ * Fetches all store subscription records.
+ */
+export async function fetchAllSubscriptions() {
+    const { data, error } = await supabase
+        .from("store_subscriptions")
+        .select("*");
+
+    if (error) throw new Error(error.message);
+    return data ?? [];
+}
