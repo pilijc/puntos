@@ -1,8 +1,10 @@
-import React from "react";
+import React, { useCallback } from "react";
 import {
 	ScrollView,
 	RefreshControl,
 	Platform,
+	FlatList,
+	ActivityIndicator,
 } from "react-native";
 import { View, Text, TouchableOpacity } from "@/tw";
 import { useTranslation } from "react-i18next";
@@ -50,9 +52,52 @@ export default function SuperAdminStores() {
 		isFetching,
 	} = useSuperAdminStores();
 
+	const ownerActiveStoreCounts = React.useMemo(() => {
+		const counts: Record<string, number> = {};
+
+		for (const store of stores) {
+			if ((store.status === "active" || store.is_active) && store.owner_id) {
+				counts[store.owner_id] = (counts[store.owner_id] ?? 0) + 1;
+			}
+		}
+
+		return counts;
+	}, [stores]);
+
+	const statusCounts = React.useMemo(() => {
+		const counts: Record<string, number> = { All: stores.length };
+
+		for (const store of stores) {
+			const status = getEffectiveStatus(store);
+			counts[status] = (counts[status] ?? 0) + 1;
+		}
+
+		return counts;
+	}, [stores, getEffectiveStatus]);
+
 	const selectedOwnerActiveStoresCount = selectedStore
-		? stores.filter(s => s.owner_id === selectedStore.owner_id && s.id !== selectedStore.id && (s.status === "active" || s.is_active)).length
+		? Math.max(0, (ownerActiveStoreCounts[selectedStore.owner_id] ?? 0) - ((selectedStore.status === "active" || selectedStore.is_active) ? 1 : 0))
 		: 0;
+
+	const renderStoreItem = useCallback(
+		({ item: store }: { item: typeof filtered[number] }) => {
+			const activeStoresCount = Math.max(
+				0,
+				(ownerActiveStoreCounts[store.owner_id] ?? 0) - ((store.status === "active" || store.is_active) ? 1 : 0)
+			);
+
+			return (
+				<AdminStoreCard
+					store={store}
+					ownerActiveStoresCount={activeStoresCount}
+					onApprove={handleApprove}
+					onReject={handleReject}
+					onSelect={(s) => setPreviewStore(s)}
+				/>
+			);
+		},
+		[ownerActiveStoreCounts, handleApprove, handleReject, setPreviewStore]
+	);
 
 	if (selectedStore) {
 		const sub = subscriptions.find(s => s.store_id === selectedStore.id);
@@ -162,7 +207,7 @@ export default function SuperAdminStores() {
 					<View className="bg-white dark:bg-darkBackgroundCard rounded-2xl p-1.5 flex-row gap-x-1 shadow-sm border border-slate-100 dark:border-darkBorder" style={{ width: '100%', maxWidth: 700 }}>
 						{FILTERS.map((f) => {
 							const active = activeFilter === f;
-							const count = f === "All" ? stores.length : stores.filter((s) => getEffectiveStatus(s) === f).length;
+							const count = statusCounts[f] ?? 0;
 							return (
 								<TouchableOpacity
 									key={f}
@@ -197,7 +242,7 @@ export default function SuperAdminStores() {
 					<ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 20, gap: 28, flexDirection: "row" }}>
 						{FILTERS.map((f) => {
 							const active = activeFilter === f;
-							const count = f === "All" ? stores.length : stores.filter((s) => getEffectiveStatus(s) === f).length;
+							const count = statusCounts[f] ?? 0;
 							return (
 								<TouchableOpacity
 									key={f}
@@ -241,93 +286,86 @@ export default function SuperAdminStores() {
 
 			{/* ── Store list ── */}
 			<View className="flex-1">
-				<ScrollView
-					className="flex-1"
-					contentContainerStyle={[
-						{ padding: 16, paddingBottom: filtered.length === 0 ? 16 : 40 },
-						isWeb && {
-							width: '100%',
-							maxWidth: 1000,
-							alignSelf: 'center'
-						}
-					]}
-					showsVerticalScrollIndicator={false}
-					refreshControl={
-						<RefreshControl
-							refreshing={refreshing}
-							onRefresh={onRefresh}
-							tintColor="#FF6600"
-							colors={["#FF6600"]}
-						/>
-					}
-				>
-					{error && !loading && (
-						<View className="flex-row items-center gap-2 bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 rounded-xl p-3 mb-4">
-							<MaterialIcons name="error-outline" size={16} color="#DC2626" />
-							<Text className="flex-1 text-sm font-poppins text-red-600 dark:text-red-400">{error}</Text>
-						</View>
-					)}
-
-					{loading && (
-						<>
-							<AdminStoreSkeletonCard />
-							<AdminStoreSkeletonCard />
-							<AdminStoreSkeletonCard />
-						</>
-					)}
-
-					{!loading && filtered.map((store) => {
-						const activeStoresCount = stores.filter(
-							s => s.owner_id === store.owner_id && s.id !== store.id && (s.status === "active" || s.is_active)
-						).length;
-
-						return (
-							<AdminStoreCard
-								key={store.id}
-								store={store}
-								ownerActiveStoresCount={activeStoresCount}
-								onApprove={handleApprove}
-								onReject={handleReject}
-								onSelect={(s) => setPreviewStore(s)}
+				{loading && !refreshing && filtered.length === 0 ? (
+					<View
+						className="flex-1"
+						style={[
+							{ padding: 16, paddingBottom: 40 },
+							isWeb && {
+								width: '100%',
+								maxWidth: 1000,
+								alignSelf: 'center'
+							}
+						]}
+					>
+						<AdminStoreSkeletonCard />
+						<AdminStoreSkeletonCard />
+						<AdminStoreSkeletonCard />
+					</View>
+				) : (
+					<FlatList
+						data={filtered}
+						renderItem={renderStoreItem}
+						keyExtractor={(store) => String(store.id)}
+						contentContainerStyle={[
+							{ padding: 16, paddingBottom: filtered.length === 0 ? 16 : 40 },
+							isWeb && {
+								width: '100%',
+								maxWidth: 1000,
+								alignSelf: 'center'
+							}
+						]}
+						showsVerticalScrollIndicator={false}
+						refreshControl={
+							<RefreshControl
+								refreshing={refreshing}
+								onRefresh={onRefresh}
+								tintColor="#FF6600"
+								colors={["#FF6600"]}
 							/>
-						);
-					})}
-
-					{!loading && filtered.length === 0 && !error && (
-						<View className="items-center pt-16 gap-3">
-							<MaterialIcons name="storefront" size={52} color="#CBD5E1" />
-							<Text className="text-base font-poppins-bold text-slate-600 dark:text-darkTextSecondary">
-								{activeFilter === "All"
-									? translate("superAdmin.stores.noStores")
-									: translate("superAdmin.stores.noFilteredStores", { status: FILTER_LABELS[activeFilter] })}
-							</Text>
-							<Text className="text-sm font-poppins text-slate-400 text-center px-8">
-								{translate("superAdmin.stores.pullToRefresh")}
-							</Text>
-						</View>
-					)}
-
-					{!loading && hasMore && (
-						<View className="mt-4 mb-8 items-center">
-							<TouchableOpacity
-								className="bg-white dark:bg-darkBackgroundCard border border-slate-200 dark:border-neutral-800 px-6 py-2.5 rounded-full flex-row items-center gap-2"
-								onPress={loadMore}
-								disabled={isFetching}
-							>
-								{isFetching ? (
-									<View className="animate-spin">
-										<MaterialIcons name="refresh" size={16} color="#64748B" />
-									</View>
-								) : (
-									<MaterialIcons name="expand-more" size={18} color="#64748B" />
-								)}
-								<Text className="text-[13px] font-poppins-semibold text-slate-600 dark:text-darkTextSecondary">
-									{isFetching ? "Loading..." : "Load More Stores"}
-								</Text>
-							</TouchableOpacity>
-						</View>
-					)}
-				</ScrollView>
+						}
+						onEndReached={() => {
+							if (hasMore && !isFetching) {
+								loadMore();
+							}
+						}}
+						onEndReachedThreshold={0.5}
+						removeClippedSubviews={true}
+						initialNumToRender={10}
+						maxToRenderPerBatch={10}
+						windowSize={10}
+						ListHeaderComponent={
+							error && !loading ? (
+								<View className="flex-row items-center gap-2 bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 rounded-xl p-3 mb-4">
+									<MaterialIcons name="error-outline" size={16} color="#DC2626" />
+									<Text className="flex-1 text-sm font-poppins text-red-600 dark:text-red-400">{error}</Text>
+								</View>
+							) : null
+						}
+						ListEmptyComponent={
+							!error ? (
+								<View className="items-center pt-16 gap-3">
+									<MaterialIcons name="storefront" size={52} color="#CBD5E1" />
+									<Text className="text-base font-poppins-bold text-slate-600 dark:text-darkTextSecondary">
+										{activeFilter === "All"
+											? translate("superAdmin.stores.noStores")
+											: translate("superAdmin.stores.noFilteredStores", { status: FILTER_LABELS[activeFilter] })}
+									</Text>
+									<Text className="text-sm font-poppins text-slate-400 text-center px-8">
+										{translate("superAdmin.stores.pullToRefresh")}
+									</Text>
+								</View>
+							) : null
+						}
+						ListFooterComponent={
+							isFetching && hasMore ? (
+								<View className="py-4 items-center">
+									<ActivityIndicator size="small" color="#FF6600" />
+								</View>
+							) : null
+						}
+					/>
+				)}
 			</View>
 
 			<AdminStorePreviewModal

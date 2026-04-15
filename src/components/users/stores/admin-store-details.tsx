@@ -1,9 +1,10 @@
 import React, { useState, useRef, useMemo } from "react";
-import { ScrollView } from "react-native";
+import { ScrollView, Platform, useColorScheme } from "react-native";
 import Carousel from 'react-native-reanimated-carousel';
 import { View, Text, TouchableOpacity } from "@/tw";
 import { useTranslation } from "react-i18next";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { ArrowLeft, Store as StoreIcon, Briefcase, BadgeCheck, AlertTriangle, Flame, Sun, Moon, RefreshCw, MapPin, Map, CheckCircle, ChevronLeft, ChevronRight } from "lucide-react-native";
 import { Image } from "expo-image";
 import { BlurView } from "expo-blur";
 import Mapbox, { Camera, MapView } from "@rnmapbox/maps";
@@ -11,18 +12,19 @@ import { ScreenWrapper } from "@/components/ui/screen-wrapper";
 import { Button } from "@/components/button";
 import { AdminStoreRow } from "@/services/store-service";
 import { ImageViewerModal } from "@/components/ui/image-viewer-modal";
-import { getStoreCategoryBadge } from "@/type/super-admin/user";
-import { useColorScheme } from "react-native";
+import { getStoreCategoryBadge, getEffectiveStatus, StoreStatusKey } from "@/type/super-admin/user";
 import { shouldUseInteractiveMapbox } from "@/utils/mapbox-platform";
 import { useSubscriptionConfigStore } from "@/store/super-admin/subscription-config";
 
 
 Mapbox.setAccessToken(process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN!);
 
+const isWeb = Platform.OS === "web";
+
 const twConfig = require("../../../../tailwind.config.js");
 const twColors = twConfig?.theme?.extend?.colors || { success: "#10b981", danger: "#ef4444" };
 
-type StatusKey = "pending_review" | "active" | "inactive";
+type StatusKey = StoreStatusKey;
 
 const STATUS_CONFIG: Record<StatusKey, {
   icon: "schedule" | "check-circle" | "cancel";
@@ -84,11 +86,6 @@ export function AdminStoreDetails({
 
   const isDark = useColorScheme() === "dark";
 
-  const getEffectiveStatus = (s: AdminStoreRow): StatusKey => {
-    if (s.status === "pending_review" || !s.status) return "pending_review";
-    if (s.status === "inactive") return "inactive";
-    return s.is_active ? "active" : "inactive";
-  };
   const statusKey = getEffectiveStatus(store);
   const statusCfg = STATUS_CONFIG[statusKey] ?? STATUS_CONFIG.pending_review;
   const isPending = statusKey === "pending_review";
@@ -142,7 +139,7 @@ export function AdminStoreDetails({
                   className="bg-white/80 dark:bg-black/60" 
                 />
               )}
-              <MaterialIcons name="arrow-back" size={22} color={isDark ? "#ffffff" : "#0F172A"} />
+              <ArrowLeft size={22} color={isDark ? "#ffffff" : "#0F172A"} />
             </TouchableOpacity>
           </View>
           <TouchableOpacity 
@@ -330,13 +327,13 @@ export function AdminStoreDetails({
                             onPress={() => scrollRef.current?.prev()}
                             className="absolute left-4 top-1/2 -mt-6 w-12 h-12 bg-black/30 hover:bg-black/50 rounded-full items-center justify-center z-30 transition-colors"
                           >
-                            <MaterialIcons name="chevron-left" size={32} color="white" />
+                            <ChevronLeft size={32} color="white" />
                           </TouchableOpacity>
                           <TouchableOpacity
                             onPress={() => scrollRef.current?.next()}
                             className="absolute right-4 top-1/2 -mt-6 w-12 h-12 bg-black/30 hover:bg-black/50 rounded-full items-center justify-center z-30 transition-colors"
                           >
-                            <MaterialIcons name="chevron-right" size={32} color="white" />
+                            <ChevronRight size={32} color="white" />
                           </TouchableOpacity>
                         </>
                       )}

@@ -8,7 +8,7 @@ import {
   StatusBar,
   Platform,
 } from "react-native";
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { X, Mouse, Move } from "lucide-react-native";
 import { Image } from "expo-image";
 import { Gesture, GestureDetector, GestureHandlerRootView } from "react-native-gesture-handler";
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from "react-native-reanimated";
@@ -144,7 +144,7 @@ export function ImageViewerModal({ uri, onClose }: { uri: string; onClose: () =>
             alignItems: "center", justifyContent: "center",
           }}
         >
-          <MaterialIcons name="close" size={22} color="#fff" />
+          <X size={22} color="#fff" />
         </TouchableOpacity>
 
 
@@ -157,7 +157,9 @@ export function ImageViewerModal({ uri, onClose }: { uri: string; onClose: () =>
             backgroundColor: "rgba(0,0,0,0.55)",
             paddingHorizontal: 18, paddingVertical: 8, borderRadius: 24,
           }}>
-            <MaterialIcons name={Platform.OS === 'web' ? "mouse" : "open-with"} size={14} color="rgba(255,255,255,0.6)" />
+            {Platform.OS === 'web'
+              ? <Mouse size={14} color="rgba(255,255,255,0.6)" />
+              : <Move size={14} color="rgba(255,255,255,0.6)" />}
             <Text style={{ color: "rgba(255,255,255,0.6)", fontSize: 11, fontFamily: "Poppins-Medium" }}>
               {Platform.OS === 'web' 
                 ? "Scroll to zoom  •  Click and drag to pan"

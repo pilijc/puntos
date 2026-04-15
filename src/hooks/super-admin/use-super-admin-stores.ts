@@ -2,9 +2,10 @@ import { useState, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useFocusEffect } from "expo-router";
 import { AdminStoreRow } from "@/services/store-service";
-import { supabase } from "@/supabase/supabase";
+import { fetchAllSubscriptions } from "@/services/super-admin/store-admin-service";
 import { useSuperAdminStoresStore } from "@/store/super-admin/super-admin-stores-store";
 import { useSubscriptionConfigStore } from "@/store/super-admin/subscription-config";
+import { getEffectiveStatus } from "@/type/super-admin/user";
 
 export const FILTERS = ["All", "pending_review", "active", "inactive"] as const;
 export type Filter = typeof FILTERS[number];
@@ -41,8 +42,12 @@ export function useSuperAdminStores() {
   }, []));
 
   const fetchSubscriptions = async () => {
-    const { data } = await supabase.from("store_subscriptions").select("*");
-    if (data) setSubscriptions(data);
+    try {
+      const data = await fetchAllSubscriptions();
+      setSubscriptions(data);
+    } catch (err) {
+      console.warn("[useSuperAdminStores] Failed to fetch subscriptions:", err);
+    }
   };
 
   const onRefresh = async () => { 
@@ -135,19 +140,21 @@ export function useSuperAdminStores() {
     });
   };
 
-  const getEffectiveStatus = (s: AdminStoreRow) => {
-    if (s.status === "pending_review" || !s.status) return "pending_review";
-    if (s.status === "inactive") return "inactive";
-    return s.is_active ? "active" : "inactive";
-  };
 
-  const filtered = (activeFilter === "All"
-    ? stores
-    : stores.filter((s) => getEffectiveStatus(s) === activeFilter))
-    .slice()
-    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
-  const pendingCount = stores.filter((s) => s.status === "pending_review").length;
+  const filtered = useMemo(() =>
+    (activeFilter === "All"
+      ? stores
+      : stores.filter((s) => getEffectiveStatus(s) === activeFilter))
+      .slice()
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()),
+    [stores, activeFilter]
+  );
+
+  const pendingCount = useMemo(() =>
+    stores.filter((s) => s.status === "pending_review").length,
+    [stores]
+  );
 
   return {
     ...storeState,
