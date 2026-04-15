@@ -349,8 +349,7 @@ export default function ClaimRewardsScreen() {
                   </RNView>
                 </RNView>
               </Animated.View>
-            ))
-            )}
+            ))}
           </Animated.View>
 
           {/* ── Almost There ──────────────────────────────────────────── */}
