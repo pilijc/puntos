@@ -78,16 +78,26 @@ export async function recordUserStreak(
  * Fetch all earned dates from streak_events for a given user + store.
  * Returns a Set of "YYYY-MM-DD" strings in the user's LOCAL timezone.
  * Used by the activity calendar so it shows real per-day history.
+ *
+ * Pass storeStreakId to scope results to a specific program and prevent old
+ * program events from contaminating the new program's weekly circles.
  */
 export async function getStreakEarnedDates(
   userId: string,
   storeId: number,
+  storeStreakId?: number,
 ): Promise<Set<string>> {
-  const { data, error } = await supabase
+  let query = supabase
     .from("streak_events")
     .select("earned_date")
     .eq("user_id", userId)
-    .eq("store_id", storeId)
+    .eq("store_id", storeId);
+
+  if (storeStreakId) {
+    query = query.eq("store_streak_id", storeStreakId);
+  }
+
+  const { data, error } = await query
     .order("earned_date", { ascending: false })
     .limit(365); // cap at one year of history
 
@@ -275,13 +285,23 @@ export async function getUserStreakByStore(
     if (streakError) throw new Error(streakError.message);
     if (storeError) throw new Error(storeError.message);
 
-    const streaks = ((streakRows ?? []) as unknown as UserStreak[]).filter((streak) =>
-      isValidStreakStore(streak),
-    );
+    // Filter 1: store must be active (existing gate).
+    // Filter 2: exclude rows linked to an ended program — an old in-progress
+    //   user_streaks row that outlived its program must NOT be returned as the
+    //   active streak. Returning it would bring the old program's start_at into
+    //   the streak log card, causing current-week circles to incorrectly fall
+    //   through to "missed" instead of "pre-program".
+    //   Exception: keep "completed" user rows so bonus claims still work.
+    const streaks = ((streakRows ?? []) as unknown as UserStreak[]).filter((streak) => {
+      if (!isValidStreakStore(streak)) return false;
+      const programStatus = streak.store_streaks?.status;
+      if (programStatus === "ended" && streak.status !== "completed") return false;
+      return true;
+    });
 
     const activeProgramStreak =
       streaks.find((streak) => streak.store_streaks?.status === "active") ??
-      streaks.find((streak) => streak.status === "in_progress") ??
+      streaks.find((streak) => streak.status === "in_progress" && streak.store_streaks?.status !== "ended") ??
       streaks[0];
 
     if (activeProgramStreak) {
