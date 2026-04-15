@@ -1,5 +1,5 @@
 import React, { useCallback } from "react";
-import { ActivityIndicator, RefreshControl, StatusBar, FlatList } from "react-native";
+import { ActivityIndicator, RefreshControl, StatusBar, FlatList, Platform } from "react-native";
 import { View, Text } from "@/tw";
 import { ScreenWrapper } from "@/components/ui/screen-wrapper";
 import { UsersModal as Modal } from "@/components/users/UsersModal";
@@ -10,6 +10,8 @@ import { UserListItem } from "@/components/users/UserListItem";
 import { TYPO, COLORS } from "@/type/super-admin/user";
 import { useSuperAdminUsers } from "@/hooks/super-admin/use-super-admin-users";
 import { useTranslation } from "react-i18next";
+
+const isWeb = Platform.OS === "web";
 
 export default function UsersScreen() {
   const colorScheme = require('react-native').useColorScheme();
@@ -51,7 +53,7 @@ export default function UsersScreen() {
   );
 
   return (
-    <ScreenWrapper className="flex-1 bg-background dark:bg-darkBackground">
+    <ScreenWrapper className="flex-1 bg-backgroundMuted dark:bg-darkBackground">
       <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
       <UsersSearchHeader
         search={search}
@@ -74,14 +76,25 @@ export default function UsersScreen() {
           }
           getItemLayout={getItemLayout}
           stickyHeaderIndices={stickyHeaders}
-          contentContainerStyle={{ paddingBottom: 110 }}
+          contentContainerStyle={[
+            {
+              paddingBottom: 110,
+              paddingTop: isWeb ? 8 : 0,
+            },
+            isWeb && {
+              width: '100%',
+              maxWidth: 1000,
+              alignSelf: "center",
+            }
+          ]}
+          style={isWeb ? { backgroundColor: isDark ? "#111827" : "#F8FAFC" } : undefined}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
           }
           onEndReached={onEndReached}
           onEndReachedThreshold={0.5}
           removeClippedSubviews={true}
-          initialNumToRender={10}
+          initialNumToRender={15}
           maxToRenderPerBatch={10}
           windowSize={10}
           ListFooterComponent={
@@ -93,7 +106,9 @@ export default function UsersScreen() {
           }
           ListEmptyComponent={
             <View className="items-center justify-center pt-20">
-              <Text className={`${TYPO.subtitle} dark:text-darkTextSecondary`}>{translate("superAdmin.users.noUsersFound")}</Text>
+              <Text className={`${TYPO.subtitle} dark:text-darkTextSecondary`}>
+                {translate("superAdmin.users.noUsersFound")}
+              </Text>
             </View>
           }
         />
@@ -115,7 +130,7 @@ export default function UsersScreen() {
         onClose={() => setShowFilterModal(false)}
         onSelectFilter={setStatusFilter}
       />
-      {/* Error modal — replaces console.error; surfaces store errors to the user */}
+      {/* Error modal */}
       <Modal
         visible={!!errorModal}
         onClose={dismissErrorModal}

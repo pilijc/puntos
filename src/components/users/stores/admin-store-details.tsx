@@ -12,6 +12,7 @@ import { Button } from "@/components/button";
 import { AdminStoreRow } from "@/services/store-service";
 import { ImageViewerModal } from "@/components/ui/image-viewer-modal";
 import { getStoreCategoryBadge } from "@/type/super-admin/user";
+import { useColorScheme } from "react-native";
 import { shouldUseInteractiveMapbox } from "@/utils/mapbox-platform";
 import { useSubscriptionConfigStore } from "@/store/super-admin/subscription-config";
 
@@ -19,7 +20,7 @@ import { useSubscriptionConfigStore } from "@/store/super-admin/subscription-con
 Mapbox.setAccessToken(process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN!);
 
 const twConfig = require("../../../../tailwind.config.js");
-const twColors = twConfig.theme.extend.colors;
+const twColors = twConfig?.theme?.extend?.colors || { success: "#10b981", danger: "#ef4444" };
 
 type StatusKey = "pending_review" | "active" | "inactive";
 
@@ -81,7 +82,7 @@ export function AdminStoreDetails({
   const scrollRef = useRef<any>(null);
   const [layoutWidth, setLayoutWidth] = useState(0);
 
-  const isDark = require("react-native").useColorScheme() === "dark";
+  const isDark = useColorScheme() === "dark";
 
   const getEffectiveStatus = (s: AdminStoreRow): StatusKey => {
     if (s.status === "pending_review" || !s.status) return "pending_review";
@@ -105,23 +106,42 @@ export function AdminStoreDetails({
 
 
       <ScrollView
-        className="flex-1 bg-[#F8FAFC] dark:bg-darkBackgroundMuted"
-        contentContainerStyle={{ paddingBottom: isPending ? 60 : 20 }}
+        className="flex-1"
+        contentContainerStyle={[
+          { paddingBottom: isPending ? 60 : 20 },
+          require('react-native').Platform.OS === 'web' && {
+            width: '100%',
+            maxWidth: 950,
+            alignSelf: 'center',
+            backgroundColor: 'transparent',
+          }
+        ]}
         showsVerticalScrollIndicator={false}
         bounces={false}
+        style={require('react-native').Platform.OS === 'web' ? { backgroundColor: isDark ? '#000000' : '#F8FAFC' } : { backgroundColor: '#F8FAFC' }}
       >
-        <View className="relative w-full h-[170px] bg-slate-900 overflow-visible">
+        <View 
+          className="relative w-full bg-slate-900 overflow-visible"
+          style={require('react-native').Platform.OS === 'web' ? { height: 240 } : { height: 170 }}
+        >
           <View className="absolute top-6 left-6 z-50">
             <TouchableOpacity
               onPress={onBack}
               activeOpacity={0.7}
               className="w-10 h-10 rounded-full items-center justify-center overflow-hidden border border-white/20 dark:border-black/20 shadow-lg shadow-black/20"
             >
-              <BlurView
-                intensity={80}
-                tint={isDark ? "dark" : "light"}
-                style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
-              />
+              {BlurView ? (
+                <BlurView
+                  intensity={80}
+                  tint={isDark ? "dark" : "light"}
+                  style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
+                />
+              ) : (
+                <View 
+                  style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} 
+                  className="bg-white/80 dark:bg-black/60" 
+                />
+              )}
               <MaterialIcons name="arrow-back" size={22} color={isDark ? "#ffffff" : "#0F172A"} />
             </TouchableOpacity>
           </View>
@@ -146,12 +166,7 @@ export function AdminStoreDetails({
              )}
           </TouchableOpacity>
            
-          <BlurView 
-             intensity={40} 
-             tint={isDark ? "dark" : "light"}
-             style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} 
-             pointerEvents="none"
-          />
+           {/* Removed bottom blur overlay */}
           <View className="absolute top-0 bottom-0 left-0 right-0 bg-black/25 dark:bg-black/45" pointerEvents="none" />
 
           <View className="absolute top-6 right-6 px-3.5 py-1.5 rounded-full flex-row items-center gap-1.5 bg-white/95 dark:bg-darkBackground/95 shadow-sm shadow-black/20 z-10">
@@ -164,7 +179,8 @@ export function AdminStoreDetails({
           <TouchableOpacity 
             activeOpacity={0.8}
             onPress={() => store.logo && setViewingDocUri(store.logo)}
-            className="absolute -bottom-10 left-6 w-[88px] h-[88px] rounded-full overflow-hidden z-20 shadow-xl shadow-black/30 bg-white"
+            className="absolute left-6 w-[88px] h-[88px] rounded-full overflow-hidden z-20 shadow-xl shadow-black/30 bg-white"
+            style={require('react-native').Platform.OS === 'web' ? { bottom: -30 } : { bottom: -40 }}
           >
              {store.logo ? (
                <Image source={{ uri: store.logo }} style={{ width: "100%", height: "100%" }} contentFit="cover" />
@@ -174,9 +190,12 @@ export function AdminStoreDetails({
           </TouchableOpacity>
         </View>
 
-        <View className="px-5 pt-[40px] space-y-3">
+        <View 
+          className="px-5 space-y-3"
+          style={require('react-native').Platform.OS === 'web' ? { paddingTop: 60 } : { paddingTop: 40 }}
+        >
 
-          <View className="bg-white dark:bg-darkBackgroundCard rounded-3xl p-4 shadow-sm shadow-slate-200/40 dark:shadow-none mb-4 border border-slate-100 dark:border-neutral-800/50">
+          <View className="bg-white dark:bg-darkBackgroundCard rounded-3xl p-6 shadow-sm shadow-slate-200/40 dark:shadow-none mb-4 border border-slate-100 dark:border-neutral-800/50">
             <View className="flex-row justify-between items-start mb-1">
               <Text className="flex-1 text-lg font-poppins-bold text-slate-800 dark:text-slate-100 leading-[26px]" numberOfLines={2}>
                 {store.name || "Unnamed Store"}
@@ -277,26 +296,57 @@ export function AdminStoreDetails({
                   </Text>
                 </View>
 
-                <View className="relative w-full h-[180px] rounded-[16px] overflow-hidden bg-[#F8FAFC] dark:bg-darkBackgroundMuted" onLayout={(e) => setLayoutWidth(e.nativeEvent.layout.width)}>
-                  {layoutWidth > 0 && (
-                    <Carousel
-                      loop
-                      width={layoutWidth}
-                      height={180}
-                      autoPlay={false}
-                      data={store.store_pictures}
-                      scrollAnimationDuration={1000}
-                      onSnapToItem={(index) => setCurrentPicIndex(index)}
-                      renderItem={({ item: uri }) => (
-                        <TouchableOpacity 
-                           activeOpacity={0.9} 
-                           onPress={() => setViewingDocUri(uri)}
-                           className="w-full h-full"
-                        >
-                          <Image source={{ uri }} style={{ width: "100%", height: "100%" }} contentFit="cover" />
-                        </TouchableOpacity>
+                <View 
+                  className="relative w-full rounded-[16px] overflow-hidden bg-[#F8FAFC] dark:bg-darkBackgroundMuted" 
+                  onLayout={(e) => setLayoutWidth(e.nativeEvent.layout.width)}
+                  style={require('react-native').Platform.OS === 'web' ? { height: 450 } : { height: 180 }}
+                >
+                  {(layoutWidth > 0 && Carousel) ? (
+                    <View className="flex-1 relative">
+                      <Carousel
+                        ref={scrollRef}
+                        loop
+                        width={layoutWidth}
+                        height={require('react-native').Platform.OS === 'web' ? 450 : 180}
+                        autoPlay={false}
+                        data={store.store_pictures}
+                        scrollAnimationDuration={1000}
+                        onSnapToItem={(index) => setCurrentPicIndex(index)}
+                        renderItem={({ item: uri }) => (
+                          <TouchableOpacity 
+                             activeOpacity={0.9} 
+                             onPress={() => setViewingDocUri(uri)}
+                             className="w-full h-full"
+                          >
+                            <Image source={{ uri }} style={{ width: "100%", height: "100%" }} contentFit="cover" />
+                          </TouchableOpacity>
+                        )}
+                      />
+
+                      {/* Web Navigation Arrows */}
+                      {require('react-native').Platform.OS === 'web' && store.store_pictures.length > 1 && (
+                        <>
+                          <TouchableOpacity
+                            onPress={() => scrollRef.current?.prev()}
+                            className="absolute left-4 top-1/2 -mt-6 w-12 h-12 bg-black/30 hover:bg-black/50 rounded-full items-center justify-center z-30 transition-colors"
+                          >
+                            <MaterialIcons name="chevron-left" size={32} color="white" />
+                          </TouchableOpacity>
+                          <TouchableOpacity
+                            onPress={() => scrollRef.current?.next()}
+                            className="absolute right-4 top-1/2 -mt-6 w-12 h-12 bg-black/30 hover:bg-black/50 rounded-full items-center justify-center z-30 transition-colors"
+                          >
+                            <MaterialIcons name="chevron-right" size={32} color="white" />
+                          </TouchableOpacity>
+                        </>
                       )}
-                    />
+                    </View>
+                  ) : (
+                    <View className="w-full h-full items-center justify-center">
+                      {store.store_pictures[0] && (
+                        <Image source={{ uri: store.store_pictures[0] }} style={{ width: "100%", height: "100%" }} contentFit="cover" />
+                      )}
+                    </View>
                   )}
  
                   {store.store_pictures.length > 1 && (
@@ -319,7 +369,7 @@ export function AdminStoreDetails({
 
             {(store.latitude !== null && store.longitude !== null && store.latitude !== undefined && store.longitude !== undefined) ? (
               <View style={{ width: "100%", height: 160, borderRadius: 16, overflow: "hidden", marginBottom: 20 }} className="bg-slate-50 dark:bg-neutral-800">
-                {shouldUseInteractiveMapbox() ? (
+                {(shouldUseInteractiveMapbox() && MapView && Mapbox) ? (
                   <MapView
                     style={{ flex: 1, width: "100%", height: "100%" }}
                     surfaceView={false}
@@ -335,18 +385,20 @@ export function AdminStoreDetails({
                     attributionEnabled={false}
                     logoEnabled={false}
                   >
-                    <Camera centerCoordinate={[Number(store.longitude), Number(store.latitude)]} zoomLevel={14} animationMode="none" />
-                    <Mapbox.Images images={{ default: require("../../../assets/images/markers/default.png") }} />
-                    <Mapbox.ShapeSource
-                      id="storePinLocation"
-                      shape={{
-                        type: "Feature",
-                        geometry: { type: "Point", coordinates: [Number(store.longitude), Number(store.latitude)] },
-                        properties: { icon: "default" },
-                      }}
-                    >
-                      <Mapbox.SymbolLayer id="storePinLayerLoc" style={{ iconImage: ["get", "icon"], iconAllowOverlap: true, iconSize: 0.015 }} />
-                    </Mapbox.ShapeSource>
+                    {Camera && <Camera centerCoordinate={[Number(store.longitude), Number(store.latitude)]} zoomLevel={14} animationMode="none" />}
+                    {Mapbox.Images && <Mapbox.Images images={{ default: require("../../../assets/images/markers/default.png") }} />}
+                    {Mapbox.ShapeSource && (
+                      <Mapbox.ShapeSource
+                        id="storePinLocation"
+                        shape={{
+                          type: "Feature",
+                          geometry: { type: "Point", coordinates: [Number(store.longitude), Number(store.latitude)] },
+                          properties: { icon: "default" },
+                        }}
+                      >
+                        {Mapbox.SymbolLayer && <Mapbox.SymbolLayer id="storePinLayerLoc" style={{ iconImage: ["get", "icon"], iconAllowOverlap: true, iconSize: 0.015 }} />}
+                      </Mapbox.ShapeSource>
+                    )}
                   </MapView>
                 ) : (
                   <View className="flex-1 w-full h-full items-center justify-center gap-y-1">

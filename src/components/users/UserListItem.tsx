@@ -34,13 +34,12 @@ export const UserListItem = React.memo(function UserListItem({
       className={`mx-4 ${isSuperAdmin ? "opacity-60" : ""}`}
     >
       <View
-        className={`flex-row items-center bg-white dark:bg-darkBackgroundMuted rounded-xl mb-3 border ${
-          isSuperAdmin
+        className={`flex-row items-center bg-white dark:bg-darkBackgroundMuted rounded-xl mb-3 border ${isSuperAdmin
             ? "border-slate-200 dark:border-darkBorder bg-slate-50 dark:bg-darkBackgroundCard"
             : isBlocked
-            ? "border-danger/20"
-            : "border-slate-100 dark:border-darkBorder"
-        }`}
+              ? "border-danger/20"
+              : "border-slate-100 dark:border-darkBorder"
+          }`}
       >
         <View className="flex-1">
           <UserRow user={item} isFirst />
