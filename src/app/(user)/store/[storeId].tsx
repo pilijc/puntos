@@ -452,7 +452,15 @@ export default function StoreOverviewDetail() {
               className="flex-row items-center gap-x-1.5 bg-white dark:bg-darkBackgroundCard border border-primary px-3 py-1.5 rounded-full"
               onPress={() => {
                 const found = storesWithLocation.find(s => s.id.toString() === storeId);
-                router.push({ pathname: "/store/claim-rewards", params: { storeName: found?.name, storeLogo: found?.logo ?? "", storeAddress: found?.address ?? "" } });
+                router.push({
+                  pathname: "/store/claim-rewards",
+                  params: {
+                    storeId,
+                    storeName: found?.name,
+                    storeLogo: found?.logo ?? "",
+                    storeAddress: found?.address ?? ""
+                  }
+                });
               }}
             >
               <Gift size={14} color="#FF6600" />
