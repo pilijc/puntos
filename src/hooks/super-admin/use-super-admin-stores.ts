@@ -2,9 +2,10 @@ import { useState, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useFocusEffect } from "expo-router";
 import { AdminStoreRow } from "@/services/store-service";
-import { supabase } from "@/supabase/supabase";
+import { fetchAllSubscriptions } from "@/services/super-admin/store-admin-service";
 import { useSuperAdminStoresStore } from "@/store/super-admin/super-admin-stores-store";
 import { useSubscriptionConfigStore } from "@/store/super-admin/subscription-config";
+import { getEffectiveStatus } from "@/type/super-admin/user";
 
 export const FILTERS = ["All", "pending_review", "active", "inactive"] as const;
 export type Filter = (typeof FILTERS)[number];
@@ -37,42 +38,24 @@ export function useSuperAdminStores() {
     hideCancel?: boolean;
   } | null>(null);
   const [subscriptions, setSubscriptions] = useState<any[]>([]);
-  const [planSlugs, setPlanSlugs] = useState<Map<number, string>>(new Map());
 
-  const fetchSubscriptions = useCallback(async () => {
-    const [{ data: subs }, { data: plans }] = await Promise.all([
-      supabase.from("manager_subscriptions").select("*"),
-      supabase.from("subscriptions").select("id, slug"),
-    ]);
-    setSubscriptions(subs ?? []);
-    const m = new Map<number, string>();
-    (plans ?? []).forEach((p: { id: number; slug: string | null }) =>
-      m.set(Number(p.id), String(p.slug ?? "").toLowerCase()),
-    );
-    setPlanSlugs(m);
-  }, []);
+  useFocusEffect(useCallback(() => { 
+    fetchStores({ forceRefresh: true }); 
+    fetchSubscriptions();
+  }, []));
 
-  useFocusEffect(
-    useCallback(() => {
-      fetchStores({ forceRefresh: true });
-      void fetchSubscriptions();
-    }, [fetchStores, fetchSubscriptions]),
-  );
+  const fetchSubscriptions = async () => {
+    try {
+      const data = await fetchAllSubscriptions();
+      setSubscriptions(data);
+    } catch (err) {
+      console.warn("[useSuperAdminStores] Failed to fetch subscriptions:", err);
+    }
+  };
 
-  const hasPaidUnlimitedOwner = useCallback(
-    (ownerId: string | null | undefined) => {
-      if (!ownerId) return false;
-      const sub = subscriptions.find((s) => s.owner_id === ownerId);
-      if (!sub || sub.payment_status !== "paid") return false;
-      const slug = planSlugs.get(Number(sub.subscription_id));
-      return Boolean(slug && slug !== "basic");
-    },
-    [subscriptions, planSlugs],
-  );
-
-  const onRefresh = async () => {
-    setRefreshing(true);
-    await fetchStores({ forceRefresh: true });
+  const onRefresh = async () => { 
+    setRefreshing(true); 
+    await fetchStores({ forceRefresh: true }); 
     await fetchSubscriptions();
     setRefreshing(false);
   };
@@ -157,21 +140,21 @@ export function useSuperAdminStores() {
     });
   };
 
-  const getEffectiveStatus = (s: AdminStoreRow) => {
-    if (s.status === "pending_review" || !s.status) return "pending_review";
-    if (s.status === "inactive") return "inactive";
-    return s.is_active ? "active" : "inactive";
-  };
 
-  const filtered = (
-    activeFilter === "All"
+
+  const filtered = useMemo(() =>
+    (activeFilter === "All"
       ? stores
-      : stores.filter((s) => getEffectiveStatus(s) === activeFilter)
-  )
-    .slice()
-    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      : stores.filter((s) => getEffectiveStatus(s) === activeFilter))
+      .slice()
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()),
+    [stores, activeFilter]
+  );
 
-  const pendingCount = stores.filter((s) => s.status === "pending_review").length;
+  const pendingCount = useMemo(() =>
+    stores.filter((s) => s.status === "pending_review").length,
+    [stores]
+  );
 
   return {
     ...storeState,

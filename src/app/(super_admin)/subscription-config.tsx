@@ -110,11 +110,46 @@ export default function SubscriptionConfig() {
 
   return (
     <ScreenWrapper className="flex-1 bg-backgroundMuted dark:bg-darkBackground">
-      <View className="bg-white dark:bg-darkBackgroundMuted border-b border-slate-100 dark:border-darkBorder px-5 py-4 flex-row items-center gap-2">
-        <CircleDollarSign size={20} color="#0F172A" className="dark:color-white" />
-        <Text className="text-base font-poppins-bold text-slate-900 dark:text-darkTextPrimary">
-          Subscription
-        </Text>
+
+      {/* ── Header ── */}
+      <View
+        style={Platform.OS === 'web' ? {
+          backgroundColor: 'transparent',
+          borderBottomWidth: 0,
+          paddingTop: 24,
+          paddingBottom: 16,
+          width: '100%',
+        } : {}}
+        className="bg-white dark:bg-darkBackgroundMuted border-b border-slate-100 dark:border-darkBorder px-5 py-4 flex-row items-center gap-2"
+      >
+        <View
+          style={Platform.OS === 'web' ? {
+            width: '100%',
+            maxWidth: 1000,
+            alignSelf: 'center',
+            paddingHorizontal: 24,
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 12
+          } : {
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 8,
+            flex: 1
+          }}
+        >
+          {Platform.OS !== 'web' && <CircleDollarSign size={20} color="#0F172A" className="dark:color-white" />}
+          <Text
+            style={Platform.OS === 'web' ? {
+              fontSize: 22,
+              fontFamily: 'Poppins-Bold',
+              color: '#0f172a',
+            } : {}}
+            className="text-base font-poppins-bold text-slate-900 dark:text-darkTextPrimary"
+          >
+            Subscription
+          </Text>
+        </View>
       </View>
 
       <ScrollView
@@ -201,9 +236,10 @@ export default function SubscriptionConfig() {
                         </Text>
                       </View>
                     </View>
-                    {isPaid && sub.current_period_end && (
-                      <Text className="text-[9px] font-poppins text-slate-400 mt-1">
-                        Ends: {new Date(sub.current_period_end).toLocaleDateString()}
+
+                    <View className="flex-row items-center justify-between">
+                      <Text className="text-[10px] font-poppins-medium text-slate-500 dark:text-darkTextMuted">
+                        {sub.owner_name}
                       </Text>
                     )}
                   </View>
@@ -233,7 +269,8 @@ export default function SubscriptionConfig() {
                 onValueChange={(val) => {
                   const ids = ownersOverLimit.map((m) => m.owner_id);
                   if (val) {
-                    config.setEnforcedOwners([...new Set([...config.enforced_owner_ids, ...ids])]);
+                    const newIds = allStores.map(s => s.id).filter(id => !config.enforced_stores_ids.includes(id));
+                    if (newIds.length > 0) config.setEnforcedStores([...config.enforced_stores_ids, ...newIds]);
                   } else {
                     config.setEnforcedOwners(
                       config.enforced_owner_ids.filter((id) => !ids.includes(id)),
