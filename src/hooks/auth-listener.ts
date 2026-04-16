@@ -30,8 +30,8 @@ export function useAuthListener() {
             // ignore
           }
 
-          // If we're already on the login page or auth/signup flows, don't boot the user back to welcome.
-          // This allows them to stay on login after cancelling a device limit modal.
+          // if we're already on the login page or auth/signup flows, don't boot the user back to welcome.
+          // this allows them to stay on login after cancelling a device limit modal.
           const isAtAuthFlow = pathname?.includes('/login') || pathname?.includes('/signup') || pathname?.includes('/welcome');
           
           if (!isAtAuthFlow) {

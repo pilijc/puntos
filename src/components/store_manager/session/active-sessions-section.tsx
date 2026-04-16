@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { ActivityIndicator } from "react-native";
 import { View, Text, TouchableOpacity } from "@/tw";
+import { Shield, RefreshCw } from 'lucide-react-native';
 import { useDeviceSession } from '@/hooks/store-manager/use-device-session';
 import { DeviceSessionCard } from '@/components/store_manager/session/device-session-card';
 import DeviceSessionSkeleton from '@/components/skeleton/store_manager/device-session-skeleton';
@@ -25,37 +26,45 @@ export function ActiveSessionSection() {
     }, [loadData]);
 
     return (
-        <View className="bg-white rounded-xl p-4 shadow-sm shadow-black/5 w-full mx-auto mt-4 px-4 overflow-hidden mb-4">
-            <View className="flex-row justify-between items-center mb-1">
-                <Text className="text-textPrimary text-base font-poppins-semibold">
-                    Active Sessions
-                </Text>
+        <View className="overflow-hidden bg-white dark:bg-darkBackground rounded-xl border border-slate-100 dark:border-slate-800 w-full mb-4">
+            {/* header row - matching settings item style */}
+            <View className="px-2.5 py-3 flex-row items-center border-b border-slate-50 dark:border-slate-800/50">
+                <View className="h-8 w-8 -mt-0.5 rounded-lg items-center justify-center">
+                    <Shield size={15} color="#0f172a" />
+                </View>
+
+                <View className="flex-1 ml-2">
+                    <Text className="text-md font-poppins-semibold text-textPrimary dark:text-darkTextPrimary">
+                        Active Sessions
+                    </Text>
+                    <Text className="text-xs font-poppins text-textMuted dark:text-darkTextMuted">
+                        You can have up to 2 active sessions at a time.
+                    </Text>
+                </View>
                 
                 {refreshing ? (
                     <ActivityIndicator size="small" color="#ff6600" />
                 ) : (
-                    <TouchableOpacity onPress={handleRefresh}>
-                        <Text className="text-primary font-poppins text-xs font-poppins-semibold">
-                            Refresh
-                        </Text>
+                    <TouchableOpacity 
+                        onPress={handleRefresh}
+                        className="bg-slate-50 dark:bg-slate-800 p-2 rounded-lg"
+                    >
+                        <RefreshCw size={14} color="#64748b" />
                     </TouchableOpacity>
                 )}
             </View>
 
-            <Text className='text-textPrimary text-xs mb-5 font-poppins'>
-                You can have up to 2 active sessions at a time.
-            </Text>
-
-            <View className="w-full">
+            {/* list content */}
+            <View className="px-4 py-4">
                 {loading ? (
                     <DeviceSessionSkeleton />
                 ) : activeSessions.length === 0 ? (
-                    <Text className='text-textSecondary text-sm py-4 font-poppins'>
+                    <Text className='text-textSecondary text-sm py-2 font-poppins'>
                         No active sessions found.
                     </Text>
                 ): (
                     activeSessions.map((session, index) => (
-                        <View key={session.id} className={index > 0 ? "border-t border-border pt-3 mt-3" : ""}>
+                        <View key={session.id} className={index > 0 ? "border-t border-border/10 pt-4 mt-4" : ""}>
                             <DeviceSessionCard session={session} />
                         </View>
                     ))
