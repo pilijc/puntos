@@ -100,7 +100,7 @@ function UserContent({
       <View className="flex-row items-center mb-3">
         <View className="w-10 h-12 rounded-xl overflow-hidden border border-slate-200 dark:border-darkBorder mr-3">
           <Image
-            source={{ uri: selectedUser.imageUri || selectedUser.avatar }}
+            source={(selectedUser.imageUri || selectedUser.avatar) ? { uri: selectedUser.imageUri || selectedUser.avatar } : require("@/assets/images/role-user.png")}
             style={{ width: "100%", height: "100%" }}
             resizeMode="cover"
           />

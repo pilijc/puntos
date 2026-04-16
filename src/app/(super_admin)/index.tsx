@@ -37,42 +37,28 @@ export default function SuperAdminDashboard() {
 
   return (
     <SafeAreaView className="flex-1 bg-background dark:bg-darkBackground" edges={["top", "left", "right"]}>
+      {/* ── Main Header (Uniform Style) ── */}
+      <View className="bg-white dark:bg-darkBackground border-b border-neutral-100 dark:border-darkBorder px-6 py-3">
+        <Text className="text-xl font-poppins-bold text-textPrimary dark:text-darkTextPrimary py-1">
+          {translate("superAdmin.dashboard.title")}
+        </Text>
+      </View>
+
+      {/* ── Sub-Header (Welcome Message) ── */}
+      <View className="bg-backgroundMuted dark:bg-darkBackground border-b border-neutral-100 dark:border-darkBorder px-6 pt-4 pb-4">
+        <Text className="text-sm text-[#94A3B8] dark:text-darkTextSecondary font-poppins">
+          {translate("superAdmin.dashboard.welcome")}
+          <Text className="text-orange-500 font-poppins-bold">
+            {adminInfo?.username?.split(" ")[0] || "Admin"}
+          </Text>!
+        </Text>
+      </View>
+
       <ScrollView
         className="flex-1"
         contentContainerStyle={{ paddingBottom: 40 }}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#FF6600" />}
       >
-        {/* ── Web Header (left-aligned, matches "Store Approvals") ── */}
-        {isWeb ? (
-          <View style={{ paddingTop: 24, paddingBottom: 16, paddingHorizontal: WEB_PAGE_PADDING }}>
-            <Text style={{ fontSize: 13, color: isDark ? '#94A3B8' : '#94A3B8', fontFamily: 'Poppins-Regular', marginBottom: 2 }}>
-              {translate("superAdmin.dashboard.welcome")}
-              <Text style={{ color: '#FF6600', fontFamily: 'Poppins-Bold' }}>
-                {adminInfo?.username?.split(" ")[0] || "Admin"}
-              </Text>!
-            </Text>
-            <Text style={{ fontSize: 22, fontFamily: 'Poppins-Bold', color: isDark ? '#e2e8f0' : '#0f172a' }}>
-              {translate("superAdmin.dashboard.title")}
-            </Text>
-          </View>
-        ) : (
-          <View className="pt-4 pb-3">
-            <View className="px-6 pt-4">
-              <Text className="text-sm text-[#94A3B8] dark:text-darkTextSecondary font-[Poppins-Regular]">
-                {translate("superAdmin.dashboard.welcome")}
-                <Text className="text-orange-500 font-[Poppins-Bold]">
-                  {adminInfo?.username?.split(" ")[0] || "Admin"}
-                </Text>!
-              </Text>
-              <Text className="text-2xl font-[Poppins-Bold] text-[#0F172A] dark:text-darkTextPrimary">
-                {translate("superAdmin.dashboard.title")}
-              </Text>
-            </View>
-            <View className="px-2 mt-3">
-              <View className="h-[1px] w-full bg-[#E2E8F0] dark:bg-darkBorder" />
-            </View>
-          </View>
-        )}
 
         {/* ── Stat Cards (centered on web) ── */}
         <View

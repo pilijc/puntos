@@ -112,44 +112,11 @@ export default function SubscriptionConfig() {
     <ScreenWrapper className="flex-1 bg-backgroundMuted dark:bg-darkBackground">
 
       {/* ── Header ── */}
-      <View
-        style={Platform.OS === 'web' ? {
-          backgroundColor: 'transparent',
-          borderBottomWidth: 0,
-          paddingTop: 24,
-          paddingBottom: 16,
-          width: '100%',
-        } : {}}
-        className="bg-white dark:bg-darkBackgroundMuted border-b border-slate-100 dark:border-darkBorder px-5 py-4 flex-row items-center gap-2"
-      >
-        <View
-          style={Platform.OS === 'web' ? {
-            width: '100%',
-            maxWidth: 1000,
-            alignSelf: 'center',
-            paddingHorizontal: 24,
-            flexDirection: 'row',
-            alignItems: 'center',
-            gap: 12
-          } : {
-            flexDirection: 'row',
-            alignItems: 'center',
-            gap: 8,
-            flex: 1
-          }}
-        >
-          {Platform.OS !== 'web' && <CircleDollarSign size={20} color="#0F172A" className="dark:color-white" />}
-          <Text
-            style={Platform.OS === 'web' ? {
-              fontSize: 22,
-              fontFamily: 'Poppins-Bold',
-              color: '#0f172a',
-            } : {}}
-            className="text-base font-poppins-bold text-slate-900 dark:text-darkTextPrimary"
-          >
-            Subscription
-          </Text>
-        </View>
+      {/* ── Main Header (Uniform Style) ── */}
+      <View className="bg-white dark:bg-darkBackground border-b border-neutral-100 dark:border-darkBorder px-6 py-3">
+        <Text className="text-xl font-poppins-bold text-textPrimary dark:text-darkTextPrimary py-1">
+          Subscription
+        </Text>
       </View>
 
       <ScrollView

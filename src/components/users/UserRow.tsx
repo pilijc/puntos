@@ -31,7 +31,7 @@ export const UserRow = React.memo(function UserRow({ user, isFirst }: any) {
       style={{ borderTopWidth: isFirst ? 0 : 1, borderTopColor: isFirst ? 'transparent' : (isDark ? "#404040" : "#F8FAFC") }}
     >
       <Image
-        source={{ uri: user.avatar }}
+        source={user.avatar ? { uri: user.avatar } : require("@/assets/images/role-user.png")}
         style={{ width: 48, height: 48, borderRadius: 12, backgroundColor: isDark ? "#262626" : "#F1F5F9" }}
       />
       <View className="ml-3 flex-1">
