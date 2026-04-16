@@ -62,6 +62,25 @@ export async function getUserPoints(userId: string, storeId?: string): Promise<U
 
 export async function getUserAvailablePoints(userId: string, storeId?: string): Promise<number> {
     const summary = await getUserPoints(userId, storeId);
+    
+    let activeCodesQuery = supabase
+        .from("reward_redemption_codes")
+        .select("code, points_cost")
+        .eq("user_id", userId)
+        .eq("status", "active")
+        .gt("expires_at", new Date().toISOString());
+    
+    if (storeId) {
+        activeCodesQuery = activeCodesQuery.eq("store_id", storeId);
+    }
+    
+    const { data: activeCodes, error: activeCodesError } = await activeCodesQuery;
+        
+    if (!activeCodesError && activeCodes) {
+        const reservedPoints = activeCodes.reduce((sum, code) => sum + (code.points_cost || 0), 0);
+        return Math.max(0, summary.availablePoints - reservedPoints);
+    }
+    
     return summary.availablePoints;
 }
 

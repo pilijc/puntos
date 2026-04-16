@@ -16,6 +16,7 @@ interface UseRedemptionCodeResult {
   timeRemaining: number;
   generateCode: () => Promise<void>;
   cancelCode: () => Promise<void>;
+  resetCode: () => void;
 }
 
 export function useRedemptionCode(
@@ -102,6 +103,16 @@ export function useRedemptionCode(
     }
   }, [redemptionCode, clearTimer, clearSubscription]);
 
+  // Reset code state - call when drawer closes
+  const resetCode = useCallback(() => {
+    clearTimer();
+    clearSubscription();
+    setRedemptionCode(null);
+    setStatus("loading");
+    setErrorMessage(null);
+    setTimeRemaining(0);
+  }, [clearTimer, clearSubscription]);
+
   // Listen to redemption status if be change
   useEffect(() => {
     if (status !== "active" || !redemptionCode) return;
@@ -157,5 +168,6 @@ export function useRedemptionCode(
     timeRemaining,
     generateCode,
     cancelCode,
+    resetCode,
   };
 }

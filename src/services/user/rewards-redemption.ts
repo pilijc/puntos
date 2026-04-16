@@ -60,8 +60,7 @@ export async function generateRedemptionCode(
       return { success: false, message: "Reward is out of stock" };
     }
 
-    // Use getUserAvailablePoints service instead of direct table query
-    const availablePoints = await getUserAvailablePoints(userId, storeId);
+     const availablePoints = await getUserAvailablePoints(userId, storeId);
     console.log("Available points:", availablePoints, "Required:", reward.points_cost);
     
     if (availablePoints < reward.points_cost) {
@@ -201,56 +200,9 @@ export async function deductPoints(
             };
         }
 
-         const { data: existingPoints, error: fetchError } = await supabase
-            .from("user_points")
-            .select("available_points")
-            .eq("user_id", userId)
-            .eq("store_id", storeId)
-            .single();
-
-        if (fetchError && fetchError.code === 'PGRST116') {
-             const { error: insertError } = await supabase
-                .from("user_points")
-                .insert({
-                    user_id: userId,
-                    store_id: storeId,
-                    available_points: Math.max(0, currentPoints - pointsToDeduct),
-                    created_at: new Date().toISOString(),
-                });
-
-            if (insertError) {
-                return {
-                    success: false,
-                    message: "Failed to create points record"
-                };
-            }
-        } else if (fetchError) {
-            return {
-                success: false,
-                message: "Failed to fetch current points"
-            };
-        } else {
-            // Update existing record
-            const newPoints = Math.max(0, existingPoints.available_points - pointsToDeduct);
-            
-            const { error: updateError } = await supabase
-                .from("user_points")
-                .update({
-                    available_points: newPoints,
-                    updated_at: new Date().toISOString(),
-                })
-                .eq("user_id", userId)
-                .eq("store_id", storeId);
-
-            if (updateError) {
-                return {
-                    success: false,
-                    message: "Failed to deduct points"
-                };
-            }
-        }
-
-        // Get updated points balance
+        // Points are tracked via reward_redemptions table
+        // The getUserAvailablePoints function already accounts for this
+        // Just return the updated balance
         const updatedPoints = await getUserAvailablePoints(userId, storeId);
 
         return {

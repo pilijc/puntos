@@ -1,9 +1,9 @@
 import React, { useEffect } from "react";
 import { View, Text, TouchableOpacity } from "@/tw";
-import { Share } from "react-native";
+import { Image } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { ChevronLeft, Share2, X, Clock, CheckCircle } from "lucide-react-native";
+import { X, Clock, CheckCircle, Store, Speaker } from "lucide-react-native";
 import QRCode from "react-native-qrcode-svg";
 import Animated, { FadeIn } from "react-native-reanimated";
 import { getQRCodeData } from "@/services/user/rewards-redemption";
@@ -73,100 +73,148 @@ function CancelledState() {
 interface ActiveStateProps {
   rewardTitle?: string;
   rewardDescription?: string;
+  rewardImage?: string;
   redemptionCode: { code: string; expires_at: string };
   timeRemaining: number;
-  onShare: () => void;
   onCancel: () => void;
   onBack: () => void;
-  insets: { top: number };
+  insets: { top: number; bottom: number };
 }
 
 function ActiveState({
   rewardTitle,
   rewardDescription,
+  rewardImage,
   redemptionCode,
   timeRemaining,
-  onShare,
   onCancel,
   onBack,
   insets,
 }: ActiveStateProps) {
   const isExpiringSoon = timeRemaining < 60;
 
+  // Format code like "M 813 161"
+  const formattedCode = redemptionCode.code
+    .replace(/[^a-zA-Z0-9]/g, "")
+    .replace(/([a-zA-Z])(\d)/, "$1 $2")
+    .replace(/(\d{3})(\d{3})/, "$1 $2");
+
   return (
-    <View className="flex-1 bg-white dark:bg-darkBackground">
-      <View
-        style={{
-          paddingTop: insets.top,
-          paddingHorizontal: 20,
-          paddingBottom: 20,
-        }}
-      >
-        <View className="flex-row items-center justify-between">
+    <View className="flex-1 bg-white">
+      {/* Yellow Header Section */}
+      <View className="bg-yellow-400 rounded-b-3xl" style={{ paddingTop: insets.top }}>
+        {/* Header with close button */}
+        <View className="flex-row items-center justify-center px-4 py-4 relative">
+          <Text className="text-lg font-poppins-semibold text-neutral-900">
+            Scan to redeem
+          </Text>
           <TouchableOpacity
             onPress={onBack}
-            className="w-10 h-10 rounded-full bg-neutral-100 dark:bg-neutral-800 items-center justify-center"
+            className="absolute left-4 w-10 h-10 items-center justify-center"
           >
-            <ChevronLeft size={20} color="#FF6600" />
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={onShare}
-            className="w-10 h-10 rounded-full bg-neutral-100 dark:bg-neutral-800 items-center justify-center"
-          >
-            <Share2 size={20} color="#FF6600" />
+            <X size={24} color="#1f2937" />
           </TouchableOpacity>
         </View>
-      </View>
 
-      <View className="flex-1 px-6">
-        <View className="items-center mb-8">
-          <Text className="text-2xl font-poppins-bold text-neutral-900 dark:text-white mb-2">
-            {rewardTitle}
-          </Text>
-          <Text className="text-neutral-500 dark:text-neutral-400 text-center">
-            {rewardDescription}
-          </Text>
-        </View>
-
-        <View className="bg-white dark:bg-neutral-800 rounded-2xl p-6 drop-shadow-sm mb-6">
-          <View className="items-center">
-            <QRCode
-              value={getQRCodeData(redemptionCode.code)}
-              size={200}
-              color="#000"
-              backgroundColor="#fff"
-            />
+        {/* QR Code Card */}
+        <View className="mx-4 mb-6">
+          <View className="bg-neutral-100 rounded-2xl p-6 items-center">
+            <View className="bg-white rounded-xl p-4 mb-4">
+              <QRCode
+                value={getQRCodeData(redemptionCode.code)}
+                size={160}
+                color="#000"
+                backgroundColor="#fff"
+              />
+            </View>
+            <Text className="text-2xl font-poppins-bold text-neutral-900 tracking-wide">
+              {formattedCode}
+            </Text>
           </View>
         </View>
 
-        <View className="bg-orange-50 dark:bg-orange-900/20 rounded-2xl p-6 mb-6">
-          <Text className="text-center text-neutral-600 dark:text-neutral-400 mb-2 font-poppins-medium">
-            Voucher Code
+        {/* Time left */}
+        <View className="items-center mb-6">
+          <Text className="text-sm text-neutral-700 mb-1">
+            Time left to redeem
           </Text>
-          <Text className="text-center text-3xl font-poppins-bold text-orange-600 dark:text-orange-400">
-            {redemptionCode.code}
-          </Text>
-        </View>
-
-        <View className="flex-row items-center justify-center mb-8">
-          <Clock size={16} color={isExpiringSoon ? "#EF4444" : "#6B7280"} />
           <Text
-            className={`ml-2 font-poppins-medium ${
-              isExpiringSoon
-                ? "text-red-500"
-                : "text-neutral-500 dark:text-neutral-400"
+            className={`text-3xl font-poppins-bold ${
+              isExpiringSoon ? "text-red-600" : "text-neutral-900"
             }`}
           >
-            Expires in {formatTime(timeRemaining)}
+            {formatTime(timeRemaining)}
           </Text>
         </View>
 
+        {/* Reward Card */}
+        <View className="mx-4 mb-6">
+          <View className="bg-white rounded-2xl p-4 flex-row items-center shadow-sm">
+            <View className="flex-1 pr-4">
+              <Text className="text-base font-poppins-semibold text-neutral-900 leading-snug">
+                {rewardTitle}
+              </Text>
+              {rewardDescription && (
+                <Text className="text-sm text-neutral-500 mt-1">
+                  {rewardDescription}
+                </Text>
+              )}
+            </View>
+            {rewardImage ? (
+              <Image
+                source={{ uri: rewardImage }}
+                className="w-20 h-20 rounded-xl"
+                resizeMode="cover"
+              />
+            ) : (
+              <View className="w-20 h-20 rounded-xl bg-yellow-100 items-center justify-center">
+                <Text className="text-2xl">🎁</Text>
+              </View>
+            )}
+          </View>
+        </View>
+      </View>
+
+      {/* Instructions Section */}
+      <View className="flex-1 bg-white px-4 pt-6" style={{ paddingBottom: insets.bottom + 20 }}>
+        <View className="bg-neutral-100 rounded-2xl p-5 space-y-5">
+          {/* In the restaurant */}
+          <View className="flex-row items-start">
+            <View className="w-10 h-10 bg-white rounded-lg items-center justify-center mr-4">
+              <Store size={20} color="#1f2937" />
+            </View>
+            <View className="flex-1">
+              <Text className="text-base font-poppins-semibold text-neutral-900 mb-1">
+                In the restaurant
+              </Text>
+              <Text className="text-sm text-neutral-600 leading-relaxed">
+                Scan the code in the ordering kiosk or present the code to staff at the front counter.
+              </Text>
+            </View>
+          </View>
+
+          {/* DriveThru */}
+          <View className="flex-row items-start">
+            <View className="w-10 h-10 bg-neutral-800 rounded-lg items-center justify-center mr-4">
+              <Speaker size={20} color="#fbbf24" />
+            </View>
+            <View className="flex-1">
+              <Text className="text-base font-poppins-semibold text-neutral-900 mb-1">
+                DriveThru
+              </Text>
+              <Text className="text-sm text-neutral-600 leading-relaxed">
+                Tell us about the code at the speaker.
+              </Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Cancel Button */}
         <TouchableOpacity
           onPress={onCancel}
-          className="bg-red-50 dark:bg-red-900/20 rounded-2xl p-4 items-center"
+          className="mt-6 py-4 items-center"
         >
-          <Text className="text-red-600 dark:text-red-400 font-poppins-semibold">
+          <Text className="text-red-500 font-poppins-semibold">
             Cancel Redemption
           </Text>
         </TouchableOpacity>
@@ -178,12 +226,13 @@ function ActiveState({
 export default function RedemptionCodeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { rewardId, storeId, rewardTitle, rewardDescription } =
+  const { rewardId, storeId, rewardTitle, rewardDescription, rewardImage } =
     useLocalSearchParams<{
       rewardId?: string;
       storeId?: string;
       rewardTitle?: string;
       rewardDescription?: string;
+      rewardImage?: string;
     }>();
 
   const {
@@ -204,7 +253,6 @@ export default function RedemptionCodeScreen() {
     generateCode();
   }, [rewardId, storeId, router, generateCode]);
 
-  // Handle auto-redirect on terminal states
   useEffect(() => {
     if (status === "redeemed") {
       setTimeout(() => router.back(), REDIRECT_DELAY.REDEEMED);
@@ -214,17 +262,6 @@ export default function RedemptionCodeScreen() {
       setTimeout(() => router.back(), REDIRECT_DELAY.EXPIRED);
     }
   }, [status, router]);
-
-  const handleShare = async () => {
-    if (!redemptionCode) return;
-    try {
-      await Share.share({
-        message: `Redemption Code: ${redemptionCode.code}`,
-      });
-    } catch (error) {
-      console.error("Error sharing redemption code:", error);
-    }
-  };
 
   const handleBack = () => router.back();
 
@@ -239,9 +276,9 @@ export default function RedemptionCodeScreen() {
     <ActiveState
       rewardTitle={rewardTitle}
       rewardDescription={rewardDescription}
+      rewardImage={rewardImage}
       redemptionCode={redemptionCode}
       timeRemaining={timeRemaining}
-      onShare={handleShare}
       onCancel={cancelCode}
       onBack={handleBack}
       insets={insets}

@@ -4,6 +4,8 @@ import React from "react";
 import type { RewardItem } from "@/data/rewards";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/button"
+import {router, Router} from "expo-router"
+import { Touchable, TouchableOpacity } from "react-native";
 
 type RewardCardProps = {
   reward: RewardItem;
@@ -60,11 +62,22 @@ export default function RewardCard({
           <Text className="text-primary font-poppins-semibold">
             {reward.points.toLocaleString()} {translate("user.rewards.rewardCard.pointsSuffix")}
           </Text>
+        <TouchableOpacity 
+              onPress={() => router.push({
+                pathname: "/(user)/store/claim-rewards",
+                params: { 
+                  storeId: reward.storeId,   
+                  storeName: storeName,
+                  storeAddress: storeLocation
+                }
+              })}
+            >
           <View className={`px-3 py-1 rounded-full ${badgeClass}`}>
             <Text className={`text-[10px] font-poppins-semibold ${badgeTextClass}`}>
               {isRedeemable ? translate("user.rewards.rewardCard.redeem") : translate("user.rewards.rewardCard.insufficient")}
             </Text>
           </View>
+          </TouchableOpacity>
         </View>
       </View>
     </Pressable>
