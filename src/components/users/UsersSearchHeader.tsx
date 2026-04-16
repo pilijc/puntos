@@ -44,18 +44,18 @@ export function UsersSearchHeader({
           </Text>
         </View>
         {/* ── Unified Controls Bar (Rounded-2xl & Matched to List Background) ── */}
-        <View style={{ width: "100%", paddingVertical: 14 }}>
+        <View style={{ width: "100%", paddingTop: 16, paddingBottom: 8 }}>
           <View
             style={{
               width: "100%",
-              maxWidth: 1000,
+              maxWidth: 950,
               alignSelf: "center",
               flexDirection: "row",
               alignItems: "center",
               backgroundColor: "#ffffff",
               borderWidth: 1,
               borderColor: "#f6f2f2ff",
-              height: 52,
+              height: 50,
               borderRadius: 16, // rounded-2xl
               overflow: "hidden",
             }}

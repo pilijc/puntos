@@ -125,21 +125,9 @@ export function AdminStoreDetails({
             <TouchableOpacity
               onPress={onBack}
               activeOpacity={0.7}
-              className="w-10 h-10 rounded-full items-center justify-center overflow-hidden border border-white/20 dark:border-black/20 shadow-lg shadow-black/20"
+              className="w-10 h-10 rounded-full bg-white dark:bg-darkBackgroundCard items-center justify-center shadow-sm shadow-black/10 border border-slate-100 dark:border-darkBorder"
             >
-              {BlurView ? (
-                <BlurView
-                  intensity={80}
-                  tint={isDark ? "dark" : "light"}
-                  style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
-                />
-              ) : (
-                <View 
-                  style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} 
-                  className="bg-white/80 dark:bg-black/60" 
-                />
-              )}
-              <ArrowLeft size={22} color={isDark ? "#ffffff" : "#0F172A"} />
+              <ChevronLeft size={24} color={isDark ? "#F8FAFC" : "#0F172A"} className="-ml-0.5" />
             </TouchableOpacity>
           </View>
           <TouchableOpacity 
