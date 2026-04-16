@@ -7,35 +7,38 @@ interface SubscriptionConfigState {
   SUBSCRIPTION_PRICE_PHP: number;
   SUBSCRIPTION_START: string;
   SUBSCRIPTION_END: string;
-  enforced_stores_ids: number[];
+  /** Store manager user ids (UUID) flagged for subscription enforcement (super admin). */
+  enforced_owner_ids: string[];
   updateLimit: (limit: number) => void;
   updateMessage: (message: string) => void;
   updatePrice: (price: number) => void;
   updateStartDate: (date: string) => void;
   updateEndDate: (date: string) => void;
   toggleEnforce: (enforce: boolean) => void;
-  toggleStoreEnforcement: (storeId: number, enforced: boolean) => void;
-  setEnforcedStores: (storeIds: number[]) => void;
+  toggleOwnerEnforcement: (ownerId: string, enforced: boolean) => void;
+  setEnforcedOwners: (ownerIds: string[]) => void;
 }
 
 export const useSubscriptionConfigStore = create<SubscriptionConfigState>((set) => ({
   ENFORCE_SUBSCRIPTION: true,
-  FREE_STORES_LIMIT: 2,
-  LIMIT_MESSAGE: "This Store Manager has reached the limit of free stores. Approving this store will require a subscription charge.",
+  FREE_STORES_LIMIT: 1,
+  LIMIT_MESSAGE:
+    "This Store Manager has reached the limit of free stores. Approving this store will require a subscription charge.",
   SUBSCRIPTION_PRICE_PHP: 500,
   SUBSCRIPTION_START: "",
   SUBSCRIPTION_END: "",
-  enforced_stores_ids: [],
+  enforced_owner_ids: [],
   updateLimit: (limit) => set({ FREE_STORES_LIMIT: limit }),
   updateMessage: (message) => set({ LIMIT_MESSAGE: message }),
   updatePrice: (price) => set({ SUBSCRIPTION_PRICE_PHP: price }),
   updateStartDate: (date) => set({ SUBSCRIPTION_START: date }),
   updateEndDate: (date) => set({ SUBSCRIPTION_END: date }),
   toggleEnforce: (enforce) => set({ ENFORCE_SUBSCRIPTION: enforce }),
-  toggleStoreEnforcement: (storeId, enforced) => set((state) => ({
-    enforced_stores_ids: enforced 
-      ? [...state.enforced_stores_ids.filter(id => id !== storeId), storeId]
-      : state.enforced_stores_ids.filter(id => id !== storeId)
-  })),
-  setEnforcedStores: (storeIds) => set({ enforced_stores_ids: storeIds }),
+  toggleOwnerEnforcement: (ownerId, enforced) =>
+    set((state) => ({
+      enforced_owner_ids: enforced
+        ? [...state.enforced_owner_ids.filter((id) => id !== ownerId), ownerId]
+        : state.enforced_owner_ids.filter((id) => id !== ownerId),
+    })),
+  setEnforcedOwners: (ownerIds) => set({ enforced_owner_ids: ownerIds }),
 }));

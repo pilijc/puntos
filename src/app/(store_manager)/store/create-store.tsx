@@ -6,6 +6,7 @@ import { TextField } from "@/components/text-field";
 import * as ImagePicker from "expo-image-picker";
 import { Modal, type ModalButton } from "@/components/modal";
 import { createStore, updateStore, uploadStoreImage, StoreImageKind, resolveStoreTimezone } from "@/services/store-service";
+import { canOwnerCreateAnotherStore } from "@/services/store-manager/subscription-limits";
 import { supabase } from "@/supabase/supabase";
 import Mapbox, { MapView, Camera, PointAnnotation } from "@rnmapbox/maps";
 import { useColorScheme, Platform, Modal as RNModal } from "react-native";
@@ -306,6 +307,18 @@ export default function CreateStore() {
       try {
         setIsSubmitting(true);
         const { data: { user } } = await supabase.auth.getUser();
+        if (!user?.id) {
+          showError(t("storeManager.createStore.createFailed"));
+          return;
+        }
+
+        const guard = await canOwnerCreateAnotherStore(user.id);
+        if (!guard.allowed) {
+          showError(
+            "You've reached the free plan limit of one store. Upgrade your subscription to add more stores.",
+          );
+          return;
+        }
 
         const newStore = await createStore({
           name: storeName.trim(),

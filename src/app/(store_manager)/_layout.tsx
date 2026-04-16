@@ -9,7 +9,7 @@ import { supabase } from "@/supabase/supabase";
 import { getRoleTypeForUser, getWebAdjustedHomeRoute } from "@/services/access-service";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
-import { LayoutDashboard, Store, ArrowLeftRight, Settings } from "lucide-react-native";
+import { LayoutDashboard, Store, ArrowLeftRight, Settings, CreditCard } from "lucide-react-native";
 import { useDeviceSession } from "@/hooks/store-manager/use-device-session";
 
 const WEB_SIDEBAR_WIDTH = 260;
@@ -23,7 +23,7 @@ const WEB_SIDEBAR_BORDER_LIGHT = "#F1F5F9";
 const WEB_SIDEBAR_BORDER_DARK = "#404040";
 const TAB_ACCENT = "#FF6600";
 
-type SidebarTabId = "index" | "stores" | "transactions" | "settings";
+type SidebarTabId = "index" | "stores" | "transactions" | "subscription" | "settings";
 type TabLabelPosition = "beside-icon" | "below-icon";
 
 function withTrailingSlash(pathname: string) {
@@ -68,6 +68,14 @@ function activeSidebarTabFromPath(path: string): SidebarTabId {
         p.startsWith("/transactions/")
     ) {
         return "transactions";
+    }
+
+    if (
+        p.startsWith("/(store_manager)/subscription") ||
+        p === "/(store_manager)/subscription/" ||
+        p.startsWith("/subscription/")
+    ) {
+        return "subscription";
     }
 
     if (
@@ -239,6 +247,7 @@ export default function StoreManagerLayout() {
             try {
                 const {
                     data: { user },
+
                 } = await supabase.auth.getUser();
                 if (!user) return;
 
@@ -325,7 +334,13 @@ export default function StoreManagerLayout() {
                     title: translate("storeManager.tabs.dashboard"),
                     tabBarIcon: ({ color, size }) => (
                         <LayoutDashboard
-                            size={isWeb ? WEB_TAB_ICON_SIZE : size}
+                            size={
+                                isWeb
+                                    ? WEB_TAB_ICON_SIZE
+                                    : Platform.OS === "android"
+                                      ? 20
+                                      : size
+                            }
                             color={webSidebarIconColor(isWeb, activeTab, "index", color)}
                         />
                     ),
@@ -347,7 +362,13 @@ export default function StoreManagerLayout() {
                     title: translate("storeManager.tabs.stores"),
                     tabBarIcon: ({ color, size }) => (
                         <Store
-                            size={isWeb ? WEB_TAB_ICON_SIZE : size}
+                            size={
+                                isWeb
+                                    ? WEB_TAB_ICON_SIZE
+                                    : Platform.OS === "android"
+                                      ? 20
+                                      : size
+                            }
                             color={storesRowActive ? TAB_ACCENT : color}
                         />
                     ),
@@ -369,7 +390,13 @@ export default function StoreManagerLayout() {
                     title: translate("storeManager.tabs.transactions"),
                     tabBarIcon: ({ color, size }) => (
                         <ArrowLeftRight
-                            size={isWeb ? WEB_TAB_ICON_SIZE : size}
+                            size={
+                                isWeb
+                                    ? WEB_TAB_ICON_SIZE
+                                    : Platform.OS === "android"
+                                      ? 20
+                                      : size
+                            }
                             color={webSidebarIconColor(
                                 isWeb,
                                 activeTab,
@@ -391,12 +418,51 @@ export default function StoreManagerLayout() {
                 }}
             />
             <Tabs.Screen
+                name="subscription"
+                options={{
+                    title: translate("storeManager.tabs.subscription"),
+                    tabBarIcon: ({ color, size }) => (
+                        <CreditCard
+                            size={
+                                isWeb
+                                    ? WEB_TAB_ICON_SIZE
+                                    : Platform.OS === "android"
+                                      ? 20
+                                      : size
+                            }
+                            color={webSidebarIconColor(
+                                isWeb,
+                                activeTab,
+                                "subscription",
+                                color,
+                            )}
+                        />
+                    ),
+                    tabBarLabel: isWeb
+                        ? ({ color, position }) => (
+                              <WebSidebarTabLabel
+                                  text={translate("storeManager.tabs.subscription")}
+                                  navColor={color}
+                                  position={position}
+                                  isRowActive={activeTab === "subscription"}
+                              />
+                          )
+                        : undefined,
+                }}
+            />
+            <Tabs.Screen
                 name="settings"
                 options={{
                     title: translate("storeManager.tabs.settings"),
                     tabBarIcon: ({ color, size }) => (
                         <Settings
-                            size={isWeb ? WEB_TAB_ICON_SIZE : size}
+                            size={
+                                isWeb
+                                    ? WEB_TAB_ICON_SIZE
+                                    : Platform.OS === "android"
+                                      ? 20
+                                      : size
+                            }
                             color={webSidebarIconColor(
                                 isWeb,
                                 activeTab,
@@ -424,7 +490,6 @@ export default function StoreManagerLayout() {
             <Tabs.Screen name="streak/configure-streaks" options={{ href: null }} />
             <Tabs.Screen name="stamp/configure-stamp" options={{ href: null }} />
             <Tabs.Screen name="stamp/index" options={{ href: null }} />
-            <Tabs.Screen name="reward/rewards" options={{ href: null }} />
             <Tabs.Screen name="reward/index" options={{ href: null }} />
             <Tabs.Screen name="reward/add-rewards" options={{ href: null }} />
             <Tabs.Screen name="reward/view-reward" options={{ href: null }} />

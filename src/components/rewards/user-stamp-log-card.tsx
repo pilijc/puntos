@@ -129,14 +129,7 @@ export default function UserStampLogCard({
             </Text>
           </View>
           <View className="flex-row items-center gap-x-3">
-            {nearby && (
-              <View className="bg-red-100 dark:bg-red-900/30 px-2.5 py-1 rounded-full flex-row items-center gap-x-1">
-                <View className="w-1.5 h-1.5 rounded-full bg-red-500" />
-                <Text className="text-[10px] font-poppins-semibold text-red-600 dark:text-red-400">
-                  {translate("user.rewards.purchase")}
-                </Text>
-              </View>
-            )}
+
             <TouchableOpacity
               onPress={(e) => {
                 e.stopPropagation();
@@ -170,13 +163,18 @@ export default function UserStampLogCard({
             )}
           </View>
           <View className="flex-1 flex-row items-center justify-between">
-            <View className="flex-row items-center gap-x-1 flex-wrap flex-1">
+            <View className="flex-row items-center gap-x-2 flex-wrap flex-1">
               <Text className="font-poppins-semibold text-neutral-900 dark:text-neutral-100" numberOfLines={1}>
                 {storeName}
               </Text>
-              <Text className="text-[10px] text-neutral-500 dark:text-neutral-400 font-poppins" numberOfLines={1}>
-                • {storeAddress}
-              </Text>
+              {nearby && (
+                <View className="bg-red-100 dark:bg-red-900/30 px-1.5 py-0.5 rounded-md flex-row items-center gap-x-1">
+                  <View className="w-1 h-1 rounded-full bg-red-500" />
+                  <Text className="text-[9px] font-poppins-semibold text-red-600 dark:text-red-400">
+                    {translate("user.rewards.purchase")}
+                  </Text>
+                </View>
+              )}
             </View>
             {/* Chevron — rightmost, controls expand */}
             <AnimatedView style={chevronStyle}>

@@ -1,4 +1,5 @@
 import type { AccountStatusFilter } from "@/store/super-admin/user-store";
+import type { AdminStoreRow } from "@/services/store-service";
 
 export const TYPO = {
   title: "text-[22px] font-poppins-bold text-textPrimary leading-7",
@@ -44,6 +45,18 @@ export const STORE_STATUS_CONFIG: Record<string, { label: string; color: string;
 	pending_review: { label: "Pending", color: "#F59E0B", bg: "bg-amber-100 dark:bg-amber-900/20", dot: "#F59E0B", text: "text-amber-600 dark:text-amber-400" },
 	inactive: { label: "Inactive", color: "#EF4444", bg: "bg-red-100 dark:bg-red-900/20", dot: "#EF4444", text: "text-red-600 dark:text-red-400" },
 };
+
+export type StoreStatusKey = "pending_review" | "active" | "inactive";
+
+/**
+ * Derives the effective display status of a store from its `status` and `is_active` fields.
+ * Single source of truth — import this instead of re-implementing the logic.
+ */
+export function getEffectiveStatus(s: AdminStoreRow): StoreStatusKey {
+  if (s.status === "pending_review" || !s.status) return "pending_review";
+  if (s.status === "inactive") return "inactive";
+  return s.is_active ? "active" : "inactive";
+}
 
 export const STORE_CATEGORY_CONFIG: Record<string, { bg: string; text: string }> = {
   "Cafe": { bg: "bg-orange-100 dark:bg-orange-900/30", text: "text-orange-700 dark:text-orange-400" },

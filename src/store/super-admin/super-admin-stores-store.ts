@@ -1,7 +1,6 @@
 import { create } from "zustand";
 import { AdminStoreRow } from "@/services/store-service";
 import { getAllStoresForAdmin, updateAdminStoreStatus } from "@/services/super-admin/store-admin-service";
-import { useSubscriptionConfigStore } from "@/store/super-admin/subscription-config";
 
 type AlertModal = { title: string; message: string; type?: "success" | "error" } | null;
 

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { ScrollView, TouchableOpacity, View as RNView, useColorScheme, Dimensions } from "react-native";
 import { View, Text, Image } from "@/tw";
 import { ChevronLeft, Gift, Gem, Star, Lock, Trophy, Sparkles, CheckCircle2 } from "lucide-react-native";
@@ -6,56 +6,61 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated";
 import Carousel from "react-native-reanimated-carousel";
+import { getRewards } from "@/services/reward-service";
+import { getUserAvailablePoints } from "@/services/user/points-service";
+import { getStoreById } from "@/services/store-service";
+import { supabase } from "@/supabase/supabase";
+import { Reward } from "@/services/reward-service";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
-// ─── Static placeholder data ──────────────────────────────────────────────────
-const STATIC_POINTS = 860;
-const STATIC_NEXT_TIER = 1000;
-
-const STATIC_REDEEMABLE = [
-  {
-    id: "coffee",
-    title: "Free Specialty Coffee",
-    desc: "Any medium size brew",
-    points: 500,
-    imageUrl: "https://images.unsplash.com/photo-1509042239860-f550ce710b93?fm=jpg&q=60&w=300",
-  },
-  {
-    id: "pastry",
-    title: "Morning Pastry",
-    desc: "Choice of croissant or muffin",
-    points: 350,
-    imageUrl: "https://images.unsplash.com/photo-1759566926618-163d14e00fc8?fm=jpg&q=60&w=300",
-  },
-];
-
-const STATIC_ALMOST = [
-  {
-    id: "beans",
-    title: "250g Whole Bean Bag",
-    desc: "House roast signature blend",
-    points: 1200,
-    deficit: 340,
-    imageUrl: "https://cdn.pixabay.com/photo/2018/02/09/22/06/coffee-3142560_1280.jpg",
-  },
-];
-const STATIC_GALLERY = [
-  { id: "g1", uri: "https://images.unsplash.com/photo-1554118811-1e0d58224f24?fm=jpg&q=80&w=600" },
-  { id: "g2", uri: "https://images.unsplash.com/photo-1445116572660-236099ec97a0?fm=jpg&q=80&w=600" },
-  { id: "g3", uri: "https://images.unsplash.com/photo-1600093463592-8e36ae95ef56?fm=jpg&q=80&w=600" },
-  { id: "g4", uri: "https://images.unsplash.com/photo-1521017432531-fbd92d768814?fm=jpg&q=80&w=600" },
-];
-// ─────────────────────────────────────────────────────────────────────────────
 
 export default function ClaimRewardsScreen() {
+  const { storeId, storeName, storeLogo, storeAddress } = useLocalSearchParams<{ storeId?: string; storeName?: string; storeLogo?: string; storeAddress?: string }>();
+  const [rewards, setRewards] = useState<Reward[]>([]);
+  const [userPoints, setUserPoints] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
   const [galleryIndex, setGalleryIndex] = useState(0);
+  const [gallery, setGallery] = useState<{ id: string, uri: string }[]>([]);
+  const [userId, setUserId] = useState<string | null>(null);
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const scheme = useColorScheme();
   const dark = scheme === "dark";
-  const { storeName, storeLogo, storeAddress } = useLocalSearchParams<{ storeName?: string; storeLogo?: string; storeAddress?: string }>();
-  const progressPercent = Math.min((STATIC_POINTS / STATIC_NEXT_TIER) * 100, 100);
+
+  useEffect(() => {
+    async function loadData() {
+      if (!storeId) return;
+
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user?.id) return;
+      setUserId(user.id);
+
+      const [storeRewards, points, storeData] = await Promise.all([
+        getRewards({ storeId: storeId as string, limit: 20 }),
+        getUserAvailablePoints(user.id),
+        getStoreById(Number(storeId))
+      ]);
+
+      setRewards(storeRewards);
+      setUserPoints(points);
+      
+      if (storeData?.store_pictures && storeData.store_pictures.length > 0) {
+        setGallery(
+          storeData.store_pictures.map((uri: string, i: number) => ({ id: `pic-${i}`, uri }))
+        );
+      }
+      
+      setIsLoading(false);
+    }
+
+    loadData();
+  }, [storeId]);
+
+  // Split into redeemable and insufficient
+  const redeemable = rewards.filter(r => userPoints >= r.points_cost);
+  const almost = rewards.filter(r => userPoints < r.points_cost)
+    .map(r => ({ ...r, deficit: r.points_cost - userPoints }));
 
   // ── Theme tokens ──────────────────────────────────────────────────────────
   const heroBg = dark ? "#171717" : "#F3F4F6";
@@ -173,7 +178,7 @@ export default function ClaimRewardsScreen() {
               <Text
                 style={{ fontSize: 36, lineHeight: 40, color: heroText, fontFamily: "Poppins-Bold" }}
               >
-                {STATIC_POINTS.toLocaleString()}
+                {userPoints.toLocaleString()}
               </Text>
               <RNView style={{ marginBottom: 8, marginLeft: 2 }}>
                 <Gem size={26} color="#FF6600" fill="rgba(255,102,0,0.15)" />
@@ -203,16 +208,17 @@ export default function ClaimRewardsScreen() {
           contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 0, paddingBottom: 60, gap: 16 }}
         >
           {/* ── Drag handle */}
-          <RNView style={{ alignItems: "center", paddingTop: 10, marginBottom: 4 }}>
+          <RNView style={{ alignItems: "center", paddingTop: 10, marginBottom: -10 }}>
             <RNView style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: dark ? "#525252" : "#E0E0E0" }} />
           </RNView>
 
           {/* ── Store Gallery Carousel ───────────────────────────────── */}
-          <Animated.View entering={FadeInDown.delay(140).duration(380)} style={{ marginHorizontal: -16, gap: 8 }}>
+          {gallery.length > 0 && (
+            <Animated.View entering={FadeInDown.delay(140).duration(380)} style={{ marginHorizontal: -16, gap: 8 }}>
             <Carousel
               width={SCREEN_WIDTH}
               height={190}
-              data={STATIC_GALLERY}
+              data={gallery}
               autoPlay
               autoPlayInterval={3200}
               scrollAnimationDuration={800}
@@ -235,7 +241,7 @@ export default function ClaimRewardsScreen() {
             />
             {/* Dot indicators */}
             <RNView style={{ flexDirection: "row", justifyContent: "center", alignItems: "center", gap: 6 }}>
-              {STATIC_GALLERY.map((_, i) => (
+              {gallery.map((_, i) => (
                 <RNView
                   key={i}
                   style={{
@@ -248,8 +254,9 @@ export default function ClaimRewardsScreen() {
               ))}
             </RNView>
           </Animated.View>
+          )}
 
-          {/* ── Tier Progress ─────────────────────────────────────────── */}
+          {/* ── Replacement Content ── */}
           <Animated.View
             entering={FadeInDown.delay(180).duration(360)}
             style={{
@@ -258,21 +265,23 @@ export default function ClaimRewardsScreen() {
               padding: 16,
             }}
           >
-            <RNView style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-              <RNView style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-                <Trophy size={15} color="#FF6600" />
-                <Text className="text-sm font-poppins-bold text-neutral-800">Next Tier</Text>
+            <RNView style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+              <RNView style={{
+                width: 38, height: 38, borderRadius: 19,
+                backgroundColor: dark ? "#9A3412" : "#FFE4CC",
+                alignItems: "center", justifyContent: "center",
+              }}>
+                <Sparkles size={16} color="#FF6600" />
               </RNView>
-              <Text className="text-xs font-poppins-bold text-primary">
-                {STATIC_POINTS} / {STATIC_NEXT_TIER} pts
-              </Text>
+              <RNView style={{ flex: 1 }}>
+                <Text className="text-neutral-800 font-poppins-semibold text-xs">
+                  Earn more points
+                </Text>
+                <Text className="text-neutral-500 font-poppins text-[11px] mt-0.5">
+                  Scan the QR code at checkout on your next visit
+                </Text>
+              </RNView>
             </RNView>
-            <RNView style={{ height: 8, backgroundColor: progTrack, borderRadius: 4, overflow: "hidden" }}>
-              <RNView style={{ height: "100%", width: `${progressPercent}%`, backgroundColor: "#FF6600", borderRadius: 4 }} />
-            </RNView>
-            <Text style={{ marginTop: 6, fontSize: 11, color: "#9CA3AF", fontFamily: "Poppins_400Regular" }}>
-              {STATIC_NEXT_TIER - STATIC_POINTS} pts until your next reward tier unlocks
-            </Text>
           </Animated.View>
 
           {/* ── Redeem Now ────────────────────────────────────────────── */}
@@ -287,12 +296,12 @@ export default function ClaimRewardsScreen() {
                 paddingHorizontal: 8, paddingVertical: 2,
               }}>
                 <Text className="text-white font-poppins-bold text-[10px]">
-                  {STATIC_REDEEMABLE.length}
+                  {redeemable.length}
                 </Text>
               </RNView>
             </RNView>
 
-            {STATIC_REDEEMABLE.map((item, i) => (
+            {redeemable.map((item, i) => (
               <Animated.View
                 key={item.id}
                 entering={FadeInDown.delay(300 + i * 80).duration(360)}
@@ -306,7 +315,7 @@ export default function ClaimRewardsScreen() {
                 {/* Image */}
                 <RNView style={{ width: 96, height: 96 }}>
                   <Image
-                    source={{ uri: item.imageUrl }}
+                    source={{ uri: item.image_url }}
                     style={{ width: 96, height: 96 }}
                     contentFit="cover"
                   />
@@ -319,14 +328,14 @@ export default function ClaimRewardsScreen() {
                       {item.title}
                     </Text>
                     <Text className="text-neutral-400 font-poppins text-[11px] mt-0.5" numberOfLines={1}>
-                      {item.desc}
+                      {item.description}
                     </Text>
                   </RNView>
                   <RNView style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
                     <RNView style={{ flexDirection: "row", alignItems: "center", gap: 3 }}>
                       <Gem size={11} color="#FF6600" fill="rgba(255,102,0,0.12)" />
                       <Text className="text-primary font-poppins-bold text-xs">
-                        {item.points.toLocaleString()}
+                        {item.points_cost.toLocaleString()}
                       </Text>
                     </RNView>
                     <TouchableOpacity
@@ -355,7 +364,7 @@ export default function ClaimRewardsScreen() {
               </Text>
             </RNView>
 
-            {STATIC_ALMOST.map((item, i) => (
+            {almost.map((item, i) => (
               <Animated.View
                 key={item.id}
                 entering={FadeInDown.delay(520 + i * 80).duration(360)}
@@ -370,7 +379,7 @@ export default function ClaimRewardsScreen() {
                 {/* Image with lock */}
                 <RNView style={{ width: 96, height: 96 }}>
                   <Image
-                    source={{ uri: item.imageUrl }}
+                    source={{ uri: item.image_url }}
                     style={{ width: 96, height: 96, opacity: 0.35 }}
                     contentFit="cover"
                   />
@@ -395,7 +404,7 @@ export default function ClaimRewardsScreen() {
                       {item.title}
                     </Text>
                     <Text className="text-neutral-400 font-poppins text-[11px] mt-0.5" numberOfLines={1}>
-                      {item.desc}
+                      {item.description}
                     </Text>
                   </RNView>
                   <RNView style={{ gap: 6 }}>
@@ -403,7 +412,7 @@ export default function ClaimRewardsScreen() {
                       <RNView style={{ flexDirection: "row", alignItems: "center", gap: 3 }}>
                         <Gem size={11} color="#9CA3AF" />
                         <Text className="text-neutral-400 font-poppins-semibold text-xs">
-                          {item.points.toLocaleString()} needed
+                          {item.points_cost.toLocaleString()} needed
                         </Text>
                       </RNView>
                       <RNView style={{
@@ -421,7 +430,7 @@ export default function ClaimRewardsScreen() {
                       <RNView style={{
                         height: "100%", borderRadius: 2,
                         backgroundColor: lockProgFill,
-                        width: `${Math.round(((item.points - item.deficit) / item.points) * 100)}%`,
+                        width: `${Math.round(((item.points_cost - item.deficit) / item.points_cost) * 100)}%`,
                       }} />
                     </RNView>
                   </RNView>
@@ -429,38 +438,6 @@ export default function ClaimRewardsScreen() {
               </Animated.View>
             ))}
           </Animated.View>
-
-
-          {/* ── Earn Tip ──────────────────────────────────────────────── */}
-          <Animated.View
-            entering={FadeInDown.delay(600).duration(360)}
-            style={{
-              backgroundColor: tipBg,
-              borderWidth: 1, borderColor: tipBorder,
-              borderRadius: 18,
-              padding: 16,
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 12,
-            }}
-          >
-            <RNView style={{
-              width: 38, height: 38, borderRadius: 19,
-              backgroundColor: dark ? "#9A3412" : "#FFE4CC",
-              alignItems: "center", justifyContent: "center",
-            }}>
-              <Sparkles size={16} color="#FF6600" />
-            </RNView>
-            <RNView style={{ flex: 1 }}>
-              <Text className="text-neutral-800 font-poppins-semibold text-xs">
-                Earn more points
-              </Text>
-              <Text className="text-neutral-500 font-poppins text-[11px] mt-0.5">
-                Scan the QR code at checkout on your next visit
-              </Text>
-            </RNView>
-          </Animated.View>
-
 
           {/* Footer */}
           <RNView style={{ alignItems: "center", paddingTop: 4 }}>

@@ -27,9 +27,7 @@ export async function getAdminSession(): Promise<AdminInfo | null> {
       user.user_metadata?.username ||
       user.email?.split("@")[0] ||
       "admin",
-    avatar:
-      user.user_metadata?.avatar_url ||
-      `https://api.dicebear.com/7.x/avataaars/png?seed=${user.id}`,
+    avatar: user.user_metadata?.avatar_url || null,
   };
 }
 
@@ -48,7 +46,7 @@ export async function getDashboardData(): Promise<DashboardData> {
       ? u.avatar_url.startsWith("http")
         ? u.avatar_url
         : `${BUCKET_URL}/${u.avatar_url}`
-      : `https://api.dicebear.com/7.x/avataaars/png?seed=${u.id}`,
+      : null,
     displayEmail: u.email || "No Email Provided",
   }));
 

@@ -5,7 +5,7 @@ import { Image } from "expo-image";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useTranslation } from "react-i18next";
 import { AdminStoreRow } from "@/services/store-service";
-import { STORE_STATUS_CONFIG, getStoreCategoryBadge } from "@/type/super-admin/user";
+import { STORE_STATUS_CONFIG, getStoreCategoryBadge, getEffectiveStatus } from "@/type/super-admin/user";
 import { Button } from "@/components/button";
 import { Modal } from "@/components/modal";
 
@@ -29,12 +29,6 @@ export function AdminStorePreviewModal({
   const { t: translate } = useTranslation();
 
   if (!store) return null;
-
-  const getEffectiveStatus = (s: AdminStoreRow) => {
-    if (s.status === "pending_review" || !s.status) return "pending_review";
-    if (s.status === "inactive") return "inactive";
-    return s.is_active ? "active" : "inactive";
-  };
 
   const status = getEffectiveStatus(store);
   const statusCfg = STORE_STATUS_CONFIG[status] ?? STORE_STATUS_CONFIG["inactive"];

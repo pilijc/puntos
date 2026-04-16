@@ -7,16 +7,28 @@ import { VoucherTransaction } from "@/type/user/voucher";
 import {FinalCalculations} from "@/services/frontdesk/percentage-service";
 
 export async function getCurrentUser() {
+  try {
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    
+    if (sessionError) {
+      throw sessionError;
+    }
+    
+    if (!session) {
+      throw new Error('Auth session missing!');
+    }
 
-  const { data: { user }, error } = await supabase.auth.getUser();
+    const { data: { user }, error } = await supabase.auth.getUser();
 
-  if (error) throw error;
+    if (error) throw error;
 
-  return user; 
-
+    return user; 
+  } catch (error) {
+    throw error;
+  }
 }
 
-//Add auto user to qr_codes table
+//Add auto user into qr_codes table
 export async function addAutoUser(){
   
   const {
