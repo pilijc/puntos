@@ -191,7 +191,7 @@ export default function TransactionsScreen() {
 
   return (
     <SafeAreaView edges={["top", "left", "right"]} className="flex-1 bg-backgroundMuted dark:bg-darkBackground">
-        <View className="bg-white dark:bg-darkBackground border-b border-neutral-100 dark:border-darkBorder px-6 py-3 flex-row items-center justify-between">
+      <View className="bg-white dark:bg-darkBackground border-b border-neutral-100 dark:border-darkBorder px-6 py-3 flex-row items-center justify-between">
         <Text className="text-xl font-poppins-bold text-textPrimary dark:text-darkTextPrimary py-1">
           {translate("storeManager.transactions.title")}
         </Text>
