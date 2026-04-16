@@ -165,11 +165,11 @@ export function useStoreOverviewData(storeId?: string) {
           limit: 3,
         });
 
-        // Fetch user points for this specific store
+        // Fetch user points
         let points = 0;
         const { data: { user } } = await supabase.auth.getUser();
         if (user?.id) {
-          points = await getUserAvailablePoints(user.id, storeId);
+          points = await getUserAvailablePoints(user.id);
           setUserPoints(points);
         }
 
@@ -255,18 +255,19 @@ export function useStoreOverviewData(storeId?: string) {
       // as the user's current progress. We match on BOTH store_id AND the current
       // active program ID. If the record belongs to an old program, we fall through
       // and return the virtual 0-progress entry so the reset is visible immediately.
-      const currentProgramId = activeStreakProgramMap.get(Number(storeId));
+      const currentProgram = activeStreakProgramMap.get(Number(storeId));
       const existingStreak = userStreaks.find(
         (s) =>
           Number(s.store_id) === Number(storeId) &&
-          (currentProgramId == null || s.store_streak_id === currentProgramId),
+          (currentProgram == null || s.store_streak_id === currentProgram.id),
       );
       if (existingStreak) return [existingStreak];
 
-      // No record for this program yet — build a virtual 0-progress entry
+      // No record for this program yet — build a virtual 0-progress entry.
+      // IMPORTANT: pass store_streaks so the circle classifier has start_at/end_date
+      // and can correctly mark pre-program days instead of falling through to "missed".
       const targetStore = storesWithLocation.find((s) => s.id.toString() === storeId);
       if (!targetStore) return [];
-      const storeStreakId = currentProgramId ?? null;
       return [{
         id: -Number(targetStore.id),
         user_id: "",
@@ -278,8 +279,8 @@ export function useStoreOverviewData(storeId?: string) {
         completion_bonus_awarded: false,
         completed_at: null,
         status: null,
-        store_streak_id: storeStreakId,
-        store_streaks: null,
+        store_streak_id: currentProgram?.id ?? null,
+        store_streaks: currentProgram ?? null,
         stores: {
           name: targetStore.name,
           logo: targetStore.logo ?? undefined,
@@ -299,16 +300,15 @@ export function useStoreOverviewData(storeId?: string) {
       if (!isEligible || !hasActiveProgram(Number(focusedStore.id))) return [];
 
       // ── Program-aware lookup (same logic as the storeId-specific path above) ──
-      const currentProgramId2 = activeStreakProgramMap.get(Number(focusedStore.id));
+      const currentProgram2 = activeStreakProgramMap.get(Number(focusedStore.id));
       const existingStreak = userStreaks.find(
         (s) =>
           Number(s.store_id) === Number(focusedStore.id) &&
-          (currentProgramId2 == null || s.store_streak_id === currentProgramId2),
+          (currentProgram2 == null || s.store_streak_id === currentProgram2.id),
       );
       if (existingStreak) return [existingStreak];
 
-      // No record for the current program yet — virtual 0-progress entry
-      const storeStreakId2 = currentProgramId2 ?? null;
+      // No record for the current program yet — virtual 0-progress entry with full program data
       return [{
         id: -Number(focusedStore.id),
         user_id: "",
@@ -320,8 +320,8 @@ export function useStoreOverviewData(storeId?: string) {
         completion_bonus_awarded: false,
         completed_at: null,
         status: null,
-        store_streak_id: storeStreakId2,
-        store_streaks: null,
+        store_streak_id: currentProgram2?.id ?? null,
+        store_streaks: currentProgram2 ?? null,
         stores: {
           name: focusedStore.name,
           logo: focusedStore.logo ?? undefined,

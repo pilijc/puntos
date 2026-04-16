@@ -39,16 +39,13 @@ export const SecurityCard: React.FC<SecurityCardProps> = ({ disabled = false, wa
                     className="flex-row items-center"
                     activeOpacity={disabled ? 1 : 0.7}
                 >
-                    <View className={`h-8 w-8 rounded-lg items-center justify-center ${warning ? 'bg-yellow-50 dark:bg-yellow-900/20' : 'bg-blue-50 dark:bg-blue-900/20'}`}>
-                        {warning ? (
-                            <CircleAlert size={15} color="#d97706" />
-                        ) : (
-                            <Shield size={15} color="#3b82f6" />
-                        )}
+                    <View className="h-8 w-8 -mt-0.5 rounded-lg items-center justify-center">{warning 
+                        ? <CircleAlert size={15} color={disabled ? "#a3a3a3" : "#0f172a"} /> 
+                        : <Shield size={15} color={disabled ? "#a3a3a3" : "#0f172a"} />}
                     </View>
 
-                    <View className="flex-1 ml-3">
-                        <Text className={`text-base font-poppins-semibold ${disabled ? 'text-neutral-400 dark:text-neutral-500' : 'text-textPrimary dark:text-darkTextPrimary'}`}>
+                    <View className="flex-1 ml-2">
+                        <Text className={`text-md font-poppins-semibold ${disabled ? 'text-neutral-400 dark:text-neutral-500' : 'text-textPrimary dark:text-darkTextPrimary'}`}>
                             {translate('settings.account.security.title')}
                         </Text>
                         {disabled && (
@@ -57,6 +54,7 @@ export const SecurityCard: React.FC<SecurityCardProps> = ({ disabled = false, wa
                             </Text>
                         )}
                     </View>
+             
 
                     {isOpen ? (
                         <ChevronUp size={15} color="#94a3b8" />
@@ -67,9 +65,6 @@ export const SecurityCard: React.FC<SecurityCardProps> = ({ disabled = false, wa
 
                 {isOpen && (
                     <View className="mt-2">
-                        {/* divider */}
-                        <View className="h-[1px] bg-neutral-100 dark:bg-darkBorder mb-1 ml-12" />
-
                         {/* change password*/}
                         <TouchableOpacity
                             onPress={handleChangePassword}
@@ -81,9 +76,6 @@ export const SecurityCard: React.FC<SecurityCardProps> = ({ disabled = false, wa
                             </Text>
                             <ChevronRight size={12} color="#94a3b8" />
                         </TouchableOpacity>
-
-                        {/* divider */}
-                        <View className="h-[1px] bg-border dark:bg-darkBorder opacity-25 ml-12" />
 
                         {/* delete */}
                         <TouchableOpacity

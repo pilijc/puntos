@@ -75,12 +75,14 @@ export default function UserStreakCard({
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user?.id) return;
-      const dates = await getStreakEarnedDates(user.id, Number(streak.store_id));
+      // Scope to the current program so old program events don't contaminate circles.
+      const currentStreakId = streak.store_streak_id ?? undefined;
+      const dates = await getStreakEarnedDates(user.id, Number(streak.store_id), currentStreakId);
       setEarnedWeekDates(dates);
     } catch {
       // silent: the fallback streak_days window (below) covers this case
     }
-  }, [streak.store_id]);
+  }, [streak.store_id, streak.store_streak_id]);
 
   useEffect(() => {
     fetchEarnedDates();
@@ -138,7 +140,7 @@ export default function UserStreakCard({
     effectiveLastDateStr = today;
   }
 
-  // ─── Program start boundary ─────────────────────────────────────────────────
+  // ─── Program start & end boundaries ────────────────────────────────────────
   // IMPORTANT: Do NOT remove this. programStartStr is used below to distinguish
   // days that fall BEFORE the streak program began ("pre-program") from days
   // that are past-but-missed ("missed"). Without this, both states look the same.
@@ -149,6 +151,10 @@ export default function UserStreakCard({
     d.setHours(0, 0, 0, 0);
     programStartStr = formatLocalDate(d);
   }
+
+  // programEndStr: days AFTER this date are also "pre-program" (outside the program window).
+  // end_date is a "YYYY-MM-DD" string from the DB (set at creation time as start_at + max_days_cap).
+  const programEndStr: string | null = streakProgram?.end_date ?? null;
 
   // Display value for subtitle and completion modal
   const clampedCount = Math.min(
@@ -197,6 +203,11 @@ export default function UserStreakCard({
 
     // ── 1. Before program start → pre-program (white bg, grey solid border) ──
     if (programStartStr && circleDateStr < programStartStr) {
+      return { label: streakDaysLabels[index], state: "pre-program" as const };
+    }
+
+    // ── 1b. After program end → pre-program (same visual: outside active window) ──
+    if (programEndStr && circleDateStr > programEndStr) {
       return { label: streakDaysLabels[index], state: "pre-program" as const };
     }
 
@@ -322,14 +333,7 @@ export default function UserStreakCard({
             </Text>
           </View>
           <View className="flex-row items-center gap-x-3">
-            {nearby && (
-              <View className="bg-green-100 dark:bg-green-900/30 px-2.5 py-1 rounded-full flex-row items-center gap-x-1">
-                <View className="w-1.5 h-1.5 rounded-full bg-green-500" />
-                <Text className="text-[10px] font-poppins-semibold text-green-700 dark:text-green-400">
-                  {translate("user.rewards.nearby")}
-                </Text>
-              </View>
-            )}
+
             <TouchableOpacity
               onPress={() => router.push(`/store/streaks?storeId=${streak.store_id}`)}
               className="px-2 py-1"
@@ -357,19 +361,18 @@ export default function UserStreakCard({
             )}
           </View>
           <View className="flex-1 flex-row items-center justify-between">
-            <View className="flex-row items-center gap-x-1 flex-wrap flex-1">
-              <Text
-                className="font-poppins-semibold text-neutral-900 dark:text-neutral-100"
-                numberOfLines={1}
-              >
+            <View className="flex-row items-center gap-x-2 flex-wrap flex-1">
+              <Text className="font-poppins-semibold text-neutral-900 dark:text-neutral-100" numberOfLines={1}>
                 {storeName}
               </Text>
-              <Text
-                className="text-[10px] text-neutral-500 dark:text-neutral-400 font-poppins"
-                numberOfLines={1}
-              >
-                • {storeAddress}
-              </Text>
+              {nearby && (
+                <View className="bg-green-100 dark:bg-green-900/30 px-1.5 py-0.5 rounded-md flex-row items-center gap-x-1">
+                  <View className="w-1 h-1 rounded-full bg-green-500" />
+                  <Text className="text-[9px] font-poppins-semibold text-green-700 dark:text-green-400">
+                    {translate("user.rewards.nearby")}
+                  </Text>
+                </View>
+              )}
             </View>
           </View>
         </View>

@@ -100,7 +100,7 @@ export default function SuperAdminStores() {
 	);
 
 	if (selectedStore) {
-		const sub = subscriptions.find(s => s.store_id === selectedStore.id);
+		const sub = subscriptions.find((s) => s.owner_id === selectedStore.owner_id);
 		return (
 			<>
 				<AdminStoreDetails
