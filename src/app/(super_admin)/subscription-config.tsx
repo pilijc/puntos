@@ -112,44 +112,11 @@ export default function SubscriptionConfig() {
     <ScreenWrapper className="flex-1 bg-backgroundMuted dark:bg-darkBackground">
 
       {/* ── Header ── */}
-      <View
-        style={Platform.OS === 'web' ? {
-          backgroundColor: 'transparent',
-          borderBottomWidth: 0,
-          paddingTop: 24,
-          paddingBottom: 16,
-          width: '100%',
-        } : {}}
-        className="bg-white dark:bg-darkBackgroundMuted border-b border-slate-100 dark:border-darkBorder px-5 py-4 flex-row items-center gap-2"
-      >
-        <View
-          style={Platform.OS === 'web' ? {
-            width: '100%',
-            maxWidth: 1000,
-            alignSelf: 'center',
-            paddingHorizontal: 24,
-            flexDirection: 'row',
-            alignItems: 'center',
-            gap: 12
-          } : {
-            flexDirection: 'row',
-            alignItems: 'center',
-            gap: 8,
-            flex: 1
-          }}
-        >
-          {Platform.OS !== 'web' && <CircleDollarSign size={20} color="#0F172A" className="dark:color-white" />}
-          <Text
-            style={Platform.OS === 'web' ? {
-              fontSize: 22,
-              fontFamily: 'Poppins-Bold',
-              color: '#0f172a',
-            } : {}}
-            className="text-base font-poppins-bold text-slate-900 dark:text-darkTextPrimary"
-          >
-            Subscription
-          </Text>
-        </View>
+      {/* ── Main Header (Uniform Style) ── */}
+      <View className="bg-white dark:bg-darkBackground border-b border-neutral-100 dark:border-darkBorder px-6 py-3">
+        <Text className="text-xl font-poppins-bold text-textPrimary dark:text-darkTextPrimary py-1">
+          Subscription
+        </Text>
       </View>
 
       <ScrollView
@@ -239,9 +206,9 @@ export default function SubscriptionConfig() {
 
                     <View className="flex-row items-center justify-between">
                       <Text className="text-[10px] font-poppins-medium text-slate-500 dark:text-darkTextMuted">
-                        {sub.owner_name}
+                        {sub.display_name}
                       </Text>
-                    )}
+                    </View>
                   </View>
                 );
               })}
@@ -269,8 +236,8 @@ export default function SubscriptionConfig() {
                 onValueChange={(val) => {
                   const ids = ownersOverLimit.map((m) => m.owner_id);
                   if (val) {
-                    const newIds = allStores.map(s => s.id).filter(id => !config.enforced_stores_ids.includes(id));
-                    if (newIds.length > 0) config.setEnforcedStores([...config.enforced_stores_ids, ...newIds]);
+                    const newIds = Array.from(new Set([...config.enforced_owner_ids, ...ids]));
+                    config.setEnforcedOwners(newIds);
                   } else {
                     config.setEnforcedOwners(
                       config.enforced_owner_ids.filter((id) => !ids.includes(id)),
