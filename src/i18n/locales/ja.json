@@ -234,6 +234,9 @@
                 "subtitle": "現在有効な報酬はありません。スタンプや連続記録を後でもう一度チェックしてください！"
             },
             "rewardCatalog": "報酬カタログ",
+            "loading": "報酬を読み込み中...",
+            "noRewards": "報酬はありません",
+            "noRewardsSubtitle": "新しい報酬をお楽しみに",
             "points": "ポイント",
             "unlocked": "ロック解除！",
             "reward": "報酬",

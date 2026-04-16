@@ -2,17 +2,29 @@ import { useState, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useFocusEffect } from "expo-router";
 import { AdminStoreRow } from "@/services/store-service";
-import { supabase } from "@/supabase/supabase";
+import { fetchAllSubscriptions } from "@/services/super-admin/store-admin-service";
 import { useSuperAdminStoresStore } from "@/store/super-admin/super-admin-stores-store";
 import { useSubscriptionConfigStore } from "@/store/super-admin/subscription-config";
+import { getEffectiveStatus } from "@/type/super-admin/user";
 
 export const FILTERS = ["All", "pending_review", "active", "inactive"] as const;
+export type Filter = (typeof FILTERS)[number];
 export type Filter = (typeof FILTERS)[number];
 
 export function useSuperAdminStores() {
   const { t: translate } = useTranslation();
   const storeState = useSuperAdminStoresStore();
   const { stores, fetchStores, approveStore, rejectStore } = storeState;
+
+  const FILTER_LABELS: Record<Filter, string> = useMemo(
+    () => ({
+      All: translate("superAdmin.stores.filter.all"),
+      pending_review: translate("superAdmin.stores.filter.pending"),
+      active: translate("superAdmin.stores.filter.active"),
+      inactive: translate("superAdmin.stores.filter.inactive"),
+    }),
+    [translate],
+  );
 
   const FILTER_LABELS: Record<Filter, string> = useMemo(
     () => ({
@@ -88,9 +100,32 @@ export function useSuperAdminStores() {
         s.owner_id === store.owner_id &&
         s.id !== store.id &&
         (s.status === "active" || s.is_active),
+    const ownerActiveStores = stores.filter(
+      (s) =>
+        s.owner_id === store.owner_id &&
+        s.id !== store.id &&
+        (s.status === "active" || s.is_active),
     ).length;
 
     const config = useSubscriptionConfigStore.getState();
+    const paidUnlimited = hasPaidUnlimitedOwner(store.owner_id);
+
+    const exceedsLimit =
+      config.ENFORCE_SUBSCRIPTION &&
+      ownerActiveStores >= config.FREE_STORES_LIMIT &&
+      !paidUnlimited;
+
+    if (exceedsLimit) {
+      setConfirmModal({
+        title: "Limit reached",
+        message: config.LIMIT_MESSAGE,
+        label: translate("label.ok"),
+        variant: "primary",
+        hideCancel: true,
+        onConfirm: () => setConfirmModal(null),
+      });
+      return;
+    }
     const paidUnlimited = hasPaidUnlimitedOwner(store.owner_id);
 
     const exceedsLimit =
@@ -114,9 +149,13 @@ export function useSuperAdminStores() {
       title: translate("superAdmin.stores.modal.approveTitle"),
       message: translate("superAdmin.stores.modal.approveMessage", { name: store.name }),
       label: translate("superAdmin.stores.modal.approveAction"),
+      title: translate("superAdmin.stores.modal.approveTitle"),
+      message: translate("superAdmin.stores.modal.approveMessage", { name: store.name }),
+      label: translate("superAdmin.stores.modal.approveAction"),
       variant: "primary",
       onConfirm: async () => {
         setConfirmModal(null);
+
 
         const success = await approveStore(store);
         if (success) {
@@ -126,6 +165,8 @@ export function useSuperAdminStores() {
             errorModal: {
               title: translate("superAdmin.stores.modal.successTitle"),
               message: translate("superAdmin.stores.modal.successMessage", { name: store.name }),
+              type: "success",
+            },
               type: "success",
             },
           });
@@ -151,17 +192,16 @@ export function useSuperAdminStores() {
               message: translate("superAdmin.stores.modal.errorMessage", { name: store.name }),
               type: "error",
             },
+              type: "error",
+            },
           });
         }
+      },
       },
     });
   };
 
-  const getEffectiveStatus = (s: AdminStoreRow) => {
-    if (s.status === "pending_review" || !s.status) return "pending_review";
-    if (s.status === "inactive") return "inactive";
-    return s.is_active ? "active" : "inactive";
-  };
+
 
   const filtered = (
     activeFilter === "All"
@@ -171,7 +211,10 @@ export function useSuperAdminStores() {
     .slice()
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
-  const pendingCount = stores.filter((s) => s.status === "pending_review").length;
+  const pendingCount = useMemo(() =>
+    stores.filter((s) => s.status === "pending_review").length,
+    [stores]
+  );
 
   return {
     ...storeState,

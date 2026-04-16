@@ -6,7 +6,7 @@ import { Image } from "expo-image";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { Modal } from "@/components/modal";
 import { AdminStoreRow } from "@/services/store-service";
-import { STORE_STATUS_CONFIG } from "@/type/super-admin/user";
+import { STORE_STATUS_CONFIG, getEffectiveStatus } from "@/type/super-admin/user";
 import { useSubscriptionConfigStore } from "@/store/super-admin/subscription-config";
 
 export function AdminStoreCard({
@@ -24,11 +24,6 @@ export function AdminStoreCard({
 }) {
 	const { t: translate } = useTranslation();
 	const config = useSubscriptionConfigStore();
-	const getEffectiveStatus = (s: AdminStoreRow) => {
-		if (s.status === "pending_review" || !s.status) return "pending_review";
-		if (s.status === "inactive") return "inactive";
-		return s.is_active ? "active" : "inactive";
-	};
 	const status = getEffectiveStatus(store);
 	const cfg = STORE_STATUS_CONFIG[status] ?? STORE_STATUS_CONFIG["inactive"];
 	const isPending = status === "pending_review";

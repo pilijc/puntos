@@ -205,10 +205,26 @@ export default function ConfigureStreaks() {
     try {
       const startAtPayload = scheduleEnabled ? start_at : null;
 
+      // Derive end_date = start_at date + max_days_cap calendar days.
+      // This gives the user-facing calendar boundary used by the streak log card
+      // to distinguish "pre-program" days from "missed" days.
+      const computeEndDate = (startIso: string | null, cap: number | null): string | null => {
+        if (!startIso || !cap || cap < 1) return null;
+        const d = new Date(startIso);
+        d.setDate(d.getDate() + cap);
+        // Return as YYYY-MM-DD local date string
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, "0");
+        const day = String(d.getDate()).padStart(2, "0");
+        return `${y}-${m}-${day}`;
+      };
+      const endDatePayload = computeEndDate(startAtPayload, max_days_cap);
+
       if (isEditMode && streakId) {
         await updateStreakProgram(Number(streakId), {
           points_mode,
           start_at: startAtPayload,
+          end_date: endDatePayload,
           fixed_points_per_day: isFixed ? (fixed_points_per_day ?? 10) : null,
           starting_points: !isFixed ? starting_points : null,
           increment_value: !isFixed ? increment_value : null,
@@ -222,6 +238,7 @@ export default function ConfigureStreaks() {
           points_mode,
           status: "draft",
           start_at: startAtPayload,
+          end_date: endDatePayload,
           fixed_points_per_day: isFixed ? (fixed_points_per_day ?? 10) : null,
           starting_points: !isFixed ? starting_points : null,
           increment_value: !isFixed ? increment_value : null,
