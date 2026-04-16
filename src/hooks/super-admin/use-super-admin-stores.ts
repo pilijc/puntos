@@ -2,30 +2,17 @@ import { useState, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useFocusEffect } from "expo-router";
 import { AdminStoreRow } from "@/services/store-service";
-import { fetchAllSubscriptions } from "@/services/super-admin/store-admin-service";
 import { useSuperAdminStoresStore } from "@/store/super-admin/super-admin-stores-store";
-import { useSubscriptionConfigStore } from "@/store/super-admin/subscription-config";
 import { getEffectiveStatus } from "@/type/super-admin/user";
+import { supabase } from "@/supabase/supabase";
 
 export const FILTERS = ["All", "pending_review", "active", "inactive"] as const;
-export type Filter = (typeof FILTERS)[number];
 export type Filter = (typeof FILTERS)[number];
 
 export function useSuperAdminStores() {
   const { t: translate } = useTranslation();
   const storeState = useSuperAdminStoresStore();
   const { stores, fetchStores, approveStore, rejectStore } = storeState;
-
-  const FILTER_LABELS: Record<Filter, string> = useMemo(
-    () => ({
-      All: translate("superAdmin.stores.filter.all"),
-      pending_review: translate("superAdmin.stores.filter.pending"),
-      active: translate("superAdmin.stores.filter.active"),
-      inactive: translate("superAdmin.stores.filter.inactive"),
-    }),
-    [translate],
-  );
-
   const FILTER_LABELS: Record<Filter, string> = useMemo(
     () => ({
       All: translate("superAdmin.stores.filter.all"),
@@ -49,19 +36,16 @@ export function useSuperAdminStores() {
     hideCancel?: boolean;
   } | null>(null);
   const [subscriptions, setSubscriptions] = useState<any[]>([]);
-  const [planSlugs, setPlanSlugs] = useState<Map<number, string>>(new Map());
 
   const fetchSubscriptions = useCallback(async () => {
-    const [{ data: subs }, { data: plans }] = await Promise.all([
-      supabase.from("manager_subscriptions").select("*"),
-      supabase.from("subscriptions").select("id, slug"),
-    ]);
-    setSubscriptions(subs ?? []);
-    const m = new Map<number, string>();
-    (plans ?? []).forEach((p: { id: number; slug: string | null }) =>
-      m.set(Number(p.id), String(p.slug ?? "").toLowerCase()),
-    );
-    setPlanSlugs(m);
+    const { data, error } = await supabase
+      .from("manager_subscriptions")
+      .select("*");
+    if (error) {
+      setSubscriptions([]);
+      return;
+    }
+    setSubscriptions(data ?? []);
   }, []);
 
   useFocusEffect(
@@ -69,17 +53,6 @@ export function useSuperAdminStores() {
       fetchStores({ forceRefresh: true });
       void fetchSubscriptions();
     }, [fetchStores, fetchSubscriptions]),
-  );
-
-  const hasPaidUnlimitedOwner = useCallback(
-    (ownerId: string | null | undefined) => {
-      if (!ownerId) return false;
-      const sub = subscriptions.find((s) => s.owner_id === ownerId);
-      if (!sub || sub.payment_status !== "paid") return false;
-      const slug = planSlugs.get(Number(sub.subscription_id));
-      return Boolean(slug && slug !== "basic");
-    },
-    [subscriptions, planSlugs],
   );
 
   const onRefresh = async () => {
@@ -95,67 +68,13 @@ export function useSuperAdminStores() {
   };
 
   const handleApprove = (store: AdminStoreRow) => {
-    const ownerActiveStores = stores.filter(
-      (s) =>
-        s.owner_id === store.owner_id &&
-        s.id !== store.id &&
-        (s.status === "active" || s.is_active),
-    const ownerActiveStores = stores.filter(
-      (s) =>
-        s.owner_id === store.owner_id &&
-        s.id !== store.id &&
-        (s.status === "active" || s.is_active),
-    ).length;
-
-    const config = useSubscriptionConfigStore.getState();
-    const paidUnlimited = hasPaidUnlimitedOwner(store.owner_id);
-
-    const exceedsLimit =
-      config.ENFORCE_SUBSCRIPTION &&
-      ownerActiveStores >= config.FREE_STORES_LIMIT &&
-      !paidUnlimited;
-
-    if (exceedsLimit) {
-      setConfirmModal({
-        title: "Limit reached",
-        message: config.LIMIT_MESSAGE,
-        label: translate("label.ok"),
-        variant: "primary",
-        hideCancel: true,
-        onConfirm: () => setConfirmModal(null),
-      });
-      return;
-    }
-    const paidUnlimited = hasPaidUnlimitedOwner(store.owner_id);
-
-    const exceedsLimit =
-      config.ENFORCE_SUBSCRIPTION &&
-      ownerActiveStores >= config.FREE_STORES_LIMIT &&
-      !paidUnlimited;
-
-    if (exceedsLimit) {
-      setConfirmModal({
-        title: "Limit reached",
-        message: config.LIMIT_MESSAGE,
-        label: translate("label.ok"),
-        variant: "primary",
-        hideCancel: true,
-        onConfirm: () => setConfirmModal(null),
-      });
-      return;
-    }
-
     setConfirmModal({
-      title: translate("superAdmin.stores.modal.approveTitle"),
-      message: translate("superAdmin.stores.modal.approveMessage", { name: store.name }),
-      label: translate("superAdmin.stores.modal.approveAction"),
       title: translate("superAdmin.stores.modal.approveTitle"),
       message: translate("superAdmin.stores.modal.approveMessage", { name: store.name }),
       label: translate("superAdmin.stores.modal.approveAction"),
       variant: "primary",
       onConfirm: async () => {
         setConfirmModal(null);
-
 
         const success = await approveStore(store);
         if (success) {
@@ -165,8 +84,6 @@ export function useSuperAdminStores() {
             errorModal: {
               title: translate("superAdmin.stores.modal.successTitle"),
               message: translate("superAdmin.stores.modal.successMessage", { name: store.name }),
-              type: "success",
-            },
               type: "success",
             },
           });
@@ -192,11 +109,8 @@ export function useSuperAdminStores() {
               message: translate("superAdmin.stores.modal.errorMessage", { name: store.name }),
               type: "error",
             },
-              type: "error",
-            },
           });
         }
-      },
       },
     });
   };
