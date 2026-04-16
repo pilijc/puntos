@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView } from 'react-native';
+import { ScrollView } from 'react-native';
+import { View, Text } from '@/tw';
 import { Modal } from '@/components/modal';
-import { AlertTriangle } from 'lucide-react-native';
+import { AlertCircle } from 'lucide-react-native';
 import { ManagerDeviceSession } from '@/type/store-manager/device-session';
 import { DeviceSessionCard } from './device-session-card';
 
@@ -22,8 +23,11 @@ export function DeviceLimitModal({
 
     const handleRetry = async () => {
         setIsRetrying(true);
-        await onCheckAgain();
-        setIsRetrying(false);
+        try {
+            await onCheckAgain();
+        } finally {
+            setIsRetrying(false);
+        }
     };
 
     return (
@@ -42,30 +46,46 @@ export function DeviceLimitModal({
             dismissOnBackdrop={false}
             showCloseButton={true}
         >
-            {/* warning banner */}
-            <View className="flex-row items-start gap-2.5 bg-amber-500/10 border border-border rounded-xl mb-4 p-3.5">      
-                <AlertTriangle size={20} color="#f59e0b" />
-                <Text className="flex-1 text-textMuted text-sm leading-5 relative top-[-1px]">
-                    You have reached the maximum of {" "}
-                    <Text className='font-poppins-bold text-Secondary'>2 Active sessions
+            <View className="w-full">
+                {/* warning banner */}
+                <View className="flex-row items-center gap-3 bg-red-50 border border-red-100 rounded-xl mb-6 p-4">      
+                    <View className="w-8 h-8 rounded-full bg-red-100 items-center justify-center">
+                        <AlertCircle size={14} color="#ef4444" />
+                    </View>
+                    <View className="flex-1">
+                        <Text className="text-red-900 text-sm font-poppins-semibold mb-0.5">
+                            Active Session Limit
+                        </Text>
+                        <Text className="text-red-700/80 text-xs font-poppins leading-4">
+                            You can have up to 2 active sessions. Please log out of another device to continue.
+                        </Text>
+                    </View>
+                </View>
+
+                {/* device list */}
+                <View className="mb-2">
+                    <Text className="text-textSecondary text-[10px] font-poppins-semibold tracking-wider uppercase mb-3">
+                        Your Active Devices
                     </Text>
-                    you must log out of one of the devices below before you can access your dashboard from this device.
-                </Text>
+
+                    <View className="bg-backgroundMuted/50 border border-border rounded-xl px-1 overflow-hidden">
+                        <ScrollView
+                            showsVerticalScrollIndicator={false}
+                            style={{ maxHeight: 240 }}
+                            contentContainerStyle={{ paddingVertical: 8 }}
+                        >
+                            {sessions.map((session, index) => (
+                                <View 
+                                    key={session.id} 
+                                    className={index > 0 ? "border-t border-border/50 pt-3 mt-3 px-3" : "px-3"}
+                                >
+                                    <DeviceSessionCard session={session} />
+                                </View>
+                            ))}
+                        </ScrollView>
+                    </View>
+                </View>
             </View>
-
-            {/* device list */}
-            <Text className="text-textMuted text-xs font-semibold tracking-wide uppercase mb-2">
-                Currently active devices
-            </Text>
-
-            <ScrollView
-                showsVerticalScrollIndicator={false}
-                style={{ maxHeight: 240 }}
-            >
-                {sessions.map((session) => (
-                    <DeviceSessionCard key={session.id} session={session} />
-                ))}
-            </ScrollView>
         </Modal>
     );
 }

@@ -158,3 +158,17 @@ export async function getActiveDeviceSessionsService(
     if (error) throw error;
     return (data ?? []) as ManagerDeviceSession[];
 }
+
+export async function forceDeactivateCurrentDeviceService(): Promise<void> {
+    const deviceId = await getOrCreateDeviceId();
+    
+    const { error } = await supabase
+        .from("manager_device_sessions")
+        .update({ is_active: false })
+        .eq("device_id", deviceId)
+        .eq("is_active", true);
+
+    if (error) {
+        console.warn("[DeviceSession] force deactivate failed:", error.message);
+    }
+}

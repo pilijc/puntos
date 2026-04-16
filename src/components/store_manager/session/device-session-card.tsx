@@ -51,7 +51,7 @@ interface DeviceSessionCardProps {
 export function DeviceSessionCard({ session }: DeviceSessionCardProps) {
     const displayName = resolveDisplayName(session);
     return (
-        <View className='flex-row items-center gap-3 w-full bg-transparent'>
+        <View className='flex-row items-center gap-3 w-full bg-transparent py-1'>
             <DeviceIcon type={session.device_type} />
 
             <View className="flex-1 gap-1">

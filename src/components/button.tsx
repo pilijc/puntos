@@ -92,11 +92,11 @@ export function Button({
   const fullWidthPad = dense ? "px-4" : "px-10";
   const sizeClass = authButton
     ? fullWidth
-      ? `w-full py-4 ${fullWidthPad}`
-      : "w-fit py-3.5 px-10"
+      ? `w-full h-14 ${fullWidthPad}`
+      : "w-fit h-14 px-10"
     : fullWidth
-      ? `w-full py-3 ${fullWidthPad}`
-      : "w-fit py-2.5 px-10";
+      ? `w-full h-11 ${fullWidthPad}`
+      : "w-fit h-11 px-10";
 
   return (
     <TouchableOpacity

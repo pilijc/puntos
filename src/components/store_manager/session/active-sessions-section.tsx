@@ -3,6 +3,7 @@ import { ActivityIndicator } from "react-native";
 import { View, Text, TouchableOpacity } from "@/tw";
 import { useDeviceSession } from '@/hooks/store-manager/use-device-session';
 import { DeviceSessionCard } from '@/components/store_manager/session/device-session-card';
+import DeviceSessionSkeleton from '@/components/skeleton/store_manager/device-session-skeleton';
 
 export function ActiveSessionSection() {
     const { activeSessions, fetchActiveSessions } = useDeviceSession();
@@ -22,14 +23,6 @@ export function ActiveSessionSection() {
         await loadData();
         setRefreshing(false);
     }, [loadData]);
-
-    if (loading) {
-        return (
-            <View className='items-center py-6'>
-                <ActivityIndicator color="#ff6600" />
-            </View>
-        );
-    }
 
     return (
         <View className="bg-white rounded-xl p-4 shadow-sm shadow-black/5 w-full mx-auto mt-4 px-4 overflow-hidden mb-4">
@@ -54,7 +47,9 @@ export function ActiveSessionSection() {
             </Text>
 
             <View className="w-full">
-                {activeSessions.length === 0 ? (
+                {loading ? (
+                    <DeviceSessionSkeleton />
+                ) : activeSessions.length === 0 ? (
                     <Text className='text-textSecondary text-sm py-4 font-poppins'>
                         No active sessions found.
                     </Text>
