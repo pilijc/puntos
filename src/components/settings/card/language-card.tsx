@@ -28,15 +28,15 @@ export const LanguageCard = () => {
                 className="flex-row items-center"
                 activeOpacity={0.7}
             >
-                <View className="h-8 w-8 rounded-lg bg-blue-50 dark:bg-blue-900/20 items-center justify-center">
-                    <Languages size={15} color="#2563eb" />
+                <View className="h-8 w-8 -mt-0.5 rounded-lg items-center justify-center">
+                    <Languages size={15} color="#0f172a" />
                 </View>
 
-                <View className="flex-1 ml-3">
-                    <Text className="text-base font-poppins-semibold text-textPrimary dark:text-darkTextPrimary">
+                <View className="flex-1 ml-2">
+                    <Text className="text-md font-poppins-semibold text-textPrimary dark:text-darkTextPrimary">
                         {translate('settings.account.language.title')}
                     </Text>
-                    <Text className="text-xs font-poppins-regular text-textMuted dark:text-darkTextMuted">
+                    <Text className="text-xs font-poppins text-textMuted dark:text-darkTextMuted">
                         {language === 'ja' ? "日本語" : "English"}
                     </Text>
                 </View>
@@ -46,16 +46,13 @@ export const LanguageCard = () => {
 
             {isOpen && (
                 <View className="mt-3">
-                    {/* divider */}
-                    <View className="h-[1px] bg-border dark:bg-darkBorder" />
-
                     {/* english */}
                     <TouchableOpacity
                         onPress={() => handleSelectLanguage('en')}
                         className="flex-row items-center justify-between py-3 ml-12"
                         activeOpacity={0.6}
                     >
-                        <Text className={`text-sm font-poppins-medium ${language === 'en' ? 'text-primary' : 'text-textPrimary dark:text-darkTextSecondary'}`}>
+                        <Text className={`text-sm font-poppins-medium ${language === 'en' ? 'text-primary' : 'text-textSecondary dark:text-darkTextSecondary'}`}>
                             English
                         </Text>
                         {language === 'en' && (
@@ -63,16 +60,13 @@ export const LanguageCard = () => {
                         )}
                     </TouchableOpacity>
 
-                    {/* divider */}
-                    <View className="h-[1px] bg-border dark:bg-darkBorder opacity-25 ml-12" />
-
                     {/* japanese */}
                     <TouchableOpacity
                         onPress={() => handleSelectLanguage('ja')}
                         className="flex-row items-center justify-between py-3 ml-12"
                         activeOpacity={0.6}
                     >
-                        <Text className={`text-sm font-poppins-medium ${language === 'ja' ? 'text-primary' : 'text-textPrimary dark:text-darkTextSecondary'}`}>
+                        <Text className={`text-sm font-poppins-medium ${language === 'ja' ? 'text-primary' : 'text-textSecondary dark:text-darkTextSecondary'}`}>
                             日本語
                         </Text>
                         {language === 'ja' && (

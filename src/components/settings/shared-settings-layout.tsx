@@ -83,6 +83,7 @@ export const SharedSettingsLayout = ({
                             <LanguageCard />
                             <View className="h-px bg-slate-100 dark:bg-slate-800" />
                             <AppearanceCard />
+                            <View className="h-px bg-slate-100 dark:bg-slate-800" />
                         </View>
 
                         {extraCards}
