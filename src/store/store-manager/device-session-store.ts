@@ -3,9 +3,11 @@ import { DeviceSessionState, ManagerDeviceSession } from "@/type/store-manager/d
 
 export const useDeviceSessionStore = create<DeviceSessionState>((set) => ({
     blockedSessions: [],
+    activeSessions: [],
     isCheckingLimit: false,
 
     setBlockedSessions: (sessions: ManagerDeviceSession[]) => set({ blockedSessions: sessions }),
+    setActiveSessions: (sessions: ManagerDeviceSession[]) => set({ activeSessions: sessions }),
 
     setIsCheckingLimit: (v: boolean) => set({ isCheckingLimit: v }),
 

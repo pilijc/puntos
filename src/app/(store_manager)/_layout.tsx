@@ -10,6 +10,7 @@ import { getRoleTypeForUser, getWebAdjustedHomeRoute } from "@/services/access-s
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 import { LayoutDashboard, Store, ArrowLeftRight, Settings } from "lucide-react-native";
+import { useDeviceSession } from "@/hooks/store-manager/use-device-session";
 
 const WEB_SIDEBAR_WIDTH = 260;
 const WEB_SIDEBAR_INSET_X = 16;
@@ -228,6 +229,7 @@ export default function StoreManagerLayout() {
     const insets = useSafeAreaInsets();
     const pathname = usePathname();
     const path = withTrailingSlash(pathname);
+    const { startHeartbeat } = useDeviceSession();
 
     const activeTab = activeSidebarTabFromPath(path);
     const storesRowActive = activeTab === "stores";
@@ -249,13 +251,16 @@ export default function StoreManagerLayout() {
                     } else {
                         router.replace(getWebAdjustedHomeRoute("/(user)") as any);
                     }
+                } else {
+                    // Valid manager/owner — start their session heartbeat listener
+                    startHeartbeat(user.id);
                 }
             } catch {
                 router.replace(getWebAdjustedHomeRoute("/(user)") as any);
             }
         };
         verifyAccess();
-    }, [router]);
+    }, [router, startHeartbeat]);
 
     const isWeb = Platform.OS === "web";
 

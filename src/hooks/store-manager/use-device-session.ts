@@ -1,16 +1,17 @@
 import { useCallback } from "react";
 import { AppState, AppStateStatus } from "react-native";
 import { supabase } from "@/supabase/supabase";
-import { checkDeviceSessionLimitService, deactivateCurrentDeviceSessionService, upsertDeviceSessionService, refreshDeviceHeartbeatService } from "@/services/store-manager/device-session-service";
-import { useDeviceSessionStore } from "@/store/store-manager/device-sessions-store";
+import { checkDeviceSessionLimitService, deactivateCurrentDeviceSessionService, upsertDeviceSessionService, refreshDeviceHeartbeatService, getActiveDeviceSessionsService } from "@/services/store-manager/device-session-service";
+import { useDeviceSessionStore } from "@/store/store-manager/device-session-store";
 import { ManagerDeviceSession } from "@/type/store-manager/device-session";
-import { transformStyle } from "node_modules/@rnmapbox/maps/lib/typescript/src/utils/StyleValue";
 
 export function useDeviceSession(userId?: string) {
     const {
         blockedSessions,
+        activeSessions,
         isCheckingLimit,
         setBlockedSessions,
+        setActiveSessions,
         setIsCheckingLimit,
         clearBlockedSessions,
     } = useDeviceSessionStore();
@@ -55,11 +56,24 @@ export function useDeviceSession(userId?: string) {
         const sub = AppState.addEventListener("change", handler);
     }, []);
 
+    const fetchActiveSessions = useCallback(async () => {
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) return;
+            const data = await getActiveDeviceSessionsService(user.id);
+            setActiveSessions(data);
+        } catch (error) {
+            console.error("Failed to fetch active sessions: ", error);
+        }
+    }, [setActiveSessions]);
+
     return {
         blockedSessions,
+        activeSessions,
         isCheckingLimit,
         checkAndRegisterSession,
         signOutCurrentDevice,
         startHeartbeat,
+        fetchActiveSessions,
     }
 }

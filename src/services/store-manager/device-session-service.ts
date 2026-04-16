@@ -123,7 +123,7 @@ export async function checkDeviceSessionLimitService(
     );
 
     if (thisDeviceAlreadyActive || sessions.length < MAX_SESSIONS) {
-        return { allowed: false, activeSessions: [] };
+        return { allowed: true, activeSessions: [] };
     } 
 
     return { allowed: false, activeSessions: sessions };

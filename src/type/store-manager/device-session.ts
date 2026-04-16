@@ -23,9 +23,12 @@ export interface DeviceSessionCheckResult {
 export interface DeviceSessionState {
     //populated when the manager is blocked from logging in
     blockedSessions: ManagerDeviceSession[];
+    // proactively displayed on the settings page
+    activeSessions: ManagerDeviceSession[];
     isCheckingLimit: boolean;
 
     setBlockedSessions: (sessions: ManagerDeviceSession[]) => void;
+    setActiveSessions: (sessions: ManagerDeviceSession[]) => void;
     setIsCheckingLimit: (v: boolean) => void;
     clearBlockedSessions: () => void;
 }
