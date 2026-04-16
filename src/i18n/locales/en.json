@@ -13,6 +13,8 @@
         "ok": "OK",
         "tryAgain": "Try Again",
         "viewAll": "View all",
+        "hideDetails": "Hide Details",
+        "viewDetails": "View Details",
         "somethingWentWrong": "Something went wrong. Please try again.",
         "poweredBy": "POWERED BY PUNTOS",
         "termsAgreement": "By continuing, you agree to our\n<legal>Terms of Service and Privacy Policy</legal>."
@@ -511,7 +513,7 @@
                 "new": "New"
             },
             "activity": {
-                "title": "Weekly Scan Activity"
+                "title": "Activity Overview"
             },
             "stampProgress": {
                 "title": "Stamp Progress",
