@@ -42,6 +42,7 @@ export default function UsersScreen() {
     stickyHeaders,
     willBlock,
     getItemLayout,
+    tabCounts,
   } = useSuperAdminUsers();
   const { t: translate } = useTranslation();
 
@@ -62,6 +63,7 @@ export default function UsersScreen() {
         onTabChange={setActiveTab}
         statusFilter={statusFilter}
         onFilterPress={() => setShowFilterModal(true)}
+        counts={tabCounts()}
       />
       {loading && !refreshing && listData.length === 0 ? (
         <View className="flex-1 justify-center items-center">

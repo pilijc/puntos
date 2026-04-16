@@ -44,21 +44,20 @@ export default function SuperAdminDashboard() {
         </Text>
       </View>
 
-      {/* ── Sub-Header (Welcome Message) ── */}
-      <View className="bg-backgroundMuted dark:bg-darkBackground border-b border-neutral-100 dark:border-darkBorder px-6 pt-4 pb-4">
-        <Text className="text-sm text-[#94A3B8] dark:text-darkTextSecondary font-poppins">
-          {translate("superAdmin.dashboard.welcome")}
-          <Text className="text-orange-500 font-poppins-bold">
-            {adminInfo?.username?.split(" ")[0] || "Admin"}
-          </Text>!
-        </Text>
-      </View>
-
       <ScrollView
         className="flex-1"
         contentContainerStyle={{ paddingBottom: 40 }}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#FF6600" />}
       >
+        {/* ── Sub-Header (Welcome Message) ── */}
+        <View className="px-6 pt-6 pb-2">
+          <Text className="text-sm text-[#94A3B8] dark:text-darkTextSecondary font-poppins">
+            {translate("superAdmin.dashboard.welcome")}
+            <Text className="text-orange-500 font-poppins-bold">
+              {adminInfo?.username?.split(" ")[0] || "Admin"}
+            </Text>!
+          </Text>
+        </View>
 
         {/* ── Stat Cards (centered on web) ── */}
         <View

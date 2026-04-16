@@ -2,6 +2,7 @@ import React, { useRef } from "react";
 import { TextInput, FlatList, Platform, Pressable } from "react-native";
 import { useTranslation } from "react-i18next";
 import { View, Text, TouchableOpacity } from "@/tw";
+import { Search, X } from "lucide-react-native";
 import { Feather } from "@expo/vector-icons";
 import { TYPO, COLORS } from "@/type/super-admin/user";
 import { WEB_PAGE_PADDING } from "@/type/super-admin/layout";
@@ -14,6 +15,7 @@ interface UsersSearchHeaderProps {
   onTabChange: (tab: UserRoleTab) => void;
   statusFilter: AccountStatusFilter;
   onFilterPress: () => void;
+  counts: Record<UserRoleTab, number>;
 }
 
 const TABS: UserRoleTab[] = ["All", "User", "Manager", "Staff"];
@@ -25,6 +27,7 @@ export function UsersSearchHeader({
   onTabChange,
   statusFilter,
   onFilterPress,
+  counts,
 }: UsersSearchHeaderProps) {
   const searchInputRef = useRef<import("react-native").TextInput>(null);
   const { t: translate } = useTranslation();
@@ -33,91 +36,83 @@ export function UsersSearchHeader({
   // ── Web layout ──
   if (isWeb) {
     return (
-      <>
-        <View
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "flex-start",
+          paddingTop: 20,
+          paddingBottom: 20,
+          paddingHorizontal: WEB_PAGE_PADDING,
+          backgroundColor: "#fcfdfeff",
+          borderBottomWidth: 1,
+          borderBottomColor: "#f1f5f9",
+        }}
+      >
+        {/* Left: Title */}
+        <Text
           style={{
-            flexDirection: "row",
-            alignItems: "flex-start",
-            paddingTop: 20,
-            paddingBottom: 20,
-            paddingHorizontal: WEB_PAGE_PADDING,
-            backgroundColor: "#fcfdfeff",
-            borderBottomWidth: 1,
-            borderBottomColor: "#f1f5f9",
+            fontSize: 22,
+            fontFamily: "Poppins-Bold",
+            color: "#0f172a",
+            paddingTop: 8,
           }}
         >
-          {/* Left: Title */}
-          <Text
+          {translate("superAdmin.users.title")}
+        </Text>
+
+        <View style={{ flex: 1 }} />
+
+        <View style={{ flexDirection: "column", gap: 8 }}>
+          {/* Search bar */}
+          <Pressable
+            onPress={() => searchInputRef.current?.focus()}
             style={{
-              fontSize: 22,
-              fontFamily: "Poppins-Bold",
-              color: "#0f172a",
-              paddingTop: 8,
+              flexDirection: "row",
+              alignItems: "center",
+              backgroundColor: "#f8fafc",
+              borderRadius: 16,
+              borderWidth: 1,
+              borderColor: "#e2e8f0",
+              height: 48,
+              paddingHorizontal: 16,
+              flex: 1,
+              cursor: "text" as any,
             }}
           >
-            {translate("superAdmin.users.title")}
-          </Text>
-
-          <View style={{ flex: 1 }} />
-
-          {/* Right column: search bar + tabs — both share the same left/right edges */}
-          <View style={{ flexDirection: "column", gap: 8 }}>
-            {/* Search bar */}
-            <Pressable
-              onPress={() => searchInputRef.current?.focus()}
+            <Feather name="search" size={18} color={COLORS.textMuted} style={{ marginRight: 10 }} />
+            <TextInput
+              ref={searchInputRef}
+              value={search}
+              onChangeText={onSearchChange}
+              placeholder={translate("superAdmin.users.searchPlaceholder")}
+              placeholderTextColor={COLORS.textMuted}
+              autoCapitalize="none"
+              autoCorrect={false}
               style={{
-                flexDirection: "row",
-                alignItems: "center",
-                backgroundColor: "#f8fafc",
-                borderRadius: 12,
-                borderWidth: 1,
-                borderColor: "#e2e8f0",
-                height: 48,
-                paddingHorizontal: 16,
-                flex: 1,
-                cursor: "text" as any,
-              }}
-            >
-              <Feather
-                name="search"
-                size={18}
-                color={COLORS.textMuted}
-                style={{ marginRight: 10 }}
-              />
-              <TextInput
-                ref={searchInputRef}
-                value={search}
-                onChangeText={onSearchChange}
-                placeholder={translate("superAdmin.users.searchPlaceholder")}
-                placeholderTextColor={COLORS.textMuted}
-                autoCapitalize="none"
-                autoCorrect={false}
-                style={
-                  {
-                    flex: 1,
-                    fontSize: 18,
-                    fontFamily: "Poppins-Regular",
-                    color: "#0f172a",
-                    outline: "none",
-                    border: "none",
-                    boxShadow: "none",
-                    backgroundColor: "transparent",
-                    padding: 0,
-                    margin: 0,
-                    height: "100%",
-                    minWidth: 0,
-                  } as any
-                }
-              />
-              {search.length > 0 && (
-                <Pressable onPress={() => onSearchChange("")} style={{ padding: 4 }}>
-                  <Feather name="x" size={14} color={COLORS.textMuted} />
-                </Pressable>
-              )}
-            </Pressable>
+                  flex: 1,
+                  fontSize: 14,
+                  fontFamily: "Poppins-Regular",
+                  color: "#0f172a",
+                  outline: "none",
+                  border: "none",
+                  boxShadow: "none",
+                  backgroundColor: "transparent",
+                  padding: 0,
+                  margin: 0,
+                  height: "100%",
+                  minWidth: 0,
+                } as any}
+            />
+            {search.length > 0 && (
+              <Pressable onPress={() => onSearchChange("")} style={{ padding: 4 }}>
+                <Feather name="x" size={14} color={COLORS.textMuted} />
+              </Pressable>
+            )}
+          </Pressable>
 
-            {/* Tabs + Filter — right-aligned, same width as search bar */}
-            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "flex-end", gap: 8 }}>
+          {/* Tabs + Filter */}
+          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "flex-end", gap: 12 }}>
+            <View className="bg-white dark:bg-darkBackgroundCard rounded-2xl p-1.5 flex-row gap-x-1 shadow-sm border border-neutral-100 dark:border-darkBorder">
               {TABS.map((tab) => {
                 const isActive = activeTab === tab;
                 return (
@@ -125,18 +120,20 @@ export function UsersSearchHeader({
                     key={tab}
                     onPress={() => onTabChange(tab)}
                     style={{
-                      height: 40,
-                      paddingHorizontal: 18,
+                      height: 36,
+                      paddingHorizontal: 16,
                       borderRadius: 10,
                       alignItems: "center",
                       justifyContent: "center",
-                      backgroundColor: isActive ? "#FF6600" : "#f1f5f9",
+                      flexDirection: "row",
+                      gap: 6,
+                      backgroundColor: isActive ? "#FF6600" : "transparent",
                     }}
                   >
                     <Text
                       style={{
                         fontSize: 13,
-                        fontFamily: "Poppins-SemiBold",
+                        fontFamily: isActive ? "Poppins-Bold" : "Poppins-SemiBold",
                         color: isActive ? "#ffffff" : "#64748b",
                       }}
                     >
@@ -145,123 +142,111 @@ export function UsersSearchHeader({
                   </Pressable>
                 );
               })}
-
-              <View style={{ width: 1, height: 24, backgroundColor: "#e2e8f0", marginHorizontal: 4 }} />
-
-              <Pressable
-                onPress={onFilterPress}
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  height: 40,
-                  paddingHorizontal: 14,
-                  borderRadius: 10,
-                  borderWidth: 1,
-                  borderColor: statusFilter !== "All" ? "#fed7aa" : "#e2e8f0",
-                  backgroundColor: statusFilter !== "All" ? "#fff7ed" : "#f8fafc",
-                  gap: 8,
-                }}
-              >
-                <Feather
-                  name="sliders"
-                  size={16}
-                  color={statusFilter !== "All" ? COLORS.primary : COLORS.textMuted}
-                />
-                <Text
-                  style={{
-                    fontSize: 13,
-                    fontFamily: "Poppins-SemiBold",
-                    color: statusFilter !== "All" ? COLORS.primary : "#64748b",
-                  }}
-                >
-                  {translate("superAdmin.users.filter")}
-                </Text>
-              </Pressable>
             </View>
+            <View style={{ width: 1, height: 24, backgroundColor: "#e2e8f0", marginHorizontal: 4 }} />
+            <Pressable
+              onPress={onFilterPress}
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                height: 44,
+                paddingHorizontal: 16,
+                borderRadius: 12,
+                borderWidth: 1,
+                borderColor: statusFilter !== "All" ? "#fed7aa" : "#e2e8f0",
+                backgroundColor: statusFilter !== "All" ? "#fff7ed" : "#f8fafc",
+                gap: 8,
+              }}
+            >
+              <Feather name="sliders" size={16} color={statusFilter !== "All" ? COLORS.primary : COLORS.textMuted} />
+              <Text style={{ fontSize: 13, fontFamily: "Poppins-SemiBold", color: statusFilter !== "All" ? COLORS.primary : "#64748b" }}>
+                {translate("superAdmin.users.filter")}
+              </Text>
+            </Pressable>
           </View>
         </View>
-      </>
+      </View>
     );
   }
 
   // ── Mobile layout ──
   return (
-    <View>
-      {/* ── Main Header (Uniform Style) ── */}
-      <View className="bg-white dark:bg-darkBackground border-b border-neutral-100 dark:border-darkBorder px-6 py-3">
-        <Text className="text-xl font-poppins-bold text-textPrimary dark:text-darkTextPrimary py-1">
+    <View className="z-10 bg-white dark:bg-darkBackground">
+      {/* ── Main Header ── */}
+      <View className="flex-row items-center px-6 py-3 border-b border-neutral-100 dark:border-darkBorder">
+        <Text className="text-xl font-poppins-bold text-textPrimary dark:text-darkTextPrimary flex-shrink-0">
           {translate("superAdmin.users.title")}
         </Text>
-      </View>
-
-      {/* ── Sub-Header (Search + Filters) ── */}
-      <View className="bg-backgroundMuted dark:bg-darkBackground border-b border-neutral-100 dark:border-darkBorder px-6 pt-5 pb-1">
+        
+        {/* Search Pill - flex-1 and w-full ensures it stretches to the right */}
         <TouchableOpacity
           activeOpacity={1}
           onPress={() => searchInputRef.current?.focus()}
-          className="flex-row items-center bg-white dark:bg-darkBackgroundMuted rounded-xl px-3.5 mb-4 h-11 border border-slate-200/50 dark:border-darkBorder w-full overflow-hidden"
+          className="flex-1 ml-4 flex-row items-center bg-slate-50 dark:bg-darkBackgroundCard rounded-full px-3 h-10 border border-slate-100 dark:border-darkBorder"
         >
-          <Feather name="search" size={16} color={COLORS.textMuted} style={{ marginRight: 10 }} />
+          <Search size={16} color="#94A3B8" />
           <TextInput
             ref={searchInputRef}
-            className="flex-1 text-[14px] font-poppins text-textPrimary dark:text-darkTextPrimary h-full py-0 m-0"
-            style={{ paddingTop: 0, paddingBottom: 0 }}
+            className="flex-1 ml-2 font-poppins text-[10px] text-neutral-900 dark:text-white"
+            style={{ 
+              includeFontPadding: false, 
+              textAlignVertical: 'center',
+              height: 40,
+              paddingTop: Platform.OS === 'android' ? 2 : 0 // Small tweak to fix Poppins vertical misalignment
+            }}
             placeholder={translate("superAdmin.users.searchPlaceholder")}
-            placeholderTextColor={COLORS.textMuted}
+            placeholderTextColor="#94A3B8"
             value={search}
             onChangeText={onSearchChange}
             autoCapitalize="none"
             autoCorrect={false}
           />
+          {search.length > 0 && (
+            <TouchableOpacity onPress={() => onSearchChange("")}>
+              <X size={14} color="#94A3B8" />
+            </TouchableOpacity>
+          )}
         </TouchableOpacity>
+      </View>
 
+      {/* ── Tabs Row ── */}
+      <View className="bg-white dark:bg-darkBackground border-b border-neutral-100 dark:border-darkBorder">
         <FlatList
           horizontal
           showsHorizontalScrollIndicator={false}
-          className="mb-4"
           data={TABS}
           keyExtractor={(item) => item}
-          contentContainerStyle={{ gap: 8 }}
+          contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 24 }}
           ListHeaderComponent={(
             <TouchableOpacity
               onPress={onFilterPress}
-              className={`flex-row items-center h-10 px-4 rounded-full mr-2 border ${
-                statusFilter !== "All"
-                  ? "bg-primary/5 border-primary/30"
-                  : "bg-white dark:bg-darkBackgroundMuted border-slate-100 dark:border-darkBorder"
-              }`}
+              style={{ marginRight: 32 }}
+              className={`py-3 items-center flex-row justify-center gap-1.5 border-b-2 ${statusFilter !== "All" ? "border-primary" : "border-transparent"}`}
             >
-              <Feather
-                name="sliders"
-                size={13}
-                color={statusFilter !== "All" ? COLORS.primary : COLORS.textMuted}
-                style={{ marginRight: 6 }}
+              <Feather 
+                name="sliders" 
+                size={14} 
+                color={statusFilter !== "All" ? "#FF6600" : "#64748B"} 
               />
-              <Text
-                className={`${TYPO.chip} ${
-                  statusFilter !== "All" ? "text-primary" : "text-textMuted"
-                }`}
-              >
+              <Text className={`text-sm ${statusFilter !== "All" ? "font-poppins-bold text-primary" : "font-poppins-medium text-slate-400"}`}>
                 {translate("superAdmin.users.filter")}
               </Text>
             </TouchableOpacity>
           )}
-          renderItem={({ item: tab }) => (
-            <TouchableOpacity
-              onPress={() => onTabChange(tab)}
-              className={`flex-row items-center h-10 px-4 rounded-full mr-2 ${
-                activeTab === tab
-                  ? "bg-primary"
-                  : "bg-white dark:bg-darkBackgroundMuted border border-slate-100 dark:border-darkBorder"
-              }`}
-            >
-              <Text
-                className={`${TYPO.chip} ${activeTab === tab ? "text-white" : "text-textMuted"}`}
+          renderItem={({ item: tab }) => {
+            const isActive = activeTab === tab;
+            return (
+              <TouchableOpacity
+                onPress={() => onTabChange(tab)}
+                style={{ marginRight: 32 }}
+                className={`py-3 items-center flex-row justify-center border-b-2 ${isActive ? "border-primary" : "border-transparent"}`}
               >
-                {translate(`superAdmin.users.tabs.${tab.toLowerCase()}`)}
-              </Text>
-            </TouchableOpacity>
-          )}
+                <Text className={`text-sm ${isActive ? "font-poppins-bold text-primary" : "font-poppins-medium text-slate-400"}`}>
+                  {translate(`superAdmin.users.tabs.${tab.toLowerCase()}`)}
+                </Text>
+              </TouchableOpacity>
+            );
+          }}
         />
       </View>
     </View>
