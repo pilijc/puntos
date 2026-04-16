@@ -7,7 +7,7 @@ import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { ArrowLeft, Store as StoreIcon, Briefcase, BadgeCheck, AlertTriangle, Flame, Sun, Moon, RefreshCw, MapPin, Map, CheckCircle, ChevronLeft, ChevronRight } from "lucide-react-native";
 import { Image } from "expo-image";
 import { BlurView } from "expo-blur";
-import Mapbox, { Camera, MapView } from "@rnmapbox/maps";
+import Mapbox, { Camera, MapView, MarkerView } from "@rnmapbox/maps";
 import { ScreenWrapper } from "@/components/ui/screen-wrapper";
 import { Button } from "@/components/button";
 import { AdminStoreRow } from "@/services/store-service";
@@ -367,36 +367,41 @@ export function AdminStoreDetails({
             {(store.latitude !== null && store.longitude !== null && store.latitude !== undefined && store.longitude !== undefined) ? (
               <View style={{ width: "100%", height: 160, borderRadius: 16, overflow: "hidden", marginBottom: 20 }} className="bg-slate-50 dark:bg-neutral-800">
                 {(shouldUseInteractiveMapbox() && MapView && Mapbox) ? (
-                  <MapView
-                    style={{ flex: 1, width: "100%", height: "100%" }}
-                    surfaceView={false}
-                    styleURL={
-                      isDark
-                        ? "mapbox://styles/mapbox/navigation-night-v1"
-                        : "mapbox://styles/mapbox/light-v11"
-                    }
-                    scrollEnabled={false}
-                    zoomEnabled={false}
-                    rotateEnabled={false}
-                    pitchEnabled={false}
-                    attributionEnabled={false}
-                    logoEnabled={false}
-                  >
-                    {Camera && <Camera centerCoordinate={[Number(store.longitude), Number(store.latitude)]} zoomLevel={14} animationMode="none" />}
-                    {Mapbox.Images && <Mapbox.Images images={{ default: require("../../../assets/images/markers/default.png") }} />}
-                    {Mapbox.ShapeSource && (
-                      <Mapbox.ShapeSource
-                        id="storePinLocation"
-                        shape={{
-                          type: "Feature",
-                          geometry: { type: "Point", coordinates: [Number(store.longitude), Number(store.latitude)] },
-                          properties: { icon: "default" },
-                        }}
+                  <View style={{ flex: 1, position: "relative" }}>
+                    <MapView
+                      style={{ flex: 1, width: "100%", height: "100%" }}
+                      surfaceView={false}
+                      styleURL={
+                        isDark
+                          ? "mapbox://styles/mapbox/navigation-night-v1"
+                          : "mapbox://styles/mapbox/streets-v12"
+                      }
+                      scrollEnabled={false}
+                      zoomEnabled={false}
+                      rotateEnabled={false}
+                      pitchEnabled={false}
+                      attributionEnabled={false}
+                      logoEnabled={false}
+                    >
+                      <Camera
+                        centerCoordinate={[Number(store.longitude), Number(store.latitude)]}
+                        zoomLevel={15}
+                        animationMode="none"
+                      />
+                      <MarkerView
+                        coordinate={[Number(store.longitude), Number(store.latitude)]}
+                        anchor={{ x: 0.5, y: 1 }}
                       >
-                        {Mapbox.SymbolLayer && <Mapbox.SymbolLayer id="storePinLayerLoc" style={{ iconImage: ["get", "icon"], iconAllowOverlap: true, iconSize: 0.015 }} />}
-                      </Mapbox.ShapeSource>
-                    )}
-                  </MapView>
+                        <View style={{ alignItems: "center", justifyContent: "flex-end" }}>
+                          <Image
+                            source={require("../../../assets/images/markers/default.png")}
+                            style={{ width: 36, height: 36 }}
+                            contentFit="contain"
+                          />
+                        </View>
+                      </MarkerView>
+                    </MapView>
+                  </View>
                 ) : (
                   <View className="flex-1 w-full h-full items-center justify-center gap-y-1">
                     <MaterialIcons name="map" size={28} color={isDark ? "#525252" : "#CBD5E1"} />

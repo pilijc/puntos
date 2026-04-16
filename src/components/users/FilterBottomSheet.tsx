@@ -107,51 +107,56 @@ export function FilterBottomSheet({
           onPress={() => onClose()}
         />
 
-        {/* Dropdown panel anchored to top-right */}
-        <View
-          style={{
-            position: "absolute",
-            top: 116,     // roughly: title(~50) + search(~56) + gap = just below the tabs row
-            right: 24,    // matches the header paddingHorizontal
-            width: 280,
-            backgroundColor: "#ffffff",
-            borderRadius: 14,
-            borderWidth: 1,
-            borderColor: "#e2e8f0",
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: 8 },
-            shadowOpacity: 0.12,
-            shadowRadius: 24,
-            elevation: 20,
-            zIndex: 100,
-            overflow: "hidden",
-          }}
+        {/* Centered container to align with content width (1000px) */}
+        <View 
+          style={{ width: "100%", maxWidth: 1000, alignSelf: "center", position: "relative" }} 
+          pointerEvents="box-none"
         >
-          {/* Header */}
+          {/* Dropdown panel anchored to the filter button on the right section */}
           <View
             style={{
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "space-between",
-              paddingHorizontal: 16,
-              paddingTop: 14,
-              paddingBottom: 12,
-              borderBottomWidth: 1,
-              borderBottomColor: "#f1f5f9",
+              position: "absolute",
+              top: 130,
+              right: 0,    // Aligns with the right-aligned filter button in 1000px layout
+              width: 280,
+              backgroundColor: "#ffffff",
+              borderRadius: 14,
+              borderWidth: 1,
+              borderColor: "#e2e8f0",
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 8 },
+              shadowOpacity: 0.12,
+              shadowRadius: 24,
+              elevation: 20,
+              zIndex: 100,
+              overflow: "hidden",
             }}
           >
-            <Text
-              style={{ fontSize: 13, fontFamily: "Poppins-SemiBold", color: "#0f172a" }}
+            {/* Header */}
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between",
+                paddingHorizontal: 16,
+                paddingTop: 14,
+                paddingBottom: 12,
+                borderBottomWidth: 1,
+                borderBottomColor: "#f1f5f9",
+              }}
             >
-              Filter Users
-            </Text>
-            <Pressable onPress={() => onClose()} style={{ padding: 4 }}>
-              <Feather name="x" size={15} color="#94a3b8" />
-            </Pressable>
-          </View>
+              <Text
+                style={{ fontSize: 13, fontFamily: "Poppins-SemiBold", color: "#0f172a" }}
+              >
+                Filter Users
+              </Text>
+              <Pressable onPress={() => onClose()} style={{ padding: 4 }}>
+                <Feather name="x" size={15} color="#94a3b8" />
+              </Pressable>
+            </View>
 
-          {/* Options */}
-          <View style={{ padding: 12, gap: 6 }}>
+            {/* Options */}
+            <View style={{ padding: 12, gap: 6 }}>
             {FILTER_OPTIONS.map((option) => {
               const isActive = statusFilter === option.value;
               return (
@@ -223,6 +228,7 @@ export function FilterBottomSheet({
               </Text>
             </Pressable>
           </View>
+          </View>
         </View>
       </View>
     );
@@ -264,15 +270,13 @@ export function FilterBottomSheet({
                 <TouchableOpacity
                   key={option.value}
                   onPress={() => closeSheet(() => onSelectFilter(option.value))}
-                  className={`flex-row items-center px-3 py-2.5 rounded-xl border ${
-                    isActive ? "bg-primary/5 border-primary/30" : "bg-backgroundMuted dark:bg-darkBackgroundCard border-slate-100 dark:border-darkBorder"
-                  }`}
+                  className={`flex-row items-center px-3 py-2.5 rounded-xl border ${isActive ? "bg-primary/5 border-primary/30" : "bg-backgroundMuted dark:bg-darkBackgroundCard border-slate-100 dark:border-darkBorder"
+                    }`}
                 >
                   <View className="flex-1">
                     <Text
-                      className={`text-[12px] ${
-                        isActive ? "font-poppins-bold text-primary" : "font-poppins-medium text-textSecondary dark:text-darkTextSecondary"
-                      }`}
+                      className={`text-[12px] ${isActive ? "font-poppins-bold text-primary" : "font-poppins-medium text-textSecondary dark:text-darkTextSecondary"
+                        }`}
                     >
                       {option.label}
                     </Text>
