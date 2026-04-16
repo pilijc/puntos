@@ -239,9 +239,9 @@ export default function SubscriptionConfig() {
 
                     <View className="flex-row items-center justify-between">
                       <Text className="text-[10px] font-poppins-medium text-slate-500 dark:text-darkTextMuted">
-                        {sub.owner_name}
+                        {sub.display_name}
                       </Text>
-                    )}
+                    </View>
                   </View>
                 );
               })}
@@ -269,8 +269,8 @@ export default function SubscriptionConfig() {
                 onValueChange={(val) => {
                   const ids = ownersOverLimit.map((m) => m.owner_id);
                   if (val) {
-                    const newIds = allStores.map(s => s.id).filter(id => !config.enforced_stores_ids.includes(id));
-                    if (newIds.length > 0) config.setEnforcedStores([...config.enforced_stores_ids, ...newIds]);
+                    const newIds = Array.from(new Set([...config.enforced_owner_ids, ...ids]));
+                    config.setEnforcedOwners(newIds);
                   } else {
                     config.setEnforcedOwners(
                       config.enforced_owner_ids.filter((id) => !ids.includes(id)),
