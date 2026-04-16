@@ -4,13 +4,16 @@ import { Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { useAuthStore } from '@/store/auth-store';
+import { deactivateCurrentDeviceSessionService } from '@/services/store-manager/device-session-service';
 
 export const useAuthActions = () => {
     const handleLogout = async () => {
         try {
-            // Commented out for now
-            // useAuthStore.getState().reset();
-            // await AsyncStorage.removeItem('sessionToken');
+            // Get user before signing out to deactivate device session
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
+                await deactivateCurrentDeviceSessionService(user.id).catch(e => console.warn(e));
+            }
 
             try {
                 await GoogleSignin.signOut();

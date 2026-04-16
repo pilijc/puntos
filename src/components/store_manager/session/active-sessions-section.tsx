@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, ActivityIndicator, RefreshControl, ScrollView, } from "react-native";
+import { ActivityIndicator } from "react-native";
+import { View, Text, TouchableOpacity } from "@/tw";
 import { useDeviceSession } from '@/hooks/store-manager/use-device-session';
 import { DeviceSessionCard } from '@/components/store_manager/session/device-session-card';
 
@@ -25,40 +26,46 @@ export function ActiveSessionSection() {
     if (loading) {
         return (
             <View className='items-center py-6'>
-                <ActivityIndicator color="#6366f1" />
+                <ActivityIndicator color="#ff6600" />
             </View>
         );
     }
 
     return (
-        <View className='mt-6 px-4'>
-            <Text className="text-textPrimary text-base font-poppins-bold mb-1">
-                Active Sessions
-            </Text>
-            <Text className='text-textSecondary text-sm mb-3.5 '>
+        <View className="bg-white rounded-xl p-4 shadow-sm shadow-black/5 w-full mx-auto mt-4 px-4 overflow-hidden mb-4">
+            <View className="flex-row justify-between items-center mb-1">
+                <Text className="text-textPrimary text-base font-poppins-semibold">
+                    Active Sessions
+                </Text>
+                
+                {refreshing ? (
+                    <ActivityIndicator size="small" color="#ff6600" />
+                ) : (
+                    <TouchableOpacity onPress={handleRefresh}>
+                        <Text className="text-primary font-poppins text-xs font-poppins-semibold">
+                            Refresh
+                        </Text>
+                    </TouchableOpacity>
+                )}
+            </View>
+
+            <Text className='text-textPrimary text-xs mb-5 font-poppins'>
                 You can have up to 2 active sessions at a time.
             </Text>
 
-            <ScrollView
-                refreshControl={
-                    <RefreshControl 
-                        refreshing={refreshing}
-                        onRefresh={handleRefresh}
-                        tintColor="#6366f1"
-                    />
-                }
-                scrollEnabled={false}
-            >
+            <View className="w-full">
                 {activeSessions.length === 0 ? (
-                    <Text className='text-textPrimary text-sm text-center py-4'>
+                    <Text className='text-textSecondary text-sm py-4 font-poppins'>
                         No active sessions found.
                     </Text>
                 ): (
-                    activeSessions.map((session) => (
-                        <DeviceSessionCard key={session.id} session={session} />
+                    activeSessions.map((session, index) => (
+                        <View key={session.id} className={index > 0 ? "border-t border-border pt-3 mt-3" : ""}>
+                            <DeviceSessionCard session={session} />
+                        </View>
                     ))
                 )}
-            </ScrollView>
+            </View>
         </View>
     )
 }

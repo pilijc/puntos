@@ -50,6 +50,25 @@ export function useAuthListener() {
                 await upsertPushId();
               }
 
+              // Enforce device session limit to prevent the global listener from hijacking routing into the dashboard!
+              if (nextRoute === "/(store_manager)" || (typeof nextRoute === "string" && nextRoute.startsWith("/(store_manager)"))) {
+                const { checkDeviceSessionLimitService, upsertDeviceSessionService } = require("@/services/store-manager/device-session-service");
+                try {
+                  const sessionCheck = await checkDeviceSessionLimitService(userId);
+                  if (sessionCheck.allowed) {
+                    await upsertDeviceSessionService(userId);
+                  } else {
+                    if (!pathname?.includes('/login')) {
+                        await supabase.auth.signOut();
+                        router.replace("/(auth)/login");
+                    }
+                    return; 
+                  }
+                } catch (e) {
+                  console.warn("[AuthListener] Device session check failed", e);
+                }
+              }
+
               router.replace(nextRoute as any);
               } catch (err: any) {
               if (err instanceof AccountDeletedError) {

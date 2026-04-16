@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import * as SecureStore from "expo-secure-store";
 import * as Device from "expo-device";
+import * as Crypto from "expo-crypto";
 import { Platform } from "react-native";
 import { ManagerDeviceSession, DeviceSessionCheckResult } from "@/type/store-manager/device-session";
 
@@ -20,7 +21,7 @@ export async function getOrCreateDeviceId(): Promise<string> {
     if(Platform.OS === "web") {
         let id = localStorage.getItem(DEVICE_ID_KEY);
         if (!id) {
-            id = crypto.randomUUID();
+            id = Crypto.randomUUID();
             localStorage.setItem(DEVICE_ID_KEY, id);
         }
         return id;
@@ -28,8 +29,7 @@ export async function getOrCreateDeviceId(): Promise<string> {
 
     let id = await SecureStore.getItemAsync(DEVICE_ID_KEY);
     if (!id) {
-        // crypto.randomUUID(); is available in react native >= 0.71 
-        id = crypto.randomUUID();
+        id = Crypto.randomUUID();
         await SecureStore.setItemAsync(DEVICE_ID_KEY, id);
     }
     return id;
@@ -62,7 +62,7 @@ export async function upsertDeviceSessionService(
 ) : Promise<ManagerDeviceSession> {
     const deviceId = await getOrCreateDeviceId();
     const deviceType = resolveDeviceType();
-    const deviceModel = resolveDeviceType();
+    const deviceModel = resolveDeviceModel();
 
     const payload = {
         user_id: userId,
@@ -76,7 +76,7 @@ export async function upsertDeviceSessionService(
 
     const { data, error } = await supabase
         .from("manager_device_sessions")
-        .upsert(payload, {onConflict: "user_id, device_id"})
+        .upsert(payload, {onConflict: "user_id,device_id"})
         .select()
         .single();
     
