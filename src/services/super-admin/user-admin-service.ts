@@ -30,10 +30,11 @@ export type UserRecord = {
 
 export const normalizeUser = (u: any): UserRecord => {
   const name = u?.name || "Unknown User";
+  const isManager = ["manager", "store_owner", "store_manager"].includes(u?.role_type);
   const roleLabel: UserRecord["roleLabel"] =
     u?.role_type === "super_admin"
       ? "s-admin"
-      : u?.role_type === "manager"
+      : isManager
       ? "Manager"
       : u?.role_type === "front_desk"
       ? "Staff"
@@ -43,9 +44,7 @@ export const normalizeUser = (u: any): UserRecord => {
     ? String(u.avatar_url).startsWith("http")
       ? u.avatar_url
       : `${BUCKET_URL}/${u.avatar_url}`
-    : `https://api.dicebear.com/7.x/avataaars/png?seed=${encodeURIComponent(
-        name || u?.id || "user"
-      )}`;
+    : null;
 
   const status: UserRecord["status"] =
     u?.blocked === true || u?.role === 0 ? "Blocked" : "Active";
@@ -153,13 +152,13 @@ export function buildUsersQuery(
     .select("*", { count: "exact" })
     .order("name", { ascending: true });
 
-  if (activeTab === "Manager") q = q.eq("role_type", "manager");
+  if (activeTab === "Manager") {
+    q = q.in("role_type", ["manager", "store_owner", "store_manager"]);
+  }
   if (activeTab === "Staff") q = q.eq("role_type", "front_desk");
   if (activeTab === "User") {
     q = q
-      .neq("role_type", "manager")
-      .neq("role_type", "front_desk")
-      .neq("role_type", "super_admin");
+      .not("role_type", "in", '("manager","store_owner","store_manager","super_admin","front_desk")');
   }
 
   const trimmed = search.trim();
