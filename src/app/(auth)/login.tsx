@@ -32,7 +32,7 @@ export default function Login() {
     buttons: ModalButton[];
   } | null>(null);
 
-  const { checkAndRegisterSession, blockedSessions } = useDeviceSession();
+  const { checkAndRegisterSession, blockedSessions, validateHomeRouteSession } = useDeviceSession();
   const [showDeviceLimitModal, setShowDeviceLimitModal] = useState(false);
 
   const handleCheckAgain = async () => {
@@ -100,15 +100,10 @@ export default function Login() {
         return;
       }
 
-      if (data.homeRoute && (data.homeRoute === "/(store_manager)" || data.homeRoute.startsWith("/(store_manager)"))) {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          const sessionCheck = await checkAndRegisterSession(user.id);
-          if (!sessionCheck.allowed) {
-            setShowDeviceLimitModal(true);
-            return;
-          }
-        }
+      const isAllowed = await validateHomeRouteSession(data.homeRoute);
+      if (!isAllowed) {
+        setShowDeviceLimitModal(true);
+        return;
       }
 
       router.replace(data.homeRoute);
@@ -136,15 +131,10 @@ export default function Login() {
       setLoadingGoogle(true);
       const data = await signInWithGoogleLoginService();
 
-      if (data.homeRoute && (data.homeRoute === "/(store_manager)" || data.homeRoute.startsWith("/(store_manager)"))) {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          const sessionCheck = await checkAndRegisterSession(user.id);
-          if (!sessionCheck.allowed) {
-            setShowDeviceLimitModal(true);
-            return;
-          }
-        }
+      const isAllowed = await validateHomeRouteSession(data.homeRoute);
+      if (!isAllowed) {
+        setShowDeviceLimitModal(true);
+        return;
       }
 
       router.replace(data.homeRoute ?? "/(user)");

@@ -3,7 +3,7 @@ import { ScrollView } from 'react-native';
 import { View, Text } from '@/tw';
 import { Modal } from '@/components/modal';
 import { AlertCircle } from 'lucide-react-native';
-import { ManagerDeviceSession } from '@/type/store-manager/device-session';
+import { ManagerDeviceSession, MAX_DEVICE_SESSIONS } from '@/type/store-manager/device-session';
 import { DeviceSessionCard } from './device-session-card';
 
 interface DeviceLimitModalProps {
@@ -57,7 +57,7 @@ export function DeviceLimitModal({
                             Active Session Limit
                         </Text>
                         <Text className="text-red-700/80 text-xs font-poppins leading-4">
-                            You can have up to 2 active sessions. Please log out of another device to continue.
+                            You can have up to {MAX_DEVICE_SESSIONS} active sessions. Please log out of another device to continue.
                         </Text>
                     </View>
                 </View>

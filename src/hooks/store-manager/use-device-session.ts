@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useEffect } from "react";
 import { AppState, AppStateStatus } from "react-native";
 import { supabase } from "@/supabase/supabase";
 import { checkDeviceSessionLimitService, deactivateCurrentDeviceSessionService, upsertDeviceSessionService, refreshDeviceHeartbeatService, getActiveDeviceSessionsService } from "@/services/store-manager/device-session-service";
@@ -15,6 +15,19 @@ export function useDeviceSession(userId?: string) {
         setIsCheckingLimit,
         clearBlockedSessions,
     } = useDeviceSessionStore();
+
+    useEffect(() => {
+        if (!userId) return;
+
+        const handler = (state: AppStateStatus) => {
+            if (state === "active") {
+                refreshDeviceHeartbeatService(userId).catch(() => {});
+            }
+        };
+
+        const sub = AppState.addEventListener("change", handler);
+        return () => sub.remove();
+    }, [userId]);
 
     const checkAndRegisterSession = useCallback(
         async (
@@ -54,6 +67,7 @@ export function useDeviceSession(userId?: string) {
             }
         };
         const sub = AppState.addEventListener("change", handler);
+        return () => sub.remove();
     }, []);
 
     const fetchActiveSessions = useCallback(async () => {
@@ -67,11 +81,23 @@ export function useDeviceSession(userId?: string) {
         }
     }, [setActiveSessions]);
 
+    const validateHomeRouteSession = useCallback(async (homeRoute?: string) => {
+        if (homeRoute && (homeRoute === "/(store_manager)" || homeRoute.startsWith("/(store_manager)"))) {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
+                const sessionCheck = await checkAndRegisterSession(user.id);
+                return sessionCheck.allowed;
+            }
+        }
+        return true;
+    }, [checkAndRegisterSession]);
+
     return {
         blockedSessions,
         activeSessions,
         isCheckingLimit,
         checkAndRegisterSession,
+        validateHomeRouteSession,
         signOutCurrentDevice,
         startHeartbeat,
         fetchActiveSessions,

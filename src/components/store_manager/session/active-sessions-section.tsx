@@ -5,6 +5,7 @@ import { Shield, RefreshCw } from 'lucide-react-native';
 import { useDeviceSession } from '@/hooks/store-manager/use-device-session';
 import { DeviceSessionCard } from '@/components/store_manager/session/device-session-card';
 import DeviceSessionSkeleton from '@/components/skeleton/store_manager/device-session-skeleton';
+import { MAX_DEVICE_SESSIONS } from '@/type/store-manager/device-session';
 
 export function ActiveSessionSection() {
     const { activeSessions, fetchActiveSessions } = useDeviceSession();
@@ -38,7 +39,7 @@ export function ActiveSessionSection() {
                         Active Sessions
                     </Text>
                     <Text className="text-xs font-poppins text-textMuted dark:text-darkTextMuted">
-                        You can have up to 2 active sessions at a time.
+                        You can have up to {MAX_DEVICE_SESSIONS} active sessions at a time.
                     </Text>
                 </View>
                 

@@ -1,16 +1,9 @@
-import { createClient } from "@supabase/supabase-js";
+import { supabase } from "@/supabase/supabase";
 import * as SecureStore from "expo-secure-store";
 import * as Device from "expo-device";
 import * as Crypto from "expo-crypto";
 import { Platform } from "react-native";
-import { ManagerDeviceSession, DeviceSessionCheckResult } from "@/type/store-manager/device-session";
-
-const supabase = createClient(
-    process.env.EXPO_PUBLIC_API_URL!,
-    process.env.EXPO_PUBLIC_SERVICE_ROLE_KEY!,
-);
-
-const MAX_SESSIONS = 2;
+import { ManagerDeviceSession, DeviceSessionCheckResult, MAX_DEVICE_SESSIONS } from "@/type/store-manager/device-session";
 
 const DEVICE_ID_KEY = "puntos_device_id";
 
@@ -122,7 +115,7 @@ export async function checkDeviceSessionLimitService(
         (s) => s.device_id === deviceId,
     );
 
-    if (thisDeviceAlreadyActive || sessions.length < MAX_SESSIONS) {
+    if (thisDeviceAlreadyActive || sessions.length < MAX_DEVICE_SESSIONS) {
         return { allowed: true, activeSessions: [] };
     } 
 

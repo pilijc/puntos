@@ -1,3 +1,4 @@
+export const MAX_DEVICE_SESSIONS = 2;
 export type DeviceType = "mobile" | "tablet" | "web";
 
 export interface ManagerDeviceSession {
