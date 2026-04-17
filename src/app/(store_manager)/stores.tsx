@@ -7,6 +7,9 @@ import { useTranslation } from "react-i18next";
 import { StoreRow } from "@/services/store-service";
 import { useManagerStoresStore } from "@/store/manager-stores-store";
 import { AlertCircle, ChartBarStacked, ChevronRight, MapPin, Plus, Store } from "lucide-react-native";
+import { Modal, type ModalButton } from "@/components/modal";
+import { canOwnerCreateAnotherStore } from "@/services/store-manager/subscription-limits";
+import { supabase } from "@/supabase/supabase";
 
 type TabKey = "all" | "active" | "pending" | "inactive";
 
@@ -142,6 +145,15 @@ export default function StoreManagerStores() {
   const router = useRouter();
   const { stores, loading, error, hasFetchedOnce, fetchStores } = useManagerStoresStore();
   const [refreshing, setRefreshing] = useState(false);
+  const [createGuard, setCreateGuard] = useState<{ checked: boolean; allowed: boolean }>({
+    checked: false,
+    allowed: true,
+  });
+  const [modal, setModal] = useState<{
+    title: string;
+    message: string;
+    buttons: ModalButton[];
+  } | null>(null);
 
   const tabs = useMemo(
     () =>
@@ -164,9 +176,24 @@ export default function StoreManagerStores() {
     }
   }, [hasFetchedOnce, fetchStores]);
 
+  const refreshCreateGuard = useCallback(async () => {
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user?.id) return;
+      const guard = await canOwnerCreateAnotherStore(user.id);
+      setCreateGuard({ checked: true, allowed: guard.allowed });
+    } catch (e) {
+      // If this check fails for any reason, don't block navigation; DB guard still enforces the limit.
+      setCreateGuard({ checked: true, allowed: true });
+    }
+  }, []);
+
   const onRefresh = async () => {
     setRefreshing(true);
     await fetchStores(true);
+    await refreshCreateGuard();
   };
 
   useFocusEffect(
@@ -174,11 +201,47 @@ export default function StoreManagerStores() {
       if (hasFetchedOnce) {
         fetchStores();
       }
-    }, [hasFetchedOnce, fetchStores])
+      void refreshCreateGuard();
+    }, [hasFetchedOnce, fetchStores, refreshCreateGuard])
   );
+
+  const handleCreatePress = useCallback(() => {
+    if (createGuard.checked && !createGuard.allowed) {
+      setModal({
+        title: "Upgrade required",
+        message:
+          "You've reached the Free plan limit of one store. To add more stores, please subscribe to the Pro plan.",
+        buttons: [
+          {
+            label: "Subscribe",
+            variant: "primary",
+            onPress: () => {
+              setModal(null);
+              router.push("/(store_manager)/subscription");
+            },
+          },
+          {
+            label: translate("label.cancel"),
+            variant: "secondary",
+            onPress: () => setModal(null),
+          },
+        ],
+      });
+      return;
+    }
+
+    router.push("/(store_manager)/store/create-store");
+  }, [createGuard.allowed, createGuard.checked, router, translate]);
 
   return (
     <SafeAreaView edges={["top"]} className="flex-1 bg-backgroundMuted dark:bg-slate-950">
+      <Modal
+        visible={!!modal}
+        onClose={() => setModal(null)}
+        title={modal?.title ?? ""}
+        message={modal?.message}
+        buttons={modal?.buttons}
+      />
       <View className="bg-white border-b border-slate-100 dark:bg-slate-900 dark:border-slate-800 px-6 py-4 flex-row items-center justify-start">
         <View className="flex-row items-center gap-2">
           <Text className="text-xl font-poppins-bold text-slate-900 dark:text-slate-100">
@@ -470,25 +533,28 @@ export default function StoreManagerStores() {
             ))
           )}
           {!loading && filtered.length === 0 && !error && (
-            <View className="items-center pt-16 gap-3">
-              <Store
-                size={52}
-                color="#CBD5E1"
-              />
-              <Text className="text-base font-poppins-bold text-slate-600 dark:text-slate-300">
-                {activeTab === "all"
-                  ? translate("storeManager.stores.empty.allTitle")
-                  : activeTab === "active"
-                    ? translate("storeManager.stores.empty.activeTitle")
-                    : activeTab === "pending"
-                      ? translate("storeManager.stores.empty.pendingTitle")
-                      : translate("storeManager.stores.empty.inactiveTitle")}
-              </Text>
-              <Text className="text-sm font-poppins text-slate-400 text-center px-8">
-                {activeTab === "all"
-                  ? translate("storeManager.stores.empty.hintAll")
-                  : translate("storeManager.stores.empty.hintFiltered")}
-              </Text>
+            <View className="items-center">
+              <View className="w-full max-w-4xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl px-6 py-8 items-center gap-4">
+                <View className="bg-white dark:bg-slate-900 rounded-2xl">
+                  <Image source={require("@/assets/images/found.png")} style={{ width: 190, height: 190 }} contentFit="contain" />
+                </View>
+                <View className="items-center">
+                  <Text className="text-base font-poppins-bold text-slate-600 dark:text-slate-300 text-center">
+                    {activeTab === "all"
+                      ? translate("storeManager.stores.empty.allTitle")
+                      : activeTab === "active"
+                        ? translate("storeManager.stores.empty.activeTitle")
+                        : activeTab === "pending"
+                          ? translate("storeManager.stores.empty.pendingTitle")
+                          : translate("storeManager.stores.empty.inactiveTitle")}
+                  </Text>
+                  <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500 text-center px-8">
+                    {activeTab === "all"
+                      ? translate("storeManager.stores.empty.hintAll")
+                      : translate("storeManager.stores.empty.hintFiltered")}
+                  </Text>
+                </View>
+              </View>
             </View>
           )}
         </ScrollView>
@@ -502,7 +568,7 @@ export default function StoreManagerStores() {
               <TouchableOpacity
                 className="w-14 h-14 rounded-full bg-primary items-center justify-center"
                 onPress={() => {
-                  router.push("/(store_manager)/store/create-store");
+                  handleCreatePress();
                 }}
               >
                 <Plus size={28} color="#fff" />
@@ -513,7 +579,7 @@ export default function StoreManagerStores() {
           <TouchableOpacity
             className="absolute bottom-5 right-6 w-14 h-14 rounded-full bg-primary items-center justify-center"
             onPress={() => {
-              router.push("/(store_manager)/store/create-store");
+              handleCreatePress();
             }}
           >
             <Plus size={28} color="#fff" />

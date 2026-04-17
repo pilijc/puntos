@@ -13,6 +13,7 @@ import { UserProfileCard } from "@/components/settings/card/user-profile-card";
 import { SecurityCard } from "@/components/settings/card/security-card";
 import { LanguageCard } from "@/components/settings/card/language-card";
 import { AppearanceCard } from "@/components/settings/card/appearance-card";
+import { SubscriptionCard } from "@/components/settings/card/subscription-card";
 
 interface SharedSettingsLayoutProps {
     headerRight?: React.ReactNode;
@@ -83,7 +84,13 @@ export const SharedSettingsLayout = ({
                             <LanguageCard />
                             <View className="h-px bg-slate-100 dark:bg-slate-800" />
                             <AppearanceCard />
-                            <View className="h-px bg-slate-100 dark:bg-slate-800" />
+                            {copyrightRole === "Store Manager" ? (
+                              <>
+                                <View className="h-px bg-slate-100 dark:bg-slate-800" />
+                                <SubscriptionCard />
+                                <View className="h-px bg-slate-100 dark:bg-slate-800" />
+                              </>
+                            ) : null}
                         </View>
 
                         {extraCards}

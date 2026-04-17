@@ -314,9 +314,26 @@ export default function CreateStore() {
 
         const guard = await canOwnerCreateAnotherStore(user.id);
         if (!guard.allowed) {
-          showError(
-            "You've reached the free plan limit of one store. Upgrade your subscription to add more stores.",
-          );
+          setModal({
+            title: "Upgrade required",
+            message:
+              "You've reached the Free plan limit of one store. To add more stores, please subscribe to the Pro plan.",
+            buttons: [
+              {
+                label: "Go to Subscriptions",
+                variant: "primary",
+                onPress: () => {
+                  setModal(null);
+                  router.push("/(store_manager)/subscription");
+                },
+              },
+              {
+                label: t("label.cancel"),
+                variant: "secondary",
+                onPress: () => setModal(null),
+              },
+            ],
+          });
           return;
         }
 
