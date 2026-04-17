@@ -3,7 +3,7 @@ import * as SecureStore from "expo-secure-store";
 import * as Device from "expo-device";
 import * as Crypto from "expo-crypto";
 import { Platform } from "react-native";
-import { ManagerDeviceSession, DeviceSessionCheckResult, MAX_DEVICE_SESSIONS } from "@/type/store-manager/device-session";
+import { ManagerDeviceSession, DeviceSessionCheckResult, MAX_DEVICE_SESSIONS, SESSION_TIMEOUT_MS } from "@/type/store-manager/device-session";
 
 const DEVICE_ID_KEY = "puntos_device_id";
 
@@ -95,12 +95,41 @@ export async function refreshDeviceHeartbeatService(
     }
 }
 
+function filterStaleSessionsAndCleanup(sessions: ManagerDeviceSession[], userId: string): ManagerDeviceSession[] {
+    const now = Date.now();
+    const active: ManagerDeviceSession[] = [];
+    const staleDeviceIds: string[] = [];
+
+    for (const session of sessions) {
+        const lastActive = new Date(session.last_active_at).getTime();
+        if (now - lastActive > SESSION_TIMEOUT_MS) {
+            staleDeviceIds.push(session.device_id);
+        } else {
+            active.push(session);
+        }
+    }
+
+    if (staleDeviceIds.length > 0) {
+        // Run lazy cleanup in background without blocking
+        supabase
+            .from("manager_device_sessions")
+            .update({ is_active: false })
+            .eq("user_id", userId)
+            .in("device_id", staleDeviceIds)
+            .then(({ error }) => {
+                if (error) console.warn("[Device Session] stale cleanup failed:", error.message);
+            });
+    }
+
+    return active;
+}
+
 export async function checkDeviceSessionLimitService(
     userId: string,
 ): Promise<DeviceSessionCheckResult> {
     const deviceId = await getOrCreateDeviceId();
 
-    const { data: activeSessions, error } = await supabase
+    const { data: rawSessions, error } = await supabase
         .from("manager_device_sessions")
         .select("*")
         .eq("user_id", userId)
@@ -109,7 +138,7 @@ export async function checkDeviceSessionLimitService(
     
     if (error) throw error;
 
-    const sessions = (activeSessions ?? []) as ManagerDeviceSession[];
+    const sessions = filterStaleSessionsAndCleanup((rawSessions ?? []) as ManagerDeviceSession[], userId);
 
     const thisDeviceAlreadyActive = sessions.some(
         (s) => s.device_id === deviceId,
@@ -149,7 +178,8 @@ export async function getActiveDeviceSessionsService(
         .order("last_active_at", { ascending: false });
 
     if (error) throw error;
-    return (data ?? []) as ManagerDeviceSession[];
+    
+    return filterStaleSessionsAndCleanup((data ?? []) as ManagerDeviceSession[], userId);
 }
 
 export async function forceDeactivateCurrentDeviceService(): Promise<void> {

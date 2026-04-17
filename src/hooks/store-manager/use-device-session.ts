@@ -16,17 +16,28 @@ export function useDeviceSession(userId?: string) {
         clearBlockedSessions,
     } = useDeviceSessionStore();
 
+    // internal effect to handle heartbeat lifecycle automatically if userId is provided
     useEffect(() => {
         if (!userId) return;
 
-        const handler = (state: AppStateStatus) => {
-            if (state === "active") {
-                refreshDeviceHeartbeatService(userId).catch(() => {});
-            }
+        const pulseHeartbeat = () => {
+            refreshDeviceHeartbeatService(userId).catch(() => {});
         };
 
+        // 1. update heartbeat when app comes to foreground
+        const handler = (state: AppStateStatus) => {
+            if (state === "active") pulseHeartbeat();
+        };
         const sub = AppState.addEventListener("change", handler);
-        return () => sub.remove();
+
+        // 2. pulse continuously every 5 minutes while the app is actively open
+        // This prevents the 15-min timeout from incorrectly killing an active user's session
+        const intervalId = setInterval(pulseHeartbeat, 5 * 60 * 1000);
+
+        return () => {
+            sub.remove();
+            clearInterval(intervalId);
+        };
     }, [userId]);
 
     const checkAndRegisterSession = useCallback(
