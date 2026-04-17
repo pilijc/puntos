@@ -12,6 +12,7 @@ export interface AdminInfo {
 export interface DashboardData {
   users: any[];
   stores: any[];
+  subscriptions: any[];
 }
 
 export async function getAdminSession(): Promise<AdminInfo | null> {
@@ -32,12 +33,13 @@ export async function getAdminSession(): Promise<AdminInfo | null> {
 }
 
 export async function getDashboardData(): Promise<DashboardData> {
-  const [{ data: userData }, { data: storeData }] = await Promise.all([
+  const [{ data: userData }, { data: storeData }, { data: subData }] = await Promise.all([
     supabase
       .from("users_with_email")
       .select("*")
       .order("id", { ascending: true }),
     supabase.from("stores").select("*"),
+    supabase.from("manager_subscriptions").select("*"),
   ]);
 
   const processedUsers = (userData || []).map((u) => ({
@@ -53,5 +55,6 @@ export async function getDashboardData(): Promise<DashboardData> {
   return {
     users: processedUsers,
     stores: storeData || [],
+    subscriptions: subData || [],
   };
 }

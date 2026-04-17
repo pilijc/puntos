@@ -125,8 +125,8 @@ function getDetailItems(items: any[], dateKeys: string[], prefix: string, timefr
   const list = allFiltered.slice(0, limit).map(({ item, date }, idx) => {
     const status =
       item?.blocked === true ||
-      item?.role === 0 ||
-      String(item?.status ?? "").toLowerCase() === "inactive"
+        item?.role === 0 ||
+        String(item?.status ?? "").toLowerCase() === "inactive"
         ? "Inactive"
         : "Active";
     const dateLabel = date
@@ -272,7 +272,7 @@ export default function SuperAdminDashboard() {
         >
           <View className="flex-row justify-between items-center mb-3">
             <Text className="text-base font-poppins-bold text-textPrimary dark:text-darkTextPrimary">User Analytics</Text>
-            <TouchableOpacity 
+            <TouchableOpacity
               onPress={() => setShowUserDetails(prev => !prev)}
               className="flex-row items-center bg-slate-50 dark:bg-darkBackgroundMuted px-3 py-1.5 rounded-full border border-slate-100 dark:border-darkBorder"
             >
@@ -282,10 +282,10 @@ export default function SuperAdminDashboard() {
               </Text>
             </TouchableOpacity>
           </View>
-          <DashboardActivityChart 
-            data={userMetrics.series} 
-            labels={userMetrics.labels} 
-            weekRange={userMetrics.rangeLabel} 
+          <DashboardActivityChart
+            data={userMetrics.series}
+            labels={userMetrics.labels}
+            weekRange={userMetrics.rangeLabel}
             loading={false}
             showDetails={showUserDetails}
           >
@@ -295,7 +295,7 @@ export default function SuperAdminDashboard() {
               ) : (
                 <>
                   {userLimit > 5 && (
-                    <TouchableOpacity 
+                    <TouchableOpacity
                       onPress={() => setUserLimit(5)}
                       className="py-2 flex-row items-center justify-end"
                     >
@@ -310,7 +310,7 @@ export default function SuperAdminDashboard() {
                     </View>
                   ))}
                   {userList.hasMore && (
-                    <TouchableOpacity 
+                    <TouchableOpacity
                       onPress={() => setUserLimit(prev => prev + 5)}
                       className="py-3 items-center"
                     >
@@ -329,7 +329,7 @@ export default function SuperAdminDashboard() {
         >
           <View className="flex-row justify-between items-center mb-3">
             <Text className="text-base font-poppins-bold text-textPrimary dark:text-darkTextPrimary">Store Analytics</Text>
-            <TouchableOpacity 
+            <TouchableOpacity
               onPress={() => setShowStoreDetails(prev => !prev)}
               className="flex-row items-center bg-slate-50 dark:bg-darkBackgroundMuted px-3 py-1.5 rounded-full border border-slate-100 dark:border-darkBorder"
             >
@@ -339,10 +339,10 @@ export default function SuperAdminDashboard() {
               </Text>
             </TouchableOpacity>
           </View>
-          <DashboardActivityChart 
-            data={storeMetrics.series} 
-            labels={storeMetrics.labels} 
-            weekRange={storeMetrics.rangeLabel} 
+          <DashboardActivityChart
+            data={storeMetrics.series}
+            labels={storeMetrics.labels}
+            weekRange={storeMetrics.rangeLabel}
             loading={false}
             showDetails={showStoreDetails}
           >
@@ -352,7 +352,7 @@ export default function SuperAdminDashboard() {
               ) : (
                 <>
                   {storeLimit > 5 && (
-                    <TouchableOpacity 
+                    <TouchableOpacity
                       onPress={() => setStoreLimit(5)}
                       className="py-2 flex-row items-center justify-end"
                     >
@@ -367,7 +367,7 @@ export default function SuperAdminDashboard() {
                     </View>
                   ))}
                   {storeList.hasMore && (
-                    <TouchableOpacity 
+                    <TouchableOpacity
                       onPress={() => setStoreLimit(prev => prev + 5)}
                       className="py-3 items-center"
                     >
@@ -378,7 +378,7 @@ export default function SuperAdminDashboard() {
               )}
             </ScrollView>
           </DashboardActivityChart>
-          
+
           <SubscriptionDistribution />
         </View>
       </ScrollView>
