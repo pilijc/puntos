@@ -12,6 +12,8 @@ import { AppHeader } from "@/components/header";
 import { TextField } from "@/components/text-field";
 import { Button } from "@/components/button";
 import { LucideEye, LucideEyeOff } from "lucide-react-native";
+import { useDeviceSession } from "@/hooks/store-manager/use-device-session";
+import { DeviceLimitModal } from "@/components/store_manager/session/device-limit-modal";
 
 export default function Login() {
   const {email, password, setEmail, setPassword, showPassword, setShowPassword } = useAuthStore();
@@ -29,6 +31,20 @@ export default function Login() {
     message: string;
     buttons: ModalButton[];
   } | null>(null);
+
+  const { checkAndRegisterSession, blockedSessions, validateHomeRouteSession } = useDeviceSession();
+  const [showDeviceLimitModal, setShowDeviceLimitModal] = useState(false);
+
+  const handleCheckAgain = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const sessionCheck = await checkAndRegisterSession(user.id);
+    if (sessionCheck.allowed) {
+      setShowDeviceLimitModal(false);
+      router.replace("/(store_manager)");
+    }
+  };
 
   const showRestrictedAccountModal = () =>
     setModal({
@@ -83,6 +99,13 @@ export default function Login() {
         });
         return;
       }
+
+      const isAllowed = await validateHomeRouteSession(data.homeRoute);
+      if (!isAllowed) {
+        setShowDeviceLimitModal(true);
+        return;
+      }
+
       router.replace(data.homeRoute);
     } catch (error: any) {
       console.log("error login component", error);
@@ -107,6 +130,13 @@ export default function Login() {
     try {
       setLoadingGoogle(true);
       const data = await signInWithGoogleLoginService();
+
+      const isAllowed = await validateHomeRouteSession(data.homeRoute);
+      if (!isAllowed) {
+        setShowDeviceLimitModal(true);
+        return;
+      }
+
       router.replace(data.homeRoute ?? "/(user)");
     } catch (error: any) {
       if (error?.name === "AccountBlockedError") {
@@ -212,6 +242,15 @@ export default function Login() {
 
   return (
     <SafeAreaView className={isWeb ? "flex-1 bg-slate-50 dark:bg-darkBackground" : "flex-1 bg-white dark:bg-darkBackground"}>
+      <DeviceLimitModal
+        visible={showDeviceLimitModal}
+        sessions={blockedSessions}
+        onCheckAgain={handleCheckAgain}
+        onCancel={async () => {
+          setShowDeviceLimitModal(false);
+          await supabase.auth.signOut();
+        }}
+      />
       <Modal
         visible={!!modal}
         onClose={() => setModal(null)}

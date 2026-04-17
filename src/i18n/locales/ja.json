@@ -493,6 +493,23 @@
                 "notifications": "通知"
             },
             "openSettings": "設定を開く"
+        },
+        "deviceSessions": {
+            "title": "アクティブなセッション",
+            "subtitle": "同時に最大{{max}}台のデバイスでログインできます。",
+            "noSessions": "アクティブなセッションはありません。",
+            "limitReached": "デバイス制限に達しました",
+            "limitWarningTitle": "アクティブセッション制限",
+            "limitWarningBody": "同時に最大{{max}}台のデバイスでログインできます。続行するには、他のデバイスからログアウトしてください。",
+            "checkAgain": "再確認",
+            "yourActiveDevices": "現在アクティブなデバイス",
+            "webBrowser": "ウェブブラウザ",
+            "unknownDevice": "不明なデバイス",
+            "justNow": "たった今",
+            "minutesAgo": "{{minutes}}分前",
+            "hoursAgo": "{{hours}}時間前",
+            "daysAgo": "{{days}}日前",
+            "lastActive": "最終アクセス: {{time}}"
         }
     },
     "storeManager": {
