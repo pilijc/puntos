@@ -1,6 +1,11 @@
 import React, { useCallback, useMemo, useRef, useState } from "react";
 import { Modal, useColorScheme, RefreshControl, ActivityIndicator, ListRenderItemInfo, Dimensions, Platform, View as RNView } from "react-native";
 import { TransactionSkeleton, StoresAndFunnelSkeleton } from "@/components/skeleton/store_manager/transaction-skeleton";
+import { QrCode, Stamp, Flame, ReceiptText, Funnel, Check } from "lucide-react-native";
+import { useTransactions } from "@/hooks/store-manager/transaction";
+import { TxType, ListItem } from "@/type/store-manager/transaction";
+import { formatTxTime } from "@/utils/store_manager/transaction";
+import { useTranslation } from "react-i18next";
 import {
   View,
   Text,
@@ -11,11 +16,6 @@ import {
   Pressable,
   Image,
 } from "@/tw";
-import { QrCode, Stamp, Flame, ReceiptText, Funnel, Check } from "lucide-react-native";
-import { useTransactions } from "@/hooks/store-manager/transaction";
-import { TxType, TypeFilter, ListItem } from "@/type/store-manager/transaction";
-import { formatTxTime } from "@/utils/store_manager/transaction";
-import { useTranslation } from "react-i18next";
 
 const TYPE_META: Record<
   TxType,
@@ -178,7 +178,11 @@ export default function TransactionsScreen() {
     [isDark, isWeb, listItems, translate]
   );
 
-  const emptyIcon = <ReceiptText size={40} color={isDark ? "#404040" : "#E2E8F0"} strokeWidth={1.5} />;
+  const emptyIllustration = (
+    <View className="bg-white dark:bg-darkBackground rounded-2xl ">
+      <Image source={require("@/assets/images/found.png")} style={{ width: 180, height: 180 }} resizeMode="contain" />
+    </View>
+  );
   const triggerColor = isDark ? "#737373" : "#94A3B8";
   const triggerIcon =
     typeFilter === "qr"
@@ -199,7 +203,7 @@ export default function TransactionsScreen() {
 
       {storesLoading ? (
         <StoresAndFunnelSkeleton />
-      ) : stores.length > 1 ? (
+      ) : stores.length >= 1 ? (
         <View className={isWeb ? "bg-backgroundMuted dark:bg-darkBackground px-4 pt-4 pb-3 items-center" : "flex-row items-center bg-background dark:bg-darkBackground border-b border-neutral-100 dark:border-darkBorder pl-5"}>
           
           {isWeb ? (
@@ -217,6 +221,7 @@ export default function TransactionsScreen() {
                       key={store.id}
                       onPress={() => selectStore(storeId)}
                       activeOpacity={0.75}
+                      disabled={stores.length === 1}
                       className={`rounded-full px-2.5 py-1 ${active ? "bg-primary" : "bg-slate-100 dark:bg-neutral-800"}`}
                     >
                       <Text
@@ -255,6 +260,7 @@ export default function TransactionsScreen() {
                       key={store.id}
                       onPress={() => selectStore(storeId)}
                       activeOpacity={0.75}
+                      disabled={stores.length === 1}
                       className={`rounded-full px-2.5 py-1 ${active ? "bg-primary" : "bg-slate-100 dark:bg-neutral-800"}`}
                     >
                       <Text
@@ -287,31 +293,33 @@ export default function TransactionsScreen() {
       ) : stores.length === 0 ? (
         <View className={isWeb ? "px-4 pb-4 items-center mt-4" : "px-4 pb-4"}>
           <View
-            className={`w-full bg-white dark:bg-darkBackground rounded-xl overflow-hidden justify-start ${isWeb ? "max-w-4xl p-4" : "p-3"}`}
+            className={`w-full bg-white dark:bg-darkBackground rounded-2xl overflow-hidden justify-start ${isWeb ? "max-w-4xl p-6" : "p-5"}`}
           >
-            <View className="items-center justify-center gap-y-3">
-              {emptyIcon}
-              <Text className="text-base font-poppins-bold text-textSecondary dark:text-darkTextSecondary">
-                {translate("storeManager.transactions.empty.noStoresTitle")}
-              </Text>
-              <Text className="text-sm font-poppins text-textMuted dark:text-darkTextMuted text-center px-10">
-                {translate("storeManager.transactions.empty.noStoresBody")}
-              </Text>
+            <View className="items-center justify-center gap-y-4">
+              {emptyIllustration}
+              <View className="items-center justify-center">
+                <Text className="text-base font-poppins-bold text-textSecondary dark:text-darkTextSecondary text-center">
+                  {translate("storeManager.transactions.empty.noStoresTitle")}
+                </Text>
+                <Text className="text-xs font-poppins text-textMuted dark:text-darkTextMuted text-center px-8">
+                  {translate("storeManager.transactions.empty.noStoresBody")}
+                </Text>
+              </View>
             </View>
           </View>
         </View>
       ) : listItems.length === 0 ? (
         <View className={isWeb ? "px-4 pb-4 items-center" : "px-4 pb-4 mt-4"}>
           <View
-            className={`w-full bg-white dark:bg-darkBackground rounded-xl overflow-hidden justify-start ${isWeb ? "max-w-4xl p-6 py-10" : "p-3"}`}
+            className={`w-full bg-white dark:bg-darkBackground rounded-2xl overflow-hidden justify-start ${isWeb ? "max-w-4xl p-6 py-10" : "p-5 py-8"}`}
           >
-            <View className="items-center justify-center gap-y-4">
-              {emptyIcon}
+            <View className="items-center justify-center gap-y-5">
+              {emptyIllustration}
               <View className="items-center justify-center">
-                <Text className="text-base font-poppins-bold text-textSecondary dark:text-darkTextSecondary">
+                <Text className="text-base font-poppins-bold text-textSecondary dark:text-darkTextSecondary text-center">
                   {translate("storeManager.transactions.empty.noTransactionsTitle")}
                 </Text>
-                <Text className="text-sm font-poppins text-textMuted dark:text-darkTextMuted text-center px-10">
+                <Text className="text-xs font-poppins text-textMuted dark:text-darkTextMuted text-center px-8">
                   {translate("storeManager.transactions.empty.noTransactionsBody")}
                 </Text>
               </View>

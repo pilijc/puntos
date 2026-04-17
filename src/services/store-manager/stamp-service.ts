@@ -89,7 +89,6 @@ export async function createStamp(payload: Omit<Stamp, "id" | "status" | "ended_
 }
 
 export async function getStampProgramById(programId: number): Promise<Stamp | null> {
-  console.log("getStampProgramById", programId);
   try {
     const { data, error } = await supabase
       .from("store_stamps")

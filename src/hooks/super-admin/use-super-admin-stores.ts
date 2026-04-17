@@ -2,10 +2,9 @@ import { useState, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useFocusEffect } from "expo-router";
 import { AdminStoreRow } from "@/services/store-service";
-import { fetchAllSubscriptions } from "@/services/super-admin/store-admin-service";
 import { useSuperAdminStoresStore } from "@/store/super-admin/super-admin-stores-store";
-import { useSubscriptionConfigStore } from "@/store/super-admin/subscription-config";
 import { getEffectiveStatus } from "@/type/super-admin/user";
+import { supabase } from "@/supabase/supabase";
 
 export const FILTERS = ["All", "pending_review", "active", "inactive"] as const;
 export type Filter = (typeof FILTERS)[number];
@@ -14,7 +13,6 @@ export function useSuperAdminStores() {
   const { t: translate } = useTranslation();
   const storeState = useSuperAdminStoresStore();
   const { stores, fetchStores, approveStore, rejectStore } = storeState;
-
   const FILTER_LABELS: Record<Filter, string> = useMemo(
     () => ({
       All: translate("superAdmin.stores.filter.all"),
@@ -39,23 +37,27 @@ export function useSuperAdminStores() {
   } | null>(null);
   const [subscriptions, setSubscriptions] = useState<any[]>([]);
 
-  useFocusEffect(useCallback(() => { 
-    fetchStores({ forceRefresh: true }); 
-    fetchSubscriptions();
-  }, []));
-
-  const fetchSubscriptions = async () => {
-    try {
-      const data = await fetchAllSubscriptions();
-      setSubscriptions(data);
-    } catch (err) {
-      console.warn("[useSuperAdminStores] Failed to fetch subscriptions:", err);
+  const fetchSubscriptions = useCallback(async () => {
+    const { data, error } = await supabase
+      .from("manager_subscriptions")
+      .select("*");
+    if (error) {
+      setSubscriptions([]);
+      return;
     }
-  };
+    setSubscriptions(data ?? []);
+  }, []);
 
-  const onRefresh = async () => { 
-    setRefreshing(true); 
-    await fetchStores({ forceRefresh: true }); 
+  useFocusEffect(
+    useCallback(() => {
+      fetchStores({ forceRefresh: true });
+      void fetchSubscriptions();
+    }, [fetchStores, fetchSubscriptions]),
+  );
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchStores({ forceRefresh: true });
     await fetchSubscriptions();
     setRefreshing(false);
   };
@@ -66,33 +68,6 @@ export function useSuperAdminStores() {
   };
 
   const handleApprove = (store: AdminStoreRow) => {
-    const ownerActiveStores = stores.filter(
-      (s) =>
-        s.owner_id === store.owner_id &&
-        s.id !== store.id &&
-        (s.status === "active" || s.is_active),
-    ).length;
-
-    const config = useSubscriptionConfigStore.getState();
-    const paidUnlimited = hasPaidUnlimitedOwner(store.owner_id);
-
-    const exceedsLimit =
-      config.ENFORCE_SUBSCRIPTION &&
-      ownerActiveStores >= config.FREE_STORES_LIMIT &&
-      !paidUnlimited;
-
-    if (exceedsLimit) {
-      setConfirmModal({
-        title: "Limit reached",
-        message: config.LIMIT_MESSAGE,
-        label: translate("label.ok"),
-        variant: "primary",
-        hideCancel: true,
-        onConfirm: () => setConfirmModal(null),
-      });
-      return;
-    }
-
     setConfirmModal({
       title: translate("superAdmin.stores.modal.approveTitle"),
       message: translate("superAdmin.stores.modal.approveMessage", { name: store.name }),
@@ -140,16 +115,16 @@ export function useSuperAdminStores() {
     });
   };
 
+  const filtered = useMemo(() => {
+    const base =
+      activeFilter === "All"
+        ? stores
+        : stores.filter((s) => getEffectiveStatus(s) === activeFilter);
 
-
-  const filtered = useMemo(() =>
-    (activeFilter === "All"
-      ? stores
-      : stores.filter((s) => getEffectiveStatus(s) === activeFilter))
+    return base
       .slice()
-      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()),
-    [stores, activeFilter]
-  );
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+  }, [activeFilter, stores]);
 
   const pendingCount = useMemo(() =>
     stores.filter((s) => s.status === "pending_review").length,

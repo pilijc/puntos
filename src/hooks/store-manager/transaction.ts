@@ -10,6 +10,7 @@ export function useTransactions() {
   const { stores, loading: storesLoading } = useStores();
   const { storeId: storeIdParam } = useLocalSearchParams<{ storeId?: string }>();
   const didInitSelectedStore = useRef(false);
+  const lastStoreIdParam = useRef<string | undefined>(undefined);
 
   const {
     selectedStoreId,
@@ -31,19 +32,33 @@ export function useTransactions() {
 
   useEffect(() => {
     if (stores.length === 0) return;
+    const storeIds = new Set(stores.map((s) => Number(s.id)));
+    const paramChanged = lastStoreIdParam.current !== storeIdParam;
+
+    if (paramChanged) {
+      didInitSelectedStore.current = false;
+      lastStoreIdParam.current = storeIdParam;
+    }
+
     if (didInitSelectedStore.current) return;
+
+    let desired: number | null = null;
 
     if (storeIdParam) {
       const id = Number(storeIdParam);
-      if (!Number.isNaN(id) && stores.some((s) => s.id === id)) {
-        setSelectedStoreId(id);
-        didInitSelectedStore.current = true;
-        return;
-      }
+      if (Number.isFinite(id) && storeIds.has(id)) desired = id;
     }
 
-    if (selectedStoreId === null) {
-      setSelectedStoreId(stores[0].id);
+    if (desired == null && selectedStoreId != null && storeIds.has(Number(selectedStoreId))) {
+      desired = Number(selectedStoreId);
+    }
+
+    if (desired == null) {
+      desired = Number(stores[0].id);
+    }
+
+    if (desired != null && desired !== selectedStoreId) {
+      setSelectedStoreId(desired);
     }
 
     didInitSelectedStore.current = true;

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useMemo } from "react";
+import React, { useEffect, useState, useRef, useMemo } from "react";
 import { ScrollView, Platform, useColorScheme } from "react-native";
 import Carousel from 'react-native-reanimated-carousel';
 import { View, Text, TouchableOpacity } from "@/tw";
@@ -14,7 +14,7 @@ import { AdminStoreRow } from "@/services/store-service";
 import { ImageViewerModal } from "@/components/ui/image-viewer-modal";
 import { getStoreCategoryBadge, getEffectiveStatus, StoreStatusKey } from "@/type/super-admin/user";
 import { shouldUseInteractiveMapbox } from "@/utils/mapbox-platform";
-import { useSubscriptionConfigStore } from "@/store/super-admin/subscription-config";
+import { canOwnerCreateAnotherStore } from "@/services/store-manager/subscription-limits";
 
 
 Mapbox.setAccessToken(process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN!);
@@ -71,7 +71,6 @@ export function AdminStoreDetails({
   onReject: (store: AdminStoreRow) => void;
 }) {
   const { t: translate, i18n } = useTranslation();
-  const config = useSubscriptionConfigStore();
 
   const STATUS_LABELS: Record<StatusKey, string> = {
     pending_review: translate("superAdmin.stores.status.pending"),
@@ -89,6 +88,28 @@ export function AdminStoreDetails({
   const statusKey = getEffectiveStatus(store);
   const statusCfg = STATUS_CONFIG[statusKey] ?? STATUS_CONFIG.pending_review;
   const isPending = statusKey === "pending_review";
+
+  const [canCreateAnotherStore, setCanCreateAnotherStore] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    const ownerId = store.owner_id;
+    if (!ownerId) return;
+
+    (async () => {
+      try {
+        const res = await canOwnerCreateAnotherStore(ownerId);
+        if (!cancelled) setCanCreateAnotherStore(res.allowed);
+      } catch {
+        // If checks fail, don't block admin UI.
+        if (!cancelled) setCanCreateAnotherStore(true);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [store.owner_id]);
 
   const registeredDate = useMemo(() => {
     return new Date(store.created_at).toLocaleDateString(i18n.language === "ja" ? "ja-JP" : "en-US", {
@@ -202,7 +223,7 @@ export function AdminStoreDetails({
                     Subscription {subscription.payment_status}
                  </Text>
                </View>
-            ) : ((ownerActiveStoresCount + (statusKey === 'active' ? 1 : 0)) > config.FREE_STORES_LIMIT) && (
+            ) : !canCreateAnotherStore && (
                <View className="flex-row items-center gap-1 self-start px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 mb-3">
                  <MaterialIcons name="local-fire-department" size={10} color="#2563EB" />
                  <Text className="text-[9px] font-poppins-bold tracking-wider text-blue-700 dark:text-blue-400 uppercase">
