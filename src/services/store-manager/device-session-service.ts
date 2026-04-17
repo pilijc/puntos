@@ -49,6 +49,21 @@ function resolveDeviceModel(): string {
 
 // ------ core services 
 
+// extracts reliable server time from the HTTP header instead of relying on the device clock
+async function getServerTimeMs(): Promise<number> {
+    try {
+        const url = process.env.EXPO_PUBLIC_API_URL || "";
+        const res = await fetch(`${url}/rest/v1/`, { method: "HEAD" });
+        const dateStr = res.headers.get("Date");
+        if (dateStr) {
+            return new Date(dateStr).getTime();
+        }
+    } catch {
+        // fallback to client time ONLY if the network check completely fails
+    }
+    return Date.now();
+}
+
 export async function upsertDeviceSessionService(
     userId: string,
     locationLabel?: string,
@@ -63,7 +78,8 @@ export async function upsertDeviceSessionService(
         device_type: deviceType,
         device_model: deviceModel,
         location_label: locationLabel ?? null,
-        last_active_at: new Date().toISOString(),
+        // use special postgres string literal 'now' to evaluate strictly on backend relative to transaction
+        last_active_at: "now", 
         is_active: true,
     };
 
@@ -85,7 +101,7 @@ export async function refreshDeviceHeartbeatService(
 
     const { error } = await supabase
         .from("manager_device_sessions")
-        .update({ last_active_at: new Date().toISOString() })
+        .update({ last_active_at: "now" })
         .eq("user_id", userId)
         .eq("device_id", deviceId)
         .eq("is_active", true);
@@ -95,14 +111,17 @@ export async function refreshDeviceHeartbeatService(
     }
 }
 
-function filterStaleSessionsAndCleanup(sessions: ManagerDeviceSession[], userId: string): ManagerDeviceSession[] {
-    const now = Date.now();
+function filterStaleSessionsAndCleanup(
+    sessions: ManagerDeviceSession[], 
+    userId: string,
+    nowMs: number
+): ManagerDeviceSession[] {
     const active: ManagerDeviceSession[] = [];
     const staleDeviceIds: string[] = [];
 
     for (const session of sessions) {
         const lastActive = new Date(session.last_active_at).getTime();
-        if (now - lastActive > SESSION_TIMEOUT_MS) {
+        if (nowMs - lastActive > SESSION_TIMEOUT_MS) {
             staleDeviceIds.push(session.device_id);
         } else {
             active.push(session);
@@ -110,7 +129,7 @@ function filterStaleSessionsAndCleanup(sessions: ManagerDeviceSession[], userId:
     }
 
     if (staleDeviceIds.length > 0) {
-        // Run lazy cleanup in background without blocking
+        // run lazy cleanup in background without blocking
         supabase
             .from("manager_device_sessions")
             .update({ is_active: false })
@@ -129,16 +148,19 @@ export async function checkDeviceSessionLimitService(
 ): Promise<DeviceSessionCheckResult> {
     const deviceId = await getOrCreateDeviceId();
 
-    const { data: rawSessions, error } = await supabase
-        .from("manager_device_sessions")
-        .select("*")
-        .eq("user_id", userId)
-        .eq("is_active", true)
-        .order("last_active_at", { ascending: false});
+    const [ { data: rawSessions, error }, serverTimeMs ] = await Promise.all([
+        supabase
+            .from("manager_device_sessions")
+            .select("*")
+            .eq("user_id", userId)
+            .eq("is_active", true)
+            .order("last_active_at", { ascending: false}),
+        getServerTimeMs(),
+    ]);
     
     if (error) throw error;
 
-    const sessions = filterStaleSessionsAndCleanup((rawSessions ?? []) as ManagerDeviceSession[], userId);
+    const sessions = filterStaleSessionsAndCleanup((rawSessions ?? []) as ManagerDeviceSession[], userId, serverTimeMs);
 
     const thisDeviceAlreadyActive = sessions.some(
         (s) => s.device_id === deviceId,
@@ -170,16 +192,19 @@ export async function deactivateCurrentDeviceSessionService(
 export async function getActiveDeviceSessionsService(
     userId: string,
 ): Promise<ManagerDeviceSession[]> {
-    const { data, error } = await supabase
-        .from("manager_device_sessions")
-        .select("*")
-        .eq("user_id", userId)
-        .eq("is_active", true)
-        .order("last_active_at", { ascending: false });
+    const [ { data, error }, serverTimeMs ] = await Promise.all([
+        supabase
+            .from("manager_device_sessions")
+            .select("*")
+            .eq("user_id", userId)
+            .eq("is_active", true)
+            .order("last_active_at", { ascending: false }),
+        getServerTimeMs(),
+    ]);
 
     if (error) throw error;
     
-    return filterStaleSessionsAndCleanup((data ?? []) as ManagerDeviceSession[], userId);
+    return filterStaleSessionsAndCleanup((data ?? []) as ManagerDeviceSession[], userId, serverTimeMs);
 }
 
 export async function forceDeactivateCurrentDeviceService(): Promise<void> {

@@ -72,13 +72,21 @@ export function useDeviceSession(userId?: string) {
     }, []);
 
     const startHeartbeat = useCallback((uid: string) => {
-        const handler = (state: AppStateStatus) => {
-            if (state === "active") {
-                refreshDeviceHeartbeatService(uid).catch(() => {});
-            }
+        const pulseHeartbeat = () => {
+            refreshDeviceHeartbeatService(uid).catch(() => {});
         };
+
+        const handler = (state: AppStateStatus) => {
+            if (state === "active") pulseHeartbeat();
+        };
+        
         const sub = AppState.addEventListener("change", handler);
-        return () => sub.remove();
+        const intervalId = setInterval(pulseHeartbeat, 5 * 60 * 1000);
+
+        return () => {
+            sub.remove();
+            clearInterval(intervalId);
+        };
     }, []);
 
     const fetchActiveSessions = useCallback(async () => {
