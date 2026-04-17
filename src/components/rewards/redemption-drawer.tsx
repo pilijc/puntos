@@ -74,8 +74,8 @@ export function RedemptionDrawer({
       Animated.parallel([
         Animated.timing(translateY, {
           toValue: SCREEN_HEIGHT,
-          duration: 350,
-          easing: Easing.in(Easing.exp),
+          duration: 500,
+          easing: Easing.inOut(Easing.cubic),
           useNativeDriver: true,
         }),
         Animated.timing(backdropOpacity, {
@@ -156,8 +156,8 @@ export function RedemptionDrawer({
         }),
         Animated.timing(translateY, {
           toValue: 0,
-          duration: 450,
-          easing: Easing.out(Easing.exp),
+          duration: 550,
+          easing: Easing.out(Easing.cubic),
           useNativeDriver: true,
         }),
       ]).start();
@@ -167,9 +167,9 @@ export function RedemptionDrawer({
     }
   }, [visible]);
 
-  if (!visible || !redemptionCode) return null;
+  if (!visible) return null;
 
-  const formattedCode = redemptionCode.code.replace(/-/g, " ");
+  const formattedCode = redemptionCode?.code?.replace(/-/g, " ") || "";
   const handleCancelPress = () => setShowConfirmModal(true);
 
   return (
@@ -206,16 +206,14 @@ export function RedemptionDrawer({
         <Animated.View style={{ transform: [{ translateY }] }}>
           <View
             {...panResponder.panHandlers}
-            className="bg-white rounded-t-[32px] overflow-hidden"
-            style={{ maxHeight: SCREEN_HEIGHT * 0.80 }}
+            className="bg-white rounded-t-[16px] overflow-hidden"
+            style={{ maxHeight: SCREEN_HEIGHT * 0.73 }}
           >
-            <ScrollView bounces={false} showsVerticalScrollIndicator={false}>
+            <ScrollView bounces={false} showsVerticalScrollIndicator={false} scrollEnabled={false} contentContainerStyle={{ flexGrow: 1 }}>
 
-              {/* HEADER */}
-              <View className="bg-backgroundMuted dark:bg-darkBackgroundMuted">
-                <View className="w-12 h-1.5 bg-neutral-300 dark:bg-neutral-700 rounded-full self-center mt-3 mb-2" />
-
-                <View className="items-center py-4 relative px-4">
+              {/* CARD AREA BACKGROUND */}
+              <View className="bg-primary pb-4">
+                <View className="mb-4 items-center py-3 relative px-4 bg-[#FFFFFF] dark:bg-darkBackgroundCard border-b border-neutral-200">
                   <Text className="text-lg text-neutral-900 dark:text-white font-poppins-semibold">
                     {status === "redeemed" ? "Reward Redeemed" : "Scan to redeem"}
                   </Text>
@@ -233,21 +231,21 @@ export function RedemptionDrawer({
                 </View>
 
                 {/* COMBINED QR & REWARD CARD */}
-                <View className="mx-4 mb-4 bg-backgroundMuted dark:bg-darkBackgroundMuted rounded-3xl p-4 pb-6 shadow-xl border border-neutral-100 dark:border-neutral-800">
+                <View className="mx-4 mb-4 bg-white rounded-3xl p-3 pb-4 border border-neutral-100">
 
                   {/* Content Container covering QR & Timer */}
-                  <View className="bg-[#F3F4F6] dark:bg-darkBackgroundCard rounded-2xl p-6 items-center mb-6">
+                  <View className="bg-[#F3F4F6] dark:bg-darkBackgroundCard rounded-2xl p-4 items-center mb-4">
                     {/* White box for just the QR code and text code */}
-                    <View className="bg-white dark:bg-neutral-800 py-4 px-6 rounded-xl mb-4 items-center shadow-sm shadow-black/5 self-center">
-                      <View className="mb-3 items-center justify-center">
+                    <View className="bg-white dark:bg-neutral-800 py-3 px-4 rounded-xl mb-3 items-center shadow-sm shadow-black/5 self-center">
+                      <View className="mb-2 items-center justify-center">
                         {status === "loading" ? (
-                          <View className="w-[160px] h-[160px] items-center justify-center">
+                          <View className="w-[140px] h-[140px] items-center justify-center">
                             <Text className="text-neutral-400 text-xs font-poppins-medium">
                               Generating...
                             </Text>
                           </View>
                         ) : (
-                          <QRCode value={getQRCodeData(redemptionCode.code)} size={160} />
+                          <QRCode value={getQRCodeData(redemptionCode?.code || "")} size={140} />
                         )}
                       </View>
 
@@ -298,8 +296,8 @@ export function RedemptionDrawer({
               </View>
 
               {/* INSTRUCTIONS */}
-              <View className="px-4 pb-8 bg-backgroundMuted dark:bg-darkBackgroundMuted">
-                <View className="bg-backgroundMuted dark:bg-darkBackgroundMuted p-5 rounded-2xl border border-neutral-100 dark:border-neutral-800">
+              <View className="flex-1  px-4 pb-6 bg-backgroundMuted dark:bg-darkBackgroundMuted">
+                <View className="mt-4 min-h-[450px] bg-[rgba(255,102,0,0.07)] p-4 rounded-2xl justify-start">
                   <Text className="text-[10px] text-neutral-400 font-poppins-bold mb-4 uppercase tracking-[2px]">
                     How to redeem
                   </Text>
