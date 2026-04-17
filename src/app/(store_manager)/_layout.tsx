@@ -343,6 +343,7 @@ export default function StoreManagerLayout() {
                             }
                             color={webSidebarIconColor(isWeb, activeTab, "index", color)}
                         />
+                  
                     ),
                     tabBarLabel: isWeb
                         ? ({ color, position }) => (
@@ -438,6 +439,7 @@ export default function StoreManagerLayout() {
                             )}
                         />
                     ),
+          
                     tabBarLabel: isWeb
                         ? ({ color, position }) => (
                               <WebSidebarTabLabel
@@ -471,6 +473,7 @@ export default function StoreManagerLayout() {
                             )}
                         />
                     ),
+              
                     tabBarLabel: isWeb
                         ? ({ color, position }) => (
                               <WebSidebarTabLabel
