@@ -158,7 +158,8 @@ export default function SuperAdminStores() {
 			<View
 				style={isWeb ? {
 					alignItems: 'center',
-					paddingVertical: 12,
+					paddingTop: 16,
+					paddingBottom: 8,
 					backgroundColor: 'transparent',
 				} : {
 					backgroundColor: '#f8fafc', // backgroundMuted
@@ -168,7 +169,7 @@ export default function SuperAdminStores() {
 				className="dark:bg-darkBackground"
 			>
 				{isWeb ? (
-					<View className="bg-white dark:bg-darkBackgroundCard rounded-2xl p-1.5 flex-row gap-x-1 shadow-sm border border-slate-100 dark:border-darkBorder" style={{ width: '100%', maxWidth: 700 }}>
+					<View className="bg-white dark:bg-darkBackgroundCard rounded-2xl flex-row shadow-sm border border-slate-100 dark:border-darkBorder" style={{ width: '100%', maxWidth: 700, height: 50, padding: 6, alignItems: 'center', alignSelf: 'center' }}>
 						{FILTERS.map((f) => {
 							const active = activeFilter === f;
 							const count = statusCounts[f] ?? 0;
@@ -179,7 +180,7 @@ export default function SuperAdminStores() {
 									activeOpacity={0.8}
 									style={{
 										flex: 1,
-										height: 44,
+										height: 38,
 										alignItems: 'center',
 										justifyContent: 'center',
 										flexDirection: 'row',

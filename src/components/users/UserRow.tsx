@@ -9,6 +9,8 @@ const getRoleDetails = (roleType: string, roleLevel?: number, translate?: any) =
   const roles: Record<string, { label: string; bg: string; text: string }> = {
     super_admin: { label: translate("superAdmin.users.roles.sadmin", { defaultValue: "S-ADMIN" }), ...orangeRole },
     manager: { label: translate("superAdmin.users.roles.manager", { defaultValue: "MANAGER" }), ...orangeRole },
+    store_manager: { label: translate("superAdmin.users.roles.manager", { defaultValue: "MANAGER" }), ...orangeRole },
+    store_owner: { label: translate("superAdmin.users.roles.manager", { defaultValue: "MANAGER" }), ...orangeRole },
     front_desk: { label: translate("superAdmin.users.roles.staff", { defaultValue: "STAFF" }), ...orangeRole },
   };
 
