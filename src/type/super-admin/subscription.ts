@@ -22,6 +22,8 @@ export type ManagerSubscriptionRow = {
   owner_name?: string | null;
   current_period_start?: string | null;
   current_period_end?: string | null;
+  cancel_at_period_end?: boolean | null;
+  paymongo_subscription_id?: string | null;
   created_at?: string | null;
   updated_at?: string | null;
 };

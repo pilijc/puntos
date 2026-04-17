@@ -1,4 +1,5 @@
 import { supabase } from "@/supabase/supabase";
+import { isPaidUnlimitedPlan } from "@/services/store-manager/subscription-limits";
 
 export type ManagerSubscriptionRow = {
   id?: number;
@@ -8,7 +9,40 @@ export type ManagerSubscriptionRow = {
   payment_status: string | null;
   current_period_start?: string | null;
   current_period_end?: string | null;
+  cancel_at_period_end?: boolean | null;
+  paymongo_subscription_id?: string | null;
 };
+
+/** Row from `manager_subscription_payments` (billing history). */
+export type ManagerSubscriptionPaymentRow = {
+  id?: number;
+  owner_id: string;
+  payment_reference?: string | null;
+  amount_paid: string | number | null;
+  payment_status?: string | null;
+  paid_at?: string | null;
+  created_at?: string | null;
+};
+
+export async function getAuthenticatedUserId(): Promise<string | null> {
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  return session?.user?.id ?? null;
+}
+
+export async function getManagerSubscriptionPayments(
+  ownerId: string,
+): Promise<ManagerSubscriptionPaymentRow[]> {
+  const { data, error } = await supabase
+    .from("manager_subscription_payments")
+    .select("id,owner_id,payment_reference,amount_paid,payment_status,paid_at,created_at")
+    .eq("owner_id", ownerId)
+    .order("created_at", { ascending: false });
+
+  if (error) return [];
+  return (data ?? []) as ManagerSubscriptionPaymentRow[];
+}
 
 export async function upsertManagerSubscriptionByOwner(
   ownerId: string,
@@ -80,6 +114,73 @@ function normalizeSubscriptionId(value: unknown): number | null {
     return Number.isFinite(n) ? n : null;
   }
   return null;
+}
+
+export type CancelManagerSubscriptionResult =
+  | { ok: true; current_period_end?: string | null; already_scheduled?: boolean }
+  | { ok: false; error: string };
+
+export async function cancelManagerSubscription(): Promise<CancelManagerSubscriptionResult> {
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  const ownerId = session?.user?.id;
+  if (!ownerId) {
+    return { ok: false, error: "Not signed in" };
+  }
+
+  const { data: plans, error: plansError } = await supabase.from("subscriptions").select("id,slug");
+  if (plansError || !plans?.length) {
+    return { ok: false, error: plansError?.message ?? "Could not load plans" };
+  }
+
+  const { data: row, error: rowError } = await supabase
+    .from("manager_subscriptions")
+    .select("owner_id,payment_status,subscription_id,cancel_at_period_end,current_period_end")
+    .eq("owner_id", ownerId)
+    .maybeSingle();
+
+  if (rowError) {
+    return { ok: false, error: rowError.message };
+  }
+  if (!row) {
+    return { ok: false, error: "No subscription record" };
+  }
+
+  if (!isPaidUnlimitedPlan(row, plans as Array<{ id: number; slug?: string | null }>)) {
+    return { ok: false, error: "Nothing to cancel" };
+  }
+  if (row.cancel_at_period_end) {
+    return {
+      ok: true,
+      already_scheduled: true,
+      current_period_end: row.current_period_end ?? null,
+    };
+  }
+
+  const { error: upErr } = await supabase
+    .from("manager_subscriptions")
+    .update({
+      cancel_at_period_end: true,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("owner_id", ownerId);
+
+  if (upErr) {
+    return { ok: false, error: upErr.message };
+  }
+
+  const { data: refreshed } = await supabase
+    .from("manager_subscriptions")
+    .select("current_period_end,cancel_at_period_end")
+    .eq("owner_id", ownerId)
+    .maybeSingle();
+
+  return {
+    ok: true,
+    current_period_end: refreshed?.current_period_end ?? row.current_period_end ?? null,
+    already_scheduled: false,
+  };
 }
 
 export async function useSubscriptionCheckout(

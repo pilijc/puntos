@@ -15,8 +15,8 @@ interface ButtonProps {
   leftImage?: ImageSource;
   leftImageSize?: number;
   fullWidth?: boolean;
-  /** Tighter horizontal padding when `fullWidth` (e.g. settings logout). */
   dense?: boolean;
+  roundedFull?: boolean;
   loading?: boolean;
   disabled?: boolean;
   keyboardDismiss?: boolean;
@@ -73,6 +73,7 @@ export function Button({
   leftImageSize = 18,
   fullWidth = false,
   dense = false,
+  roundedFull = false,
   loading = false,
   disabled = false,
   keyboardDismiss = false,
@@ -104,7 +105,7 @@ export function Button({
       disabled={disabled || loading}
       onPress={onPress}
       onPressIn={keyboardDismiss ? () => { Keyboard.dismiss(); onPress(); } : undefined}
-      className={`${sizeClass} rounded-xl ${container} items-center flex-row justify-center gap-x-2`}
+      className={`${sizeClass} ${roundedFull ? "rounded-full" : "rounded-xl"} ${container} items-center flex-row justify-center gap-x-2`}
     >
       {loading ? (
         <ActivityIndicator size="small" color={spinnerColor} />
