@@ -8,21 +8,12 @@ import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated";
 import Carousel from "react-native-reanimated-carousel";
 import { getRewards } from "@/services/reward-service";
 import { getUserAvailablePoints } from "@/services/user/points-service";
+import { getStoreById } from "@/services/store-service";
 import { supabase } from "@/supabase/supabase";
 import { Reward } from "@/services/reward-service";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
-// ─── Static placeholder data ──────────────────────────────────────────────────
-const STATIC_NEXT_TIER = 1000;
-
-const STATIC_GALLERY = [
-  { id: "g1", uri: "https://images.unsplash.com/photo-1554118811-1e0d58224f24?fm=jpg&q=80&w=600" },
-  { id: "g2", uri: "https://images.unsplash.com/photo-1445116572660-236099ec97a0?fm=jpg&q=80&w=600" },
-  { id: "g3", uri: "https://images.unsplash.com/photo-1600093463592-8e36ae95ef56?fm=jpg&q=80&w=600" },
-  { id: "g4", uri: "https://images.unsplash.com/photo-1521017432531-fbd92d768814?fm=jpg&q=80&w=600" },
-];
-// ─────────────────────────────────────────────────────────────────────────────
 
 export default function ClaimRewardsScreen() {
   const { storeId, storeName, storeLogo, storeAddress } = useLocalSearchParams<{ storeId?: string; storeName?: string; storeLogo?: string; storeAddress?: string }>();
@@ -30,12 +21,12 @@ export default function ClaimRewardsScreen() {
   const [userPoints, setUserPoints] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [galleryIndex, setGalleryIndex] = useState(0);
+  const [gallery, setGallery] = useState<{ id: string, uri: string }[]>([]);
   const [userId, setUserId] = useState<string | null>(null);
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const scheme = useColorScheme();
   const dark = scheme === "dark";
-  const progressPercent = Math.min((userPoints / STATIC_NEXT_TIER) * 100, 100);
 
   useEffect(() => {
     async function loadData() {
@@ -45,13 +36,21 @@ export default function ClaimRewardsScreen() {
       if (!user?.id) return;
       setUserId(user.id);
 
-      const [storeRewards, points] = await Promise.all([
+      const [storeRewards, points, storeData] = await Promise.all([
         getRewards({ storeId: storeId as string, limit: 20 }),
-        getUserAvailablePoints(user.id)
+        getUserAvailablePoints(user.id),
+        getStoreById(Number(storeId))
       ]);
 
       setRewards(storeRewards);
       setUserPoints(points);
+      
+      if (storeData?.store_pictures && storeData.store_pictures.length > 0) {
+        setGallery(
+          storeData.store_pictures.map((uri: string, i: number) => ({ id: `pic-${i}`, uri }))
+        );
+      }
+      
       setIsLoading(false);
     }
 
@@ -209,16 +208,17 @@ export default function ClaimRewardsScreen() {
           contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 0, paddingBottom: 60, gap: 16 }}
         >
           {/* ── Drag handle */}
-          <RNView style={{ alignItems: "center", paddingTop: 10, marginBottom: 4 }}>
+          <RNView style={{ alignItems: "center", paddingTop: 10, marginBottom: -10 }}>
             <RNView style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: dark ? "#525252" : "#E0E0E0" }} />
           </RNView>
 
           {/* ── Store Gallery Carousel ───────────────────────────────── */}
-          <Animated.View entering={FadeInDown.delay(140).duration(380)} style={{ marginHorizontal: -16, gap: 8 }}>
+          {gallery.length > 0 && (
+            <Animated.View entering={FadeInDown.delay(140).duration(380)} style={{ marginHorizontal: -16, gap: 8 }}>
             <Carousel
               width={SCREEN_WIDTH}
               height={190}
-              data={STATIC_GALLERY}
+              data={gallery}
               autoPlay
               autoPlayInterval={3200}
               scrollAnimationDuration={800}
@@ -241,7 +241,7 @@ export default function ClaimRewardsScreen() {
             />
             {/* Dot indicators */}
             <RNView style={{ flexDirection: "row", justifyContent: "center", alignItems: "center", gap: 6 }}>
-              {STATIC_GALLERY.map((_, i) => (
+              {gallery.map((_, i) => (
                 <RNView
                   key={i}
                   style={{
@@ -254,8 +254,9 @@ export default function ClaimRewardsScreen() {
               ))}
             </RNView>
           </Animated.View>
+          )}
 
-          {/* ── Tier Progress ─────────────────────────────────────────── */}
+          {/* ── Replacement Content ── */}
           <Animated.View
             entering={FadeInDown.delay(180).duration(360)}
             style={{
@@ -264,21 +265,23 @@ export default function ClaimRewardsScreen() {
               padding: 16,
             }}
           >
-            <RNView style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-              <RNView style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-                <Trophy size={15} color="#FF6600" />
-                <Text className="text-sm font-poppins-bold text-neutral-800">Next Tier</Text>
+            <RNView style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+              <RNView style={{
+                width: 38, height: 38, borderRadius: 19,
+                backgroundColor: dark ? "#9A3412" : "#FFE4CC",
+                alignItems: "center", justifyContent: "center",
+              }}>
+                <Sparkles size={16} color="#FF6600" />
               </RNView>
-              <Text className="text-xs font-poppins-bold text-primary">
-                {userPoints} / {STATIC_NEXT_TIER} pts
-              </Text>
+              <RNView style={{ flex: 1 }}>
+                <Text className="text-neutral-800 font-poppins-semibold text-xs">
+                  Earn more points
+                </Text>
+                <Text className="text-neutral-500 font-poppins text-[11px] mt-0.5">
+                  Scan the QR code at checkout on your next visit
+                </Text>
+              </RNView>
             </RNView>
-            <RNView style={{ height: 8, backgroundColor: progTrack, borderRadius: 4, overflow: "hidden" }}>
-              <RNView style={{ height: "100%", width: `${progressPercent}%`, backgroundColor: "#FF6600", borderRadius: 4 }} />
-            </RNView>
-            <Text style={{ marginTop: 6, fontSize: 11, color: "#9CA3AF", fontFamily: "Poppins_400Regular" }}>
-              {Math.max(0, STATIC_NEXT_TIER - userPoints)} pts until your next reward tier unlocks
-            </Text>
           </Animated.View>
 
           {/* ── Redeem Now ────────────────────────────────────────────── */}
@@ -435,38 +438,6 @@ export default function ClaimRewardsScreen() {
               </Animated.View>
             ))}
           </Animated.View>
-
-
-          {/* ── Earn Tip ──────────────────────────────────────────────── */}
-          <Animated.View
-            entering={FadeInDown.delay(600).duration(360)}
-            style={{
-              backgroundColor: tipBg,
-              borderWidth: 1, borderColor: tipBorder,
-              borderRadius: 18,
-              padding: 16,
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 12,
-            }}
-          >
-            <RNView style={{
-              width: 38, height: 38, borderRadius: 19,
-              backgroundColor: dark ? "#9A3412" : "#FFE4CC",
-              alignItems: "center", justifyContent: "center",
-            }}>
-              <Sparkles size={16} color="#FF6600" />
-            </RNView>
-            <RNView style={{ flex: 1 }}>
-              <Text className="text-neutral-800 font-poppins-semibold text-xs">
-                Earn more points
-              </Text>
-              <Text className="text-neutral-500 font-poppins text-[11px] mt-0.5">
-                Scan the QR code at checkout on your next visit
-              </Text>
-            </RNView>
-          </Animated.View>
-
 
           {/* Footer */}
           <RNView style={{ alignItems: "center", paddingTop: 4 }}>

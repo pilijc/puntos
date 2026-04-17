@@ -571,12 +571,30 @@
             "fallbackTitle": "店舗の詳細",
             "fallbackDescription": "店舗情報の表示と管理",
             "menu": {
-                "staff": { "label": "スタッフ", "description": "チーム管理" },
-                "streak": { "label": "ストリーク", "description": "毎日の特典" },
-                "stamp": { "label": "スタンプ", "description": "スタンプカード" },
-                "qr": { "label": "QR購入", "description": "スキャンで特典" },
-                "rewards": { "label": "リワード", "description": "交換アイテム" },
-                "media": { "label": "詳細", "description": "店舗を管理" }
+                "staff": {
+                    "label": "スタッフ",
+                    "description": "チーム管理"
+                },
+                "streak": {
+                    "label": "ストリーク",
+                    "description": "毎日の特典"
+                },
+                "stamp": {
+                    "label": "スタンプ",
+                    "description": "スタンプカード"
+                },
+                "qr": {
+                    "label": "QR購入",
+                    "description": "スキャンで特典"
+                },
+                "rewards": {
+                    "label": "リワード",
+                    "description": "交換アイテム"
+                },
+                "media": {
+                    "label": "詳細",
+                    "description": "店舗を管理"
+                }
             },
             "recentTransactions": "最近の取引",
             "seeAll": "すべて見る",
@@ -851,7 +869,11 @@
             "endFailed": "プログラムの終了に失敗しました。",
             "deleteFailed": "プログラムの削除に失敗しました。",
             "activateFailed": "プログラムの有効化に失敗しました。",
-            "tabs": { "draft": "下書き", "active": "有効", "ended": "終了" },
+            "tabs": {
+                "draft": "下書き",
+                "active": "有効",
+                "ended": "終了"
+            },
             "emptyDraftTitle": "下書きのスタンププログラムはありません",
             "emptyActiveTitle": "有効なプログラムはありません",
             "emptyEndedTitle": "終了したプログラムはありません",
@@ -908,7 +930,11 @@
         "streak": {
             "title": "ストリークプログラム",
             "description": "ストリークポイントでお客様に特典",
-            "tabs": { "active": "有効", "upcoming": "予定", "ended": "終了" },
+            "tabs": {
+                "active": "有効",
+                "upcoming": "予定",
+                "ended": "終了"
+            },
             "emptyActiveTitle": "有効なプログラムはありません",
             "emptyUpcomingTitle": "予定のプログラムはありません",
             "emptyEndedTitle": "過去のプログラムはありません",
@@ -1034,10 +1060,38 @@
                 "radius": "半径（50〜500m）"
             }
         },
+        "subscription": {
+            "title": "サブスクリプション",
+            "welcome": {
+                "planBadge": "ベーシックプラン",
+                "headline": "現在はベーシックです",
+                "subhead": "1店舗目は追加料金なしでご利用いただけます。複数店舗に広がるタイミングでプレミアムへ移行すると、すべての店舗をスムーズに運用できます。",
+                "basicTitle": "ベーシック",
+                "basicSubtitle": "アカウントに含まれるプラン",
+                "currentPlan": "現在のプラン",
+                "basicFeature1": "1店舗でロイヤルティ機能をフル活用",
+                "basicFeature2": "スタンプ、ストリーク、特典、QR、スタッフ管理",
+                "basicFeature3": "ダッシュボードと取引履歴",
+                "premiumTitle": "プレミアム",
+                "premiumSubtitle": "複数店舗での運用向け",
+                "recommended": "おすすめ",
+                "premiumFeature1": "複数店舗の登録と運用",
+                "premiumFeature2": "追加店舗の利用制限リスクを軽減",
+                "premiumFeature3": "優先サポート",
+                "premiumFeature4": "今後リリースされるプレミアム機能へのアクセス",
+                "cta": "プレミアムにアップグレード",
+                "ctaHint": "安全なお支払いは、今後のアップデートでここから行えるようになります。"
+            },
+            "premiumActive": {
+                "title": "プレミアムをご利用中です",
+                "body": "ご登録ありがとうございます。決済連携後はここからお支払い情報を管理できます。"
+            }
+        },
         "tabs": {
             "dashboard": "ダッシュボード",
             "stores": "店舗",
             "transactions": "取引履歴",
+            "subscription": "サブスクリプション",
             "settings": "設定"
         }
     },

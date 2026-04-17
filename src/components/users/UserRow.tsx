@@ -9,6 +9,8 @@ const getRoleDetails = (roleType: string, roleLevel?: number, translate?: any) =
   const roles: Record<string, { label: string; bg: string; text: string }> = {
     super_admin: { label: translate("superAdmin.users.roles.sadmin", { defaultValue: "S-ADMIN" }), ...orangeRole },
     manager: { label: translate("superAdmin.users.roles.manager", { defaultValue: "MANAGER" }), ...orangeRole },
+    store_manager: { label: translate("superAdmin.users.roles.manager", { defaultValue: "MANAGER" }), ...orangeRole },
+    store_owner: { label: translate("superAdmin.users.roles.manager", { defaultValue: "MANAGER" }), ...orangeRole },
     front_desk: { label: translate("superAdmin.users.roles.staff", { defaultValue: "STAFF" }), ...orangeRole },
   };
 
@@ -31,7 +33,7 @@ export const UserRow = React.memo(function UserRow({ user, isFirst }: any) {
       style={{ borderTopWidth: isFirst ? 0 : 1, borderTopColor: isFirst ? 'transparent' : (isDark ? "#404040" : "#F8FAFC") }}
     >
       <Image
-        source={{ uri: user.avatar }}
+        source={user.avatar ? { uri: user.avatar } : require("@/assets/images/role-user.png")}
         style={{ width: 48, height: 48, borderRadius: 12, backgroundColor: isDark ? "#262626" : "#F1F5F9" }}
       />
       <View className="ml-3 flex-1">

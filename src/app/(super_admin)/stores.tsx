@@ -100,7 +100,7 @@ export default function SuperAdminStores() {
 	);
 
 	if (selectedStore) {
-		const sub = subscriptions.find(s => s.store_id === selectedStore.id);
+		const sub = subscriptions.find((s) => s.owner_id === selectedStore.owner_id);
 		return (
 			<>
 				<AdminStoreDetails
@@ -147,64 +147,29 @@ export default function SuperAdminStores() {
 	return (
 		<ScreenWrapper className="flex-1 bg-backgroundMuted dark:bg-darkBackground">
 
-			{/* ── Header ── */}
-			<View
-				style={isWeb ? {
-					backgroundColor: 'transparent',
-					borderBottomWidth: 0,
-					paddingTop: 24,
-					paddingBottom: 16,
-					width: '100%',
-				} : {}}
-				className="bg-white border-b border-slate-100 dark:bg-darkBackgroundMuted dark:border-darkBorder px-6 py-4 flex-row items-center justify-start"
-			>
-				<View
-					style={isWeb ? {
-						width: '100%',
-						maxWidth: 1000,
-						alignSelf: 'center',
-						paddingHorizontal: 24,
-						flexDirection: 'row',
-						alignItems: 'center',
-						justifyContent: 'flex-start'
-					} : {
-						flexDirection: 'row',
-						alignItems: 'center',
-						gap: 8,
-						flex: 1
-					}}
-				>
-					{!isWeb && (
-						<MaterialIcons name="storefront" size={22} color="black" className="mt-1 dark:color-white" />
-					)}
-					<Text
-						style={isWeb ? {
-							fontSize: 22,
-							fontFamily: 'Poppins-Bold',
-							color: '#0f172a',
-						} : {}}
-						className="text-1xl font-poppins-bold text-slate-900 dark:text-darkTextPrimary flex-1"
-					>
-						{translate("superAdmin.stores.title", { defaultValue: "Store Approvals" })}
-					</Text>
-				</View>
+			{/* ── Main Header (Uniform Style) ── */}
+			<View className="bg-white dark:bg-darkBackground border-b border-neutral-100 dark:border-darkBorder px-6 py-3">
+				<Text className="text-xl font-poppins-bold text-textPrimary dark:text-darkTextPrimary py-1">
+					{translate("superAdmin.stores.title", { defaultValue: "Store Approvals" })}
+				</Text>
 			</View>
 
-			{/* ── Filter tabs ── */}
+			{/* ── Filter tabs (Sub-Header) ── */}
 			<View
 				style={isWeb ? {
 					alignItems: 'center',
-					paddingVertical: 12,
+					paddingTop: 16,
+					paddingBottom: 8,
 					backgroundColor: 'transparent',
 				} : {
-					backgroundColor: 'white',
+					backgroundColor: '#f8fafc', // backgroundMuted
 					borderBottomWidth: 1,
 					borderBottomColor: '#f1f5f9'
 				}}
 				className="dark:bg-darkBackground"
 			>
 				{isWeb ? (
-					<View className="bg-white dark:bg-darkBackgroundCard rounded-2xl p-1.5 flex-row gap-x-1 shadow-sm border border-slate-100 dark:border-darkBorder" style={{ width: '100%', maxWidth: 700 }}>
+					<View className="bg-white dark:bg-darkBackgroundCard rounded-2xl flex-row shadow-sm border border-slate-100 dark:border-darkBorder" style={{ width: '100%', maxWidth: 700, height: 50, padding: 6, alignItems: 'center', alignSelf: 'center' }}>
 						{FILTERS.map((f) => {
 							const active = activeFilter === f;
 							const count = statusCounts[f] ?? 0;
@@ -215,7 +180,7 @@ export default function SuperAdminStores() {
 									activeOpacity={0.8}
 									style={{
 										flex: 1,
-										height: 44,
+										height: 38,
 										alignItems: 'center',
 										justifyContent: 'center',
 										flexDirection: 'row',

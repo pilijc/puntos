@@ -159,20 +159,39 @@ export default function SuperAdminDashboard() {
 
   return (
     <SafeAreaView className="flex-1 bg-background dark:bg-darkBackground" edges={["top", "left", "right"]}>
+      {/* ── Main Header (Uniform Style) ── */}
+      <View className="bg-white dark:bg-darkBackground border-b border-neutral-100 dark:border-darkBorder px-6 py-3 flex-row items-center justify-between">
+        <View className="flex-row items-baseline gap-2">
+          <Text className="text-xl font-poppins-bold text-textPrimary dark:text-darkTextPrimary py-1">
+            {translate("superAdmin.dashboard.title")}
+          </Text>
+          {isWeb && (
+            <Text className="text-xs text-[#94A3B8] dark:text-darkTextSecondary font-poppins">
+              {translate("superAdmin.dashboard.welcome")}
+              <Text className="text-orange-500 font-poppins-bold">
+                {adminInfo?.username?.split(" ")[0] || "Admin"}
+              </Text>!
+            </Text>
+          )}
+        </View>
+      </View>
+
       <ScrollView
         className="flex-1"
         contentContainerStyle={{ paddingBottom: 40 }}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#FF6600" />}
       >
-        <View style={isWeb ? { paddingTop: 24, paddingBottom: 12, paddingHorizontal: WEB_PAGE_PADDING } : {}} className="px-6 pt-4 pb-3">
-          <Text className="text-sm text-[#94A3B8] dark:text-darkTextSecondary font-[Poppins-Regular]">
-            {translate("superAdmin.dashboard.welcome")}
-            <Text className="text-orange-500 font-[Poppins-Bold]"> {adminInfo?.username?.split(" ")[0] || "Admin"}</Text>!
-          </Text>
-          <Text className="text-2xl font-[Poppins-Bold] text-[#0F172A] dark:text-darkTextPrimary">
-            {translate("superAdmin.dashboard.title")}
-          </Text>
-        </View>
+        {/* ── Sub-Header (Welcome Message) ── */}
+        {!isWeb && (
+          <View className="px-6 pt-6 pb-2">
+            <Text className="text-sm text-[#94A3B8] dark:text-darkTextSecondary font-poppins">
+              {translate("superAdmin.dashboard.welcome")}
+              <Text className="text-orange-500 font-poppins-bold">
+                {adminInfo?.username?.split(" ")[0] || "Admin"}
+              </Text>!
+            </Text>
+          </View>
+        )}
 
         <View
           style={isWeb ? { maxWidth: WEB_CARD_MAX_WIDTH, width: "100%", alignSelf: "center", paddingHorizontal: WEB_CARD_PADDING } : {}}
