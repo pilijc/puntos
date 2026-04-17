@@ -39,8 +39,12 @@ export function useRedemptionCode(
   }, []);
 
   const clearSubscription = useCallback(() => {
-    if (channelRef.current) {
-      channelRef.current.unsubscribe();
+    if (channelRef.current && typeof channelRef.current.unsubscribe === 'function') {
+      try {
+        channelRef.current.unsubscribe();
+      } catch (error) {
+        console.error('Error unsubscribing from channel:', error);
+      }
       channelRef.current = null;
     }
   }, []);

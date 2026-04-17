@@ -28,13 +28,14 @@ export async function getRewards(options: {
   let query = supabase
     .from("store_rewards")
     .select("*")
-    .eq("is_active", true);
+    .eq("is_active", true)
+    .gt("stock", 0);
 
   if (storeId) {
     query = query.eq("store_id", storeId);
   }
 
-  // Backend Sorting Logic 
+  // Backend Sorting Logic
   if (sortBy === "points") {
     query = query.order("points_cost", { ascending: pointsOrder === "asc" });
   } else if (sortBy === "newest") {

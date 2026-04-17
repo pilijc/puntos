@@ -17,7 +17,7 @@ function generateRandomCode(): string {
   for (let i = 0; i < CODE_LENGTH; i++) {
     result += chars.charAt(Math.floor(Math.random() * chars.length));
   }
-  return `${REDEMPTION_CODE_PREFIX}-${result}`;
+  return `${REDEMPTION_CODE_PREFIX}${result}`;
 }
 
 function getExpiryTimestamp(): string {
@@ -134,25 +134,64 @@ export function listenToRedemptionStatus(
   codeId: string,
   onStatusChange: (update: RedemptionUpdate) => void
 ) {
-  return supabase
-    .channel(`redemption-status-${codeId}`)
-    .on(
-      "postgres_changes",
-      {
-        event: "UPDATE",
-        schema: "public",
-        table: "reward_redemption_codes",
-        filter: `id=eq.${codeId}`,
-      },
-      (payload) => {
-        const updated = payload.new as RedemptionCode;
-        onStatusChange({
-          status: updated.status,
-          redeemed_at: updated.redeemed_at,
-        });
-      }
-    )
-    .subscribe();
+  let retryCount = 0;
+  const maxRetries = 10;
+  const baseDelay = 2000;
+
+  const subscribeWithRetry = () => {
+    if (retryCount >= maxRetries) {
+      console.error(`Max retries (${maxRetries}) reached for redemption status listener. Real-time may not be enabled for reward_redemption_codes table.`);
+      return null;
+    }
+
+    const delay = Math.min(baseDelay * Math.pow(2, retryCount), 30000);
+
+    const channel = supabase
+      .channel(`redemption-status-${codeId}`, {
+        config: {
+          broadcast: { self: true },
+          presence: { key: codeId },
+        },
+      })
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "reward_redemption_codes",
+          filter: `id=eq.${codeId}`,
+        },
+        (payload) => {
+          const updated = payload.new as RedemptionCode;
+          onStatusChange({
+            status: updated.status,
+            redeemed_at: updated.redeemed_at,
+          });
+        }
+      )
+      .subscribe((status) => {
+        console.log(`Redemption status listener for code ${codeId}:`, status);
+        if (status === "SUBSCRIBED") {
+          console.log(`Successfully subscribed to redemption status for code ${codeId}`);
+          retryCount = 0;
+        } else if (status === "TIMED_OUT" || status === "CLOSED" || status === "CHANNEL_ERROR") {
+          console.error(`Redemption status listener failed for code ${codeId}:`, status);
+          retryCount++;
+          if (retryCount < maxRetries) {
+            console.log(`Reconnecting in ${delay/1000}s... (attempt ${retryCount}/${maxRetries})`);
+            setTimeout(() => {
+              subscribeWithRetry();
+            }, delay);
+          } else {
+            console.error(`Max retries reached. Real-time may need to be enabled for reward_redemption_codes table in Supabase.`);
+          }
+        }
+      });
+
+    return channel;
+  };
+
+  return subscribeWithRetry();
 }
 
 export async function cancelRedemptionCode(
@@ -185,14 +224,14 @@ export function getQRCodeData(code: string): string {
 }
 
 export async function deductPoints(
-    userId: string, 
-    storeId: string, 
+    userId: string,
+    storeId: string,
     pointsToDeduct: number
 ): Promise<{ success: boolean; message: string; remainingPoints?: number }> {
     try {
-        
+
         const currentPoints = await getUserAvailablePoints(userId, storeId);
-        
+
         if (currentPoints < pointsToDeduct) {
             return {
                 success: false,
@@ -215,4 +254,29 @@ export async function deductPoints(
             message: "An error occurred while deducting points"
         };
     }
+}
+
+export function listenToUserRedemptions(
+  userId: string,
+  onNewRedemption: (redemption: any) => void
+) {
+  return supabase
+    .channel(`user-redemptions-${userId}`)
+    .on(
+      "postgres_changes",
+      {
+        event: "INSERT",
+        schema: "public",
+        table: "reward_redemptions",
+        filter: `user_id=eq.${userId}`,
+      },
+      (payload) => {
+        console.log("User redemption realtime triggered:", payload);
+        const newRedemption = payload.new;
+        onNewRedemption(newRedemption);
+      }
+    )
+    .subscribe((status) => {
+      console.log(`User redemptions listener status for user ${userId}:`, status);
+    });
 }

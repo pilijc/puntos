@@ -3,27 +3,25 @@ import {
   StyleSheet,
   Animated,
   PanResponder,
-  Platform,
   Image,
   Easing,
   ScrollView,
 } from "react-native";
 import { View, Text, TouchableOpacity } from "@/tw";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { X, Store, Speaker } from "lucide-react-native";
+import { X, Store, Speaker, CheckCircle2 } from "lucide-react-native";
 import QRCode from "react-native-qrcode-svg";
 import { Modal } from "@/components/modal";
 import { Button } from "@/components/button";
-import { getQRCodeData } from "@/services/user/rewards-redemption";
-
-const isWeb = Platform.OS === "web";
+import { getQRCodeData, listenToRedemptionStatus } from "@/services/user/rewards-redemption";
+import { RewardSuccessModal } from "@/components/RewardSuccessModal";
 
 interface RedemptionDrawerProps {
   visible: boolean;
   rewardTitle?: string;
   rewardDescription?: string;
   rewardImage?: string;
-  redemptionCode?: { code: string; expires_at: string };
+  redemptionCode?: { id: string; code: string; expires_at: string };
   timeRemaining?: number;
   status?: "loading" | "active" | "redeemed" | "cancelled" | "expired" | "error";
   onClose: () => void;
@@ -54,15 +52,31 @@ export function RedemptionDrawer({
   const isExpiringSoon = (timeRemaining || 0) < 60;
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [localStatus, setLocalStatus] = useState<"loading" | "active" | "redeemed" | "cancelled" | "expired" | "error">(status);
+
+  // Sync local status with prop status
+  useEffect(() => {
+    setLocalStatus(status);
+  }, [status]);
+
+  // Listen for real-time status changes from staff side
+  useEffect(() => {
+    if (!visible || !redemptionCode?.id || localStatus === "redeemed" || localStatus === "cancelled") {
+      return;
+    }
+
+    const channel = listenToRedemptionStatus(redemptionCode.id, (update) => {
+      console.log("Redemption status updated in drawer:", update);
+      setLocalStatus(update.status);
+    });
+
+    return () => {
+      channel.unsubscribe();
+    };
+  }, [visible, redemptionCode?.id, localStatus]);
 
   const closeSheet = useCallback(
     (onClosed?: () => void) => {
-      if (isWeb) {
-        onClose();
-        onClosed?.();
-        return;
-      }
-
       Animated.parallel([
         Animated.spring(translateY, {
           toValue: 600,
@@ -86,13 +100,26 @@ export function RedemptionDrawer({
     [translateY, backdropOpacity, onClose]
   );
 
+  // Auto-close drawer when redeemed
+  useEffect(() => {
+    if (localStatus === "redeemed") {
+      const timer = setTimeout(() => {
+        closeSheet();
+        setTimeout(() => {
+          setShowSuccessModal(true);
+        }, 300);
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [localStatus, closeSheet]);
+
   const handleSwipeClose = useCallback(() => {
-    if (status === "cancelled" || status === "redeemed") {
+    if (localStatus === "cancelled" || localStatus === "redeemed") {
       closeSheet();
     } else {
       setShowConfirmModal(true);
     }
-  }, [status, closeSheet]);
+  }, [localStatus, closeSheet]);
 
   const panResponder = useRef(
     PanResponder.create({
@@ -131,7 +158,7 @@ export function RedemptionDrawer({
   const handleConfirmCancel = async () => {
     setShowConfirmModal(false);
     if (onCancel) await onCancel();
-    setShowSuccessModal(true);
+    closeSheet();
   };
 
   const handleSuccessClose = () => {
@@ -140,7 +167,7 @@ export function RedemptionDrawer({
   };
 
   useEffect(() => {
-    if (visible && !isWeb) {
+    if (visible) {
       translateY.setValue(600);
       backdropOpacity.setValue(0);
 
@@ -163,7 +190,7 @@ export function RedemptionDrawer({
 
   if (!visible || !redemptionCode) return null;
 
-  const formattedCode = redemptionCode.code.replace(/-/g, " ");
+  const formattedCode = redemptionCode.code;
 
   const handleCancelPress = () => setShowConfirmModal(true);
 
@@ -178,7 +205,7 @@ export function RedemptionDrawer({
         <TouchableOpacity
           style={StyleSheet.absoluteFillObject}
           onPress={() =>
-            status === "cancelled" || status === "redeemed"
+            localStatus === "cancelled" || localStatus === "redeemed"
               ? closeSheet()
               : setShowConfirmModal(true)
           }
@@ -200,12 +227,12 @@ export function RedemptionDrawer({
 
               <View className="items-center py-3 relative px-4">
                 <Text className="text-base text-white font-poppins-semibold">
-                  {status === "redeemed" ? "Reward Redeemed" : "Scan to redeem"}
+                  {localStatus === "redeemed" ? "Reward Redeemed" : "Scan to redeem"}
                 </Text>
 
                 <TouchableOpacity
                   onPress={() =>
-                    status === "cancelled" || status === "redeemed"
+                    localStatus === "cancelled" || localStatus === "redeemed"
                       ? closeSheet()
                       : setShowConfirmModal(true)
                   }
@@ -217,13 +244,17 @@ export function RedemptionDrawer({
 
               {/* QR CARD */}
               <View className="mx-3 mb-3 bg-white rounded-2xl p-4 items-center shadow-lg">
-                
+
                 <View className="bg-white p-2 rounded-xl mb-3 border border-neutral-100">
-                  {status === "loading" ? (
+                  {localStatus === "loading" ? (
                     <View className="w-[140px] h-[140px] items-center justify-center">
                       <Text className="text-neutral-400 text-xs font-poppins-medium">
                         Generating...
                       </Text>
+                    </View>
+                  ) : localStatus === "redeemed" ? (
+                    <View className="w-[140px] h-[140px] items-center justify-center">
+                      <CheckCircle2 size={80} color="#10B981" />
                     </View>
                   ) : (
                     <QRCode value={getQRCodeData(redemptionCode.code)} size={140} />
@@ -231,15 +262,17 @@ export function RedemptionDrawer({
                 </View>
 
                 <Text className="text-xl font-poppins-bold mb-1 tracking-[0.15em] text-neutral-900">
-                  {status === "loading" ? "..." : formattedCode}
+                  {localStatus === "loading" ? "..." : formattedCode}
                 </Text>
 
-                <Text className="text-xs text-neutral-500 font-poppins-medium">Time left to redeem</Text>
+                <Text className="text-xs text-neutral-500 font-poppins-medium">
+                  {localStatus === "redeemed" ? "Status" : "Time left to redeem"}
+                </Text>
 
                 <Text className={`text-2xl font-poppins-bold mt-1 ${isExpiringSoon ? "text-red-500" : "text-neutral-900"}`}>
-                  {status === "redeemed"
+                  {localStatus === "redeemed"
                     ? "Redeemed!"
-                    : status === "loading"
+                    : localStatus === "loading"
                     ? "--:--"
                     : formatTime(timeRemaining)}
                 </Text>
@@ -296,7 +329,7 @@ export function RedemptionDrawer({
                 </View>
               </View>
 
-              {status !== "cancelled" && status !== "loading" && status !== "redeemed" && (
+              {localStatus !== "cancelled" && localStatus !== "loading" && localStatus !== "redeemed" && (
                 <View className="mt-7">
                   <Button
                     label="Cancel Redemption"
@@ -324,14 +357,9 @@ export function RedemptionDrawer({
         ]}
       />
 
-      <Modal
+      <RewardSuccessModal
         visible={showSuccessModal}
         onClose={handleSuccessClose}
-        title="Cancelled"
-        message="Redemption cancelled"
-        buttons={[
-          { label: "Close", onPress: handleSuccessClose, variant: "primary" },
-        ]}
       />
     </View>
   );

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { View, Text, TouchableOpacity, Image } from "@/tw";
-import { Gem, User, Clock, AlertCircle } from "lucide-react-native";
+import { Gem, User, Clock, AlertCircle, CheckCircle2 } from "lucide-react-native";
 import { Button } from "@/components/button";
 import { processRedemption } from "@/services/frontdesk/reward-redemption-service";
 import { RedemptionVerificationResult } from "@/type/frontdesk/reward-redemption";
@@ -23,6 +23,7 @@ export default function RewardRedemptionModal({
   onError,
 }: Props) {
   const [isProcessing, setIsProcessing] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
 
   if (!visible || !verification?.code) return null;
 
@@ -30,12 +31,10 @@ export default function RewardRedemptionModal({
     setIsProcessing(true);
     try {
       const result = await processRedemption(verification.code!.code, staffId);
-      
+
       if (result.success) {
+        setShowSuccess(true);
         onSuccess();
-        setTimeout(() => {
-          onClose();
-        }, 1500);
       } else {
         onError(result.message || "Failed to process redemption");
       }
@@ -45,6 +44,47 @@ export default function RewardRedemptionModal({
       setIsProcessing(false);
     }
   };
+
+  const handleCloseSuccess = () => {
+    onClose();
+    setTimeout(() => setShowSuccess(false), 300);
+  };
+
+  if (showSuccess) {
+    return (
+      <View className="absolute inset-0 bg-black/50 items-center justify-center z-50">
+        <View className="bg-white dark:bg-darkBackgroundCard rounded-2xl mx-4 max-w-sm w-full p-8 items-center shadow-lg">
+          <View className="w-24 h-24 bg-green-100 dark:bg-green-900/20 rounded-full items-center justify-center mb-5 shadow-sm">
+            <CheckCircle2 size={56} color="#10B981" />
+          </View>
+          <Text className="text-2xl font-poppins-bold text-neutral-900 dark:text-white mb-2 text-center">
+            Reward Redeemed!
+          </Text>
+          <Text className="text-base font-poppins-medium text-neutral-500 dark:text-neutral-400 text-center px-4 leading-relaxed">
+            The reward has been successfully redeemed. Points have been deducted from the customer's account.
+          </Text>
+          <View className="mt-6 w-full">
+            <View className="bg-green-50 dark:bg-green-900/20 rounded-xl py-4 px-6 border border-green-100 dark:border-green-900/30">
+              <View className="flex-row items-center justify-center">
+                <Gem size={20} color="#FF6600" />
+                <Text className="ml-2 font-poppins-bold text-orange-600 dark:text-orange-400">
+                  -{verification.code?.points_cost?.toLocaleString() || 0} points
+                </Text>
+              </View>
+            </View>
+          </View>
+          <View className="mt-6 w-full">
+            <Button
+              label="Done"
+              onPress={handleCloseSuccess}
+              variant="primary"
+              fullWidth
+            />
+          </View>
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View className="absolute inset-0 bg-black/50 items-center justify-center z-50">
@@ -72,7 +112,7 @@ export default function RewardRedemptionModal({
               {verification.code.reward_description}
             </Text>
           )}
-          
+
           {verification.code.reward_image_url && (
             <Image
               source={{ uri: verification.code.reward_image_url }}
@@ -108,7 +148,7 @@ export default function RewardRedemptionModal({
               Cancel
             </Text>
           </TouchableOpacity>
-          
+
           <TouchableOpacity
             onPress={handleConfirmRedemption}
             className="flex-1 bg-orange-500 rounded-xl py-3 items-center"

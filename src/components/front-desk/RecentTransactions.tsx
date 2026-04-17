@@ -48,7 +48,7 @@ export default function RecentTransactions({ recentScans }: RecentTransactionsPr
 
   const getTransactionDescription = (scan: any) => {
     if (scan.type === "redeemed") {
-      return "Reward Redemption";
+      return scan.rewardTitle || "Reward Redemption";
     }
     if (scan.method === "qr") {
       return "QR Scan";
@@ -88,7 +88,7 @@ export default function RecentTransactions({ recentScans }: RecentTransactionsPr
               </View>
               <View className="flex-1">
                 <Text className="text-sm font-poppins-semibold text-neutral-800 dark:text-darkTextPrimary">
-                  {scan.type === "redeemed" ? getTransactionDescription(scan) : `₱${scan.amount.toFixed(2)} ${getTransactionDescription(scan)}`}
+                  {scan.type === "redeemed" ? `₱${scan.amount.toFixed(2)} ${getTransactionDescription(scan)}` : `₱${scan.amount.toFixed(2)} ${getTransactionDescription(scan)}`}
                 </Text>
                 <Text className="text-xs font-poppins text-neutral-400 dark:text-darkTextSoft mt-0.5">
                   {scan.customerName && `${scan.customerName} • `}

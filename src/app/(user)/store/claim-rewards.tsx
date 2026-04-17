@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { ScrollView, TouchableOpacity, View as RNView, useColorScheme, Dimensions } from "react-native";
 import { View, Text, Image } from "@/tw";
 import { ChevronLeft, Gift, Gem, Star, Lock, Trophy, Sparkles, CheckCircle2 } from "lucide-react-native";
@@ -9,6 +9,7 @@ import Carousel from "react-native-reanimated-carousel";
 import { getRewards } from "@/services/reward-service";
 import { getUserAvailablePoints } from "@/services/user/points-service";
 import { getStoreById } from "@/services/store-service";
+import { listenToUserRedemptions } from "@/services/user/rewards-redemption";
 import { supabase } from "@/supabase/supabase";
 import { Reward } from "@/services/reward-service";
 import { RedemptionDrawer } from "@/components/rewards/redemption-drawer";
@@ -28,6 +29,7 @@ export default function ClaimRewardsScreen() {
   const [drawerVisible, setDrawerVisible] = useState(false);
   const [selectedReward, setSelectedReward] = useState<Reward | null>(null);
   const router = useRouter();
+  const redemptionChannelRef = useRef<any | null>(null);
   const insets = useSafeAreaInsets();
   const scheme = useColorScheme();
   const dark = scheme === "dark";
@@ -82,7 +84,7 @@ export default function ClaimRewardsScreen() {
     if (selectedReward && drawerVisible && !redemptionCode) {
       generateCode();
     }
-  }, [selectedReward, drawerVisible, redemptionCode, generateCode]);
+  }, [selectedReward, drawerVisible, redemptionCode]);
 
   // Refresh points when redemption is completed
   useEffect(() => {
@@ -90,6 +92,31 @@ export default function ClaimRewardsScreen() {
       getUserAvailablePoints(userId, storeId).then(setUserPoints);
     }
   }, [status, userId, storeId]);
+
+  // Set up user redemption listener to refresh rewards when redemption is processed
+  useEffect(() => {
+    if (!userId || !storeId) return;
+
+    redemptionChannelRef.current = listenToUserRedemptions(
+      userId,
+      (redemption) => {
+        // Refresh rewards and points when a new redemption is processed
+        Promise.all([
+          getRewards({ storeId: storeId as string, limit: 20 }),
+          getUserAvailablePoints(userId, storeId),
+        ]).then(([storeRewards, points]) => {
+          setRewards(storeRewards);
+          setUserPoints(points);
+        });
+      }
+    );
+
+    return () => {
+      if (redemptionChannelRef.current) {
+        redemptionChannelRef.current.unsubscribe();
+      }
+    };
+  }, [userId, storeId]);
 
   // Cancel redemption
   const handleCancelRedemption = useCallback(async () => {
