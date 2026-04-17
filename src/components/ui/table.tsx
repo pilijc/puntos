@@ -96,25 +96,28 @@ export function Table<Row>(props: {
                     onPress={() => onRowPress?.(row, idx)}
                   >
                     <View className="flex-row">
-                      {columns.map((col) => (
-                        <View
-                          key={col.key}
-                          style={{
-                            width: col.width,
-                            flexGrow: col.width ? 0 : col.flex ?? 1,
-                            flexBasis: col.width ? undefined : 0,
-                          }}
-                          className={`px-3 py-3 ${alignClass(col.align)}`}
-                        >
-                          {typeof col.render(row) === "string" ? (
-                            <Text className="text-xs font-poppins text-textSecondary dark:text-darkTextSecondary">
-                              {col.render(row) as any}
-                            </Text>
-                          ) : (
-                            col.render(row)
-                          )}
-                        </View>
-                      ))}
+                      {columns.map((col) => {
+                        const cell = col.render(row);
+                        return (
+                          <View
+                            key={col.key}
+                            style={{
+                              width: col.width,
+                              flexGrow: col.width ? 0 : col.flex ?? 1,
+                              flexBasis: col.width ? undefined : 0,
+                            }}
+                            className={`px-3 py-3 ${alignClass(col.align)}`}
+                          >
+                            {typeof cell === "string" ? (
+                              <Text className="text-xs font-poppins text-textSecondary dark:text-darkTextSecondary">
+                                {cell}
+                              </Text>
+                            ) : (
+                              cell
+                            )}
+                          </View>
+                        );
+                      })}
                     </View>
                   </Pressable>
 
