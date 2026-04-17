@@ -29,7 +29,7 @@ export const LanguageCard = () => {
                 activeOpacity={0.7}
             >
                 <View className="h-8 w-8 -mt-0.5 rounded-lg items-center justify-center">
-                    <Languages size={15} color="#0f172a" />
+                    <Languages size={15} color="#FF6600" />
                 </View>
 
                 <View className="flex-1 ml-2">
