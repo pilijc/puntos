@@ -115,15 +115,16 @@ export function useSuperAdminStores() {
     });
   };
 
+  const filtered = useMemo(() => {
+    const base =
+      activeFilter === "All"
+        ? stores
+        : stores.filter((s) => getEffectiveStatus(s) === activeFilter);
 
-
-  const filtered = (
-    activeFilter === "All"
-      ? stores
-      : stores.filter((s) => getEffectiveStatus(s) === activeFilter)
-  )
-    .slice()
-    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    return base
+      .slice()
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+  }, [activeFilter, stores]);
 
   const pendingCount = useMemo(() =>
     stores.filter((s) => s.status === "pending_review").length,
