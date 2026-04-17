@@ -6,11 +6,13 @@ import { useDeviceSession } from '@/hooks/store-manager/use-device-session';
 import { DeviceSessionCard } from '@/components/store_manager/session/device-session-card';
 import DeviceSessionSkeleton from '@/components/skeleton/store_manager/device-session-skeleton';
 import { MAX_DEVICE_SESSIONS } from '@/type/store-manager/device-session';
+import { useTranslation } from 'react-i18next';
 
 export function ActiveSessionSection() {
     const { activeSessions, fetchActiveSessions } = useDeviceSession();
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
+    const { t } = useTranslation();
 
     const loadData = useCallback(async () => {
         await fetchActiveSessions();
@@ -31,15 +33,15 @@ export function ActiveSessionSection() {
             {/* header row - matching settings item style */}
             <View className="px-2.5 py-3 flex-row items-center border-b border-slate-50 dark:border-slate-800/50">
                 <View className="h-8 w-8 -mt-0.5 rounded-lg items-center justify-center">
-                    <Activity size={15} color="#0f172a" />
+                    <Activity size={15} color="#0f172a" className="dark:text-white" />
                 </View>
 
                 <View className="flex-1 ml-2">
                     <Text className="text-md font-poppins-semibold text-textPrimary dark:text-darkTextPrimary">
-                        Active Sessions
+                        {t("settings.deviceSessions.title")}
                     </Text>
                     <Text className="text-xs font-poppins text-textMuted dark:text-darkTextMuted">
-                        You can have up to {MAX_DEVICE_SESSIONS} active sessions at a time.
+                        {t("settings.deviceSessions.subtitle", { max: MAX_DEVICE_SESSIONS })}
                     </Text>
                 </View>
                 
@@ -50,7 +52,7 @@ export function ActiveSessionSection() {
                         onPress={handleRefresh}
                         className="bg-slate-50 dark:bg-slate-800 p-2 rounded-lg"
                     >
-                        <RefreshCw size={14} color="#64748b" />
+                        <RefreshCw size={14} color="#64748b" className="dark:text-slate-400" />
                     </TouchableOpacity>
                 )}
             </View>
@@ -60,12 +62,12 @@ export function ActiveSessionSection() {
                 {loading ? (
                     <DeviceSessionSkeleton />
                 ) : activeSessions.length === 0 ? (
-                    <Text className='text-textSecondary text-sm py-2 font-poppins'>
-                        No active sessions found.
+                    <Text className='text-textSecondary dark:text-darkTextSecondary text-sm py-2 font-poppins'>
+                        {t("settings.deviceSessions.noSessions")}
                     </Text>
                 ): (
                     activeSessions.map((session, index) => (
-                        <View key={session.id} className={index > 0 ? "border-t border-border/10 pt-4 mt-4" : ""}>
+                        <View key={session.id} className={index > 0 ? "border-t border-border/10 dark:border-borderDark/10 pt-4 mt-4" : ""}>
                             <DeviceSessionCard session={session} />
                         </View>
                     ))
