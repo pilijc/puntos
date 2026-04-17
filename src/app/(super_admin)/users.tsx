@@ -42,6 +42,7 @@ export default function UsersScreen() {
     stickyHeaders,
     willBlock,
     getItemLayout,
+    tabCounts,
   } = useSuperAdminUsers();
   const { t: translate } = useTranslation();
 
@@ -53,7 +54,7 @@ export default function UsersScreen() {
   );
 
   return (
-    <ScreenWrapper className="flex-1 bg-backgroundMuted dark:bg-darkBackground">
+    <ScreenWrapper className="flex-1 bg-background dark:bg-darkBackground">
       <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
       <UsersSearchHeader
         search={search}
@@ -62,6 +63,7 @@ export default function UsersScreen() {
         onTabChange={setActiveTab}
         statusFilter={statusFilter}
         onFilterPress={() => setShowFilterModal(true)}
+        counts={tabCounts()}
       />
       {loading && !refreshing && listData.length === 0 ? (
         <View className="flex-1 justify-center items-center">
@@ -82,10 +84,11 @@ export default function UsersScreen() {
               paddingTop: isWeb ? 8 : 0,
             },
             isWeb && {
-              width: '100%',
+              width: "100%",
               maxWidth: 1000,
               alignSelf: "center",
-            }
+              paddingHorizontal: 16,
+            },
           ]}
           style={isWeb ? { backgroundColor: isDark ? "#111827" : "#F8FAFC" } : undefined}
           refreshControl={
