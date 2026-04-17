@@ -15,6 +15,7 @@ interface ButtonProps {
   leftImage?: ImageSource;
   leftImageSize?: number;
   fullWidth?: boolean;
+  fitContent?: boolean;
   dense?: boolean;
   roundedFull?: boolean;
   loading?: boolean;
@@ -72,6 +73,7 @@ export function Button({
   leftImage,
   leftImageSize = 18,
   fullWidth = false,
+  fitContent = false,
   dense = false,
   roundedFull = false,
   loading = false,
@@ -90,14 +92,14 @@ export function Button({
   }
 
   const LucideIcon = icon ? (LucideIcons[icon] as React.ComponentType<{ size: number; color: string }>) : null;
-  const fullWidthPad = dense ? "px-4" : "px-10";
+  const fullWidthPad = fitContent ? "px-5" : dense ? "px-4" : "px-10";
   const sizeClass = authButton
     ? fullWidth
       ? `w-full py-4 ${fullWidthPad}`
-      : "w-fit py-3.5 px-10"
+      : `w-fit py-3.5 ${fitContent ? "px-5" : "px-10"}`
     : fullWidth
       ? `w-full py-3 ${fullWidthPad}`
-      : "w-fit py-2.5 px-10";
+      : `w-fit py-2.5 ${fitContent ? "px-5" : "px-10"}`;
 
   return (
     <TouchableOpacity

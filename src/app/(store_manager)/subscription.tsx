@@ -18,6 +18,7 @@ import {
 	cancelManagerSubscription,
 	type ManagerSubscriptionPaymentRow,
 } from "@/services/store-manager/subscription-service";
+import { Sparkles } from "lucide-react-native";
 
 function toAmountNumber(value: unknown): number | null {
 	if (typeof value === "number" && Number.isFinite(value)) return value;
@@ -339,39 +340,45 @@ export default function SubscriptionScreen() {
 						style={{ maxWidth: isWeb ? 896 : undefined }}
 						className="w-full gap-4"
 					>
-						<View className="relative w-full rounded-2xl border border-slate-100 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-5">
+						<View className="relative w-full overflow-hidden rounded-2xl bg-primary p-5 elevation-2">
+							<View className="absolute inset-0 pointer-events-none">
+								<View className="absolute -top-16 -right-16 h-56 w-56 rounded-full bg-white/10" />
+								<View className="absolute -bottom-20 -left-20 h-72 w-72 rounded-full bg-white/8" />
+								<View className="absolute top-10 -right-24 h-10 w-80 rotate-12 rounded-full bg-white/10" />
+								<View className="absolute bottom-10 -left-24 h-10 w-72 -rotate-12 rounded-full bg-white/8" />
+							</View>
 							{cancellingSubscription ? (
-								<View className="absolute inset-0 z-10 rounded-2xl bg-white/80 dark:bg-neutral-900/80 items-center justify-center">
+								<View className="absolute inset-0 z-10 rounded-2xl bg-black/25 items-center justify-center">
 									<ActivityIndicator size="large" color="#FF6600" />
 								</View>
 							) : null}
 							<View className="w-full">
 								<View className="flex-row items-center gap-2">
-									<View className="px-2 py-1 rounded-full bg-emerald-50 dark:bg-emerald-900/20">
-										<Text className="text-[10px] font-poppins-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
+									<View className="px-2 py-1 rounded-full bg-white/15">
+										<Text className="text-[10px] font-poppins-bold uppercase tracking-wider text-white">
 											Active plan
 										</Text>
 									</View>
 
-									<Text className="text-xs font-poppins-semibold bg-primary/10 text-primary px-2 py-0.5 rounded-full">
+									<Text className="text-xs font-poppins-semibold bg-white/15 text-white px-2 py-0.5 rounded-full">
 										{activePlanName}
 									</Text>
 								</View>
 
 								{accessEndMessage && cancelScheduled ? (
-									<View className="mt-3 rounded-xl bg-amber-50 dark:bg-amber-950/30 px-3 py-2.5">
-										<Text className="text-xs font-poppins leading-5 text-amber-900 dark:text-amber-100">
+									<View className="mt-3 rounded-xl bg-white/15 px-3 py-2.5">
+										<Text className="text-xs font-poppins leading-5 text-white">
 											{accessEndMessage}
 										</Text>
 									</View>
 								) : null}
 
 								<View className="flex-row items-end gap-1 mt-4">
-									<Text className="text-4xl font-poppins-bold text-textPrimary dark:text-darkTextPrimary">
+									<Text className="text-4xl font-poppins-bold text-white">
 										{activePlanAmount === 0 ? "Free" : `PHP ${activePlanAmount.toFixed(2)}`}
 									</Text>
 									{activePlanAmount !== 0 ? (
-										<Text className="text-sm font-poppins text-textMuted dark:text-darkTextMuted mb-1">
+										<Text className="text-sm font-poppins text-white/80 mb-1">
 											/mo
 										</Text>
 									) : null}
@@ -379,18 +386,18 @@ export default function SubscriptionScreen() {
 
 								<View className="flex-row gap-6 mt-5">
 									<View className="flex-1">
-										<Text className="text-xs font-poppins text-textMuted dark:text-darkTextMuted">
+										<Text className="text-xs font-poppins text-white/80">
 											{periodLabel}
 										</Text>
-										<Text className="mt-1 text-sm font-poppins-semibold text-textPrimary dark:text-darkTextPrimary">
+										<Text className="mt-1 text-sm font-poppins-semibold text-white">
 											{formatDateLong(nextPaymentDate)}
 										</Text>
 									</View>
 									<View className="flex-1">
-										<Text className="text-xs font-poppins text-textMuted dark:text-darkTextMuted">
+										<Text className="text-xs font-poppins text-white/80">
 											Estimated cost
 										</Text>
-										<Text className="mt-1 text-sm font-poppins-semibold text-textPrimary dark:text-darkTextPrimary">
+										<Text className="mt-1 text-sm font-poppins-semibold text-white">
 											{activePlanAmount === 0 ? "PHP 0.00" : `PHP ${estimatedCost.toFixed(2)}`}
 										</Text>
 									</View>
@@ -400,8 +407,10 @@ export default function SubscriptionScreen() {
 									{!isPaidPro && proPlan ? (
 										<Button
 											variant="primary"
-											label={startingCheckout ? "Starting..." : "Upgrade to Pro"}
+											label="Upgrade to Pro"
 											roundedFull
+											icon="Sparkles"
+											loading={startingCheckout}
 											onPress={() => {
 												const amount = proAmount ?? 0;
 												const name = String(proPlan?.name ?? "Pro plan");
@@ -413,6 +422,7 @@ export default function SubscriptionScreen() {
 									{isPaidPro && !cancelScheduled ? (
 										<Button
 											variant="secondary"
+											fitContent={true}
 											label="Cancel Subscription"
 											roundedFull
 											onPress={openCancelConfirm}
