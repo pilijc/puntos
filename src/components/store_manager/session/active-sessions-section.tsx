@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { ActivityIndicator } from "react-native";
 import { View, Text, TouchableOpacity } from "@/tw";
-import { Shield, RefreshCw } from 'lucide-react-native';
+import { Activity, RefreshCw } from 'lucide-react-native';
 import { useDeviceSession } from '@/hooks/store-manager/use-device-session';
 import { DeviceSessionCard } from '@/components/store_manager/session/device-session-card';
 import DeviceSessionSkeleton from '@/components/skeleton/store_manager/device-session-skeleton';
@@ -31,7 +31,7 @@ export function ActiveSessionSection() {
             {/* header row - matching settings item style */}
             <View className="px-2.5 py-3 flex-row items-center border-b border-slate-50 dark:border-slate-800/50">
                 <View className="h-8 w-8 -mt-0.5 rounded-lg items-center justify-center">
-                    <Shield size={15} color="#0f172a" />
+                    <Activity size={15} color="#0f172a" />
                 </View>
 
                 <View className="flex-1 ml-2">
