@@ -14,6 +14,7 @@ import { X, Store, Speaker } from "lucide-react-native";
 import QRCode from "react-native-qrcode-svg";
 import { Modal } from "@/components/modal";
 import { Button } from "@/components/button";
+import { getQRCodeData } from "@/services/user/rewards-redemption";
 
 const isWeb = Platform.OS === "web";
 
@@ -86,7 +87,7 @@ export function RedemptionDrawer({
   );
 
   const handleSwipeClose = useCallback(() => {
-    if (status === "cancelled") {
+    if (status === "cancelled" || status === "redeemed") {
       closeSheet();
     } else {
       setShowConfirmModal(true);
@@ -162,10 +163,7 @@ export function RedemptionDrawer({
 
   if (!visible || !redemptionCode) return null;
 
-  const formattedCode = redemptionCode.code
-    .replace(/[^a-zA-Z0-9]/g, "")
-    .replace(/([a-zA-Z])(\d)/, "$1 $2")
-    .replace(/(\d{3})(\d{3})/, "$1 $2");
+  const formattedCode = redemptionCode.code.replace(/-/g, " ");
 
   const handleCancelPress = () => setShowConfirmModal(true);
 
@@ -180,7 +178,7 @@ export function RedemptionDrawer({
         <TouchableOpacity
           style={StyleSheet.absoluteFillObject}
           onPress={() =>
-            status === "cancelled"
+            status === "cancelled" || status === "redeemed"
               ? closeSheet()
               : setShowConfirmModal(true)
           }
@@ -202,12 +200,12 @@ export function RedemptionDrawer({
 
               <View className="items-center py-3 relative px-4">
                 <Text className="text-base text-white font-poppins-semibold">
-                  Scan to redeem
+                  {status === "redeemed" ? "Reward Redeemed" : "Scan to redeem"}
                 </Text>
 
                 <TouchableOpacity
                   onPress={() =>
-                    status === "cancelled"
+                    status === "cancelled" || status === "redeemed"
                       ? closeSheet()
                       : setShowConfirmModal(true)
                   }
@@ -228,7 +226,7 @@ export function RedemptionDrawer({
                       </Text>
                     </View>
                   ) : (
-                    <QRCode value={redemptionCode.code} size={140} />
+                    <QRCode value={getQRCodeData(redemptionCode.code)} size={140} />
                   )}
                 </View>
 
@@ -239,7 +237,9 @@ export function RedemptionDrawer({
                 <Text className="text-xs text-neutral-500 font-poppins-medium">Time left to redeem</Text>
 
                 <Text className={`text-2xl font-poppins-bold mt-1 ${isExpiringSoon ? "text-red-500" : "text-neutral-900"}`}>
-                  {status === "loading"
+                  {status === "redeemed"
+                    ? "Redeemed!"
+                    : status === "loading"
                     ? "--:--"
                     : formatTime(timeRemaining)}
                 </Text>
@@ -296,7 +296,7 @@ export function RedemptionDrawer({
                 </View>
               </View>
 
-              {status !== "cancelled" && status !== "loading" && (
+              {status !== "cancelled" && status !== "loading" && status !== "redeemed" && (
                 <View className="mt-7">
                   <Button
                     label="Cancel Redemption"

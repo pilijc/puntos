@@ -200,9 +200,6 @@ export async function deductPoints(
             };
         }
 
-        // Points are tracked via reward_redemptions table
-        // The getUserAvailablePoints function already accounts for this
-        // Just return the updated balance
         const updatedPoints = await getUserAvailablePoints(userId, storeId);
 
         return {

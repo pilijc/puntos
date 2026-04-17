@@ -8,6 +8,7 @@ import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated";
 import Carousel from "react-native-reanimated-carousel";
 import { getRewards } from "@/services/reward-service";
 import { getUserAvailablePoints } from "@/services/user/points-service";
+import { getStoreById } from "@/services/store-service";
 import { supabase } from "@/supabase/supabase";
 import { Reward } from "@/services/reward-service";
 import { RedemptionDrawer } from "@/components/rewards/redemption-drawer";
@@ -15,16 +16,6 @@ import { useRedemptionCode } from "@/hooks/useRedemptionCode";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
-// ─── Static placeholder data ──────────────────────────────────────────────────
-const STATIC_NEXT_TIER = 1000;
-
-const STATIC_GALLERY = [
-  { id: "g1", uri: "https://images.unsplash.com/photo-1554118811-1e0d58224f24?fm=jpg&q=80&w=600" },
-  { id: "g2", uri: "https://images.unsplash.com/photo-1445116572660-236099ec97a0?fm=jpg&q=80&w=600" },
-  { id: "g3", uri: "https://images.unsplash.com/photo-1600093463592-8e36ae95ef56?fm=jpg&q=80&w=600" },
-  { id: "g4", uri: "https://images.unsplash.com/photo-1521017432531-fbd92d768814?fm=jpg&q=80&w=600" },
-];
-// ─────────────────────────────────────────────────────────────────────────────
 
 export default function ClaimRewardsScreen() {
   const { storeId, storeName, storeLogo, storeAddress } = useLocalSearchParams<{ storeId?: string; storeName?: string; storeLogo?: string; storeAddress?: string }>();
@@ -32,6 +23,7 @@ export default function ClaimRewardsScreen() {
   const [userPoints, setUserPoints] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [galleryIndex, setGalleryIndex] = useState(0);
+  const [gallery, setGallery] = useState<{ id: string, uri: string }[]>([]);
   const [userId, setUserId] = useState<string | null>(null);
   const [drawerVisible, setDrawerVisible] = useState(false);
   const [selectedReward, setSelectedReward] = useState<Reward | null>(null);
@@ -39,8 +31,7 @@ export default function ClaimRewardsScreen() {
   const insets = useSafeAreaInsets();
   const scheme = useColorScheme();
   const dark = scheme === "dark";
-  const progressPercent = Math.min((userPoints / STATIC_NEXT_TIER) * 100, 100);
-
+ 
   useEffect(() => {
     async function loadData() {
       if (!storeId) return;
@@ -49,21 +40,28 @@ export default function ClaimRewardsScreen() {
       if (!user?.id) return;
       setUserId(user.id);
 
-      const [storeRewards, points] = await Promise.all([
+      const [storeRewards, points, storeData] = await Promise.all([
         getRewards({ storeId: storeId as string, limit: 20 }),
-        getUserAvailablePoints(user.id, storeId as string)
+        getUserAvailablePoints(user.id, storeId),
+        getStoreById(Number(storeId))
       ]);
 
       setRewards(storeRewards);
       setUserPoints(points);
+      
+      if (storeData?.store_pictures && storeData.store_pictures.length > 0) {
+        setGallery(
+          storeData.store_pictures.map((uri: string, i: number) => ({ id: `pic-${i}`, uri }))
+        );
+      }
+      
       setIsLoading(false);
     }
 
     loadData();
   }, [storeId]);
 
-  // Redemption code hook for selected reward
-  const {
+   const {
     redemptionCode,
     status,
     timeRemaining,
@@ -75,20 +73,23 @@ export default function ClaimRewardsScreen() {
     storeId
   );
 
-  // Open drawer and generate code
-  const handleClaimReward = useCallback(async (reward: Reward) => {
+   const handleClaimReward = useCallback(async (reward: Reward) => {
     setSelectedReward(reward);
     setDrawerVisible(true);
-    // Generate code immediately - the hook will use the reward ID
   }, []);
 
-  // Effect to generate code when reward is selected
-  useEffect(() => {
+   useEffect(() => {
     if (selectedReward && drawerVisible && !redemptionCode) {
       generateCode();
     }
   }, [selectedReward, drawerVisible, redemptionCode, generateCode]);
 
+  // Refresh points when redemption is completed
+  useEffect(() => {
+    if (status === "redeemed" && userId && storeId) {
+      getUserAvailablePoints(userId, storeId).then(setUserPoints);
+    }
+  }, [status, userId, storeId]);
 
   // Cancel redemption
   const handleCancelRedemption = useCallback(async () => {
@@ -98,10 +99,8 @@ export default function ClaimRewardsScreen() {
   // Close drawer and reset
   const handleCloseDrawer = useCallback(() => {
     setDrawerVisible(false);
-    // Reset the hook state so next claim generates fresh code
-    resetCode();
-    // Small delay to allow animation before clearing reward
-    setTimeout(() => {
+     resetCode();
+     setTimeout(() => {
       setSelectedReward(null);
     }, 300);
   }, [resetCode]);
@@ -111,7 +110,7 @@ export default function ClaimRewardsScreen() {
   const almost = rewards.filter(r => userPoints < r.points_cost)
     .map(r => ({ ...r, deficit: r.points_cost - userPoints }));
 
-  // ── Theme tokens ──────────────────────────────────────────────────────────
+  // Theme tokens 
   const heroBg = dark ? "#171717" : "#F3F4F6";
   const heroText = dark ? "#FFFFFF" : "#1C1C1E";
   const heroSub = dark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.35)";
@@ -262,11 +261,12 @@ export default function ClaimRewardsScreen() {
           </RNView>
 
           {/* ── Store Gallery Carousel ───────────────────────────────── */}
-          <Animated.View entering={FadeInDown.delay(140).duration(380)} style={{ marginHorizontal: -16, gap: 8 }}>
+          {gallery.length > 0 && (
+            <Animated.View entering={FadeInDown.delay(140).duration(380)} style={{ marginHorizontal: -16, gap: 8 }}>
             <Carousel
               width={SCREEN_WIDTH}
               height={190}
-              data={STATIC_GALLERY}
+              data={gallery}
               autoPlay
               autoPlayInterval={3200}
               scrollAnimationDuration={800}
@@ -289,7 +289,7 @@ export default function ClaimRewardsScreen() {
             />
             {/* Dot indicators */}
             <RNView style={{ flexDirection: "row", justifyContent: "center", alignItems: "center", gap: 6 }}>
-              {STATIC_GALLERY.map((_, i) => (
+              {gallery.map((_, i) => (
                 <RNView
                   key={i}
                   style={{
@@ -302,6 +302,7 @@ export default function ClaimRewardsScreen() {
               ))}
             </RNView>
           </Animated.View>
+          )}
 
           {/* ── Replacement Content ── */}
           <Animated.View
