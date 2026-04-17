@@ -11,6 +11,7 @@ type RewardCardProps = {
   reward: RewardItem;
   storeName?: string;
   storeLocation?: string;
+  storeLogo?: string;
   onPress?: () => void;
 };
 
@@ -18,6 +19,7 @@ export default function RewardCard({
   reward,
   storeName,
   storeLocation,
+  storeLogo,
   onPress,
 }: RewardCardProps) {
   const { t: translate } = useTranslation();
@@ -49,15 +51,7 @@ export default function RewardCard({
         <Text className="text-xs text-neutral-500 dark:text-darkTextSecondary font-poppins mt-.5">
           {reward.desc}
         </Text>
-        {storeName ? (
-          <View className="flex-row items-center gap-x-1 mt-2">
-            <MaterialIcons name="storefront" size={12} color="#94a3b8" />
-            <Text className="text-[11px] text-neutral-400 font-poppins-medium">
-              {storeName}
-              {storeLocation ? ` • ${storeLocation}` : ""}
-            </Text>
-          </View>
-        ) : null}
+
         <View className="flex-row items-center justify-between mt-1">
           <Text className="text-primary font-poppins-semibold">
             {reward.points.toLocaleString()} {translate("user.rewards.rewardCard.pointsSuffix")}
@@ -68,7 +62,8 @@ export default function RewardCard({
                 params: { 
                   storeId: reward.storeId,   
                   storeName: storeName,
-                  storeAddress: storeLocation
+                  storeAddress: storeLocation,
+                  storeLogo: storeLogo
                 }
               })}
             >

@@ -4,19 +4,22 @@ import {
   Animated,
   PanResponder,
   Platform,
-  Image,
   Easing,
   ScrollView,
+  Dimensions,
+  Modal as RNModal,
+  useColorScheme,
 } from "react-native";
-import { View, Text, TouchableOpacity } from "@/tw";
+import { View, Text, TouchableOpacity, Image } from "@/tw";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { X, Store, Speaker } from "lucide-react-native";
+import { X, Store } from "lucide-react-native";
 import QRCode from "react-native-qrcode-svg";
 import { Modal } from "@/components/modal";
 import { Button } from "@/components/button";
 import { getQRCodeData } from "@/services/user/rewards-redemption";
 
 const isWeb = Platform.OS === "web";
+const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 interface RedemptionDrawerProps {
   visible: boolean;
@@ -48,12 +51,17 @@ export function RedemptionDrawer({
   onCancel,
 }: RedemptionDrawerProps) {
   const insets = useSafeAreaInsets();
-  const translateY = useRef(new Animated.Value(600)).current;
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === "dark";
+  const translateY = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
   const backdropOpacity = useRef(new Animated.Value(0)).current;
 
   const isExpiringSoon = (timeRemaining || 0) < 60;
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+
+  // Maintain internal visibility to allow closing animation before unmounting via Modal
+  const [internalVisible, setInternalVisible] = useState(visible);
 
   const closeSheet = useCallback(
     (onClosed?: () => void) => {
@@ -64,11 +72,10 @@ export function RedemptionDrawer({
       }
 
       Animated.parallel([
-        Animated.spring(translateY, {
-          toValue: 600,
-          damping: 15,
-          stiffness: 100,
-          mass: 1,
+        Animated.timing(translateY, {
+          toValue: SCREEN_HEIGHT,
+          duration: 350,
+          easing: Easing.in(Easing.exp),
           useNativeDriver: true,
         }),
         Animated.timing(backdropOpacity, {
@@ -77,10 +84,8 @@ export function RedemptionDrawer({
           useNativeDriver: true,
         }),
       ]).start(() => {
-        requestAnimationFrame(() => {
-          onClose();
-          onClosed?.();
-        });
+        onClose();
+        onClosed?.();
       });
     },
     [translateY, backdropOpacity, onClose]
@@ -102,14 +107,13 @@ export function RedemptionDrawer({
         if (g.dy > 0) translateY.setValue(g.dy);
       },
       onPanResponderRelease: (_, g) => {
-        if (g.dy > 100) {
+        if (g.dy > 120) {
           handleSwipeClose();
         } else {
           Animated.spring(translateY, {
             toValue: 0,
-            damping: 18,
-            stiffness: 100,
-            mass: 0.8,
+            damping: 20,
+            stiffness: 120,
             useNativeDriver: true,
           }).start();
         }
@@ -121,9 +125,8 @@ export function RedemptionDrawer({
     setShowConfirmModal(false);
     Animated.spring(translateY, {
       toValue: 0,
-      damping: 18,
-      stiffness: 100,
-      mass: 0.8,
+      damping: 20,
+      stiffness: 120,
       useNativeDriver: true,
     }).start();
   };
@@ -141,198 +144,211 @@ export function RedemptionDrawer({
 
   useEffect(() => {
     if (visible && !isWeb) {
-      translateY.setValue(600);
+      setInternalVisible(true);
+      translateY.setValue(SCREEN_HEIGHT);
       backdropOpacity.setValue(0);
 
       Animated.parallel([
         Animated.timing(backdropOpacity, {
           toValue: 1,
-          duration: 400,
-          easing: Easing.inOut(Easing.ease),
+          duration: 300,
           useNativeDriver: true,
         }),
         Animated.timing(translateY, {
           toValue: 0,
-          duration: 500,
+          duration: 450,
           easing: Easing.out(Easing.exp),
           useNativeDriver: true,
         }),
       ]).start();
+    } else if (!visible) {
+      // If visible prop becomes false from parent, we sync internal state
+      setInternalVisible(false);
     }
   }, [visible]);
 
   if (!visible || !redemptionCode) return null;
 
   const formattedCode = redemptionCode.code.replace(/-/g, " ");
-
   const handleCancelPress = () => setShowConfirmModal(true);
 
   return (
-    <View className="absolute inset-0 z-50" style={{ justifyContent: "flex-end" }}>
-      
-      {/* Backdrop */}
-      <Animated.View
-        style={[StyleSheet.absoluteFillObject, { opacity: backdropOpacity }]}
-        className="bg-black/40"
-      >
-        <TouchableOpacity
-          style={StyleSheet.absoluteFillObject}
-          onPress={() =>
-            status === "cancelled" || status === "redeemed"
-              ? closeSheet()
-              : setShowConfirmModal(true)
-          }
-        />
-      </Animated.View>
+    <RNModal
+      visible={internalVisible}
+      transparent
+      animationType="none"
+      statusBarTranslucent
+      onRequestClose={() =>
+        status === "cancelled" || status === "redeemed"
+          ? closeSheet()
+          : setShowConfirmModal(true)
+      }
+    >
+      <View className="flex-1" style={{ justifyContent: "flex-end" }}>
 
-      {/* Bottom Sheet */}
-      <Animated.View style={{ transform: [{ translateY }] }}>
-        <View
-          {...panResponder.panHandlers}
-          className="bg-white rounded-t-3xl overflow-hidden"
-          style={{ maxHeight: "92%" }}
+        {/* Backdrop */}
+        <Animated.View
+          style={[StyleSheet.absoluteFillObject, { opacity: backdropOpacity }]}
+          className="bg-black/60"
         >
-          <View>
-            
-            {/* HEADER */}
-            <View style={{ backgroundColor: "#FF6600" }}>
-              <View className="w-12 h-1.5 bg-white/50 rounded-full self-center mt-3 mb-2" />
+          <TouchableOpacity
+            style={StyleSheet.absoluteFillObject}
+            activeOpacity={1}
+            onPress={() =>
+              status === "cancelled" || status === "redeemed"
+                ? closeSheet()
+                : setShowConfirmModal(true)
+            }
+          />
+        </Animated.View>
 
-              <View className="items-center py-3 relative px-4">
-                <Text className="text-base text-white font-poppins-semibold">
-                  {status === "redeemed" ? "Reward Redeemed" : "Scan to redeem"}
-                </Text>
+        {/* Bottom Sheet */}
+        <Animated.View style={{ transform: [{ translateY }] }}>
+          <View
+            {...panResponder.panHandlers}
+            className="bg-white rounded-t-[32px] overflow-hidden"
+            style={{ maxHeight: SCREEN_HEIGHT * 0.80 }}
+          >
+            <ScrollView bounces={false} showsVerticalScrollIndicator={false}>
 
-                <TouchableOpacity
-                  onPress={() =>
-                    status === "cancelled" || status === "redeemed"
-                      ? closeSheet()
-                      : setShowConfirmModal(true)
-                  }
-                  className="absolute right-4 top-2 p-1"
-                >
-                  <X size={22} color="#fff" />
-                </TouchableOpacity>
-              </View>
+              {/* HEADER */}
+              <View className="bg-backgroundMuted dark:bg-darkBackgroundMuted">
+                <View className="w-12 h-1.5 bg-neutral-300 dark:bg-neutral-700 rounded-full self-center mt-3 mb-2" />
 
-              {/* QR CARD */}
-              <View className="mx-3 mb-3 bg-white rounded-2xl p-4 items-center shadow-lg">
-                
-                <View className="bg-white p-2 rounded-xl mb-3 border border-neutral-100">
-                  {status === "loading" ? (
-                    <View className="w-[140px] h-[140px] items-center justify-center">
-                      <Text className="text-neutral-400 text-xs font-poppins-medium">
-                        Generating...
+                <View className="items-center py-4 relative px-4">
+                  <Text className="text-lg text-neutral-900 dark:text-white font-poppins-semibold">
+                    {status === "redeemed" ? "Reward Redeemed" : "Scan to redeem"}
+                  </Text>
+
+                  <TouchableOpacity
+                    onPress={() =>
+                      status === "cancelled" || status === "redeemed"
+                        ? closeSheet()
+                        : setShowConfirmModal(true)
+                    }
+                    className="absolute right-6 top-3 p-1"
+                  >
+                    <X size={24} color={isDark ? "#fff" : "#1F2937"} />
+                  </TouchableOpacity>
+                </View>
+
+                {/* COMBINED QR & REWARD CARD */}
+                <View className="mx-4 mb-4 bg-backgroundMuted dark:bg-darkBackgroundMuted rounded-3xl p-4 pb-6 shadow-xl border border-neutral-100 dark:border-neutral-800">
+
+                  {/* Content Container covering QR & Timer */}
+                  <View className="bg-[#F3F4F6] dark:bg-darkBackgroundCard rounded-2xl p-6 items-center mb-6">
+                    {/* White box for just the QR code and text code */}
+                    <View className="bg-white dark:bg-neutral-800 py-4 px-6 rounded-xl mb-4 items-center shadow-sm shadow-black/5 self-center">
+                      <View className="mb-3 items-center justify-center">
+                        {status === "loading" ? (
+                          <View className="w-[160px] h-[160px] items-center justify-center">
+                            <Text className="text-neutral-400 text-xs font-poppins-medium">
+                              Generating...
+                            </Text>
+                          </View>
+                        ) : (
+                          <QRCode value={getQRCodeData(redemptionCode.code)} size={160} />
+                        )}
+                      </View>
+
+                      <Text className="text-2xl font-poppins-bold tracking-[0.15em] text-neutral-900 dark:text-white">
+                        {status === "loading" ? "..." : formattedCode}
                       </Text>
                     </View>
-                  ) : (
-                    <QRCode value={getQRCodeData(redemptionCode.code)} size={140} />
-                  )}
-                </View>
 
-                <Text className="text-xl font-poppins-bold mb-1 tracking-[0.15em] text-neutral-900">
-                  {status === "loading" ? "..." : formattedCode}
-                </Text>
+                    <Text className="text-[11px] text-neutral-500 dark:text-neutral-400 font-poppins mt-1">Time left to redeem</Text>
 
-                <Text className="text-xs text-neutral-500 font-poppins-medium">Time left to redeem</Text>
-
-                <Text className={`text-2xl font-poppins-bold mt-1 ${isExpiringSoon ? "text-red-500" : "text-neutral-900"}`}>
-                  {status === "redeemed"
-                    ? "Redeemed!"
-                    : status === "loading"
-                    ? "--:--"
-                    : formatTime(timeRemaining)}
-                </Text>
-              </View>
-
-              {/* REWARD */}
-              <View className="mx-3 mb-3 bg-white rounded-xl p-3 flex-row items-center shadow-md">
-                <View className="flex-1 pr-4">
-                  <Text numberOfLines={2} className="text-sm font-poppins-semibold text-neutral-900 leading-snug">
-                    {rewardTitle}
-                  </Text>
-                  {rewardDescription && (
-                    <Text numberOfLines={2} className="text-xs text-neutral-600 font-poppins-medium mt-1 leading-relaxed">
-                      {rewardDescription}
+                    <Text className={`text-2xl font-poppins-bold mt-1 ${isExpiringSoon ? "text-red-500" : "text-neutral-900 dark:text-white"}`}>
+                      {status === "redeemed"
+                        ? "Redeemed!"
+                        : status === "loading"
+                          ? "--:--"
+                          : formatTime(timeRemaining)}
                     </Text>
-                  )}
-                </View>
+                  </View>
 
-                <View className="w-28 h-28">
-                  {rewardImage ? (
-                    <Image
-                      source={{ uri: rewardImage }}
-                      className="w-28 h-28 rounded-xl"
-                      resizeMode="cover"
-                    />
-                  ) : (
-                    <View className="w-28 h-28 bg-orange-100 rounded-xl items-center justify-center border-2 border-orange-300">
-                      <Text className="text-4xl">🎁</Text>
+                  {/* Reward Section (Image on right) */}
+                  <View className="flex-row items-center justify-between pt-2">
+                    <View className="flex-1 pr-4">
+                      <Text numberOfLines={2} className="text-[14px] font-poppins-bold text-neutral-900 leading-tight">
+                        {rewardTitle}
+                      </Text>
+                      {rewardDescription && (
+                        <Text numberOfLines={2} className="text-[11px] text-neutral-500 font-poppins mt-1 leading-normal">
+                          {rewardDescription}
+                        </Text>
+                      )}
                     </View>
-                  )}
-                </View>
-              </View>
-            </View>
 
-            {/* INSTRUCTIONS */}
-            <View className="px-3 pb-4" style={{ backgroundColor: "#FF6600" }}>
-              <View className="bg-neutral-100 p-4 rounded-2xl">
-                <Text className="text-xs text-neutral-500 font-poppins-medium mb-3 uppercase tracking-wide">
-                  How to redeem
-                </Text>
-
-                <View className="flex-row items-start mb-3">
-                  <View className="w-8 h-8 bg-white rounded-lg items-center justify-center shadow-sm mr-3">
-                    <Store size={16} color="#1f2937" />
-                  </View>
-                  <View className="flex-1 pt-0.5">
-                    <Text className="text-sm font-poppins-semibold text-neutral-900">
-                      In the restaurant
-                    </Text>
-                    <Text className="text-xs text-neutral-600 leading-relaxed">
-                      Scan or show code to staff
-                    </Text>
+                    <View className="w-20 h-20 shadow-sm shadow-black/10">
+                      {rewardImage ? (
+                        <Image
+                          source={typeof rewardImage === "string" && rewardImage.startsWith("http") ? { uri: rewardImage } : rewardImage}
+                          className="w-20 h-20 rounded-xl"
+                          contentFit="cover"
+                        />
+                      ) : (
+                        <View className="w-20 h-20 bg-orange-50 rounded-xl items-center justify-center border border-orange-100">
+                          <Text className="text-3xl">🎁</Text>
+                        </View>
+                      )}
+                    </View>
                   </View>
                 </View>
               </View>
 
-              {status !== "cancelled" && status !== "loading" && status !== "redeemed" && (
-                <View className="mt-7">
-                  <Button
-                    label="Cancel Redemption"
-                    onPress={handleCancelPress}
-                    variant="danger"
-                    fullWidth
-                  />
-                </View>
-              )}
-            </View>
+              {/* INSTRUCTIONS */}
+              <View className="px-4 pb-8 bg-backgroundMuted dark:bg-darkBackgroundMuted">
+                <View className="bg-backgroundMuted dark:bg-darkBackgroundMuted p-5 rounded-2xl border border-neutral-100 dark:border-neutral-800">
+                  <Text className="text-[10px] text-neutral-400 font-poppins-bold mb-4 uppercase tracking-[2px]">
+                    How to redeem
+                  </Text>
 
+                  <View className="flex-row items-center">
+                    <View className="w-10 h-10 bg-white dark:bg-darkBackgroundCard rounded-xl items-center justify-center shadow-sm mr-4">
+                      <Store size={20} color="#FF6600" />
+                    </View>
+                    <View className="flex-1">
+                      <Text className="text-sm font-poppins-bold text-neutral-900">
+                        In the restaurant
+                      </Text>
+                      <Text className="text-xs text-neutral-500 font-poppins mt-0.5">
+                        Scan or show code to staff
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+
+                {/* Spacer for bottom safe area if needed */}
+                <View style={{ height: insets.bottom + 20 }} />
+              </View>
+
+            </ScrollView>
           </View>
-        </View>
-      </Animated.View>
+        </Animated.View>
 
-      {/* MODALS */}
-      <Modal
-        visible={showConfirmModal}
-        onClose={handleKeepIt}
-        title="Cancel Redemption?"
-        message="Are you sure you want to cancel this redemption?"
-        buttons={[
-          { label: "Keep", onPress: handleKeepIt, variant: "secondary" },
-          { label: "Cancel", onPress: handleConfirmCancel, variant: "danger" },
-        ]}
-      />
+        {/* MODALS */}
+        <Modal
+          visible={showConfirmModal}
+          onClose={handleKeepIt}
+          title="Cancel Redemption?"
+          message="Are you sure you want to cancel this redemption? Points will be returned to your balance."
+          buttons={[
+            { label: "Keep it", onPress: handleKeepIt, variant: "secondary" },
+            { label: "Cancel", onPress: handleConfirmCancel, variant: "danger" },
+          ]}
+        />
 
-      <Modal
-        visible={showSuccessModal}
-        onClose={handleSuccessClose}
-        title="Cancelled"
-        message="Redemption cancelled"
-        buttons={[
-          { label: "Close", onPress: handleSuccessClose, variant: "primary" },
-        ]}
-      />
-    </View>
+        <Modal
+          visible={showSuccessModal}
+          onClose={handleSuccessClose}
+          title="Success"
+          message="Redemption has been successfully cancelled."
+          buttons={[
+            { label: "Got it", onPress: handleSuccessClose, variant: "primary" },
+          ]}
+        />
+      </View>
+    </RNModal>
   );
 }
