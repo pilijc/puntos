@@ -74,7 +74,6 @@ export async function getPublicUsersByIds(userIds: string[]) {
 
 export async function getManagerSubscriptionPaymentsByOwner(ownerId: string) {
   try {
-    console.log("OWNER ID", ownerId);
 
     const { data, error } = await supabase
       .from("manager_subscription_payments")
@@ -82,10 +81,7 @@ export async function getManagerSubscriptionPaymentsByOwner(ownerId: string) {
       .eq("owner_id", ownerId)
       .order("created_at", { ascending: false });
 
-      console.log("DATA", data);
-
     if (error) {
-      console.error("PAYMENTS ERROR", error);
       throw new Error(error.message);
     }
     return data;
