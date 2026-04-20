@@ -5,7 +5,7 @@ import { useProfile } from "@/hooks/user/use-profile";
 
 export function useSuperAdminDashboard() {
   const router = useRouter();
-  const { users, stores, adminInfo, loading, fetchDashboardData, fetchAdminSession } = useDashboardStore();
+  const { users, stores, subscriptions, adminInfo, loading, fetchDashboardData, fetchAdminSession } = useDashboardStore();
   const { profile, refreshProfile } = useProfile();
 
   const [refreshing, setRefreshing] = useState(false);
@@ -42,6 +42,7 @@ export function useSuperAdminDashboard() {
     router,
     users,
     stores,
+    subscriptions,
     adminInfo,
     loading,
     profile,
