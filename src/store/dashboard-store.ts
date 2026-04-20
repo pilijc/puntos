@@ -4,6 +4,7 @@ import { getAdminSession, getDashboardData, AdminInfo } from "@/services/super-a
 interface DashboardState {
   users: any[];
   stores: any[];
+  subscriptions: any[];
   adminInfo: AdminInfo;
   loading: boolean;
   fetchDashboardData: () => Promise<void>;
@@ -13,6 +14,7 @@ interface DashboardState {
 export const useDashboardStore = create<DashboardState>((set, get) => ({
   users: [],
   stores: [],
+  subscriptions: [],
   adminInfo: { name: "Loading...", username: "admin", avatar: "" },
   loading: true,
 
@@ -32,8 +34,8 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
     if (isInitialFetch) set({ loading: true });
     
     try {
-      const { users, stores } = await getDashboardData();
-      set({ users, stores });
+      const { users, stores, subscriptions } = await getDashboardData();
+      set({ users, stores, subscriptions });
     } catch (error) {
       console.error("Dashboard Fetch Error:", error);
     } finally {
