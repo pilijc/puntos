@@ -68,8 +68,8 @@ function buildTimeframeSeries(items: any[], dateKeys: string[], timeframe: Timef
       return;
     }
 
-    const bucketFromStart = Math.floor((windowDays - 1 - diffDays) / bucketSize);
-    const idx = Math.min(6, Math.max(0, bucketFromStart));
+    const rawBucket = Math.floor(diffDays / bucketSize);
+    const idx = Math.min(6, Math.max(0, 6 - rawBucket));
     series[idx] += 1;
   });
 

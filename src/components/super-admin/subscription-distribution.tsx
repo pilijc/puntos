@@ -14,16 +14,32 @@ export function SubscriptionDistribution() {
   // Calculate stats based on real data
   const stats = useMemo(() => {
     if (!stores.length) return null;
-    
+
+    // --- Fix #3: pre-index lookups into Maps to avoid O(owners × subscriptions) scans ---
+    // Build a Map of owner_id → subscription row (O(subscriptions))
+    const subByOwner = new Map(subscriptions.map(s => [s.owner_id, s]));
+
+    // Build a Map of owner_id → store[] for the top-payers section (O(stores))
+    const storesByOwner = new Map<string, typeof stores>();
+    for (const store of stores) {
+      if (!store.owner_id) continue;
+      const existing = storesByOwner.get(store.owner_id);
+      if (existing) {
+        existing.push(store);
+      } else {
+        storesByOwner.set(store.owner_id, [store]);
+      }
+    }
+
     // Group stores by owner to get unique managers
     const ownerIds = Array.from(new Set(stores.map(s => s.owner_id).filter(Boolean)));
     const totalOwners = ownerIds.length || 1;
-    
+
     let proCount = 0;
     let basicCount = 0;
-    
+
     ownerIds.forEach(id => {
-      const sub = subscriptions.find(s => s.owner_id === id);
+      const sub = subByOwner.get(id);  // O(1) lookup
       if (sub) {
         // Pro: paid or availed
         // Basic: pending or unpaid
@@ -40,21 +56,23 @@ export function SubscriptionDistribution() {
 
     const proPercent = proCount / totalOwners;
     const basicPercent = basicCount / totalOwners;
-    
+
     // Get Top Payers (those with 'paid' status)
     const topPayers = subscriptions
       .filter(sub => sub.payment_status === 'paid')
       .slice(0, 3)
       .map(sub => {
-        const store = stores.find(s => s.owner_id === sub.owner_id);
-        const name = store?.owner_name || "Unknown Manager";
+        const ownerStores = storesByOwner.get(sub.owner_id) ?? [];  // O(1) lookup
+        const name = ownerStores[0]?.owner_name || "Unknown Manager";
         // Calculate a pseudo-percent for the bar (using active stores count)
-        const activeStores = stores.filter(s => s.owner_id === sub.owner_id && (s.status === 'active' || s.is_active)).length;
+        const activeStores = ownerStores.filter(
+          s => s.status === 'active' || s.is_active
+        ).length;
         return {
           name,
           label: `${activeStores} Store${activeStores !== 1 ? 's' : ''}`,
           percent: Math.min(100, activeStores * 20), // Max 5 stores for 100% bar
-          activeStores
+          activeStores,
         };
       });
 
@@ -67,14 +85,25 @@ export function SubscriptionDistribution() {
         { percent: proPercent, color: "#FF6600", label: "Pro Plan", sub: `${Math.round(proPercent * 100)}%` },
         { percent: basicPercent, color: "#E2E8F0", label: "Basic", sub: `${Math.round(basicPercent * 100)}%` },
       ],
-      leaders: topPayers
+      leaders: topPayers,
     };
   }, [stores, subscriptions]);
 
-  if (loading || !stats) {
+  // Fix #2: split loading and empty-data into distinct guards.
+  // The old `loading || !stats` caused a perpetual "Loading distribution..."
+  // on empty deployments because !stats remained true after fetch completed.
+  if (loading) {
     return (
       <View className="bg-white dark:bg-darkBackgroundCard rounded-xl p-5 mb-[8px] items-center justify-center h-48 border border-transparent dark:border-darkBorder">
         <Text className="text-xs font-poppins text-textMuted dark:text-darkTextMuted">Loading distribution...</Text>
+      </View>
+    );
+  }
+
+  if (!stats) {
+    return (
+      <View className="bg-white dark:bg-darkBackgroundCard rounded-xl p-5 mb-[8px] items-center justify-center h-48 border border-transparent dark:border-darkBorder">
+        <Text className="text-xs font-poppins text-textMuted dark:text-darkTextMuted">No subscription data yet.</Text>
       </View>
     );
   }
