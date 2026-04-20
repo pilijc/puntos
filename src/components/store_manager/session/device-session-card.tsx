@@ -7,23 +7,23 @@ import { useTranslation } from 'react-i18next';
 function DeviceIcon({ type }: { type: string }) {
     if (type === "tablet") {
         return (
-            <View className="w-10 h-10 rounded-xl items-center justify-center bg-teal-50 dark:bg-teal-900/40">
-                <Tablet size={15} color="#0d9488" className="dark:text-teal-400" />
+            <View className="w-10 h-10 rounded-xl items-center justify-center">
+                <Tablet size={15} color="#ff6600" className="dark:text-orange-400" />
             </View>
         );
     }
 
     if (type === "web") {
         return (
-            <View className="w-10 h-10 rounded-xl items-center justify-center bg-orange-50 dark:bg-orange-900/40">
-                <Monitor size={15} color="#f97316" className="dark:text-orange-400" />
+            <View className="w-10 h-10 rounded-xl items-center justify-center">
+                <Monitor size={15} color="#ff6600" className="dark:text-orange-400" />
             </View>
         );
     }
     
     return (
-        <View className="w-10 h-10 rounded-xl items-center justify-center bg-indigo-50 dark:bg-indigo-900/40">
-            <Smartphone size={15} color="#6366f1" className="dark:text-indigo-400" />
+        <View className="w-10 h-10 rounded-xl items-center justify-center">
+            <Smartphone size={15} color="#ff6600" className="dark:text-orange-400" />
         </View>
     );
 }
