@@ -1,5 +1,5 @@
-import React, { useCallback, useEffect, useMemo } from "react";
-import { ActivityIndicator, Linking, Platform } from "react-native";
+import React, { useCallback, useEffect, useMemo, useRef } from "react";
+import { ActivityIndicator, Animated, Linking, Platform, useColorScheme } from "react-native";
 import { View, Text, SafeAreaView, ScrollView } from "@/tw";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { usePaymentReturnHandler } from "@/hooks/store-manager/use-payment-return-handler";
@@ -8,6 +8,7 @@ import { isPaidUnlimitedPlan } from "@/services/store-manager/subscription-limit
 import { Table, type TableColumn } from "@/components/ui/table";
 import { Modal } from "@/components/modal";
 import { useStoreManagerSubscriptionStore } from "@/store/store-manager/subscription-store";
+import { useTranslation } from "react-i18next";
 import {
 	getAuthenticatedUserId,
 	getManagerSubscription,
@@ -50,6 +51,8 @@ export default function SubscriptionScreen() {
 	const insets = useSafeAreaInsets();
 	const isWeb = Platform.OS === "web";
 	const scrollBottom = Math.max(insets.bottom, 40);
+	const colorScheme = useColorScheme();
+	const { t: translate } = useTranslation();
 	const {
 		ownerId,
 		plans,
@@ -120,6 +123,7 @@ export default function SubscriptionScreen() {
 	const proId = proPlan?.id != null ? Number(proPlan.id) : null;
 
 	const activePlanName = useMemo(() => {
+		if (loading) return "—";
 		if (currentSubscriptionId == null) return String(basicPlan?.name ?? "Basic plan");
 		if (proId != null && currentSubscriptionId === proId)
 			return String(proPlan?.name ?? "Pro plan");
@@ -129,6 +133,7 @@ export default function SubscriptionScreen() {
 	}, [basicId, basicPlan?.name, currentSubscriptionId, proId, proPlan?.name]);
 
 	const activePlanAmount = useMemo(() => {
+		if (loading) return 0;
 		const active =
 			proId != null && currentSubscriptionId === proId
 				? toAmountNumber(proPlan?.amount)
@@ -153,18 +158,22 @@ export default function SubscriptionScreen() {
 
 	const isPaidPro = isPaidUnlimitedPlan(managerRow, planListForGate);
 	const cancelScheduled = Boolean(managerRow?.cancel_at_period_end);
-	const periodLabel = cancelScheduled ? "Access until" : "Next payment";
+	const periodLabel = cancelScheduled
+		? translate("storeManager.subscription.billing.period.accessUntil")
+		: translate("storeManager.subscription.billing.period.nextPayment");
 	const accessEndMessage = useMemo(() => {
 		const end = nextPaymentDate;
 		if (!end) return null;
-		return `Your subscription will remain active until ${formatDateLong(end)}. You will not be billed again.`;
-	}, [nextPaymentDate]);
+		return translate("storeManager.subscription.billing.messages.accessUntilNoBill", {
+			date: formatDateLong(end),
+		});
+	}, [nextPaymentDate, translate]);
 
 	const invoiceColumns = useMemo((): Array<TableColumn<ManagerSubscriptionPaymentRow>> => {
 		return [
 			{
 				key: "payment_reference",
-				header: "Payment reference",
+				header: translate("storeManager.subscription.billing.invoices.columns.paymentReference"),
 				flex: 3,
 				align: "left",
 				render: (r) => (
@@ -180,7 +189,7 @@ export default function SubscriptionScreen() {
 			},
 			{
 				key: "paid_date",
-				header: "Paid date",
+				header: translate("storeManager.subscription.billing.invoices.columns.paidDate"),
 				flex: 2,
 				align: "center",
 				render: (r) => (
@@ -191,7 +200,7 @@ export default function SubscriptionScreen() {
 			},
 			{
 				key: "status",
-				header: "Status",
+				header: translate("storeManager.subscription.billing.invoices.columns.status"),
 				flex: 1,
 				align: "center",
 				render: (r) => (
@@ -204,7 +213,7 @@ export default function SubscriptionScreen() {
 			},
 			{
 				key: "amount",
-				header: "Amount",
+				header: translate("storeManager.subscription.billing.invoices.columns.amount"),
 				flex: 1,
 				align: "right",
 				render: (r) => (
@@ -214,12 +223,15 @@ export default function SubscriptionScreen() {
 				),
 			},
 		];
-	}, []);
+	}, [translate]);
 
 	const handleSubscribe = useCallback(async (amount: number, name: string) => {
 		const s = useStoreManagerSubscriptionStore.getState();
 		if (!s.ownerId) {
-			s.showMessage("Something went wrong", "You must be signed in to subscribe.");
+			s.showMessage(
+				translate("label.somethingWentWrong"),
+				translate("storeManager.subscription.billing.errors.mustBeSignedInToSubscribe"),
+			);
 			return;
 		}
 
@@ -233,19 +245,19 @@ export default function SubscriptionScreen() {
 				await Linking.openURL(checkoutUrl);
 			} else {
 				s.showMessage(
-					"Something went wrong",
-					"Could not start checkout. Your session may be invalid. Please log in again and retry.",
+					translate("label.somethingWentWrong"),
+					translate("storeManager.subscription.billing.errors.checkoutStartFailed"),
 				);
 			}
 		} catch (e) {
 			s.showMessage(
-				"Something went wrong",
-				e instanceof Error ? e.message : "Please try again.",
+				translate("label.somethingWentWrong"),
+				e instanceof Error ? e.message : translate("storeManager.subscription.billing.errors.pleaseTryAgain"),
 			);
 		} finally {
 			s.setStartingCheckout(false);
 		}
-	}, []);
+	}, [translate]);
 
 	const performCancel = useCallback(async () => {
 		const s = useStoreManagerSubscriptionStore.getState();
@@ -254,7 +266,7 @@ export default function SubscriptionScreen() {
 			const uid = s.ownerId;
 			const result = await cancelManagerSubscription();
 			if (result.ok === false) {
-				s.showMessage("Could not cancel", result.error);
+				s.showMessage(translate("storeManager.subscription.billing.cancel.failedTitle"), result.error);
 				return;
 			}
 
@@ -268,29 +280,34 @@ export default function SubscriptionScreen() {
 
 			const endFormatted = formatDateLong(refreshedEnd);
 			s.showMessage(
-				"Subscription",
-				`Your subscription will remain active until ${endFormatted}. You will not be billed again.`,
+				translate("storeManager.subscription.billing.cancel.successTitle"),
+				translate("storeManager.subscription.billing.messages.accessUntilNoBill", {
+					date: endFormatted,
+				}),
 			);
 		} catch (e) {
 			s.showMessage(
-				"Something went wrong",
-				e instanceof Error ? e.message : "Please try again.",
+				translate("label.somethingWentWrong"),
+				e instanceof Error ? e.message : translate("storeManager.subscription.billing.errors.pleaseTryAgain"),
 			);
 		} finally {
 			s.setCancellingSubscription(false);
 		}
-	}, []);
+	}, [translate]);
 
 	const openCancelConfirm = useCallback(() => {
 		const s = useStoreManagerSubscriptionStore.getState();
 		s.setModal({
-			title: "Cancel subscription?",
-			message:
-				"You will keep your current benefits until the end of this billing period. After that date you will not be charged again.",
+			title: translate("storeManager.subscription.billing.cancel.confirmTitle"),
+			message: translate("storeManager.subscription.billing.cancel.confirmMessage"),
 			buttons: [
-				{ label: "Go back", variant: "secondary", onPress: () => s.clearModal() },
 				{
-					label: "Confirm cancel",
+					label: translate("storeManager.subscription.billing.cancel.goBack"),
+					variant: "secondary",
+					onPress: () => s.clearModal(),
+				},
+				{
+					label: translate("storeManager.subscription.billing.cancel.confirmCta"),
 					variant: "danger",
 					onPress: () => {
 						s.clearModal();
@@ -299,7 +316,7 @@ export default function SubscriptionScreen() {
 				},
 			],
 		});
-	}, [performCancel]);
+	}, [performCancel, translate]);
 
 	const proAmount = toAmountNumber(proPlan?.amount);
 
@@ -317,14 +334,9 @@ export default function SubscriptionScreen() {
 			/>
 			<View className="bg-white dark:bg-darkBackground border-b border-neutral-100 dark:border-darkBorder px-6 py-4">
 				<Text className="text-xl font-poppins-bold text-textPrimary dark:text-darkTextPrimary">
-					Billing & Subscription
+					{translate("storeManager.subscription.billing.title")}
 				</Text>
 			</View>
-			{loading ? (
-				<View className="flex-1 items-center justify-center">
-					<ActivityIndicator size="large" color="#FF6600" />
-				</View>
-			) : (
 				<ScrollView
 					className="flex-1"
 					contentContainerStyle={{
@@ -355,7 +367,7 @@ export default function SubscriptionScreen() {
 								<View className="flex-row items-center gap-2">
 									<View className="px-2 py-1 rounded-full bg-white/15">
 										<Text className="text-[10px] font-poppins-bold uppercase tracking-wider text-white">
-											Active plan
+											{translate("storeManager.subscription.billing.activePlanBadge")}
 										</Text>
 									</View>
 
@@ -374,11 +386,13 @@ export default function SubscriptionScreen() {
 
 								<View className="flex-row items-end gap-1 mt-4">
 									<Text className="text-4xl font-poppins-bold text-white">
-										{activePlanAmount === 0 ? "Free" : `PHP ${activePlanAmount.toFixed(2)}`}
+										{activePlanAmount === 0
+											? translate("storeManager.subscription.billing.free")
+											: `PHP ${activePlanAmount.toFixed(2)}`}
 									</Text>
 									{activePlanAmount !== 0 ? (
 										<Text className="text-sm font-poppins text-white/80 mb-1">
-											/mo
+											{translate("storeManager.subscription.billing.perMonth")}
 										</Text>
 									) : null}
 								</View>
@@ -394,7 +408,7 @@ export default function SubscriptionScreen() {
 									</View>
 									<View className="flex-1">
 										<Text className="text-xs font-poppins text-white/80">
-											Estimated cost
+											{translate("storeManager.subscription.billing.estimatedCost")}
 										</Text>
 										<Text className="mt-1 text-sm font-poppins-semibold text-white">
 											{activePlanAmount === 0 ? "PHP 0.00" : `PHP ${estimatedCost.toFixed(2)}`}
@@ -406,13 +420,16 @@ export default function SubscriptionScreen() {
 									{!isPaidPro && proPlan ? (
 										<Button
 											variant="primary"
-											label="Upgrade to Pro"
+											label={translate("storeManager.subscription.billing.upgradeToPro")}
 											roundedFull
 											icon="Sparkles"
 											loading={startingCheckout}
 											onPress={() => {
 												const amount = proAmount ?? 0;
-												const name = String(proPlan?.name ?? "Pro plan");
+												const name = String(
+													proPlan?.name ??
+														translate("storeManager.subscription.billing.fallbackPlanName.pro"),
+												);
 												void handleSubscribe(amount, name);
 											}}
 											disabled={startingCheckout || !ownerId || proAmount == null}
@@ -422,7 +439,7 @@ export default function SubscriptionScreen() {
 										<Button
 											variant="secondary"
 											fitContent={true}
-											label="Cancel Subscription"
+											label={translate("storeManager.subscription.billing.cancelSubscription")}
 											roundedFull
 											onPress={openCancelConfirm}
 											disabled={cancellingSubscription}
@@ -435,11 +452,11 @@ export default function SubscriptionScreen() {
 						<View className="bg-white dark:bg-darkBackgroundCard rounded-2xl border border-slate-100 dark:border-neutral-800 p-4">
 							<View className="flex-row items-center gap-2 mb-2">
 								<Text className="text-sm font-poppins-semibold text-slate-800 dark:text-slate-100">
-									Recent billing
+									{translate("storeManager.subscription.billing.recentBilling.title")}
 								</Text>
 							</View>
 							<Text className="text-xs font-poppins text-slate-500 dark:text-darkTextMuted leading-4 mb-4 px-0.5">
-								Payment history for your account.
+								{translate("storeManager.subscription.billing.recentBilling.subtitle")}
 							</Text>
 
 							{loadingInvoices ? (
@@ -453,11 +470,11 @@ export default function SubscriptionScreen() {
 										columns={invoiceColumns}
 										rows={invoices}
 										rowKey={(r, idx) => String(r.id ?? `${r.owner_id}-${idx}`)}
-										emptyText="No invoices yet."
+										emptyText={translate("storeManager.subscription.billing.invoices.empty")}
 									/>
 									<View className="mt-3 items-center">
 										<Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">
-											You&apos;ve reached the end.
+											{translate("storeManager.subscription.billing.invoices.end")}
 										</Text>
 									</View>
 								</>
@@ -465,7 +482,6 @@ export default function SubscriptionScreen() {
 						</View>
 					</View>
 				</ScrollView>
-			)}
 		</SafeAreaView>
 	);
 }

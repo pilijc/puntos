@@ -7,6 +7,7 @@ import { loginService, signInWithGoogleLoginService } from "@/services/auth-serv
 import { useTranslation, Trans } from "react-i18next";
 import { Modal, type ModalButton } from "@/components/modal";
 import { supabase } from "@/supabase/supabase";
+import { markIntentionalSignOut } from "@/lib/intentional-signout";
 import TranslateButton from "@/components/ui/translate-button";
 import { AppHeader } from "@/components/header";
 import { TextField } from "@/components/text-field";
@@ -91,6 +92,7 @@ export default function Login() {
               label: "OK",
               variant: "secondary",
               onPress: async () => {
+                markIntentionalSignOut();
                 await supabase.auth.signOut();
                 setModal(null);
               }
@@ -136,7 +138,6 @@ export default function Login() {
         setShowDeviceLimitModal(true);
         return;
       }
-
       router.replace(data.homeRoute ?? "/(user)");
     } catch (error: any) {
       if (error?.name === "AccountBlockedError") {
@@ -248,6 +249,7 @@ export default function Login() {
         onCheckAgain={handleCheckAgain}
         onCancel={async () => {
           setShowDeviceLimitModal(false);
+          markIntentionalSignOut();
           await supabase.auth.signOut();
         }}
       />

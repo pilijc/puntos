@@ -5,6 +5,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { useAuthStore } from '@/store/auth-store';
 import { deactivateCurrentDeviceSessionService } from '@/services/store-manager/device-session-service';
+import { markIntentionalSignOut } from '@/lib/intentional-signout';
 
 export const useAuthActions = () => {
     const handleLogout = async () => {
@@ -21,6 +22,7 @@ export const useAuthActions = () => {
                 console.log("Not signed in with Google or error signing out:", googleError);
             }
 
+            markIntentionalSignOut();
             const { error } = await supabase.auth.signOut();
             if (error) {
                 console.error("Supabase signOut error (ignoring to allow local logout):", error.message);

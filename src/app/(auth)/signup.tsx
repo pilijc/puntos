@@ -26,8 +26,8 @@ export default function SignUp() {
   const [currentStep, setCurrentStep] = useState(() => (isWeb ? 1 : 0));
   const totalSteps = 4;
   const [loading, setLoading] = useState(false);
-  const [loadingGoogle, setLoadingGoogle] = useState(false);
   const isSigningUp = useRef(false);
+  const [loadingGoogle, setLoadingGoogle] = useState(false);
   const {
     name,
     setName,
@@ -45,9 +45,7 @@ export default function SignUp() {
   } = useAuthStore();
 
   const [acceptedTerms, setAcceptedTerms] = useState(false);
-
   const [role, setRole] = useState(() => (isWeb ? "manager" : "user"));
-
   const [errors, setErrors] = useState({
     name: '',
     email: '',
@@ -193,7 +191,6 @@ export default function SignUp() {
       setLoading(true);
       console.log("Starting signup with role:", role);
       const data = await signUpService(email, password, name, role);
-      console.log("Signup service completed successfully, data:", data);
       reset();
       setAcceptedTerms(false);
       setRole('user');

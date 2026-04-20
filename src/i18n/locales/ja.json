@@ -51,6 +51,10 @@
                 "invalidLogin": "ログイン情報が正しくありません"
             }
         },
+        "sessionExpired": {
+            "title": "セッションが終了しました",
+            "message": "セキュリティのため、セッションの有効期限が切れました。続行するには再度サインインしてください。"
+        },
         "forgotPassword": {
             "title": "パスワードをお忘れですか",
             "subtitle": "メールアドレスを入力してください。パスワードリセット用のリンクをお送りします。",
@@ -1079,6 +1083,52 @@
         },
         "subscription": {
             "title": "サブスクリプション",
+            "billing": {
+                "title": "お支払い・サブスクリプション",
+                "activePlanBadge": "現在のプラン",
+                "free": "無料",
+                "perMonth": "/月",
+                "estimatedCost": "見積り費用",
+                "upgradeToPro": "Proにアップグレード",
+                "cancelSubscription": "サブスクリプションを解約",
+                "fallbackPlanName": {
+                    "pro": "Proプラン"
+                },
+                "period": {
+                    "accessUntil": "利用期限",
+                    "nextPayment": "次回支払い"
+                },
+                "messages": {
+                    "accessUntilNoBill": "{{date}}までご利用いただけます。以降は請求されません。"
+                },
+                "errors": {
+                    "mustBeSignedInToSubscribe": "サブスクを開始するにはログインが必要です。",
+                    "checkoutStartFailed": "決済を開始できませんでした。セッションが無効の可能性があります。再度ログインしてもう一度お試しください。",
+                    "pleaseTryAgain": "もう一度お試しください。"
+                },
+                "cancel": {
+                    "confirmTitle": "サブスクリプションを解約しますか？",
+                    "confirmMessage": "この請求期間の終了までは現在の特典をご利用いただけます。その日以降は請求されません。",
+                    "goBack": "戻る",
+                    "confirmCta": "解約する",
+                    "failedTitle": "解約できませんでした",
+                    "successTitle": "サブスクリプション"
+                },
+                "recentBilling": {
+                    "title": "最近のお支払い",
+                    "subtitle": "アカウントのお支払い履歴です。"
+                },
+                "invoices": {
+                    "empty": "請求履歴はまだありません。",
+                    "end": "これ以上ありません。",
+                    "columns": {
+                        "paymentReference": "支払い参照",
+                        "paidDate": "支払い日",
+                        "status": "ステータス",
+                        "amount": "金額"
+                    }
+                }
+            },
             "welcome": {
                 "planBadge": "ベーシックプラン",
                 "headline": "現在はベーシックです",

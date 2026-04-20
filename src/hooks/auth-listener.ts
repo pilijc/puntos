@@ -7,6 +7,7 @@ import { Alert, Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { upsertPushId, isOneSignalNativeAvailable } from '@/services/push-service';
 import { useAuthStore } from '@/store/auth-store';
+import { markIntentionalSignOut, consumeIntentionalSignOut } from '@/lib/intentional-signout';
 
 let OneSignal: typeof import("react-native-onesignal").OneSignal | null = null;
 
@@ -28,6 +29,7 @@ export function useAuthListener() {
           router.replace("/reset-password");
         } else if (event === 'SIGNED_OUT') {
           console.log("User logged out");
+          const intentional = consumeIntentionalSignOut();
           try {
             const { forceDeactivateCurrentDeviceService } = require("@/services/store-manager/device-session-service");
             forceDeactivateCurrentDeviceService().catch((e: any) => console.warn("[AuthListener] Force deactivate failed", e));
@@ -38,11 +40,23 @@ export function useAuthListener() {
           // if we're already on the login page or auth/signup flows, don't boot the user back to welcome.
           // this allows them to stay on login after cancelling a device limit modal.
           const isAtAuthFlow = pathname?.includes('/login') || pathname?.includes('/signup') || pathname?.includes('/welcome');
-          
-          if (!isAtAuthFlow) {
-            router.replace("/(onboarding)/welcome");
-          }
+
+          void (async () => {
+            try {
+              await AsyncStorage.removeItem('sessionToken');
+              useAuthStore.getState().setSessionToken(null);
+            } catch {
+              // ignore
+            }
+            if (!intentional && !isAtAuthFlow) {
+              useAuthStore.getState().setSessionExpiredNotice(true);
+            }
+            if (!isAtAuthFlow) {
+              router.replace("/(onboarding)/welcome");
+            }
+          })();
         } else if (event === 'SIGNED_IN' && session && !isOnSignupFlow) {
+          useAuthStore.getState().setSessionExpiredNotice(false);
           console.log("User logged in:", session.user.email);
           void (async () => {
             try {
@@ -82,7 +96,8 @@ export function useAuthListener() {
                     // We simply return so line 72 doesn't execute and "unhide" the auth screen.
                     if (isAtAuthFlow) return;
 
-                    // Otherwise, if we're on a dashboard route but somehow lost our session slot, boot to login.
+                    // Session token expired
+                    markIntentionalSignOut();
                     await supabase.auth.signOut();
                     router.replace("/(auth)/login");
                     return; 
