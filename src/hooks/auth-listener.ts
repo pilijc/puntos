@@ -3,11 +3,16 @@ import { useRouter, usePathname } from 'expo-router';
 import { supabase } from '@/supabase/supabase';
 import { getHomeRouteForUserId, getWebAdjustedHomeRoute } from '@/services/access-service';
 import { checkIfAccountDeletedService, checkIfAccountBlockedService, AccountDeletedError, AccountBlockedError } from '@/services/auth-service';
-import { Alert } from 'react-native';
+import { Alert, Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { upsertPushId, isOneSignalNativeAvailable } from '@/services/push-notif';
+import { upsertPushId, isOneSignalNativeAvailable } from '@/services/push-service';
 import { useAuthStore } from '@/store/auth-store';
-import { OneSignal } from 'react-native-onesignal';
+
+let OneSignal: typeof import("react-native-onesignal").OneSignal | null = null;
+
+if (Platform.OS !== "web") {
+  OneSignal = require("react-native-onesignal").OneSignal;
+}
 
 export function useAuthListener() {
   const router = useRouter();
