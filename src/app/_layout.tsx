@@ -19,23 +19,27 @@ import { checkIfAccountDeletedService, checkIfAccountBlockedService, AccountDele
 import { Modal } from "@/components/modal";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { useAuthStore } from "@/store/auth-store";
-import { OneSignal } from "react-native-onesignal";
-import { isOneSignalNativeAvailable } from "@/services/push-notif";
+import { isOneSignalNativeAvailable } from "@/services/push-service";
 import { useStamps } from "@/hooks/use-stamps";
 import { checkDeviceSessionLimitService, upsertDeviceSessionService } from "@/services/store-manager/device-session-service";
 
+let OneSignal: typeof import("react-native-onesignal").OneSignal | null = null;
+
+if (Platform.OS !== "web") {
+  OneSignal = require("react-native-onesignal").OneSignal;
+}
 SplashScreen.preventAutoHideAsync();
 
 export async function initOneSignal(): Promise<string | null> {
-  if (!isOneSignalNativeAvailable()) return null;
+  if (!isOneSignalNativeAvailable() || !OneSignal) return null;
 
   const appId = process.env.EXPO_PUBLIC_ONESIGNAL_APP_ID;
   if (!appId) throw new Error("Missing EXPO_PUBLIC_ONESIGNAL_APP_ID");
 
   OneSignal.initialize(appId);
-  OneSignal.Notifications.requestPermission(true);
+  await OneSignal.Notifications.requestPermission(true);
 
-  return OneSignal.User.pushSubscription.getIdAsync();
+  return await OneSignal.User.pushSubscription.getIdAsync();
 }
 
 export default function Layout() {
