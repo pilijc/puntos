@@ -12,10 +12,10 @@ export default function SubscriptionCancelScreen() {
     <SafeAreaView edges={["top", "left", "right"]} style={{ flex: 1 }}>
       <View className="flex-1 items-center justify-center px-6 bg-white dark:bg-neutral-900">
         <Text className="text-xl font-poppins-bold text-textPrimary dark:text-darkTextPrimary text-center">
-          {translate("storeManager.subscription.cancel.title")}
+          {translate("store_manager.subscription.cancel.title")}
         </Text>
         <Text className="mt-2 text-sm font-poppins text-textSecondary dark:text-darkTextSecondary text-center">
-          {translate("storeManager.subscription.cancel.body")}
+          {translate("store_manager.subscription.cancel.body")}
         </Text>
 
         <TouchableOpacity
@@ -24,7 +24,7 @@ export default function SubscriptionCancelScreen() {
           onPress={() => router.replace("/(store_manager)/subscription")}
         >
           <Text className="text-sm font-poppins-semibold text-white">
-            {translate("storeManager.subscription.cancel.back")}
+            {translate("store_manager.subscription.cancel.back")}
           </Text>
         </TouchableOpacity>
       </View>
