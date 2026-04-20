@@ -1154,7 +1154,10 @@
                 "successTitle": "店舗承認完了",
                 "successMessage": "「{{name}}」が有効になり、運営を開始できます。",
                 "errorTitle": "申請却下",
-                "errorMessage": "「{{name}}」の申請は却下されました。"
+                "errorMessage": "「{{name}}」の申請は却下されました。",
+                "exceededTitle": "店舗サブスクリプション上限超過",
+                "exceededMessage": "{{name}}さんは既にアクティブな店舗を1つ持っています。「{{storeName}}」を承認するには、Proプランへのアップグレードが必要です。",
+                "exceededAction": "終了"
             },
             "details": {
                 "title": "店舗の詳細",

@@ -1129,7 +1129,10 @@
                 "successTitle": "Store Approved",
                 "successMessage": "\"{{name}}\" is now active and can begin operations.",
                 "errorTitle": "Application Rejected",
-                "errorMessage": "The application for \"{{name}}\" has been rejected."
+                "errorMessage": "The application for \"{{name}}\" has been rejected.",
+                "exceededTitle": "Store Exceeded Subscriptions",
+                "exceededMessage": "{{name}} already has an active store. To approve \"{{storeName}}\", they must upgrade to a Pro subscription.",
+                "exceededAction": "Exit"
             },
             "details": {
                 "title": "Store Details",

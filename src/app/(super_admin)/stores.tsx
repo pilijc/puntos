@@ -50,19 +50,9 @@ export default function SuperAdminStores() {
 		subscriptions,
 		hasMore,
 		isFetching,
+		ownerActiveStoreCounts,
+		hasProSubscription,
 	} = useSuperAdminStores();
-
-	const ownerActiveStoreCounts = React.useMemo(() => {
-		const counts: Record<string, number> = {};
-
-		for (const store of stores) {
-			if ((store.status === "active" || store.is_active) && store.owner_id) {
-				counts[store.owner_id] = (counts[store.owner_id] ?? 0) + 1;
-			}
-		}
-
-		return counts;
-	}, [stores]);
 
 	const statusCounts = React.useMemo(() => {
 		const counts: Record<string, number> = { All: stores.length };

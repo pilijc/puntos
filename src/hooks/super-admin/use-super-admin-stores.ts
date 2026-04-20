@@ -62,12 +62,49 @@ export function useSuperAdminStores() {
     setRefreshing(false);
   };
 
+  const ownerActiveStoreCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const store of stores) {
+      if ((store.status === "active" || store.is_active) && store.owner_id) {
+        counts[store.owner_id] = (counts[store.owner_id] ?? 0) + 1;
+      }
+    }
+    return counts;
+  }, [stores]);
+
+  const hasProSubscription = useCallback((ownerId: string | null) => {
+    if (!ownerId) return false;
+    const sub = subscriptions.find((s) => s.owner_id === ownerId);
+    return !!sub && !!sub.subscription_id;
+  }, [subscriptions]);
+
   const loadMore = async () => {
     if (storeState.isFetching || !storeState.hasMore) return;
     await fetchStores({ loadMore: true });
   };
 
   const handleApprove = (store: AdminStoreRow) => {
+    const ownerId = store.owner_id;
+    const activeCount = ownerId ? (ownerActiveStoreCounts[ownerId] ?? 0) : 0;
+    const isPro = hasProSubscription(ownerId);
+
+    // If owner already has 1 or more active stores and is NOT Pro
+    if (activeCount >= 1 && !isPro) {
+      setConfirmModal({
+        title: translate("superAdmin.stores.modal.exceededTitle", { defaultValue: "Store Exceeded Subscriptions" }),
+        message: translate("superAdmin.stores.modal.exceededMessage", {
+          name: store.owner_name || "The manager",
+          storeName: store.name,
+          defaultValue: `${store.owner_name || "The manager"} already has an active store. To approve "${store.name}", they must upgrade to a Pro subscription.`
+        }),
+        label: translate("superAdmin.stores.modal.exceededAction", { defaultValue: "I Understand" }),
+        variant: "primary",
+        hideCancel: true,
+        onConfirm: () => setConfirmModal(null),
+      });
+      return;
+    }
+
     setConfirmModal({
       title: translate("superAdmin.stores.modal.approveTitle"),
       message: translate("superAdmin.stores.modal.approveMessage", { name: store.name }),
@@ -151,5 +188,7 @@ export function useSuperAdminStores() {
     pendingCount,
     FILTER_LABELS,
     subscriptions,
+    ownerActiveStoreCounts,
+    hasProSubscription,
   };
 }
