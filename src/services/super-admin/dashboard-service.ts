@@ -38,8 +38,13 @@ export async function getDashboardData(): Promise<DashboardData> {
       .from("users_with_email")
       .select("*")
       .order("id", { ascending: true }),
-    supabase.from("stores").select("*"),
-    supabase.from("manager_subscriptions").select("*"),
+    supabase
+      .from("stores")
+      .select("id, owner_id, status, is_active, created_at, updated_at, users!owner_id ( name )")
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("manager_subscriptions")
+      .select("id, owner_id, payment_status"),
   ]);
 
   const processedUsers = (userData || []).map((u) => ({
@@ -52,9 +57,16 @@ export async function getDashboardData(): Promise<DashboardData> {
     displayEmail: u.email || "No Email Provided",
   }));
 
+  // Flatten the joined relation: { users: { name } } → { owner_name: string }
+  const processedStores = (storeData || []).map((s: any) => ({
+    ...s,
+    owner_name: s.users?.name ?? null,
+    users: undefined,
+  }));
+
   return {
     users: processedUsers,
-    stores: storeData || [],
+    stores: processedStores,
     subscriptions: subData || [],
   };
 }
