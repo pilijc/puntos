@@ -152,7 +152,7 @@ export async function getStaffTransactions(
       timestamp: new Date(r.created_at),
       amount: 0, // Redemptions don't have purchase amounts
       type: "redeemed" as const,
-      method: "manual" as const,
+      method: "voucher" as const,
       customerName: r.users ? r.users.name || "Customer" : "Customer",
       customer_id: r.user_id,
     }));

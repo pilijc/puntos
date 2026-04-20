@@ -1,7 +1,7 @@
 import { useRouter, useFocusEffect } from "expo-router";
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useColorScheme } from "react-native";
-import { ScrollView, View, Text } from "@/tw";
+import { ScrollView, View, Text, TouchableOpacity } from "@/tw";
 import { Animated} from "react-native";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { Lock } from "lucide-react-native";
@@ -17,9 +17,12 @@ import { checkPasswordSetupRequired } from "@/services/frontdesk/password-servic
 import { checkQRAccessForCurrentStaff } from "@/services/frontdesk/qr-access-service";
 import FrontDeskHeader from "@/components/front-desk/FrontDeskHeader";
 import FrontDeskScanner from "@/components/front-desk/FrontDeskScanner";
+import RewardRedemptionScanner from "@/components/front-desk/RewardRedemptionScanner";
+import RewardRedemptionModal from "@/components/front-desk/modal/RewardRedemptionModal";
 import RecentTransactions from "@/components/front-desk/RecentTransactions";
 import SuccessModal from "@/components/front-desk/modal/SuccessModal";
 import ErrorModal from "@/components/front-desk/modal/ErrorModal";
+import { RedemptionVerificationResult } from "@/type/frontdesk/reward-redemption";
 
 export default function FrontDeskScan() {
   const router = useRouter();
@@ -37,6 +40,9 @@ export default function FrontDeskScan() {
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string>("");
   const [isPasswordSetupComplete, setIsPasswordSetupComplete] = useState<boolean | null>(null);
+  const [mode, setMode] = useState<"earn" | "redeem">("earn");
+  const [redemptionVerification, setRedemptionVerification] = useState<RedemptionVerificationResult | null>(null);
+  const [showRedemptionModal, setShowRedemptionModal] = useState(false);
   const [passwordSetupModal, setPasswordSetupModal] = useState<{
     title: string;
     message: string;
@@ -243,8 +249,39 @@ export default function FrontDeskScan() {
             {/* ── Header ── */}
             <FrontDeskHeader storeInfo={storeInfo} />
 
+            {/* ── Mode Toggle ── */}
+            <View className="mx-4 mt-4">
+              <View className="flex-row bg-neutral-100 dark:bg-neutral-800 rounded-xl p-1">
+                <TouchableOpacity
+                  onPress={() => setMode("earn")}
+                  className={`flex-1 py-2 rounded-lg items-center ${
+                    mode === "earn" ? "bg-white dark:bg-neutral-700" : ""
+                  }`}
+                >
+                  <Text className={`text-sm font-poppins-semibold ${
+                    mode === "earn" ? "text-orange-600 dark:text-orange-400" : "text-neutral-500"
+                  }`}>
+                    Earn Points
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => setMode("redeem")}
+                  className={`flex-1 py-2 rounded-lg items-center ${
+                    mode === "redeem" ? "bg-white dark:bg-neutral-700" : ""
+                  }`}
+                >
+                  <Text className={`text-sm font-poppins-semibold ${
+                    mode === "redeem" ? "text-orange-600 dark:text-orange-400" : "text-neutral-500"
+                  }`}>
+                    Redeem Reward
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+
             {/* ── Scanner Card ── */}
-            <FrontDeskScanner
+            {mode === "earn" ? (
+              <FrontDeskScanner
               purchaseAmount={purchaseAmount}
               setPurchaseAmount={setPurchaseAmount}
               showCamera={showCamera}
@@ -273,6 +310,23 @@ export default function FrontDeskScan() {
               }}
               scrollY={scrollY}
             />
+            ) : (
+              <RewardRedemptionScanner
+                currentStaffId={currentStaffId}
+                onSuccess={(result) => {
+                  setRedemptionVerification(result);
+                  setShowRedemptionModal(true);
+                }}
+                onError={(message) => {
+                  setModal({
+                    title: "Error",
+                    message,
+                    buttons: [{ label: translate("label.ok"), variant: "secondary", onPress: () => setModal(null) }],
+                  });
+                }}
+                scrollY={scrollY}
+              />
+            )}
 
             {/* ── Recent Transactions ── */}
             <RecentTransactions recentScans={recentScans} />
@@ -305,6 +359,28 @@ export default function FrontDeskScan() {
         visible={showErrorModal}
         onClose={handleErrorModalClose}
         errorMessage={errorMessage}
+      />
+
+      {/* ── Reward Redemption Modal ── */}
+      <RewardRedemptionModal
+        visible={showRedemptionModal}
+        verification={redemptionVerification}
+        staffId={currentStaffId}
+        onClose={() => {
+          setShowRedemptionModal(false);
+          setRedemptionVerification(null);
+        }}
+        onSuccess={() => {
+          // Refresh transactions
+          if (storeInfo) fetchTransactions(storeInfo.id);
+        }}
+        onError={(message) => {
+          setModal({
+            title: "Redemption Error",
+            message,
+            buttons: [{ label: translate("label.ok"), variant: "secondary", onPress: () => setModal(null) }],
+          });
+        }}
       />
     </View>
   );

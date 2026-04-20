@@ -165,11 +165,11 @@ export function useStoreOverviewData(storeId?: string) {
           limit: 3,
         });
 
-        // Fetch user points
+        // Fetch user points for this store
         let points = 0;
         const { data: { user } } = await supabase.auth.getUser();
         if (user?.id) {
-          points = await getUserAvailablePoints(user.id);
+          points = await getUserAvailablePoints(user.id, storeId);
           setUserPoints(points);
         }
 

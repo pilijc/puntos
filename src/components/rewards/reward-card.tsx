@@ -4,11 +4,14 @@ import React from "react";
 import type { RewardItem } from "@/data/rewards";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/button"
+import {router, Router} from "expo-router"
+import { Touchable, TouchableOpacity } from "react-native";
 
 type RewardCardProps = {
   reward: RewardItem;
   storeName?: string;
   storeLocation?: string;
+  storeLogo?: string;
   onPress?: () => void;
 };
 
@@ -16,6 +19,7 @@ export default function RewardCard({
   reward,
   storeName,
   storeLocation,
+  storeLogo,
   onPress,
 }: RewardCardProps) {
   const { t: translate } = useTranslation();
@@ -47,24 +51,28 @@ export default function RewardCard({
         <Text className="text-xs text-neutral-500 dark:text-darkTextSecondary font-poppins mt-.5">
           {reward.desc}
         </Text>
-        {storeName ? (
-          <View className="flex-row items-center gap-x-1 mt-2">
-            <MaterialIcons name="storefront" size={12} color="#94a3b8" />
-            <Text className="text-[11px] text-neutral-400 font-poppins-medium">
-              {storeName}
-              {storeLocation ? ` • ${storeLocation}` : ""}
-            </Text>
-          </View>
-        ) : null}
+
         <View className="flex-row items-center justify-between mt-1">
           <Text className="text-primary font-poppins-semibold">
             {reward.points.toLocaleString()} {translate("user.rewards.rewardCard.pointsSuffix")}
           </Text>
+        <TouchableOpacity 
+              onPress={() => router.push({
+                pathname: "/(user)/store/claim-rewards",
+                params: { 
+                  storeId: reward.storeId,   
+                  storeName: storeName,
+                  storeAddress: storeLocation,
+                  storeLogo: storeLogo
+                }
+              })}
+            >
           <View className={`px-3 py-1 rounded-full ${badgeClass}`}>
             <Text className={`text-[10px] font-poppins-semibold ${badgeTextClass}`}>
               {isRedeemable ? translate("user.rewards.rewardCard.redeem") : translate("user.rewards.rewardCard.insufficient")}
             </Text>
           </View>
+          </TouchableOpacity>
         </View>
       </View>
     </Pressable>
