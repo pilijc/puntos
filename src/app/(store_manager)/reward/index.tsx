@@ -135,7 +135,7 @@ export default function RewardIndex() {
                   className="mt-3 bg-primary px-6 py-2.5 rounded-xl"
                   activeOpacity={0.85}
                 >
-                  <Text className="text-xs font-poppins-semibold text-white">{t("label.addFirst")}</Text>
+                  <Text className="text-xs font-poppins-semibold text-white">{t("store_manager.reward.addFirst")}</Text>
                 </TouchableOpacity>
               </View>
             ) : (

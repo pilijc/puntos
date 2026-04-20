@@ -197,7 +197,7 @@ export default function ViewStaff() {
                   className="mt-2 bg-primary px-5 py-2.5 rounded-xl"
                   activeOpacity={0.85}
                 >
-                  <Text className="text-xs font-poppins-semibold text-white">{t("label.addFirst")}</Text>
+                  <Text className="text-xs font-poppins-semibold text-white">{t("store_manager.staff.addFirst")}</Text>
                 </TouchableOpacity>
               </View>
             ) : (

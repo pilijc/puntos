@@ -213,10 +213,10 @@ export default function AddStaff() {
                 />
 
                 <TextField
-                  label={t("label.email")}
+                  label={t("store_manager.staffForm.email")}
                   value={email}
                   onChangeText={setEmail}
-                  placeholder={t("label.emailPlaceholder")}
+                  placeholder={t("store_manager.staffForm.emailPlaceholder")}
                   required={true}
                 />
 
@@ -225,7 +225,7 @@ export default function AddStaff() {
                     <View className="flex-row items-center justify-between gap-x-0.5">
                       <View className="flex-row items-center gap-x-0.5">
                         <Text className="text-sm font-poppins-semibold text-slate-700 dark:text-slate-300">
-                          {t("label.password")}
+                          {t("store_manager.staffForm.password")}
                         </Text>
                         <Text className="text-xs font-poppins-bold text-red-500">*</Text>
                       </View>
@@ -246,7 +246,7 @@ export default function AddStaff() {
                         includeFontPadding: false,
                       }}
                       keyboardType="default"
-                      placeholder={t("label.passwordPlaceholder")}
+                      placeholder={t("store_manager.staffForm.passwordPlaceholder")}
                       placeholderTextColor="#94A3B8"
                       value={password}
                     />
@@ -299,7 +299,7 @@ export default function AddStaff() {
             </Text>
 
             <View className="mb-3 gap-y-1.5">
-              <Text className="text-xs font-poppins text-slate-500 dark:text-slate-400">{t("label.emailLabel")}</Text>
+              <Text className="text-xs font-poppins text-slate-500 dark:text-slate-400">{t("store_manager.staffForm.email")}</Text>
               <View className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 dark:border-slate-700 dark:bg-slate-800">
                 <Text className="text-sm font-poppins-bold text-slate-900 dark:text-slate-100">{email}</Text>
               </View>

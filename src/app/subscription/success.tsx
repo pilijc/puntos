@@ -60,16 +60,16 @@ export default function SubscriptionSuccessScreen() {
     <SafeAreaView edges={["top", "left", "right"]} style={{ flex: 1 }}>
       <View className="flex-1 items-center justify-center px-6 bg-white dark:bg-neutral-900">
         <Text className="text-xl font-poppins-bold text-textPrimary dark:text-darkTextPrimary text-center">
-          {translate("storeManager.subscription.success.title")}
+          {translate("store_manager.subscription.success.title")}
         </Text>
         <Text className="mt-2 text-sm font-poppins text-textSecondary dark:text-darkTextSecondary text-center">
-          {verifying ? translate("storeManager.subscription.success.verifying") : translate("storeManager.subscription.success.body")}
+          {verifying ? translate("store_manager.subscription.success.verifying") : translate("store_manager.subscription.success.body")}
         </Text>
         {verifying ? (
           <View className="mt-4 items-center">
             <ActivityIndicator />
             <Text className="mt-2 text-xs font-poppins text-textMuted dark:text-darkTextMuted">
-              {translate("storeManager.subscription.success.waitingWebhook", { tries: triesLeft })}
+              {translate("store_manager.subscription.success.waitingWebhook", { tries: triesLeft })}
             </Text>
           </View>
         ) : null}
@@ -80,7 +80,7 @@ export default function SubscriptionSuccessScreen() {
           onPress={() => router.replace("/(store_manager)/subscription")}
         >
           <Text className="text-sm font-poppins-semibold text-white">
-            {translate("storeManager.subscription.success.back")}
+            {translate("store_manager.subscription.success.back")}
           </Text>
         </TouchableOpacity>
       </View>

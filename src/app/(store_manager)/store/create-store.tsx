@@ -434,7 +434,7 @@ export default function CreateStore() {
                   <TextField
                     label={t("label.storeName")}
                     required
-                    placeholder={t("label.storeNamePlaceholder")}
+                    placeholder={t("store_manager.detailEdit.storeNamePlaceholder")}
                     value={storeName}
                     onChangeText={setStoreName}
                     sanitize={(v) => v}
@@ -732,7 +732,7 @@ export default function CreateStore() {
                   <TextField
                     label={t("store_manager.createStore.landmarkAddress")}
                     required
-                    placeholder={t("label.addressPlaceholder")}
+                    placeholder={t("store_manager.createStore.addressPlaceholder")}
                     value={address}
                     onChangeText={setAddress}
                     multiline
@@ -773,7 +773,7 @@ export default function CreateStore() {
               <TextField
                 label={t("label.storeName")}
                 required
-                placeholder={t("label.storeNamePlaceholder")}
+                placeholder={t("store_manager.detailEdit.storeNamePlaceholder")}
                 value={storeName}
                 onChangeText={setStoreName}
                 sanitize={(v) => v}
@@ -1153,7 +1153,7 @@ export default function CreateStore() {
               <TextField
                 label={t("store_manager.createStore.landmarkAddress")}
                 required
-                placeholder={t("label.addressPlaceholder")}
+                placeholder={t("store_manager.createStore.addressPlaceholder")}
                 value={address}
                 onChangeText={setAddress}
                 multiline

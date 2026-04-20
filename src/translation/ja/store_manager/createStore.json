@@ -35,6 +35,8 @@
   "mapFallbackWeb": "地図はAndroidとWebのみ — 現在地取得または下の住所入力をご利用ください。",
   "landmarkAddress": "ランドマーク / 住所",
   "addressPlaceholder": "所在地の住所を入力",
+  "timezone": "店舗のタイムゾーン",
+  "timezonePlaceholder": "例: Asia/Tokyo",
   "storeRadius": "店舗の半径",
   "radiusMin": "50m",
   "radiusMax": "500m",

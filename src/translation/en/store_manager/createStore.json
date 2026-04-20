@@ -30,6 +30,8 @@
   "mapFallbackWeb": "Map only on Android & Web — use Get Current or enter address below.",
   "landmarkAddress": "Landmark / Address",
   "addressPlaceholder": "Enter full physical address",
+  "timezone": "Store Timezone",
+  "timezonePlaceholder": "e.g. Asia/Manila",
   "storeRadius": "Store Radius",
   "radiusMin": "50m",
   "radiusMax": "500m",
