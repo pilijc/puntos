@@ -46,8 +46,6 @@ export const SecurityCard: React.FC<SecurityCardProps> = ({ disabled = false, wa
 
                     <View className="flex-1 ml-2">
                         <Text className={`text-md font-poppins-semibold ${disabled ? 'text-neutral-400 dark:text-neutral-500' : 'text-textPrimary dark:text-darkTextPrimary'}`}>
-                    <View className="flex-1 ml-2">
-                        <Text className={`text-md font-poppins-semibold ${disabled ? 'text-neutral-400 dark:text-neutral-500' : 'text-textPrimary dark:text-darkTextPrimary'}`}>
                             {translate('settings.account.security.title')}
                         </Text>
                         {disabled && (
