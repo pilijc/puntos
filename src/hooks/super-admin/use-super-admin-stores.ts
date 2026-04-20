@@ -75,7 +75,8 @@ export function useSuperAdminStores() {
   const hasProSubscription = useCallback((ownerId: string | null) => {
     if (!ownerId) return false;
     const sub = subscriptions.find((s) => s.owner_id === ownerId);
-    return !!sub && !!sub.subscription_id;
+    // Based on subscription-limits.ts, it must have a subscription and payment_status === "paid"
+    return !!sub && !!sub.subscription_id && sub.payment_status === "paid";
   }, [subscriptions]);
 
   const loadMore = async () => {
