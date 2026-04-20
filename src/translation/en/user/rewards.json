@@ -87,6 +87,7 @@
     "notFound": "No Active Stamps Found",
     "notFoundDetail": "You haven't collected any stamps yet. Visit a partner store and scan to begin!",
     "activeStore": "Active Partner Store",
+    "inactiveStore": "Inactive Partner Store",
     "bonusPts": "+{{count}} bonus pts",
     "percentComplete": "{{percent}}% complete",
     "reachingTarget": "Keep stamping to reach your target!",

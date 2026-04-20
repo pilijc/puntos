@@ -152,7 +152,7 @@ export default function EditDetails() {
   const handleGetCurrentLocation = async () => {
     const { status } = await Location.requestForegroundPermissionsAsync();
     if (status !== "granted") {
-      showError(t("label.locationPermission"));
+      showError(t("store_manager.detailEdit.locationPermission"));
       return;
     }
 
@@ -296,7 +296,7 @@ export default function EditDetails() {
           <View className="gap-y-4">
             <TextField
               label={t("label.storeName")}
-              placeholder={t("label.storeNamePlaceholder")}
+              placeholder={t("store_manager.detailEdit.storeNamePlaceholder")}
               value={name}
               onChangeText={setName}
               sanitize={(v) => v}
@@ -666,8 +666,8 @@ export default function EditDetails() {
           </View>
 
           <TextField
-            label={t("label.addressLandmark")}
-            placeholder={t("label.addressPlaceholder")}
+            label={t("store_manager.detailEdit.addressLandmark")}
+            placeholder={t("store_manager.detailEdit.addressPlaceholder")}
             value={address}
             onChangeText={setAddress}
             multiline
