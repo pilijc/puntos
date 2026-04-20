@@ -93,7 +93,11 @@ function ActiveState({
 }: ActiveStateProps) {
   const isExpiringSoon = timeRemaining < 60;
 
-  const formattedCode = redemptionCode.code;
+  // Format code like "M 813 161"
+  const formattedCode = redemptionCode.code
+    .replace(/[^a-zA-Z0-9]/g, "")
+    .replace(/([a-zA-Z])(\d)/, "$1 $2")
+    .replace(/(\d{3})(\d{3})/, "$1 $2");
 
   return (
     <View className="flex-1 bg-white">

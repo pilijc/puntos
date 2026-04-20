@@ -26,7 +26,12 @@ import { checkDeviceSessionLimitService, upsertDeviceSessionService } from "@/se
 let OneSignal: typeof import("react-native-onesignal").OneSignal | null = null;
 
 if (Platform.OS !== "web") {
-  OneSignal = require("react-native-onesignal").OneSignal;
+  try {
+    OneSignal = require("react-native-onesignal").OneSignal;
+  } catch (error) {
+    console.warn("OneSignal native module not found:", error);
+    OneSignal = null;
+  }
 }
 SplashScreen.preventAutoHideAsync();
 

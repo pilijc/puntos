@@ -45,8 +45,8 @@ export function useRedemptionCode(
       } catch (error) {
         console.error('Error unsubscribing from channel:', error);
       }
-      channelRef.current = null;
     }
+    channelRef.current = null;
   }, []);
 
   // Generate redemption code

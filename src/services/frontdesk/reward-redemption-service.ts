@@ -5,7 +5,7 @@ import { getUserAvailablePoints } from "../user/points-service";
 export async function verifyRedemptionCode(code: string, staffId: string): 
 Promise<RedemptionVerificationResult> {
   try {
-    const {data: codeData, error: codeError} = await supabase
+    const {data: codeData, error: codeError} = await supabase 
       .from("reward_redemption_codes")
       .select('*,reward:store_rewards(title, description, image_url, points_cost, stock)')
       .eq("code", code)

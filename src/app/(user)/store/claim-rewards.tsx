@@ -17,7 +17,6 @@ import { useRedemptionCode } from "@/hooks/useRedemptionCode";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
-
 export default function ClaimRewardsScreen() {
   const { storeId, storeName, storeLogo, storeAddress } = useLocalSearchParams<{ storeId?: string; storeName?: string; storeLogo?: string; storeAddress?: string }>();
   const [rewards, setRewards] = useState<Reward[]>([]);
@@ -33,7 +32,7 @@ export default function ClaimRewardsScreen() {
   const insets = useSafeAreaInsets();
   const scheme = useColorScheme();
   const dark = scheme === "dark";
- 
+
   useEffect(() => {
     async function loadData() {
       if (!storeId) return;
@@ -50,20 +49,20 @@ export default function ClaimRewardsScreen() {
 
       setRewards(storeRewards);
       setUserPoints(points);
-      
+
       if (storeData?.store_pictures && storeData.store_pictures.length > 0) {
         setGallery(
           storeData.store_pictures.map((uri: string, i: number) => ({ id: `pic-${i}`, uri }))
         );
       }
-      
+
       setIsLoading(false);
     }
 
     loadData();
   }, [storeId]);
 
-   const {
+  const {
     redemptionCode,
     status,
     timeRemaining,
@@ -75,16 +74,16 @@ export default function ClaimRewardsScreen() {
     storeId
   );
 
-   const handleClaimReward = useCallback(async (reward: Reward) => {
+  const handleClaimReward = useCallback(async (reward: Reward) => {
     setSelectedReward(reward);
     setDrawerVisible(true);
   }, []);
 
-   useEffect(() => {
+  useEffect(() => {
     if (selectedReward && drawerVisible && !redemptionCode) {
       generateCode();
     }
-  }, [selectedReward, drawerVisible, redemptionCode]);
+  }, [selectedReward, drawerVisible, redemptionCode, generateCode]);
 
   // Refresh points when redemption is completed
   useEffect(() => {
@@ -93,14 +92,26 @@ export default function ClaimRewardsScreen() {
     }
   }, [status, userId, storeId]);
 
-  // Set up user redemption listener to refresh rewards when redemption is processed
+  // Cancel redemption
+  const handleCancelRedemption = useCallback(async () => {
+    await cancelCode();
+  }, [cancelCode]);
+
+  // Close drawer and reset
+  const handleCloseDrawer = useCallback(() => {
+    setDrawerVisible(false);
+     resetCode();
+     setTimeout(() => {
+      setSelectedReward(null);
+    }, 300);
+  }, [resetCode]);
+
   useEffect(() => {
     if (!userId || !storeId) return;
 
     redemptionChannelRef.current = listenToUserRedemptions(
       userId,
       (redemption) => {
-        // Refresh rewards and points when a new redemption is processed
         Promise.all([
           getRewards({ storeId: storeId as string, limit: 20 }),
           getUserAvailablePoints(userId, storeId),
@@ -118,26 +129,10 @@ export default function ClaimRewardsScreen() {
     };
   }, [userId, storeId]);
 
-  // Cancel redemption
-  const handleCancelRedemption = useCallback(async () => {
-    await cancelCode();
-  }, [cancelCode]);
-
-  // Close drawer and reset
-  const handleCloseDrawer = useCallback(() => {
-    setDrawerVisible(false);
-     resetCode();
-     setTimeout(() => {
-      setSelectedReward(null);
-    }, 300);
-  }, [resetCode]);
-
-  // Split into redeemable and insufficient
   const redeemable = rewards.filter(r => userPoints >= r.points_cost);
   const almost = rewards.filter(r => userPoints < r.points_cost)
     .map(r => ({ ...r, deficit: r.points_cost - userPoints }));
 
-  // Theme tokens 
   const heroBg = dark ? "#171717" : "#F3F4F6";
   const heroText = dark ? "#FFFFFF" : "#1C1C1E";
   const heroSub = dark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.35)";
@@ -290,45 +285,45 @@ export default function ClaimRewardsScreen() {
           {/* ── Store Gallery Carousel ───────────────────────────────── */}
           {gallery.length > 0 && (
             <Animated.View entering={FadeInDown.delay(140).duration(380)} style={{ marginHorizontal: -16, gap: 8 }}>
-            <Carousel
-              width={SCREEN_WIDTH}
-              height={190}
-              data={gallery}
-              autoPlay
-              autoPlayInterval={3200}
-              scrollAnimationDuration={800}
-              loop
-              onSnapToItem={setGalleryIndex}
-              mode="parallax"
-              modeConfig={{ parallaxScrollingScale: 0.88, parallaxScrollingOffset: 48 }}
-              renderItem={({ item }) => (
-                <RNView style={{ flex: 1, borderRadius: 18, overflow: "hidden", marginHorizontal: 8 }}>
-                  <Image
-                    source={{ uri: item.uri }}
-                    style={{ width: "100%", height: "100%" }}
-                    contentFit="cover"
+              <Carousel
+                width={SCREEN_WIDTH}
+                height={190}
+                data={gallery}
+                autoPlay
+                autoPlayInterval={3200}
+                scrollAnimationDuration={800}
+                loop
+                onSnapToItem={setGalleryIndex}
+                mode="parallax"
+                modeConfig={{ parallaxScrollingScale: 0.88, parallaxScrollingOffset: 48 }}
+                renderItem={({ item }) => (
+                  <RNView style={{ flex: 1, borderRadius: 18, overflow: "hidden", marginHorizontal: 8 }}>
+                    <Image
+                      source={{ uri: item.uri }}
+                      style={{ width: "100%", height: "100%" }}
+                      contentFit="cover"
+                    />
+                    {/* Bottom gradient overlay (layered views) */}
+                    <RNView style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 60, backgroundColor: "rgba(0,0,0,0.28)", borderBottomLeftRadius: 18, borderBottomRightRadius: 18 }} />
+                    <RNView style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 30, backgroundColor: "rgba(0,0,0,0.18)", borderBottomLeftRadius: 18, borderBottomRightRadius: 18 }} />
+                  </RNView>
+                )}
+              />
+              {/* Dot indicators */}
+              <RNView style={{ flexDirection: "row", justifyContent: "center", alignItems: "center", gap: 6 }}>
+                {gallery.map((_, i) => (
+                  <RNView
+                    key={i}
+                    style={{
+                      height: 6,
+                      width: galleryIndex === i ? 18 : 6,
+                      borderRadius: 3,
+                      backgroundColor: galleryIndex === i ? "#FF6600" : (dark ? "#525252" : "#D1D5DB"),
+                    }}
                   />
-                  {/* Bottom gradient overlay (layered views) */}
-                  <RNView style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 60, backgroundColor: "rgba(0,0,0,0.28)", borderBottomLeftRadius: 18, borderBottomRightRadius: 18 }} />
-                  <RNView style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 30, backgroundColor: "rgba(0,0,0,0.18)", borderBottomLeftRadius: 18, borderBottomRightRadius: 18 }} />
-                </RNView>
-              )}
-            />
-            {/* Dot indicators */}
-            <RNView style={{ flexDirection: "row", justifyContent: "center", alignItems: "center", gap: 6 }}>
-              {gallery.map((_, i) => (
-                <RNView
-                  key={i}
-                  style={{
-                    height: 6,
-                    width: galleryIndex === i ? 18 : 6,
-                    borderRadius: 3,
-                    backgroundColor: galleryIndex === i ? "#FF6600" : (dark ? "#525252" : "#D1D5DB"),
-                  }}
-                />
-              ))}
-            </RNView>
-          </Animated.View>
+                ))}
+              </RNView>
+            </Animated.View>
           )}
 
           {/* ── Replacement Content ── */}
