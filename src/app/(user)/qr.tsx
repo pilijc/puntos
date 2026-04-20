@@ -148,15 +148,9 @@ export default function Qr() {
         </View>
 
         {/* Instructions */}
-        <Text className="text-base font-semibold text-black dark:text-darkTextPrimary text-center mt-4">
-          Get your Points Now
-        </Text>
-        <Text className="text-sm mt-4 text-gray-500 dark:text-darkTextSecondary text-center">
-          Let the operator scan your QR code
-        </Text>
-        <Text className="text-xs mt-1 text-gray-400 dark:text-darkTextMuted text-center">
-          This is your unique customer QR code
-        </Text>
+        <Text className="text-base font-semibold text-black dark:text-darkTextPrimary text-center mt-4">{translate("user.qr.title")}</Text>
+        <Text className="text-sm mt-4 text-gray-500 dark:text-darkTextSecondary text-center">{translate("user.qr.instruction")}</Text>
+        <Text className="text-xs mt-1 text-gray-400 dark:text-darkTextMuted text-center">{translate("user.qr.detail")}</Text>
 
         {/* QR Code */}
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
@@ -164,21 +158,15 @@ export default function Qr() {
             <ActivityIndicator size="large" color={isDark ? '#FF6600' : undefined} />
           ) : qrValue ? (
             <>
-              <Text className="mb-5 text-sm font-poppins-semibold text-neutral-700 dark:text-darkTextSoft">
-                Your QR Code
-              </Text>
+              <Text className="mb-5 text-sm font-poppins-semibold text-neutral-700 dark:text-darkTextSoft">{translate("user.qr.yourQrCode")}</Text>
               {/* White wrapper so code stays scannable on dark backgrounds */}
               <View className="bg-white p-4 rounded-2xl">
                 <QRCode value={qrValue} size={200} />
               </View>
-              <Text className="mt-4 text-xs text-center text-gray-500 dark:text-darkTextSecondary font-poppins">
-                Show this to the front desk to earn points
-              </Text>
+              <Text className="mt-4 text-xs text-center text-gray-500 dark:text-darkTextSecondary font-poppins">{translate("user.qr.prompt")}</Text>
             </>
           ) : (
-            <Text className="text-neutral-500 dark:text-darkTextSecondary font-poppins">
-              Failed to load QR code. Try again.
-            </Text>
+            <Text className="text-neutral-500 dark:text-darkTextSecondary font-poppins">{translate("user.qr.error")}</Text>
           )}
           {user?.id && <VoucherGenerator userId={user.id} />}
         </View>
@@ -201,23 +189,17 @@ export default function Qr() {
             </View>
 
             {/* Title */}
-            <Text className="text-2xl font-bold text-center text-gray-900 mb-2">
-              Congratulations!
-            </Text>
+            <Text className="text-2xl font-bold text-center text-gray-900 mb-2">{translate("user.qr.success.title")}</Text>
 
             {/* Points Message */}
-            <Text className="text-base text-center text-gray-600 mb-6">
-              You earned points
-            </Text>
+            <Text className="text-base text-center text-gray-600 mb-6">{translate("user.qr.success.message")}</Text>
 
             {/* Points Display */}
             <View className="bg-orange-50 rounded-2xl p-6 mb-8 border border-orange-100">
               <Text className="text-3xl font-bold text-center text-orange-600">
                 +{earnedPoints}
               </Text>
-              <Text className="text-sm text-center text-orange-500 mt-1">
-                Points Added
-              </Text>
+              <Text className="text-sm text-center text-orange-500 mt-1">{translate("user.qr.success.added")}</Text>
             </View>
 
             {/* Action Button */}
@@ -225,9 +207,7 @@ export default function Qr() {
               onPress={() => setShowCongratsModal(false)}
               className="bg-orange-500 py-4 px-6 rounded-xl"
             >
-              <Text className="text-white font-bold text-center text-lg">
-                Great!
-              </Text>
+              <Text className="text-white font-bold text-center text-lg">{translate("user.qr.success.button")}</Text>
             </TouchableOpacity>
 
             {/* Close hint */}

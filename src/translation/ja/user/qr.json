@@ -10,5 +10,13 @@
     "message": "ポイントを獲得しました",
     "added": "ポイントが追加されました",
     "button": "閉じる"
+  },
+  "voucher": {
+    "title": "バウチャーコード",
+    "generate": "コードを生成",
+    "generateNew": "新しいコードを生成",
+    "expires": "有効期限: {{time}}",
+    "userIdRequired": "バウチャーを生成するにはユーザーIDが必要です",
+    "failed": "バウチャーの生成に失敗しました。もう一度お試しください。"
   }
 }

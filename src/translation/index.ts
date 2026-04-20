@@ -40,9 +40,11 @@ import en_store_manager_transactions from './en/store_manager/transactions.json'
 import en_store_manager_viewStore from './en/store_manager/viewStore.json';
 import en_super_admin_dashboard from './en/super_admin/dashboard.json';
 import en_super_admin_stores from './en/super_admin/stores.json';
+import en_super_admin_subscription from './en/super_admin/subscription.json';
 import en_super_admin_users from './en/super_admin/users.json';
 import en_user_activity from './en/user/activity.json';
 import en_user_discover from './en/user/discover.json';
+import en_user_qr from './en/user/qr.json';
 import en_user_rewards from './en/user/rewards.json';
 import ja_frontdesk_transaction from './ja/frontdesk/transaction.json';
 import ja_frontdesk_transactionHistory from './ja/frontdesk/transactionHistory.json';
@@ -83,9 +85,11 @@ import ja_store_manager_transactions from './ja/store_manager/transactions.json'
 import ja_store_manager_viewStore from './ja/store_manager/viewStore.json';
 import ja_super_admin_dashboard from './ja/super_admin/dashboard.json';
 import ja_super_admin_stores from './ja/super_admin/stores.json';
+import ja_super_admin_subscription from './ja/super_admin/subscription.json';
 import ja_super_admin_users from './ja/super_admin/users.json';
 import ja_user_activity from './ja/user/activity.json';
 import ja_user_discover from './ja/user/discover.json';
+import ja_user_qr from './ja/user/qr.json';
 import ja_user_rewards from './ja/user/rewards.json';
 const resources = {
   en: {
@@ -138,11 +142,13 @@ const resources = {
       super_admin: {
         dashboard: en_super_admin_dashboard,
         stores: en_super_admin_stores,
+        subscription: en_super_admin_subscription,
         users: en_super_admin_users,
       },
       user: {
         activity: en_user_activity,
         discover: en_user_discover,
+        qr: en_user_qr,
         rewards: en_user_rewards,
       },
     }
@@ -197,11 +203,13 @@ const resources = {
       super_admin: {
         dashboard: ja_super_admin_dashboard,
         stores: ja_super_admin_stores,
+        subscription: ja_super_admin_subscription,
         users: ja_super_admin_users,
       },
       user: {
         activity: ja_user_activity,
         discover: ja_user_discover,
+        qr: ja_user_qr,
         rewards: ja_user_rewards,
       },
     }

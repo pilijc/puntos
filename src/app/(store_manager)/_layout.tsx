@@ -1,6 +1,6 @@
 import { Tabs } from "expo-router";
 import { useColorScheme, Platform, Text, View, Image,} from "react-native";
-import React, { useCallback, useEffect } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { usePathname, useRouter } from "expo-router";
 import { BottomTabBar, type BottomTabBarButtonProps, type BottomTabBarProps,} from "@react-navigation/bottom-tabs";
 import { PlatformPressable } from "@react-navigation/elements";
@@ -237,7 +237,8 @@ export default function StoreManagerLayout() {
     const insets = useSafeAreaInsets();
     const pathname = usePathname();
     const path = withTrailingSlash(pathname);
-    const { startHeartbeat } = useDeviceSession();
+    const [currentUserId, setCurrentUserId] = useState<string | undefined>(undefined);
+    const { } = useDeviceSession(currentUserId);
 
     const activeTab = activeSidebarTabFromPath(path);
     const storesRowActive = activeTab === "stores";
@@ -261,15 +262,15 @@ export default function StoreManagerLayout() {
                         router.replace(getWebAdjustedHomeRoute("/(user)") as any);
                     }
                 } else {
-                    // Valid manager/owner — start their session heartbeat listener
-                    startHeartbeat(user.id);
+                    // valid manager/owner — activate heartbeat by providing userId to the hook
+                    setCurrentUserId(user.id);
                 }
             } catch {
                 router.replace(getWebAdjustedHomeRoute("/(user)") as any);
             }
         };
         verifyAccess();
-    }, [router, startHeartbeat]);
+    }, [router]);
 
     const isWeb = Platform.OS === "web";
 

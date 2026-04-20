@@ -10,5 +10,13 @@
     "message": "You earned points",
     "added": "Points Added",
     "button": "Great!"
+  },
+  "voucher": {
+    "title": "Your Voucher Code",
+    "generate": "Generate Code",
+    "generateNew": "Generate New Voucher",
+    "expires": "Expires in {{time}}",
+    "userIdRequired": "User ID is required to generate voucher",
+    "failed": "Failed to generate voucher. Try again."
   }
 }
