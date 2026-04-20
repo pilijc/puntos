@@ -18,7 +18,6 @@ import {
 	cancelManagerSubscription,
 	type ManagerSubscriptionPaymentRow,
 } from "@/services/store-manager/subscription-service";
-import { Sparkles } from "lucide-react-native";
 
 function toAmountNumber(value: unknown): number | null {
 	if (typeof value === "number" && Number.isFinite(value)) return value;
