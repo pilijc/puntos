@@ -1,25 +1,29 @@
 import { Text, SafeAreaView, View, Image } from "@/tw";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import Mapbox, { MapView, PointAnnotation } from "@rnmapbox/maps";
-import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
-import { TextInput, TouchableOpacity, useColorScheme } from "react-native";
+import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
+import { TextInput, TouchableOpacity, useColorScheme, Platform } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
-import * as Location from 'expo-location'
+import * as Location from "expo-location";
 import { Ionicons, MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
-import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
+import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 import { getRouteService, getSearchResultsService } from "@/services/discover-service";
 import { useStoreStore } from "@/store/user/store-store";
 import { Store } from "@/type/user/store";
 import type * as GeoJSON from "geojson";
-import { getOneSignalId, sendPushNotification, isOneSignalNativeAvailable } from "@/services/push-notif";
+import { getOneSignalId, sendPushNotification, isOneSignalNativeAvailable } from "@/services/push-service";
 import { isStoreNearby } from "@/services/user/location-service";
 import * as turf from "@turf/turf";
 import { getStores } from "@/services/store-service";
-import { OneSignal } from "react-native-onesignal";
 import { storeIconKey } from "@/type/user/discover";
-import Svg, { Path } from "react-native-svg";
 import { useTranslation } from "react-i18next";
 import { useLanguageStore } from "@/store/language-store";
+
+let OneSignal: typeof import("react-native-onesignal").OneSignal | null = null;
+
+if (Platform.OS !== "web") {
+  OneSignal = require("react-native-onesignal").OneSignal;
+}
 
 Mapbox.setAccessToken(process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN);
 
@@ -82,8 +86,8 @@ export default function Discover() {
   }, [searchQuery]);
 
   useEffect(() => {
-    if (!isOneSignalNativeAvailable()) return;
-
+    if (!isOneSignalNativeAvailable() || !OneSignal) return;
+  
     const handleNotificationClick = (event: any) => {
       (async () => {
         try {
@@ -91,23 +95,23 @@ export default function Discover() {
           const data = (notification.additionalData ?? notification.data) as
             | { store_id?: number | string; store_ids?: (number | string)[] }
             | undefined;
-
+  
           const rawIds: (number | string)[] = [];
           if (data?.store_id != null) rawIds.push(data.store_id);
           if (Array.isArray(data?.store_ids)) rawIds.push(...data.store_ids);
-
+  
           const storeIds = Array.from(
             new Set(rawIds.map((id) => Number(id)).filter((n) => !Number.isNaN(n))),
           );
           if (storeIds.length === 0) return;
-
+  
           const allStores = (await getStores()) ?? [];
           const matchedStores = allStores.filter((s) =>
             storeIds.includes(Number(s.id)),
           ) as Store[];
-
+  
           if (matchedStores.length === 0) return;
-
+  
           setSheetStores(matchedStores);
           if (matchedStores.length > 1) {
             setSheetView("list");
@@ -122,10 +126,11 @@ export default function Discover() {
         }
       })();
     };
-
+  
     OneSignal.Notifications.addEventListener("click", handleNotificationClick);
+  
     return () => {
-      OneSignal.Notifications.removeEventListener("click", handleNotificationClick);
+      OneSignal?.Notifications.removeEventListener("click", handleNotificationClick);
     };
   }, []);
 

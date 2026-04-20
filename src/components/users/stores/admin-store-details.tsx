@@ -1,4 +1,4 @@
-import React, { useState, useRef, useMemo } from "react";
+import React, { useEffect, useState, useRef, useMemo } from "react";
 import { ScrollView, Platform, useColorScheme } from "react-native";
 import Carousel from 'react-native-reanimated-carousel';
 import { View, Text, TouchableOpacity } from "@/tw";
@@ -7,14 +7,14 @@ import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { ArrowLeft, Store as StoreIcon, Briefcase, BadgeCheck, AlertTriangle, Flame, Sun, Moon, RefreshCw, MapPin, Map, CheckCircle, ChevronLeft, ChevronRight } from "lucide-react-native";
 import { Image } from "expo-image";
 import { BlurView } from "expo-blur";
-import Mapbox, { Camera, MapView } from "@rnmapbox/maps";
+import Mapbox, { Camera, MapView, MarkerView } from "@rnmapbox/maps";
 import { ScreenWrapper } from "@/components/ui/screen-wrapper";
 import { Button } from "@/components/button";
 import { AdminStoreRow } from "@/services/store-service";
 import { ImageViewerModal } from "@/components/ui/image-viewer-modal";
 import { getStoreCategoryBadge, getEffectiveStatus, StoreStatusKey } from "@/type/super-admin/user";
 import { shouldUseInteractiveMapbox } from "@/utils/mapbox-platform";
-import { useSubscriptionConfigStore } from "@/store/super-admin/subscription-config";
+import { canOwnerCreateAnotherStore } from "@/services/store-manager/subscription-limits";
 
 
 Mapbox.setAccessToken(process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN!);
@@ -71,7 +71,6 @@ export function AdminStoreDetails({
   onReject: (store: AdminStoreRow) => void;
 }) {
   const { t: translate, i18n } = useTranslation();
-  const config = useSubscriptionConfigStore();
 
   const STATUS_LABELS: Record<StatusKey, string> = {
     pending_review: translate("superAdmin.stores.status.pending"),
@@ -89,6 +88,28 @@ export function AdminStoreDetails({
   const statusKey = getEffectiveStatus(store);
   const statusCfg = STATUS_CONFIG[statusKey] ?? STATUS_CONFIG.pending_review;
   const isPending = statusKey === "pending_review";
+
+  const [canCreateAnotherStore, setCanCreateAnotherStore] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    const ownerId = store.owner_id;
+    if (!ownerId) return;
+
+    (async () => {
+      try {
+        const res = await canOwnerCreateAnotherStore(ownerId);
+        if (!cancelled) setCanCreateAnotherStore(res.allowed);
+      } catch {
+        // If checks fail, don't block admin UI.
+        if (!cancelled) setCanCreateAnotherStore(true);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [store.owner_id]);
 
   const registeredDate = useMemo(() => {
     return new Date(store.created_at).toLocaleDateString(i18n.language === "ja" ? "ja-JP" : "en-US", {
@@ -125,21 +146,9 @@ export function AdminStoreDetails({
             <TouchableOpacity
               onPress={onBack}
               activeOpacity={0.7}
-              className="w-10 h-10 rounded-full items-center justify-center overflow-hidden border border-white/20 dark:border-black/20 shadow-lg shadow-black/20"
+              className="w-10 h-10 rounded-full bg-white dark:bg-darkBackgroundCard items-center justify-center shadow-sm shadow-black/10 border border-slate-100 dark:border-darkBorder"
             >
-              {BlurView ? (
-                <BlurView
-                  intensity={80}
-                  tint={isDark ? "dark" : "light"}
-                  style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
-                />
-              ) : (
-                <View 
-                  style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} 
-                  className="bg-white/80 dark:bg-black/60" 
-                />
-              )}
-              <ArrowLeft size={22} color={isDark ? "#ffffff" : "#0F172A"} />
+              <ChevronLeft size={24} color={isDark ? "#F8FAFC" : "#0F172A"} className="-ml-0.5" />
             </TouchableOpacity>
           </View>
           <TouchableOpacity 
@@ -214,7 +223,7 @@ export function AdminStoreDetails({
                     Subscription {subscription.payment_status}
                  </Text>
                </View>
-            ) : ((ownerActiveStoresCount + (statusKey === 'active' ? 1 : 0)) > config.FREE_STORES_LIMIT) && (
+            ) : !canCreateAnotherStore && (
                <View className="flex-row items-center gap-1 self-start px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 mb-3">
                  <MaterialIcons name="local-fire-department" size={10} color="#2563EB" />
                  <Text className="text-[9px] font-poppins-bold tracking-wider text-blue-700 dark:text-blue-400 uppercase">
@@ -367,36 +376,41 @@ export function AdminStoreDetails({
             {(store.latitude !== null && store.longitude !== null && store.latitude !== undefined && store.longitude !== undefined) ? (
               <View style={{ width: "100%", height: 160, borderRadius: 16, overflow: "hidden", marginBottom: 20 }} className="bg-slate-50 dark:bg-neutral-800">
                 {(shouldUseInteractiveMapbox() && MapView && Mapbox) ? (
-                  <MapView
-                    style={{ flex: 1, width: "100%", height: "100%" }}
-                    surfaceView={false}
-                    styleURL={
-                      isDark
-                        ? "mapbox://styles/mapbox/navigation-night-v1"
-                        : "mapbox://styles/mapbox/light-v11"
-                    }
-                    scrollEnabled={false}
-                    zoomEnabled={false}
-                    rotateEnabled={false}
-                    pitchEnabled={false}
-                    attributionEnabled={false}
-                    logoEnabled={false}
-                  >
-                    {Camera && <Camera centerCoordinate={[Number(store.longitude), Number(store.latitude)]} zoomLevel={14} animationMode="none" />}
-                    {Mapbox.Images && <Mapbox.Images images={{ default: require("../../../assets/images/markers/default.png") }} />}
-                    {Mapbox.ShapeSource && (
-                      <Mapbox.ShapeSource
-                        id="storePinLocation"
-                        shape={{
-                          type: "Feature",
-                          geometry: { type: "Point", coordinates: [Number(store.longitude), Number(store.latitude)] },
-                          properties: { icon: "default" },
-                        }}
+                  <View style={{ flex: 1, position: "relative" }}>
+                    <MapView
+                      style={{ flex: 1, width: "100%", height: "100%" }}
+                      surfaceView={false}
+                      styleURL={
+                        isDark
+                          ? "mapbox://styles/mapbox/navigation-night-v1"
+                          : "mapbox://styles/mapbox/streets-v12"
+                      }
+                      scrollEnabled={false}
+                      zoomEnabled={false}
+                      rotateEnabled={false}
+                      pitchEnabled={false}
+                      attributionEnabled={false}
+                      logoEnabled={false}
+                    >
+                      <Camera
+                        centerCoordinate={[Number(store.longitude), Number(store.latitude)]}
+                        zoomLevel={15}
+                        animationMode="none"
+                      />
+                      <MarkerView
+                        coordinate={[Number(store.longitude), Number(store.latitude)]}
+                        anchor={{ x: 0.5, y: 1 }}
                       >
-                        {Mapbox.SymbolLayer && <Mapbox.SymbolLayer id="storePinLayerLoc" style={{ iconImage: ["get", "icon"], iconAllowOverlap: true, iconSize: 0.015 }} />}
-                      </Mapbox.ShapeSource>
-                    )}
-                  </MapView>
+                        <View style={{ alignItems: "center", justifyContent: "flex-end" }}>
+                          <Image
+                            source={require("../../../assets/images/markers/default.png")}
+                            style={{ width: 36, height: 36 }}
+                            contentFit="contain"
+                          />
+                        </View>
+                      </MarkerView>
+                    </MapView>
+                  </View>
                 ) : (
                   <View className="flex-1 w-full h-full items-center justify-center gap-y-1">
                     <MaterialIcons name="map" size={28} color={isDark ? "#525252" : "#CBD5E1"} />

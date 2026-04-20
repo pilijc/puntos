@@ -3,11 +3,16 @@ import { useRouter, usePathname } from 'expo-router';
 import { supabase } from '@/supabase/supabase';
 import { getHomeRouteForUserId, getWebAdjustedHomeRoute } from '@/services/access-service';
 import { checkIfAccountDeletedService, checkIfAccountBlockedService, AccountDeletedError, AccountBlockedError } from '@/services/auth-service';
-import { Alert } from 'react-native';
+import { Alert, Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { upsertPushId, isOneSignalNativeAvailable } from '@/services/push-notif';
+import { upsertPushId, isOneSignalNativeAvailable } from '@/services/push-service';
 import { useAuthStore } from '@/store/auth-store';
-import { OneSignal } from 'react-native-onesignal';
+
+let OneSignal: typeof import("react-native-onesignal").OneSignal | null = null;
+
+if (Platform.OS !== "web") {
+  OneSignal = require("react-native-onesignal").OneSignal;
+}
 
 export function useAuthListener() {
   const router = useRouter();
@@ -23,7 +28,20 @@ export function useAuthListener() {
           router.replace("/reset-password");
         } else if (event === 'SIGNED_OUT') {
           console.log("User logged out");
-          router.replace("/(onboarding)/welcome");
+          try {
+            const { forceDeactivateCurrentDeviceService } = require("@/services/store-manager/device-session-service");
+            forceDeactivateCurrentDeviceService().catch((e: any) => console.warn("[AuthListener] Force deactivate failed", e));
+          } catch (e) {
+            // ignore
+          }
+
+          // if we're already on the login page or auth/signup flows, don't boot the user back to welcome.
+          // this allows them to stay on login after cancelling a device limit modal.
+          const isAtAuthFlow = pathname?.includes('/login') || pathname?.includes('/signup') || pathname?.includes('/welcome');
+          
+          if (!isAtAuthFlow) {
+            router.replace("/(onboarding)/welcome");
+          }
         } else if (event === 'SIGNED_IN' && session && !isOnSignupFlow) {
           console.log("User logged in:", session.user.email);
           void (async () => {
@@ -48,6 +66,30 @@ export function useAuthListener() {
               if (isOneSignalNativeAvailable()) {
                 await OneSignal.login(userId);
                 await upsertPushId();
+              }
+
+              const isAtAuthFlow = pathname?.includes('/login') || pathname?.includes('/signup') || pathname?.includes('/welcome');
+
+              // Enforce device session limit to prevent the global listener from hijacking routing into the dashboard!
+              if (nextRoute === "/(store_manager)" || (typeof nextRoute === "string" && nextRoute.startsWith("/(store_manager)"))) {
+                const { checkDeviceSessionLimitService, upsertDeviceSessionService } = require("@/services/store-manager/device-session-service");
+                try {
+                  const sessionCheck = await checkDeviceSessionLimitService(userId);
+                  if (sessionCheck.allowed) {
+                    await upsertDeviceSessionService(userId);
+                  } else {
+                    // If we're on the login page, we let the login page itself handle the modal state.
+                    // We simply return so line 72 doesn't execute and "unhide" the auth screen.
+                    if (isAtAuthFlow) return;
+
+                    // Otherwise, if we're on a dashboard route but somehow lost our session slot, boot to login.
+                    await supabase.auth.signOut();
+                    router.replace("/(auth)/login");
+                    return; 
+                  }
+                } catch (e) {
+                  console.warn("[AuthListener] Device session check failed", e);
+                }
               }
 
               router.replace(nextRoute as any);

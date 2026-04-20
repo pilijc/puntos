@@ -40,8 +40,8 @@ export const SecurityCard: React.FC<SecurityCardProps> = ({ disabled = false, wa
                     activeOpacity={disabled ? 1 : 0.7}
                 >
                     <View className="h-8 w-8 -mt-0.5 rounded-lg items-center justify-center">{warning 
-                        ? <CircleAlert size={15} color={disabled ? "#a3a3a3" : "#0f172a"} /> 
-                        : <Shield size={15} color={disabled ? "#a3a3a3" : "#0f172a"} />}
+                        ? <CircleAlert size={15} color={disabled ? "#a3a3a3" : "#FF6600"} /> 
+                        : <Shield size={15} color={disabled ? "#a3a3a3" : "#FF6600"} />}
                     </View>
 
                     <View className="flex-1 ml-2">
@@ -54,6 +54,7 @@ export const SecurityCard: React.FC<SecurityCardProps> = ({ disabled = false, wa
                             </Text>
                         )}
                     </View>
+             
              
 
                     {isOpen ? (

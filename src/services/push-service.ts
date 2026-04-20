@@ -1,13 +1,18 @@
 import { Platform } from "react-native";
 import { supabase } from "@/supabase/supabase";
-import { OneSignal } from "react-native-onesignal";
+
+let OneSignal: typeof import("react-native-onesignal").OneSignal | null = null;
+
+if (Platform.OS !== "web") {
+  OneSignal = require("react-native-onesignal").OneSignal;
+}
 
 export function isOneSignalNativeAvailable(): boolean {
-  return Platform.OS !== "web";
+  return Platform.OS !== "web" && OneSignal != null;
 }
 
 export async function upsertPushId() {
-  if (!isOneSignalNativeAvailable()) return;
+  if (!isOneSignalNativeAvailable() || !OneSignal) return;
 
   const { data: auth } = await supabase.auth.getUser();
   const user = auth.user;
@@ -16,19 +21,18 @@ export async function upsertPushId() {
   const subId = await getOneSignalId();
   if (!subId) return;
 
-  await supabase
-    .from("user_push_tokens")
-    .upsert({
-      user_id: user.id,
-      onesignal_subscription_id: subId,
-      updated_at: new Date().toISOString(),
-    });
+  await supabase.from("user_push_tokens").upsert({
+    user_id: user.id,
+    onesignal_subscription_id: subId,
+    updated_at: new Date().toISOString(),
+  });
 }
 
 export async function getOneSignalId(): Promise<string | null> {
-  if (!isOneSignalNativeAvailable()) return null;
+  if (!isOneSignalNativeAvailable() || !OneSignal) return null;
+
   await OneSignal.Notifications.requestPermission(true);
-  return OneSignal.User.pushSubscription.getIdAsync();
+  return await OneSignal.User.pushSubscription.getIdAsync();
 }
 
 export async function sendPushNotification(
@@ -49,13 +53,14 @@ export async function sendPushNotification(
         name: "Puntos",
         target_channel: "push",
         include_subscription_ids: [subscriptionId],
-        headings: { en: title ?? "Sample" },
-        contents: { en: body ?? "Hello" },
+        headings: { en: title || "Sample" },
+        contents: { en: body || "Hello" },
         data,
         android_channel_id: process.env.EXPO_PUBLIC_ONESIGNAL_ANDROID_CHANNEL_ID,
         priority: 10,
       }),
     });
+
     return res;
   } catch (e) {
     return e as Error;

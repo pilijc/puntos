@@ -19,22 +19,27 @@ import { checkIfAccountDeletedService, checkIfAccountBlockedService, AccountDele
 import { Modal } from "@/components/modal";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { useAuthStore } from "@/store/auth-store";
-import { OneSignal } from "react-native-onesignal";
-import { isOneSignalNativeAvailable } from "@/services/push-notif";
+import { isOneSignalNativeAvailable } from "@/services/push-service";
 import { useStamps } from "@/hooks/use-stamps";
+import { checkDeviceSessionLimitService, upsertDeviceSessionService } from "@/services/store-manager/device-session-service";
 
+let OneSignal: typeof import("react-native-onesignal").OneSignal | null = null;
+
+if (Platform.OS !== "web") {
+  OneSignal = require("react-native-onesignal").OneSignal;
+}
 SplashScreen.preventAutoHideAsync();
 
 export async function initOneSignal(): Promise<string | null> {
-  if (!isOneSignalNativeAvailable()) return null;
+  if (!isOneSignalNativeAvailable() || !OneSignal) return null;
 
   const appId = process.env.EXPO_PUBLIC_ONESIGNAL_APP_ID;
   if (!appId) throw new Error("Missing EXPO_PUBLIC_ONESIGNAL_APP_ID");
 
   OneSignal.initialize(appId);
-  OneSignal.Notifications.requestPermission(true);
+  await OneSignal.Notifications.requestPermission(true);
 
-  return OneSignal.User.pushSubscription.getIdAsync();
+  return await OneSignal.User.pushSubscription.getIdAsync();
 }
 
 export default function Layout() {
@@ -79,6 +84,26 @@ export default function Layout() {
           await checkIfAccountDeletedService(userId);
           await checkIfAccountBlockedService(userId);
           const nextRoute = getWebAdjustedHomeRoute(await getHomeRouteForUserId(userId));
+
+          // If this is a store manager, enforce device session limit before auto-navigating
+          if (nextRoute === "/(store_manager)" || (typeof nextRoute === "string" && nextRoute.startsWith("/(store_manager)"))) {
+            try {
+              const sessionCheck = await checkDeviceSessionLimitService(userId);
+              if (sessionCheck.allowed) {
+                // Register this device's session
+                await upsertDeviceSessionService(userId);
+              } else {
+                // Device limit reached — sign out and send to login so the modal can handle it
+                await supabase.auth.signOut();
+                router.replace("/(auth)/login");
+                return;
+              }
+            } catch (deviceErr) {
+              console.warn("[DeviceSession] check failed during session restore:", deviceErr);
+              // Don't block login if the device session check itself fails
+            }
+          }
+
           router.replace(nextRoute as any);
         } catch (err: any) {
           if (err instanceof AccountDeletedError) {

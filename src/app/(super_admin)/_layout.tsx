@@ -7,7 +7,7 @@ import { PlatformPressable } from "@react-navigation/elements";
 import { useRoute } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
-import { LayoutDashboard, Users, Store, Settings, CircleDollarSign } from 'lucide-react-native';
+import { LayoutDashboard, Users, Store, Settings, CreditCard } from 'lucide-react-native';
 import { useSuperAdminLayout } from "@/hooks/super-admin/use-super-admin-layout";
 
 const WEB_SIDEBAR_WIDTH = 260;
@@ -21,7 +21,7 @@ const WEB_SIDEBAR_BORDER_LIGHT = "#F1F5F9";
 const WEB_SIDEBAR_BORDER_DARK = "#404040";
 const TAB_ACCENT = "#FF6600";
 
-type SidebarTabId = "index" | "users" | "stores" | "settings" | "subscription-config";
+type SidebarTabId = "index" | "users" | "stores" | "settings" | "subscriptions";
 type TabLabelPosition = "beside-icon" | "below-icon";
 
 function withTrailingSlash(pathname: string) {
@@ -43,8 +43,8 @@ function activeSidebarTabFromPath(path: string): SidebarTabId {
         return "settings";
     }
 
-    if (p.includes("/subscription-config/") || p.endsWith("/subscription-config/")) {
-        return "subscription-config";
+    if (p.includes("/subscriptions/") || p.endsWith("/subscriptions/")) {
+        return "subscriptions";
     }
 
     return "index";
@@ -268,6 +268,28 @@ export default function SuperAdminLayout() {
                 : undefined,
         }}
       />
+			<Tabs.Screen
+			name="subscriptions"
+			options={{
+				title: "Subscriptions",
+				tabBarIcon: ({ color, size }) => (
+					<CreditCard 
+							size={isWeb ? WEB_TAB_ICON_SIZE : size} 
+							color={isWeb && activeTab === "subscriptions" ? TAB_ACCENT : color} 
+					/>
+				),
+				tabBarLabel: isWeb
+					? ({ color, position }) => (
+									<WebSidebarTabLabel
+											text="Subscriptions"
+											navColor={color}
+											position={position}
+											isRowActive={activeTab === "subscriptions"}
+									/>
+							)
+					: undefined,
+        }}
+      />
       <Tabs.Screen
         name="stores"
         options={{
@@ -288,28 +310,6 @@ export default function SuperAdminLayout() {
                         />
                     )
                 : undefined,
-        }}
-      />
-      <Tabs.Screen
-        name="subscription-config"
-        options={{
-          title: "Subscription",
-          tabBarIcon: ({ color, size }) => (
-            <CircleDollarSign 
-                size={isWeb ? WEB_TAB_ICON_SIZE : size} 
-                color={isWeb && activeTab === "subscription-config" ? TAB_ACCENT : color} 
-            />
-          ),
-          tabBarLabel: isWeb
-            ? ({ color, position }) => (
-                    <WebSidebarTabLabel
-                        text="Subscription"
-                        navColor={color}
-                        position={position}
-                        isRowActive={activeTab === "subscription-config"}
-                    />
-                )
-            : undefined,
         }}
       />
       <Tabs.Screen
