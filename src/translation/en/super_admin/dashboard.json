@@ -5,16 +5,24 @@
     "totalStores": "Total Stores",
     "activeStores": "Active Stores"
   },
-  "analytics": {
-    "user": {
-      "title": "User Analytics",
-      "insights": "User Insights",
-      "desc": "User analytics and behaviors will appear here."
-    },
-    "store": {
-      "title": "Store Analytics",
-      "insights": "Store Insights",
-      "desc": "Store analytics and insights will appear here."
-    }
-  }
+  "timeframe": {
+    "today": "Today",
+    "sevenDays": "7d",
+    "oneMonth": "1m"
+  },
+  "peakHour": "Peak Hour",
+  "mostActiveDay": "Most Active Day",
+  "mostActiveWeek": "Most Active Week",
+  "rangeToday": "Today",
+  "rangeLast7": "Last 7 days",
+  "rangeLast30": "Last 30 days",
+  "returningCustomers": "Returning Customers",
+  "retentionRate": "Retention rate",
+  "userAnalytics": "User Analytics",
+  "storeAnalytics": "Store Analytics",
+  "viewDetails": "View Details",
+  "hideDetails": "Hide Details",
+  "noRecords": "No records for this period.",
+  "loadMore": "Load More",
+  "reset": "Reset"
 }

@@ -1,18 +1,48 @@
 {
   "title": "Subscription",
-  "config": {
-    "enforce": "Enforce Subscription",
-    "enforceDetail": "Require Store Managers to pay after exceeding the free store limit.",
-    "parameters": "Subscription Parameters",
-    "limitLabel": "Free Stores Limit",
-    "priceLabel": "Price (PHP)",
-    "managerSubs": "Manager subscriptions",
-    "managerSubsDetail": "Billing state per store manager (owner).",
-    "exceededManagers": "Exceeded Store Managers",
-    "exceededDetail": "Managers with more than {{limit}} active store(s) and pending applications. Toggle enforcement per manager.",
-    "save": "Save Configurations",
-    "saving": "Saving...",
+  "basic": {
+    "price": "Free",
+    "feature1": "1 store with full loyalty tools",
+    "feature2": "Stamps, rewards, QR, and staff tools"
+  },
+  "pro": {
+    "builtFor": "Built for multiple locations",
+    "priceLabel": "Pro monthly amount (PHP)",
+    "feature1": "Add and run more than one store",
+    "feature2": "Priority support",
+    "feature3": "Access to new premium features as we release them",
+    "saveChanges": "Save Changes"
+  },
+  "managerSubs": {
+    "title": "Manager subscriptions",
+    "detail": "Billing state per store manager.",
+    "empty": "No manager subscriptions found."
+  },
+  "table": {
+    "managerCol": "Store manager",
+    "planCol": "Plan",
+    "paymentsCol": "View payments",
+    "planBasic": "Basic",
+    "planPro": "Pro"
+  },
+  "ledger": {
+    "paymentRef": "Payment reference",
+    "amount": "Amount",
+    "billingStart": "Billing period start",
+    "billingEnd": "Billing period end",
+    "status": "Status",
+    "empty": "No payments yet."
+  },
+  "formError": {
+    "invalidPrice": "Please enter a valid Pro price (PHP).",
+    "saveFailed": "Failed to save Pro price.",
+    "loadPlansFailed": "Failed to load subscription plans.",
+    "loadSubsFailed": "Failed to load manager subscriptions.",
+    "loadLedgerFailed": "Failed to load payments ledger."
+  },
+  "modal": {
     "successTitle": "Successfully Saved!",
-    "successDetail": "Subscription configuration has been saved. Enforcement applies per store manager."
+    "successDetail": "Pro pricing has been saved. Basic remains free.",
+    "okay": "Okay"
   }
 }
