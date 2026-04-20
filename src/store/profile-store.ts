@@ -7,7 +7,7 @@ import {
     updateUserProfileService,
     updateUserSettingsService,
     deleteOldAvatar
-} from "@/services/settings-service";
+} from "@/services/user/settings-service";
 
 
 interface ProfileState {
@@ -77,8 +77,16 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
                     promo_emails: false, //placeholder for future feature
                 }
             })
-        } catch (error) {
+        } catch (error: any) {
             console.error("Profile store load error:", error);
+            if (error?.message === "No User Found") {
+                try {
+                   const { forceDeactivateCurrentDeviceService } = require("@/services/store-manager/device-session-service");
+                   forceDeactivateCurrentDeviceService().catch((e: any) => console.warn("[ProfileStore] Failsafe cleanup failed", e));
+                } catch (e) {
+                   // ignore import errors if we are in a non-manager context where the service doesn't apply
+                }
+            }
         } finally {
             set({ loading: false })
         }

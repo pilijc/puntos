@@ -1,4 +1,20 @@
+import { Platform } from "react-native";
 import { supabase } from "@/supabase/supabase";
+
+export const WEB_APP_UNAVAILABLE_HREF = "/web-unavailable" as const;
+
+export function getWebAdjustedHomeRoute(route: string): string {
+  if (Platform.OS !== "web") return route;
+  if (
+    route === "/(user)" ||
+    route.startsWith("/(user)/") ||
+    route === "/(front_desk)" ||
+    route.startsWith("/(front_desk)/")
+  ) {
+    return WEB_APP_UNAVAILABLE_HREF;
+  }
+  return route;
+}
 
 export type AppHomeRoute = "/(user)" | "/(super_admin)" | "/(front_desk)" | "/(store_manager)";
 
@@ -47,11 +63,6 @@ export async function getRoleTypeForUser(userId: string): Promise<string | null>
     .from("user_roles")
     .select("role_id")
     .eq("user_id", userId);
-
-  // if (userRolesError) {
-  //   console.error("Error querying user_roles:", userRolesError);
-  //   throw userRolesError;
-  // }
 
   console.log("Found user_roles data:", userRoles);
 
@@ -121,18 +132,11 @@ export async function getHomeRouteForUserId(userId: string): Promise<AppHomeRout
     
     console.log(`Determined role type for user ${userId}: ${roleType}`);
     
-    // If no role found, assign default user role
     if (!roleType) {
       console.log(`No role found for user ${userId}, assigning default user role`);
       const { error: insertError } = await supabase
         .from("user_roles")
         .insert({ user_id: userId, role_id: 4, store_id: null });
-      
-      // if (insertError) {
-      //   console.error("Failed to insert default role:", insertError);
-      // } else {
-      //   console.log("Default user role inserted successfully");
-      // }
       
       return "/(user)";
     }

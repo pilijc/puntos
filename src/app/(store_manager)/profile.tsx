@@ -1,19 +1,40 @@
 import React from "react";
-import { SafeAreaView, View, Text, TouchableOpacity, Alert } from "react-native";
+import { SafeAreaView, View, Text, TouchableOpacity, Alert, Platform } from "react-native";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { router } from "expo-router";
 import { supabase } from "@/supabase/supabase";
+import { useDeviceSession } from "@/hooks/store-manager/use-device-session";
 
 export default function StoreManagerProfile() {
+    const { signOutCurrentDevice } = useDeviceSession();
+
     const handleLogout = async () => {
+        if (Platform.OS === "web") {
+            const confirmed = window.confirm("Are you sure you want to log out?");
+            if (confirmed) {
+                const { data: { user } } = await supabase.auth.getUser();
+                if (user) await signOutCurrentDevice(user.id);
+                await supabase.auth.signOut();
+                router.push("/(onboarding)/welcome");
+            }
+            return;
+        }
+
         Alert.alert("Log Out", "Are you sure you want to log out?", [
             { text: "Cancel", style: "cancel" },
             {
                 text: "Log Out",
                 style: "destructive",
                 onPress: async () => {
+                    const { data: { user } } = await supabase.auth.getUser();
+                    if (user) await signOutCurrentDevice(user.id);
+                    
                     await supabase.auth.signOut();
-                    router.replace("/(onboarding)/index");
+                    router.push(
+                      Platform.OS === "web"
+                        ? "/(onboarding)/welcome"
+                        : "/(onboarding)/index",
+                    );
                 },
             },
         ]);

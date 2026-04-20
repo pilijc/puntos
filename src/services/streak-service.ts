@@ -8,6 +8,8 @@ export interface RecordStreakResult {
   justCompleted: boolean;
 }
 
+// NOTE: formatLocalDate is kept for read-only display uses (calendar, earned dates).
+// It is NOT used as authority for reward eligibility — that is handled server-side.
 function formatLocalDate(date: Date) {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -15,127 +17,87 @@ function formatLocalDate(date: Date) {
   return `${year}-${month}-${day}`;
 }
 
+/**
+ * Records a streak day for the user via a server-authoritative DB RPC.
+ *
+ * The RPC (`record_user_streak`) owns all time logic:
+ *   - It computes "today" and "yesterday" from DB now() in the store's snapshotted timezone.
+ *   - It blocks duplicate claims for the same store-local business day.
+ *   - It computes consecutive-day logic from store-local dates, not device dates.
+ *
+ * NOTE (Phase 1): The caller (user-streak-card.tsx) still performs a client-side
+ * "nearby store" gate before invoking this RPC. That gate is intentionally
+ * client-side only in this phase. Server-side location enforcement is deferred
+ * to Phase 2 (location anti-cheat).
+ *
+ * @param pointsPerDay - Ignored; the RPC derives points from the program config.
+ * @param streakLength - Ignored; the RPC derives the cap from the program config.
+ */
 export async function recordUserStreak(
   userId: string,
   storeId: number,
   storeStreakId: number,
-  pointsPerDay: number = 0,
-  streakLength: number = 0,
+  pointsPerDay: number = 0,   // kept for call-site compatibility, unused
+  streakLength: number = 0,   // kept for call-site compatibility, unused
 ): Promise<RecordStreakResult> {
-  const d = new Date();
-  const today = formatLocalDate(d);
-  d.setDate(d.getDate() - 1);
-  const yesterday = formatLocalDate(d);
-
-  const { data: existing } = await supabase
-    .from("user_streaks")
-    .select("*")
-    .eq("user_id", userId)
-    .eq("store_id", storeId)
-    .eq("store_streak_id", storeStreakId)
-    .maybeSingle();
-
-  if (existing) {
-    // BLOCKER: Already earned today — no double-dipping
-    if (existing.last_activity_date === today) {
-      return { alreadyRecorded: true, newStreakDays: existing.streak_days, pointsEarned: 0, justCompleted: false };
-    }
-
-    // BLOCKER: Already completed the streak program — cannot earn more days
-    const currentTotal = existing.total_earned_days ?? 0;
-    if (streakLength > 0 && currentTotal >= streakLength) {
-      return { alreadyRecorded: true, newStreakDays: existing.streak_days, pointsEarned: 0, justCompleted: false };
-    }
-
-    const isConsecutive = existing.last_activity_date === yesterday;
-    const newStreakDays = isConsecutive ? existing.streak_days + 1 : 1;
-    const newTotalEarned = currentTotal + 1;
-    const newPointsEarned = Number(existing.points_earned ?? 0) + pointsPerDay;
-
-    // Mark as completed when the user hits exactly the target
-    const justCompleted = streakLength > 0 && newTotalEarned >= streakLength;
-    const nowIso = new Date().toISOString();
-
-    const { error } = await supabase
-      .from("user_streaks")
-      .update({
-        streak_days: newStreakDays,
-        last_activity_date: today,
-        total_earned_days: newTotalEarned,
-        points_earned: newPointsEarned,
-        updated_at: nowIso,
-        ...(justCompleted && {
-          status: "completed",
-          completed_at: nowIso,
-        }),
-      })
-      .eq("id", existing.id);
-
-    if (error) throw new Error(error.message);
-
-    // Log the individual earned day — UNIQUE constraint prevents duplicates
-    await supabase.from("streak_events").insert({
-      user_id: userId,
-      store_id: storeId,
-      user_streak_id: existing.id,
-      store_streak_id: storeStreakId,
-      earned_date: today,
+  try {
+    const { data, error } = await supabase.rpc('record_user_streak', {
+      p_user_id: userId,
+      p_store_id: storeId,
+      p_store_streak_id: storeStreakId,
     });
 
-    return { alreadyRecorded: false, newStreakDays, pointsEarned: pointsPerDay, justCompleted };
+    if (error) {
+      console.error('[recordUserStreak] RPC error:', error.message);
+      throw new Error(error.message);
+    }
+
+    const result = data as {
+      alreadyRecorded: boolean;
+      newStreakDays: number;
+      pointsEarned: number;
+      justCompleted: boolean;
+      earnedDate?: string;
+      programTimezone?: string;
+      reason?: string;
+    };
+
+    return {
+      alreadyRecorded: result.alreadyRecorded ?? false,
+      newStreakDays: result.newStreakDays ?? 0,
+      pointsEarned: result.pointsEarned ?? 0,
+      justCompleted: result.justCompleted ?? false,
+    };
+  } catch (err) {
+    console.error('[recordUserStreak] Exception:', err);
+    throw err;
   }
-
-  // New record — first ever streak for this store
-  // Edge-case: if streakLength is 1, it's immediately completed
-  const justCompleted = streakLength > 0 && streakLength <= 1;
-  const nowIso = new Date().toISOString();
-
-  const { error, data: inserted } = await supabase
-    .from("user_streaks")
-    .insert({
-      user_id: userId,
-      store_id: storeId,
-      store_streak_id: storeStreakId,
-      streak_days: 1,
-      last_activity_date: today,
-      total_earned_days: 1,
-      points_earned: pointsPerDay,
-      status: justCompleted ? "completed" : "in_progress",
-      ...(justCompleted && { completed_at: nowIso }),
-    })
-    .select("id")
-    .single();
-
-  if (error) throw new Error(error.message);
-
-  // Log the first earned day for this streak
-  if (inserted?.id) {
-    await supabase.from("streak_events").insert({
-      user_id: userId,
-      store_id: storeId,
-      user_streak_id: inserted.id,
-      store_streak_id: storeStreakId,
-      earned_date: today,
-    });
-  }
-
-  return { alreadyRecorded: false, newStreakDays: 1, pointsEarned: pointsPerDay, justCompleted };
 }
 
 /**
  * Fetch all earned dates from streak_events for a given user + store.
  * Returns a Set of "YYYY-MM-DD" strings in the user's LOCAL timezone.
  * Used by the activity calendar so it shows real per-day history.
+ *
+ * Pass storeStreakId to scope results to a specific program and prevent old
+ * program events from contaminating the new program's weekly circles.
  */
 export async function getStreakEarnedDates(
   userId: string,
   storeId: number,
+  storeStreakId?: number,
 ): Promise<Set<string>> {
-  const { data, error } = await supabase
+  let query = supabase
     .from("streak_events")
     .select("earned_date")
     .eq("user_id", userId)
-    .eq("store_id", storeId)
+    .eq("store_id", storeId);
+
+  if (storeStreakId) {
+    query = query.eq("store_streak_id", storeStreakId);
+  }
+
+  const { data, error } = await query
     .order("earned_date", { ascending: false })
     .limit(365); // cap at one year of history
 
@@ -323,13 +285,23 @@ export async function getUserStreakByStore(
     if (streakError) throw new Error(streakError.message);
     if (storeError) throw new Error(storeError.message);
 
-    const streaks = ((streakRows ?? []) as unknown as UserStreak[]).filter((streak) =>
-      isValidStreakStore(streak),
-    );
+    // Filter 1: store must be active (existing gate).
+    // Filter 2: exclude rows linked to an ended program — an old in-progress
+    //   user_streaks row that outlived its program must NOT be returned as the
+    //   active streak. Returning it would bring the old program's start_at into
+    //   the streak log card, causing current-week circles to incorrectly fall
+    //   through to "missed" instead of "pre-program".
+    //   Exception: keep "completed" user rows so bonus claims still work.
+    const streaks = ((streakRows ?? []) as unknown as UserStreak[]).filter((streak) => {
+      if (!isValidStreakStore(streak)) return false;
+      const programStatus = streak.store_streaks?.status;
+      if (programStatus === "ended" && streak.status !== "completed") return false;
+      return true;
+    });
 
     const activeProgramStreak =
       streaks.find((streak) => streak.store_streaks?.status === "active") ??
-      streaks.find((streak) => streak.status === "in_progress") ??
+      streaks.find((streak) => streak.status === "in_progress" && streak.store_streaks?.status !== "ended") ??
       streaks[0];
 
     if (activeProgramStreak) {

@@ -116,6 +116,7 @@ export async function processVoucherCode(
                 store_id: storeId,
                 amount: amount,
                 created_at: currentTime,
+                points_earned: pointsEarned,
             })
             .select()
             .single();
@@ -137,14 +138,31 @@ export async function processVoucherCode(
             };
         }
 
-        // Update with points earned
+       
         const { error: updateError } = await supabase
+            .from("purchases")
+            .update({ 
+                points_earned: pointsEarned,
+                metadata: {
+                    transaction_type: "voucher",
+                    processed_by_staff: storeStaffId,
+                    voucher_id: voucher.id
+                }
+            })
+            .eq("id", purchaseData.id);
+
+        if (updateError) {
+            console.error("Error updating purchase with staff info:", updateError);
+         }
+
+        // Update with points  
+        const { error: pointsUpdateError } = await supabase
             .from("purchases")
             .update({ points_earned: pointsEarned })
             .eq("id", purchaseData.id);
 
-        if (updateError) {
-            console.error("Purchase update error:", updateError);
+        if (pointsUpdateError) {
+            console.error("Purchase update error:", pointsUpdateError);
             
             // Rollback voucher status and delete purchase
             await supabase

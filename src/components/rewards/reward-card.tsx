@@ -3,6 +3,7 @@ import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import React from "react";
 import type { RewardItem } from "@/data/rewards";
 import { useTranslation } from "react-i18next";
+import { Button } from "@/components/button"
 
 type RewardCardProps = {
   reward: RewardItem;
@@ -25,7 +26,7 @@ export default function RewardCard({
   return (
     <Pressable
       onPress={onPress}
-      className="bg-white dark:bg-darkBackgroundMuted rounded-2xl p-3 flex-row gap-x-3"
+      className="bg-white dark:bg-darkBackgroundMuted rounded-2xl px-3 py-4 flex-row items-center gap-x-3"
     >
       <View className="w-16 h-16 rounded-xl bg-neutral-100 dark:bg-darkBackgroundCard items-center justify-center overflow-hidden">
         {reward.imageUrl ? (
@@ -43,7 +44,7 @@ export default function RewardCard({
         <Text className="font-poppins-semibold text-neutral-900 dark:text-darkTextPrimary">
           {reward.title}
         </Text>
-        <Text className="text-xs text-neutral-500 dark:text-darkTextSecondary font-poppins mt-1">
+        <Text className="text-xs text-neutral-500 dark:text-darkTextSecondary font-poppins mt-.5">
           {reward.desc}
         </Text>
         {storeName ? (
@@ -55,14 +56,12 @@ export default function RewardCard({
             </Text>
           </View>
         ) : null}
-        <View className="flex-row items-center justify-between mt-3">
+        <View className="flex-row items-center justify-between mt-1">
           <Text className="text-primary font-poppins-semibold">
             {reward.points.toLocaleString()} {translate("user.rewards.rewardCard.pointsSuffix")}
           </Text>
           <View className={`px-3 py-1 rounded-full ${badgeClass}`}>
-            <Text
-              className={`text-[10px] font-poppins-semibold ${badgeTextClass}`}
-            >
+            <Text className={`text-[10px] font-poppins-semibold ${badgeTextClass}`}>
               {isRedeemable ? translate("user.rewards.rewardCard.redeem") : translate("user.rewards.rewardCard.insufficient")}
             </Text>
           </View>

@@ -9,6 +9,7 @@ export interface CreateStorePayload {
     longitude?: number | null;
     phone?: string;
     registrationNumber?: string;
+    timezone?: string | null;
     businessDocumentImage?: string | null;
     storeOpen?: string | null;
     storeClose?: string | null;
@@ -28,6 +29,7 @@ export interface StoreRow {
     radius: number | null;
     status: string;
     is_active: boolean;
+    timezone: string | null;
     logo: string | null;
     owner_id: string | null;
     phone: string | null;
@@ -37,6 +39,27 @@ export interface StoreRow {
     store_open: string | null;
     store_close: string | null;
     created_at: string;
+    approved_at: string | null;
+}
+
+/**
+ * Calls the DB RPC to resolve a timezone string from a lon/lat point.
+ * Returns null if PostGIS boundary data hasn't been loaded yet or if no
+ * polygon covers the given coordinates.
+ */
+export async function resolveStoreTimezone(
+    longitude: number,
+    latitude: number
+): Promise<string | null> {
+    const { data, error } = await supabase.rpc('resolve_store_timezone', {
+        p_longitude: longitude,
+        p_latitude: latitude,
+    });
+    if (error) {
+        console.warn('[resolveStoreTimezone] RPC error:', error.message);
+        return null;
+    }
+    return (data as string | null) ?? null;
 }
 
 /**
@@ -54,6 +77,7 @@ export async function createStore(payload: CreateStorePayload): Promise<StoreRow
             address: payload.address,
             latitude: payload.latitude ?? null,
             longitude: payload.longitude ?? null,
+            timezone: payload.timezone ?? null,
             phone: payload.phone ?? null,
             registration_number: payload.registrationNumber ?? null,
             business_document_image: payload.businessDocumentImage ?? null,
@@ -186,7 +210,7 @@ export async function getAllStores(): Promise<AdminStoreRow[]> {
         .select(`
             id, name, type, address, latitude, longitude, radius,
             status, is_active, logo, owner_id,
-            phone, registration_number, business_document_image, store_pictures, store_open, store_close, created_at,
+            phone, registration_number, business_document_image, store_pictures, store_open, store_close, created_at, approved_at,
             users!owner_id ( name )
         `)
         .order("created_at", { ascending: false });
@@ -263,7 +287,6 @@ export async function uploadStoreImage(
       : "store/pictures";
   const filePath = `${folder}/${storeId}/${Date.now()}.${ext}`;
 
-  console.log("filePath", filePath);
   const { error: uploadError } = await supabase.storage
     .from("puntos-public")
     .upload(filePath, bytes, { contentType: mimeType, upsert: true });

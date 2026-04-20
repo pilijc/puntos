@@ -1,15 +1,45 @@
-import { Tabs } from 'expo-router';
-import React from 'react';
+import { Tabs, Redirect } from 'expo-router';
+import React, { useEffect } from 'react';
 import { useColorScheme, Platform } from 'react-native';
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 import { Compass, Store, History, Settings } from 'lucide-react-native';
+import { useProfile } from '@/hooks/user/use-profile';
+import { useLocationSync } from '@/hooks/user/use-location-sync';
+import { getMutedStores } from '@/services/user/mute-service';
+import { useStoreStore } from '@/store/user/store-store';
 
-export default function TabLayout() {
+function UserTabs() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
   const { t: translate } = useTranslation();
   const insets = useSafeAreaInsets();
+  const { user, preferences } = useProfile();
+  useLocationSync(user?.id, preferences?.location_enabled ?? false);
+  const { setMutedStoreIds, setMutedStoresHydrated } = useStoreStore();
+
+  useEffect(() => {
+    let isActive = true;
+    if (user?.id) {
+      setMutedStoresHydrated(false);
+      getMutedStores()
+        .then((ids) => {
+          if (isActive) {
+            setMutedStoreIds(ids);
+            setMutedStoresHydrated(true);
+          }
+        })
+        .catch((err) => {
+          console.error("[Mute] fetch failed:", err);
+          if (isActive) setMutedStoresHydrated(true);
+        });
+    } else {
+      setMutedStoresHydrated(false);
+    }
+    return () => {
+      isActive = false;
+    };
+  }, [user?.id]);
 
   return (
     <Tabs
@@ -58,10 +88,16 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-          name="qr"
-          options={{ href: null }}
+        name="qr"
+        options={{ href: null }}
       />
     </Tabs>
   );
 }
 
+export default function TabLayout() {
+  if (Platform.OS === "web") {
+    return <Redirect href="/web-unavailable" />;
+  }
+  return <UserTabs />;
+}

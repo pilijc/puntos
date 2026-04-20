@@ -6,7 +6,7 @@ import {
   AnimatedView,
   Image,
 } from "@/tw";
-import { CalendarDays, ChevronDown, ChevronLeft, ChevronUp, CircleCheck, Gift, MapPinOff } from "lucide-react-native";
+import { CalendarDays, ChevronDown, ChevronLeft, ChevronUp, CircleCheck, ExternalLink, Gift, MapPinOff, ReceiptText } from "lucide-react-native";
 import React, { useCallback, useEffect, useState } from "react";
 import Animated, { FadeIn, FadeOut, Layout, Easing, useSharedValue, useAnimatedStyle, withSpring, withTiming } from "react-native-reanimated";
 import { useRouter, useLocalSearchParams } from "expo-router";
@@ -26,6 +26,9 @@ import { useRewardsDataStore } from "@/hooks/use-rewards-data";
 import { useStoreOverviewData } from "@/hooks/use-store-overview-data";
 import { ProgramSkeleton } from "@/components/skeleton/user/program-skeleton";
 import StoreScreenContainer from "@/components/ui/store-screen-container";
+import { MuteStoreButton } from "@/components/users/stores/mute-store-button";
+import { supabase } from "@/supabase/supabase";
+import { getUserTransactionHistory } from "@/services/user/qr-service";
 
 const { width: screenWidth } = Dimensions.get("window");
 
@@ -57,11 +60,11 @@ export default function StoreOverviewDetail() {
     setIsSwitchingStore,
     isStamping,
   } = useRewardsUiStore();
-  
+
   const { fetchRewardsData } = useRewardsDataStore();
-  
+
   const router = useRouter();
-  
+
   const {
     activeStampProgramRewards,
     handleCarouselInteraction,
@@ -80,11 +83,12 @@ export default function StoreOverviewDetail() {
     fetchedStoreIds,
     refetchStreaks,
     upcomingStreak,
+    isLoadingRewards,
   } = useStoreOverviewData(storeId);
 
   // If a specific store is requested, we don't necessarily need to snap the carousel 
   // unless we want to show it in context. For now, let's keep it simple.
-  
+
   const handleHeroSnap = useCallback((index: number) => {
     setHeroIndex(index);
     setIsSwitchingStore(true);
@@ -108,19 +112,44 @@ export default function StoreOverviewDetail() {
 
   const [isRefreshingLocal, setIsRefreshingLocal] = useState(false);
 
+  // ── Store-specific transaction history ──
+  const [storeTransactions, setStoreTransactions] = useState<any[]>([]);
+  const [loadingTx, setLoadingTx] = useState(false);
+
+  useEffect(() => {
+    if (!storeId || storesWithLocation.length === 0) return;
+    (async () => {
+      try {
+        setLoadingTx(true);
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+        const all = await getUserTransactionHistory(user.id);
+        const currentStore = storesWithLocation.find(s => s.id.toString() === storeId);
+        const filtered = currentStore
+          ? all.filter((tx: any) => tx.title === currentStore.name)
+          : all;
+        setStoreTransactions(filtered.slice(0, 3));
+      } catch {
+        // silent
+      } finally {
+        setLoadingTx(false);
+      }
+    })();
+  }, [storeId, storesWithLocation]);
+
   const onRefreshLocal = useCallback(async () => {
     setIsRefreshingLocal(true);
-    
+
     const promises: Promise<any>[] = [handleRefresh(storeId)];
     if (refetchStreaks) promises.push(refetchStreaks());
-    
+
     if (storeId) {
       const numericStoreId = Number(storeId);
       if (!isNaN(numericStoreId)) {
         promises.push(fetchRewardsData([numericStoreId], [numericStoreId]));
       }
     }
-    
+
     await Promise.all(promises);
     setIsRefreshingLocal(false);
   }, [handleRefresh, storeId, fetchRewardsData, refetchStreaks]);
@@ -152,16 +181,18 @@ export default function StoreOverviewDetail() {
         />
       }
     >
-      <View className="flex-row items-center gap-x-4 mb-[-12px] z-50 pt-2 pl-2">
-        <TouchableOpacity 
+      <View className="flex-row items-center justify-between gap-x-4 mb-[-12px] z-50 px-2">
+        <TouchableOpacity
           onPress={() => router.back()}
-          className="p-1 -ml-1"
+          className="p-1 -ml-1 bg-black/30 rounded-full"
         >
           <ChevronLeft
             size={36}
             color="#FFFFFF"
           />
         </TouchableOpacity>
+
+        <MuteStoreButton storeId={Number(storeId)} />
       </View>
 
       <View className="gap-y-0 -mt-16">
@@ -336,7 +367,7 @@ export default function StoreOverviewDetail() {
                   onScrollStart={handleCarouselInteraction}
                   onSnapToItem={(index) => setCarouselIndex(index)}
                   renderItem={({ item: streak }) => (
-                     <UserStreakCard
+                    <UserStreakCard
                       key={streak.store_id}
                       streak={streak}
                       nearbyStores={nearbyStores}
@@ -421,7 +452,15 @@ export default function StoreOverviewDetail() {
               className="flex-row items-center gap-x-1.5 bg-white dark:bg-darkBackgroundCard border border-primary px-3 py-1.5 rounded-full"
               onPress={() => {
                 const found = storesWithLocation.find(s => s.id.toString() === storeId);
-                router.push({ pathname: "/store/claim-rewards", params: { storeName: found?.name, storeLogo: found?.logo ?? "", storeAddress: found?.address ?? "" } });
+                router.push({
+                  pathname: "/store/claim-rewards",
+                  params: {
+                    storeId,
+                    storeName: found?.name,
+                    storeLogo: found?.logo ?? "",
+                    storeAddress: found?.address ?? ""
+                  }
+                });
               }}
             >
               <Gift size={14} color="#FF6600" />
@@ -433,20 +472,106 @@ export default function StoreOverviewDetail() {
         </View>
 
         <View className="gap-y-4">
-          {sortedRewards.map((item) => {
-            const store = storesWithLocation.find(
-              (entry) => entry.id.toString() === item.storeId,
-            );
-            return (
-              <RewardCard
-                key={item.id}
-                reward={item}
-                storeName={store?.name}
-                storeLocation={store?.address}
-              />
-            );
-          })}
+          {isLoadingRewards ? (
+            <View className="items-center py-8">
+              <ActivityIndicator size="small" color="#FF6600" />
+              <Text className="text-neutral-400 font-poppins text-sm mt-2">
+                {translate("user.rewards.loading")}
+              </Text>
+            </View>
+          ) : sortedRewards.length === 0 ? (
+            <View className="items-center py-8 bg-white dark:bg-darkBackgroundMuted rounded-xl">
+              <Gift size={40} color="#9CA3AF" />
+              <Text className="text-neutral-500 font-poppins-semibold text-sm mt-3">
+                {translate("user.rewards.noRewards")}
+              </Text>
+              <Text className="text-neutral-400 font-poppins text-xs mt-1 text-center px-4">
+                {translate("user.rewards.noRewardsSubtitle")}
+              </Text>
+            </View>
+          ) : (
+            sortedRewards.slice(0, 3).map((item) => {
+              return (
+                <RewardCard
+                  key={item.id}
+                  reward={item}
+                />
+              );
+            })
+          )}
         </View>
+      </View>
+
+      {/* ── Transactions Section ── */}
+      <View className="gap-y-3">
+        {/* Header */}
+        <View className="flex-row items-center justify-between">
+          <Text className="text-lg font-poppins-semibold text-neutral-900 dark:text-darkTextPrimary">
+            Transactions
+          </Text>
+          <TouchableOpacity
+            className="flex-row items-center gap-x-1.5 bg-white dark:bg-darkBackgroundCard border border-primary px-3 py-1.5 rounded-full"
+            onPress={() => router.push("/(user)/history")}
+          >
+            <Text className="text-primary font-poppins-semibold text-xs">
+              See All
+            </Text>
+            <ExternalLink size={12} color="#FF6600" />
+          </TouchableOpacity>
+        </View>
+
+        {/* Transaction cards */}
+        {loadingTx ? (
+          <View className="items-center py-6">
+            <ActivityIndicator size="small" color="#FF6600" />
+          </View>
+        ) : storeTransactions.length === 0 ? (
+          <View className="bg-white dark:bg-darkBackgroundCard rounded-2xl border border-neutral-100 dark:border-darkBorder items-center py-8 gap-y-2">
+            <ReceiptText size={28} color="#d1d5db" />
+            <Text className="text-xs font-poppins text-neutral-400 dark:text-darkTextSecondary">
+              No transactions yet
+            </Text>
+          </View>
+        ) : (
+          <View className="gap-y-2">
+            {storeTransactions.map((item: any) => (
+              <View
+                key={item.id}
+                className="bg-white dark:bg-darkBackgroundCard rounded-2xl overflow-hidden"
+                style={{ borderLeftWidth: 3, borderLeftColor: "#FF6600" }}
+              >
+                <View className="flex-row items-center pl-3 pr-4 py-3 gap-x-3">
+                  {/* Icon badge */}
+                  <View className="w-10 h-10 rounded-xl bg-orange-50 dark:bg-primary/10 items-center justify-center flex-shrink-0">
+                    <Text className="text-base">{item.icon ?? "🛒"}</Text>
+                  </View>
+
+                  {/* Type label + date/time */}
+                  <View className="flex-1">
+                    <Text
+                      numberOfLines={1}
+                      className="text-[13px] font-poppins-semibold text-neutral-800 dark:text-darkTextPrimary"
+                    >
+                      {translate(item.subtitle)}
+                    </Text>
+                    <Text className="text-[11px] font-poppins text-neutral-400 dark:text-darkTextSecondary mt-0.5">
+                      {item.time
+                        ? `${new Date(item.time).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })} · ${new Date(item.time).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true })}`
+                        : ""}
+                    </Text>
+                  </View>
+
+                  {/* Points pill */}
+                  <View className={`px-2.5 py-1 rounded-full ${item.positive ? "bg-emerald-50 dark:bg-emerald-500/10" : "bg-primary/10 dark:bg-primary/10"}`}>
+                    <Text className={`text-sm font-poppins-bold ${item.positive ? "text-emerald-500" : "text-primary"}`}>
+                      {item.points}
+                    </Text>
+                  </View>
+                </View>
+              </View>
+            ))}
+          </View>
+        )}
       </View>
 
       <View className="items-center pt-4">

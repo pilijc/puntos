@@ -39,8 +39,52 @@ export interface UpcomingStreakProgram {
 
 export type StampResult = {
   success: boolean;
-  reason?: "already_stamped_today" | "already_completed" | "stamp_not_enabled" | "card_expired" | "error";
+  reason?: "already_stamped_today" | "already_completed" | "stamp_not_enabled" | "card_expired" | "timezone_missing" | "duplicate" | "error";
 };
+
+/**
+ * Issues a stamp for a verified purchase via a server-authoritative DB RPC.
+ * This is the canonical way to award stamps. The RPC uses DB time (now()) for
+ * all timestamps and enforces the uniqueness constraint on purchase_id so the
+ * same purchase can never mint more than one stamp.
+ *
+ * @param purchaseId - The `purchases.id` of the completed, verified purchase.
+ */
+export async function issueStampForPurchase(purchaseId: number | string): Promise<StampResult> {
+  try {
+    const { data, error } = await supabase.rpc('issue_stamp_for_purchase', {
+      p_purchase_id: Number(purchaseId),
+    });
+
+    if (error) {
+      console.error('[issueStampForPurchase] RPC error:', error.message);
+      return { success: false, reason: 'error' };
+    }
+
+    const result = data as {
+      success: boolean;
+      duplicate?: boolean;
+      reason?: string;
+    };
+
+    if (result.duplicate) {
+      // Same purchase already stamped — idempotent, treat as success
+      return { success: true, reason: 'duplicate' };
+    }
+
+    if (!result.success) {
+      return {
+        success: false,
+        reason: (result.reason as StampResult['reason']) ?? 'error',
+      };
+    }
+
+    return { success: true };
+  } catch (err) {
+    console.error('[issueStampForPurchase] Exception:', err);
+    return { success: false, reason: 'error' };
+  }
+}
 
 export async function getUserStamps(userId: string): Promise<StampProgress[]> {
   try {
@@ -102,6 +146,11 @@ function todayLocalDate(): string {
   return `${year}-${month}-${day}`;
 }
 
+/**
+ * @deprecated Stamps must come from verified purchases only. Use
+ * `issueStampForPurchase(purchaseId)` in the QR/purchase flow instead.
+ * This function is kept temporarily for backward compat but will be removed.
+ */
 export async function addStamp(
   userId: string,
   storeId: number | string,
@@ -435,19 +484,41 @@ export async function getStoresWithEnabledStreaks(
   }
 }
 
+export interface ActiveStreakProgram {
+  id: number;
+  store_id: number;
+  title: string | null;
+  start_at: string | null;
+  end_date: string | null;
+  streak_length: number | null;
+  max_days_cap: number | null;
+  fixed_points_per_day: number | null;
+  points_mode: string | null;
+  starting_points: number | null;
+  increment_value: number | null;
+  completion_bonus_points: number | null;
+  reward_description: string | null;
+  status: string | null;
+}
+
 /**
- * Returns a map of storeId → active store_streaks.id for the given stores.
- * Used to populate store_streak_id in virtual (first-time) streak entries.
+ * Returns a map of storeId → full active store_streaks program for the given stores.
+ * Used to populate store_streak_id AND program boundary data (start_at, end_date)
+ * in virtual (first-time) streak entries so circle classifiers work correctly.
  */
 export async function getActiveStreakProgramsByStore(
   storeIds: number[],
-): Promise<Map<number, number>> {
+): Promise<Map<number, ActiveStreakProgram>> {
   if (storeIds.length === 0) return new Map();
 
   try {
     const { data, error } = await supabase
       .from("store_streaks")
-      .select("id, store_id")
+      .select(`
+        id, store_id, title, start_at, end_date, streak_length, max_days_cap,
+        fixed_points_per_day, points_mode, starting_points, increment_value,
+        completion_bonus_points, reward_description, status
+      `)
       .in("store_id", storeIds)
       .eq("status", "active");
 
@@ -456,9 +527,24 @@ export async function getActiveStreakProgramsByStore(
       return new Map();
     }
 
-    const map = new Map<number, number>();
+    const map = new Map<number, ActiveStreakProgram>();
     for (const row of data ?? []) {
-      map.set(Number(row.store_id), Number(row.id));
+      map.set(Number(row.store_id), {
+        id: Number(row.id),
+        store_id: Number(row.store_id),
+        title: row.title ?? null,
+        start_at: row.start_at ?? null,
+        end_date: row.end_date ?? null,
+        streak_length: row.streak_length ?? null,
+        max_days_cap: row.max_days_cap ?? null,
+        fixed_points_per_day: row.fixed_points_per_day ?? null,
+        points_mode: row.points_mode ?? null,
+        starting_points: row.starting_points ?? null,
+        increment_value: row.increment_value ?? null,
+        completion_bonus_points: row.completion_bonus_points ?? null,
+        reward_description: row.reward_description ?? null,
+        status: row.status ?? null,
+      });
     }
     return map;
   } catch (error) {

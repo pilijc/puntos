@@ -1,64 +1,60 @@
-import React, { useEffect, useState, useCallback } from "react";
-import { Switch, RefreshControl } from "react-native";
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  ScrollView,
-  SafeAreaView,
-} from "@/tw";
+import React, { useState, useCallback, useMemo } from "react";
+import { RefreshControl, Platform } from "react-native";
+import { View, Text, TouchableOpacity, ScrollView, SafeAreaView } from "@/tw";
 import { Image } from "expo-image";
 import { useRouter, useFocusEffect } from "expo-router";
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { StoreRow, getMyStores } from "@/services/store-service";
+import { useTranslation } from "react-i18next";
+import { StoreRow } from "@/services/store-service";
 import { useManagerStoresStore } from "@/store/manager-stores-store";
+import { AlertCircle, ChartBarStacked, ChevronRight, MapPin, Plus, Store } from "lucide-react-native";
+import { Modal, type ModalButton } from "@/components/modal";
+import { canOwnerCreateAnotherStore } from "@/services/store-manager/subscription-limits";
 import { supabase } from "@/supabase/supabase";
-import { getStoreByOwnerId } from "@/services/store-manager/payment-service";
-import PaymentModal from "@/components/payment/paymentBoxModal";
 
 type TabKey = "all" | "active" | "pending" | "inactive";
 
-const TABS: { key: TabKey; label: string }[] = [
-  { key: "all", label: "All" },
-  { key: "active", label: "Active" },
-  { key: "pending", label: "Pending" },
-  { key: "inactive", label: "Inactive" },
-];
+const WEB_MAX_WIDTH = 896;
 
-const STATUS_BADGE: Record<
-  string,
-  { label: string; bg: string; text: string }
+const STATUS_BADGE_STYLE: Record<
+  "active" | "pending_review" | "inactive",
+  { bg: string; text: string }
 > = {
   active: {
-    label: "Active",
     bg: "bg-green-100",
     text: "text-green-700",
   },
   pending_review: {
-    label: "Pending",
     bg: "bg-amber-100",
     text: "text-amber-700",
   },
   inactive: {
-    label: "Inactive",
     bg: "bg-slate-100",
     text: "text-slate-500",
   },
 };
 
+function storeStatusBadgeStyle(status: string) {
+  if (status === "active" || status === "pending_review" || status === "inactive") {
+    return STATUS_BADGE_STYLE[status];
+  }
+  return STATUS_BADGE_STYLE.inactive;
+}
+
 function StoreCard({ store, router }: { store: StoreRow; router: any }) {
+  const { t: translate } = useTranslation();
   const status = store.status ?? "inactive";
-  const badge = STATUS_BADGE[status] ?? STATUS_BADGE.inactive;
+  const badgeStyle = storeStatusBadgeStyle(status);
+  const badgeLabelKey =
+    status === "active" || status === "pending_review" || status === "inactive"
+      ? status
+      : "inactive";
 
   return (
     <TouchableOpacity
       className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl overflow-hidden mb-3"
       activeOpacity={0.95}
       onPress={() =>
-        router.push({
-          pathname: `/(store_manager)/view-store/${store.id}`,
-          params: { storeId: store.id },
-        })
+        router.push(`/(store_manager)/view-store/${store.id}`)
       }
     >
       <View className="p-4 flex-row gap-3">
@@ -70,7 +66,7 @@ function StoreCard({ store, router }: { store: StoreRow; router: any }) {
               contentFit="cover"
             />
           ) : (
-            <MaterialIcons name="storefront" size={26} color="#94A3B8" />
+            <Store size={26} color="#94A3B8" />
           )}
         </View>
         <View className="flex-1 justify-center gap-y-1">
@@ -81,26 +77,26 @@ function StoreCard({ store, router }: { store: StoreRow; router: any }) {
             >
               {store.name}
             </Text>
-            <View className={`px-2 py-0.5 rounded-full ${badge.bg}`}>
+            <View className={`self-center h-5 px-2 rounded-full ${badgeStyle.bg} items-center justify-center`}>
               <Text
-                className={`text-[9px] font-poppins-bold uppercase tracking-wider ${badge.text}`}
+                className={`text-[9px] leading-4 font-poppins-bold uppercase tracking-wider ${badgeStyle.text}`}
               >
-                {badge.label}
+                {translate(`storeManager.stores.badge.${badgeLabelKey}`)}
               </Text>
             </View>
           </View>
           <View className="flex-row items-center gap-1">
-            <MaterialIcons name="location-on" size={12} color="#94A3B8" />
+            <MapPin size={12} color="#94A3B8" />
             <Text
               className="text-xs font-poppins text-slate-400 dark:text-slate-500 flex-1"
               numberOfLines={1}
             >
-              {store.address ?? "No address provided"}
+              {store.address ?? translate("storeManager.stores.noAddress")}
             </Text>
           </View>
           {store.type ? (
             <View className="flex-row items-center gap-1">
-              <MaterialIcons name="category" size={12} color="#94A3B8" />
+              <ChartBarStacked size={12} color="#94A3B8" />
               <Text
                 className="text-xs font-poppins text-slate-400 dark:text-slate-500"
                 numberOfLines={1}
@@ -144,18 +140,29 @@ function SkeletonCard() {
 }
 
 export default function StoreManagerStores() {
+  const { t: translate } = useTranslation();
   const [activeTab, setActiveTab] = useState<TabKey>("all");
-
   const router = useRouter();
-
   const { stores, loading, error, hasFetchedOnce, fetchStores } = useManagerStoresStore();
-
-  const [selectedStore, setSelectedStore] = useState<StoreRow | null>(null);
-  const [modalVisible, setModalVisible] = useState(false);
-  const [user, setUser] = useState<string | null>(null);
-  const [hasPaidStoreFee, setHasPaidStoreFee] = useState(false);
-  const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [createGuard, setCreateGuard] = useState<{ checked: boolean; allowed: boolean }>({
+    checked: false,
+    allowed: true,
+  });
+  const [modal, setModal] = useState<{
+    title: string;
+    message: string;
+    buttons: ModalButton[];
+  } | null>(null);
+
+  const tabs = useMemo(
+    () =>
+      (["all", "active", "pending", "inactive"] as const).map((key) => ({
+        key,
+        label: translate(`storeManager.stores.tabs.${key}`),
+      })),
+    [translate],
+  );
 
   const filtered = React.useMemo(() => {
     if (activeTab === "all") return stores;
@@ -169,9 +176,24 @@ export default function StoreManagerStores() {
     }
   }, [hasFetchedOnce, fetchStores]);
 
+  const refreshCreateGuard = useCallback(async () => {
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user?.id) return;
+      const guard = await canOwnerCreateAnotherStore(user.id);
+      setCreateGuard({ checked: true, allowed: guard.allowed });
+    } catch (e) {
+      // If this check fails for any reason, don't block navigation; DB guard still enforces the limit.
+      setCreateGuard({ checked: true, allowed: true });
+    }
+  }, []);
+
   const onRefresh = async () => {
     setRefreshing(true);
     await fetchStores(true);
+    await refreshCreateGuard();
   };
 
   useFocusEffect(
@@ -179,77 +201,163 @@ export default function StoreManagerStores() {
       if (hasFetchedOnce) {
         fetchStores();
       }
-    }, [hasFetchedOnce, fetchStores])
+      void refreshCreateGuard();
+    }, [hasFetchedOnce, fetchStores, refreshCreateGuard])
   );
+
+  const handleCreatePress = useCallback(() => {
+    if (createGuard.checked && !createGuard.allowed) {
+      setModal({
+        title: "Upgrade required",
+        message:
+          "You've reached the Free plan limit of one store. To add more stores, please subscribe to the Pro plan.",
+        buttons: [
+          {
+            label: "Subscribe",
+            variant: "primary",
+            onPress: () => {
+              setModal(null);
+              router.push("/(store_manager)/subscription");
+            },
+          },
+          {
+            label: translate("label.cancel"),
+            variant: "secondary",
+            onPress: () => setModal(null),
+          },
+        ],
+      });
+      return;
+    }
+
+    router.push("/(store_manager)/store/create-store");
+  }, [createGuard.allowed, createGuard.checked, router, translate]);
 
   return (
     <SafeAreaView edges={["top"]} className="flex-1 bg-backgroundMuted dark:bg-slate-950">
+      <Modal
+        visible={!!modal}
+        onClose={() => setModal(null)}
+        title={modal?.title ?? ""}
+        message={modal?.message}
+        buttons={modal?.buttons}
+      />
       <View className="bg-white border-b border-slate-100 dark:bg-slate-900 dark:border-slate-800 px-6 py-4 flex-row items-center justify-start">
         <View className="flex-row items-center gap-2">
           <Text className="text-xl font-poppins-bold text-slate-900 dark:text-slate-100">
-            Merchant Stores
+            {translate("storeManager.stores.title")}
           </Text>
         </View>
       </View>
 
-      <View className="bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 flex-row px-6">
-        {TABS.map((tab) => {
-          const active = activeTab === tab.key;
-          const count =
-            tab.key === "all"
-              ? stores.length
-              : stores.filter((s) =>
-                tab.key === "pending"
-                  ? s.status === "pending_review"
-                  : s.status === tab.key
-              ).length;
+      {Platform.OS === "web" ? (
+        <View className="bg-backgroundMuted dark:bg-slate-950 px-4 pt-4 items-center">
+          <View className="w-full max-w-4xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-xl overflow-hidden flex-row">
+            {tabs.map((tab) => {
+              const active = activeTab === tab.key;
+              const count =
+                tab.key === "all"
+                  ? stores.length
+                  : stores.filter((s) =>
+                    tab.key === "pending"
+                      ? s.status === "pending_review"
+                      : s.status === tab.key
+                  ).length;
 
-          return (
-            <TouchableOpacity
-              key={tab.key}
-              className="flex-1 py-3 items-center flex-row justify-center gap-1.5"
-              style={{
-                borderBottomWidth: 2,
-                borderBottomColor: active ? "#FF6600" : "transparent",
-              }}
-              onPress={() => setActiveTab(tab.key)}
-              activeOpacity={0.7}
-            >
-              <Text
-                className={
-                  active
-                    ? "text-xs font-poppins-bold text-primary"
-                    : "text-xs font-poppins-medium text-slate-400 dark:text-slate-500"
-                }
-              >
-                {tab.label}
-              </Text>
-              {count > 0 && (
-                <View
-                  className={`rounded-full px-1.5 min-w-[18px] items-center ${active
-                      ? "bg-primary/10"
-                      : "bg-neutral-100 dark:bg-neutral-700"
-                    }`}
+              return (
+                <TouchableOpacity
+                  key={tab.key}
+                  className={[
+                    "flex-1 py-3 items-center flex-row justify-center gap-1.5 rounded-xl mx-1 my-1",
+                    active && "bg-primary",
+                  ]
+                    .filter(Boolean)
+                    .join(" ")}
+                  onPress={() => setActiveTab(tab.key)}
+                  activeOpacity={0.7}
                 >
                   <Text
-                    className={`text-[9px] font-poppins-bold ${active
-                        ? "text-primary"
-                        : "text-neutral-500 dark:text-neutral-400"
-                      }`}
+                    className={
+                      active
+                        ? "text-xs font-poppins-bold text-white"
+                        : "text-xs font-poppins-medium text-slate-400 dark:text-slate-500"
+                    }
                   >
-                    {count}
+                    {tab.label}
                   </Text>
-                </View>
-              )}
-            </TouchableOpacity>
-          );
-        })}
-      </View>
+                  {count > 0 && (
+                    <View
+                      className="rounded-full min-w-[18px] items-center bg-white/20"
+                    >
+                      <Text className="text-[10px] font-poppins-semibold text-white">{count}</Text>
+                    </View>
+                  )}
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </View>
+      ) : (
+        <View className="border-b border-slate-100 dark:border-slate-800 px-4 py-3">
+          <View className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-xl overflow-hidden flex-row p-1">
+            {tabs.map((tab) => {
+              const active = activeTab === tab.key;
+              const count =
+                tab.key === "all"
+                  ? stores.length
+                  : stores.filter((s) =>
+                    tab.key === "pending"
+                      ? s.status === "pending_review"
+                      : s.status === tab.key
+                  ).length;
+
+              return (
+                <TouchableOpacity
+                  key={tab.key}
+                  className={[
+                    "flex-1 py-2 items-center flex-row justify-center gap-1.5 rounded-xl",
+                    active ? "bg-primary" : "bg-white dark:bg-slate-900",
+                  ]
+                    .filter(Boolean)
+                    .join(" ")}
+                  onPress={() => setActiveTab(tab.key)}
+                  activeOpacity={0.7}
+                >
+                  <Text
+                    className={
+                      active
+                        ? "text-xs font-poppins-bold text-white"
+                        : "text-xs font-poppins-medium text-slate-400 dark:text-slate-500"
+                    }
+                  >
+                    {tab.label}
+                  </Text>
+                  {count > 0 && (
+                    <View
+                      className={`rounded-full min-w-[18px] items-center px-1.5 ${active ? "bg-white/20" : ""}`}
+                    >
+                      <Text
+                        className={`text-[9px] font-poppins-bold ${active ? "text-white" : "text-neutral-500 dark:text-neutral-400"}`}
+                      >
+                        {count}
+                      </Text>
+                    </View>
+                  )}
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </View>
+      )}
 
       <View className="flex-1">
         <ScrollView
           className="flex-1"
-          contentContainerStyle={{ padding: 16, paddingBottom: 80 }}
+          contentContainerStyle={{
+            paddingHorizontal: 16,
+            paddingTop: Platform.OS === "web" ? 16 : 1,
+            paddingBottom: Platform.OS === "web" ? 20 : 0,
+          }}
           showsVerticalScrollIndicator={false}
           refreshControl={
             <RefreshControl
@@ -262,8 +370,7 @@ export default function StoreManagerStores() {
         >
           {error && !loading && (
             <View className="flex-row items-center gap-2 bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 rounded-xl p-3 mb-4">
-              <MaterialIcons
-                name="error-outline"
+              <AlertCircle
                 size={16}
                 color="#DC2626"
               />
@@ -279,51 +386,205 @@ export default function StoreManagerStores() {
               <SkeletonCard />
             </>
           )}
-          {!loading &&
+          {!loading && filtered.length > 0 && !error && Platform.OS === "web" ? (
+            <View className="items-center">
+              <View
+                className="w-full max-w-4xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl overflow-hidden"
+              >
+                {filtered.map((store, idx) => {
+                  const status = store.status ?? "inactive";
+                  const badgeStyle = storeStatusBadgeStyle(status);
+                  const badgeLabelKey =
+                    status === "active" || status === "pending_review" || status === "inactive"
+                      ? status
+                      : "inactive";
+
+                  return (
+                    <View key={store.id}>
+                      <TouchableOpacity
+                        activeOpacity={0.95}
+                        onPress={() =>
+                          router.push(`/(store_manager)/view-store/${store.id}`)
+                        }
+                        className="flex-row items-center gap-x-3 px-4 py-4"
+                      >
+                        <View className="w-[52px] h-[52px] rounded-xl bg-slate-100 dark:bg-slate-800 items-center justify-center overflow-hidden">
+                          {store.logo ? (
+                            <Image
+                              source={{ uri: store.logo }}
+                              style={{ width: 52, height: 52 }}
+                              contentFit="cover"
+                            />
+                          ) : (
+                            <Store size={24} color="#94A3B8" />
+                          )}
+                        </View>
+
+                        <View className="flex-1 min-w-0 gap-y-1">
+                          <View className="flex-row items-center justify-between gap-x-2">
+                            <Text
+                              className="font-poppins-bold text-[15px] text-slate-900 dark:text-slate-100 flex-1"
+                              numberOfLines={1}
+                            >
+                              {store.name}
+                            </Text>
+                          </View>
+
+                          <View className="flex-row items-center gap-1">
+                            <MapPin size={12} color="#94A3B8" />
+                            <Text
+                              className="text-xs font-poppins text-slate-400 dark:text-slate-500 flex-1"
+                              numberOfLines={1}
+                            >
+                              {store.address ?? translate("storeManager.stores.noAddress")}
+                            </Text>
+                          </View>
+                        </View>
+                        <View className={`h-5 px-2 rounded-full ${badgeStyle.bg} items-center justify-center`}>
+                          <Text className={`text-[10px] leading-4 font-poppins-semibold ${badgeStyle.text}`}>
+                            {translate(`storeManager.stores.badge.${badgeLabelKey}`)}
+                          </Text>
+                        </View>
+                        <ChevronRight size={20} color="#94A3B8" />
+                      </TouchableOpacity>
+
+                      {idx < filtered.length - 1 ? (
+                        <View className="h-px bg-slate-100 dark:bg-slate-800" />
+                      ) : null}
+                    </View>
+                  );
+                })}
+          
+              </View>
+            </View>
+          ) : !loading && filtered.length > 0 && !error && Platform.OS === "android" ? (
+            <View>
+              <View className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl overflow-hidden">
+                {filtered.map((store, idx) => {
+                  const status = store.status ?? "inactive";
+                  const badgeStyle = storeStatusBadgeStyle(status);
+                  const badgeLabelKey =
+                    status === "active" || status === "pending_review" || status === "inactive"
+                      ? status
+                      : "inactive";
+
+                  return (
+                    <View key={store.id}>
+                      <TouchableOpacity
+                        activeOpacity={0.95}
+                        onPress={() =>
+                          router.push(`/(store_manager)/view-store/${store.id}`)
+                        }
+                        className="flex-row items-center gap-x-3 px-4 py-4"
+                      >
+                        <View className="w-[52px] h-[52px] rounded-xl bg-slate-100 dark:bg-slate-800 items-center justify-center overflow-hidden">
+                          {store.logo ? (
+                            <Image
+                              source={{ uri: store.logo }}
+                              style={{ width: 52, height: 52 }}
+                              contentFit="cover"
+                            />
+                          ) : (
+                            <Store size={24} color="#94A3B8" />
+                          )}
+                        </View>
+
+                        <View className="flex-1 min-w-0 gap-y-1">
+                          <View className="flex-row items-center justify-between gap-x-2">
+                            <Text
+                              className="font-poppins-bold text-[15px] text-slate-900 dark:text-slate-100 flex-1"
+                              numberOfLines={1}
+                            >
+                              {store.name}
+                            </Text>
+                          </View>
+
+                          <View className="flex-row items-center gap-1">
+                            <MapPin size={12} color="#94A3B8" />
+                            <Text
+                              className="text-xs font-poppins text-slate-400 dark:text-slate-500 flex-1"
+                              numberOfLines={1}
+                            >
+                              {store.address ?? translate("storeManager.stores.noAddress")}
+                            </Text>
+                          </View>
+                        </View>
+
+                        <View className={`h-5 px-2 rounded-full ${badgeStyle.bg} items-center justify-center`}>
+                          <Text className={`text-[10px] leading-4 font-poppins-semibold ${badgeStyle.text}`}>
+                            {translate(`storeManager.stores.badge.${badgeLabelKey}`)}
+                          </Text>
+                        </View>
+
+                      </TouchableOpacity>
+
+                      {idx < filtered.length - 1 ? (
+                        <View className="h-px bg-slate-100 dark:bg-slate-800" />
+                      ) : null}
+                    </View>
+                  );
+                })}
+              </View>
+            </View>
+          ) : (
+            !loading &&
             filtered.map((store) => (
               <StoreCard key={store.id} store={store} router={router} />
-            ))}
+            ))
+          )}
           {!loading && filtered.length === 0 && !error && (
-            <View className="items-center pt-16 gap-3">
-              <MaterialIcons
-                name="storefront"
-                size={52}
-                color="#CBD5E1"
-              />
-              <Text className="text-base font-poppins-bold text-slate-600 dark:text-slate-300">
-                {activeTab === "all"
-                  ? "No stores yet"
-                  : `No ${activeTab} stores`}
-              </Text>
-              <Text className="text-sm font-poppins text-slate-400 text-center px-8">
-                {activeTab === "all"
-                  ? "Tap the + button to create your first store."
-                  : "Try a different tab or add a new store."}
-              </Text>
+            <View className="items-center">
+              <View className="w-full max-w-4xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl px-6 py-8 items-center gap-4">
+                <View className="bg-white dark:bg-slate-900 rounded-2xl">
+                  <Image source={require("@/assets/images/found.png")} style={{ width: 190, height: 190 }} contentFit="contain" />
+                </View>
+                <View className="items-center">
+                  <Text className="text-base font-poppins-bold text-slate-600 dark:text-slate-300 text-center">
+                    {activeTab === "all"
+                      ? translate("storeManager.stores.empty.allTitle")
+                      : activeTab === "active"
+                        ? translate("storeManager.stores.empty.activeTitle")
+                        : activeTab === "pending"
+                          ? translate("storeManager.stores.empty.pendingTitle")
+                          : translate("storeManager.stores.empty.inactiveTitle")}
+                  </Text>
+                  <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500 text-center px-8">
+                    {activeTab === "all"
+                      ? translate("storeManager.stores.empty.hintAll")
+                      : translate("storeManager.stores.empty.hintFiltered")}
+                  </Text>
+                </View>
+              </View>
             </View>
           )}
         </ScrollView>
 
-        <TouchableOpacity
-          className="absolute bottom-5 right-6 w-14 h-14 rounded-full bg-primary items-center justify-center"
-          onPress={() => {
-            // if (!hasPaidStoreFee) {
-            //   setShowPaymentModal(true);
-            //   console.log("Payment required to create store");
-            //   return;
-            // }
-            router.push("/(store_manager)/store/create-store");
-          }}
-        >
-          <MaterialIcons name="add" size={28} color="#fff" />
-        </TouchableOpacity>
-        {/* {showPaymentModal && (
-          <PaymentModal
-            setShowPaymentModal={setShowPaymentModal}
-            userId={user}
-            amount={199}
-          />
-        )} */}
+        {Platform.OS === "web" ? (
+          <View
+            pointerEvents="box-none"
+            style={{ position: "absolute", left: 0, right: 0, bottom: 60, alignItems: "center" }}
+          >
+            <View style={{ width: "100%", maxWidth: WEB_MAX_WIDTH, paddingHorizontal: 16, alignItems: "flex-end" }}>
+              <TouchableOpacity
+                className="w-14 h-14 rounded-full bg-primary items-center justify-center"
+                onPress={() => {
+                  handleCreatePress();
+                }}
+              >
+                <Plus size={28} color="#fff" />
+              </TouchableOpacity>
+            </View>
+          </View>
+        ) : (
+          <TouchableOpacity
+            className="absolute bottom-5 right-6 w-14 h-14 rounded-full bg-primary items-center justify-center"
+            onPress={() => {
+              handleCreatePress();
+            }}
+          >
+            <Plus size={28} color="#fff" />
+          </TouchableOpacity>
+        )}
       </View>
     </SafeAreaView>
   );

@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { Text, View, Image, TouchableOpacity } from "@/tw";
 import { CirclePlus, Gift, ReceiptText, TrendingUp } from "lucide-react-native";
-import { RefreshControl } from "react-native";
-import { getUserTransactionHistory } from "@/services/users/qr-service";
+import { RefreshControl, ScrollView } from "react-native";
+import { getUserTransactionHistory } from "@/services/user/qr-service";
 import { supabase } from "@/supabase/supabase";
 import { useTranslation } from "react-i18next";
 import StoreScreenContainer from "@/components/ui/store-screen-container";
@@ -11,6 +11,7 @@ const TABS = ["all", "earned", "claimed"];
 
 export default function History() {
   const [activeTab, setActiveTab] = useState(0);
+  const [activeStore, setActiveStore] = useState<string | null>(null);
   const [transactionHistory, setTransactionHistory] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -48,7 +49,15 @@ export default function History() {
     return matchesTab;
   });
 
-  const sections = [...new Set(filteredData.map((item) => item.section))] as string[];
+  const storeNames = [...new Set(
+    transactionHistory.map((item) => item.title).filter(Boolean)
+  )] as string[];
+
+  const storeFilteredData = activeStore
+    ? filteredData.filter((item) => item.title === activeStore)
+    : filteredData;
+
+  const sections = [...new Set(storeFilteredData.map((item) => item.section))] as string[];
 
   const totalEarned = transactionHistory
     .filter((i) => i.type === "earned")
@@ -145,6 +154,49 @@ export default function History() {
         </View>
       </View>
 
+      {/* ── Store Filter ── */}
+      {storeNames.length > 1 && (
+        <View>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{ gap: 8, paddingHorizontal: 4 }}
+          >
+            <TouchableOpacity
+              onPress={() => setActiveStore(null)}
+              className={`px-3.5 py-1.5 rounded-full border ${
+                activeStore === null
+                  ? "bg-primary border-primary"
+                  : "bg-white dark:bg-darkBackgroundCard border-neutral-200 dark:border-darkBorder"
+              }`}
+            >
+              <Text className={`text-xs font-poppins-semibold ${
+                activeStore === null ? "text-white" : "text-neutral-500 dark:text-darkTextSecondary"
+              }`}>
+                All Stores
+              </Text>
+            </TouchableOpacity>
+            {storeNames.map((name) => (
+              <TouchableOpacity
+                key={name}
+                onPress={() => setActiveStore(name)}
+                className={`px-3.5 py-1.5 rounded-full border ${
+                  activeStore === name
+                    ? "bg-primary border-primary"
+                    : "bg-white dark:bg-darkBackgroundCard border-neutral-200 dark:border-darkBorder"
+                }`}
+              >
+                <Text className={`text-xs font-poppins-semibold ${
+                  activeStore === name ? "text-white" : "text-neutral-500 dark:text-darkTextSecondary"
+                }`}>
+                  {name}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+      )}
+
       {/* ── Transaction List ── */}
       {loading ? (
         <HistorySkeleton />
@@ -162,7 +214,7 @@ export default function History() {
         </View>
       ) : (
         sections.map((section) => {
-          const items = filteredData.filter((item) => item.section === section);
+          const items = storeFilteredData.filter((item) => item.section === section);
           return (
             <View key={section}>
               {/* Floating uppercase section label */}

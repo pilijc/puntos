@@ -3,6 +3,8 @@ import {
   StyleSheet,
   Animated,
   PanResponder,
+  Platform,
+  Pressable,
 } from "react-native";
 import { View, Text, TouchableOpacity } from "@/tw";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -18,6 +20,8 @@ interface FilterBottomSheetProps {
   onSelectFilter: (value: AccountStatusFilter) => void;
 }
 
+const isWeb = Platform.OS === "web";
+
 export function FilterBottomSheet({
   visible,
   statusFilter,
@@ -30,6 +34,11 @@ export function FilterBottomSheet({
 
   const closeSheet = useCallback(
     (onClosed?: () => void) => {
+      if (isWeb) {
+        onClose();
+        onClosed?.();
+        return;
+      }
       Animated.parallel([
         Animated.timing(translateY, {
           toValue: 300,
@@ -66,7 +75,7 @@ export function FilterBottomSheet({
   ).current;
 
   React.useEffect(() => {
-    if (visible) {
+    if (visible && !isWeb) {
       Animated.parallel([
         Animated.timing(backdropOpacity, {
           toValue: 1,
@@ -85,6 +94,147 @@ export function FilterBottomSheet({
 
   if (!visible) return null;
 
+  // ── Web: right-aligned dropdown below the Filter button ──
+  if (isWeb) {
+    return (
+      <View
+        style={StyleSheet.absoluteFillObject}
+        pointerEvents="box-none"
+      >
+        {/* Invisible backdrop to close on outside click */}
+        <Pressable
+          style={StyleSheet.absoluteFillObject}
+          onPress={() => onClose()}
+        />
+
+        {/* Centered container to align with content width (1000px) */}
+        <View 
+          style={{ width: "100%", maxWidth: 1000, alignSelf: "center", position: "relative" }} 
+          pointerEvents="box-none"
+        >
+          {/* Dropdown panel anchored to the filter button on the right section */}
+          <View
+            style={{
+              position: "absolute",
+              top: 130,
+              right: 0,    // Aligns with the right-aligned filter button in 1000px layout
+              width: 280,
+              backgroundColor: "#ffffff",
+              borderRadius: 14,
+              borderWidth: 1,
+              borderColor: "#e2e8f0",
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 8 },
+              shadowOpacity: 0.12,
+              shadowRadius: 24,
+              elevation: 20,
+              zIndex: 100,
+              overflow: "hidden",
+            }}
+          >
+            {/* Header */}
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between",
+                paddingHorizontal: 16,
+                paddingTop: 14,
+                paddingBottom: 12,
+                borderBottomWidth: 1,
+                borderBottomColor: "#f1f5f9",
+              }}
+            >
+              <Text
+                style={{ fontSize: 13, fontFamily: "Poppins-SemiBold", color: "#0f172a" }}
+              >
+                Filter Users
+              </Text>
+              <Pressable onPress={() => onClose()} style={{ padding: 4 }}>
+                <Feather name="x" size={15} color="#94a3b8" />
+              </Pressable>
+            </View>
+
+            {/* Options */}
+            <View style={{ padding: 12, gap: 6 }}>
+            {FILTER_OPTIONS.map((option) => {
+              const isActive = statusFilter === option.value;
+              return (
+                <Pressable
+                  key={option.value}
+                  onPress={() => {
+                    onSelectFilter(option.value);
+                    onClose();
+                  }}
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    paddingHorizontal: 12,
+                    paddingVertical: 10,
+                    borderRadius: 10,
+                    borderWidth: 1,
+                    borderColor: isActive ? "#fed7aa" : "#f1f5f9",
+                    backgroundColor: isActive ? "#fff7ed" : "#f8fafc",
+                  }}
+                >
+                  <View style={{ flex: 1 }}>
+                    <Text
+                      style={{
+                        fontSize: 13,
+                        fontFamily: isActive ? "Poppins-SemiBold" : "Poppins-Medium",
+                        color: isActive ? COLORS.primary : "#334155",
+                      }}
+                    >
+                      {option.label}
+                    </Text>
+                    <Text
+                      style={{ fontSize: 10, fontFamily: "Poppins-Regular", color: "#94a3b8", marginTop: 1 }}
+                    >
+                      {option.desc}
+                    </Text>
+                  </View>
+                  {isActive && (
+                    <Feather name="check" size={14} color={COLORS.primary} />
+                  )}
+                </Pressable>
+              );
+            })}
+          </View>
+
+          {/* Reset */}
+          <View
+            style={{
+              paddingHorizontal: 12,
+              paddingBottom: 12,
+              borderTopWidth: 1,
+              borderTopColor: "#f1f5f9",
+              paddingTop: 8,
+            }}
+          >
+            <Pressable
+              onPress={() => {
+                onSelectFilter("All");
+                onClose();
+              }}
+              style={{
+                alignItems: "center",
+                paddingVertical: 8,
+                borderRadius: 8,
+                backgroundColor: "#f1f5f9",
+              }}
+            >
+              <Text style={{ fontSize: 12, fontFamily: "Poppins-SemiBold", color: "#64748b" }}>
+                Reset filter
+              </Text>
+            </Pressable>
+          </View>
+          </View>
+        </View>
+      </View>
+    );
+  }
+
+  // ── Mobile: original bottom sheet (unchanged) ──
   return (
     <View
       className="absolute inset-0 z-50"
@@ -120,15 +270,13 @@ export function FilterBottomSheet({
                 <TouchableOpacity
                   key={option.value}
                   onPress={() => closeSheet(() => onSelectFilter(option.value))}
-                  className={`flex-row items-center px-3 py-2.5 rounded-xl border ${
-                    isActive ? "bg-primary/5 border-primary/30" : "bg-backgroundMuted dark:bg-darkBackgroundCard border-slate-100 dark:border-darkBorder"
-                  }`}
+                  className={`flex-row items-center px-3 py-2.5 rounded-xl border ${isActive ? "bg-primary/5 border-primary/30" : "bg-backgroundMuted dark:bg-darkBackgroundCard border-slate-100 dark:border-darkBorder"
+                    }`}
                 >
                   <View className="flex-1">
                     <Text
-                      className={`text-[12px] ${
-                        isActive ? "font-poppins-bold text-primary" : "font-poppins-medium text-textSecondary dark:text-darkTextSecondary"
-                      }`}
+                      className={`text-[12px] ${isActive ? "font-poppins-bold text-primary" : "font-poppins-medium text-textSecondary dark:text-darkTextSecondary"
+                        }`}
                     >
                       {option.label}
                     </Text>

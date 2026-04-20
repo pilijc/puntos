@@ -1,5 +1,5 @@
 import { supabase } from "@/supabase/supabase";
-import { parseQRCode, createQRTransaction } from "@/services/users/qr-service";
+import { parseQRCode, createQRTransaction } from "@/services/user/qr-service";
 import { FrontDeskScanResult, ScanResult } from "@/type/qr-transaction";
 
 
@@ -37,9 +37,7 @@ export async function processFrontDeskScan(
       pointsEarned: transaction.points_earned,
     };
   } catch (error) {
-    console.error("Failed to create transaction:", error);
-    console.error("Error details:", error instanceof Error ? error.message : String(error));
-    return { 
+     return { 
       success: false, 
       message: `Failed to process QR code: ${error instanceof Error ? error.message : 'Unknown error'}` 
     };
@@ -59,13 +57,11 @@ export async function getCurrentUserStore(): Promise<{name: string; id: number} 
       .single();
 
     if (profileError || !profile) {
-      console.error("User not found in public.users:", profileError);
-      return null;
+       return null;
     }
 
     if (profile.role !== "front_desk") {
-      console.error("User is not a front desk operator:", profile.role);
-      return null;
+       return null;
     }
 
     // Get store_id from store_staff table for current user
@@ -77,8 +73,7 @@ export async function getCurrentUserStore(): Promise<{name: string; id: number} 
       .single();
 
     if (staffError || !staffData) {
-     // console.error('No active store staff record found:', staffError);
-      return null;
+       return null;
     }
 
     // Get store name from stores table
@@ -90,14 +85,12 @@ export async function getCurrentUserStore(): Promise<{name: string; id: number} 
       .single();
 
     if (storeError || !storeData) {
-      console.error('Store not found:', storeError);
-      return null;
+       return null;
     }
 
     return { name: storeData.name, id: staffData.store_id };
   } catch (error) {
-    console.error('Error fetching store info:', error);
-    return null;
+     return null;
   }
 }
 
@@ -113,8 +106,7 @@ export const getCurrentUserIsActive = async (): Promise<boolean> => {
     .single();
 
   if (error || !data) {
-    console.log("Error fetching is_active:", error);
-    return false;
+     return false;
   }
 
   return data.is_active ?? false;

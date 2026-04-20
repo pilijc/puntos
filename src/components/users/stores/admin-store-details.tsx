@@ -1,19 +1,30 @@
-import React, { useState, useRef, useMemo } from "react";
-import { ScrollView } from "react-native";
+import React, { useEffect, useState, useRef, useMemo } from "react";
+import { ScrollView, Platform, useColorScheme } from "react-native";
+import Carousel from 'react-native-reanimated-carousel';
 import { View, Text, TouchableOpacity } from "@/tw";
 import { useTranslation } from "react-i18next";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { ArrowLeft, Store as StoreIcon, Briefcase, BadgeCheck, AlertTriangle, Flame, Sun, Moon, RefreshCw, MapPin, Map, CheckCircle, ChevronLeft, ChevronRight } from "lucide-react-native";
 import { Image } from "expo-image";
+import { BlurView } from "expo-blur";
+import Mapbox, { Camera, MapView, MarkerView } from "@rnmapbox/maps";
 import { ScreenWrapper } from "@/components/ui/screen-wrapper";
 import { Button } from "@/components/button";
 import { AdminStoreRow } from "@/services/store-service";
 import { ImageViewerModal } from "@/components/ui/image-viewer-modal";
-import { getStoreCategoryBadge } from "@/type/super-admin/user";
+import { getStoreCategoryBadge, getEffectiveStatus, StoreStatusKey } from "@/type/super-admin/user";
+import { shouldUseInteractiveMapbox } from "@/utils/mapbox-platform";
+import { canOwnerCreateAnotherStore } from "@/services/store-manager/subscription-limits";
+
+
+Mapbox.setAccessToken(process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN!);
+
+const isWeb = Platform.OS === "web";
 
 const twConfig = require("../../../../tailwind.config.js");
-const twColors = twConfig.theme.extend.colors;
+const twColors = twConfig?.theme?.extend?.colors || { success: "#10b981", danger: "#ef4444" };
 
-type StatusKey = "pending_review" | "active" | "inactive";
+type StatusKey = StoreStatusKey;
 
 const STATUS_CONFIG: Record<StatusKey, {
   icon: "schedule" | "check-circle" | "cancel";
@@ -24,7 +35,6 @@ const STATUS_CONFIG: Record<StatusKey, {
   inactive: { icon: "cancel", bg: "#ffffff", border: "#fecaca", badgeBg: "#fee2e2", text: twColors.danger },
 };
 
-// ─── Field helpers ────────────────────────────────────────────────────────────
 const SectionHeader = ({ title }: { title: string }) => (
   <Text className="text-base font-poppins-bold text-textPrimary dark:text-darkTextPrimary mb-3">{title}</Text>
 );
@@ -37,7 +47,7 @@ const FieldCard = ({ children, noPad }: { children: React.ReactNode; noPad?: boo
   </View>
 );
 const ReadOnlyField = ({ label, value }: { label: string; value?: string | null }) => (
-  <View className="mb-2.5">
+  <View className="mb-1.5">
     <FieldLabel>{label}</FieldLabel>
     <FieldCard>
       <Text className="text-sm font-poppins-medium text-textPrimary dark:text-darkTextPrimary">{value || "—"}</Text>
@@ -45,42 +55,61 @@ const ReadOnlyField = ({ label, value }: { label: string; value?: string | null 
   </View>
 );
 
-
-// ─── Main Screen ──────────────────────────────────────────────────────────────
 export function AdminStoreDetails({
   store,
+  subscription,
+  ownerActiveStoresCount = 0,
   onBack,
   onApprove,
   onReject,
 }: {
   store: AdminStoreRow;
+  subscription?: any;
+  ownerActiveStoresCount?: number;
   onBack: () => void;
   onApprove: (store: AdminStoreRow) => void;
   onReject: (store: AdminStoreRow) => void;
 }) {
-	const { t: translate, i18n } = useTranslation();
+  const { t: translate, i18n } = useTranslation();
 
-	const STATUS_LABELS: Record<StatusKey, string> = {
-		pending_review: translate("superAdmin.stores.status.pending"),
-		active: translate("superAdmin.stores.status.active"),
-		inactive: translate("superAdmin.stores.status.inactive"),
-	};
+  const STATUS_LABELS: Record<StatusKey, string> = {
+    pending_review: translate("superAdmin.stores.status.pending"),
+    active: translate("superAdmin.stores.status.active"),
+    inactive: translate("superAdmin.stores.status.inactive"),
+  };
 
-  const [viewingDoc, setViewingDoc] = useState(false);
+  const [viewingDocUri, setViewingDocUri] = useState<string | null>(null);
   const [currentPicIndex, setCurrentPicIndex] = useState(0);
   const scrollRef = useRef<any>(null);
   const [layoutWidth, setLayoutWidth] = useState(0);
 
-  const isDark = require("react-native").useColorScheme() === "dark";
+  const isDark = useColorScheme() === "dark";
 
-  const getEffectiveStatus = (s: AdminStoreRow): StatusKey => {
-    if (s.status === "pending_review" || !s.status) return "pending_review";
-    if (s.status === "inactive") return "inactive";
-    return s.is_active ? "active" : "inactive";
-  };
   const statusKey = getEffectiveStatus(store);
   const statusCfg = STATUS_CONFIG[statusKey] ?? STATUS_CONFIG.pending_review;
   const isPending = statusKey === "pending_review";
+
+  const [canCreateAnotherStore, setCanCreateAnotherStore] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    const ownerId = store.owner_id;
+    if (!ownerId) return;
+
+    (async () => {
+      try {
+        const res = await canOwnerCreateAnotherStore(ownerId);
+        if (!cancelled) setCanCreateAnotherStore(res.allowed);
+      } catch {
+        // If checks fail, don't block admin UI.
+        if (!cancelled) setCanCreateAnotherStore(true);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [store.owner_id]);
 
   const registeredDate = useMemo(() => {
     return new Date(store.created_at).toLocaleDateString(i18n.language === "ja" ? "ja-JP" : "en-US", {
@@ -91,266 +120,358 @@ export function AdminStoreDetails({
   return (
     <ScreenWrapper className="flex-1 bg-backgroundMuted dark:bg-darkBackgroundMuted">
 
-      {/* Header */}
-      <View className="flex-row items-center justify-between px-4 h-[60px]">
-        <View className="flex-row items-center gap-1.5">
-          <TouchableOpacity onPress={onBack} activeOpacity={0.7} className="items-center justify-center -ml-2 p-2">
-            <MaterialIcons name="chevron-left" size={28} color={isDark ? "#ffffff" : "#0F172A"} />
-          </TouchableOpacity>
-          <Text className="text-[17px] font-poppins-bold text-textPrimary dark:text-darkTextPrimary ml-1">
-						{translate("superAdmin.stores.details.title")}
-					</Text>
-        </View>
-      </View>
+
+
 
       <ScrollView
-        className="flex-1 bg-backgroundMuted dark:bg-darkBackgroundMuted"
-        contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 40, gap: 20 }}
+        className="flex-1"
+        contentContainerStyle={[
+          { paddingBottom: isPending ? 60 : 20 },
+          require('react-native').Platform.OS === 'web' && {
+            width: '100%',
+            maxWidth: 950,
+            alignSelf: 'center',
+            backgroundColor: 'transparent',
+          }
+        ]}
         showsVerticalScrollIndicator={false}
+        bounces={false}
+        style={require('react-native').Platform.OS === 'web' ? { backgroundColor: isDark ? '#000000' : '#F8FAFC' } : { backgroundColor: '#F8FAFC' }}
       >
-
-        {/* Store Details */}
-        <View>
-          <View className="mb-2.5">
-            <FieldLabel>{translate("superAdmin.stores.details.name")}</FieldLabel>
-            <FieldCard>
-              <View className="flex-row items-center justify-between">
-                <Text className="text-sm font-poppins-medium text-textPrimary dark:text-darkTextPrimary flex-1 mr-2" numberOfLines={1}>
-                  {store.name || "—"}
-                </Text>
-                <View style={{ backgroundColor: statusCfg.badgeBg }} className="flex-row items-center gap-1 px-2 py-1 rounded-full">
-                  <MaterialIcons name={statusCfg.icon} size={12} color={statusCfg.text} />
-                  <Text style={{ color: statusCfg.text }} className="text-[10px] font-poppins-bold tracking-wider">
-                    {STATUS_LABELS[statusKey]}
-                  </Text>
-                </View>
-              </View>
-            </FieldCard>
+        <View 
+          className="relative w-full bg-slate-900 overflow-visible"
+          style={require('react-native').Platform.OS === 'web' ? { height: 240 } : { height: 170 }}
+        >
+          <View className="absolute top-6 left-6 z-50">
+            <TouchableOpacity
+              onPress={onBack}
+              activeOpacity={0.7}
+              className="w-10 h-10 rounded-full bg-white dark:bg-darkBackgroundCard items-center justify-center shadow-sm shadow-black/10 border border-slate-100 dark:border-darkBorder"
+            >
+              <ChevronLeft size={24} color={isDark ? "#F8FAFC" : "#0F172A"} className="-ml-0.5" />
+            </TouchableOpacity>
           </View>
-
-          <View className="mb-2.5">
-            <FieldLabel>{translate("superAdmin.stores.details.type")}</FieldLabel>
-            <FieldCard noPad>
-              {store.type ? (
-                <View className={`${getStoreCategoryBadge(store.type).bg} rounded-full px-3.5 py-1.5 self-start m-1`}>
-                  <Text className={`text-xs font-poppins-semibold ${getStoreCategoryBadge(store.type).text}`}>
-                    {translate(`superAdmin.stores.category.${store.type.toLowerCase().replace(/ & /g, '_')}`, { defaultValue: store.type })}
-                  </Text>
-                </View>
-              ) : (
-                <Text className="text-sm font-poppins-medium text-textMuted p-1">—</Text>
-              )}
-            </FieldCard>
-          </View>
-
-          {/* Logo — static, no tap */}
-          <View className="mb-2.5">
-            <FieldLabel>{translate("superAdmin.stores.details.logo")}</FieldLabel>
-            <FieldCard noPad>
-              <View className="w-[60px] h-[60px] rounded-xl overflow-hidden bg-[#f1f5f9] dark:bg-darkBackgroundCard items-center justify-center m-1">
-                {store.logo
-                  ? <Image source={{ uri: store.logo }} style={{ width: "100%", height: "100%" }} contentFit="cover" />
-                  : <MaterialIcons name="storefront" size={26} color="#94A3B8" />
-                }
-              </View>
-            </FieldCard>
-          </View>
-
-          <View className="mb-2.5">
-            <FieldLabel>{translate("superAdmin.stores.details.pictures")}</FieldLabel>
-            <FieldCard noPad>
-              {store.store_pictures && store.store_pictures.length > 0 ? (
-                <View 
-                  className="relative w-full h-[200px] rounded-xl overflow-hidden bg-[#f1f5f9] dark:bg-darkBackgroundCard my-1"
-                  onLayout={(e) => setLayoutWidth(e.nativeEvent.layout.width)}
-                >
-                  <ScrollView
-                    ref={scrollRef}
-                    horizontal
-                    pagingEnabled
-                    showsHorizontalScrollIndicator={false}
-                    onScroll={(e) => {
-                      if (layoutWidth > 0) {
-                        const idx = Math.round(e.nativeEvent.contentOffset.x / layoutWidth);
-                        if (idx !== currentPicIndex && idx >= 0 && idx < store.store_pictures!.length) {
-                          setCurrentPicIndex(idx);
-                        }
-                      }
-                    }}
-                    scrollEventThrottle={16}
-                    bounces={false}
-                  >
-                    {store.store_pictures.map((uri, idx) => (
-                      <View key={idx} style={{ width: layoutWidth > 0 ? layoutWidth : '100%', height: '100%' }}>
-                        <Image 
-                          source={{ uri }} 
-                          style={{ width: "100%", height: "100%" }} 
-                          contentFit="cover" 
-                        />
-                      </View>
-                    ))}
-                  </ScrollView>
-                  
-                  {store.store_pictures.length > 1 && (
-                    <>
-                      {currentPicIndex > 0 && (
-                        <TouchableOpacity 
-                          activeOpacity={0.8} 
-                          onPress={() => {
-                            scrollRef.current?.scrollTo({ x: (currentPicIndex - 1) * layoutWidth, animated: true });
-                          }}
-                          className="absolute left-2 top-1/2 -mt-4 w-8 h-8 rounded-full bg-black/50 items-center justify-center z-10"
-                        >
-                          <MaterialIcons name="chevron-left" size={24} color="#fff" />
-                        </TouchableOpacity>
-                      )}
-
-                      {currentPicIndex < store.store_pictures.length - 1 && (
-                        <TouchableOpacity 
-                          activeOpacity={0.8} 
-                          onPress={() => {
-                            scrollRef.current?.scrollTo({ x: (currentPicIndex + 1) * layoutWidth, animated: true });
-                          }}
-                          className="absolute right-2 top-1/2 -mt-4 w-8 h-8 rounded-full bg-black/50 items-center justify-center z-10"
-                        >
-                          <MaterialIcons name="chevron-right" size={24} color="#fff" />
-                        </TouchableOpacity>
-                      )}
-
-                      <View className="absolute bottom-2 left-0 right-0 flex-row justify-center gap-1.5 z-10">
-                        {store.store_pictures.map((_, idx) => (
-                          <View 
-                            key={idx} 
-                            className={`h-2 rounded-full transition-all ${idx === currentPicIndex ? 'w-5 bg-primary' : 'w-2 bg-white/60'}`} 
-                          />
-                        ))}
-                      </View>
-                    </>
-                  )}
-                </View>
-              ) : (
-                <Text className="text-sm font-poppins-medium text-textMuted p-1">—</Text>
-              )}
-            </FieldCard>
-          </View>
-        </View>
-
-        {/* Business Details */}
-        <View>
-          <SectionHeader title={translate("superAdmin.stores.details.businessDetails")} />
-          <ReadOnlyField label={translate("superAdmin.stores.details.ownerName")} value={store.owner_name} />
-          <ReadOnlyField label={translate("superAdmin.stores.details.phone")} value={store.phone} />
-          
-          <View className="mb-2.5">
-            <FieldLabel>{translate("superAdmin.stores.details.operatingHours")}</FieldLabel>
-            <FieldCard>
-              <View className="flex-row items-center px-1">
-                <View className="flex-1 flex-row items-center justify-center gap-2">
-                  <MaterialIcons name="wb-sunny" size={16} color="#FF6600" />
-                  <Text className="text-sm font-poppins-medium text-textPrimary dark:text-darkTextPrimary">
-                    {store.store_open ? store.store_open.slice(0, 5) : "09:00"}
-                  </Text>
-                </View>
-                
-                <View className="w-[1.5px] h-4 bg-slate-300 dark:bg-slate-700 rounded-full mx-2" />
-                
-                <View className="flex-1 flex-row items-center justify-center gap-2">
-                  <MaterialIcons name="nights-stay" size={16} color="#FF6600" />
-                  <Text className="text-sm font-poppins-medium text-textPrimary dark:text-darkTextPrimary">
-                    {store.store_close ? store.store_close.slice(0, 5) : "21:00"}
-                  </Text>
-                </View>
-              </View>
-            </FieldCard>
-          </View>
-
-          <View className="flex-row gap-2.5">
-            <View className="flex-1">
-              <FieldLabel>{translate("superAdmin.stores.details.registrationNumber")}</FieldLabel>
-              <FieldCard>
-                <Text className="text-sm font-poppins-medium text-textPrimary dark:text-darkTextPrimary" numberOfLines={1}>
-                  {store.registration_number || "—"}
-                </Text>
-              </FieldCard>
-            </View>
-            <View className="flex-1">
-              <FieldLabel>{translate("superAdmin.stores.details.registeredOn")}</FieldLabel>
-              <FieldCard>
-                <Text className="text-sm font-poppins-medium text-textPrimary dark:text-darkTextPrimary" numberOfLines={1}>
-                  {registeredDate}
-                </Text>
-              </FieldCard>
-            </View>
-          </View>
-
-          {/* Business document — taps into full-screen viewer */}
-          <View className="mb-2.5 mt-2.5">
-            <FieldLabel>{translate("superAdmin.stores.details.businessDocument")}</FieldLabel>
-            <FieldCard noPad>
-              {store.business_document_image ? (
-                <TouchableOpacity
-                  activeOpacity={0.85}
-                  onPress={() => setViewingDoc(true)}
-                  style={{
-                    width: "100%", height: 160, borderRadius: 10,
-                    overflow: "hidden"
-                  }}
-                >
-                  <Image
-                    source={{ uri: store.business_document_image }}
-                    style={{ width: "100%", height: "100%" }}
-                    contentFit="cover"
+          <TouchableOpacity 
+             activeOpacity={0.9} 
+             onPress={() => store.store_pictures?.[0] && setViewingDocUri(store.store_pictures[0])}
+             className="w-full h-full"
+          >
+             {store.store_pictures && store.store_pictures.length > 0 ? (
+                <View className="w-full h-full overflow-hidden">
+                  <Image 
+                    source={{ uri: store.store_pictures[0] }} 
+                    style={{ width: "100%", height: "100%" }} 
+                    contentFit="cover" 
+                    contentPosition="center"
                   />
-                  {/* Tap overlay */}
-                  <View style={{
-                    position: "absolute", top: 0, left: 0, right: 0, bottom: 0,
-                    backgroundColor: "rgba(0,0,0,0.28)",
-                    alignItems: "center", justifyContent: "center",
-                    gap: 8,
-                  }}>
-                    <View style={{
-                      width: 52, height: 52, borderRadius: 26,
-                      backgroundColor: "rgba(0,0,0,0.5)",
-                      borderWidth: 1.5, borderColor: "rgba(255,255,255,0.4)",
-                      alignItems: "center", justifyContent: "center",
-                    }}>
-                      <MaterialIcons name="zoom-in" size={26} color="#fff" />
-                    </View>
-                    <View style={{
-                      backgroundColor: "rgba(0,0,0,0.5)",
-                      paddingHorizontal: 12, paddingVertical: 5, borderRadius: 14,
-                    }}>
-                      <Text style={{ color: "#fff", fontSize: 11, fontFamily: "Poppins-Medium" }}>
-                        {translate("superAdmin.stores.details.viewAndZoom")}
-                      </Text>
-                    </View>
-                  </View>
-                </TouchableOpacity>
-              ) : (
-                <Text className="text-sm font-poppins-medium text-textMuted p-1">—</Text>
-              )}
-            </FieldCard>
+                </View>
+             ) : (
+                <View className="w-full h-full overflow-hidden bg-[#F1F5F9] dark:bg-neutral-800 items-center justify-center">
+                   <MaterialIcons name="storefront" size={64} color={isDark ? "#52525B" : "#CBD5E1"} />
+                </View>
+             )}
+          </TouchableOpacity>
+           
+           {/* Removed bottom blur overlay */}
+          <View className="absolute top-0 bottom-0 left-0 right-0 bg-black/25 dark:bg-black/45" pointerEvents="none" />
+
+          <View className="absolute top-6 right-6 px-3.5 py-1.5 rounded-full flex-row items-center gap-1.5 bg-white/95 dark:bg-darkBackground/95 shadow-sm shadow-black/20 z-10">
+            <View className={`w-2 h-2 rounded-full`} style={{ backgroundColor: statusCfg.text }} />
+            <Text className="text-[10px] font-poppins-bold tracking-wider text-slate-800 dark:text-slate-200 mt-[1px] uppercase">
+              {STATUS_LABELS[statusKey]}
+            </Text>
           </View>
+
+          <TouchableOpacity 
+            activeOpacity={0.8}
+            onPress={() => store.logo && setViewingDocUri(store.logo)}
+            className="absolute left-6 w-[88px] h-[88px] rounded-full overflow-hidden z-20 shadow-xl shadow-black/30 bg-white"
+            style={require('react-native').Platform.OS === 'web' ? { bottom: -30 } : { bottom: -40 }}
+          >
+             {store.logo ? (
+               <Image source={{ uri: store.logo }} style={{ width: "100%", height: "100%" }} contentFit="cover" />
+             ) : (
+               <MaterialIcons name="storefront" size={36} color="#94A3B8" />
+             )}
+          </TouchableOpacity>
         </View>
 
-        {/* Location */}
-        <View>
-          <SectionHeader title={translate("superAdmin.stores.details.locationDetails")} />
-          <View className="mb-2.5">
-            <FieldLabel>{translate("superAdmin.stores.details.landmarkAddress")}</FieldLabel>
-            <View className="bg-white dark:bg-darkBackgroundCard rounded-xl p-3 flex-row items-center gap-2.5">
-              <View><MaterialIcons name="location-on" size={20} color="#FF6600" /></View>
-              <Text className="flex-1 text-[13px] font-poppins-medium text-textPrimary dark:text-darkTextPrimary leading-5">
-                {store.address || "—"}
+        <View 
+          className="px-5 space-y-3"
+          style={require('react-native').Platform.OS === 'web' ? { paddingTop: 60 } : { paddingTop: 40 }}
+        >
+
+          <View className="bg-white dark:bg-darkBackgroundCard rounded-3xl p-6 shadow-sm shadow-slate-200/40 dark:shadow-none mb-4 border border-slate-100 dark:border-neutral-800/50">
+            <View className="flex-row justify-between items-start mb-1">
+              <Text className="flex-1 text-lg font-poppins-bold text-slate-800 dark:text-slate-100 leading-[26px]" numberOfLines={2}>
+                {store.name || "Unnamed Store"}
+              </Text>
+              <View className="pt-1">
+                <MaterialIcons name="work-outline" size={18} color="#CBD5E1" />
+              </View>
+            </View>
+
+            <Text className="text-xs font-poppins-medium text-slate-500 mb-2">
+              {store.owner_name ? `By: ${store.owner_name}` : "By: Not specified"}
+            </Text>
+
+            {/* SUBSCRIPTION INDICATOR */}
+            {subscription ? (
+               <View className={`flex-row items-center gap-1 self-start px-2 py-0.5 rounded-full border mb-3 ${subscription.payment_status === 'paid' ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-100 dark:border-emerald-800' : 'bg-red-50 dark:bg-red-900/20 border-red-100 dark:border-red-800'}`}>
+                 <MaterialIcons name={subscription.payment_status === 'paid' ? "verified" : "warning"} size={10} color={subscription.payment_status === 'paid' ? "#10B981" : "#EF4444"} />
+                 <Text className={`text-[9px] font-poppins-bold tracking-wider uppercase ${subscription.payment_status === 'paid' ? 'text-emerald-700 dark:text-emerald-400' : 'text-red-700 dark:text-red-400'}`}>
+                    Subscription {subscription.payment_status}
+                 </Text>
+               </View>
+            ) : !canCreateAnotherStore && (
+               <View className="flex-row items-center gap-1 self-start px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 mb-3">
+                 <MaterialIcons name="local-fire-department" size={10} color="#2563EB" />
+                 <Text className="text-[9px] font-poppins-bold tracking-wider text-blue-700 dark:text-blue-400 uppercase">
+                    Subscription Required
+                 </Text>
+               </View>
+            )}
+
+            <View className={`self-start px-2 py-0.5 rounded-full ${getStoreCategoryBadge(store.type).bg} mb-1.5 flex-row items-center justify-center`}>
+              <Text
+                className={`text-[10px] font-poppins-semibold ${getStoreCategoryBadge(store.type).text}`}
+                style={{ lineHeight: 16, includeFontPadding: false } as any}
+              >
+                {store.type || "General"}
               </Text>
             </View>
-          </View>
-        </View>
 
-        {/* Approve / Reject */}
-        {isPending && (
-          <View className="-mt-1">
-            <View className="flex-row gap-3">
+            {store.registration_number && (
+              <View className="mb-1.5">
+                <Text className="text-[10px] font-poppins-semibold tracking-wider text-[#94A3B8] uppercase mb-1">{translate("superAdmin.stores.details.registrationNumber", { defaultValue: "Registration No." })}</Text>
+                <Text className="text-xs font-poppins-semibold text-slate-800 dark:text-slate-200">
+                  {store.registration_number}
+                </Text>
+              </View>
+            )}
+
+            <View className="mb-1.5">
+              <Text className="text-[10px] font-poppins-semibold tracking-wider text-[#94A3B8] uppercase mb-1.5">{translate("superAdmin.stores.details.operatingHours", { defaultValue: "Operating Hours" })}</Text>
+              <View className="bg-[#F8FAFC] dark:bg-darkBackgroundMuted rounded-xl p-3 border border-slate-100 dark:border-neutral-800">
+                <View className="flex-row items-center px-1">
+                  <View className="flex-1 flex-row items-center justify-center gap-2">
+                    <MaterialIcons name="wb-sunny" size={14} color="#FF6600" />
+                    <Text className="text-xs font-poppins-semibold text-slate-800 dark:text-slate-100">
+                      {store.store_open ? store.store_open.slice(0, 5) : "09:00"}
+                    </Text>
+                  </View>
+                  <View className="w-[1.5px] h-3 bg-slate-300 dark:bg-neutral-600 rounded-full mx-2" />
+                  <View className="flex-1 flex-row items-center justify-center gap-2">
+                    <MaterialIcons name="nights-stay" size={14} color="#FF6600" />
+                    <Text className="text-xs font-poppins-semibold text-slate-800 dark:text-slate-100">
+                      {store.store_close ? store.store_close.slice(0, 5) : "21:00"}
+                    </Text>
+                  </View>
+                </View>
+              </View>
+            </View>
+
+            <View>
+              <Text className="text-[10px] font-poppins-semibold tracking-wider text-[#94A3B8] uppercase mb-1.5">About This Store</Text>
+              <Text className="text-[11px] font-poppins text-slate-400 dark:text-slate-500 italic leading-5">
+                No store information has been provided yet by the manager.
+              </Text>
+              {store.status !== 'pending_review' && (
+                <View className={`mt-4 flex-row text-center items-center gap-2 self-start px-3 py-2 rounded-xl border ${statusKey === 'inactive' ? 'bg-red-50 dark:bg-red-900/10 border-red-100 dark:border-red-800/30' : 'bg-emerald-50 dark:bg-emerald-900/10 border-emerald-100 dark:border-emerald-800/30'}`}>
+                  <View className={`w-5 h-5 rounded-full items-center justify-center ${statusKey === 'inactive' ? 'bg-red-500' : 'bg-emerald-500'}`}>
+                    <MaterialIcons name={statusKey === 'inactive' ? 'refresh' : 'verified'} size={12} color="#ffffff" />
+                  </View>
+                  <Text
+                    className={`text-[10px] font-poppins-bold uppercase tracking-wider ${statusKey === 'inactive' ? 'text-red-700 dark:text-red-400' : 'text-emerald-700 dark:text-emerald-400'}`}
+                    style={{ lineHeight: 14, includeFontPadding: false } as any}
+                  >
+                    {statusKey === 'inactive'
+                      ? 'Requires Resubmission'
+                      : `Approved Date: ${store.approved_at ? new Date(store.approved_at).toLocaleDateString("en-US", { year: 'numeric', month: 'short', day: 'numeric' }) : "N/A"}`}
+                  </Text>
+                </View>
+              )}
+            </View>
+
+            {store.store_pictures && store.store_pictures.length > 0 && (
+              <View className="mt-8 border-t border-slate-100 dark:border-neutral-800 pt-6">
+                <View className="flex-row items-center justify-between mb-1.5">
+                  <Text className="text-sm font-poppins-bold text-slate-800 dark:text-slate-100">Store Pictures</Text>
+                  <Text className="text-[10px] font-poppins-semibold text-textMuted dark:text-slate-500 uppercase tracking-widest">
+                    {store.store_pictures.length} {store.store_pictures.length === 1 ? 'PHOTO' : 'PHOTOS'}
+                  </Text>
+                </View>
+
+                <View 
+                  className="relative w-full rounded-[16px] overflow-hidden bg-[#F8FAFC] dark:bg-darkBackgroundMuted" 
+                  onLayout={(e) => setLayoutWidth(e.nativeEvent.layout.width)}
+                  style={require('react-native').Platform.OS === 'web' ? { height: 450 } : { height: 180 }}
+                >
+                  {(layoutWidth > 0 && Carousel) ? (
+                    <View className="flex-1 relative">
+                      <Carousel
+                        ref={scrollRef}
+                        loop
+                        width={layoutWidth}
+                        height={require('react-native').Platform.OS === 'web' ? 450 : 180}
+                        autoPlay={false}
+                        data={store.store_pictures}
+                        scrollAnimationDuration={1000}
+                        onSnapToItem={(index) => setCurrentPicIndex(index)}
+                        renderItem={({ item: uri }) => (
+                          <TouchableOpacity 
+                             activeOpacity={0.9} 
+                             onPress={() => setViewingDocUri(uri)}
+                             className="w-full h-full"
+                          >
+                            <Image source={{ uri }} style={{ width: "100%", height: "100%" }} contentFit="cover" />
+                          </TouchableOpacity>
+                        )}
+                      />
+
+                      {/* Web Navigation Arrows */}
+                      {require('react-native').Platform.OS === 'web' && store.store_pictures.length > 1 && (
+                        <>
+                          <TouchableOpacity
+                            onPress={() => scrollRef.current?.prev()}
+                            className="absolute left-4 top-1/2 -mt-6 w-12 h-12 bg-black/30 hover:bg-black/50 rounded-full items-center justify-center z-30 transition-colors"
+                          >
+                            <ChevronLeft size={32} color="white" />
+                          </TouchableOpacity>
+                          <TouchableOpacity
+                            onPress={() => scrollRef.current?.next()}
+                            className="absolute right-4 top-1/2 -mt-6 w-12 h-12 bg-black/30 hover:bg-black/50 rounded-full items-center justify-center z-30 transition-colors"
+                          >
+                            <ChevronRight size={32} color="white" />
+                          </TouchableOpacity>
+                        </>
+                      )}
+                    </View>
+                  ) : (
+                    <View className="w-full h-full items-center justify-center">
+                      {store.store_pictures[0] && (
+                        <Image source={{ uri: store.store_pictures[0] }} style={{ width: "100%", height: "100%" }} contentFit="cover" />
+                      )}
+                    </View>
+                  )}
+ 
+                  {store.store_pictures.length > 1 && (
+                    <View className="absolute bottom-2 left-0 right-0 flex-row justify-center gap-1.5 z-10" pointerEvents="none">
+                      {store.store_pictures.map((_, idx) => (
+                        <View key={idx} className={`h-1.5 rounded-full transition-all ${idx === currentPicIndex ? 'w-4 bg-primary' : 'w-1.5 bg-white/70'}`} />
+                      ))}
+                    </View>
+                  )}
+                </View>
+              </View>
+            )}
+          </View>
+
+          <View className="bg-white dark:bg-darkBackgroundCard rounded-3xl p-6 shadow-sm shadow-slate-200/40 dark:shadow-none mb-4 border border-slate-100 dark:border-neutral-800/50">
+            <View className="flex-row items-center gap-1.5 mb-5">
+              <MaterialIcons name="location-on" size={18} color="#D93025" />
+              <Text className="text-sm font-poppins-bold text-slate-800 dark:text-slate-100">Location & Contact</Text>
+            </View>
+
+            {(store.latitude !== null && store.longitude !== null && store.latitude !== undefined && store.longitude !== undefined) ? (
+              <View style={{ width: "100%", height: 160, borderRadius: 16, overflow: "hidden", marginBottom: 20 }} className="bg-slate-50 dark:bg-neutral-800">
+                {(shouldUseInteractiveMapbox() && MapView && Mapbox) ? (
+                  <View style={{ flex: 1, position: "relative" }}>
+                    <MapView
+                      style={{ flex: 1, width: "100%", height: "100%" }}
+                      surfaceView={false}
+                      styleURL={
+                        isDark
+                          ? "mapbox://styles/mapbox/navigation-night-v1"
+                          : "mapbox://styles/mapbox/streets-v12"
+                      }
+                      scrollEnabled={false}
+                      zoomEnabled={false}
+                      rotateEnabled={false}
+                      pitchEnabled={false}
+                      attributionEnabled={false}
+                      logoEnabled={false}
+                    >
+                      <Camera
+                        centerCoordinate={[Number(store.longitude), Number(store.latitude)]}
+                        zoomLevel={15}
+                        animationMode="none"
+                      />
+                      <MarkerView
+                        coordinate={[Number(store.longitude), Number(store.latitude)]}
+                        anchor={{ x: 0.5, y: 1 }}
+                      >
+                        <View style={{ alignItems: "center", justifyContent: "flex-end" }}>
+                          <Image
+                            source={require("../../../assets/images/markers/default.png")}
+                            style={{ width: 36, height: 36 }}
+                            contentFit="contain"
+                          />
+                        </View>
+                      </MarkerView>
+                    </MapView>
+                  </View>
+                ) : (
+                  <View className="flex-1 w-full h-full items-center justify-center gap-y-1">
+                    <MaterialIcons name="map" size={28} color={isDark ? "#525252" : "#CBD5E1"} />
+                    <Text className="text-[10px] font-poppins text-slate-400 dark:text-slate-500 px-3 text-center">
+                      Map only on Android & Web
+                    </Text>
+                  </View>
+                )}
+              </View>
+            ) : (
+              <View className="h-[120px] bg-slate-50 dark:bg-neutral-800/50 rounded-2xl items-center justify-center mb-5 border border-slate-100 dark:border-neutral-800">
+                <MaterialIcons name="map" size={28} color="#CBD5E1" />
+                <Text className="text-xs font-poppins text-slate-400 mt-2">No map coordinates</Text>
+              </View>
+            )}
+
+            <View>
+              <Text className="text-[10px] font-poppins-semibold tracking-wider text-slate-400 dark:text-slate-500 uppercase mb-1">Store Address</Text>
+              <Text className="text-xs font-poppins-medium text-slate-700 dark:text-slate-300 leading-5">{store.address || "—"}</Text>
+            </View>
+
+            {store.phone && (
+              <View className="mt-5">
+                <Text className="text-[10px] font-poppins-semibold tracking-wider text-slate-400 dark:text-slate-500 uppercase mb-1">Phone Number</Text>
+                <Text className="text-xs font-poppins-medium text-slate-700 dark:text-slate-300">{store.phone}</Text>
+              </View>
+            )}
+          </View>
+
+          <View className="bg-white dark:bg-darkBackgroundCard rounded-3xl p-6 shadow-sm shadow-slate-200/40 dark:shadow-none mb-6 border border-slate-100 dark:border-neutral-800/50">
+            <View className="flex-row items-center gap-1.5 mb-5">
+              <MaterialIcons name="verified" size={18} color="#15803d" />
+              <Text className="text-sm font-poppins-bold text-slate-800 dark:text-slate-100">Verification</Text>
+            </View>
+
+            {store.business_document_image ? (
+              <TouchableOpacity
+                onPress={() => setViewingDocUri(store.business_document_image)}
+                activeOpacity={0.7}
+                className="bg-[#F8FAFC] dark:bg-neutral-800/40 rounded-2xl p-4 flex-row items-center mb-4 border border-slate-100 dark:border-neutral-800"
+              >
+                <View className="w-10 h-10 bg-white dark:bg-darkBackgroundCard rounded drop-shadow-sm border border-slate-100 dark:border-neutral-700 items-center justify-center overflow-hidden">
+                  <Image source={{ uri: store.business_document_image }} style={{ width: 40, height: 40 }} contentFit="cover" />
+                </View>
+                <View className="ml-3 flex-1">
+                  <Text className="text-xs font-poppins-semibold text-slate-800 dark:text-slate-100">Business License</Text>
+                  <Text className="text-[9px] font-poppins-medium text-slate-400 mt-0.5 uppercase tracking-wider">IMG • Tap to View</Text>
+                </View>
+                <MaterialIcons name="check-circle" size={18} color="#15803d" />
+              </TouchableOpacity>
+            ) : (
+              <View className="bg-[#F8FAFC] dark:bg-neutral-800/40 rounded-2xl p-4 items-center justify-center border border-slate-100 dark:border-neutral-800 mb-1.5">
+                <Text className="text-[10px] font-poppins-semibold text-slate-400 uppercase tracking-widest">No Documents Provided</Text>
+              </View>
+            )}
+
+
+          </View>
+
+          {isPending && (
+            <View className="flex-row gap-3 pt-2">
               <View className="flex-1">
                 <Button variant="danger" label={translate("superAdmin.stores.details.rejectApplication")} onPress={() => onReject(store)} fullWidth />
               </View>
@@ -358,15 +479,15 @@ export function AdminStoreDetails({
                 <Button variant="primary" label={translate("superAdmin.stores.details.approveStore")} onPress={() => onApprove(store)} fullWidth />
               </View>
             </View>
-          </View>
-        )}
+          )}
+
+        </View>
       </ScrollView>
 
-      {/* Full-screen document viewer */}
-      {viewingDoc && store.business_document_image && (
+      {viewingDocUri && (
         <ImageViewerModal
-          uri={store.business_document_image}
-          onClose={() => setViewingDoc(false)}
+          uri={viewingDocUri}
+          onClose={() => setViewingDocUri(null)}
         />
       )}
     </ScreenWrapper>

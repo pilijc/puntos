@@ -1,24 +1,33 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { RefreshControl, useColorScheme, NativeSyntheticEvent, NativeScrollEvent, useWindowDimensions } from "react-native";
-import { View, Text, TouchableOpacity, ScrollView, Image } from "@/tw";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  RefreshControl,
+  NativeSyntheticEvent,
+  NativeScrollEvent,
+  useWindowDimensions,
+  Platform,
+  ScrollView as RNScrollView,
+} from "react-native";
+import { View, Text, TouchableOpacity, ScrollView, Image, SafeAreaView } from "@/tw";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { getStoreById } from "@/services/store-service";
 import { getTransactionsPageForStore } from "@/services/store-manager/transactions-service";
-import { TransactionItem, TxType, type_badge } from "@/type/store-manager/transaction";
+import { TransactionItem, type_badge } from "@/type/store-manager/transaction";
 import { formatTxTime } from "@/utils/store_manager/transaction";
 import { Modal, ModalButton } from "@/components/modal";
-import { Building2, Gift, QrCode, UsersRound, Stamp, Flame } from "lucide-react-native";
+import { Building2, Gift, QrCode, UsersRound, Stamp, Flame, ChevronLeft, ChevronRight, Loader2, ReceiptText } from "lucide-react-native";
+import { AppHeader } from "@/components/header";
+import { useTranslation } from "react-i18next";
 
 export default function ViewStore() {
+  const { t } = useTranslation();
   const { id } = useLocalSearchParams();
   const storeId = Number(id);
-  const insets = useSafeAreaInsets();
   const { width: screenWidth } = useWindowDimensions();
   const router = useRouter();
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === "dark";
+  const isWeb = Platform.OS === "web";
+  const carouselCardPadding = isWeb ? 8 : 0;
+  const carouselMaxWidth = isWeb ? 860 : screenWidth - 32;
+  const carouselWidth = Math.max(0, Math.min(screenWidth - 32, carouselMaxWidth) - carouselCardPadding * 2);
   const [store, setStore] = useState<Awaited<ReturnType<typeof getStoreById>> | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
@@ -33,14 +42,14 @@ export default function ViewStore() {
 
   const menuItems = useMemo(
     () => [
-      { key: "staff",   label: "Staff",       description: "Manage team",        icon: <UsersRound size={18} color="#FF6600" />, route: "/(store_manager)/staff"              as const },
-      { key: "streak",  label: "Streak",      description: "Daily rewards",      icon: <Flame      size={18} color="#FF6600" />, route: "/(store_manager)/streak" as const },
-      { key: "stamp",   label: "Stamp",       description: "Punch cards",        icon: <Stamp      size={18} color="#FF6600" />, route: "/(store_manager)/stamp/"   as const },
-      { key: "qr",      label: "QR Purchase", description: "Scan rewards",       icon: <QrCode     size={18} color="#FF6600" />, route: "/(store_manager)/qr"                 as const },
-      { key: "rewards", label: "Rewards",     description: "Redeemable items",   icon: <Gift       size={18} color="#FF6600" />, route: "/(store_manager)/reward"             as const },
-      { key: "media",   label: "Details",     description: "Manage Store",       icon: <Building2  size={18} color="#FF6600" />, route: "/(store_manager)/detail"             as const },
+      { key: "staff", label: t("storeManager.viewStore.menu.staff.label"), description: t("storeManager.viewStore.menu.staff.description"), icon: <UsersRound size={18} color="#FF6600" />, route: "/(store_manager)/staff" as const },
+      { key: "streak", label: t("storeManager.viewStore.menu.streak.label"), description: t("storeManager.viewStore.menu.streak.description"), icon: <Flame size={18} color="#FF6600" />, route: "/(store_manager)/streak" as const },
+      { key: "stamp", label: t("storeManager.viewStore.menu.stamp.label"), description: t("storeManager.viewStore.menu.stamp.description"), icon: <Stamp size={18} color="#FF6600" />, route: "/(store_manager)/stamp/" as const },
+      { key: "qr", label: t("storeManager.viewStore.menu.qr.label"), description: t("storeManager.viewStore.menu.qr.description"), icon: <QrCode size={18} color="#FF6600" />, route: "/(store_manager)/qr" as const },
+      { key: "rewards", label: t("storeManager.viewStore.menu.rewards.label"), description: t("storeManager.viewStore.menu.rewards.description"), icon: <Gift size={18} color="#FF6600" />, route: "/(store_manager)/reward" as const },
+      { key: "media", label: t("storeManager.viewStore.menu.media.label"), description: t("storeManager.viewStore.menu.media.description"), icon: <Building2 size={18} color="#FF6600" />, route: "/(store_manager)/detail" as const },
     ],
-    []
+    [t]
   );
 
   const carouselImages = useMemo(() => {
@@ -50,12 +59,23 @@ export default function ViewStore() {
     return [require("@/assets/images/puntos-icon.png")];
   }, [store?.store_pictures, store?.logo]);
 
+  const carouselRef = useRef<RNScrollView | null>(null);
+
   const onCarouselScroll = useCallback((e: NativeSyntheticEvent<NativeScrollEvent>) => {
-    const cardWidth = e.nativeEvent.layoutMeasurement.width;
+    const cardWidth = isWeb ? carouselWidth : e.nativeEvent.layoutMeasurement.width;
     if (!cardWidth) return;
     const nextIndex = Math.round(e.nativeEvent.contentOffset.x / cardWidth);
     setActiveImageIndex(nextIndex);
-  }, []);
+  }, [carouselWidth, isWeb]);
+
+  const scrollToCarouselIndex = useCallback(
+    (nextIndex: number) => {
+      const clamped = Math.max(0, Math.min(nextIndex, carouselImages.length - 1));
+      carouselRef.current?.scrollTo({ x: clamped * carouselWidth, y: 0, animated: true });
+      setActiveImageIndex(clamped);
+    },
+    [carouselImages.length, carouselWidth]
+  );
 
   const fetchStore = useCallback(async () => {
     const storeData = await getStoreById(storeId);
@@ -92,7 +112,7 @@ export default function ViewStore() {
   }, [fetchStore, fetchRecentTransactions]);
 
   return (
-    <View className="flex-1 bg-backgroundMuted dark:bg-neutral-900">
+    <SafeAreaView edges={["top", "left", "right"]} className="flex-1 bg-backgroundMuted dark:bg-darkBackground">
       <Modal
         visible={!!modal}
         onClose={() => setModal(null)}
@@ -101,33 +121,18 @@ export default function ViewStore() {
         buttons={modal?.buttons}
         timer={modal?.timer ? 3000 : undefined}
       />
-      <View
-        className="border-b border-neutral-100 dark:border-neutral-700 bg-background dark:bg-neutral-800"
-        style={{ paddingTop: insets.top + 8, paddingBottom: 12 }}
-      >
-        <View className="flex-row items-center px-2">
-          <TouchableOpacity
-            onPress={() => router.push("/(store_manager)/stores")}
-            className="w-10 h-10 rounded-full items-center justify-center"
-            activeOpacity={0.7}
-          >
-            <MaterialIcons name="chevron-left" size={22} color={isDark ? "#F1F5F9" : "#0F172A"} />
-          </TouchableOpacity>
-          <View className="flex-1 items-center justify-center -ml-10">
-            <Text className="text-md font-poppins-bold text-textPrimary dark:text-textPrimary">
-              {store?.name || "Store Details"}
-            </Text>
-            <Text className="text-xs font-poppins text-textMuted dark:text-textMuted -mt-2">
-              {store?.address || "View & manage store info"}
-            </Text>
-          </View>
-
-        </View>
-      </View>
+      <AppHeader
+        title={store?.name || t("storeManager.viewStore.fallbackTitle")}
+        description={store?.address || t("storeManager.viewStore.fallbackDescription")}
+        onBackPress={() => {
+          router.push("/(store_manager)/stores");
+        }}
+      />
 
       <ScrollView
-        className="flex-1 gap-y-4"
+        className="flex-1 gap-y-4 pt-2"
         showsVerticalScrollIndicator={false}
+        contentInsetAdjustmentBehavior="never"
         contentContainerStyle={{ paddingBottom: 32 }}
         refreshControl={
           <RefreshControl
@@ -138,138 +143,275 @@ export default function ViewStore() {
           />
         }
       >
-        <View className="items-center gap-y-2">
-          <View className="w-full px-4">
-            <View style={{ width: (screenWidth - 32), height: 144, borderRadius: 12, overflow: "hidden" }}>
-              <ScrollView
-                horizontal
-                pagingEnabled
-                showsHorizontalScrollIndicator={false}
-                onScroll={onCarouselScroll}
-                scrollEventThrottle={16}
-                style={{ width: (screenWidth - 32), height: 144 }}
-              >
-                {carouselImages.map((img, idx) => (
-                  <Image
-                    key={`${typeof img === "string" ? img : "default"}-${idx}`}
-                    source={typeof img === "string" ? { uri: img } : img}
-                    style={{ width: (screenWidth - 32), height: 144 }}
-                    contentFit="cover"
-                  />
-                ))}
-              </ScrollView>
-              {carouselImages.length > 1 && (
-                <View
-                  className="flex-row items-center justify-center gap-x-1.5 absolute bottom-4 left-0 right-0"
+        <View className="items-center">
+          <View className="w-full px-4 items-center">
+            <View
+              className={isWeb ? "bg-white dark:bg-neutral-800 border border-slate-100 dark:border-neutral-700 rounded-xl p-2" : ""}
+              style={isWeb ? { width: "100%", maxWidth: 860 } : undefined}
+            >
+              <View className="w-full h-40 rounded-xl overflow-hidden">
+                <RNScrollView
+                  ref={carouselRef}
+                  horizontal
+                  pagingEnabled={!isWeb}
+                  snapToInterval={isWeb ? carouselWidth : undefined}
+                  snapToAlignment={isWeb ? "start" : undefined}
+                  decelerationRate={isWeb ? "fast" : undefined}
+                  disableIntervalMomentum={isWeb}
+                  showsHorizontalScrollIndicator={false}
+                  onScroll={onCarouselScroll}
+                  scrollEventThrottle={16}
+                  style={{ width: "100%", height: "100%" }}
                 >
-                  {carouselImages.map((_, i) => (
-                    <View
-                      key={`dot-${i}`}
-                      className={`rounded-full ${activeImageIndex === i ? "bg-white w-5 h-1.5" : "bg-white/50 w-1.5 h-1.5"}`}
+                  {carouselImages.map((img, idx) => (
+                    <Image
+                      key={`${typeof img === "string" ? img : "default"}-${idx}`}
+                      source={typeof img === "string" ? { uri: img } : img}
+                      style={{ width: carouselWidth, height: "100%" }}
+                      contentFit="cover"
+                      pointerEvents="none"
                     />
+                  ))}
+                </RNScrollView>
+
+                {Platform.OS === "web" && carouselImages.length > 1 && (
+                  <>
+                    <TouchableOpacity
+                      activeOpacity={0.8}
+                      onPress={() => scrollToCarouselIndex(activeImageIndex - 1)}
+                      className="absolute left-2 top-1/2 -mt-4 w-8 h-8 rounded-full bg-black/40 items-center justify-center"
+                    >
+                      <ChevronLeft size={18} color="#FFFFFF" />
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      activeOpacity={0.8}
+                      onPress={() => scrollToCarouselIndex(activeImageIndex + 1)}
+                      className="absolute right-2 top-1/2 -mt-4 w-8 h-8 rounded-full bg-black/40 items-center justify-center"
+                    >
+                      <ChevronRight size={18} color="#FFFFFF" />
+                    </TouchableOpacity>
+                  </>
+                )}
+                {carouselImages.length > 1 && (
+                  <View
+                    className="flex-row items-center justify-center gap-x-1.5 absolute bottom-4 left-0 right-0"
+                  >
+                    {carouselImages.map((_, i) => (
+                      <View
+                        key={`dot-${i}`}
+                        className={`rounded-full ${activeImageIndex === i ? "bg-white w-5 h-1.5" : "bg-white/50 w-1.5 h-1.5"}`}
+                      />
+                    ))}
+                  </View>
+                )}
+              </View>
+            </View>
+          </View>
+        </View>
+
+        {Platform.OS === "web" ? (
+          <View className="px-4 py-3 items-center">
+            <View
+              className="w-full bg-white dark:bg-neutral-800 border border-slate-100 dark:border-neutral-700 rounded-xl p-3"
+              style={{ maxWidth: 860 }}
+            >
+              <View className="flex-row flex-wrap gap-y-2 justify-between">
+                {menuItems.map((item) => (
+                  <TouchableOpacity
+                    key={item.key}
+                    activeOpacity={0.85}
+                    onPress={() => router.push({ pathname: item.route, params: { storeId } })}
+                    style={{ width: "32.5%" }}
+                    className="bg-white dark:bg-neutral-800 border border-slate-100 dark:border-neutral-700 rounded-xl p-3"
+                  >
+                    <View className="w-9 h-9 rounded-lg items-center justify-center mb-1 -ml-1">
+                      {item.icon}
+                    </View>
+                    <Text className="text-[11px] font-poppins-semibold text-slate-800 dark:text-slate-100 leading-4">
+                      {item.label}
+                    </Text>
+                    <Text className="text-[9px] font-poppins text-slate-400 dark:text-slate-500 mt-0.5">
+                      {item.description}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+          </View>
+        ) : (
+          <View className="px-4 py-3">
+            <View className="flex-row flex-wrap gap-y-2 justify-between">
+              {menuItems.map((item) => (
+                <TouchableOpacity
+                  key={item.key}
+                  activeOpacity={0.85}
+                  onPress={() => router.push({ pathname: item.route, params: { storeId } })}
+                  style={{ width: "32.5%" }}
+                  className="bg-white dark:bg-neutral-800 border border-slate-100 dark:border-neutral-700 rounded-xl p-3"
+                >
+                  <View className="w-9 h-9 rounded-lg items-center justify-center mb-1 -ml-1">
+                    {item.icon}
+                  </View>
+                  <Text className="text-[11px] font-poppins-semibold text-slate-800 dark:text-slate-100 leading-4">
+                    {item.label}
+                  </Text>
+                  <Text className="text-[9px] font-poppins text-slate-400 dark:text-slate-500 mt-0.5">
+                    {item.description}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        )}
+
+        {isWeb ? (
+          <View className="px-4 items-center">
+            <View style={{ width: "100%", maxWidth: 860 }}>
+              <View className="flex-row items-center justify-between mb-3">
+                <Text className="text-sm font-poppins-bold text-textSecondary dark:text-textSecondary ml-1">
+                  {t("storeManager.viewStore.recentTransactions")}
+                </Text>
+                <TouchableOpacity
+                  activeOpacity={0.7}
+                  className="flex-row items-center gap-x-0.5"
+                  onPress={() =>
+                    router.push({ pathname: "/(store_manager)/transactions", params: { storeId: String(storeId) } })
+                  }
+                >
+                  <Text className="text-xs font-poppins text-primary">{t("storeManager.viewStore.seeAll")}</Text>
+                  <ChevronRight size={14} color="#FF6600" />
+                </TouchableOpacity>
+              </View>
+
+              {txLoading ? (
+                <View className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 px-4 py-8 items-center">
+                  <Loader2 className="animate-spin" size={28} color="#CBD5E1" />
+                </View>
+              ) : recentTxs.length === 0 ? (
+                <View className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 px-4 py-10 items-center gap-y-2">
+                  <ReceiptText size={32} color="#CBD5E1" />
+                  <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">
+                    {t("storeManager.viewStore.noTransactionsYet")}
+                  </Text>
+                </View>
+              ) : (
+                <View className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 overflow-hidden">
+                  {recentTxs.map((tx, idx) => (
+                    <View
+                      key={tx.id}
+                      className={`flex-row items-center px-4 py-3 gap-x-3 ${
+                        idx < recentTxs.length - 1 ? "border-b border-slate-100 dark:border-slate-800" : ""
+                      }`}
+                    >
+                      {tx.userAvatar ? (
+                        <Image
+                          source={{ uri: tx.userAvatar }}
+                          style={{ width: 36, height: 36, borderRadius: 18 }}
+                          contentFit="cover"
+                        />
+                      ) : (
+                        <View className="w-9 h-9 rounded-full bg-slate-200 dark:bg-slate-700 items-center justify-center">
+                          <Text className="text-xs font-poppins-bold text-slate-600 dark:text-slate-300">
+                            {(tx.userName || "?").charAt(0).toUpperCase()}
+                          </Text>
+                        </View>
+                      )}
+                      <View className="flex-1 min-w-0">
+                        <View className="flex-row items-center justify-between gap-x-2">
+                          <Text className="text-sm font-poppins-semibold text-slate-900 dark:text-slate-100" numberOfLines={1}>
+                            {tx.userName}
+                          </Text>
+                          <Text className="text-xs font-poppins-semibold text-primary shrink-0">{tx.detail}</Text>
+                        </View>
+                        <View className="flex-row items-center justify-between mt-0.5">
+                          <Text className="text-[10px] font-poppins text-slate-400 dark:text-slate-500">
+                            {type_badge[tx.type]}
+                          </Text>
+                          <Text className="text-[10px] font-poppins text-slate-400 dark:text-slate-500">
+                            {formatTxTime(tx.date)}
+                          </Text>
+                        </View>
+                      </View>
+                    </View>
                   ))}
                 </View>
               )}
             </View>
           </View>
-        </View>
-
-        <View className="px-4 py-3">
-          <View className="flex-row flex-wrap gap-y-2 justify-between">
-            {menuItems.map((item) => (
-              <TouchableOpacity
-                key={item.key}
-                activeOpacity={0.85}
-                onPress={() => router.push({ pathname: item.route, params: { storeId } })}
-                style={{ width: "32.5%" }}
-                className="bg-white dark:bg-neutral-800 border border-slate-100 dark:border-neutral-700 rounded-xl p-3"
-              >
-                <View className="w-9 h-9 rounded-lg items-center justify-center mb-1 -ml-1">
-                  {item.icon}
-                </View>
-                <Text className="text-[11px] font-poppins-semibold text-slate-800 dark:text-slate-100 leading-4">
-                  {item.label}
-                </Text>
-                <Text className="text-[9px] font-poppins text-slate-400 dark:text-slate-500 mt-0.5">
-                  {item.description}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-
-        <View className="px-4">
-          <View className="flex-row items-center justify-between mb-3">
-            <Text className="text-sm font-poppins-bold text-textSecondary dark:text-textSecondary ml-1">
-              Recent Transactions
-            </Text>
-            <TouchableOpacity
-              activeOpacity={0.7}
-              className="flex-row items-center gap-x-0.5"
-              onPress={() =>
-                router.push({ pathname: "/(store_manager)/transactions", params: { storeId: String(storeId) } })
-              }
-            >
-              <Text className="text-xs font-poppins text-primary">See all</Text>
-              <MaterialIcons name="chevron-right" size={14} color="#FF6600" />
-            </TouchableOpacity>
-          </View>
-
-          {txLoading ? (
-            <View className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 px-4 py-8 items-center">
-              <MaterialIcons name="hourglass-empty" size={28} color="#CBD5E1" />
-            </View>
-          ) : recentTxs.length === 0 ? (
-            <View className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 px-4 py-10 items-center gap-y-2">
-              <MaterialIcons name="receipt-long" size={32} color="#CBD5E1" />
-              <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">
-                No transactions yet
+        ) : (
+          <View className="px-4">
+            <View className="flex-row items-center justify-between mb-3">
+              <Text className="text-sm font-poppins-bold text-textSecondary dark:text-textSecondary ml-1">
+                {t("storeManager.viewStore.recentTransactions")}
               </Text>
+              <TouchableOpacity
+                activeOpacity={0.7}
+                className="flex-row items-center gap-x-0.5"
+                onPress={() =>
+                  router.push({ pathname: "/(store_manager)/transactions", params: { storeId: String(storeId) } })
+                }
+              >
+                <Text className="text-xs font-poppins text-primary">{t("storeManager.viewStore.seeAll")}</Text>
+                <ChevronRight size={14} color="#FF6600" />
+              </TouchableOpacity>
             </View>
-          ) : (
-            <View className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 overflow-hidden">
-              {recentTxs.map((tx, idx) => (
-                <View
-                  key={tx.id}
-                  className={`flex-row items-center px-4 py-3 gap-x-3 ${
-                    idx < recentTxs.length - 1 ? "border-b border-slate-100 dark:border-slate-800" : ""
-                  }`}
-                >
-                  {tx.userAvatar ? (
-                    <Image
-                      source={{ uri: tx.userAvatar }}
-                      style={{ width: 36, height: 36, borderRadius: 18 }}
-                      contentFit="cover"
-                    />
-                  ) : (
-                    <View className="w-9 h-9 rounded-full bg-slate-200 dark:bg-slate-700 items-center justify-center">
-                      <Text className="text-xs font-poppins-bold text-slate-600 dark:text-slate-300">
-                        {(tx.userName || "?").charAt(0).toUpperCase()}
-                      </Text>
-                    </View>
-                  )}
-                  <View className="flex-1 min-w-0">
-                    <View className="flex-row items-center justify-between gap-x-2">
-                      <Text className="text-sm font-poppins-semibold text-slate-900 dark:text-slate-100" numberOfLines={1}>
-                        {tx.userName}
-                      </Text>
-                      <Text className="text-xs font-poppins-semibold text-primary shrink-0">{tx.detail}</Text>
-                    </View>
-                    <View className="flex-row items-center justify-between mt-0.5">
-                      <Text className="text-[10px] font-poppins text-slate-400 dark:text-slate-500">
-                        {type_badge[tx.type]}
-                      </Text>
-                      <Text className="text-[10px] font-poppins text-slate-400 dark:text-slate-500">
-                        {formatTxTime(tx.date)}
-                      </Text>
+
+            {txLoading ? (
+              <View className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 px-4 py-8 items-center">
+                <Loader2 className="animate-spin" size={28} color="#CBD5E1" />
+              </View>
+            ) : recentTxs.length === 0 ? (
+              <View className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 px-4 py-10 items-center gap-y-2">
+                <ReceiptText size={32} color="#CBD5E1" />
+                <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">
+                  {t("storeManager.viewStore.noTransactionsYet")}
+                </Text>
+              </View>
+            ) : (
+              <View className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 overflow-hidden">
+                {recentTxs.map((tx, idx) => (
+                  <View
+                    key={tx.id}
+                    className={`flex-row items-center px-4 py-3 gap-x-3 ${
+                      idx < recentTxs.length - 1 ? "border-b border-slate-100 dark:border-slate-800" : ""
+                    }`}
+                  >
+                    {tx.userAvatar ? (
+                      <Image
+                        source={{ uri: tx.userAvatar }}
+                        style={{ width: 36, height: 36, borderRadius: 18 }}
+                        contentFit="cover"
+                      />
+                    ) : (
+                      <View className="w-9 h-9 rounded-full bg-slate-200 dark:bg-slate-700 items-center justify-center">
+                        <Text className="text-xs font-poppins-bold text-slate-600 dark:text-slate-300">
+                          {(tx.userName || "?").charAt(0).toUpperCase()}
+                        </Text>
+                      </View>
+                    )}
+                    <View className="flex-1 min-w-0">
+                      <View className="flex-row items-center justify-between gap-x-2">
+                        <Text className="text-sm font-poppins-semibold text-slate-900 dark:text-slate-100" numberOfLines={1}>
+                          {tx.userName}
+                        </Text>
+                        <Text className="text-xs font-poppins-semibold text-primary shrink-0">{tx.detail}</Text>
+                      </View>
+                      <View className="flex-row items-center justify-between mt-0.5">
+                        <Text className="text-[10px] font-poppins text-slate-400 dark:text-slate-500">
+                          {type_badge[tx.type]}
+                        </Text>
+                        <Text className="text-[10px] font-poppins text-slate-400 dark:text-slate-500">
+                          {formatTxTime(tx.date)}
+                        </Text>
+                      </View>
                     </View>
                   </View>
-                </View>
-              ))}
-            </View>
-          )}
-        </View>
+                ))}
+              </View>
+            )}
+          </View>
+        )}
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 }

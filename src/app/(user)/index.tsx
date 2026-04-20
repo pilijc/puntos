@@ -1,25 +1,29 @@
 import { Text, SafeAreaView, View, Image } from "@/tw";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import Mapbox, { MapView, PointAnnotation } from "@rnmapbox/maps";
-import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
-import { TextInput, TouchableOpacity, useColorScheme } from "react-native";
+import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
+import { TextInput, TouchableOpacity, useColorScheme, Platform } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
-import * as Location from 'expo-location'
+import * as Location from "expo-location";
 import { Ionicons, MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
-import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
+import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 import { getRouteService, getSearchResultsService } from "@/services/discover-service";
 import { useStoreStore } from "@/store/user/store-store";
 import { Store } from "@/type/user/store";
 import type * as GeoJSON from "geojson";
-import { getOneSignalId, sendPushNotification } from "@/services/push-notif";
+import { getOneSignalId, sendPushNotification, isOneSignalNativeAvailable } from "@/services/push-service";
 import { isStoreNearby } from "@/services/user/location-service";
 import * as turf from "@turf/turf";
 import { getStores } from "@/services/store-service";
-import { OneSignal } from "react-native-onesignal";
 import { storeIconKey } from "@/type/user/discover";
-import Svg, { Path } from "react-native-svg";
 import { useTranslation } from "react-i18next";
 import { useLanguageStore } from "@/store/language-store";
+
+let OneSignal: typeof import("react-native-onesignal").OneSignal | null = null;
+
+if (Platform.OS !== "web") {
+  OneSignal = require("react-native-onesignal").OneSignal;
+}
 
 Mapbox.setAccessToken(process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN);
 
@@ -82,6 +86,8 @@ export default function Discover() {
   }, [searchQuery]);
 
   useEffect(() => {
+    if (!isOneSignalNativeAvailable() || !OneSignal) return;
+  
     const handleNotificationClick = (event: any) => {
       (async () => {
         try {
@@ -89,23 +95,23 @@ export default function Discover() {
           const data = (notification.additionalData ?? notification.data) as
             | { store_id?: number | string; store_ids?: (number | string)[] }
             | undefined;
-
+  
           const rawIds: (number | string)[] = [];
           if (data?.store_id != null) rawIds.push(data.store_id);
           if (Array.isArray(data?.store_ids)) rawIds.push(...data.store_ids);
-
+  
           const storeIds = Array.from(
             new Set(rawIds.map((id) => Number(id)).filter((n) => !Number.isNaN(n))),
           );
           if (storeIds.length === 0) return;
-
+  
           const allStores = (await getStores()) ?? [];
           const matchedStores = allStores.filter((s) =>
             storeIds.includes(Number(s.id)),
           ) as Store[];
-
+  
           if (matchedStores.length === 0) return;
-
+  
           setSheetStores(matchedStores);
           if (matchedStores.length > 1) {
             setSheetView("list");
@@ -120,10 +126,11 @@ export default function Discover() {
         }
       })();
     };
-
+  
     OneSignal.Notifications.addEventListener("click", handleNotificationClick);
+  
     return () => {
-      OneSignal.Notifications.removeEventListener("click", handleNotificationClick);
+      OneSignal?.Notifications.removeEventListener("click", handleNotificationClick);
     };
   }, []);
 
@@ -169,70 +176,70 @@ export default function Discover() {
         },
         async (position) => {
           if (cancelled) return;
-          setLocation(position);
-
-          const { latitude: uLat, longitude: uLon } = position.coords;
-          const currentStores = useStoreStore.getState().stores;
-
-          const nearbyStoreIds: number[] = [];
-          for (const store of currentStores) {
-            if (notifiedStoreIds.current.has(store.id)) continue;
-            if (!store.latitude || !store.longitude) continue;
-
-            const nearby = isStoreNearby(
-              uLat,
-              uLon,
-              store.latitude,
-              store.longitude,
-              store.radius!
-            );
-
-            if (nearby) nearbyStoreIds.push(store.id);
-          }
-
-          const nearbyCount = nearbyStoreIds.length;
-          if (nearbyCount === 0) {
-            return;
-          }
-
-          let title: string;
-          let body: string;
-
-          if (nearbyCount === 1) {
-            const onlyStoreId = nearbyStoreIds[0];
-            const onlyStore = currentStores.find((s) => s.id === onlyStoreId);
-            const storeName = onlyStore?.name ?? "A store";
-            title = translate("user.discover.geofence.singleTitle", { name: storeName });
-            body = translate("user.discover.geofence.singleBody", { name: storeName });
-          } else {
-            title = translate("user.discover.geofence.multiTitle", { count: nearbyCount });
-            body = translate("user.discover.geofence.multiBody");
-          }
 
           try {
+            setLocation(position);
+
+            const { latitude: uLat, longitude: uLon } = position.coords;
+            const { mutedStoreIds, isMutedStoresHydrated } = useStoreStore.getState();
+            
+            if (!isMutedStoresHydrated) return;
+
+            const currentStores = useStoreStore.getState().stores;
+
+            const nearbyStoreIds: number[] = [];
+            for (const store of currentStores) {
+              if (notifiedStoreIds.current.has(store.id)) continue;
+              if (Array.isArray(mutedStoreIds) && mutedStoreIds.includes(store.id)) continue;
+              if (!store.latitude || !store.longitude) continue;
+              if (!store.radius) continue;
+
+              const nearby = isStoreNearby(
+                uLat,
+                uLon,
+                store.latitude,
+                store.longitude,
+                store.radius
+              );
+
+              if (nearby) nearbyStoreIds.push(store.id);
+            }
+
+            const nearbyCount = nearbyStoreIds.length;
+            if (nearbyCount === 0) return;
+
+            let title: string;
+            let body: string;
+
+            if (nearbyCount === 1) {
+              const onlyStoreId = nearbyStoreIds[0];
+              const onlyStore = currentStores.find((s) => s.id === onlyStoreId);
+              const storeName = onlyStore?.name ?? "A store";
+              title = translate("user.discover.geofence.singleTitle", { name: storeName });
+              body = translate("user.discover.geofence.singleBody", { name: storeName });
+            } else {
+              title = translate("user.discover.geofence.multiTitle", { count: nearbyCount });
+              body = translate("user.discover.geofence.multiBody");
+            }
+
             const subscriptionId = await getOneSignalId();
             if (!subscriptionId) return;
 
-            const res = await sendPushNotification(
-              subscriptionId,
-              title,
-              body,
-              {
-                store_ids: nearbyStoreIds,
-              },
-            );
+            const res = await sendPushNotification(subscriptionId, title, body, {
+              store_ids: nearbyStoreIds,
+            });
+
             if (res instanceof Response) {
-              console.log(
-                `[Geofence] Push sent (${nearbyCount} nearby stores):`,
-                res.status
-              );
+              console.log(`[Geofence] Push sent (${nearbyCount} nearby stores):`, res.status);
             }
 
             nearbyStoreIds.forEach((id) => notifiedStoreIds.current.add(id));
+
           } catch (err) {
-            console.error("[Geofence] Failed to send push notification:", err);
+            console.error("[Geofence] Error in location callback:", err);
           }
         }
+
       );
 
       if (!cancelled) {
@@ -261,13 +268,11 @@ export default function Discover() {
     hasCenteredOnUserRef.current = true;
   }, [mapReady, location]);
 
-  // Localize Mapbox Labels
   useEffect(() => {
     if (!mapReady) return;
 
     const localizeMap = async () => {
       try {
-        // Mapbox supports these language codes
         const mapboxLanguage = language === 'ja' ? 'ja' : 'en';
 
         const labelLayerPatterns = [
@@ -436,7 +441,6 @@ export default function Discover() {
         />
         <Mapbox.Camera
           ref={cameraRef}
-          // followUserLocation={searchQuery ? false : true}
           followUserMode={Mapbox.UserTrackingMode.FollowWithHeading}
           followZoomLevel={16}
           animationMode="easeTo"
@@ -488,7 +492,6 @@ export default function Discover() {
           />
         </Mapbox.ShapeSource>
 
-        {/* Animated route line */}
         {routeGeoJSON && !searchQuery && (() => {
           const coords = routeGeoJSON.coordinates;
           const total = coords.length;
@@ -689,7 +692,6 @@ export default function Discover() {
                               {s.address}
                             </Text>
                           </View>
-                          {/* meters + chevron stacked vertically centered */}
                           <View style={{ flexDirection: "row", alignItems: "center", marginLeft: 4 }}>
                             <Text
                               style={{

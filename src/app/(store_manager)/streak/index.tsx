@@ -1,18 +1,22 @@
 import React, { useCallback } from "react";
-import { FlatList, useColorScheme } from "react-native";
-import { View, Text, TouchableOpacity } from "@/tw";
-import { Button } from "@/components/button";
+import { FlatList, useColorScheme, Platform } from "react-native";
+import { View, Text, TouchableOpacity, SafeAreaView } from "@/tw";
 import { Modal } from "@/components/modal";
 import { useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { getAllStreaksByStoreId, endStreakProgram, publishStreakProgram, activateStreakProgram, deleteStreakProgram } from "@/services/store-manager/streak-service";
 import { Streak, StreakTabs } from "@/type/store-manager/streak";
-import { ChevronLeft, Flame, Plus } from "lucide-react-native";
+import { Flame, Plus } from "lucide-react-native";
 import { StreakCard } from "@/components/store_manager/streak/streak-card";
 import { StreakCardSkeleton } from "@/components/skeleton/store_manager/streak-skeleton";
 import { useStreakViewStore } from "@/store/store-manager/streak-store";
+import { AppHeader } from "@/components/header";
+import { useTranslation } from "react-i18next";
+
+const WEB_MAX_WIDTH = 896;
 
 export default function ViewStreak() {
+  const { t } = useTranslation();
   const PAGE_SIZE = 6;
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -65,7 +69,7 @@ export default function ViewStreak() {
     : visibleEndedStreaks;
 
   const showError = (message: string) =>
-    setModal({ title: "Error", message, buttons: [{ label: "OK", onPress: () => setModal(null) }] });
+    setModal({ title: t("storeManager.streak.error"), message, buttons: [{ label: t("label.ok"), onPress: () => setModal(null) }] });
 
   const handlePublish = (streak: Streak) => {
     const hasOtherUpcoming = streaks.some(
@@ -73,19 +77,19 @@ export default function ViewStreak() {
     );
     if (hasOtherUpcoming) {
       setModal({
-        title: "Upcoming Program Exists",
-        message: "There is already an upcoming streak program for this store. End or activate it first before publishing another one.",
-        buttons: [{ label: "OK", onPress: () => setModal(null) }],
+        title: t("storeManager.streak.upcomingExistsTitle"),
+        message: t("storeManager.streak.upcomingExistsMessage"),
+        buttons: [{ label: t("label.ok"), onPress: () => setModal(null) }],
       });
       return;
     }
 
     setModal({
-      title: "Publish Streak Program",
-      message: "Users will be able to see this program is coming. You can activate it when you're ready.",
+      title: t("storeManager.streak.publishTitle"),
+      message: t("storeManager.streak.publishMessage"),
       buttons: [
-        { label: "Cancel",  variant: "secondary", onPress: () => setModal(null) },
-        { label: "Publish", variant: "primary", onPress: () => { setModal(null); doPublish(streak.id!); } },
+        { label: t("label.cancel"),  variant: "secondary", onPress: () => setModal(null) },
+        { label: t("storeManager.streak.publish"), variant: "primary", onPress: () => { setModal(null); doPublish(streak.id!); } },
       ],
     });
   };
@@ -103,7 +107,7 @@ export default function ViewStreak() {
       await publishStreakProgram(programId);
       load();
     } catch (e) {
-      showError((e as Error).message ?? "Failed to publish program.");
+      showError((e as Error).message ?? t("storeManager.streak.publishFailed"));
     } finally {
       setActing(null);
     }
@@ -111,11 +115,11 @@ export default function ViewStreak() {
 
   const handleActivate = (streak: Streak) => {
     setModal({
-      title: "Activate Streak Program",
-      message: "Users will be able to start earning streak points immediately.",
+      title: t("storeManager.streak.activateTitle"),
+      message: t("storeManager.streak.activateMessage"),
       buttons: [
-        { label: "Cancel",   variant: "secondary", onPress: () => setModal(null) },
-        { label: "Activate", variant: "primary", onPress: () => { setModal(null); doActivate(streak.id!); } },
+        { label: t("label.cancel"),   variant: "secondary", onPress: () => setModal(null) },
+        { label: t("storeManager.streak.activate"), variant: "primary", onPress: () => { setModal(null); doActivate(streak.id!); } },
       ],
     });
   };
@@ -126,7 +130,7 @@ export default function ViewStreak() {
       await activateStreakProgram(programId);
       load();
     } catch (e) {
-      showError((e as Error).message ?? "Failed to activate program.");
+      showError((e as Error).message ?? t("storeManager.streak.activateFailed"));
     } finally {
       setActing(null);
     }
@@ -134,22 +138,22 @@ export default function ViewStreak() {
 
   const handleEnd = (streak: Streak) => {
     setModal({
-      title: "End Streak Program",
-      message: "This will immediately stop earning for all users. This action cannot be undone.",
+      title: t("storeManager.streak.endTitle"),
+      message: t("storeManager.streak.endMessage"),
       buttons: [
-        { label: "Cancel",      variant: "secondary", onPress: () => setModal(null) },
-        { label: "End Program", variant: "danger",   onPress: () => { setModal(null); doEnd(streak.id!); } },
+        { label: t("label.cancel"),      variant: "secondary", onPress: () => setModal(null) },
+        { label: t("storeManager.streak.endProgram"), variant: "danger",   onPress: () => { setModal(null); doEnd(streak.id!); } },
       ],
     });
   };
 
   const handleDelete = (streak: Streak) => {
     setModal({
-      title: "Delete Streak Program",
-      message: "This will permanently delete this program. This action cannot be undone.",
+      title: t("storeManager.streak.deleteTitle"),
+      message: t("storeManager.streak.deleteMessage"),
       buttons: [
-        { label: "Cancel", variant: "secondary", onPress: () => setModal(null) },
-				{ label: "Delete Program", variant: "danger", onPress: () => { setModal(null); doDelete(streak.id!); } },
+        { label: t("label.cancel"), variant: "secondary", onPress: () => setModal(null) },
+				{ label: t("storeManager.streak.deleteProgram"), variant: "danger", onPress: () => { setModal(null); doDelete(streak.id!); } },
       ],
     });
   };
@@ -160,7 +164,7 @@ export default function ViewStreak() {
       await endStreakProgram(programId);
       load();
     } catch (e) {
-      showError((e as Error).message ?? "Failed to end program.");
+      showError((e as Error).message ?? t("storeManager.streak.endFailed"));
     } finally {
       setActing(null);
     }
@@ -172,7 +176,7 @@ export default function ViewStreak() {
       await deleteStreakProgram(programId);
       load();
     } catch (e) {
-      showError((e as Error).message ?? "Failed to delete program.");
+      showError((e as Error).message ?? t("storeManager.streak.deleteFailed"));
     } finally {
       setActing(null);
     }
@@ -189,7 +193,7 @@ export default function ViewStreak() {
   };
 
   return (
-    <View className="flex-1 bg-backgroundMuted dark:bg-[#111921]">
+    <SafeAreaView edges={["top"]} className="flex-1 bg-backgroundMuted dark:bg-[#111921]">
       <Modal
         visible={!!modal}
         onClose={() => setModal(null)}
@@ -198,54 +202,101 @@ export default function ViewStreak() {
         buttons={modal?.buttons}
       />
 
-      <View
-        className="bg-white dark:bg-[#111921] flex-row items-center px-2"
-        style={{ paddingTop: insets.top + 8, paddingBottom: 0 }}
-      >
-        <TouchableOpacity
-          className="w-10 h-10 rounded-full items-center justify-center"
-          activeOpacity={0.7}
-          onPress={() => router.push({ pathname: "/(store_manager)/view-store/[id]", params: { id: storeId } })}
-        >
-          <ChevronLeft size={22} color={isDark ? "#FFFFFF" : "#0F172A"} />
-        </TouchableOpacity>
-        <Text className="flex-1 text-center text-md font-poppins-bold text-textPrimary dark:text-darkTextPrimary pr-10 mb-3">
-          Streak Programs
-        </Text>
-      </View>
+      <AppHeader
+        title={t("storeManager.streak.title")}
+        description={t("storeManager.streak.description")}
+        onBackPress={() => {
+          router.push(`/(store_manager)/view-store/${storeId}`);
+        }}
+      />
 
-      <View className="bg-white dark:bg-neutral-800 border-b border-slate-100 dark:border-slate-800 flex-row px-6">
-        {StreakTabs.map((tab) => {
-          const isActive = activeTab === tab.key;
-          const count =
-            tab.key === "active" ? activeStreaks.length
-            : tab.key === "upcoming" ? upcomingStreaks.length
-            : endedStreaks.length;
-          return (
-            <TouchableOpacity
-              key={tab.key}
-              className="flex-1 py-3 items-center flex-row justify-center gap-1.5"
-              style={{ borderBottomWidth: 2, borderBottomColor: isActive ? "#FF6600" : "transparent" }}
-              onPress={() => setActiveTab(tab.key)}
-              activeOpacity={0.7}
-            >
-              <Text className={isActive ? "text-xs font-poppins-bold text-primary" : "text-xs font-poppins-medium text-slate-400 dark:text-slate-500"}>
-                {tab.label}
-              </Text>
-              {count > 0 && (
-                <View className={`rounded-full px-1.5 min-w-[18px] items-center ${isActive ? "bg-primary/10" : "bg-neutral-100 dark:bg-neutral-700"}`}>
-                  <Text className={`text-[9px] font-poppins-bold ${isActive ? "text-primary" : "text-neutral-500 dark:text-neutral-400"}`}>
-                    {count}
+      {Platform.OS === "web" ? (
+        <View className="bg-backgroundMuted dark:bg-slate-950 px-4 pt-4 items-center">
+          <View className="w-full max-w-4xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-xl overflow-hidden flex-row">
+            {StreakTabs.map((tab) => {
+              const active = activeTab === tab.key;
+              const count =
+                tab.key === "active" ? activeStreaks.length : tab.key === "upcoming" ? upcomingStreaks.length : endedStreaks.length;
+
+              return (
+                <TouchableOpacity
+                  key={tab.key}
+                  className={[
+                    "flex-1 py-3 items-center flex-row justify-center gap-1.5 rounded-xl mx-1 my-1",
+                    active && "bg-primary",
+                  ]
+                    .filter(Boolean)
+                    .join(" ")}
+                  onPress={() => setActiveTab(tab.key)}
+                  activeOpacity={0.7}
+                >
+                  <Text
+                    className={
+                      active
+                        ? "text-xs font-poppins-bold text-white"
+                        : "text-xs font-poppins-medium text-slate-400 dark:text-slate-500"
+                    }
+                  >
+                    {t(`storeManager.streak.tabs.${tab.key}`)}
                   </Text>
-                </View>
-              )}
-            </TouchableOpacity>
-          );
-        })}
-      </View>
+                  {count > 0 && (
+                    <View className="rounded-full min-w-[18px] items-center bg-white/20">
+                      <Text className="text-[10px] font-poppins-semibold text-white">{count}</Text>
+                    </View>
+                  )}
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </View>
+      ) : (
+        <View className="border-b border-slate-100 dark:border-slate-800 px-4 py-3">
+          <View className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-xl overflow-hidden flex-row p-1">
+            {StreakTabs.map((tab) => {
+              const active = activeTab === tab.key;
+              const count =
+                tab.key === "active" ? activeStreaks.length : tab.key === "upcoming" ? upcomingStreaks.length : endedStreaks.length;
+
+              return (
+                <TouchableOpacity
+                  key={tab.key}
+                  className={[
+                    "flex-1 py-2 items-center flex-row justify-center gap-1.5 rounded-xl",
+                    active ? "bg-primary" : "bg-white dark:bg-slate-900",
+                  ]
+                    .filter(Boolean)
+                    .join(" ")}
+                  onPress={() => setActiveTab(tab.key)}
+                  activeOpacity={0.7}
+                >
+                  <Text
+                    className={
+                      active
+                        ? "text-xs font-poppins-bold text-white"
+                        : "text-xs font-poppins-medium text-slate-400 dark:text-slate-500"
+                    }
+                  >
+                    {tab.label}
+                  </Text>
+                  {count > 0 && (
+                    <View className={`rounded-full min-w-[18px] items-center px-1.5 ${active ? "bg-white/20" : ""}`}>
+                      <Text className={`text-[9px] font-poppins-bold ${active ? "text-white" : "text-neutral-500 dark:text-neutral-400"}`}>
+                        {count}
+                      </Text>
+                    </View>
+                  )}
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </View>
+      )}
 
       {loading ? (
-        <View className="flex-1 p-4">
+        <View
+          className="flex-1 pt-2"
+          style={Platform.OS === "web" ? { width: "100%", maxWidth: WEB_MAX_WIDTH, alignSelf: "center" } : undefined}
+        >
           <StreakCardSkeleton />
         </View>
       ) : tabStreaks.length === 0 ? (
@@ -256,17 +307,17 @@ export default function ViewStreak() {
           <View className="items-center gap-y-1 -mt-4">
             <Text className="text-sm font-poppins-semibold text-textMuted">
               {activeTab === "active"
-                ? "No Active Program"
+                ? t("storeManager.streak.emptyActiveTitle")
                 : activeTab === "upcoming"
-                ? "No Upcoming Programs"
-                : "No Past Programs"}
+                ? t("storeManager.streak.emptyUpcomingTitle")
+                : t("storeManager.streak.emptyEndedTitle")}
             </Text>
             <Text className="text-sm font-poppins text-textMuted text-center">
               {activeTab === "active"
-                ? "Activate a streak program to start rewarding daily visitors."
+                ? t("storeManager.streak.emptyActiveBody")
                 : activeTab === "upcoming"
-                ? "Create and publish a program so users can see it's coming."
-                : "Ended streak programs will appear here."}
+                ? t("storeManager.streak.emptyUpcomingBody")
+                : t("storeManager.streak.emptyEndedBody")}
             </Text>
           </View>
         </View>
@@ -274,7 +325,11 @@ export default function ViewStreak() {
         <FlatList
           data={tabStreaks}
           keyExtractor={(item, index) => `${item.id ?? index}`}
-          contentContainerStyle={{ padding: 16, gap: 12 }}
+          contentContainerStyle={{
+            padding: 16,
+            gap: 12,
+            ...(Platform.OS === "web" ? { width: "100%", maxWidth: WEB_MAX_WIDTH, alignSelf: "center" } : null),
+          }}
           showsVerticalScrollIndicator={false}
           onEndReached={handleLoadMore}
           onEndReachedThreshold={0.35}
@@ -297,16 +352,35 @@ export default function ViewStreak() {
       )}
 
       {activeTab !== "ended" && (
-        <TouchableOpacity
-          className="absolute bottom-6 right-6 w-14 h-14 rounded-full bg-primary items-center justify-center"
-          activeOpacity={0.85}
-          onPress={() => {
-            router.push({ pathname: "/(store_manager)/streak/configure-streaks", params: { storeId } });
-          }}
-        >
-          <Plus size={28} color="#fff" />
-        </TouchableOpacity>
+        Platform.OS === "web" ? (
+          <View
+            pointerEvents="box-none"
+            style={{ position: "absolute", left: 0, right: 0, bottom: 60, alignItems: "center" }}
+          >
+            <View style={{ width: "100%", maxWidth: WEB_MAX_WIDTH, paddingHorizontal: 16, alignItems: "flex-end" }}>
+              <TouchableOpacity
+                className="w-14 h-14 rounded-full bg-primary items-center justify-center"
+                activeOpacity={0.85}
+                onPress={() => {
+                  router.push({ pathname: "/(store_manager)/streak/configure-streaks", params: { storeId } });
+                }}
+              >
+                <Plus size={28} color="#fff" />
+              </TouchableOpacity>
+            </View>
+          </View>
+        ) : (
+          <TouchableOpacity
+            className="absolute bottom-6 right-6 w-14 h-14 rounded-full bg-primary items-center justify-center"
+            activeOpacity={0.85}
+            onPress={() => {
+              router.push({ pathname: "/(store_manager)/streak/configure-streaks", params: { storeId } });
+            }}
+          >
+            <Plus size={28} color="#fff" />
+          </TouchableOpacity>
+        )
       )}
-    </View>
+    </SafeAreaView>
   );
 }

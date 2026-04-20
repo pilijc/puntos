@@ -1,6 +1,10 @@
-import { rewards } from "@/data/rewards";
+import { RewardItem, rewards } from "@/data/rewards";
+import { getRewards } from "@/services/reward-service";
+import { getUserAvailablePoints } from "@/services/user/points-service";
+import { mapBackendRewardsToRewardItems } from "@/utils/user/reward-mappers";
+import { supabase } from "@/supabase/supabase";
 import { useCarouselAutoplayPause } from "@/hooks/use-carousel-autoplay-pause";
-import { useLocation } from "@/hooks/use-location";
+import { useLocation } from "@/hooks/user/use-location";
 import { useRewardsActions } from "@/hooks/use-rewards-actions";
 import { useStampRewards } from "@/hooks/use-stamp-rewards";
 import { useStamps } from "@/hooks/use-stamps";
@@ -10,9 +14,9 @@ import { StampProgress } from "@/services/stamp-service";
 import { useRewardsDataStore } from "@/hooks/use-rewards-data";
 import { useRewardsUiStore } from "@/store/user/rewards-ui-store";
 import { useStoreStore } from "@/store/user/store-store";
-import { sortRewards } from "@/utils/store-helpers";
+import { getHasStampedToday, sortRewards } from "@/utils/store-helpers";
 import { distance, point } from "@turf/turf";
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   useAnimatedStyle,
   useSharedValue,
@@ -63,11 +67,16 @@ export function useStoreOverviewData(storeId?: string) {
     upcomingStreakProgramMap,
   } = useRewardsDataStore();
   const { stores, setStores } = useStoreStore();
-  const { location, startWatching, stopWatching } = useLocation();
-  const { handleRefresh, hasStampedToday } = useRewardsActions();
+  const { location } = useLocation();
+  const { handleRefresh } = useRewardsActions();
   const { stamps } = useStamps();
   const { stampRewards } = useStampRewards();
   const { streaks: userStreaks, refetch: refetchStreaks } = useStreaks();
+
+  // State for dynamic rewards
+  const [storeRewards, setStoreRewards] = useState<RewardItem[]>([]);
+  const [userPoints, setUserPoints] = useState<number>(0);
+  const [isLoadingRewards, setIsLoadingRewards] = useState(false);
 
   const handleCarouselInteraction = useCarouselAutoplayPause(setIsAutoPlayEnabled);
   const swipeIndicatorOpacity = useSharedValue(0);
@@ -84,14 +93,6 @@ export function useStoreOverviewData(storeId?: string) {
   useEffect(() => {
     fetchActiveStores();
   }, [fetchActiveStores]);
-
-  useEffect(() => {
-    startWatching();
-    return () => {
-      stopWatching();
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   const storesWithLocation = useMemo(
     () => getEnrichedStores(stores, location),
@@ -149,10 +150,44 @@ export function useStoreOverviewData(storeId?: string) {
     });
   }, [location, stamps]);
 
-  const sortedRewards = useMemo(
-    () => sortRewards(rewards, rewardSort, rewardPointsOrder).slice(0, 3),
-    [rewardPointsOrder, rewardSort],
-  );
+  // Fetch rewards and user points
+  useEffect(() => {
+    async function fetchStoreRewards() {
+      if (!storeId) return;
+
+      setIsLoadingRewards(true);
+      try {
+        // Fetch rewards for this store
+        const rewards = await getRewards({
+          storeId,
+          sortBy: rewardSort,
+          pointsOrder: rewardPointsOrder,
+          limit: 3,
+        });
+
+        // Fetch user points
+        let points = 0;
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user?.id) {
+          points = await getUserAvailablePoints(user.id);
+          setUserPoints(points);
+        }
+
+        // Map to RewardItem with status
+        const mappedRewards = mapBackendRewardsToRewardItems(rewards, points);
+        setStoreRewards(mappedRewards);
+      } catch (error) {
+        console.error("Failed to fetch store rewards:", error);
+        setStoreRewards([]);
+      } finally {
+        setIsLoadingRewards(false);
+      }
+    }
+
+    fetchStoreRewards();
+  }, [storeId, rewardSort, rewardPointsOrder]);
+
+  const sortedRewards = useMemo(() => storeRewards, [storeRewards]);
 
   const isStoreNearby = useCallback((storeLat?: number | null, storeLon?: number | null) => {
     if (!location || storeLat == null || storeLon == null) return false;
@@ -220,18 +255,19 @@ export function useStoreOverviewData(storeId?: string) {
       // as the user's current progress. We match on BOTH store_id AND the current
       // active program ID. If the record belongs to an old program, we fall through
       // and return the virtual 0-progress entry so the reset is visible immediately.
-      const currentProgramId = activeStreakProgramMap.get(Number(storeId));
+      const currentProgram = activeStreakProgramMap.get(Number(storeId));
       const existingStreak = userStreaks.find(
         (s) =>
           Number(s.store_id) === Number(storeId) &&
-          (currentProgramId == null || s.store_streak_id === currentProgramId),
+          (currentProgram == null || s.store_streak_id === currentProgram.id),
       );
       if (existingStreak) return [existingStreak];
 
-      // No record for this program yet — build a virtual 0-progress entry
+      // No record for this program yet — build a virtual 0-progress entry.
+      // IMPORTANT: pass store_streaks so the circle classifier has start_at/end_date
+      // and can correctly mark pre-program days instead of falling through to "missed".
       const targetStore = storesWithLocation.find((s) => s.id.toString() === storeId);
       if (!targetStore) return [];
-      const storeStreakId = currentProgramId ?? null;
       return [{
         id: -Number(targetStore.id),
         user_id: "",
@@ -243,8 +279,8 @@ export function useStoreOverviewData(storeId?: string) {
         completion_bonus_awarded: false,
         completed_at: null,
         status: null,
-        store_streak_id: storeStreakId,
-        store_streaks: null,
+        store_streak_id: currentProgram?.id ?? null,
+        store_streaks: currentProgram ?? null,
         stores: {
           name: targetStore.name,
           logo: targetStore.logo ?? undefined,
@@ -264,16 +300,15 @@ export function useStoreOverviewData(storeId?: string) {
       if (!isEligible || !hasActiveProgram(Number(focusedStore.id))) return [];
 
       // ── Program-aware lookup (same logic as the storeId-specific path above) ──
-      const currentProgramId2 = activeStreakProgramMap.get(Number(focusedStore.id));
+      const currentProgram2 = activeStreakProgramMap.get(Number(focusedStore.id));
       const existingStreak = userStreaks.find(
         (s) =>
           Number(s.store_id) === Number(focusedStore.id) &&
-          (currentProgramId2 == null || s.store_streak_id === currentProgramId2),
+          (currentProgram2 == null || s.store_streak_id === currentProgram2.id),
       );
       if (existingStreak) return [existingStreak];
 
-      // No record for the current program yet — virtual 0-progress entry
-      const storeStreakId2 = currentProgramId2 ?? null;
+      // No record for the current program yet — virtual 0-progress entry with full program data
       return [{
         id: -Number(focusedStore.id),
         user_id: "",
@@ -285,8 +320,8 @@ export function useStoreOverviewData(storeId?: string) {
         completion_bonus_awarded: false,
         completed_at: null,
         status: null,
-        store_streak_id: storeStreakId2,
-        store_streaks: null,
+        store_streak_id: currentProgram2?.id ?? null,
+        store_streaks: currentProgram2 ?? null,
         stores: {
           name: focusedStore.name,
           logo: focusedStore.logo ?? undefined,
@@ -366,6 +401,16 @@ export function useStoreOverviewData(storeId?: string) {
     };
   });
 
+  // Compute hasStampedToday for the focused store
+  const hasStampedToday = useMemo(() => {
+    const focusedStore = storeId
+      ? storesWithLocation.find((s) => s.id.toString() === storeId)
+      : nearbyStores[heroIndex];
+    if (!focusedStore) return false;
+    const storeStamp = stamps.find((s) => Number(s.store_id) === Number(focusedStore.id));
+    return getHasStampedToday(storeStamp?.last_stamp_at);
+  }, [stamps, storeId, nearbyStores, heroIndex, storesWithLocation]);
+
   return {
     activeStampProgramRewards,
     handleCarouselInteraction,
@@ -384,5 +429,7 @@ export function useStoreOverviewData(storeId?: string) {
     fetchedStoreIds,
     refetchStreaks,
     upcomingStreak,
+    isLoadingRewards,
+    userPoints,
   };
 }

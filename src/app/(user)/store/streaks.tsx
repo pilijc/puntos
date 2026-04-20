@@ -133,8 +133,10 @@ function toLocalDateStr(d: Date): string {
  */
 function RecentActivityCalendar({
   earnedDates,
+  endDate,
 }: {
   earnedDates: Set<string>;
+  endDate?: string | null;
 }) {
   const [expanded, setExpanded] = React.useState(false);
   const scrollRef = React.useRef<any>(null);
@@ -144,6 +146,9 @@ function RecentActivityCalendar({
   const todayLocal = new Date();
   todayLocal.setHours(0, 0, 0, 0);
   const todayStr = toLocalDateStr(todayLocal);
+  // End date is "past" when its date string is before today string.
+  // Past end dates show as regular earned/missed — no special End styling.
+  const endDateIsPast = endDate ? endDate < todayStr : false;
 
   const dayLabels = ["S", "M", "T", "W", "T", "F", "S"];
 
@@ -168,36 +173,53 @@ function RecentActivityCalendar({
   const daysInMonth = new Date(todayLocal.getFullYear(), todayLocal.getMonth() + 1, 0).getDate();
   const monthLabel = todayLocal.toLocaleString("default", { month: "long", year: "numeric" });
 
-  const Cell = ({ day, isToday, earned, isFuture, isOtherMonth }: {
+  const Cell = ({ day, isToday, earned, isFuture, isOtherMonth, isEndDate }: {
     day?: number;
     isToday?: boolean;
     earned?: boolean;
     isFuture?: boolean;
     isOtherMonth?: boolean;
-  }) => (
-    <RNView
-      style={{
-        flex: 1,
-        aspectRatio: 1,
-        margin: 2,
-        borderRadius: 8,
-        alignItems: "center",
-        justifyContent: "center",
-        backgroundColor: earned ? "#FF6600" : isToday && !earned ? "#FFF7ED" : "#f3f4f6",
-        borderWidth: isToday && !earned ? 1.5 : 0,
-        borderColor: "#FF6600",
-        opacity: isFuture && !earned ? 0.35 : isOtherMonth && !earned ? 0.4 : 1,
-      }}
-    >
-      {earned ? (
-        <Flame size={12} color="#FFFFFF" />
-      ) : (
-        <Text style={{ fontSize: 9, color: isToday ? "#FF6600" : "#9ca3af", fontWeight: "600" }}>
-          {day}
-        </Text>
-      )}
-    </RNView>
-  );
+    // isEndDate: marks the program end_date cell (expanded calendar only, future/today only)
+    isEndDate?: boolean;
+  }) => {
+    const isEndMarker = isEndDate && !earned;
+    const bgColor = earned
+      ? "#FF6600"
+      : isEndMarker
+        ? "#FFF7ED"
+        : isToday && !earned
+          ? "#FFF7ED"
+          : "#f3f4f6";
+    const borderWidth = isEndMarker || (isToday && !earned) ? 1.5 : 0;
+    const borderStyle = isEndMarker ? ("dashed" as const) : ("solid" as const);
+    return (
+      <RNView
+        style={{
+          flex: 1,
+          aspectRatio: 1,
+          margin: 2,
+          borderRadius: 8,
+          alignItems: "center",
+          justifyContent: "center",
+          backgroundColor: bgColor,
+          borderWidth,
+          borderColor: "#FF6600",
+          borderStyle,
+          opacity: isFuture && !earned ? 0.35 : isOtherMonth && !earned ? 0.4 : 1,
+        }}
+      >
+        {earned ? (
+          <Flame size={12} color="#FFFFFF" />
+        ) : isEndMarker ? (
+          <Text style={{ fontSize: 8, color: "#FF6600", fontWeight: "700" }}>End</Text>
+        ) : (
+          <Text style={{ fontSize: 9, color: isToday ? "#FF6600" : "#9ca3af", fontWeight: "600" }}>
+            {day}
+          </Text>
+        )}
+      </RNView>
+    );
+  };
 
   // Monthly grid — prev-month trailing days fill the start padding
   const prevMonthYear = todayLocal.getMonth() === 0 ? todayLocal.getFullYear() - 1 : todayLocal.getFullYear();
@@ -220,6 +242,7 @@ function RecentActivityCalendar({
           earned={earnedDates.has(dateStr)}
           isFuture={false}
           isOtherMonth
+          isEndDate={dateStr === endDate && !endDateIsPast}
         />,
       );
     } else {
@@ -233,6 +256,7 @@ function RecentActivityCalendar({
           isToday={dateStr === todayStr}
           earned={earnedDates.has(dateStr)}
           isFuture={d > todayLocal}
+          isEndDate={dateStr === endDate && !endDateIsPast}
         />,
       );
     }
@@ -254,6 +278,7 @@ function RecentActivityCalendar({
           earned={earnedDates.has(dateStr)}
           isFuture
           isOtherMonth
+          isEndDate={dateStr === endDate && !endDateIsPast}
         />,
       );
       nextDay++;
@@ -261,7 +286,7 @@ function RecentActivityCalendar({
     rows.push(<View key={`row-${rows.length}`} className="flex-row">{cells}</View>);
   }
 
-  const Legend = () => (
+  const Legend = ({ showEnd = false }: { showEnd?: boolean }) => (
     <View className="flex-row items-center gap-x-3 flex-wrap gap-y-1">
       <View className="flex-row items-center gap-x-1">
         <RNView style={{ width: 12, height: 12, borderRadius: 3, backgroundColor: "#FF6600" }} />
@@ -275,6 +300,16 @@ function RecentActivityCalendar({
         <RNView style={{ width: 12, height: 12, borderRadius: 3, backgroundColor: "#f3f4f6" }} />
         <Text className="text-[10px] text-neutral-400 font-poppins">Missed</Text>
       </View>
+      {showEnd && endDate && !endDateIsPast && (
+        <View className="flex-row items-center gap-x-1">
+          <RNView style={{
+            width: 12, height: 12, borderRadius: 3,
+            backgroundColor: "#FFF7ED",
+            borderWidth: 1.5, borderColor: "#FF6600", borderStyle: "dashed",
+          }} />
+          <Text className="text-[10px] text-neutral-400 font-poppins">End</Text>
+        </View>
+      )}
     </View>
   );
 
@@ -350,7 +385,7 @@ function RecentActivityCalendar({
             ))}
           </View>
           {rows}
-          <View className="mt-2"><Legend /></View>
+          <View className="mt-2"><Legend showEnd /></View>
         </>
       )}
     </View>
@@ -386,6 +421,7 @@ function SectionHeader({ icon, title, sub }: { icon: React.ReactNode; title: str
     </View>
   );
 }
+
 
 export default function StoreStreakDetail() {
   const { storeId } = useLocalSearchParams<{ storeId?: string }>();
@@ -771,7 +807,7 @@ export default function StoreStreakDetail() {
             sub="(last 14 days)"
           />
           {/* ✅ Real per-day history from streak_events — no backward-count guessing */}
-          <RecentActivityCalendar earnedDates={earnedDates} />
+          <RecentActivityCalendar earnedDates={earnedDates} endDate={program?.end_date} />
         </SectionCard>
       </View>
     </ScrollView>

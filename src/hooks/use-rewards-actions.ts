@@ -1,36 +1,48 @@
 import { useCallback } from "react";
-import { Alert } from "react-native";
 import { useRewardsUiStore } from "@/store/user/rewards-ui-store";
 import { useRewardsDataStore } from "@/hooks/use-rewards-data";
 import { useStamps } from "@/hooks/use-stamps";
 import { useStampRewards } from "@/hooks/use-stamp-rewards";
-import { addStamp } from "@/services/stamp-service";
-import { supabase } from "@/supabase/supabase";
-import { getHasStampedToday } from "@/utils/store-helpers";
+import { useStreaks } from "@/hooks/use-streaks";
 
 export function useRewardsActions() {
-  const { 
-    setIsStamping, 
-    setRefreshing, 
-    rewardSort, 
+  const {
+    setRefreshing,
+    rewardSort,
     rewardPointsOrder,
   } = useRewardsUiStore();
-  
-  const { fetchBackendRewards } = useRewardsDataStore();
-  const { stamps, refetch: refetchStamps } = useStamps();
-  const { refetch: refetchStampRewards } = useStampRewards();
 
-  const handleRefresh = useCallback(async (storeId?: string) => {
+  const { fetchBackendRewards, fetchRewardsData, fetchedStoreIds, reset: resetRewardsData } = useRewardsDataStore();
+  const { refetch: refetchStamps } = useStamps();
+  const { refetch: refetchStampRewards } = useStampRewards();
+  const { refetch: refetchStreaks } = useStreaks();
+
+  const handleRefresh = useCallback(async (storeId?: string, nearbyStoreIds?: number[]) => {
     setRefreshing(true);
     try {
-      const promises: Promise<any>[] = [refetchStamps(), refetchStampRewards()];
-      
+      // Reset fetchedStoreIds so fetchRewardsData bypasses the stale-while-revalidate
+      // guard and forces a fresh fetch of activeStreakProgramMap / upcomingStreakProgramMap.
+      // Without this, a program that transitions upcoming → active stays stale until reload.
+      resetRewardsData();
+
+      const promises: Promise<any>[] = [
+        refetchStamps(),
+        refetchStampRewards(),
+        refetchStreaks(),
+      ];
+
+      // Re-fetch streak/stamp program maps for the relevant stores
+      if (nearbyStoreIds && nearbyStoreIds.length > 0) {
+        const stampIds = storeId ? [Number(storeId)] : nearbyStoreIds;
+        promises.push(fetchRewardsData(nearbyStoreIds, stampIds));
+      }
+
       // If we are on a store details page, also refresh backend rewards
       if (storeId) {
-        promises.push(fetchBackendRewards({ 
-          storeId, 
-          sortBy: rewardSort, 
-          pointsOrder: rewardPointsOrder 
+        promises.push(fetchBackendRewards({
+          storeId,
+          sortBy: rewardSort,
+          pointsOrder: rewardPointsOrder,
         }));
       }
 
@@ -40,46 +52,9 @@ export function useRewardsActions() {
     } finally {
       setRefreshing(false);
     }
-  }, [setRefreshing, refetchStamps, refetchStampRewards, fetchBackendRewards, rewardSort, rewardPointsOrder]);
-
-  const handleStamp = useCallback(async (storeId: string) => {
-    setIsStamping(true);
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user?.id) {
-        Alert.alert("Error", "You must be logged in to collect stamps.");
-        return;
-      }
-
-      const result = await addStamp(user.id, storeId);
-      if (result.success) {
-        Alert.alert("Success!", "Stamp collected successfully!");
-        await handleRefresh(storeId);
-      } else {
-        const messages: Record<string, string> = {
-          already_stamped_today: "You have already collected a stamp today at this store.",
-          already_completed: "You've already completed your stamp card for this store! 🎉",
-          stamp_not_enabled: "Stamping is currently disabled for this store.",
-          not_nearby: "You must be near the store to collect a stamp.",
-        };
-        Alert.alert("Notice", messages[result.reason || ""] || "Failed to collect stamp.");
-      }
-    } catch (error) {
-      console.error("Stamping failed:", error);
-      Alert.alert("Error", "An unexpected error occurred.");
-    } finally {
-      setIsStamping(false);
-    }
-  }, [setIsStamping, handleRefresh]);
-
-  const hasStampedToday = useCallback((storeId: number) => {
-    const stampProgress = stamps.find(s => Number(s.store_id) === storeId);
-    return getHasStampedToday(stampProgress?.last_stamp_at);
-  }, [stamps]);
+  }, [setRefreshing, refetchStamps, refetchStampRewards, refetchStreaks, fetchBackendRewards, fetchRewardsData, resetRewardsData, rewardSort, rewardPointsOrder]);
 
   return {
     handleRefresh,
-    handleStamp,
-    hasStampedToday,
   };
 }
