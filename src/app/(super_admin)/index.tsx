@@ -1,10 +1,11 @@
 import React from "react";
-import { ScrollView, ActivityIndicator, RefreshControl, Platform, useColorScheme } from "react-native";
+import { ScrollView, ActivityIndicator, RefreshControl, Platform, useColorScheme, TouchableOpacity } from "react-native";
 import { SafeAreaView, Text, View } from "@/tw";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useSuperAdminDashboard } from "@/hooks/super-admin/use-super-admin-dashboard";
 import { SectionHeader } from "@/components/ui/section-header";
 import { StatCard } from "@/components/ui/stat-card";
-import { Users, Store, BarChart3 } from "lucide-react-native";
+import { Users, Store, BarChart3, MessageSquare } from "lucide-react-native";
 import { useTranslation } from "react-i18next";
 import { WEB_PAGE_PADDING, WEB_CARD_PADDING, WEB_CARD_MAX_WIDTH } from "@/type/super-admin/layout";
 
@@ -26,6 +27,7 @@ export default function SuperAdminDashboard() {
   const { t: translate } = useTranslation();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
+  const insets = useSafeAreaInsets();
 
   if (loading && !refreshing) {
     return (
@@ -131,6 +133,23 @@ export default function SuperAdminDashboard() {
           </View>
         </View>
       </ScrollView>
+
+      {/* Floating Action Button for Chat */}
+      <TouchableOpacity
+        onPress={() => router.push("/(super_admin)/inbox" as any)}
+        style={isWeb
+          ? { position: 'fixed' as any, bottom: 24, right: 24, width: 56, height: 56, backgroundColor: '#FFF0E6', borderRadius: 28, alignItems: 'center', justifyContent: 'center', zIndex: 50, borderWidth: 1, borderColor: '#FFD4B5' }
+          : { position: 'absolute', bottom: Math.max(insets.bottom, 8) + 4, right: 24, width: 56, height: 56, backgroundColor: '#FFF0E6', borderRadius: 28, alignItems: 'center', justifyContent: 'center', zIndex: 50, borderWidth: 1, borderColor: '#FFD4B5' }
+        }
+      >
+        <MessageSquare size={24} color="#FF6600" />
+        {/* Red message indicator badge */}
+        <View style={{ position: 'absolute', top: 0, right: -4, width: 22, height: 22, backgroundColor: '#EF4444', borderRadius: 11, borderWidth: 2, borderColor: '#ffffff', alignItems: 'center', justifyContent: 'center' }}>
+          <Text className="text-[10px] font-poppins-bold text-white mt-0.5">
+            1
+          </Text>
+        </View>
+      </TouchableOpacity>
     </SafeAreaView>
   );
 }
