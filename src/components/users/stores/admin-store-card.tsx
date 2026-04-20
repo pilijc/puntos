@@ -7,7 +7,6 @@ import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { Modal } from "@/components/modal";
 import { AdminStoreRow } from "@/services/store-service";
 import { STORE_STATUS_CONFIG, getEffectiveStatus } from "@/type/super-admin/user";
-import { useSubscriptionConfigStore } from "@/store/super-admin/subscription-config";
 
 export function AdminStoreCard({
 	store,
@@ -23,7 +22,6 @@ export function AdminStoreCard({
 	onSelect: (store: AdminStoreRow) => void;
 }) {
 	const { t: translate } = useTranslation();
-	const config = useSubscriptionConfigStore();
 	const status = getEffectiveStatus(store);
 	const cfg = STORE_STATUS_CONFIG[status] ?? STORE_STATUS_CONFIG["inactive"];
 	const isPending = status === "pending_review";

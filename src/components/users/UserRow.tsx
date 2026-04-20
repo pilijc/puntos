@@ -1,6 +1,7 @@
 import React from "react";
 import { Image } from "react-native";
 import { View, Text } from "@/tw";
+import { User } from "lucide-react-native";
 import { useTranslation } from "react-i18next";
 
 const getRoleDetails = (roleType: string, roleLevel?: number, translate?: any) => {
@@ -28,14 +29,23 @@ export const UserRow = React.memo(function UserRow({ user, isFirst }: any) {
   const roleInfo = getRoleDetails(user.role_type, user.role, translate);
   const isDark = require('react-native').useColorScheme() === 'dark';
   return (
-    <View 
+    <View
       className="flex-row items-center p-3.5"
       style={{ borderTopWidth: isFirst ? 0 : 1, borderTopColor: isFirst ? 'transparent' : (isDark ? "#404040" : "#F8FAFC") }}
     >
-      <Image
-        source={user.avatar ? { uri: user.avatar } : require("@/assets/images/role-user.png")}
-        style={{ width: 48, height: 48, borderRadius: 12, backgroundColor: isDark ? "#262626" : "#F1F5F9" }}
-      />
+      {user.avatar ? (
+        <Image
+          source={{ uri: user.avatar }}
+          style={{ width: 48, height: 48, borderRadius: 12, backgroundColor: isDark ? "#262626" : "#F1F5F9" }}
+        />
+      ) : (
+        <View
+          style={{ width: 48, height: 48, borderRadius: 12, backgroundColor: "#FF660015" }}
+          className="items-center justify-center border border-primary/10"
+        >
+          <User size={22} color="#FF6600" />
+        </View>
+      )}
       <View className="ml-3 flex-1">
         <Text className="text-[13px] font-poppins-bold text-textPrimary dark:text-darkTextPrimary">{user.name || translate("super_admin.users.defaultUserName")}</Text>
         <Text className="text-[10px] font-poppins text-textMuted dark:text-darkTextSecondary italic">{user.displayEmail}</Text>

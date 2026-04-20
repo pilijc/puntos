@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { ScrollView, TouchableOpacity, View as RNView, useColorScheme, Dimensions } from "react-native";
 import { View, Text, Image } from "@/tw";
@@ -12,6 +12,8 @@ import { getUserAvailablePoints } from "@/services/user/points-service";
 import { getStoreById } from "@/services/store-service";
 import { supabase } from "@/supabase/supabase";
 import { Reward } from "@/services/reward-service";
+import { RedemptionDrawer } from "@/components/rewards/redemption-drawer";
+import { useRedemptionCode } from "@/hooks/useRedemptionCode";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -24,11 +26,13 @@ export default function ClaimRewardsScreen() {
   const [galleryIndex, setGalleryIndex] = useState(0);
   const [gallery, setGallery] = useState<{ id: string, uri: string }[]>([]);
   const [userId, setUserId] = useState<string | null>(null);
+  const [drawerVisible, setDrawerVisible] = useState(false);
+  const [selectedReward, setSelectedReward] = useState<Reward | null>(null);
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const scheme = useColorScheme();
   const dark = scheme === "dark";
-
+ 
   useEffect(() => {
     async function loadData() {
       if (!storeId) return;
@@ -39,7 +43,7 @@ export default function ClaimRewardsScreen() {
 
       const [storeRewards, points, storeData] = await Promise.all([
         getRewards({ storeId: storeId as string, limit: 20 }),
-        getUserAvailablePoints(user.id),
+        getUserAvailablePoints(user.id, storeId),
         getStoreById(Number(storeId))
       ]);
 
@@ -58,12 +62,56 @@ export default function ClaimRewardsScreen() {
     loadData();
   }, [storeId]);
 
+   const {
+    redemptionCode,
+    status,
+    timeRemaining,
+    generateCode,
+    cancelCode,
+    resetCode,
+  } = useRedemptionCode(
+    selectedReward?.id?.toString(),
+    storeId
+  );
+
+   const handleClaimReward = useCallback(async (reward: Reward) => {
+    setSelectedReward(reward);
+    setDrawerVisible(true);
+  }, []);
+
+   useEffect(() => {
+    if (selectedReward && drawerVisible && !redemptionCode) {
+      generateCode();
+    }
+  }, [selectedReward, drawerVisible, redemptionCode, generateCode]);
+
+  // Refresh points when redemption is completed
+  useEffect(() => {
+    if (status === "redeemed" && userId && storeId) {
+      getUserAvailablePoints(userId, storeId).then(setUserPoints);
+    }
+  }, [status, userId, storeId]);
+
+  // Cancel redemption
+  const handleCancelRedemption = useCallback(async () => {
+    await cancelCode();
+  }, [cancelCode]);
+
+  // Close drawer and reset
+  const handleCloseDrawer = useCallback(() => {
+    setDrawerVisible(false);
+     resetCode();
+     setTimeout(() => {
+      setSelectedReward(null);
+    }, 300);
+  }, [resetCode]);
+
   // Split into redeemable and insufficient
   const redeemable = rewards.filter(r => userPoints >= r.points_cost);
   const almost = rewards.filter(r => userPoints < r.points_cost)
     .map(r => ({ ...r, deficit: r.points_cost - userPoints }));
 
-  // ── Theme tokens ──────────────────────────────────────────────────────────
+  // Theme tokens 
   const heroBg = dark ? "#171717" : "#F3F4F6";
   const heroText = dark ? "#FFFFFF" : "#1C1C1E";
   const heroSub = dark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.35)";
@@ -340,6 +388,7 @@ export default function ClaimRewardsScreen() {
                       </Text>
                     </RNView>
                     <TouchableOpacity
+                      onPress={() => handleClaimReward(item)}
                       style={{
                         flexDirection: "row", alignItems: "center", gap: 4,
                         backgroundColor: "#FF6600",
@@ -448,6 +497,19 @@ export default function ClaimRewardsScreen() {
           </RNView>
         </ScrollView>
       </Animated.View>
+
+      {/* Redemption Drawer */}
+      <RedemptionDrawer
+        visible={drawerVisible}
+        rewardTitle={selectedReward?.title}
+        rewardDescription={selectedReward?.description}
+        rewardImage={selectedReward?.image_url}
+        redemptionCode={redemptionCode ?? undefined}
+        timeRemaining={timeRemaining}
+        status={status}
+        onClose={handleCloseDrawer}
+        onCancel={handleCancelRedemption}
+      />
     </RNView>
   );
 }

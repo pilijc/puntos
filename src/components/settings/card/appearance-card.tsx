@@ -22,7 +22,7 @@ export const AppearanceCard = () => {
                 activeOpacity={0.7}
             >
                 <View className="h-8 w-8 -mt-0.5 rounded-lg items-center justify-center">
-                    <SunMoon size={15} color="#0f172a" />
+                    <SunMoon size={15} color="#FF6600" />
                 </View>
 
                 <View className="flex-1 ml-2">

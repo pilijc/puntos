@@ -1,0 +1,524 @@
+import React, { useCallback, useMemo } from "react";
+import { useTranslation } from "react-i18next";
+import { ActivityIndicator, Platform, Pressable, useColorScheme } from "react-native";
+import { View, Text, SafeAreaView, ScrollView } from "@/tw";
+import { useSuperAdminStoresStore } from "@/store/super-admin/super-admin-stores-store";
+import { Check, ChevronDown, ChevronUp, Sparkles, Store } from "lucide-react-native";
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { Button } from "@/components/button";
+import { TextField } from "@/components/text-field";
+import { Modal } from "@/components/modal";
+import { useSuperAdminSubscriptionStore } from "@/store/super-admin/subscription-store";
+import { Table, type TableColumn } from "@/components/ui/table";
+import {
+  getSubscriptionPlans,
+  getManagerSubscriptions,
+  getPublicUsersByIds,
+  getManagerSubscriptionPaymentsByOwner,
+  updateProSubscriptionAmount,
+} from "@/services/super-admin/subscription-service";
+
+function FeatureLine({ text }: { text: string }) {
+  return (
+    <View className="flex-row items-start gap-2 py-1">
+      <Check size={14} color="#FF6600" style={{ marginTop: 2 }} />
+      <Text className="flex-1 text-xs font-poppins leading-5 text-textPrimary dark:text-darkTextPrimary">
+        {text}
+      </Text>
+    </View>
+  );
+}
+
+export default function SubscriptionConfig() {
+  const { stores, fetchStores } = useSuperAdminStoresStore();
+  const subscriptionState = useSuperAdminSubscriptionStore();
+  const isWeb = Platform.OS === "web";
+  const isDark = useColorScheme() === "dark";
+  const { t: translate } = useTranslation();
+  const mutedIcon = isDark ? "#a3a3a3" : "#64748b";
+  const plans = subscriptionState.plans;
+  const proAmountInput = subscriptionState.proAmountInput;
+  const savedProAmount = subscriptionState.savedProAmount;
+  const formError = subscriptionState.formError;
+
+  React.useEffect(() => {
+    fetchStores();
+    void (async () => {
+      subscriptionState.setFormError(null);
+      subscriptionState.setLoading(true);
+      try {
+        try {
+          const plans = await getSubscriptionPlans();
+          subscriptionState.setPlans(plans);
+
+          const pro = plans.find((p) => String(p.slug ?? "").trim().toLowerCase() === "pro") ?? null;
+          const amt =
+            typeof pro?.amount === "number" && Number.isFinite(pro.amount) ? pro.amount : null;
+          subscriptionState.setSavedProAmount(amt);
+          subscriptionState.setProAmountInput(amt != null ? String(amt) : "");
+        } catch (e) {
+          subscriptionState.setFormError(
+            e instanceof Error ? e.message : translate("super_admin.subscription.formError.loadPlansFailed"),
+          );
+        }
+
+        try {
+          const managerSubscriptions = await getManagerSubscriptions();
+          subscriptionState.setManagerSubscriptions(managerSubscriptions);
+
+          const users = await getPublicUsersByIds(managerSubscriptions.map((m) => m.owner_id));
+          subscriptionState.setPublicUsers(users);
+        } catch (e) {
+          subscriptionState.setFormError(
+            e instanceof Error ? e.message : translate("super_admin.subscription.formError.loadSubsFailed"),
+          );
+          subscriptionState.setManagerSubscriptions([]);
+          subscriptionState.setPublicUsers([]);
+        }
+      } finally {
+        subscriptionState.setLoading(false);
+      }
+    })();
+  }, []);
+
+  const basicPlan = useMemo(
+    () => plans.find((p) => String(p.slug ?? "").trim().toLowerCase() === "basic") ?? null,
+    [plans],
+  );
+  const proPlan = useMemo(
+    () => plans.find((p) => String(p.slug ?? "").trim().toLowerCase() === "pro") ?? null,
+    [plans],
+  );
+
+  const hasProAmountChanges = useMemo(() => {
+    if (savedProAmount == null) return false;
+    const current = Number(proAmountInput);
+    if (!Number.isFinite(current)) return false;
+    return current !== savedProAmount;
+  }, [proAmountInput, savedProAmount]);
+
+  const toAmountNumber = useCallback((value: unknown): number | null => {
+    if (typeof value === "number" && Number.isFinite(value)) return value;
+    if (typeof value === "string") {
+      const n = Number(value);
+      return Number.isFinite(n) ? n : null;
+    }
+    return null;
+  }, []);
+
+  const formatPeso = useCallback((amount: number | null) => {
+    if (amount == null) return "";
+    return `₱ ${amount.toFixed(2)}`;
+  }, []);
+
+  const formatDateLong = useCallback((value: string | number | Date | null | undefined) => {
+    if (!value) return "—";
+    const d = value instanceof Date ? value : new Date(value);
+    if (Number.isNaN(d.getTime())) return "—";
+    return new Intl.DateTimeFormat(undefined, {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    }).format(d);
+  }, []);
+
+  const handleSave = async () => {
+    subscriptionState.setFormError(null);
+    const amount = Number(proAmountInput);
+    if (!Number.isFinite(amount) || amount <= 0) {
+      subscriptionState.setFormError(translate("super_admin.subscription.formError.invalidPrice"));
+      return;
+    }
+
+    try {
+      subscriptionState.setSaving(true);
+      await updateProSubscriptionAmount(amount);
+      const [plans, managerSubscriptions] = await Promise.all([
+        getSubscriptionPlans(),
+        getManagerSubscriptions(),
+      ]);
+      subscriptionState.setPlans(plans);
+      subscriptionState.setManagerSubscriptions(managerSubscriptions);
+      const users = await getPublicUsersByIds(managerSubscriptions.map((m) => m.owner_id));
+      subscriptionState.setPublicUsers(users);
+
+      const pro = plans.find((p) => String(p.slug ?? "").trim().toLowerCase() === "pro") ?? null;
+      const amt = typeof pro?.amount === "number" && Number.isFinite(pro.amount) ? pro.amount : null;
+      subscriptionState.setSavedProAmount(amt);
+      subscriptionState.setProAmountInput(amt != null ? String(amt) : "");
+
+      subscriptionState.setShowSuccessModal(true);
+    } catch (e) {
+      subscriptionState.setFormError(e instanceof Error ? e.message : translate("super_admin.subscription.formError.saveFailed"));
+    } finally {
+      subscriptionState.setSaving(false);
+    }
+  };
+
+  const subscribedManagers = React.useMemo(() => {
+    return subscriptionState.managerSubscriptions.map((sub) => {
+      const store = stores.find((s) => s.owner_id === sub.owner_id);
+      const user = subscriptionState.publicUsers[sub.owner_id];
+      const name = (user?.name ?? "").trim();
+      return {
+        ...sub,
+        display_name: name || store?.owner_name || sub.owner_id,
+        email: user?.email ?? null,
+      };
+    });
+  }, [subscriptionState.managerSubscriptions, subscriptionState.publicUsers, stores]);
+
+  const togglePayments = useCallback(
+    async (ownerId: string) => {
+      const open = Boolean(subscriptionState.paymentsOpen[ownerId]);
+      const next = !open;
+
+      subscriptionState.setPaymentsOpen(ownerId, next);
+      if (!next) return;
+      if (subscriptionState.paymentsByOwner[ownerId]?.length) return;
+
+      subscriptionState.setPaymentsLoading(ownerId, true);
+      try {
+        const payments = await getManagerSubscriptionPaymentsByOwner(ownerId);
+        subscriptionState.setPaymentsForOwner(ownerId, payments);
+      } catch (e) {
+        subscriptionState.setFormError(e instanceof Error ? e.message : translate("super_admin.subscription.formError.loadLedgerFailed"));
+      } finally {
+        subscriptionState.setPaymentsLoading(ownerId, false);
+      }
+    },
+    [
+      subscriptionState.paymentsByOwner,
+      subscriptionState.paymentsOpen,
+      subscriptionState.setFormError,
+      subscriptionState.setPaymentsForOwner,
+      subscriptionState.setPaymentsLoading,
+      subscriptionState.setPaymentsOpen,
+    ],
+  );
+
+  const renderLedger = useCallback(
+    (row: (typeof subscribedManagers)[number]) => {
+      const payments = subscriptionState.paymentsByOwner[row.owner_id] ?? [];
+      return (
+        <View className="w-full">
+          <View className="pt-1">
+            <Table
+              variant="divider"
+              headerPaddingYClassName="py-2"
+              columns={[
+                {
+                  key: "payment_reference",
+                  header: translate("super_admin.subscription.ledger.paymentRef"),
+                  flex: 3,
+                  align: "left",
+                  render: (p: any) =>
+                    p.payment_reference
+                      ? p.payment_reference
+                      : "—",
+                },
+                {
+                  key: "amount",
+                  header: translate("super_admin.subscription.ledger.amount"),
+                  flex: 2,
+                  align: "center",
+                  render: (p: any) => `₱${Number(p.amount_paid ?? 0).toFixed(2)}`,
+                },
+                {
+                  key: "billing_period_start",
+                  header: translate("super_admin.subscription.ledger.billingStart"),
+                  flex: 2,
+                  align: "center",
+                  render: (p: any) =>
+                    p.billing_period_start
+                      ? formatDateLong(p.billing_period_start)
+                      : "—",
+                },
+                {
+                  key: "billing_period_end",
+                  header: translate("super_admin.subscription.ledger.billingEnd"),
+                  flex: 3,
+                  align: "center",
+                  render: (p: any) =>
+                    p.billing_period_end
+                      ? formatDateLong(p.billing_period_end)
+                      : "—",
+                },
+           
+                {
+                  key: "status",
+                  header: translate("super_admin.subscription.ledger.status"),
+                  flex: 1,
+                  align: "left",
+                  render: (p: any) => (
+                    <View className="px-2 py-0.5 rounded-full bg-emerald-100/60 dark:bg-emerald-900/25">
+                      <Text className="text-[10px] font-poppins-bold uppercase text-emerald-700 dark:text-emerald-300">
+                        {String(p.payment_status ?? "—")}
+                      </Text>
+                    </View>
+                  ),
+                },
+            ]}
+            rows={payments}
+            rowKey={(p: any, idx: number) => String(p.id ?? `${row.owner_id}-${idx}`)}
+            emptyText={translate("super_admin.subscription.ledger.empty")}
+            />
+          </View>
+        </View>
+      );
+    },
+    [subscriptionState.paymentsByOwner],
+  );
+
+  const isExpanded = useCallback(
+    (row: (typeof subscribedManagers)[number]) => Boolean(subscriptionState.paymentsOpen[row.owner_id]),
+    [subscriptionState.paymentsOpen],
+  );
+
+  const tableColumns = useMemo(() => {
+    const cols: Array<TableColumn<(typeof subscribedManagers)[number]>> = [
+      {
+        key: "manager",
+        header: translate("super_admin.subscription.table.managerCol"),
+        flex: 2,
+        align: "left",
+        render: (row) => (
+          <View className="min-w-0">
+            <Text className="text-[12px] font-poppins-semibold text-slate-800 dark:text-slate-100" numberOfLines={1}>
+              {row.display_name}
+            </Text>
+            {/* <Text className="text-[10px] font-poppins text-slate-500 dark:text-slate-400" numberOfLines={1}>
+              {row.email || "—"}
+            </Text> */}
+          </View>
+        ),
+      },
+      {
+        key: "plan",
+        header: translate("super_admin.subscription.table.planCol"),
+        width: 150,
+        align: "center",
+        render: (row) => (
+          <View className="px-2 py-0.5 rounded-full bg-primary/10">
+            <Text className="text-[10px] font-poppins-bold uppercase tracking-wider text-primary">
+              {row.subscription_id ? translate("super_admin.subscription.table.planPro") : translate("super_admin.subscription.table.planBasic")}
+            </Text>
+          </View>
+        ),
+   
+      },
+      {
+        key: "payments",
+        header: translate("super_admin.subscription.table.paymentsCol"),
+        width: 150,
+        align: "center",
+        render: (row) => {
+          const open = Boolean(subscriptionState.paymentsOpen[row.owner_id]);
+          const loading = Boolean(subscriptionState.paymentsLoading[row.owner_id]);
+          return (
+            <Pressable
+              onPress={() => void togglePayments(row.owner_id)}
+              disabled={loading}
+              hitSlop={8}
+              accessibilityRole="button"
+              accessibilityLabel={open ? "Hide payments" : "View payments"}
+              style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
+            >
+              <View className="flex-row items-center justify-center">
+                {loading ? (
+                  <Text className="text-[12px] font-poppins-semibold text-primary">...</Text>
+                ) : open ? (
+                  <ChevronUp size={16} color={mutedIcon} />
+                ) : (
+                  <ChevronDown size={16} color={mutedIcon} />
+                )}
+              </View>
+            </Pressable>
+          );
+        },
+      },
+    ];
+    return cols;
+  }, [
+    subscribedManagers,
+    subscriptionState.paymentsLoading,
+    subscriptionState.paymentsOpen,
+    renderLedger,
+    togglePayments,
+  ]);
+
+  return (
+    <SafeAreaView edges={["top", "left", "right"]} className="flex-1 bg-backgroundMuted dark:bg-neutral-900">
+      <View className="bg-white dark:bg-darkBackground border-b border-neutral-100 dark:border-darkBorder px-6 py-3 flex-row items-center justify-between">
+        <Text className="text-xl font-poppins-bold text-textPrimary dark:text-darkTextPrimary py-1">
+          {translate("super_admin.subscription.title")}
+        </Text>
+      </View>
+
+      {subscriptionState.loading ? (
+        <View className="flex-1 items-center justify-center">
+          <ActivityIndicator size="large" color="#FF6600" />
+        </View>
+      ) : (
+        <ScrollView
+          className="flex-1"
+          contentContainerStyle={{
+            paddingHorizontal: 16,
+            paddingTop: 16,
+            paddingBottom: 40,
+            ...(isWeb ? { alignItems: "center" as const } : {}),
+          }}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={{ maxWidth: isWeb ? 896 : undefined }} className="w-full">
+            <View className="w-full rounded-xl border border-slate-100 dark:border-neutral-700 bg-white dark:bg-neutral-800 overflow-hidden p-4 gap-4">
+
+              <View className={isWeb ? "flex-row gap-4 items-stretch" : "flex-col gap-4"}>
+                <View className="flex-1 min-w-0">
+                  <View className="relative rounded-2xl border border-slate-100 bg-white p-4 h-full dark:border-slate-700 dark:bg-neutral-900">
+                    <View className="flex-row items-center gap-2 mb-1">
+                      <Store size={20} color={mutedIcon} />
+                      <Text className="text-md font-poppins-bold text-textPrimary dark:text-darkTextPrimary">
+                        {String(basicPlan?.name ?? "Basic")}
+                      </Text>
+                    </View>
+                    <Text className="text-xs font-poppins text-textMuted dark:text-darkTextMuted mb-2">
+                      {translate("super_admin.subscription.basic.price")}
+                    </Text>
+                    <View className="pt-1 border-t border-slate-100 dark:border-slate-700">
+                      <FeatureLine text={translate("super_admin.subscription.basic.feature1")} />
+                      <FeatureLine text={translate("super_admin.subscription.basic.feature2")} />
+                    </View>
+                  </View>
+                </View>
+
+                <View
+                  className={`
+                    flex-1 min-w-0
+                    w-full rounded-2xl
+                    bg-white dark:bg-neutral-900
+                    p-4 relative
+                    border
+                    border-primary/50 dark:border-primary/60
+                    ${isWeb ? "shadow-[0_0_16px_0_rgba(255,102,0,0.22)] dark:shadow-[0_0_24px_0_rgba(255,102,0,0.28)]" : ""}
+                  `}
+                >
+           
+                  <View className="relative h-full">
+                    <View className="flex-row items-center gap-2 mb-1 mt-1">
+                      <Sparkles size={20} color="#FF6600" />
+                      <Text className="text-md font-poppins-bold text-textPrimary dark:text-darkTextPrimary">
+                        {String(proPlan?.name ?? "Pro")}
+                      </Text>
+                    </View>
+
+                    <Text className="text-xs font-poppins text-textMuted dark:text-darkTextMuted mb-2">
+                      {toAmountNumber(proAmountInput) != null
+                        ? `${translate("super_admin.subscription.pro.builtFor")} · ${formatPeso(toAmountNumber(proAmountInput))}/month`
+                        : translate("super_admin.subscription.pro.builtFor")}
+                    </Text>
+
+                    <View className="pt-1 border-t border-orange-100/80 dark:border-orange-900/40">
+                      <FeatureLine text={translate("super_admin.subscription.pro.feature1")} />
+                      <FeatureLine text={translate("super_admin.subscription.pro.feature2")} />
+                      <FeatureLine text={translate("super_admin.subscription.pro.feature3")} />
+                    </View>
+
+                    <View className="mt-4">
+                      <TextField
+                        label={translate("super_admin.subscription.pro.priceLabel")}
+                        value={proAmountInput}
+                        onChangeText={subscriptionState.setProAmountInput}
+                        keyboardType="numeric"
+                      />
+                      {formError ? (
+                        <View className="mt-2 bg-red-50 dark:bg-red-900/20 rounded-xl p-4">
+                          <Text className="text-xs font-poppins text-red-700 dark:text-red-300">
+                            {formError}
+                          </Text>
+                        </View>
+                      ) : null}
+
+                      <View className="mt-3">
+                        {hasProAmountChanges ? (
+                          <Button
+                            variant="primary"
+                            loading={subscriptionState.saving}
+                            label={translate("super_admin.subscription.pro.saveChanges")}
+                            onPress={handleSave}
+                            disabled={subscriptionState.saving}
+                            fullWidth={true}
+                          />
+                        ) : null}
+                      </View>
+                    </View>
+                  </View>
+                </View>
+              </View>
+            </View>
+
+            {subscribedManagers.length > 0 ? (
+              <View className="bg-white dark:bg-darkBackgroundCard rounded-2xl border border-slate-100 dark:border-neutral-800 p-4 mt-4">
+                <View className="flex-row items-center gap-2 mb-2">
+                  <Text className="text-sm font-poppins-semibold text-slate-800 dark:text-slate-100">
+                    {translate("super_admin.subscription.managerSubs.title")}
+                  </Text>
+                </View>
+
+                <Text className="text-xs font-poppins text-slate-500 dark:text-darkTextMuted leading-4 mb-4 px-0.5">
+                  {translate("super_admin.subscription.managerSubs.detail")}
+                </Text>
+
+                <Table
+                  columns={tableColumns}
+                  rows={subscribedManagers}
+                  rowKey={(row, idx) => String(row.id ?? row.owner_id ?? idx)}
+                  emptyText={translate("super_admin.subscription.managerSubs.empty")}
+                  isRowExpanded={(row) => isExpanded(row)}
+                  renderExpandedRow={(row) => renderLedger(row)}
+                  hideExpandedTopBorder={true}
+                  onRowPress={(row) => {
+                    void togglePayments(row.owner_id);
+                  }}
+                  isRowPressDisabled={(row) => Boolean(subscriptionState.paymentsLoading[row.owner_id])}
+                />
+              </View>
+            ) : (
+              <View className="bg-white dark:bg-darkBackgroundCard rounded-2xl border border-slate-100 dark:border-neutral-800 p-4 mt-4">
+                <Text className="text-sm font-poppins-semibold text-slate-800 dark:text-slate-100 mb-1">
+                  {translate("super_admin.subscription.managerSubs.title")}
+                </Text>
+                <Text className="text-[10px] font-poppins text-slate-500 dark:text-darkTextMuted leading-4">
+                  {translate("super_admin.subscription.managerSubs.empty")}
+                </Text>
+              </View>
+            )}
+          </View>
+        </ScrollView>
+      )}
+
+      <Modal
+        visible={subscriptionState.showSuccessModal}
+        title={translate("super_admin.subscription.modal.successTitle")}
+        onClose={() => subscriptionState.setShowSuccessModal(false)}
+        showCloseButton={false}
+        buttons={[
+          {
+            label: translate("super_admin.subscription.modal.okay"),
+            variant: "success",
+            onPress: () => subscriptionState.setShowSuccessModal(false),
+          },
+        ]}
+      >
+        <View className="items-center justify-center pt-2">
+          <View className="w-14 h-14 rounded-full bg-emerald-100 dark:bg-emerald-900/30 items-center justify-center mb-4 border border-emerald-200 dark:border-emerald-800">
+            <MaterialIcons name="check" size={32} color="#10B981" />
+          </View>
+          <Text className="text-sm leading-6 font-poppins text-slate-500 dark:text-slate-400 text-center px-2">
+            {translate("super_admin.subscription.modal.successDetail")}
+          </Text>
+        </View>
+      </Modal>
+    </SafeAreaView>
+  );
+}

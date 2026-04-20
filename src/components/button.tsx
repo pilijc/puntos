@@ -15,8 +15,9 @@ interface ButtonProps {
   leftImage?: ImageSource;
   leftImageSize?: number;
   fullWidth?: boolean;
-  /** Tighter horizontal padding when `fullWidth` (e.g. settings logout). */
+  fitContent?: boolean;
   dense?: boolean;
+  roundedFull?: boolean;
   loading?: boolean;
   disabled?: boolean;
   keyboardDismiss?: boolean;
@@ -72,7 +73,9 @@ export function Button({
   leftImage,
   leftImageSize = 18,
   fullWidth = false,
+  fitContent = false,
   dense = false,
+  roundedFull = false,
   loading = false,
   disabled = false,
   keyboardDismiss = false,
@@ -89,14 +92,14 @@ export function Button({
   }
 
   const LucideIcon = icon ? (LucideIcons[icon] as React.ComponentType<{ size: number; color: string }>) : null;
-  const fullWidthPad = dense ? "px-4" : "px-10";
+  const fullWidthPad = fitContent ? "px-5" : dense ? "px-4" : "px-10";
   const sizeClass = authButton
     ? fullWidth
-      ? `w-full h-14 ${fullWidthPad}`
-      : "w-fit h-14 px-10"
+      ? `w-full py-4 ${fullWidthPad}`
+      : `w-fit py-3.5 ${fitContent ? "px-5" : "px-10"}`
     : fullWidth
-      ? `w-full h-11 ${fullWidthPad}`
-      : "w-fit h-11 px-10";
+      ? `w-full py-3 ${fullWidthPad}`
+      : `w-fit py-2.5 ${fitContent ? "px-5" : "px-10"}`;
 
   return (
     <TouchableOpacity
@@ -104,7 +107,7 @@ export function Button({
       disabled={disabled || loading}
       onPress={onPress}
       onPressIn={keyboardDismiss ? () => { Keyboard.dismiss(); onPress(); } : undefined}
-      className={`${sizeClass} rounded-xl ${container} items-center flex-row justify-center gap-x-2`}
+      className={`${sizeClass} ${roundedFull ? "rounded-full" : "rounded-xl"} ${container} items-center flex-row justify-center gap-x-2`}
     >
       {loading ? (
         <ActivityIndicator size="small" color={spinnerColor} />
