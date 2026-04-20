@@ -1,0 +1,27 @@
+{
+  "title": "ダッシュボード",
+  "noStores": "利用可能な店舗がありません。",
+  "metrics": {
+    "inStore": "来店中",
+    "realTimeUsers": "リアルタイムユーザー",
+    "totalScanned": "スキャン総数",
+    "redeemedToday": "本日の利用"
+  },
+  "retention": {
+    "title": "リテンション",
+    "subtitle": "ユーザーロイヤルティ概要",
+    "returning": "リピーター",
+    "new": "新規"
+  },
+  "activity": {
+    "title": "週間スキャンアクティビティ"
+  },
+  "stampProgress": {
+    "title": "スタンプの進捗",
+    "distribution": "ユーザー分布: {{users}}人 · 目標: {{goal}} スタンプ",
+    "noProgram": "アクティブなスタンププログラムが見つかりません",
+    "stamps": "スタンプ",
+    "user": "人",
+    "users": "人"
+  }
+}

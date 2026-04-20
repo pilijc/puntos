@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { ScrollView, Platform } from "react-native";
 import { ScreenWrapper } from "@/components/ui/screen-wrapper";
 import { View, Text } from "@/tw";
@@ -15,6 +16,7 @@ import { supabase } from "@/supabase/supabase";
 import { upsertManagerSubscriptionByOwner } from "@/services/store-manager/subscription-service";
 
 export default function SubscriptionConfig() {
+  const { t: translate } = useTranslation();
   const config = useSubscriptionConfigStore();
   const { stores, fetchStores } = useSuperAdminStoresStore();
 
@@ -114,9 +116,7 @@ export default function SubscriptionConfig() {
       {/* ── Header ── */}
       {/* ── Main Header (Uniform Style) ── */}
       <View className="bg-white dark:bg-darkBackground border-b border-neutral-100 dark:border-darkBorder px-6 py-3">
-        <Text className="text-xl font-poppins-bold text-textPrimary dark:text-darkTextPrimary py-1">
-          Subscription
-        </Text>
+        <Text className="text-xl font-poppins-bold text-textPrimary dark:text-darkTextPrimary py-1">{translate("super_admin.subscription.title")}</Text>
       </View>
 
       <ScrollView
@@ -127,9 +127,7 @@ export default function SubscriptionConfig() {
         <View className="bg-white dark:bg-darkBackgroundCard rounded-2xl border border-slate-100 dark:border-neutral-800 p-4 mb-4">
           <View className="flex-row items-center justify-between bg-slate-50 dark:bg-darkBackgroundMuted rounded-xl p-4 border border-slate-100 dark:border-neutral-700 mb-4">
             <View className="flex-1 pr-4">
-              <Text className="text-sm font-poppins-semibold text-slate-800 dark:text-darkTextPrimary">
-                Enforce Subscription
-              </Text>
+              <Text className="text-sm font-poppins-semibold text-slate-800 dark:text-darkTextPrimary">{translate("super_admin.subscription.config.enforce")}</Text>
               <Text className="text-[10px] font-poppins text-slate-500 dark:text-darkTextMuted leading-4 mt-1">
                 Require Store Managers to pay after exceeding the free store limit.
               </Text>
@@ -139,15 +137,13 @@ export default function SubscriptionConfig() {
 
           <View className="flex-row items-center gap-2 mb-3">
             <CircleDollarSign size={16} color="#FF6600" />
-            <Text className="text-sm font-poppins-semibold text-slate-800 dark:text-slate-100">
-              Subscription Parameters
-            </Text>
+            <Text className="text-sm font-poppins-semibold text-slate-800 dark:text-slate-100">{translate("super_admin.subscription.config.parameters")}</Text>
           </View>
 
           <View className="flex-row gap-3">
             <View className="flex-1">
               <TextField
-                label="Free Stores Limit"
+                label={translate("super_admin.subscription.config.limitLabel")}
                 value={limit}
                 onChangeText={setLimit}
                 keyboardType="numeric"
@@ -155,7 +151,7 @@ export default function SubscriptionConfig() {
             </View>
             <View className="flex-1">
               <TextField
-                label="Price (PHP)"
+                label={translate("super_admin.subscription.config.priceLabel")}
                 value={price}
                 onChangeText={setPrice}
                 keyboardType="numeric"
@@ -168,9 +164,7 @@ export default function SubscriptionConfig() {
           <View className="bg-white dark:bg-darkBackgroundCard rounded-2xl border border-slate-100 dark:border-neutral-800 p-4 mb-4">
             <View className="flex-row items-center gap-2 mb-2">
               <CalendarDays size={16} color="#10B981" />
-              <Text className="text-sm font-poppins-semibold text-slate-800 dark:text-slate-100">
-                Manager subscriptions
-              </Text>
+              <Text className="text-sm font-poppins-semibold text-slate-800 dark:text-slate-100">{translate("super_admin.subscription.config.managerSubs")}</Text>
             </View>
 
             <Text className="text-[10px] font-poppins text-slate-500 dark:text-darkTextMuted leading-4 mb-4 px-0.5">
@@ -199,7 +193,7 @@ export default function SubscriptionConfig() {
                         <Text
                           className={`text-[8px] font-poppins-bold uppercase tracking-wider ${isPaid ? "text-emerald-700" : "text-red-700"}`}
                         >
-                          {sub.payment_status || "unpaid"}
+                          {translate("label." + (sub.payment_status || "unpaid"))}
                         </Text>
                       </View>
                     </View>
@@ -221,9 +215,7 @@ export default function SubscriptionConfig() {
             <View className="flex-row items-center justify-between mb-2 pr-5">
               <View className="flex-row items-center gap-2">
                 <AlertTriangle size={16} color="#EF4444" />
-                <Text className="text-sm font-poppins-semibold text-slate-800 dark:text-slate-100">
-                  Exceeded Store Managers
-                </Text>
+                <Text className="text-sm font-poppins-semibold text-slate-800 dark:text-slate-100">{translate("super_admin.subscription.config.exceededManagers")}</Text>
               </View>
               <Toggle
                 size="sm"
@@ -248,8 +240,7 @@ export default function SubscriptionConfig() {
             </View>
 
             <Text className="text-[10px] font-poppins text-slate-500 dark:text-darkTextMuted leading-4 mb-4 px-0.5">
-              Managers with more than {config.FREE_STORES_LIMIT} active store(s) and pending
-              applications. Toggle enforcement per manager.
+              {translate("super_admin.subscription.config.exceededDetail", { limit: config.FREE_STORES_LIMIT })}
             </Text>
 
             {ownersOverLimit.map((manager, idx) => (
@@ -300,7 +291,7 @@ export default function SubscriptionConfig() {
         <View className="items-center mt-2">
           <Button
             variant="primary"
-            label={isSaving ? "Saving..." : "Save Configurations"}
+            label={isSaving ? translate("super_admin.subscription.config.saving") : translate("super_admin.subscription.config.save")}
             icon="Save"
             onPress={handleSave}
             disabled={isSaving}
@@ -310,10 +301,10 @@ export default function SubscriptionConfig() {
 
       <Modal
         visible={showSuccessModal}
-        title="Successfully Saved!"
+        title={translate("super_admin.subscription.config.successTitle")}
         onClose={() => setShowSuccessModal(false)}
         showCloseButton={false}
-        buttons={[{ label: "Okay", variant: "success", onPress: () => setShowSuccessModal(false) }]}
+        buttons={[{ label: translate("label.ok"), variant: "success", onPress: () => setShowSuccessModal(false) }]}
       >
         <View className="items-center justify-center pt-2 pb-4">
           <View className="w-14 h-14 rounded-full bg-emerald-100 dark:bg-emerald-900/30 items-center justify-center mb-4 border border-emerald-200 dark:border-emerald-800">

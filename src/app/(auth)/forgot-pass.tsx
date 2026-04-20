@@ -90,10 +90,10 @@ export default function ForgotPassword() {
             <View className="gap-y-4">
               <View>
                 <Text className="mb-2 text-sm font-poppins-medium text-neutral-700 dark:text-darkTextSecondary">
-                  {translate("onboarding.forgotPassword.label.email")}
+                  {translate("label.email")}
                 </Text>
                 <TextInput
-                  placeholder={translate("onboarding.forgotPassword.input.email")}
+                  placeholder={translate("label.emailPlaceholder")}
                   placeholderTextColor="#9CA3AF"
                   keyboardType="email-address"
                   autoCapitalize="none"

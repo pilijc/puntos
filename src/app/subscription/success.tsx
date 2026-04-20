@@ -6,11 +6,13 @@ import { useEffect, useState } from "react";
 import { ActivityIndicator } from "react-native";
 import { supabase } from "@/supabase/supabase";
 import { getSubscriptionPaymentStatus } from "@/services/store-manager/subscription-service";
+import { useTranslation } from "react-i18next";
 
 export default function SubscriptionSuccessScreen() {
   const router = useRouter();
   const [verifying, setVerifying] = useState(true);
   const [triesLeft, setTriesLeft] = useState(10);
+  const { t: translate } = useTranslation();
 
   useEffect(() => {
     let cancelled = false;
@@ -58,16 +60,16 @@ export default function SubscriptionSuccessScreen() {
     <SafeAreaView edges={["top", "left", "right"]} style={{ flex: 1 }}>
       <View className="flex-1 items-center justify-center px-6 bg-white dark:bg-neutral-900">
         <Text className="text-xl font-poppins-bold text-textPrimary dark:text-darkTextPrimary text-center">
-          Payment successful
+          {translate("storeManager.subscription.success.title")}
         </Text>
         <Text className="mt-2 text-sm font-poppins text-textSecondary dark:text-darkTextSecondary text-center">
-          {verifying ? "Verifying payment..." : "Thanks! Your plan will update shortly."}
+          {verifying ? translate("storeManager.subscription.success.verifying") : translate("storeManager.subscription.success.body")}
         </Text>
         {verifying ? (
           <View className="mt-4 items-center">
             <ActivityIndicator />
             <Text className="mt-2 text-xs font-poppins text-textMuted dark:text-darkTextMuted">
-              Waiting for webhook ({triesLeft})
+              {translate("storeManager.subscription.success.waitingWebhook", { tries: triesLeft })}
             </Text>
           </View>
         ) : null}
@@ -77,7 +79,9 @@ export default function SubscriptionSuccessScreen() {
           activeOpacity={0.85}
           onPress={() => router.replace("/(store_manager)/subscription")}
         >
-          <Text className="text-sm font-poppins-semibold text-white">Back to Subscription</Text>
+          <Text className="text-sm font-poppins-semibold text-white">
+            {translate("storeManager.subscription.success.back")}
+          </Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>

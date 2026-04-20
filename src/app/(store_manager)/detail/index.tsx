@@ -42,27 +42,27 @@ export default function DetailIndex() {
   const statusKey =
     detail?.status && detail.status in STATUS_CONFIG ? detail.status : "pending_review";
   const statusCfg = STATUS_CONFIG[statusKey] ?? STATUS_CONFIG.pending_review;
-  const statusLabel = t(`storeManager.detail.status.${statusKey}`);
+  const statusLabel = t(`store_manager.detail.status.${statusKey}`);
 
   const storeTypeLabel = useMemo(() => {
     if (!detail?.type) return "—";
     if (store_types_options.some((o) => o.value === detail.type)) {
-      return t(`storeManager.storeTypes.${detail.type}`);
+      return t(`store_manager.storeTypes.${detail.type}`);
     }
     return detail.type;
   }, [detail?.type, t]);
 
-  const notSet = t("storeManager.detail.notSet");
+  const notSet = t("store_manager.detail.notSet");
   const openLine = (time: string | null | undefined) =>
-    t("storeManager.detail.open", { time: time ? formatTime(time) : notSet });
+    t("store_manager.detail.open", { time: time ? formatTime(time) : notSet });
   const closeLine = (time: string | null | undefined) =>
-    t("storeManager.detail.close", { time: time ? formatTime(time) : notSet });
+    t("store_manager.detail.close", { time: time ? formatTime(time) : notSet });
 
   return (
     <SafeAreaView edges={["top"]} className="flex-1 bg-backgroundMuted dark:bg-neutral-900">
       <AppHeader
-        title={detail?.name || t("storeManager.viewStore.fallbackTitle")}
-        description={detail?.address || t("storeManager.detail.headerDefaultDescription")}
+        title={detail?.name || t("store_manager.viewStore.fallbackTitle")}
+        description={detail?.address || t("store_manager.detail.headerDefaultDescription")}
         onBackPress={() => {
           router.push(`/(store_manager)/view-store/${storeId}`);
         }}
@@ -70,7 +70,7 @@ export default function DetailIndex() {
           <OptionsMenu
             options={[
               {
-                label: t("storeManager.detail.edit"),
+                label: t("label.edit"),
                 icon: <Pencil size={14} color="text-primary" />,
                 onPress: () => router.push({ pathname: "/(store_manager)/detail/edit-details", params: { storeId } }),
               },
@@ -119,7 +119,7 @@ export default function DetailIndex() {
                   <View className="flex-1 items-start justify-start">
                     <View className="flex-row items-center w-full">
                       <Text className="text-base font-poppins-bold text-slate-800 dark:text-slate-100 text-left mr-2">
-                        {detail?.name || t("storeManager.detail.unnamedStore")}
+                        {detail?.name || t("store_manager.detail.unnamedStore")}
                       </Text>
                       <View className={`flex-row items-center gap-x-1 px-2.5 py-1 rounded-full ${statusCfg.bg}`}>
                         <View className={`w-1.5 h-1.5 rounded-full ${statusCfg.dot}`} />
@@ -188,7 +188,7 @@ export default function DetailIndex() {
                     <View className="h-px bg-slate-100 dark:bg-neutral-700 mx-4" />
                     <View className="px-4 py-3.5">
                       <Text className="text-xs font-poppins text-textMuted dark:text-slate-500 mb-2">
-                        {t("storeManager.detail.businessDocument")}
+                        {t("label.businessDocument")}
                       </Text>
                       <Image
                         source={{ uri: detail.business_document_image }}
@@ -202,7 +202,7 @@ export default function DetailIndex() {
 
                 <View className="h-px bg-slate-100 dark:bg-neutral-700 mx-4" />
                 <View className="px-4 pb-4 py-4 gap-y-4">
-                  <Text className="text-xs font-poppins text-textMuted dark:text-slate-500">{t("storeManager.detail.location")}</Text>
+                  <Text className="text-xs font-poppins text-textMuted dark:text-slate-500">{t("label.location")}</Text>
                   {detail?.address && (
                     <Text className="text-xs font-poppins-semibold text-textPrimary dark:text-textPrimary -mt-4">
                       {detail.address}
@@ -254,14 +254,14 @@ export default function DetailIndex() {
                       <View style={{ borderRadius: 12 }} className="h-32 bg-slate-50 dark:bg-neutral-700 items-center justify-center gap-y-1">
                         <MapPin size={24} color={isDark ? "#525252" : "#CBD5E1"} />
                         <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">
-                          {t("storeManager.detail.mapOnlyAndroidWeb")}
+                          {t("store_manager.detail.mapOnlyAndroidWeb")}
                         </Text>
                       </View>
                     )
                   ) : (
                     <View style={{ borderRadius: 12 }} className="h-32 bg-slate-50 dark:bg-neutral-700 items-center justify-center gap-y-1">
                       <MapPinOff size={24} color={isDark ? "#525252" : "#CBD5E1"} />
-                      <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">{t("storeManager.detail.noLocationSet")}</Text>
+                      <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">{t("store_manager.detail.noLocationSet")}</Text>
                     </View>
                   )}
                 </View>
@@ -289,7 +289,7 @@ export default function DetailIndex() {
               <View className="flex-1 items-start justify-start">
                 <View className="flex-row items-center w-full">
                   <Text className="text-base font-poppins-bold text-slate-800 dark:text-slate-100 text-left mr-2">
-                    {detail?.name || t("storeManager.detail.unnamedStore")}
+                    {detail?.name || t("store_manager.detail.unnamedStore")}
                   </Text>
                   <View className={`flex-row items-center gap-x-1 px-2.5 py-1 rounded-full ${statusCfg.bg}`}>
                     <View className={`w-1.5 h-1.5 rounded-full ${statusCfg.dot}`} />
@@ -360,7 +360,7 @@ export default function DetailIndex() {
                 <View className="h-px bg-slate-100 dark:bg-neutral-700 mx-4" />
                 <View className="px-4 py-3.5">
                   <Text className="text-xs font-poppins text-textMuted dark:text-slate-500 mb-2">
-                    {t("storeManager.detail.businessDocument")}
+                    {t("label.businessDocument")}
                   </Text>
                   <Image
                     source={{ uri: detail.business_document_image }}
@@ -373,7 +373,7 @@ export default function DetailIndex() {
             )}
             <View className="h-px bg-slate-100 dark:bg-neutral-700 mx-4" />
               <View className="px-4 pb-4 py-4 gap-y-4">
-                <Text className="text-xs font-poppins text-textMuted dark:text-slate-500">{t("storeManager.detail.location")}</Text>
+                <Text className="text-xs font-poppins text-textMuted dark:text-slate-500">{t("label.location")}</Text>
                 {detail?.address && (
                   <>
                     <Text className="text-xs font-poppins-semibold text-textPrimary dark:text-textPrimary -mt-4">
@@ -446,7 +446,7 @@ export default function DetailIndex() {
                     >
                       <MapPin size={24} color={isDark ? "#525252" : "#CBD5E1"} />
                       <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">
-                        {t("storeManager.detail.mapOnlyAndroidWeb")}
+                        {t("store_manager.detail.mapOnlyAndroidWeb")}
                       </Text>
                     </View>
                   )
@@ -457,7 +457,7 @@ export default function DetailIndex() {
                   >
                     <MapPinOff size={24} color={isDark ? "#525252" : "#CBD5E1"} />
                     <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">
-                      {t("storeManager.detail.noLocationSet")}
+                      {t("store_manager.detail.noLocationSet")}
                     </Text>
                   </View>
                 )}

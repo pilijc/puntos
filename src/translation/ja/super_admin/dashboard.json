@@ -1,0 +1,21 @@
+{
+  "welcome": "ようこそ、",
+  "title": "ダッシュボード",
+  "metrics": {
+    "totalUsers": "全ユーザー",
+    "totalStores": "全店舗",
+    "activeStores": "アクティブ店舗"
+  },
+  "analytics": {
+    "user": {
+      "title": "ユーザー分析",
+      "insights": "ユーザーインサイト",
+      "desc": "ユーザーの分析と行動がここに表示されます。"
+    },
+    "store": {
+      "title": "店舗分析",
+      "insights": "店舗インサイト",
+      "desc": "店舗の分析とインサイトがここに表示されます。"
+    }
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "welcome": "Welcome, ",
+  "metrics": {
+    "totalUsers": "Total Users",
+    "totalStores": "Total Stores",
+    "activeStores": "Active Stores"
+  },
+  "analytics": {
+    "user": {
+      "title": "User Analytics",
+      "insights": "User Insights",
+      "desc": "User analytics and behaviors will appear here."
+    },
+    "store": {
+      "title": "Store Analytics",
+      "insights": "Store Insights",
+      "desc": "Store analytics and insights will appear here."
+    }
+  }
+}

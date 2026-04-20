@@ -507,14 +507,14 @@ export default function StoreOverviewDetail() {
         {/* Header */}
         <View className="flex-row items-center justify-between">
           <Text className="text-lg font-poppins-semibold text-neutral-900 dark:text-darkTextPrimary">
-            Transactions
+            {translate("user.rewards.transactions.title")}
           </Text>
           <TouchableOpacity
             className="flex-row items-center gap-x-1.5 bg-white dark:bg-darkBackgroundCard border border-primary px-3 py-1.5 rounded-full"
             onPress={() => router.push("/(user)/history")}
           >
             <Text className="text-primary font-poppins-semibold text-xs">
-              See All
+              {translate("user.rewards.transactions.seeAll")}
             </Text>
             <ExternalLink size={12} color="#FF6600" />
           </TouchableOpacity>
@@ -529,7 +529,7 @@ export default function StoreOverviewDetail() {
           <View className="bg-white dark:bg-darkBackgroundCard rounded-2xl border border-neutral-100 dark:border-darkBorder items-center py-8 gap-y-2">
             <ReceiptText size={28} color="#d1d5db" />
             <Text className="text-xs font-poppins text-neutral-400 dark:text-darkTextSecondary">
-              No transactions yet
+              {translate("user.rewards.transactions.empty")}
             </Text>
           </View>
         ) : (

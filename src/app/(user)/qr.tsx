@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from "react-i18next";
 import { ActivityIndicator, useColorScheme, Alert, Vibration, Modal } from 'react-native';
 import { SafeAreaView, View, Text, TouchableOpacity } from '@/tw';
 
@@ -12,6 +13,7 @@ import { useStampRewards } from '@/hooks/use-stamp-rewards';
 import { VoucherGenerator } from '@/components/users/voucher';
 
 export default function Qr() {
+  const { t: translate } = useTranslation();
   const router = useRouter();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';

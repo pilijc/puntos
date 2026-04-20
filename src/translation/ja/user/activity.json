@@ -1,0 +1,40 @@
+{
+  "title": "アクティビティ",
+  "unclaimed": "未受取",
+  "searchPlaceholder": "履歴を検索...",
+  "month": "{{month}}",
+  "filter": {
+    "all": "すべて",
+    "earned": "獲得",
+    "claimed": "使用済み"
+  },
+  "loading": "取引履歴を読み込み中...",
+  "empty": "取引が見つかりません",
+  "sections": {
+    "today": "今日",
+    "yesterday": "昨日"
+  },
+  "subtitle": {
+    "purchasePoints": "購入ポイント"
+  },
+  "unknownStore": "不明な店舗",
+  "stampLog": {
+    "stampsSuffix": "スタンプ",
+    "loyaltyProgress": "ロイヤルティ進捗",
+    "rewardProgram": "リワードプログラム",
+    "stampsReward": "{{count}} スタンプ達成リワード",
+    "earnInfo": "購入ごとに1スタンプ獲得！カードを完成させてリワードをアンロックしましょう。",
+    "stampHistory": "スタンプ履歴",
+    "noStampsYet": "まだスタンプを獲得していません。\n履歴はここに表示されます。",
+    "stampEarned": "スタンプ獲得",
+    "ptsEarned": "+{{count}} ポイント",
+    "rewardHistory": "リワード履歴",
+    "noRewardsYet": "まだ交換した報酬はありません。",
+    "claimed": "使用済み",
+    "expired": "期限切れ",
+    "expiresToday": "本日期限切れ！",
+    "expiresInDays": "あと {{count}} 日で期限切れ！",
+    "validUntil": "{{date}} まで有効",
+    "programExpired": "プログラム終了"
+  }
+}

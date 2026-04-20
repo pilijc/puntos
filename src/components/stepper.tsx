@@ -25,7 +25,7 @@ export const STEP_DATA = [
     descriptionKey: "onboarding.signup.stepper.step3.description"
   },
   {
-    titleKey: "onboarding.signup.stepper.step4.title",
+    titleKey: "label.almostThere",
     descriptionKey: "onboarding.signup.stepper.step4.description"
   }
 ];
@@ -108,7 +108,7 @@ export function EmailStep({ value, onChange, error }: StepProps) {
         label={translate("onboarding.signup.stepper.label.email")}
         value={value}
         onChangeText={onChange}
-        placeholder={translate("onboarding.signup.stepper.placeholder.email")}
+        placeholder={translate("label.emailPlaceholder")}
         keyboardType="email-address"
       />
       {error && (
@@ -139,7 +139,7 @@ export function PasswordStep({
       <View className="gap-y-2">
         <View className="gap-y-2">
           <TextField
-            label={translate("onboarding.signup.stepper.label.password")}
+            label={translate("label.password")}
             value={password}
             onChangeText={onPasswordChange}
             placeholder={translate("onboarding.signup.stepper.placeholder.password")}

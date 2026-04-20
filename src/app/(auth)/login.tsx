@@ -155,17 +155,17 @@ export default function Login() {
       <View className="w-full items-center gap-y-3">
         <View className="w-full">
           <TextField
-            label={translate("onboarding.login.label.email")}
+            label={translate("label.email")}
             value={email}
             onChangeText={setEmail}
-            placeholder={translate("onboarding.login.input.email")}
+            placeholder={translate("label.emailPlaceholder")}
             keyboardType="email-address"
           />
         </View>
 
         <View className="w-full">
           <TextField
-            label={translate("onboarding.login.label.password")}
+            label={translate("label.password")}
             value={password}
             onChangeText={setPassword}
             placeholder={translate("onboarding.login.input.password")}

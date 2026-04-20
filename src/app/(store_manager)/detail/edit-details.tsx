@@ -89,8 +89,8 @@ export default function EditDetails() {
         setDetail(null);
         reset();
         setModal({
-          title: t("storeManager.detailEdit.loadFailedTitle"),
-          message: t("storeManager.detailEdit.loadFailedMessage"),
+          title: t("store_manager.detailEdit.loadFailedTitle"),
+          message: t("store_manager.detailEdit.loadFailedMessage"),
           buttons: [{ label: t("label.ok"), onPress: () => setModal(null), variant: "primary" }],
         });
       })
@@ -103,7 +103,7 @@ export default function EditDetails() {
 
   const showError = (message: string) =>
     setModal({
-      title: t("storeManager.detailEdit.errorTitle"),
+      title: t("store_manager.detailEdit.errorTitle"),
       message,
       buttons: [{ label: t("label.ok"), onPress: () => setModal(null), variant: "primary" }],
     });
@@ -111,8 +111,8 @@ export default function EditDetails() {
   const pickImage = async (kind: PickImageType, index?: number) => {
     const { granted } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!granted) {
-      showError(t("storeManager.detailEdit.photoLibraryPermission"));
-      showError(t("storeManager.detailEdit.photoLibraryPermission"));
+      showError(t("store_manager.detailEdit.photoLibraryPermission"));
+      showError(t("store_manager.detailEdit.photoLibraryPermission"));
       return;
     }
 
@@ -125,7 +125,7 @@ export default function EditDetails() {
 
     if (result.canceled || !result.assets?.[0]) return;
     const asset = result.assets[0];
-    if (!asset.base64) { showError(t("storeManager.detailEdit.couldNotReadImage")); return; }
+    if (!asset.base64) { showError(t("store_manager.detailEdit.couldNotReadImage")); return; }
 
     const dataUri = `data:${asset.mimeType ?? "image/jpeg"};base64,${asset.base64}`;
 
@@ -152,7 +152,7 @@ export default function EditDetails() {
   const handleGetCurrentLocation = async () => {
     const { status } = await Location.requestForegroundPermissionsAsync();
     if (status !== "granted") {
-      showError(t("storeManager.detailEdit.locationPermission"));
+      showError(t("label.locationPermission"));
       return;
     }
 
@@ -163,7 +163,7 @@ export default function EditDetails() {
       (await Location.getLastKnownPositionAsync({}).catch(() => null));
 
     if (!loc) {
-      showError(t("storeManager.detailEdit.couldNotGetLocation"));
+      showError(t("store_manager.detailEdit.couldNotGetLocation"));
       return;
     }
 
@@ -183,18 +183,18 @@ export default function EditDetails() {
 
   const handleSave = async () => {
     if (!logo) {
-      showError(t("storeManager.detailEdit.logoRequired"));
-      showError(t("storeManager.detailEdit.logoRequired"));
+      showError(t("store_manager.detailEdit.logoRequired"));
+      showError(t("store_manager.detailEdit.logoRequired"));
       return;
     }
-    if (!name.trim()) { showError(t("storeManager.detailEdit.nameRequired")); return; }
-    if (!type) { showError(t("storeManager.detailEdit.typeRequired")); return; }
-    if (!name.trim()) { showError(t("storeManager.detailEdit.nameRequired")); return; }
-    if (!type) { showError(t("storeManager.detailEdit.typeRequired")); return; }
+    if (!name.trim()) { showError(t("store_manager.detailEdit.nameRequired")); return; }
+    if (!type) { showError(t("store_manager.detailEdit.typeRequired")); return; }
+    if (!name.trim()) { showError(t("store_manager.detailEdit.nameRequired")); return; }
+    if (!type) { showError(t("store_manager.detailEdit.typeRequired")); return; }
 
     const validPics = pictures.filter(Boolean) as string[];
-    if (validPics.length === 0) { showError(t("storeManager.detailEdit.picturesRequired")); return; }
-    if (validPics.length === 0) { showError(t("storeManager.detailEdit.picturesRequired")); return; }
+    if (validPics.length === 0) { showError(t("store_manager.detailEdit.picturesRequired")); return; }
+    if (validPics.length === 0) { showError(t("store_manager.detailEdit.picturesRequired")); return; }
 
     setIsSaving(true);
     try {
@@ -223,11 +223,11 @@ export default function EditDetails() {
       setDetail(null);
       initFromDetail(null);
       setModal({
-        title: t("storeManager.detailEdit.savedTitle"),
-        message: t("storeManager.detailEdit.savedMessage"),
+        title: t("store_manager.detailEdit.savedTitle"),
+        message: t("store_manager.detailEdit.savedMessage"),
         buttons: [
           {
-            label: t("storeManager.detailEdit.done"),
+            label: t("store_manager.detailEdit.done"),
             onPress: () => {
               setModal(null);
               router.push({ pathname: "/(store_manager)/detail", params: { storeId } });
@@ -237,8 +237,8 @@ export default function EditDetails() {
         ],
       });
     } catch (err: any) {
-      showError(err?.message ?? t("storeManager.detailEdit.saveFailed"));
-      showError(err?.message ?? t("storeManager.detailEdit.saveFailed"));
+      showError(err?.message ?? t("store_manager.detailEdit.saveFailed"));
+      showError(err?.message ?? t("store_manager.detailEdit.saveFailed"));
     } finally {
       setIsSaving(false);
       setIsUploading(false);
@@ -264,15 +264,15 @@ export default function EditDetails() {
       />
 
       <AppHeader
-        title={t("storeManager.detailEdit.title")}
-        description={t("storeManager.detailEdit.description")}
+        title={t("store_manager.detailEdit.title")}
+        description={t("store_manager.detailEdit.description")}
         onBackPress={() => {
           router.push({ pathname: "/(store_manager)/detail", params: { storeId } });
         }}
       />
       <AppHeader
-        title={t("storeManager.detailEdit.title")}
-        description={t("storeManager.detailEdit.description")}
+        title={t("store_manager.detailEdit.title")}
+        description={t("store_manager.detailEdit.description")}
         onBackPress={() => {
           router.push({ pathname: "/(store_manager)/detail", params: { storeId } });
         }}
@@ -295,16 +295,16 @@ export default function EditDetails() {
         >
           <View className="gap-y-4">
             <TextField
-              label={t("storeManager.detailEdit.storeName")}
-              placeholder={t("storeManager.detailEdit.storeNamePlaceholder")}
+              label={t("label.storeName")}
+              placeholder={t("label.storeNamePlaceholder")}
               value={name}
               onChangeText={setName}
               sanitize={(v) => v}
             />
 
             <View className="gap-y-2">
-              <Text className="text-sm font-poppins-semibold text-textSecondary dark:text-textSecondary mb-1.5">{t("storeManager.detailEdit.storeType")}</Text>
-              <Text className="text-sm font-poppins-semibold text-textSecondary dark:text-textSecondary mb-1.5">{t("storeManager.detailEdit.storeType")}</Text>
+              <Text className="text-sm font-poppins-semibold text-textSecondary dark:text-textSecondary mb-1.5">{t("label.storeType")}</Text>
+              <Text className="text-sm font-poppins-semibold text-textSecondary dark:text-textSecondary mb-1.5">{t("label.storeType")}</Text>
               <View className="flex-row flex-wrap gap-2">
                 {store_types_options.map((opt) => {
                   const selected = type === opt.value;
@@ -326,8 +326,8 @@ export default function EditDetails() {
                             : 'text-textSecondary dark:text-textSecondary'
                         }`}
                       >
-                        {t(`storeManager.storeTypes.${opt.value}`)}
-                        {t(`storeManager.storeTypes.${opt.value}`)}
+                        {t(`store_manager.storeTypes.${opt.value}`)}
+                        {t(`store_manager.storeTypes.${opt.value}`)}
                       </Text>
                     </TouchableOpacity>
                   );
@@ -337,11 +337,11 @@ export default function EditDetails() {
 
             <View className="flex-row gap-x-3">
               <View className="flex-1">
-                <Text className="text-sm font-poppins-semibold text-textSecondary dark:text-textSecondary mb-1.5">{t("storeManager.detailEdit.openingTime")}</Text>
+                <Text className="text-sm font-poppins-semibold text-textSecondary dark:text-textSecondary mb-1.5">{t("store_manager.detailEdit.openingTime")}</Text>
                 {isWeb ? (
                   <TextField
                     label=""
-                    placeholder={t("storeManager.detailEdit.timePlaceholderOpen")}
+                    placeholder={t("store_manager.detailEdit.timePlaceholderOpen")}
                     value={storeOpen ?? ""}
                     onChangeText={setStoreOpen}
                     sanitize={(v) => v}
@@ -355,11 +355,11 @@ export default function EditDetails() {
                     <Text className="font-poppins text-slate-900 dark:text-slate-100">{storeOpen || "09:00"}</Text>
                   </TouchableOpacity>
                 )}
-                <Text className="text-sm font-poppins-semibold text-textSecondary dark:text-textSecondary mb-1.5">{t("storeManager.detailEdit.openingTime")}</Text>
+                <Text className="text-sm font-poppins-semibold text-textSecondary dark:text-textSecondary mb-1.5">{t("store_manager.detailEdit.openingTime")}</Text>
                 {isWeb ? (
                   <TextField
                     label=""
-                    placeholder={t("storeManager.detailEdit.timePlaceholderOpen")}
+                    placeholder={t("store_manager.detailEdit.timePlaceholderOpen")}
                     value={storeOpen ?? ""}
                     onChangeText={setStoreOpen}
                     sanitize={(v) => v}
@@ -376,11 +376,11 @@ export default function EditDetails() {
               </View>
 
               <View className="flex-1">
-                <Text className="text-sm font-poppins-semibold text-textSecondary dark:text-textSecondary mb-1.5">{t("storeManager.detailEdit.closingTime")}</Text>
+                <Text className="text-sm font-poppins-semibold text-textSecondary dark:text-textSecondary mb-1.5">{t("store_manager.detailEdit.closingTime")}</Text>
                 {isWeb ? (
                   <TextField
                     label=""
-                    placeholder={t("storeManager.detailEdit.timePlaceholderClose")}
+                    placeholder={t("store_manager.detailEdit.timePlaceholderClose")}
                     value={storeClose ?? ""}
                     onChangeText={setStoreClose}
                     sanitize={(v) => v}
@@ -394,11 +394,11 @@ export default function EditDetails() {
                     <Text className="font-poppins text-slate-900 dark:text-slate-100">{storeClose || "21:00"}</Text>
                   </TouchableOpacity>
                 )}
-                <Text className="text-sm font-poppins-semibold text-textSecondary dark:text-textSecondary mb-1.5">{t("storeManager.detailEdit.closingTime")}</Text>
+                <Text className="text-sm font-poppins-semibold text-textSecondary dark:text-textSecondary mb-1.5">{t("store_manager.detailEdit.closingTime")}</Text>
                 {isWeb ? (
                   <TextField
                     label=""
-                    placeholder={t("storeManager.detailEdit.timePlaceholderClose")}
+                    placeholder={t("store_manager.detailEdit.timePlaceholderClose")}
                     value={storeClose ?? ""}
                     onChangeText={setStoreClose}
                     sanitize={(v) => v}
@@ -427,8 +427,8 @@ export default function EditDetails() {
                   <TouchableOpacity className="flex-1 bg-black/40 justify-end" activeOpacity={1} onPress={() => setShowOpenPicker(false)}>
                     <TouchableOpacity activeOpacity={1} onPress={(e) => e.stopPropagation()} className="bg-white dark:bg-slate-800 rounded-t-2xl pb-8 pt-2">
                       <DateTimePicker value={timeStringToDate(storeOpen || "09:00", 9, 0)} mode="time" onChange={(_, d) => { if (d) setStoreOpen(dateToTimeString(d)); }} />
-                      <View className="px-4"><Button label={t("storeManager.detailEdit.done")} onPress={() => setShowOpenPicker(false)} variant="primary" fullWidth /></View>
-                      <View className="px-4"><Button label={t("storeManager.detailEdit.done")} onPress={() => setShowOpenPicker(false)} variant="primary" fullWidth /></View>
+                      <View className="px-4"><Button label={t("store_manager.detailEdit.done")} onPress={() => setShowOpenPicker(false)} variant="primary" fullWidth /></View>
+                      <View className="px-4"><Button label={t("store_manager.detailEdit.done")} onPress={() => setShowOpenPicker(false)} variant="primary" fullWidth /></View>
                     </TouchableOpacity>
                   </TouchableOpacity>
                 </RNModal>
@@ -447,8 +447,8 @@ export default function EditDetails() {
                   <TouchableOpacity className="flex-1 bg-black/40 justify-end" activeOpacity={1} onPress={() => setShowClosePicker(false)}>
                     <TouchableOpacity activeOpacity={1} onPress={(e) => e.stopPropagation()} className="bg-white dark:bg-slate-800 rounded-t-2xl pb-8 pt-2">
                       <DateTimePicker value={timeStringToDate(storeClose || "21:00", 21, 0)} mode="time" onChange={(_, d) => { if (d) setStoreClose(dateToTimeString(d)); }} />
-                      <View className="px-4"><Button label={t("storeManager.detailEdit.done")} onPress={() => setShowClosePicker(false)} variant="primary" fullWidth /></View>
-                      <View className="px-4"><Button label={t("storeManager.detailEdit.done")} onPress={() => setShowClosePicker(false)} variant="primary" fullWidth /></View>
+                      <View className="px-4"><Button label={t("store_manager.detailEdit.done")} onPress={() => setShowClosePicker(false)} variant="primary" fullWidth /></View>
+                      <View className="px-4"><Button label={t("store_manager.detailEdit.done")} onPress={() => setShowClosePicker(false)} variant="primary" fullWidth /></View>
                     </TouchableOpacity>
                   </TouchableOpacity>
                 </RNModal>
@@ -457,8 +457,8 @@ export default function EditDetails() {
           </View>
           <View className="h-px bg-slate-100 dark:bg-neutral-700" />
           <View>
-            <Text className="text-sm font-poppins-semibold text-textSecondary dark:text-textSecondary mb-1.5">{t("storeManager.detailEdit.storeLogo")}</Text>
-            <Text className="text-sm font-poppins-semibold text-textSecondary dark:text-textSecondary mb-1.5">{t("storeManager.detailEdit.storeLogo")}</Text>
+            <Text className="text-sm font-poppins-semibold text-textSecondary dark:text-textSecondary mb-1.5">{t("label.storeLogo")}</Text>
+            <Text className="text-sm font-poppins-semibold text-textSecondary dark:text-textSecondary mb-1.5">{t("label.storeLogo")}</Text>
             <View className="flex-row items-center gap-x-3">
               <TouchableOpacity
                 onPress={() => pickImage("logo")}
@@ -480,8 +480,8 @@ export default function EditDetails() {
                 ) : (
                   <View className="flex-1 items-center justify-center gap-y-1">
                     <MaterialIcons name="add-a-photo" size={20} color="#94A3B8" />
-                    <Text className="text-[9px] font-poppins text-slate-400">{t("storeManager.detailEdit.logo")}</Text>
-                    <Text className="text-[9px] font-poppins text-slate-400">{t("storeManager.detailEdit.logo")}</Text>
+                    <Text className="text-[9px] font-poppins text-slate-400">{t("store_manager.detailEdit.logo")}</Text>
+                    <Text className="text-[9px] font-poppins text-slate-400">{t("store_manager.detailEdit.logo")}</Text>
                   </View>
                 )}
               </TouchableOpacity>
@@ -490,7 +490,9 @@ export default function EditDetails() {
 
           <View>
             <View className="flex-row items-center justify-between mb-1.5">
-              <Text className="text-sm font-poppins-semibold text-textSecondary dark:text-textSecondary mb-1.5">Store Pictures</Text>
+              <Text className="text-sm font-poppins-semibold text-textSecondary dark:text-textSecondary mb-1.5">
+                {t("store_manager.detailEdit.storePictures")}
+              </Text>
             </View>
             <View className="flex-row gap-x-2">
               {[0, 1, 2].map((i) => {
@@ -522,8 +524,8 @@ export default function EditDetails() {
                         activeOpacity={0.8}
                       >
                         <MaterialIcons name="add-a-photo" size={20} color="#94A3B8" />
-                        <Text className="text-[9px] font-poppins text-slate-400 mt-0.5">{t("storeManager.detailEdit.add")}</Text>
-                        <Text className="text-[9px] font-poppins text-slate-400 mt-0.5">{t("storeManager.detailEdit.add")}</Text>
+                        <Text className="text-[9px] font-poppins text-slate-400 mt-0.5">{t("label.add")}</Text>
+                        <Text className="text-[9px] font-poppins text-slate-400 mt-0.5">{t("label.add")}</Text>
                       </TouchableOpacity>
                     )}
                   </View>
@@ -533,24 +535,24 @@ export default function EditDetails() {
           </View>
           <View className="h-px bg-slate-100 dark:bg-neutral-700" />
           <TextField
-            label={t("storeManager.detailEdit.phoneNumber")}
-            placeholder={t("storeManager.detailEdit.phonePlaceholder")}
+            label={t("store_manager.detailEdit.phoneNumber")}
+            placeholder={t("store_manager.detailEdit.phonePlaceholder")}
             keyboardType="phone-pad"
             value={phone}
             onChangeText={setPhone}
           />
 
           <TextField
-            label={t("storeManager.detailEdit.registrationNumber")}
-            placeholder={t("storeManager.detailEdit.registrationPlaceholder")}
+            label={t("store_manager.detailEdit.registrationNumber")}
+            placeholder={t("store_manager.detailEdit.registrationPlaceholder")}
             value={registrationNumber}
             onChangeText={setRegistrationNumber}
             sanitize={(v) => v}
           />
 
           <View>
-            <Text className="text-sm font-poppins-semibold text-textSecondary dark:text-textSecondary mb-1.5">{t("storeManager.detailEdit.businessDocument")}</Text>
-            <Text className="text-sm font-poppins-semibold text-textSecondary dark:text-textSecondary mb-1.5">{t("storeManager.detailEdit.businessDocument")}</Text>
+            <Text className="text-sm font-poppins-semibold text-textSecondary dark:text-textSecondary mb-1.5">{t("label.businessDocument")}</Text>
+            <Text className="text-sm font-poppins-semibold text-textSecondary dark:text-textSecondary mb-1.5">{t("label.businessDocument")}</Text>
             <TouchableOpacity
               onPress={() => { if (!businessDoc) pickImage("business_document"); }}
               disabled={!!businessDoc}
@@ -579,7 +581,7 @@ export default function EditDetails() {
               ) : (
                 <>
                   <MaterialIcons name="description" size={26} color="#94A3B8" />
-                  <Text className="text-xs font-poppins text-slate-400 mt-1.5">{t("storeManager.detailEdit.uploadDocumentImage")}</Text>
+                  <Text className="text-xs font-poppins text-slate-400 mt-1.5">{t("store_manager.detailEdit.uploadDocumentImage")}</Text>
                 </>
               )}
             </TouchableOpacity>
@@ -588,7 +590,7 @@ export default function EditDetails() {
 
           <View className="flex-row items-center justify-between">
             <Text className="text-sm font-poppins-semibold text-textSecondary dark:text-textSecondary">
-              {t("storeManager.detailEdit.location")}
+              {t("label.location")}
             </Text>
             {!isWeb && (
               <TouchableOpacity
@@ -597,7 +599,7 @@ export default function EditDetails() {
                 activeOpacity={0.8}
               >
                 <MaterialIcons name="my-location" size={14} color="#FF6600" />
-                <Text className="text-xs font-poppins-semibold text-textPrimary dark:text-textPrimary">{t("storeManager.detailEdit.useCurrent")}</Text>
+                <Text className="text-xs font-poppins-semibold text-textPrimary dark:text-textPrimary">{t("store_manager.detailEdit.useCurrent")}</Text>
               </TouchableOpacity>
             )}
           </View>
@@ -649,7 +651,7 @@ export default function EditDetails() {
                 </MapView>
                 <View className="absolute bottom-2 left-2 bg-black/50 rounded-lg px-2 py-1">
                   <Text style={{ color: "#fff", fontSize: 10, fontFamily: "Poppins-Regular" }}>
-                    {t("storeManager.detailEdit.tapMapMovePin")}
+                    {t("store_manager.detailEdit.tapMapMovePin")}
                   </Text>
                 </View>
               </>
@@ -657,15 +659,15 @@ export default function EditDetails() {
               <View className="flex-1 h-full bg-slate-50 dark:bg-neutral-800 items-center justify-center gap-y-1 px-4">
                 <MaterialIcons name="map" size={28} color={isDark ? "#525252" : "#CBD5E1"} />
                 <Text className="text-xs font-poppins text-center text-slate-400 dark:text-slate-500">
-                  {t("storeManager.detailEdit.mapFallbackMessage")}
+                  {t("store_manager.detailEdit.mapFallbackMessage")}
                 </Text>
               </View>
             )}
           </View>
 
           <TextField
-            label={t("storeManager.detailEdit.addressLandmark")}
-            placeholder={t("storeManager.detailEdit.addressPlaceholder")}
+            label={t("label.addressLandmark")}
+            placeholder={t("label.addressPlaceholder")}
             value={address}
             onChangeText={setAddress}
             multiline
@@ -674,8 +676,8 @@ export default function EditDetails() {
 
           <View>
             <View className="flex-row justify-between items-center mb-1">
-              <Text className="text-sm font-poppins-semibold text-textSecondary dark:text-textSecondary mb-1.5">{t("storeManager.detailEdit.storeRadius")}</Text>
-              <Text className="text-sm font-poppins-bold text-primary">{t("storeManager.detailEdit.radiusMeters", { meters: radius ?? 50 })}</Text>
+              <Text className="text-sm font-poppins-semibold text-textSecondary dark:text-textSecondary mb-1.5">{t("store_manager.detailEdit.storeRadius")}</Text>
+              <Text className="text-sm font-poppins-bold text-primary">{t("store_manager.detailEdit.radiusMeters", { meters: radius ?? 50 })}</Text>
             </View>
             {isWeb ? (
               <TextField
@@ -720,17 +722,17 @@ export default function EditDetails() {
               />
             )}
             <View className="flex-row justify-between">
-              <Text className="text-xs font-poppins text-slate-400">{t("storeManager.detailEdit.radiusMin")}</Text>
-              <Text className="text-xs font-poppins text-slate-400">{t("storeManager.detailEdit.radiusMax")}</Text>
-              <Text className="text-xs font-poppins text-slate-400">{t("storeManager.detailEdit.radiusMin")}</Text>
-              <Text className="text-xs font-poppins text-slate-400">{t("storeManager.detailEdit.radiusMax")}</Text>
+              <Text className="text-xs font-poppins text-slate-400">{t("store_manager.detailEdit.radiusMin")}</Text>
+              <Text className="text-xs font-poppins text-slate-400">{t("store_manager.detailEdit.radiusMax")}</Text>
+              <Text className="text-xs font-poppins text-slate-400">{t("store_manager.detailEdit.radiusMin")}</Text>
+              <Text className="text-xs font-poppins text-slate-400">{t("store_manager.detailEdit.radiusMax")}</Text>
             </View>
           </View>
           <View className="h-px bg-slate-100 dark:bg-neutral-700" />
 
           <View className="gap-y-3">
             <Button
-              label={isUploading ? t("storeManager.detailEdit.uploadingImages") : t("storeManager.detailEdit.saveChanges")}
+              label={isUploading ? t("store_manager.detailEdit.uploadingImages") : t("label.saveChanges")}
               onPress={handleSave}
               variant="primary"
               loading={isSaving}
@@ -738,7 +740,7 @@ export default function EditDetails() {
               disabled={isSaving}
             />
             <Button
-              label={t("storeManager.detailEdit.cancel")}
+              label={t("label.cancel")}
               onPress={() => {
                 router.push({ pathname: "/(store_manager)/detail", params: { storeId } });
               }}

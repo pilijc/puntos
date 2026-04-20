@@ -227,7 +227,7 @@ export default function SuperAdminLayout() {
       <Tabs.Screen
         name="index"
         options={{
-            title: "Overview",
+            title: translate("layout.overview"),
             tabBarIcon: ({ color, size }) => (
                 <LayoutDashboard 
                     size={isWeb ? WEB_TAB_ICON_SIZE : size} 
@@ -237,7 +237,7 @@ export default function SuperAdminLayout() {
             tabBarLabel: isWeb
                 ? ({ color, position }) => (
                         <WebSidebarTabLabel
-                            text="Overview"
+                            text={translate("layout.overview")}
                             navColor={color}
                             position={position}
                             isRowActive={activeTab === "index"}
@@ -249,7 +249,7 @@ export default function SuperAdminLayout() {
       <Tabs.Screen
         name="users"
         options={{
-            title: "Users",
+            title: translate("layout.users"),
             tabBarIcon: ({ color, size }) => (
                 <Users 
                     size={isWeb ? WEB_TAB_ICON_SIZE : size} 
@@ -259,7 +259,7 @@ export default function SuperAdminLayout() {
             tabBarLabel: isWeb
                 ? ({ color, position }) => (
                         <WebSidebarTabLabel
-                            text="Users"
+                            text={translate("layout.users")}
                             navColor={color}
                             position={position}
                             isRowActive={activeTab === "users"}
@@ -271,7 +271,7 @@ export default function SuperAdminLayout() {
       <Tabs.Screen
         name="stores"
         options={{
-            title: "Stores",
+            title: translate("layout.stores"),
             tabBarIcon: ({ color, size }) => (
                 <Store 
                     size={isWeb ? WEB_TAB_ICON_SIZE : size} 
@@ -281,7 +281,7 @@ export default function SuperAdminLayout() {
             tabBarLabel: isWeb
                 ? ({ color, position }) => (
                         <WebSidebarTabLabel
-                            text="Stores"
+                            text={translate("layout.stores")}
                             navColor={color}
                             position={position}
                             isRowActive={activeTab === "stores"}
@@ -293,7 +293,7 @@ export default function SuperAdminLayout() {
       <Tabs.Screen
         name="subscription-config"
         options={{
-          title: "Subscription",
+          title: translate("layout.subscription"),
           tabBarIcon: ({ color, size }) => (
             <CircleDollarSign 
                 size={isWeb ? WEB_TAB_ICON_SIZE : size} 
@@ -303,7 +303,7 @@ export default function SuperAdminLayout() {
           tabBarLabel: isWeb
             ? ({ color, position }) => (
                     <WebSidebarTabLabel
-                        text="Subscription"
+                        text={translate("layout.subscription")}
                         navColor={color}
                         position={position}
                         isRowActive={activeTab === "subscription-config"}
@@ -315,7 +315,7 @@ export default function SuperAdminLayout() {
       <Tabs.Screen
         name="settings"
         options={{
-            title: "Settings",
+            title: translate("layout.settings"),
             tabBarIcon: ({ color, size }) => (
                 <Settings 
                     size={isWeb ? WEB_TAB_ICON_SIZE : size} 
@@ -325,7 +325,7 @@ export default function SuperAdminLayout() {
             tabBarLabel: isWeb
                 ? ({ color, position }) => (
                         <WebSidebarTabLabel
-                            text="Settings"
+                            text={translate("layout.settings")}
                             navColor={color}
                             position={position}
                             isRowActive={activeTab === "settings"}

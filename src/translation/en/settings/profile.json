@@ -1,0 +1,18 @@
+{
+  "title": "Edit Profile",
+  "description": "Update your account information",
+  "emailDescription": "Email verification is required to update your email address",
+  "label": {
+    "pic": "Change Profile Picture",
+    "name": "Username",
+    "email": "Email Address"
+  },
+  "input": {
+    "name": "Enter Username",
+    "email": "Enter Email Address"
+  },
+  "success": "Profile updated successfully.",
+  "error": {
+    "failed": "Failed to save profile. Please try again."
+  }
+}

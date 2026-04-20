@@ -1,0 +1,18 @@
+{
+  "title": "サブスクリプション",
+  "config": {
+    "enforce": "サブスクリプションの適用",
+    "enforceDetail": "無料店舗数の上限を超えた場合、ストアマネージャーに支払いを求めます。",
+    "parameters": "サブスクリプション設定",
+    "limitLabel": "無料店舗数の上限",
+    "priceLabel": "価格 (PHP)",
+    "managerSubs": "マネージャーのサブスクリプション",
+    "managerSubsDetail": "ストアマネージャー（オーナー）ごとの請求状態。",
+    "exceededManagers": "上限を超えたマネージャー",
+    "exceededDetail": "アクティブな店舗が{{limit}}件以上あり、申請が保留中のマネージャーです。マネージャーごとに適用設定を切り替えられます。",
+    "save": "設定を保存",
+    "saving": "保存中...",
+    "successTitle": "保存完了！",
+    "successDetail": "サブスクリプション設定が保存されました。適用はストアマネージャーごとに行われます。"
+  }
+}

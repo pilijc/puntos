@@ -1,0 +1,39 @@
+{
+  "title": "Activity",
+  "unclaimed": "UNCLAIMED",
+  "searchPlaceholder": "Search history...",
+  "month": "{{month}}",
+  "filter": {
+    "earned": "Earned",
+    "claimed": "Claimed"
+  },
+  "loading": "Loading transaction history...",
+  "empty": "No transactions found",
+  "sections": {
+    "today": "Today",
+    "yesterday": "Yesterday"
+  },
+  "subtitle": {
+    "purchasePoints": "Purchase Points"
+  },
+  "unknownStore": "Unknown Store",
+  "stampLog": {
+    "stampsSuffix": "Stamps",
+    "loyaltyProgress": "Loyalty Progress",
+    "rewardProgram": "Reward Program",
+    "stampsReward": "{{count}} Stamps Reward",
+    "earnInfo": "Earn 1 stamp per purchase! Complete your card to unlock the reward.",
+    "stampHistory": "Stamp History",
+    "noStampsYet": "No stamps earned yet.\nYour history will appear here.",
+    "stampEarned": "Stamp Earned",
+    "ptsEarned": "+{{count}} pts",
+    "rewardHistory": "Reward History",
+    "noRewardsYet": "No rewards redeemed yet.",
+    "claimed": "Claimed",
+    "expired": "Expired",
+    "expiresToday": "Expires today!",
+    "expiresInDays": "Expires in {{count}} days!",
+    "validUntil": "Valid until {{date}}",
+    "programExpired": "Program expired"
+  }
+}

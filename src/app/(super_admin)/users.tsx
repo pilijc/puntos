@@ -110,7 +110,7 @@ export default function UsersScreen() {
           ListEmptyComponent={
             <View className="items-center justify-center pt-20">
               <Text className={`${TYPO.subtitle} dark:text-darkTextSecondary`}>
-                {translate("superAdmin.users.noUsersFound")}
+                {translate("super_admin.users.noUsersFound")}
               </Text>
             </View>
           }

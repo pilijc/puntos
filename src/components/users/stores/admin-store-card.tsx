@@ -61,7 +61,7 @@ export function AdminStoreCard({
 						<View className="flex-row items-center gap-1">
 							<MaterialIcons name="location-on" size={12} color="#94A3B8" />
 							<Text className="text-xs font-poppins text-slate-400 dark:text-darkTextMuted flex-1" numberOfLines={1}>
-								{store.address ?? translate("superAdmin.stores.details.noAddress")}
+								{store.address ?? translate("super_admin.stores.details.noAddress")}
 							</Text>
 						</View>
 						{store.type ? (
@@ -76,7 +76,7 @@ export function AdminStoreCard({
 				{/* ── Visual Indicator for Tap ── */}
 				<View className="px-4 py-3 border-t border-slate-100 dark:border-darkBorder bg-slate-50 dark:bg-darkBackgroundMuted flex-row justify-between items-center">
 					<Text className="text-xs font-poppins-medium text-slate-500 dark:text-darkTextSecondary">
-						{translate("superAdmin.stores.details.tapToView")}
+						{translate("super_admin.stores.details.tapToView")}
 					</Text>
 					<MaterialIcons name="chevron-right" size={18} color="#94A3B8" />
 				</View>

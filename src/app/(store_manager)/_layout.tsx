@@ -331,7 +331,7 @@ export default function StoreManagerLayout() {
             <Tabs.Screen
                 name="index"
                 options={{
-                    title: translate("storeManager.tabs.dashboard"),
+                    title: translate("label.dashboard"),
                     tabBarIcon: ({ color, size }) => (
                         <LayoutDashboard
                             size={
@@ -347,7 +347,7 @@ export default function StoreManagerLayout() {
                     tabBarLabel: isWeb
                         ? ({ color, position }) => (
                               <WebSidebarTabLabel
-                                  text={translate("storeManager.tabs.dashboard")}
+                                  text={translate("label.dashboard")}
                                   navColor={color}
                                   position={position}
                                   isRowActive={activeTab === "index"}
@@ -359,7 +359,7 @@ export default function StoreManagerLayout() {
             <Tabs.Screen
                 name="stores"
                 options={{
-                    title: translate("storeManager.tabs.stores"),
+                    title: translate("store_manager.tabs.stores"),
                     tabBarIcon: ({ color, size }) => (
                         <Store
                             size={
@@ -374,7 +374,7 @@ export default function StoreManagerLayout() {
                     ),
                     tabBarLabel: ({ color, position }) => (
                         <StoresTabLabel
-                            text={translate("storeManager.tabs.stores")}
+                            text={translate("store_manager.tabs.stores")}
                             navColor={color}
                             position={position}
                             isRowActive={storesRowActive}
@@ -387,7 +387,7 @@ export default function StoreManagerLayout() {
             <Tabs.Screen
                 name="transactions"
                 options={{
-                    title: translate("storeManager.tabs.transactions"),
+                    title: translate("label.transactions"),
                     tabBarIcon: ({ color, size }) => (
                         <ArrowLeftRight
                             size={
@@ -408,7 +408,7 @@ export default function StoreManagerLayout() {
                     tabBarLabel: isWeb
                         ? ({ color, position }) => (
                               <WebSidebarTabLabel
-                                  text={translate("storeManager.tabs.transactions")}
+                                  text={translate("label.transactions")}
                                   navColor={color}
                                   position={position}
                                   isRowActive={activeTab === "transactions"}
@@ -420,7 +420,7 @@ export default function StoreManagerLayout() {
             <Tabs.Screen
                 name="subscription"
                 options={{
-                    title: translate("storeManager.tabs.subscription"),
+                    title: translate("store_manager.tabs.subscription"),
                     tabBarIcon: ({ color, size }) => (
                         <CreditCard
                             size={
@@ -441,7 +441,7 @@ export default function StoreManagerLayout() {
                     tabBarLabel: isWeb
                         ? ({ color, position }) => (
                               <WebSidebarTabLabel
-                                  text={translate("storeManager.tabs.subscription")}
+                                  text={translate("store_manager.tabs.subscription")}
                                   navColor={color}
                                   position={position}
                                   isRowActive={activeTab === "subscription"}
@@ -453,7 +453,7 @@ export default function StoreManagerLayout() {
             <Tabs.Screen
                 name="settings"
                 options={{
-                    title: translate("storeManager.tabs.settings"),
+                    title: translate("label.settings"),
                     tabBarIcon: ({ color, size }) => (
                         <Settings
                             size={
@@ -474,7 +474,7 @@ export default function StoreManagerLayout() {
                     tabBarLabel: isWeb
                         ? ({ color, position }) => (
                               <WebSidebarTabLabel
-                                  text={translate("storeManager.tabs.settings")}
+                                  text={translate("label.settings")}
                                   navColor={color}
                                   position={position}
                                   isRowActive={activeTab === "settings"}

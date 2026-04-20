@@ -1,0 +1,18 @@
+{
+  "title": "Subscription",
+  "config": {
+    "enforce": "Enforce Subscription",
+    "enforceDetail": "Require Store Managers to pay after exceeding the free store limit.",
+    "parameters": "Subscription Parameters",
+    "limitLabel": "Free Stores Limit",
+    "priceLabel": "Price (PHP)",
+    "managerSubs": "Manager subscriptions",
+    "managerSubsDetail": "Billing state per store manager (owner).",
+    "exceededManagers": "Exceeded Store Managers",
+    "exceededDetail": "Managers with more than {{limit}} active store(s) and pending applications. Toggle enforcement per manager.",
+    "save": "Save Configurations",
+    "saving": "Saving...",
+    "successTitle": "Successfully Saved!",
+    "successDetail": "Subscription configuration has been saved. Enforcement applies per store manager."
+  }
+}

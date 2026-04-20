@@ -150,7 +150,7 @@ export default function SuperAdminStores() {
 			{/* ── Main Header (Uniform Style) ── */}
 			<View className="bg-white dark:bg-darkBackground border-b border-neutral-100 dark:border-darkBorder px-6 py-3">
 				<Text className="text-xl font-poppins-bold text-textPrimary dark:text-darkTextPrimary py-1">
-					{translate("superAdmin.stores.title", { defaultValue: "Store Approvals" })}
+					{translate("super_admin.stores.title", { defaultValue: "Store Approvals" })}
 				</Text>
 			</View>
 
@@ -313,11 +313,11 @@ export default function SuperAdminStores() {
 									<MaterialIcons name="storefront" size={52} color="#CBD5E1" />
 									<Text className="text-base font-poppins-bold text-slate-600 dark:text-darkTextSecondary">
 										{activeFilter === "All"
-											? translate("superAdmin.stores.noStores")
-											: translate("superAdmin.stores.noFilteredStores", { status: FILTER_LABELS[activeFilter] })}
+											? translate("super_admin.stores.noStores")
+											: translate("super_admin.stores.noFilteredStores", { status: FILTER_LABELS[activeFilter] })}
 									</Text>
 									<Text className="text-sm font-poppins text-slate-400 text-center px-8">
-										{translate("superAdmin.stores.pullToRefresh")}
+										{translate("super_admin.stores.pullToRefresh")}
 									</Text>
 								</View>
 							) : null

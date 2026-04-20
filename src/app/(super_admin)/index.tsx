@@ -41,11 +41,11 @@ export default function SuperAdminDashboard() {
       <View className="bg-white dark:bg-darkBackground border-b border-neutral-100 dark:border-darkBorder px-6 py-3 flex-row items-center justify-between">
         <View className="flex-row items-baseline gap-2">
           <Text className="text-xl font-poppins-bold text-textPrimary dark:text-darkTextPrimary py-1">
-            {translate("superAdmin.dashboard.title")}
+            {translate("label.dashboard")}
           </Text>
           {isWeb && (
             <Text className="text-xs text-[#94A3B8] dark:text-darkTextSecondary font-poppins">
-              {translate("superAdmin.dashboard.welcome")}
+              {translate("super_admin.dashboard.welcome")}
               <Text className="text-orange-500 font-poppins-bold">
                 {adminInfo?.username?.split(" ")[0] || "Admin"}
               </Text>!
@@ -63,7 +63,7 @@ export default function SuperAdminDashboard() {
         {!isWeb && (
           <View className="px-6 pt-6 pb-2">
             <Text className="text-sm text-[#94A3B8] dark:text-darkTextSecondary font-poppins">
-              {translate("superAdmin.dashboard.welcome")}
+              {translate("super_admin.dashboard.welcome")}
               <Text className="text-orange-500 font-poppins-bold">
                 {adminInfo?.username?.split(" ")[0] || "Admin"}
               </Text>!
@@ -77,9 +77,9 @@ export default function SuperAdminDashboard() {
           className="px-6 mb-6 mt-4"
         >
           <View className="flex-row gap-2">
-            <StatCard label={translate("superAdmin.dashboard.metrics.totalUsers")} val={users.length} Icon={Users} />
-            <StatCard label={translate("superAdmin.dashboard.metrics.totalStores")} val={stores.length} Icon={Store} />
-            <StatCard label={translate("superAdmin.dashboard.metrics.activeStores")} val={activeStoresCount} Icon={Store} />
+            <StatCard label={translate("super_admin.dashboard.metrics.totalUsers")} val={users.length} Icon={Users} />
+            <StatCard label={translate("super_admin.dashboard.metrics.totalStores")} val={stores.length} Icon={Store} />
+            <StatCard label={translate("super_admin.dashboard.metrics.activeStores")} val={activeStoresCount} Icon={Store} />
           </View>
         </View>
 
@@ -87,7 +87,7 @@ export default function SuperAdminDashboard() {
         {/* Label: left-aligned on web */}
         {isWeb ? (
           <View style={{ paddingHorizontal: WEB_PAGE_PADDING, marginBottom: 8 }}>
-            <SectionHeader title={translate("superAdmin.dashboard.analytics.user.title")} onAction={() => { }} />
+            <SectionHeader title={translate("super_admin.dashboard.analytics.user.title")} onAction={() => { }} />
           </View>
         ) : null}
         {/* Card: centered on web */}
@@ -95,14 +95,14 @@ export default function SuperAdminDashboard() {
           style={isWeb ? { maxWidth: WEB_CARD_MAX_WIDTH, width: '100%', alignSelf: 'center', paddingHorizontal: WEB_CARD_PADDING } : {}}
           className={isWeb ? 'mb-6' : 'mb-6 px-6'}
         >
-          {!isWeb && <SectionHeader title={translate("superAdmin.dashboard.analytics.user.title")} onAction={() => { }} />}
+          {!isWeb && <SectionHeader title={translate("super_admin.dashboard.analytics.user.title")} onAction={() => { }} />}
           <View className="bg-white dark:bg-darkBackgroundMuted rounded-2xl p-8 border border-slate-100 dark:border-darkBorder items-center justify-center min-h-[220px]">
             <Users size={48} color="#FF6600" />
             <Text className="text-lg font-[Poppins-Bold] text-[#0F172A] dark:text-darkTextPrimary mt-3">
-              {translate("superAdmin.dashboard.analytics.user.insights")}
+              {translate("super_admin.dashboard.analytics.user.insights")}
             </Text>
             <Text className="text-sm font-[Poppins-Regular] text-[#94A3B8] dark:text-darkTextSecondary text-center mt-2 px-6">
-              {translate("superAdmin.dashboard.analytics.user.desc")}
+              {translate("super_admin.dashboard.analytics.user.desc")}
             </Text>
           </View>
         </View>
@@ -111,7 +111,7 @@ export default function SuperAdminDashboard() {
         {/* Label: left-aligned on web */}
         {isWeb ? (
           <View style={{ paddingHorizontal: WEB_PAGE_PADDING, marginBottom: 8 }}>
-            <SectionHeader title={translate("superAdmin.dashboard.analytics.store.title")} onAction={() => { }} />
+            <SectionHeader title={translate("super_admin.dashboard.analytics.store.title")} onAction={() => { }} />
           </View>
         ) : null}
         {/* Card: centered on web */}
@@ -119,14 +119,14 @@ export default function SuperAdminDashboard() {
           style={isWeb ? { maxWidth: WEB_CARD_MAX_WIDTH, width: '100%', alignSelf: 'center', paddingHorizontal: WEB_CARD_PADDING } : {}}
           className={isWeb ? 'mb-8' : 'mb-8 px-6'}
         >
-          {!isWeb && <SectionHeader title={translate("superAdmin.dashboard.analytics.store.title")} onAction={() => { }} />}
+          {!isWeb && <SectionHeader title={translate("super_admin.dashboard.analytics.store.title")} onAction={() => { }} />}
           <View className="bg-white dark:bg-darkBackgroundMuted rounded-2xl p-8 border border-slate-100 dark:border-darkBorder items-center justify-center min-h-[220px]">
             <BarChart3 size={48} color="#FF6600" />
             <Text className="text-lg font-[Poppins-Bold] text-[#0F172A] dark:text-darkTextPrimary mt-3">
-              {translate("superAdmin.dashboard.analytics.store.insights")}
+              {translate("super_admin.dashboard.analytics.store.insights")}
             </Text>
             <Text className="text-sm font-[Poppins-Regular] text-[#94A3B8] dark:text-darkTextSecondary text-center mt-2 px-6">
-              {translate("superAdmin.dashboard.analytics.store.desc")}
+              {translate("super_admin.dashboard.analytics.store.desc")}
             </Text>
           </View>
         </View>

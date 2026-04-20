@@ -40,7 +40,7 @@ export function UsersSearchHeader({
         {/* ── Title Header ── */}
         <View className="bg-white dark:bg-darkBackground border-b border-neutral-100 dark:border-darkBorder px-6 py-3">
           <Text className="text-xl font-poppins-bold text-textPrimary dark:text-darkTextPrimary py-1">
-            {translate("superAdmin.users.title")}
+            {translate("super_admin.users.title")}
           </Text>
         </View>
         {/* ── Unified Controls Bar (Rounded-2xl & Matched to List Background) ── */}
@@ -67,7 +67,7 @@ export function UsersSearchHeader({
                 ref={searchInputRef}
                 value={search}
                 onChangeText={onSearchChange}
-                placeholder={translate("superAdmin.users.searchPlaceholder")}
+                placeholder={translate("super_admin.users.searchPlaceholder")}
                 placeholderTextColor="#94A3B8"
                 autoCapitalize="none"
                 autoCorrect={false}
@@ -116,7 +116,7 @@ export function UsersSearchHeader({
                         color: isActive ? "#ffffff" : "#64748b",
                       }}
                     >
-                      {translate(`superAdmin.users.tabs.${tab.toLowerCase()}`)}
+                      {translate(`super_admin.users.tabs.${tab.toLowerCase()}`)}
                     </Text>
                   </Pressable>
                 );
@@ -151,7 +151,7 @@ export function UsersSearchHeader({
       {/* ── Main Header ── */}
       <View className="flex-row items-center px-6 py-3 border-b border-neutral-100 dark:border-darkBorder">
         <Text className="text-xl font-poppins-bold text-textPrimary dark:text-darkTextPrimary flex-shrink-0">
-          {translate("superAdmin.users.title")}
+          {translate("super_admin.users.title")}
         </Text>
 
         {/* Search Pill - flex-1 and w-full ensures it stretches to the right */}
@@ -170,7 +170,7 @@ export function UsersSearchHeader({
               height: 40,
               paddingTop: Platform.OS === 'android' ? 11 : 2
             }}
-            placeholder={translate("superAdmin.users.searchPlaceholder")}
+            placeholder={translate("super_admin.users.searchPlaceholder")}
             placeholderTextColor="#94A3B8"
             value={search}
             onChangeText={onSearchChange}
@@ -202,7 +202,7 @@ export function UsersSearchHeader({
                 className={`py-3 items-center flex-row justify-center border-b-2 ${isActive ? "border-primary" : "border-transparent"}`}
               >
                 <Text className={`text-sm ${isActive ? "font-poppins-bold text-primary" : "font-poppins-medium text-slate-400"}`}>
-                  {translate(`superAdmin.users.tabs.${tab.toLowerCase()}`)}
+                  {translate(`super_admin.users.tabs.${tab.toLowerCase()}`)}
                 </Text>
               </TouchableOpacity>
             );
@@ -218,7 +218,7 @@ export function UsersSearchHeader({
                 color={statusFilter !== "All" ? "#FF6600" : "#64748B"}
               />
               <Text className={`text-sm ${statusFilter !== "All" ? "font-poppins-bold text-primary" : "font-poppins-medium text-slate-400"}`}>
-                {translate("superAdmin.users.filter")}
+                {translate("super_admin.users.filter")}
               </Text>
             </TouchableOpacity>
           )}

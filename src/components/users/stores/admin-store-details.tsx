@@ -74,9 +74,9 @@ export function AdminStoreDetails({
   const config = useSubscriptionConfigStore();
 
   const STATUS_LABELS: Record<StatusKey, string> = {
-    pending_review: translate("superAdmin.stores.status.pending"),
-    active: translate("superAdmin.stores.status.active"),
-    inactive: translate("superAdmin.stores.status.inactive"),
+    pending_review: translate("super_admin.stores.status.pending"),
+    active: translate("super_admin.stores.status.active"),
+    inactive: translate("super_admin.stores.status.inactive"),
   };
 
   const [viewingDocUri, setViewingDocUri] = useState<string | null>(null);
@@ -222,7 +222,7 @@ export function AdminStoreDetails({
 
             {store.registration_number && (
               <View className="mb-1.5">
-                <Text className="text-[10px] font-poppins-semibold tracking-wider text-[#94A3B8] uppercase mb-1">{translate("superAdmin.stores.details.registrationNumber", { defaultValue: "Registration No." })}</Text>
+                <Text className="text-[10px] font-poppins-semibold tracking-wider text-[#94A3B8] uppercase mb-1">{translate("super_admin.stores.details.registrationNumber", { defaultValue: "Registration No." })}</Text>
                 <Text className="text-xs font-poppins-semibold text-slate-800 dark:text-slate-200">
                   {store.registration_number}
                 </Text>
@@ -230,7 +230,7 @@ export function AdminStoreDetails({
             )}
 
             <View className="mb-1.5">
-              <Text className="text-[10px] font-poppins-semibold tracking-wider text-[#94A3B8] uppercase mb-1.5">{translate("superAdmin.stores.details.operatingHours", { defaultValue: "Operating Hours" })}</Text>
+              <Text className="text-[10px] font-poppins-semibold tracking-wider text-[#94A3B8] uppercase mb-1.5">{translate("super_admin.stores.details.operatingHours", { defaultValue: "Operating Hours" })}</Text>
               <View className="bg-[#F8FAFC] dark:bg-darkBackgroundMuted rounded-xl p-3 border border-slate-100 dark:border-neutral-800">
                 <View className="flex-row items-center px-1">
                   <View className="flex-1 flex-row items-center justify-center gap-2">
@@ -452,10 +452,10 @@ export function AdminStoreDetails({
           {isPending && (
             <View className="flex-row gap-3 pt-2">
               <View className="flex-1">
-                <Button variant="danger" label={translate("superAdmin.stores.details.rejectApplication")} onPress={() => onReject(store)} fullWidth />
+                <Button variant="danger" label={translate("super_admin.stores.details.rejectApplication")} onPress={() => onReject(store)} fullWidth />
               </View>
               <View className="flex-1">
-                <Button variant="primary" label={translate("superAdmin.stores.details.approveStore")} onPress={() => onApprove(store)} fullWidth />
+                <Button variant="primary" label={translate("super_admin.stores.details.approveStore")} onPress={() => onApprove(store)} fullWidth />
               </View>
             </View>
           )}

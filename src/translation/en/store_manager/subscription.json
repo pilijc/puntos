@@ -1,0 +1,39 @@
+{
+  "title": "Subscription",
+  "welcome": {
+    "planBadge": "Basic plan",
+    "headline": "You're on Basic",
+    "subhead": "Your first store is included at no extra cost. When you outgrow a single location, Premium keeps every store running without interruptions.",
+    "basicTitle": "Basic",
+    "basicSubtitle": "Included with your account",
+    "currentPlan": "Current plan",
+    "basicFeature1": "1 store with full loyalty tools",
+    "basicFeature2": "Stamps, streaks, rewards, QR, and staff tools",
+    "basicFeature3": "Dashboard and transaction history",
+    "premiumTitle": "Premium",
+    "premiumSubtitle": "Built for multiple locations",
+    "recommended": "Recommended",
+    "premiumFeature1": "Add and run more than one store",
+    "premiumFeature2": "Avoid billing holds on extra locations",
+    "premiumFeature3": "Priority support when you need help",
+    "premiumFeature4": "Access to new premium features as we release them",
+    "cta": "Upgrade to Premium",
+    "ctaHint": "Secure checkout will connect here in a future update."
+  },
+  "premiumActive": {
+    "title": "You're on Premium",
+    "body": "Thanks for subscribing. Manage billing details here once checkout is connected."
+  },
+  "success": {
+    "title": "Payment successful",
+    "body": "Thanks! Your plan will update shortly.",
+    "verifying": "Verifying payment...",
+    "waitingWebhook": "Waiting for webhook ({{tries}})",
+    "back": "Back to Subscription"
+  },
+  "cancel": {
+    "title": "Payment cancelled",
+    "body": "No worries — you can try upgrading again anytime.",
+    "back": "Back to Subscription"
+  }
+}

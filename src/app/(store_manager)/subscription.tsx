@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { ActivityIndicator, Alert, Linking, Platform, useColorScheme } from "react-native";
 import { View, Text, SafeAreaView, ScrollView, TouchableOpacity } from "@/tw";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -29,6 +30,7 @@ function FeatureLine({ text }: { text: string }) {
 }
 
 export default function SubscriptionScreen() {
+	const { t: translate } = useTranslation();
 	const insets = useSafeAreaInsets();
 	const isWeb = Platform.OS === "web";
 	const isDark = useColorScheme() === "dark";
@@ -157,9 +159,7 @@ export default function SubscriptionScreen() {
 			className="flex-1 bg-backgroundMuted dark:bg-neutral-900"
 		>
 			<View className="bg-white dark:bg-darkBackground border-b border-neutral-100 dark:border-darkBorder px-6 py-3 flex-row items-center justify-between">
-				<Text className="text-xl font-poppins-bold text-textPrimary dark:text-darkTextPrimary py-1">
-					Subscription
-				</Text>
+				<Text className="text-xl font-poppins-bold text-textPrimary dark:text-darkTextPrimary py-1">{translate("store_manager.subscription.title")}</Text>
 			</View>
 			{loading ? (
 				<View className="flex-1 items-center justify-center">
@@ -185,11 +185,11 @@ export default function SubscriptionScreen() {
 								<View className="items-center px-1">
 									<View className="flex-row items-center gap-2 px-3 py-1.5 rounded-full bg-orange-50 dark:bg-[#431407]/60">
 										<Text className="text-xs font-poppins-semibold text-primary dark:text-primary">
-											{String(basicPlan?.name ?? "Basic plan")}
+											{String(basicPlan?.name ?? translate("store_manager.subscription.welcome.planBadge"))}
 										</Text>
 									</View>
 									<Text className="mt-4 text-2xl font-poppins-bold text-center text-textPrimary dark:text-darkTextPrimary">
-										You're on {String(basicPlan?.name ?? "Basic")}
+										You're on {String(basicPlan?.name ?? translate("store_manager.subscription.welcome.basicTitle"))}
 									</Text>
 									<Text className="mt-2 text-sm font-poppins text-center leading-6 text-textSecondary dark:text-darkTextSecondary max-w-[520px]">
 										Choose a plan below. Plan details come from your catalog.
@@ -205,28 +205,26 @@ export default function SubscriptionScreen() {
 										<View className="relative rounded-2xl border border-slate-100 bg-white p-5 h-full dark:border-slate-700 dark:bg-neutral-900">
 											{showBasicBadge ? (
 												<View className="absolute -top-2.5 right-4 px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800">
-													<Text className="text-[10px] font-poppins-bold uppercase tracking-wide text-textSecondary dark:text-darkTextSecondary">
-														Current plan
-													</Text>
+													<Text className="text-[10px] font-poppins-bold uppercase tracking-wide text-textSecondary dark:text-darkTextSecondary">{translate("store_manager.subscription.welcome.currentPlan")}</Text>
 												</View>
 											) : null}
 											<View className="flex-row items-center gap-2 mb-1">
 												<Store size={20} color={mutedIcon} />
 												<Text className="text-lg font-poppins-bold text-textPrimary dark:text-darkTextPrimary">
-													{String(basicPlan?.name ?? "Basic")}
+													{String(basicPlan?.name ?? translate("store_manager.subscription.welcome.basicTitle"))}
 												</Text>
 											</View>
 											<Text className="text-xs font-poppins text-textMuted dark:text-darkTextMuted mb-3">
 												{toAmountNumber(basicPlan?.amount) === 0
-													? "Free"
+													? translate("label.free")
 													: `${formatPeso(toAmountNumber(basicPlan?.amount))}/month`}
 											</Text>
 											<View className="pt-1 border-t border-slate-100 dark:border-slate-700">
-												<FeatureLine text={"1 store with full loyalty tools"} />
+												<FeatureLine text={translate("store_manager.subscription.welcome.basicFeature1")} />
 												<FeatureLine
-													text={"Stamps, streaks, rewards, QR, and staff tools"}
+													text={translate("store_manager.subscription.welcome.basicFeature2")}
 												/>
-												<FeatureLine text={"Dashboard and transaction history"} />
+												<FeatureLine text={translate("store_manager.subscription.welcome.basicFeature3")} />
 											</View>
 										</View>
 									</View>
@@ -234,14 +232,12 @@ export default function SubscriptionScreen() {
 									<View className="flex-1 min-w-0">
 										<View className="relative rounded-2xl border border-primary/35 dark:border-primary/45 bg-white dark:bg-neutral-900 p-5 h-full">
 											<View className="absolute -top-2.5 right-4 px-2.5 py-1 rounded-full bg-[#FF6600] shadow-sm">
-												<Text className="text-[10px] font-poppins-bold text-white uppercase tracking-wide">
-													Recommended
-												</Text>
+												<Text className="text-[10px] font-poppins-bold text-white uppercase tracking-wide">{translate("store_manager.subscription.welcome.recommended")}</Text>
 											</View>
 											<View className="flex-row items-center gap-2 mb-1 mt-1">
 												<Sparkles size={20} color={ACCENT} />
 												<Text className="text-lg font-poppins-bold text-textPrimary dark:text-darkTextPrimary">
-													{String(premiumPlan?.name ?? "Premium")}
+													{String(premiumPlan?.name ?? translate("store_manager.subscription.welcome.premiumTitle"))}
 												</Text>
 											</View>
 											<Text className="text-xs font-poppins text-textMuted dark:text-darkTextMuted mb-3">
@@ -252,11 +248,11 @@ export default function SubscriptionScreen() {
 													: "Built for multiple locations"}
 											</Text>
 											<View className="pt-1 border-t border-orange-100/80 dark:border-orange-900/40">
-												<FeatureLine text={"Add and run more than one store"} />
-												<FeatureLine text={"Avoid billing holds on extra locations"} />
-												<FeatureLine text={"Priority support when you need help"} />
+												<FeatureLine text={translate("store_manager.subscription.welcome.premiumFeature1")} />
+												<FeatureLine text={translate("store_manager.subscription.welcome.premiumFeature2")} />
+												<FeatureLine text={translate("store_manager.subscription.welcome.premiumFeature3")} />
 												<FeatureLine
-													text={"Access to new premium features as we release them"}
+													text={translate("store_manager.subscription.welcome.premiumFeature4")}
 												/>
 											</View>
 											<TouchableOpacity
@@ -268,7 +264,7 @@ export default function SubscriptionScreen() {
 												onPress={() =>
 													handleSubscribe(
 														toAmountNumber(premiumPlan?.amount) ?? 0,
-														String(premiumPlan?.name ?? "Premium"),
+														String(premiumPlan?.name ?? translate("store_manager.subscription.welcome.premiumTitle")),
 													)
 												}
 											>
@@ -276,7 +272,7 @@ export default function SubscriptionScreen() {
 													<ActivityIndicator size="small" color="#fff" />
 												) : (
 													<Text className="text-sm font-poppins-semibold text-white">
-														Upgrade to {String(premiumPlan?.name ?? "Premium")}
+														Upgrade to {String(premiumPlan?.name ?? translate("store_manager.subscription.welcome.premiumTitle"))}
 													</Text>
 												)}
 											</TouchableOpacity>
@@ -301,7 +297,7 @@ export default function SubscriptionScreen() {
 									</View>
 								) : null}
 								<Text className="text-base font-poppins-semibold text-textPrimary dark:text-darkTextPrimary">
-									You're on {String(premiumPlan?.name ?? "Premium")}
+									You're on {String(premiumPlan?.name ?? translate("store_manager.subscription.welcome.premiumTitle"))}
 								</Text>
 								<Text className="mt-2 text-sm font-poppins text-textSecondary dark:text-darkTextSecondary">
 									Thanks for subscribing. You can add unlimited stores from the dashboard.
