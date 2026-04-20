@@ -178,7 +178,7 @@ export function SubscriptionDistribution() {
 
       {/* Leaders Section */}
       <Text className="text-[10px] font-poppins-bold text-[#475569] dark:text-darkTextPrimary mb-4 uppercase tracking-wider">
-        Top Subscription Payers
+        Subscription Payers
       </Text>
 
       <View className="flex-col gap-4">

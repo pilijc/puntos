@@ -144,184 +144,161 @@ export default function SuperAdminStores() {
 				</Text>
 			</View>
 
-			{/* ── Filter tabs (Sub-Header) ── */}
-			<View
-				style={isWeb ? {
-					alignItems: 'center',
-					paddingTop: 16,
-					paddingBottom: 8,
-					backgroundColor: 'transparent',
-				} : {
-					backgroundColor: '#f8fafc', // backgroundMuted
-					borderBottomWidth: 1,
-					borderBottomColor: '#f1f5f9'
-				}}
-				className="dark:bg-darkBackground"
-			>
-				{isWeb ? (
-					<View className="bg-white dark:bg-darkBackgroundCard rounded-2xl flex-row shadow-sm border border-slate-100 dark:border-darkBorder" style={{ width: '100%', maxWidth: 700, height: 50, padding: 6, alignItems: 'center', alignSelf: 'center' }}>
-						{FILTERS.map((f) => {
-							const active = activeFilter === f;
-							const count = statusCounts[f] ?? 0;
-							return (
-								<TouchableOpacity
-									key={f}
-									onPress={() => setActiveFilter(f)}
-									activeOpacity={0.8}
-									style={{
-										flex: 1,
-										height: 38,
-										alignItems: 'center',
-										justifyContent: 'center',
-										flexDirection: 'row',
-										gap: 6,
-										borderRadius: 12,
-										backgroundColor: active ? '#FF6600' : 'transparent',
-									}}
-								>
-									<Text className={`text-sm font-poppins-bold ${active ? 'text-white' : 'text-slate-500 dark:text-darkTextMuted'}`}>
-										{FILTER_LABELS[f]}
-									</Text>
-									{count >= 0 && (
-										<View className={`rounded-full px-2 py-0.5 items-center justify-center ${active ? 'bg-white/20' : 'bg-slate-100 dark:bg-neutral-800'}`}>
-											<Text className={`text-[10px] font-poppins-bold ${active ? 'text-white' : 'text-slate-500 dark:text-darkTextMuted'}`}>
-												{count}
-											</Text>
-										</View>
-									)}
-								</TouchableOpacity>
-							);
-						})}
-					</View>
-				) : (
-					<ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 20, gap: 28, flexDirection: "row" }}>
-						{FILTERS.map((f) => {
-							const active = activeFilter === f;
-							const count = statusCounts[f] ?? 0;
-							return (
-								<TouchableOpacity
-									key={f}
-									className={`py-3 items-center flex-row justify-center gap-1.5 border-b-2 ${active ? 'border-primary' : 'border-transparent'}`}
-									onPress={() => setActiveFilter(f)}
-									activeOpacity={0.7}
-								>
-									<Text
-										className={
-											active
-												? "text-sm font-poppins-bold text-primary"
-												: "text-sm font-poppins-medium text-slate-400 dark:text-darkTextMuted"
-										}
-										numberOfLines={1}
-									>
-										{FILTER_LABELS[f]}
-									</Text>
-									{count > 0 && (
-										<View
-											className={`rounded-full px-1.5 min-w-[20px] items-center ${active
-												? "bg-primary/10"
-												: "bg-neutral-100 dark:bg-darkBackgroundCard"
-												}`}
-										>
-											<Text
-												className={`text-[10px] font-poppins-bold ${active
-													? "text-primary"
-													: "text-neutral-500 dark:text-darkTextMuted"
-													}`}
-											>
-												{count}
-											</Text>
-										</View>
-									)}
-								</TouchableOpacity>
-							);
-						})}
-					</ScrollView>
-				)}
-			</View>
+			{/* ── Content ── */}
+			{isWeb ? (
+				<ScrollView
+					className="flex-1"
+					contentContainerStyle={{
+						paddingHorizontal: 16,
+						paddingTop: 16,
+						paddingBottom: 40,
+						alignItems: "center" as const,
+					}}
+					showsVerticalScrollIndicator={false}
+					refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#FF6600" colors={["#FF6600"]} />}
+				>
+					<View style={{ maxWidth: 896 }} className="w-full">
 
-			{/* ── Store list ── */}
-			<View className="flex-1">
-				{loading && !refreshing && filtered.length === 0 ? (
-					<View
-						className="flex-1"
-						style={[
-							{ padding: 16, paddingBottom: 40 },
-							isWeb && {
-								width: '100%',
-								maxWidth: 1000,
-								alignSelf: 'center'
-							}
-						]}
-					>
-						<AdminStoreSkeletonCard />
-						<AdminStoreSkeletonCard />
-						<AdminStoreSkeletonCard />
-					</View>
-				) : (
-					<FlatList
-						data={filtered}
-						renderItem={renderStoreItem}
-						keyExtractor={(store) => String(store.id)}
-						contentContainerStyle={[
-							{ padding: 16, paddingBottom: filtered.length === 0 ? 16 : 40 },
-							isWeb && {
-								width: '100%',
-								maxWidth: 1000,
-								alignSelf: 'center'
-							}
-						]}
-						showsVerticalScrollIndicator={false}
-						refreshControl={
-							<RefreshControl
-								refreshing={refreshing}
-								onRefresh={onRefresh}
-								tintColor="#FF6600"
-								colors={["#FF6600"]}
+						{/* ── Filter tabs ── */}
+						<View className="bg-white dark:bg-darkBackgroundCard rounded-2xl flex-row shadow-sm border border-slate-100 dark:border-darkBorder mb-4" style={{ width: '100%', height: 50, padding: 6, alignItems: 'center' }}>
+							{FILTERS.map((f) => {
+								const active = activeFilter === f;
+								const count = statusCounts[f] ?? 0;
+								return (
+									<TouchableOpacity key={f} onPress={() => setActiveFilter(f)} activeOpacity={0.8} style={{ flex: 1, height: 38, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 6, borderRadius: 12, backgroundColor: active ? '#FF6600' : 'transparent' }}>
+										<Text className={`text-sm font-poppins-bold ${active ? 'text-white' : 'text-slate-500 dark:text-darkTextMuted'}`}>{FILTER_LABELS[f]}</Text>
+										{count >= 0 && (
+											<View className={`rounded-full px-2 py-0.5 items-center justify-center ${active ? 'bg-white/20' : 'bg-slate-100 dark:bg-neutral-800'}`}>
+												<Text className={`text-[10px] font-poppins-bold ${active ? 'text-white' : 'text-slate-500 dark:text-darkTextMuted'}`}>{count}</Text>
+											</View>
+										)}
+									</TouchableOpacity>
+								);
+							})}
+						</View>
+
+						{/* ── Store list ── */}
+						{loading && !refreshing && filtered.length === 0 ? (
+							<View>
+								<AdminStoreSkeletonCard />
+								<AdminStoreSkeletonCard />
+								<AdminStoreSkeletonCard />
+							</View>
+						) : (
+							<FlatList
+								data={filtered}
+								renderItem={renderStoreItem}
+								keyExtractor={(store) => String(store.id)}
+								contentContainerStyle={{ paddingBottom: 16 }}
+								scrollEnabled={false}
+								showsVerticalScrollIndicator={false}
+								removeClippedSubviews={false}
+								initialNumToRender={filtered.length}
+								ListHeaderComponent={
+									error && !loading ? (
+										<View className="flex-row items-center gap-2 bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 rounded-xl p-3 mb-4">
+											<MaterialIcons name="error-outline" size={16} color="#DC2626" />
+											<Text className="flex-1 text-sm font-poppins text-red-600 dark:text-red-400">{error}</Text>
+										</View>
+									) : null
+								}
+								ListEmptyComponent={
+									!error ? (
+										<View className="items-center pt-16 gap-3">
+											<MaterialIcons name="storefront" size={52} color="#CBD5E1" />
+											<Text className="text-base font-poppins-bold text-slate-600 dark:text-darkTextSecondary">
+												{activeFilter === "All" ? translate("superAdmin.stores.noStores") : translate("superAdmin.stores.noFilteredStores", { status: FILTER_LABELS[activeFilter] })}
+											</Text>
+											<Text className="text-sm font-poppins text-slate-400 text-center px-8">{translate("superAdmin.stores.pullToRefresh")}</Text>
+										</View>
+									) : null
+								}
+								ListFooterComponent={
+									isFetching && hasMore ? (
+										<View className="py-4 items-center">
+											<ActivityIndicator size="small" color="#FF6600" />
+										</View>
+									) : null
+								}
 							/>
-						}
-						onEndReached={() => {
-							if (hasMore && !isFetching) {
-								loadMore();
-							}
-						}}
-						onEndReachedThreshold={0.5}
-						removeClippedSubviews={true}
-						initialNumToRender={10}
-						maxToRenderPerBatch={10}
-						windowSize={10}
-						ListHeaderComponent={
-							error && !loading ? (
-								<View className="flex-row items-center gap-2 bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 rounded-xl p-3 mb-4">
-									<MaterialIcons name="error-outline" size={16} color="#DC2626" />
-									<Text className="flex-1 text-sm font-poppins text-red-600 dark:text-red-400">{error}</Text>
-								</View>
-							) : null
-						}
-						ListEmptyComponent={
-							!error ? (
-								<View className="items-center pt-16 gap-3">
-									<MaterialIcons name="storefront" size={52} color="#CBD5E1" />
-									<Text className="text-base font-poppins-bold text-slate-600 dark:text-darkTextSecondary">
-										{activeFilter === "All"
-											? translate("superAdmin.stores.noStores")
-											: translate("superAdmin.stores.noFilteredStores", { status: FILTER_LABELS[activeFilter] })}
-									</Text>
-									<Text className="text-sm font-poppins text-slate-400 text-center px-8">
-										{translate("superAdmin.stores.pullToRefresh")}
-									</Text>
-								</View>
-							) : null
-						}
-						ListFooterComponent={
-							isFetching && hasMore ? (
-								<View className="py-4 items-center">
-									<ActivityIndicator size="small" color="#FF6600" />
-								</View>
-							) : null
-						}
-					/>
-				)}
-			</View>
+						)}
+					</View>
+				</ScrollView>
+			) : (
+				<>
+					{/* ── Filter tabs (Sub-Header) ── */}
+					<View style={{ backgroundColor: '#f8fafc', borderBottomWidth: 1, borderBottomColor: '#f1f5f9' }} className="dark:bg-darkBackground mb-0">
+						<ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 20, gap: 28, flexDirection: "row" }}>
+							{FILTERS.map((f) => {
+								const active = activeFilter === f;
+								const count = statusCounts[f] ?? 0;
+								return (
+									<TouchableOpacity key={f} className={`py-3 items-center flex-row justify-center gap-1.5 border-b-2 ${active ? 'border-primary' : 'border-transparent'}`} onPress={() => setActiveFilter(f)} activeOpacity={0.7}>
+										<Text className={active ? "text-sm font-poppins-bold text-primary" : "text-sm font-poppins-medium text-slate-400 dark:text-darkTextMuted"} numberOfLines={1}>{FILTER_LABELS[f]}</Text>
+										{count > 0 && (
+											<View className={`rounded-full px-1.5 min-w-[20px] items-center ${active ? "bg-primary/10" : "bg-neutral-100 dark:bg-darkBackgroundCard"}`}>
+												<Text className={`text-[10px] font-poppins-bold ${active ? "text-primary" : "text-neutral-500 dark:text-darkTextMuted"}`}>{count}</Text>
+											</View>
+										)}
+									</TouchableOpacity>
+								);
+							})}
+						</ScrollView>
+					</View>
+
+					{/* ── Store list ── */}
+					<View className="flex-1">
+						{loading && !refreshing && filtered.length === 0 ? (
+							<View className="flex-1" style={{ padding: 16, paddingBottom: 40 }}>
+								<AdminStoreSkeletonCard />
+								<AdminStoreSkeletonCard />
+								<AdminStoreSkeletonCard />
+							</View>
+						) : (
+							<FlatList
+								data={filtered}
+								renderItem={renderStoreItem}
+								keyExtractor={(store) => String(store.id)}
+								contentContainerStyle={{ padding: 16, paddingBottom: filtered.length === 0 ? 16 : 40 }}
+								showsVerticalScrollIndicator={false}
+								refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#FF6600" colors={["#FF6600"]} />}
+								onEndReached={() => { if (hasMore && !isFetching) { loadMore(); } }}
+								onEndReachedThreshold={0.5}
+								removeClippedSubviews={true}
+								initialNumToRender={10}
+								maxToRenderPerBatch={10}
+								windowSize={10}
+								ListHeaderComponent={
+									error && !loading ? (
+										<View className="flex-row items-center gap-2 bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 rounded-xl p-3 mb-4">
+											<MaterialIcons name="error-outline" size={16} color="#DC2626" />
+											<Text className="flex-1 text-sm font-poppins text-red-600 dark:text-red-400">{error}</Text>
+										</View>
+									) : null
+								}
+								ListEmptyComponent={
+									!error ? (
+										<View className="items-center pt-16 gap-3">
+											<MaterialIcons name="storefront" size={52} color="#CBD5E1" />
+											<Text className="text-base font-poppins-bold text-slate-600 dark:text-darkTextSecondary">
+												{activeFilter === "All" ? translate("superAdmin.stores.noStores") : translate("superAdmin.stores.noFilteredStores", { status: FILTER_LABELS[activeFilter] })}
+											</Text>
+											<Text className="text-sm font-poppins text-slate-400 text-center px-8">{translate("superAdmin.stores.pullToRefresh")}</Text>
+										</View>
+									) : null
+								}
+								ListFooterComponent={
+									isFetching && hasMore ? (
+										<View className="py-4 items-center">
+											<ActivityIndicator size="small" color="#FF6600" />
+										</View>
+									) : null
+								}
+							/>
+						)}
+					</View>
+				</>
+			)}
 
 			<AdminStorePreviewModal
 				visible={!!previewStore}

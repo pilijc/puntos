@@ -16,6 +16,8 @@ interface UsersSearchHeaderProps {
   statusFilter: AccountStatusFilter;
   onFilterPress: () => void;
   counts: Record<UserRoleTab, number>;
+  hideTitle?: boolean;
+  hideControls?: boolean;
 }
 
 const TABS: UserRoleTab[] = ["All", "User", "Manager", "Staff"];
@@ -28,6 +30,8 @@ export function UsersSearchHeader({
   statusFilter,
   onFilterPress,
   counts,
+  hideTitle = false,
+  hideControls = false,
 }: UsersSearchHeaderProps) {
   const searchInputRef = useRef<import("react-native").TextInput>(null);
   const { t: translate } = useTranslation();
@@ -38,109 +42,113 @@ export function UsersSearchHeader({
     return (
       <>
         {/* ── Title Header ── */}
-        <View className="bg-white dark:bg-darkBackground border-b border-neutral-100 dark:border-darkBorder px-6 py-3">
-          <Text className="text-xl font-poppins-bold text-textPrimary dark:text-darkTextPrimary py-1">
-            {translate("superAdmin.users.title")}
-          </Text>
-        </View>
+        {!hideTitle && (
+          <View className="bg-white dark:bg-darkBackground border-b border-neutral-100 dark:border-darkBorder px-6 py-3">
+            <Text className="text-xl font-poppins-bold text-textPrimary dark:text-darkTextPrimary py-1">
+              {translate("superAdmin.users.title")}
+            </Text>
+          </View>
+        )}
         {/* ── Unified Controls Bar (Rounded-2xl & Matched to List Background) ── */}
-        <View style={{ width: "100%", paddingTop: 16, paddingBottom: 8 }}>
-          <View
-            style={{
-              width: "100%",
-              maxWidth: 950,
-              alignSelf: "center",
-              flexDirection: "row",
-              alignItems: "center",
-              backgroundColor: "#ffffff",
-              borderWidth: 1,
-              borderColor: "#f6f2f2ff",
-              height: 50,
-              borderRadius: 16, // rounded-2xl
-              overflow: "hidden",
-            }}
-          >
-            {/* 1. Search Section (Left) */}
-            <View style={{ flex: 1, flexDirection: "row", alignItems: "center", paddingHorizontal: 16 }}>
-              <Feather name="search" size={17} color="#94A3B8" />
-              <TextInput
-                ref={searchInputRef}
-                value={search}
-                onChangeText={onSearchChange}
-                placeholder={translate("superAdmin.users.searchPlaceholder")}
-                placeholderTextColor="#94A3B8"
-                autoCapitalize="none"
-                autoCorrect={false}
-                style={{
-                  flex: 1,
-                  fontSize: 14,
-                  fontFamily: "Poppins-Medium",
-                  color: "#334155",
-                  outline: "none",
-                  border: "none",
-                  marginLeft: 10,
-                  backgroundColor: "transparent",
-                } as any}
-              />
-              {search.length > 0 && (
-                <Pressable onPress={() => onSearchChange("")}>
-                  <Feather name="x" size={14} color="#94A3B8" />
-                </Pressable>
-              )}
-            </View>
-
-            {/* Vertical Divider */}
-            <View style={{ width: 1, height: 32, backgroundColor: "#f1f5f9" }} />
-
-            {/* 2. Tabs Section (Right) */}
-            <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 12, gap: 6 }}>
-              {TABS.map((tab) => {
-                const isActive = activeTab === tab;
-                return (
-                  <Pressable
-                    key={tab}
-                    onPress={() => onTabChange(tab)}
-                    style={{
-                      height: 34,
-                      paddingHorizontal: 16,
-                      borderRadius: 10, // Matching 2xl style
-                      alignItems: "center",
-                      justifyContent: "center",
-                      backgroundColor: isActive ? "#FF6600" : "transparent",
-                    }}
-                  >
-                    <Text
-                      style={{
-                        fontSize: 12,
-                        fontFamily: "Poppins-SemiBold",
-                        color: isActive ? "#ffffff" : "#64748b",
-                      }}
-                    >
-                      {translate(`superAdmin.users.tabs.${tab.toLowerCase()}`)}
-                    </Text>
-                  </Pressable>
-                );
-              })}
-            </View>
-
-            {/* Vertical Divider */}
-            <View style={{ width: 1, height: 32, backgroundColor: "#f1f5f9" }} />
-
-            {/* 3. Filter Icon Section (Right) */}
-            <Pressable
-              onPress={onFilterPress}
+        {!hideControls && (
+          <View style={{ width: "100%", paddingTop: 16, paddingBottom: 8 }}>
+            <View
               style={{
-                width: 52,
-                height: 52,
+                width: "100%",
+                maxWidth: 896,
+                alignSelf: "center",
+                flexDirection: "row",
                 alignItems: "center",
-                justifyContent: "center",
-                backgroundColor: statusFilter !== "All" ? "#fff7ed" : "transparent",
+                backgroundColor: "#ffffff",
+                borderWidth: 1,
+                borderColor: "#f6f2f2ff",
+                height: 50,
+                borderRadius: 16, // rounded-2xl
+                overflow: "hidden",
               }}
             >
-              <Feather name="sliders" size={16} color={statusFilter !== "All" ? "#FF6600" : "#94A3B8"} />
-            </Pressable>
+              {/* 1. Search Section (Left) */}
+              <View style={{ flex: 1, flexDirection: "row", alignItems: "center", paddingHorizontal: 16 }}>
+                <Feather name="search" size={17} color="#94A3B8" />
+                <TextInput
+                  ref={searchInputRef}
+                  value={search}
+                  onChangeText={onSearchChange}
+                  placeholder={translate("superAdmin.users.searchPlaceholder")}
+                  placeholderTextColor="#94A3B8"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  style={{
+                    flex: 1,
+                    fontSize: 14,
+                    fontFamily: "Poppins-Medium",
+                    color: "#334155",
+                    outline: "none",
+                    border: "none",
+                    marginLeft: 10,
+                    backgroundColor: "transparent",
+                  } as any}
+                />
+                {search.length > 0 && (
+                  <Pressable onPress={() => onSearchChange("")}>
+                    <Feather name="x" size={14} color="#94A3B8" />
+                  </Pressable>
+                )}
+              </View>
+
+              {/* Vertical Divider */}
+              <View style={{ width: 1, height: 32, backgroundColor: "#f1f5f9" }} />
+
+              {/* 2. Tabs Section (Right) */}
+              <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 12, gap: 6 }}>
+                {TABS.map((tab) => {
+                  const isActive = activeTab === tab;
+                  return (
+                    <Pressable
+                      key={tab}
+                      onPress={() => onTabChange(tab)}
+                      style={{
+                        height: 34,
+                        paddingHorizontal: 16,
+                        borderRadius: 10, // Matching 2xl style
+                        alignItems: "center",
+                        justifyContent: "center",
+                        backgroundColor: isActive ? "#FF6600" : "transparent",
+                      }}
+                    >
+                      <Text
+                        style={{
+                          fontSize: 12,
+                          fontFamily: "Poppins-SemiBold",
+                          color: isActive ? "#ffffff" : "#64748b",
+                        }}
+                      >
+                        {translate(`superAdmin.users.tabs.${tab.toLowerCase()}`)}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+
+              {/* Vertical Divider */}
+              <View style={{ width: 1, height: 32, backgroundColor: "#f1f5f9" }} />
+
+              {/* 3. Filter Icon Section (Right) */}
+              <Pressable
+                onPress={onFilterPress}
+                style={{
+                  width: 52,
+                  height: 52,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  backgroundColor: statusFilter !== "All" ? "#fff7ed" : "transparent",
+                }}
+              >
+                <Feather name="sliders" size={16} color={statusFilter !== "All" ? "#FF6600" : "#94A3B8"} />
+              </Pressable>
+            </View>
           </View>
-        </View>
+        )}
       </>
     );
   }

@@ -206,46 +206,53 @@ export default function SuperAdminDashboard() {
 
       <ScrollView
         className="flex-1"
-        contentContainerStyle={{ paddingBottom: 40 }}
+        contentContainerStyle={{
+          paddingBottom: 40,
+          ...(isWeb ? {
+            paddingHorizontal: 16,
+            paddingTop: 16,
+            alignItems: "center" as const
+          } : {}),
+        }}
+        showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#FF6600" />}
       >
-        {/* ── Sub-Header (Welcome Message) ── */}
-        {!isWeb && (
-          <View className="px-6 pt-6 pb-2">
-            <Text className="text-sm text-[#94A3B8] dark:text-darkTextSecondary font-poppins">
-              {translate("superAdmin.dashboard.welcome")}
-              <Text className="text-orange-500 font-poppins-bold">
-                {adminInfo?.username?.split(" ")[0] || "Admin"}
-              </Text>!
-            </Text>
-          </View>
-        )}
+        <View style={isWeb ? { maxWidth: 896, width: "100%" } : {}} className={isWeb ? "w-full" : ""}>
+          {/* ── Sub-Header (Welcome Message) ── */}
+          {!isWeb && (
+            <View className="px-6 pt-6 pb-2">
+              <Text className="text-sm text-[#94A3B8] dark:text-darkTextSecondary font-poppins">
+                {translate("superAdmin.dashboard.welcome")}
+                <Text className="text-orange-500 font-poppins-bold">
+                  {adminInfo?.username?.split(" ")[0] || "Admin"}
+                </Text>!
+              </Text>
+            </View>
+          )}
 
-        <View
-          style={isWeb ? { maxWidth: WEB_CARD_MAX_WIDTH, width: "100%", alignSelf: "center", paddingHorizontal: WEB_CARD_PADDING } : {}}
-          className="px-6 mb-6 mt-2"
-        >
-          <View className="flex-row gap-2 mb-2">
-            <StatCard label={translate("superAdmin.dashboard.metrics.totalUsers")} val={users.length} Icon={Users} />
-            <StatCard label={translate("superAdmin.dashboard.metrics.totalStores")} val={stores.length} Icon={Store} />
-            <StatCard label={translate("superAdmin.dashboard.metrics.activeStores")} val={activeStoresCount} Icon={Activity} />
+          <View
+            className={isWeb ? "mb-6 mt-2" : "px-6 mb-6 mt-2"}
+          >
+            <View className="flex-row gap-2 mb-2">
+              <StatCard label={translate("superAdmin.dashboard.metrics.totalUsers")} val={users.length} Icon={Users} />
+              <StatCard label={translate("superAdmin.dashboard.metrics.totalStores")} val={stores.length} Icon={Store} />
+              <StatCard label={translate("superAdmin.dashboard.metrics.activeStores")} val={activeStoresCount} Icon={Activity} />
+            </View>
+            <View className="flex-row gap-[10px]">
+              <DashboardMetricTile
+                label={timeframe === "today" ? "Peak Hour" : timeframe === "7d" ? "Most Active Day" : "Most Active Week"}
+                value={mostActiveLabel}
+                subtitle={timeframe === "today" ? "Today" : timeframe === "7d" ? "Last 7 days" : "Last 30 days"}
+                icon={CalendarDays}
+                loading={false}
+              />
+              <DashboardMetricTile label="Returning Customers" value={`${userRetentionPercent}%`} subtitle="Retention rate" icon={Activity} loading={false} />
+            </View>
           </View>
-          <View className="flex-row gap-[10px]">
-            <DashboardMetricTile
-              label={timeframe === "today" ? "Peak Hour" : timeframe === "7d" ? "Most Active Day" : "Most Active Week"}
-              value={mostActiveLabel}
-              subtitle={timeframe === "today" ? "Today" : timeframe === "7d" ? "Last 7 days" : "Last 30 days"}
-              icon={CalendarDays}
-              loading={false}
-            />
-            <DashboardMetricTile label="Returning Customers" value={`${userRetentionPercent}%`} subtitle="Retention rate" icon={Activity} loading={false} />
-          </View>
-        </View>
 
-        <View
-          style={isWeb ? { maxWidth: WEB_CARD_MAX_WIDTH, width: "100%", alignSelf: "center", paddingHorizontal: WEB_CARD_PADDING } : {}}
-          className="px-6 mb-4"
-        >
+          <View
+            className={isWeb ? "mb-4" : "px-6 mb-4"}
+          >
           <View className="flex-row rounded-xl bg-[#EEF2F7] dark:bg-darkBackgroundMuted p-1 self-start">
             {([
               { id: "today", label: "Today" },
@@ -267,8 +274,7 @@ export default function SuperAdminDashboard() {
         </View>
 
         <View
-          style={isWeb ? { maxWidth: WEB_CARD_MAX_WIDTH, width: "100%", alignSelf: "center", paddingHorizontal: WEB_CARD_PADDING } : {}}
-          className={isWeb ? "mb-4" : "mb-4 px-6"}
+          className={isWeb ? "mb-4" : "px-6 mb-4"}
         >
           <View className="flex-row justify-between items-center mb-3">
             <Text className="text-base font-poppins-bold text-textPrimary dark:text-darkTextPrimary">User Analytics</Text>
@@ -324,8 +330,7 @@ export default function SuperAdminDashboard() {
         </View>
 
         <View
-          style={isWeb ? { maxWidth: WEB_CARD_MAX_WIDTH, width: "100%", alignSelf: "center", paddingHorizontal: WEB_CARD_PADDING } : {}}
-          className={isWeb ? "mb-8" : "mb-8 px-6"}
+          className={isWeb ? "mb-8" : "px-6 mb-8"}
         >
           <View className="flex-row justify-between items-center mb-3">
             <Text className="text-base font-poppins-bold text-textPrimary dark:text-darkTextPrimary">Store Analytics</Text>
@@ -380,6 +385,7 @@ export default function SuperAdminDashboard() {
           </DashboardActivityChart>
 
           <SubscriptionDistribution />
+        </View>
         </View>
       </ScrollView>
     </SafeAreaView>
