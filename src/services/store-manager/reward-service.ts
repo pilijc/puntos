@@ -49,7 +49,8 @@ export async function getRewardById(storeId: string, rewardId: string): Promise<
 export async function createReward(reward: Reward): Promise<void> {
   const { error } = await supabase
     .from("store_rewards")
-    .insert(reward);
+    .insert({...reward,
+      is_active: reward.is_active ?? true});
 
   if (error) throw new Error(error.message);
 }
@@ -57,7 +58,7 @@ export async function createReward(reward: Reward): Promise<void> {
 export async function updateReward(
   storeId: string,
   rewardId: string,
-  payload: Pick<Reward, "title" | "description" | "points_cost" | "stock" | "image_url">,
+  payload: Pick<Reward, "title" | "description" | "points_cost" | "stock" | "image_url" | "is_active">,
 ): Promise<void> {
   const { error } = await supabase
     .from("store_rewards")

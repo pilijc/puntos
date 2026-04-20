@@ -3,6 +3,7 @@ import { useRouter } from "expo-router";
 import { useColorScheme } from "react-native";
 import { View, Text, TouchableOpacity } from "@/tw";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { ShoppingBag, QrCode, Tag, Gift } from "lucide-react-native";
 import { useTranslation } from "react-i18next";
 import { useRecentTransactions } from "@/hooks/use-recent-transactions";
 import {RecentTransactionsProps} from "@/type/frontdesk/transaction";
@@ -23,6 +24,39 @@ export default function RecentTransactions({ recentScans }: RecentTransactionsPr
     if (minutes < 60) return `${minutes}${translate(minutes === 1 ? "frontdesk.transaction.recent.time.minute" : "frontdesk.transaction.recent.time.minutes")} ago`;
     if (hours < 24) return `${hours}${translate(hours === 1 ? "frontdesk.transaction.recent.time.hour" : "frontdesk.transaction.recent.time.hours")} ago`;
     return `${days}${translate(days === 1 ? "frontdesk.transaction.recent.time.day" : "frontdesk.transaction.recent.time.days")} ago`;
+  };
+
+  const getTransactionIcon = (type: string, method?: string) => {
+    if (type === "redeemed") {
+      return <Gift size={16} color="#EF4444" />;
+    }
+    if (method === "qr") {
+      return <QrCode size={16} color="#10B981" />;
+    }
+    if (method === "voucher") {
+      return <Tag size={16} color="#F59E0B" />;
+    }
+    return <ShoppingBag size={16} color="#6B7280" />;
+  };
+
+  const getPointsColor = (type: string) => {
+    if (type === "redeemed") {
+      return "text-red-500";
+    }
+    return "text-green-500";
+  };
+
+  const getTransactionDescription = (scan: any) => {
+    if (scan.type === "redeemed") {
+      return "Reward Redemption";
+    }
+    if (scan.method === "qr") {
+      return "QR Scan";
+    }
+    if (scan.method === "voucher") {
+      return "Voucher";
+    }
+    return translate("frontdesk.transaction.recent.purchase");
   };
 
   return (
@@ -49,17 +83,21 @@ export default function RecentTransactions({ recentScans }: RecentTransactionsPr
             className="bg-white dark:bg-darkBackgroundCard rounded-2xl border border-neutral-100 dark:border-darkBorder mb-3 overflow-hidden"
           >
             <View className="flex-row items-center px-4 py-4">
+              <View className="w-8 h-8 rounded-full bg-neutral-100 dark:bg-neutral-800 items-center justify-center mr-3">
+                {getTransactionIcon(scan.type, scan.method)}
+              </View>
               <View className="flex-1">
                 <Text className="text-sm font-poppins-semibold text-neutral-800 dark:text-darkTextPrimary">
-                  ₱{scan.amount.toFixed(2)} {translate("frontdesk.transaction.recent.purchase")}
+                  {scan.type === "redeemed" ? getTransactionDescription(scan) : `₱${scan.amount.toFixed(2)} ${getTransactionDescription(scan)}`}
                 </Text>
                 <Text className="text-xs font-poppins text-neutral-400 dark:text-darkTextSoft mt-0.5">
+                  {scan.customerName && `${scan.customerName} • `}
                   {formatTimeAgo(scan.timestamp)}
                 </Text>
               </View>
               <View className="items-end">
-                <Text className="text-base font-poppins-bold text-orange-500">
-                  +{scan.points}
+                <Text className={`text-base font-poppins-bold ${getPointsColor(scan.type)}`}>
+                  {scan.type === "redeemed" ? `-${scan.points}` : `+${scan.points}`}
                 </Text>
                 <Text className="text-xs font-poppins text-neutral-400">pts</Text>
               </View>

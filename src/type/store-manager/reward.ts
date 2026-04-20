@@ -6,6 +6,7 @@ export interface Reward {
   points_cost: number;
   stock:number
   image_url: string;
+  is_active: boolean;
 }
 
 export interface RewardState {

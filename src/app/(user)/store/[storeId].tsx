@@ -491,10 +491,14 @@ export default function StoreOverviewDetail() {
             </View>
           ) : (
             sortedRewards.slice(0, 3).map((item) => {
+              const currentStore = storesWithLocation.find(s => s.id.toString() === storeId);
               return (
                 <RewardCard
                   key={item.id}
                   reward={item}
+                  storeName={currentStore?.name}
+                  storeLocation={currentStore?.address}
+                  storeLogo={currentStore?.logo ?? ""}
                 />
               );
             })
