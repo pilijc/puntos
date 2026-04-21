@@ -340,8 +340,8 @@ export function RedemptionDrawer({
         <Modal
           visible={showSuccessModal}
           onClose={handleSuccessClose}
-          title="Success"
-          message="Redemption has been successfully cancelled."
+          title="Cancelled"
+          message="Your code is cancelled."
           buttons={[
             { label: "Got it", onPress: handleSuccessClose, variant: "primary" },
           ]}

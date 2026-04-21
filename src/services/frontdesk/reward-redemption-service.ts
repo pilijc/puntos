@@ -9,11 +9,20 @@ Promise<RedemptionVerificationResult> {
       .from("reward_redemption_codes")
       .select('*,reward:store_rewards(title, description, image_url, points_cost, stock)')
       .eq("code", code)
-      .eq("status", "active")
       .maybeSingle();
 
     if (codeError) throw codeError;
-    if (!codeData) return { success: true, message: "Invalid or expired code" };
+    if (!codeData) return { success: false, message: "Invalid redemption code" };
+
+    // Check if code is already redeemed
+    if (codeData.status === "redeemed") {
+      return { success: false, message: "Redemption code already used" };
+    }
+
+    // Check if code is not active
+    if (codeData.status !== "active") {
+      return { success: false, message: "Invalid or expired code" };
+    }
 
     const codeWithReward = codeData as RedemptionCodeWithReward;
 
@@ -62,7 +71,7 @@ export async function processRedemption(
 
     const now = new Date().toISOString();
 
-    // Update redemption code status to "redeemed" first to release reserved points
+    // Update redemption code status to "redeemed" before releasing points
     const { error: codeUpdateError } = await supabase
       .from("reward_redemption_codes")
       .update({
@@ -72,7 +81,6 @@ export async function processRedemption(
       .eq("id", verification.code.id);
 
     if (codeUpdateError) {
-      console.error("Error updating redemption code status:", codeUpdateError);
       return { success: false, message: "Failed to update redemption code status" };
     }
 
@@ -89,7 +97,7 @@ export async function processRedemption(
       .single();
 
     if (redemptionError || !redemption) {
-      // Rollback code status update if redemption insertion fails
+      // Rollback the code status update if redemption insertion fails
       await supabase
         .from("reward_redemption_codes")
         .update({
@@ -206,6 +214,7 @@ export function listenToRewardRedemptions(
   let retryCount = 0;
   const maxRetries = 10;
   const baseDelay = 2000;
+  let currentChannel: any = null;
 
   const subscribeWithRetry = () => {
     if (retryCount >= maxRetries) {
@@ -216,7 +225,7 @@ export function listenToRewardRedemptions(
     const delay = Math.min(baseDelay * Math.pow(2, retryCount), 30000);
 
     const channel = supabase
-      .channel(`reward-redemptions-${storeId}`, {
+      .channel(`reward-redemptions-${storeId}-${Date.now()}`, {
         config: {
           broadcast: { self: true },
           presence: { key: `store-${storeId}` },
@@ -231,10 +240,9 @@ export function listenToRewardRedemptions(
           filter: `store_id=eq.${storeId}`,
         },
         async (payload) => {
-          console.log("Reward redemption realtime triggered:", payload);
+           
           const newRedemption = payload.new as any;
 
-          // Fetch user name and reward title
           const { data: userData } = await supabase
             .from("users")
             .select("name")
@@ -260,24 +268,26 @@ export function listenToRewardRedemptions(
         }
       )
       .subscribe((status) => {
-        console.log(`Reward redemptions listener status for store ${storeId}:`, status);
+       
         if (status === "SUBSCRIBED") {
-          console.log(`Successfully subscribed to reward redemptions for store ${storeId}`);
+           
           retryCount = 0;
         } else if (status === "TIMED_OUT" || status === "CLOSED" || status === "CHANNEL_ERROR") {
-          console.error(`Reward redemptions listener failed for store ${storeId}:`, status);
+          
           retryCount++;
           if (retryCount < maxRetries) {
-            console.log(`Reconnecting in ${delay/1000}s... (attempt ${retryCount}/${maxRetries})`);
+            
             setTimeout(() => {
+              if (currentChannel) {
+                supabase.removeChannel(currentChannel);
+              }
               subscribeWithRetry();
             }, delay);
-          } else {
-            console.error(`Max retries reached. Real-time may need to be enabled for reward_redemptions table in Supabase.`);
-          }
+          } 
         }
       });
 
+    currentChannel = channel;
     return channel;
   };
 

@@ -172,10 +172,10 @@ export function listenToRedemptionStatus(
       .subscribe((status) => {
         console.log(`Redemption status listener for code ${codeId}:`, status);
         if (status === "SUBSCRIBED") {
-          console.log(`Successfully subscribed to redemption status for code ${codeId}`);
+          //console.log(`Successfully subscribed to redemption status for code ${codeId}`);
           retryCount = 0;
         } else if (status === "TIMED_OUT" || status === "CLOSED" || status === "CHANNEL_ERROR") {
-          console.error(`Redemption status listener failed for code ${codeId}:`, status);
+          //console.error(`Redemption status listener failed for code ${codeId}:`, status);
           retryCount++;
           if (retryCount < maxRetries) {
             console.log(`Reconnecting in ${delay/1000}s... (attempt ${retryCount}/${maxRetries})`);

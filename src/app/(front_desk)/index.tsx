@@ -38,6 +38,7 @@ export default function FrontDeskScan() {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [successTransactionId, setSuccessTransactionId] = useState<string>("");
   const [successPoints, setSuccessPoints] = useState(0);
+  const [successModalType, setSuccessModalType] = useState<"earn" | "redeem">("earn");
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string>("");
   const [isPasswordSetupComplete, setIsPasswordSetupComplete] = useState<boolean | null>(null);
@@ -166,6 +167,7 @@ export default function FrontDeskScan() {
         const pointsAwarded = result.pointsEarned || Math.ceil(amount * 0.1);
         setSuccessTransactionId(result.transactionId || "");
         setSuccessPoints(pointsAwarded);
+        setSuccessModalType("earn");
         setShowSuccessModal(true);
       } else {
         setModal({
@@ -191,6 +193,7 @@ export default function FrontDeskScan() {
     setPurchaseAmount("");
     setVoucherCode("");
     setShowSuccessModal(false);
+    setSuccessModalType("earn");
   };
 
   const handleErrorModalClose = () => {
@@ -316,6 +319,7 @@ export default function FrontDeskScan() {
               currentStaffId={currentStaffId}
               onSuccess={(points) => {
                 setSuccessPoints(points);
+                setSuccessModalType("earn");
                 setShowSuccessModal(true);
                 addScan({ points, timestamp: new Date(), amount: parseFloat(purchaseAmount) });
                 setVoucherCode("");
@@ -372,6 +376,7 @@ export default function FrontDeskScan() {
         visible={showSuccessModal}
         onClose={handleModalClose}
         successPoints={successPoints}
+        type={successModalType}
       />
 
       {/* ── Error Modal ── */}
@@ -405,6 +410,10 @@ export default function FrontDeskScan() {
               rewardTitle: redemptionVerification.code.reward?.title || "Reward",
               pointsCost: redemptionVerification.code.points_cost,
             });
+            // Show success modal
+            setSuccessPoints(redemptionVerification.code.points_cost);
+            setSuccessModalType("redeem");
+            setShowSuccessModal(true);
           }
         }}
         onError={(message) => {
