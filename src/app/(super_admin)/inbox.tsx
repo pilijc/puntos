@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useRef } from "react";
 import {
   Platform,
   KeyboardAvoidingView,
@@ -112,6 +112,7 @@ export default function SuperAdminInbox() {
   const [messageText, setMessageText] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState<FilterType>("all");
+  const scrollViewRef = useRef<ScrollView>(null);
 
   const activeStore = stores.find((s) => s.id === activeStoreId);
 
@@ -154,7 +155,7 @@ export default function SuperAdminInbox() {
   const unreadCount = stores.filter((s) => s.unread > 0 && !s.archived).length;
 
   /* ─────────────────────────── INBOX LIST ─────────────────────────── */
-  const InboxList = () => (
+  const renderInboxList = () => (
     <View
       style={{
         flex: !isLargeScreen && activeStoreId ? 0 : 1,
@@ -482,7 +483,7 @@ export default function SuperAdminInbox() {
   );
 
   /* ─────────────────────────── CHAT AREA ─────────────────────────── */
-  const ChatArea = () => {
+  const renderChatArea = () => {
     if (!activeStore) {
       if (!isLargeScreen) return null;
       return (
@@ -592,6 +593,9 @@ export default function SuperAdminInbox() {
           behavior={Platform.OS === "ios" ? "padding" : undefined}
         >
           <ScrollView
+            ref={scrollViewRef}
+            onContentSizeChange={() => scrollViewRef.current?.scrollToEnd({ animated: true })}
+            onLayout={() => scrollViewRef.current?.scrollToEnd({ animated: true })}
             style={{ flex: 1 }}
             contentContainerStyle={{
               paddingHorizontal: 16,
@@ -739,8 +743,8 @@ export default function SuperAdminInbox() {
       edges={["top", "left", "right"]}
       style={{ flex: 1, flexDirection: "row", backgroundColor: "#FFFFFF" }}
     >
-      <InboxList />
-      <ChatArea />
+      {renderInboxList()}
+      {renderChatArea()}
     </SafeAreaView>
   );
 }

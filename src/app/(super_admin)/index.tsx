@@ -137,14 +137,15 @@ export default function SuperAdminDashboard() {
       {/* Floating Action Button for Chat */}
       <TouchableOpacity
         onPress={() => router.push("/(super_admin)/inbox" as any)}
+        className="w-14 h-14 bg-[#FFF0E6] rounded-full items-center justify-center z-50 border border-[#FFD4B5]"
         style={isWeb
-          ? { position: 'fixed' as any, bottom: 24, right: 24, width: 56, height: 56, backgroundColor: '#FFF0E6', borderRadius: 28, alignItems: 'center', justifyContent: 'center', zIndex: 50, borderWidth: 1, borderColor: '#FFD4B5' }
-          : { position: 'absolute', bottom: Math.max(insets.bottom, 8) + 4, right: 24, width: 56, height: 56, backgroundColor: '#FFF0E6', borderRadius: 28, alignItems: 'center', justifyContent: 'center', zIndex: 50, borderWidth: 1, borderColor: '#FFD4B5' }
+          ? { position: 'fixed' as any, bottom: 24, right: 24 }
+          : { position: 'absolute', bottom: Math.max(insets.bottom, 8) + 4, right: 24 }
         }
       >
         <MessageSquare size={24} color="#FF6600" />
         {/* Red message indicator badge */}
-        <View style={{ position: 'absolute', top: 0, right: -4, width: 22, height: 22, backgroundColor: '#EF4444', borderRadius: 11, borderWidth: 2, borderColor: '#ffffff', alignItems: 'center', justifyContent: 'center' }}>
+        <View className="absolute top-0 -right-1 w-[22px] h-[22px] bg-red-500 rounded-full border-2 border-white items-center justify-center">
           <Text className="text-[10px] font-poppins-bold text-white mt-0.5">
             1
           </Text>

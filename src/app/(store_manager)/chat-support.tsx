@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { Platform, KeyboardAvoidingView, ScrollView, TextInput, TouchableOpacity, LayoutAnimation } from "react-native";
 import { View, Text, SafeAreaView } from "@/tw";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -36,6 +36,7 @@ const MOCK_MESSAGES: ChatMessage[] = [
 export default function ChatSupportScreen() {
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>(MOCK_MESSAGES);
+  const scrollViewRef = useRef<ScrollView>(null);
   const insets = useSafeAreaInsets();
   const scrollBottom = Math.max(insets.bottom, 40);
   const isWeb = Platform.OS === "web";
@@ -45,6 +46,11 @@ export default function ChatSupportScreen() {
     if (!message.trim()) return;
 
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    
+    // TODO: Replace this local state mockup with a real backend API integration (e.g., Supabase/Zustand).
+    // Currently, this logic is solely for testing the UI layout and animations. 
+    // `Date.now()` is used here purely as a placeholder ID. Messages are not persisted 
+    // and will be lost upon navigating away from this screen.
     const newMessage: ChatMessage = {
       id: Date.now().toString(),
       text: message,
@@ -82,6 +88,9 @@ export default function ChatSupportScreen() {
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
         <ScrollView
+          ref={scrollViewRef}
+          onContentSizeChange={() => scrollViewRef.current?.scrollToEnd({ animated: true })}
+          onLayout={() => scrollViewRef.current?.scrollToEnd({ animated: true })}
           className="flex-1"
           contentContainerStyle={{
             paddingHorizontal: 16,
