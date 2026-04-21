@@ -42,7 +42,7 @@ export function AdminStorePreviewModal({
     <Modal
       visible={visible}
       onClose={onClose}
-      title={translate("superAdmin.stores.preview.title", { defaultValue: "Quick Preview" })}
+      title={translate("super_admin.stores.preview.title", { defaultValue: "Quick Preview" })}
       showCloseButton={true}
       dismissOnBackdrop={true}
     >
@@ -130,7 +130,7 @@ export function AdminStorePreviewModal({
       <View className="flex-row items-center w-full gap-3 pt-4 mt-2 border-t border-slate-100 dark:border-neutral-800">
         <View className="flex-1">
           <Button
-            label={translate("superAdmin.stores.preview.viewDetails", { defaultValue: "View Full Details" })}
+            label={translate("super_admin.stores.preview.viewDetails", { defaultValue: "View Full Details" })}
             onPress={onViewFullDetails}
             variant="primary"
             fullWidth

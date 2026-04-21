@@ -182,7 +182,7 @@ export default function FrontDeskHistory() {
                     </Text>
                     {!isLoading && total > 0 && (
                         <Text className="text-xs font-poppins text-textMuted dark:text-darkTextMuted" style={{ marginTop: -4 }}>
-                            {total} {total === 1 ? "record" : "records"}
+                            {total} {total === 1 ? translate("frontdesk.transactionHistory.record") : translate("frontdesk.transactionHistory.records")}
                         </Text>
                     )}
                 </View>
@@ -198,7 +198,7 @@ export default function FrontDeskHistory() {
                 >
                     <SlidersHorizontal size={15} color={hasFilters ? "#FF6600" : isDark ? "#A3A3A3" : "#64748B"} />
                     <Text style={{ fontSize: 13, fontFamily: "Poppins-SemiBold", color: hasFilters ? "#FF6600" : isDark ? "#A3A3A3" : "#64748B" }}>
-                        Filter{filterCount > 0 ? ` (${filterCount})` : ""}
+                        {translate("frontdesk.transactionHistory.filter")}{filterCount > 0 ? ` (${filterCount})` : ""}
                     </Text>
                 </TouchableOpacity>
             </View>
@@ -222,7 +222,7 @@ export default function FrontDeskHistory() {
                         style={{ marginBottom: 16 }}
                     />
                     <Text className="text-sm font-poppins text-textMuted dark:text-darkTextMuted">
-                        Loading transactions...
+                        {translate("frontdesk.transactionHistory.loading")}
                     </Text>
                 </View>
             ) : listItems.length === 0 ? (
@@ -246,7 +246,7 @@ export default function FrontDeskHistory() {
                         <View style={{ paddingVertical: 20, alignItems: 'center' }}>
                             <ActivityIndicator size="small" color={isDark ? "#FF6600" : "#FF6600"} />
                             <Text className="text-xs font-poppins text-textMuted dark:text-darkTextMuted mt-2">
-                                Loading more...
+                                {translate("frontdesk.transactionHistory.loadingMore")}
                             </Text>
                         </View>
                     ) : null}

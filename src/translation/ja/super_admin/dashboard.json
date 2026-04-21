@@ -1,0 +1,28 @@
+{
+  "welcome": "ようこそ、",
+  "metrics": {
+    "totalUsers": "全ユーザー",
+    "totalStores": "全店舗",
+    "activeStores": "アクティブ店舗"
+  },
+  "timeframe": {
+    "today": "今日",
+    "sevenDays": "7日",
+    "oneMonth": "1ヶ月"
+  },
+  "peakHour": "ピーク時間",
+  "mostActiveDay": "最も活発な日",
+  "mostActiveWeek": "最も活発な週",
+  "rangeToday": "今日",
+  "rangeLast7": "過去7日間",
+  "rangeLast30": "過去30日間",
+  "returningCustomers": "リピーター",
+  "retentionRate": "リテンション率",
+  "userAnalytics": "ユーザー分析",
+  "storeAnalytics": "店舗分析",
+  "viewDetails": "詳細を見る",
+  "hideDetails": "詳細を隠す",
+  "noRecords": "この期間のデータがありません。",
+  "loadMore": "もっと見る",
+  "reset": "リセット"
+}

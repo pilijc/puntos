@@ -52,8 +52,8 @@ export default function AddStaff() {
 
     init().catch(() => {
       setModal({
-        title: t("storeManager.staffForm.loadErrorTitle"),
-        message: t("storeManager.staffForm.loadErrorMessage"),
+        title: t("store_manager.staffForm.loadErrorTitle"),
+        message: t("store_manager.staffForm.loadErrorMessage"),
         buttons: [{ label: t("label.ok"), onPress: () => setModal(null), variant: "secondary" }],
       });
     });
@@ -67,8 +67,8 @@ export default function AddStaff() {
 
     if (!trimmedName || !trimmedEmail) {
       setModal({
-        title: t("storeManager.staffForm.validationTitle"),
-        message: t("storeManager.staffForm.nameEmailRequired"),
+        title: t("store_manager.staffForm.validationTitle"),
+        message: t("store_manager.staffForm.nameEmailRequired"),
         buttons: [{ label: t("label.ok"), onPress: () => setModal(null), variant: "secondary" }],
       });
       return;
@@ -77,8 +77,8 @@ export default function AddStaff() {
     const emailPattern = /\S+@\S+\.\S+/;
     if (!emailPattern.test(trimmedEmail)) {
       setModal({
-        title: t("storeManager.staffForm.invalidEmailTitle"),
-        message: t("storeManager.staffForm.invalidEmailMessage"),
+        title: t("store_manager.staffForm.invalidEmailTitle"),
+        message: t("store_manager.staffForm.invalidEmailMessage"),
         buttons: [{ label: t("label.ok"), onPress: () => setModal(null), variant: "secondary" }],
       });
       return;
@@ -97,10 +97,10 @@ export default function AddStaff() {
       }
 
       setModal({
-        title: isEditMode ? t("storeManager.staffForm.updatedTitle") : t("storeManager.staffForm.addedTitle"),
+        title: isEditMode ? t("store_manager.staffForm.updatedTitle") : t("store_manager.staffForm.addedTitle"),
         message: isEditMode
-          ? t("storeManager.staffForm.updatedMessage")
-          : t("storeManager.staffForm.addedMessage"),
+          ? t("store_manager.staffForm.updatedMessage")
+          : t("store_manager.staffForm.addedMessage"),
         buttons: [
           {
             label: t("label.ok"),
@@ -119,7 +119,7 @@ export default function AddStaff() {
     } catch (error) {
       setModal({
         title: t("label.error"),
-        message: (error as Error).message ?? t("storeManager.staffForm.saveError"),
+        message: (error as Error).message ?? t("store_manager.staffForm.saveError"),
         buttons: [{ label: t("label.ok"), onPress: () => setModal(null), variant: "secondary" }],
       });
     } finally {
@@ -139,11 +139,11 @@ export default function AddStaff() {
       />
 
       <AppHeader
-        title={isEditMode ? t("storeManager.staffForm.editTitle") : t("storeManager.staffForm.addTitle")}
+        title={isEditMode ? t("store_manager.staffForm.editTitle") : t("store_manager.staffForm.addTitle")}
         description={
           isEditMode
-            ? t("storeManager.staffForm.editDescription")
-            : t("storeManager.staffForm.addDescription")
+            ? t("store_manager.staffForm.editDescription")
+            : t("store_manager.staffForm.addDescription")
         }
         onBackPress={() => {
           router.push({
@@ -175,48 +175,48 @@ export default function AddStaff() {
               <View className="mx-4 mt-2 mb-4 gap-y-4 rounded-xl border border-slate-100 bg-white p-4 dark:border-neutral-700 dark:bg-neutral-800">
                 <View>
                   <Text className="text-sm font-poppins-bold text-slate-800 dark:text-slate-100">
-                    {isEditMode ? t("storeManager.staffForm.profileSectionEdit") : t("storeManager.staffForm.profileSectionAdd")}
+                    {isEditMode ? t("store_manager.staffForm.profileSectionEdit") : t("store_manager.staffForm.profileSectionAdd")}
                   </Text>
                   <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">
                     {isEditMode
-                      ? t("storeManager.staffForm.profileHintEdit")
-                      : t("storeManager.staffForm.profileHintAdd")}
+                      ? t("store_manager.staffForm.profileHintEdit")
+                      : t("store_manager.staffForm.profileHintAdd")}
                   </Text>
                 </View>
 
                 {!isEditMode && (
                   <View className="rounded-xl bg-primary/5 p-4 dark:bg-primary-800">
-                    <Text className="text-sm font-poppins-semibold text-primary">{t("storeManager.staffForm.loginInfoTitle")}</Text>
+                    <Text className="text-sm font-poppins-semibold text-primary">{t("store_manager.staffForm.loginInfoTitle")}</Text>
                     <View className="mt-1 gap-y-1">
                       <Text className="text-xs font-poppins text-primary">
-                        • {t("storeManager.staffForm.loginBullet1")}
+                        • {t("store_manager.staffForm.loginBullet1")}
                       </Text>
                       <Text className="text-xs font-poppins text-primary">
-                        • {t("storeManager.staffForm.loginBullet2")}
+                        • {t("store_manager.staffForm.loginBullet2")}
                       </Text>
                       <Text className="text-xs font-poppins text-primary">
-                        • {t("storeManager.staffForm.loginBullet3")}
+                        • {t("store_manager.staffForm.loginBullet3")}
                       </Text>
                       <Text className="text-xs font-poppins text-primary">
-                        • {t("storeManager.staffForm.loginBullet4")}
+                        • {t("store_manager.staffForm.loginBullet4")}
                       </Text>
                     </View>
                   </View>
                 )}
 
                 <TextField
-                  label={t("storeManager.staffForm.fullName")}
+                  label={t("store_manager.staffForm.fullName")}
                   value={name}
                   onChangeText={setName}
-                  placeholder={t("storeManager.staffForm.fullNamePlaceholder")}
+                  placeholder={t("store_manager.staffForm.fullNamePlaceholder")}
                   required={true}
                 />
 
                 <TextField
-                  label={t("storeManager.staffForm.email")}
+                  label={t("store_manager.staffForm.email")}
                   value={email}
                   onChangeText={setEmail}
-                  placeholder={t("storeManager.staffForm.emailPlaceholder")}
+                  placeholder={t("store_manager.staffForm.emailPlaceholder")}
                   required={true}
                 />
 
@@ -225,7 +225,7 @@ export default function AddStaff() {
                     <View className="flex-row items-center justify-between gap-x-0.5">
                       <View className="flex-row items-center gap-x-0.5">
                         <Text className="text-sm font-poppins-semibold text-slate-700 dark:text-slate-300">
-                          {t("storeManager.staffForm.password")}
+                          {t("store_manager.staffForm.password")}
                         </Text>
                         <Text className="text-xs font-poppins-bold text-red-500">*</Text>
                       </View>
@@ -246,7 +246,7 @@ export default function AddStaff() {
                         includeFontPadding: false,
                       }}
                       keyboardType="default"
-                      placeholder={t("storeManager.staffForm.passwordPlaceholder")}
+                      placeholder={t("store_manager.staffForm.passwordPlaceholder")}
                       placeholderTextColor="#94A3B8"
                       value={password}
                     />
@@ -255,7 +255,7 @@ export default function AddStaff() {
 
                 <View className="gap-y-3" style={{ paddingBottom: insets.bottom }}>
                   <Button
-                    label={isEditMode ? t("storeManager.staffForm.saveChanges") : t("storeManager.staffForm.confirm")}
+                    label={isEditMode ? t("label.saveChanges") : t("store_manager.staffForm.confirm")}
                     onPress={openConfirm}
                     disabled={isSubmitting}
                     loading={isSubmitting}
@@ -264,7 +264,7 @@ export default function AddStaff() {
                     keyboardDismiss={true}
                   />
                   <Button
-                    label={t("storeManager.staffForm.cancel")}
+                    label={t("label.cancel")}
                     onPress={() => {
                       router.push({
                         pathname: "/(store_manager)/staff",
@@ -289,17 +289,17 @@ export default function AddStaff() {
         >
           <View className="w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl dark:border-slate-700 dark:bg-slate-900">
             <Text className="mb-2 text-base font-poppins-bold text-slate-900 dark:text-slate-100">
-              {isEditMode ? t("storeManager.staffForm.confirmEditTitle") : t("storeManager.staffForm.confirmAddTitle")}
+              {isEditMode ? t("store_manager.staffForm.confirmEditTitle") : t("store_manager.staffForm.confirmAddTitle")}
             </Text>
 
             <Text className="mb-4 text-sm font-poppins text-slate-500 dark:text-slate-400">
               {isEditMode
-                ? t("storeManager.staffForm.confirmEditBody")
-                : t("storeManager.staffForm.confirmAddBody")}
+                ? t("store_manager.staffForm.confirmEditBody")
+                : t("store_manager.staffForm.confirmAddBody")}
             </Text>
 
             <View className="mb-3 gap-y-1.5">
-              <Text className="text-xs font-poppins text-slate-500 dark:text-slate-400">{t("storeManager.staffForm.emailLabel")}</Text>
+              <Text className="text-xs font-poppins text-slate-500 dark:text-slate-400">{t("store_manager.staffForm.email")}</Text>
               <View className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 dark:border-slate-700 dark:bg-slate-800">
                 <Text className="text-sm font-poppins-bold text-slate-900 dark:text-slate-100">{email}</Text>
               </View>
@@ -307,7 +307,7 @@ export default function AddStaff() {
 
             {!isEditMode && (
               <View className="mb-4 gap-y-1.5">
-                <Text className="text-xs font-poppins text-slate-500 dark:text-slate-400">{t("storeManager.staffForm.tempPassword")}</Text>
+                <Text className="text-xs font-poppins text-slate-500 dark:text-slate-400">{t("store_manager.staffForm.tempPassword")}</Text>
                 <View className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 dark:border-slate-700 dark:bg-slate-800">
                   <Text className="text-sm font-poppins-bold text-slate-900 dark:text-slate-100">{password}</Text>
                 </View>
@@ -332,7 +332,7 @@ export default function AddStaff() {
                 }}
               >
                 <Text className="text-xs font-poppins-semibold text-white">
-                  {isEditMode ? t("storeManager.staffForm.saveChanges") : t("storeManager.staffForm.createStaff")}
+                  {isEditMode ? t("label.saveChanges") : t("store_manager.staffForm.createStaff")}
                 </Text>
               </TouchableOpacity>
             </View>

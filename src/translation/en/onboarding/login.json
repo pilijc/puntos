@@ -1,0 +1,17 @@
+{
+  "button": "Login",
+  "welcome": "Welcome back!",
+  "subhead": "Sign in to your account to continue.",
+  "signup": "Don't have an account? <signup> Sign Up </signup>",
+  "forgotPassword": "Forgot Password?",
+  "label": {},
+  "input": {
+    "password": "Enter your password"
+  },
+  "error": {
+    "emailRequired": "Email is required.",
+    "passwordRequired": "Password is required.",
+    "emailValid": "Please enter a valid email address.",
+    "invalidLogin": "Invalid login credentials"
+  }
+}

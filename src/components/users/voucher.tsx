@@ -3,6 +3,7 @@ import { ActivityIndicator, Alert } from "react-native";
 import { View, Text, TouchableOpacity } from "@/tw";
 import { VoucherGeneratorProps, Voucher } from "@/type/user/voucher";
 import { generateVoucherCode } from "@/services/user/voucher-service";
+import { useTranslation } from "react-i18next";
 
 
 export const VoucherGenerator: React.FC<VoucherGeneratorProps> = ({
@@ -10,13 +11,14 @@ export const VoucherGenerator: React.FC<VoucherGeneratorProps> = ({
   durationMinutes = 5,
   onVoucherReady,
 }) => {
+  const { t: translate } = useTranslation();
   const [voucher, setVoucher] = useState<Voucher | null>(null);
   const [loading, setLoading] = useState(false);
   const [timeLeft, setTimeLeft] = useState<number>(0);
 
   const generateVoucher = async () => {
     if (!userId) {
-      Alert.alert("Error", "User ID is required to generate voucher");
+      Alert.alert(translate("label.error"), translate("user.qr.voucher.userIdRequired"));
       return;
     }
 
@@ -31,7 +33,7 @@ export const VoucherGenerator: React.FC<VoucherGeneratorProps> = ({
       setTimeLeft(Math.max(Math.floor((expiresAt - Date.now()) / 1000), 0));
     } catch (err) {
       console.error("Voucher error:", err);
-      Alert.alert("Error", "Failed to generate voucher. Try again.");
+      Alert.alert(translate("label.error"), translate("user.qr.voucher.failed"));
     } finally {
       setLoading(false);
     }
@@ -69,17 +71,19 @@ export const VoucherGenerator: React.FC<VoucherGeneratorProps> = ({
           {loading ? (
             <ActivityIndicator size="small" color="#FFFFFF" />
           ) : (
-            <Text className="text-white font-bold text-lg">Generate Code</Text>
+            <Text className="text-white font-bold text-lg">{translate("user.qr.voucher.generate")}</Text>
           )}
         </TouchableOpacity>
       ) : (
         <>
-          <Text className="text-sm font-semibold mb-2 text-gray-800">Your Voucher Code</Text>
+          <Text className="text-sm font-semibold mb-2 text-gray-800 dark:text-darkTextPrimary">{translate("user.qr.voucher.title")}</Text>
           <View className="bg-white p-4 rounded-2xl mb-2  border border-gray-200">
             <Text className="text-2xl font-bold text-gray-900">{voucher.code}</Text>
           </View>
-          <Text className="text-xs text-gray-500 mb-4">
-            Expires in {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, "0")}
+          <Text className="text-xs text-gray-500 dark:text-darkTextSecondary mb-4">
+            {translate("user.qr.voucher.expires", {
+              time: `${Math.floor(timeLeft / 60)}:${(timeLeft % 60).toString().padStart(2, "0")}`
+            })}
           </Text>
           <TouchableOpacity
             onPress={generateVoucher}
@@ -89,7 +93,7 @@ export const VoucherGenerator: React.FC<VoucherGeneratorProps> = ({
             {loading ? (
               <ActivityIndicator size="small" color="#FFFFFF" />
             ) : (
-              <Text className="text-white font-bold">Generate New Voucher</Text>
+              <Text className="text-white font-bold">{translate("user.qr.voucher.generateNew")}</Text>
             )}
           </TouchableOpacity>
         </>

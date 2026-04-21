@@ -81,7 +81,7 @@ function StoreCard({ store, router }: { store: StoreRow; router: any }) {
               <Text
                 className={`text-[9px] leading-4 font-poppins-bold uppercase tracking-wider ${badgeStyle.text}`}
               >
-                {translate(`storeManager.stores.badge.${badgeLabelKey}`)}
+                {translate(`store_manager.stores.badge.${badgeLabelKey}`)}
               </Text>
             </View>
           </View>
@@ -91,7 +91,7 @@ function StoreCard({ store, router }: { store: StoreRow; router: any }) {
               className="text-xs font-poppins text-slate-400 dark:text-slate-500 flex-1"
               numberOfLines={1}
             >
-              {store.address ?? translate("storeManager.stores.noAddress")}
+              {store.address ?? translate("store_manager.stores.noAddress")}
             </Text>
           </View>
           {store.type ? (
@@ -159,7 +159,7 @@ export default function StoreManagerStores() {
     () =>
       (["all", "active", "pending", "inactive"] as const).map((key) => ({
         key,
-        label: translate(`storeManager.stores.tabs.${key}`),
+        label: translate(`store_manager.stores.tabs.${key}`),
       })),
     [translate],
   );
@@ -245,7 +245,7 @@ export default function StoreManagerStores() {
       <View className="bg-white border-b border-slate-100 dark:bg-slate-900 dark:border-slate-800 px-6 py-4 flex-row items-center justify-start">
         <View className="flex-row items-center gap-2">
           <Text className="text-xl font-poppins-bold text-slate-900 dark:text-slate-100">
-            {translate("storeManager.stores.title")}
+            {translate("store_manager.stores.title")}
           </Text>
         </View>
       </View>
@@ -436,13 +436,13 @@ export default function StoreManagerStores() {
                               className="text-xs font-poppins text-slate-400 dark:text-slate-500 flex-1"
                               numberOfLines={1}
                             >
-                              {store.address ?? translate("storeManager.stores.noAddress")}
+                              {store.address ?? translate("store_manager.stores.noAddress")}
                             </Text>
                           </View>
                         </View>
                         <View className={`h-5 px-2 rounded-full ${badgeStyle.bg} items-center justify-center`}>
                           <Text className={`text-[10px] leading-4 font-poppins-semibold ${badgeStyle.text}`}>
-                            {translate(`storeManager.stores.badge.${badgeLabelKey}`)}
+                            {translate(`store_manager.stores.badge.${badgeLabelKey}`)}
                           </Text>
                         </View>
                         <ChevronRight size={20} color="#94A3B8" />
@@ -505,14 +505,14 @@ export default function StoreManagerStores() {
                               className="text-xs font-poppins text-slate-400 dark:text-slate-500 flex-1"
                               numberOfLines={1}
                             >
-                              {store.address ?? translate("storeManager.stores.noAddress")}
+                              {store.address ?? translate("store_manager.stores.noAddress")}
                             </Text>
                           </View>
                         </View>
 
                         <View className={`h-5 px-2 rounded-full ${badgeStyle.bg} items-center justify-center`}>
                           <Text className={`text-[10px] leading-4 font-poppins-semibold ${badgeStyle.text}`}>
-                            {translate(`storeManager.stores.badge.${badgeLabelKey}`)}
+                            {translate(`store_manager.stores.badge.${badgeLabelKey}`)}
                           </Text>
                         </View>
 
@@ -541,17 +541,17 @@ export default function StoreManagerStores() {
                 <View className="items-center">
                   <Text className="text-base font-poppins-bold text-slate-600 dark:text-slate-300 text-center">
                     {activeTab === "all"
-                      ? translate("storeManager.stores.empty.allTitle")
+                      ? translate("store_manager.stores.empty.allTitle")
                       : activeTab === "active"
-                        ? translate("storeManager.stores.empty.activeTitle")
+                        ? translate("store_manager.stores.empty.activeTitle")
                         : activeTab === "pending"
-                          ? translate("storeManager.stores.empty.pendingTitle")
-                          : translate("storeManager.stores.empty.inactiveTitle")}
+                          ? translate("store_manager.stores.empty.pendingTitle")
+                          : translate("store_manager.stores.empty.inactiveTitle")}
                   </Text>
                   <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500 text-center px-8">
                     {activeTab === "all"
-                      ? translate("storeManager.stores.empty.hintAll")
-                      : translate("storeManager.stores.empty.hintFiltered")}
+                      ? translate("store_manager.stores.empty.hintAll")
+                      : translate("store_manager.stores.empty.hintFiltered")}
                   </Text>
                 </View>
               </View>

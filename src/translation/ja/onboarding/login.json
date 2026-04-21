@@ -1,0 +1,21 @@
+{
+  "button": "ログイン",
+  "welcome": "おかえりなさい！",
+  "subhead": "アカウントにサインインして続行してください。",
+  "signup": "アカウントをお持ちでないですか？ <signup>新規登録</signup>",
+  "forgotPassword": "パスワードをお忘れですか？",
+  "label": {
+    "email": "メールアドレス",
+    "password": "パスワード"
+  },
+  "input": {
+    "email": "example@domain.com",
+    "password": "パスワードを入力"
+  },
+  "error": {
+    "emailRequired": "メールアドレスは必須です。",
+    "passwordRequired": "パスワードは必須です。",
+    "emailValid": "有効なメールアドレスを入力してください。",
+    "invalidLogin": "ログイン情報が正しくありません"
+  }
+}

@@ -1,0 +1,46 @@
+{
+  "title": "アカウント設定",
+  "security": {
+    "title": "セキュリティ",
+    "description": "パスワード、アカウントの削除",
+    "completePasswordSetup": "アクセスするにはパスワード設定を完了してください",
+    "changePassword": {
+      "title": "パスワード変更",
+      "description": "現在のパスワードと新しいパスワードを入力してください",
+      "label": {
+        "current": "現在のパスワード",
+        "new": "新しいパスワード",
+        "repeat": "新しいパスワード（確認用）"
+      },
+      "input": {
+        "current": "現在のパスワードを入力",
+        "new": "新しいパスワードを入力",
+        "repeat": "新しいパスワードを再入力"
+      },
+      "success": "パスワードが正常に変更されました。",
+      "error": {
+        "missingFields": "入力されていない項目があります",
+        "passwordMatch": "新しいパスワードが一致しません",
+        "passwordLimit": "パスワードは8文字以上で入力してください",
+        "incorrect": "現在のパスワードが正しくありません",
+        "failed": "パスワードの更新に失敗しました"
+      }
+    },
+    "deleteAccount": {
+      "title": "アカウント削除",
+      "description": "アカウントを削除すると元に戻せません。本当に削除しますか？"
+    }
+  },
+  "language": {
+    "title": "言語",
+    "en": "英語",
+    "jp": "日本語"
+  },
+  "appearance": {
+    "title": "外観",
+    "description": "アプリの表示をカスタマイズします",
+    "light": "ライト",
+    "dark": "ダーク",
+    "system": "システム"
+  }
+}

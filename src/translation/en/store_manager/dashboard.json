@@ -1,0 +1,26 @@
+{
+  "noStores": "No stores available.",
+  "metrics": {
+    "inStore": "IN-STORE",
+    "realTimeUsers": "real-time users",
+    "totalScanned": "TOTAL SCANNED",
+    "redeemedToday": "Redeemed today"
+  },
+  "retention": {
+    "title": "Retention",
+    "subtitle": "User loyalty overview",
+    "returning": "Returning",
+    "new": "New"
+  },
+  "activity": {
+    "title": "Activity Overview"
+  },
+  "stampProgress": {
+    "title": "Stamp Progress",
+    "distribution": "Distribution of {{users}} users · Goal: {{goal}} stamps",
+    "noProgram": "No active stamp program found",
+    "stamps": "stamps",
+    "user": "user",
+    "users": "users"
+  }
+}

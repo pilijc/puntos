@@ -1,0 +1,45 @@
+{
+  "editTitle": "スタンププログラムを編集",
+  "newTitle": "新しいスタンププログラム",
+  "cannotEditTitle": "編集できません",
+  "cannotEditDefault": "このスタンププログラムは編集できません。",
+  "almostThere": "あと少しです！",
+  "stampsRequiredInvalid": "必要スタンプ数に有効な数を入力してください。",
+  "selectReward": "このスタンププログラムのリワードを選択してください。",
+  "expirationDaysInvalid": "カード有効期限の日数に有効な数を入力してください。",
+  "successUpdate": "スタンププログラムを更新しました！",
+  "successCreate": "スタンププログラムを作成しました！",
+  "saveFailed": "スタンププログラムの作成に失敗しました。",
+  "stampDetails": "スタンプの詳細",
+  "stampDetailsBody": "デジタルロイヤルティカードのルールを設定します。",
+  "beforeYouStart": "始める前に",
+  "rule1": "店舗ごとに有効にできるスタンププログラムは1つまでです。",
+  "rule2": "プログラムを終了すると新しいスタンプは貯まりませんが、猶予期間中は引き続き交換できます。",
+  "stampsToRedeem": "交換に必要なスタンプ数",
+  "stampsPlaceholder": "例: 10",
+  "reward": "リワード",
+  "clear": "クリア",
+  "noRewardsTitle": "リワードがまだありません",
+  "noRewardsBody": "スタンププログラムを始めるには少なくとも1つのリワードが必要です。",
+  "createReward": "リワードを作成",
+  "loadingReward": "リワードを読み込み中…",
+  "chooseReward": "タップしてリワードを選択",
+  "opensList": "検索可能な一覧を開きます",
+  "expirationMode": "有効期限モード",
+  "expirationModeHint": "お客様のスタンプカードの有効期限の付け方を選びます。",
+  "expirationDays": "有効期限（日数）",
+  "expirationDaysPlaceholder": "例: 30",
+  "saveChanges": "変更を保存",
+  "launchProgram": "スタンププログラムを開始",
+  "cancel": "キャンセル",
+  "expiration": {
+    "none": {
+      "label": "期限なし",
+      "description": "カードが完成するまでスタンプは失効しません。"
+    },
+    "card": {
+      "label": "カードの有効期限",
+      "description": "指定日数内にカードが完成しないと、スタンプカード全体が失効します。"
+    }
+  }
+}

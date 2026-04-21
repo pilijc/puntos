@@ -1,0 +1,17 @@
+{
+  "title": "Front desk staff",
+  "description": "Frontdesk staff assigned to this store",
+  "memberCount": "{{count}} member",
+  "memberCount_plural": "{{count}} members",
+  "subtitle": "Frontdesk staff assigned to this store",
+  "loading": "Loading...",
+  "emptyTitle": "No staff yet",
+  "emptyBody": "Add frontdesk staff who can assist customers and handle daily store tasks.",
+  "addFirst": "Add First Staff",
+  "removeAction": "Remove",
+  "removeTitle": "Remove Staff",
+  "removeMessage": "Are you sure you want to remove {{name}}? This action cannot be undone.",
+  "removeFallbackName": "this staff member",
+  "removeFailedTitle": "Unable to Remove Staff",
+  "removeFailedMessage": "Failed to remove staff member. Please try again."
+}

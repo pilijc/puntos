@@ -191,11 +191,11 @@ export default function SuperAdminDashboard() {
       <View className="bg-white dark:bg-darkBackground border-b border-neutral-100 dark:border-darkBorder px-6 py-3 flex-row items-center justify-between">
         <View className="flex-row items-baseline gap-2">
           <Text className="text-xl font-poppins-bold text-textPrimary dark:text-darkTextPrimary py-1">
-            {translate("superAdmin.dashboard.title")}
+            {translate("label.dashboard")}
           </Text>
           {isWeb && (
             <Text className="text-xs text-[#94A3B8] dark:text-darkTextSecondary font-poppins">
-              {translate("superAdmin.dashboard.welcome")}
+              {translate("super_admin.dashboard.welcome")}
               <Text className="text-orange-500 font-poppins-bold">
                 {adminInfo?.username?.split(" ")[0] || "Admin"}
               </Text>!
@@ -213,7 +213,7 @@ export default function SuperAdminDashboard() {
         {!isWeb && (
           <View className="px-6 pt-6 pb-2">
             <Text className="text-sm text-[#94A3B8] dark:text-darkTextSecondary font-poppins">
-              {translate("superAdmin.dashboard.welcome")}
+              {translate("super_admin.dashboard.welcome")}
               <Text className="text-orange-500 font-poppins-bold">
                 {adminInfo?.username?.split(" ")[0] || "Admin"}
               </Text>!
@@ -226,19 +226,19 @@ export default function SuperAdminDashboard() {
           className="px-6 mb-6 mt-2"
         >
           <View className="flex-row gap-2 mb-2">
-            <StatCard label={translate("superAdmin.dashboard.metrics.totalUsers")} val={users.length} Icon={Users} />
-            <StatCard label={translate("superAdmin.dashboard.metrics.totalStores")} val={stores.length} Icon={Store} />
-            <StatCard label={translate("superAdmin.dashboard.metrics.activeStores")} val={activeStoresCount} Icon={Activity} />
+            <StatCard label={translate("super_admin.dashboard.metrics.totalUsers")} val={users.length} Icon={Users} />
+            <StatCard label={translate("super_admin.dashboard.metrics.totalStores")} val={stores.length} Icon={Store} />
+            <StatCard label={translate("super_admin.dashboard.metrics.activeStores")} val={activeStoresCount} Icon={Activity} />
           </View>
           <View className="flex-row gap-[10px]">
             <DashboardMetricTile
-              label={timeframe === "today" ? "Peak Hour" : timeframe === "7d" ? "Most Active Day" : "Most Active Week"}
+              label={timeframe === "today" ? translate("super_admin.dashboard.peakHour") : timeframe === "7d" ? translate("super_admin.dashboard.mostActiveDay") : translate("super_admin.dashboard.mostActiveWeek")}
               value={mostActiveLabel}
-              subtitle={timeframe === "today" ? "Today" : timeframe === "7d" ? "Last 7 days" : "Last 30 days"}
+              subtitle={timeframe === "today" ? translate("super_admin.dashboard.rangeToday") : timeframe === "7d" ? translate("super_admin.dashboard.rangeLast7") : translate("super_admin.dashboard.rangeLast30")}
               icon={CalendarDays}
               loading={false}
             />
-            <DashboardMetricTile label="Returning Customers" value={`${userRetentionPercent}%`} subtitle="Retention rate" icon={Activity} loading={false} />
+            <DashboardMetricTile label={translate("super_admin.dashboard.returningCustomers")} value={`${userRetentionPercent}%`} subtitle={translate("super_admin.dashboard.retentionRate")} icon={Activity} loading={false} />
           </View>
         </View>
 
@@ -248,9 +248,9 @@ export default function SuperAdminDashboard() {
         >
           <View className="flex-row rounded-xl bg-[#EEF2F7] dark:bg-darkBackgroundMuted p-1 self-start">
             {([
-              { id: "today", label: "Today" },
-              { id: "7d", label: "7d" },
-              { id: "1m", label: "1m" },
+              { id: "today", label: translate("super_admin.dashboard.timeframe.today") },
+              { id: "7d", label: translate("super_admin.dashboard.timeframe.sevenDays") },
+              { id: "1m", label: translate("super_admin.dashboard.timeframe.oneMonth") },
             ] as Array<{ id: Timeframe; label: string }>).map((opt) => {
               const active = timeframe === opt.id;
               return (
@@ -271,14 +271,14 @@ export default function SuperAdminDashboard() {
           className={isWeb ? "mb-4" : "mb-4 px-6"}
         >
           <View className="flex-row justify-between items-center mb-3">
-            <Text className="text-base font-poppins-bold text-textPrimary dark:text-darkTextPrimary">User Analytics</Text>
+            <Text className="text-base font-poppins-bold text-textPrimary dark:text-darkTextPrimary">{translate("super_admin.dashboard.userAnalytics")}</Text>
             <TouchableOpacity
               onPress={() => setShowUserDetails(prev => !prev)}
               className="flex-row items-center bg-slate-50 dark:bg-darkBackgroundMuted px-3 py-1.5 rounded-full border border-slate-100 dark:border-darkBorder"
             >
               {showUserDetails ? <EyeOff size={12} color="#475569" /> : <Eye size={12} color="#475569" />}
               <Text className="text-[10px] font-poppins-bold text-slate-600 dark:text-darkTextPrimary ml-1.5">
-                {showUserDetails ? "Hide Details" : "View Details"}
+                {showUserDetails ? translate("super_admin.dashboard.hideDetails") : translate("super_admin.dashboard.viewDetails")}
               </Text>
             </TouchableOpacity>
           </View>
@@ -291,7 +291,7 @@ export default function SuperAdminDashboard() {
           >
             <ScrollView className="max-h-64" showsVerticalScrollIndicator={false}>
               {userList.list.length === 0 ? (
-                <Text className="text-xs font-poppins text-textMuted dark:text-darkTextMuted">No records for this period.</Text>
+                <Text className="text-xs font-poppins text-textMuted dark:text-darkTextMuted">{translate("super_admin.dashboard.noRecords")}</Text>
               ) : (
                 <>
                   {userLimit > 5 && (
@@ -300,7 +300,7 @@ export default function SuperAdminDashboard() {
                       className="py-2 flex-row items-center justify-end"
                     >
                       <RotateCcw size={12} color="#FF6600" />
-                      <Text className="text-[11px] font-poppins-bold text-primary ml-1.5">Reset</Text>
+                      <Text className="text-[11px] font-poppins-bold text-primary ml-1.5">{translate("super_admin.dashboard.reset")}</Text>
                     </TouchableOpacity>
                   )}
                   {userList.list.map((item) => (
@@ -314,7 +314,7 @@ export default function SuperAdminDashboard() {
                       onPress={() => setUserLimit(prev => prev + 5)}
                       className="py-3 items-center"
                     >
-                      <Text className="text-[11px] font-poppins-bold text-primary">Load More</Text>
+                      <Text className="text-[11px] font-poppins-bold text-primary">{translate("super_admin.dashboard.loadMore")}</Text>
                     </TouchableOpacity>
                   )}
                 </>
@@ -328,14 +328,14 @@ export default function SuperAdminDashboard() {
           className={isWeb ? "mb-8" : "mb-8 px-6"}
         >
           <View className="flex-row justify-between items-center mb-3">
-            <Text className="text-base font-poppins-bold text-textPrimary dark:text-darkTextPrimary">Store Analytics</Text>
+            <Text className="text-base font-poppins-bold text-textPrimary dark:text-darkTextPrimary">{translate("super_admin.dashboard.storeAnalytics")}</Text>
             <TouchableOpacity
               onPress={() => setShowStoreDetails(prev => !prev)}
               className="flex-row items-center bg-slate-50 dark:bg-darkBackgroundMuted px-3 py-1.5 rounded-full border border-slate-100 dark:border-darkBorder"
             >
               {showStoreDetails ? <EyeOff size={12} color="#475569" /> : <Eye size={12} color="#475569" />}
               <Text className="text-[10px] font-poppins-bold text-slate-600 dark:text-darkTextPrimary ml-1.5">
-                {showStoreDetails ? "Hide Details" : "View Details"}
+                {showStoreDetails ? translate("super_admin.dashboard.hideDetails") : translate("super_admin.dashboard.viewDetails")}
               </Text>
             </TouchableOpacity>
           </View>
@@ -348,7 +348,7 @@ export default function SuperAdminDashboard() {
           >
             <ScrollView className="max-h-64" showsVerticalScrollIndicator={false}>
               {storeList.list.length === 0 ? (
-                <Text className="text-xs font-poppins text-textMuted dark:text-darkTextMuted">No records for this period.</Text>
+                <Text className="text-xs font-poppins text-textMuted dark:text-darkTextMuted">{translate("super_admin.dashboard.noRecords")}</Text>
               ) : (
                 <>
                   {storeLimit > 5 && (
@@ -357,7 +357,7 @@ export default function SuperAdminDashboard() {
                       className="py-2 flex-row items-center justify-end"
                     >
                       <RotateCcw size={12} color="#FF6600" />
-                      <Text className="text-[11px] font-poppins-bold text-primary ml-1.5">Reset</Text>
+                      <Text className="text-[11px] font-poppins-bold text-primary ml-1.5">{translate("super_admin.dashboard.reset")}</Text>
                     </TouchableOpacity>
                   )}
                   {storeList.list.map((item) => (
@@ -371,7 +371,7 @@ export default function SuperAdminDashboard() {
                       onPress={() => setStoreLimit(prev => prev + 5)}
                       className="py-3 items-center"
                     >
-                      <Text className="text-[11px] font-poppins-bold text-primary">Load More</Text>
+                      <Text className="text-[11px] font-poppins-bold text-primary">{translate("super_admin.dashboard.loadMore")}</Text>
                     </TouchableOpacity>
                   )}
                 </>

@@ -1,0 +1,22 @@
+{
+  "title": "Get your Points Now",
+  "instruction": "Let the operator scan your QR code",
+  "detail": "This is your unique customer QR code",
+  "yourQrCode": "Your QR Code",
+  "prompt": "Show this to the front desk to earn points",
+  "error": "Failed to load QR code. Try again.",
+  "success": {
+    "title": "Congratulations!",
+    "message": "You earned points",
+    "added": "Points Added",
+    "button": "Great!"
+  },
+  "voucher": {
+    "title": "Your Voucher Code",
+    "generate": "Generate Code",
+    "generateNew": "Generate New Voucher",
+    "expires": "Expires in {{time}}",
+    "userIdRequired": "User ID is required to generate voucher",
+    "failed": "Failed to generate voucher. Try again."
+  }
+}

@@ -122,7 +122,7 @@ function FrontDeskTabs() {
             <Tabs.Screen
                 name="index"
                 options={{
-                    title: "Scan",
+                    title: translate("layout.scan"),
                     tabBarIcon: ({color}) => (
                         <ScanLine size={24} color={color} />
                     ),

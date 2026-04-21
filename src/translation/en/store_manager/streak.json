@@ -1,0 +1,33 @@
+{
+  "title": "Streak Programs",
+  "description": "Reward customers with streak points",
+  "tabs": {
+    "upcoming": "Upcoming",
+    "ended": "Ended"
+  },
+  "emptyActiveTitle": "No Active Program",
+  "emptyUpcomingTitle": "No Upcoming Programs",
+  "emptyEndedTitle": "No Past Programs",
+  "emptyActiveBody": "Activate a streak program to start rewarding daily visitors.",
+  "emptyUpcomingBody": "Create and publish a program so users can see it's coming.",
+  "emptyEndedBody": "Ended streak programs will appear here.",
+  "upcomingExistsTitle": "Upcoming Program Exists",
+  "upcomingExistsMessage": "There is already an upcoming streak program for this store. End or activate it first before publishing another one.",
+  "publishTitle": "Publish Streak Program",
+  "publishMessage": "Users will be able to see this program is coming. You can activate it when you're ready.",
+  "publish": "Publish",
+  "publishFailed": "Failed to publish program.",
+  "activateTitle": "Activate Streak Program",
+  "activateMessage": "Users will be able to start earning streak points immediately.",
+  "activate": "Activate",
+  "activateFailed": "Failed to activate program.",
+  "endTitle": "End Streak Program",
+  "endMessage": "This will immediately stop earning for all users. This action cannot be undone.",
+  "endProgram": "End Program",
+  "endFailed": "Failed to end program.",
+  "deleteTitle": "Delete Streak Program",
+  "deleteMessage": "This will permanently delete this program. This action cannot be undone.",
+  "deleteProgram": "Delete Program",
+  "deleteFailed": "Failed to delete program.",
+  "error": "Error"
+}
