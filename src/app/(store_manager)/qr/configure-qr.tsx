@@ -52,21 +52,21 @@ export default function ConfigureStreaks() {
   } = useQRStore();
 
 	const showError = (message: string) =>
-		setModal({ title: t("storeManager.qrConfigure.almostThere"), message, buttons: [{ label: t("label.ok"), onPress: () => setModal(null), variant: "secondary" }] });
+		setModal({ title: t("label.almostThere"), message, buttons: [{ label: t("label.ok"), onPress: () => setModal(null), variant: "secondary" }] });
 
 	const validate = (): boolean => {
 		if (earning_type === "percentage") {
 			const pct = parseFloat(percentageInput);
 			const base = parseFloat(baseAmountInput);
-			if (!percentageInput || isNaN(pct) || pct <= 0) { showError(t("storeManager.qrConfigure.validPercentage")); return false; }
-			if (pct > 100) { showError(t("storeManager.qrConfigure.percentageOver100")); return false; }
-			if (baseAmountInput && (isNaN(base) || base <= 0)) { showError(t("storeManager.qrConfigure.validBaseAmount")); return false; }
+			if (!percentageInput || isNaN(pct) || pct <= 0) { showError(t("store_manager.qrConfigure.validPercentage")); return false; }
+			if (pct > 100) { showError(t("store_manager.qrConfigure.percentageOver100")); return false; }
+			if (baseAmountInput && (isNaN(base) || base <= 0)) { showError(t("store_manager.qrConfigure.validBaseAmount")); return false; }
 		} else {
 			const pts = parseFloat(fixedPointsInput);
-			if (!fixedPointsInput || isNaN(pts) || pts <= 0) { showError(t("storeManager.qrConfigure.validFixedPoints")); return false; }
+			if (!fixedPointsInput || isNaN(pts) || pts <= 0) { showError(t("store_manager.qrConfigure.validFixedPoints")); return false; }
       const maxTxn = maxPointsInput ? parseFloat(maxPointsInput) : NaN;
       if (!isNaN(maxTxn) && maxTxn > 0 && maxTxn < pts) {
-        showError(t("storeManager.qrConfigure.maxLowerThanFixed"));
+        showError(t("store_manager.qrConfigure.maxLowerThanFixed"));
         return false;
       }
 		}
@@ -122,8 +122,8 @@ export default function ConfigureStreaks() {
       .catch((error) => {
         if (cancelled) return;
         setModal({
-          title: t("storeManager.qrConfigure.loadErrorTitle"),
-          message: t("storeManager.qrConfigure.loadErrorMessage"),
+          title: t("store_manager.qrConfigure.loadErrorTitle"),
+          message: t("store_manager.qrConfigure.loadErrorMessage"),
           buttons: [{ label: t("label.ok"), onPress: () => setModal(null), variant: "secondary" }],
         });
       });
@@ -148,8 +148,8 @@ export default function ConfigureStreaks() {
     const storeIdForDb = storeIdParam && storeIdParam !== "undefined" ? storeIdParam : null;
     if (!storeIdForDb) {
       setModal({
-        title: t("storeManager.qrConfigure.invalidStoreTitle"),
-        message: t("storeManager.qrConfigure.invalidStoreMessage"),
+        title: t("store_manager.qrConfigure.invalidStoreTitle"),
+        message: t("store_manager.qrConfigure.invalidStoreMessage"),
         buttons: [{ label: t("label.ok"), onPress: () => setModal(null), variant: "secondary" }],
       });
       return;
@@ -170,13 +170,13 @@ export default function ConfigureStreaks() {
 			reset();
 			setModal({
 				title: t("label.success"),
-				message: t("storeManager.qrConfigure.successMessage"),
+				message: t("store_manager.qrConfigure.successMessage"),
         buttons: [{ label: t("label.ok"), onPress: () => router.push({ pathname: "/(store_manager)/qr", params: { storeId: storeIdForDb } }), variant: "secondary" }],
 			});
 		} catch (error) {
 			setModal({
 				title: t("label.error"),
-				message: (error as Error).message ?? t("storeManager.qrConfigure.saveFailed"),
+				message: (error as Error).message ?? t("store_manager.qrConfigure.saveFailed"),
 				buttons: [{ label: t("label.ok"), onPress: () => setModal(null), variant: "secondary" }],
 			});
 		} finally {
@@ -199,7 +199,7 @@ export default function ConfigureStreaks() {
       />
       
       <AppHeader
-        title={t("storeManager.qrConfigure.title")}
+        title={t("store_manager.qrConfigure.title")}
         onBackPress={() => {
           router.push({ pathname: "/(store_manager)/qr", params: { storeId: storeIdParam } });
         }}
@@ -230,12 +230,12 @@ export default function ConfigureStreaks() {
           </View>
         <View className="gap-y-2">
           <Text className="text-sm font-poppins-semibold text-slate-700 dark:text-slate-300">
-            {t("storeManager.qrConfigure.pointsType")}
+            {t("store_manager.qrConfigure.pointsType")}
           </Text>
           <View className="flex-row gap-x-2">
             {([
-              { key: "percentage" as EarningType, label: t("storeManager.qrConfigure.percentageOptionTitle"), desc: t("storeManager.qrConfigure.percentageOptionDesc") },
-              { key: "fixed" as EarningType, label: t("storeManager.qrConfigure.fixedOptionTitle"), desc: t("storeManager.qrConfigure.fixedOptionDesc") },
+              { key: "percentage" as EarningType, label: t("store_manager.qrConfigure.percentageOptionTitle"), desc: t("store_manager.qrConfigure.percentageOptionDesc") },
+              { key: "fixed" as EarningType, label: t("label.fixed"), desc: t("store_manager.qrConfigure.fixedOptionDesc") },
             ] as const)
               .map((opt) => {
               const selected = earning_type === opt.key;
@@ -272,8 +272,8 @@ export default function ConfigureStreaks() {
             <View className="flex-row gap-x-3">
               <View className="flex-1">
                 <TextField
-                  label={t("storeManager.qrConfigure.percentageLabel")}
-                  placeholder={t("storeManager.qrConfigure.percentagePlaceholder")}
+                  label={t("store_manager.qrConfigure.percentageLabel")}
+                  placeholder={t("label.eg10Placeholder")}
                   keyboardType="decimal-pad"
                   value={percentageInput}
                   onChangeText={(v) => {
@@ -286,8 +286,8 @@ export default function ConfigureStreaks() {
               </View>
               <View className="flex-1">
                 <TextField
-                  label={t("storeManager.qrConfigure.baseAmount")}
-                  placeholder={t("storeManager.qrConfigure.baseAmountPlaceholder")}
+                  label={t("store_manager.qrConfigure.baseAmount")}
+                  placeholder={t("label.eg10Placeholder")}
                   keyboardType="decimal-pad"
                   value={baseAmountInput}
                   onChangeText={(v) => {
@@ -302,7 +302,7 @@ export default function ConfigureStreaks() {
 
             <View className="bg-yellow-50 dark:bg-yellow-900/20 rounded-xl px-4 py-3">
               <Text className="text-xs font-poppins text-yellow-800 dark:text-yellow-200">
-                {t("storeManager.qrConfigure.percentageHint")}
+                {t("store_manager.qrConfigure.percentageHint")}
               </Text>
             </View>
           </View>
@@ -314,8 +314,8 @@ export default function ConfigureStreaks() {
 						<View className="flex-row gap-x-3">
 							<View className="flex-1">
 								<TextField
-									label={t("storeManager.qrConfigure.fixedPoints")}
-									placeholder={t("storeManager.qrConfigure.fixedPointsPlaceholder")}
+									label={t("store_manager.qrConfigure.fixedPoints")}
+									placeholder={t("store_manager.qrConfigure.fixedPointsPlaceholder")}
 									keyboardType="decimal-pad"
 									value={fixedPointsInput}
 									onChangeText={(v) => {
@@ -328,8 +328,8 @@ export default function ConfigureStreaks() {
 							</View>
 							<View className="flex-1">
 								<TextField
-									label={t("storeManager.qrConfigure.minimumSpend")}
-									placeholder={t("storeManager.qrConfigure.minimumSpendPlaceholder")}
+									label={t("store_manager.qrConfigure.minimumSpend")}
+									placeholder={t("store_manager.qrConfigure.minimumSpendPlaceholder")}
 									keyboardType="decimal-pad"
 									value={minimumSpendInput}
 									onChangeText={(v) => {
@@ -344,7 +344,7 @@ export default function ConfigureStreaks() {
 
             <View className="bg-yellow-50 dark:bg-yellow-900/20 rounded-xl px-4 py-3">
               <Text className="text-xs font-poppins text-yellow-800 dark:text-yellow-200">
-                {t("storeManager.qrConfigure.fixedHint")}
+                {t("store_manager.qrConfigure.fixedHint")}
               </Text>
             </View>
 					</>
@@ -352,9 +352,9 @@ export default function ConfigureStreaks() {
 
         {/* Max points per transaction — shared */}
         <TextField
-          label={t("storeManager.qrConfigure.maxPointsPerTxn")}
-          hint={t("storeManager.qrConfigure.maxPointsHint")}
-          placeholder={t("storeManager.qrConfigure.maxPointsPlaceholder")}
+          label={t("store_manager.qrConfigure.maxPointsPerTxn")}
+          hint={t("store_manager.qrConfigure.maxPointsHint")}
+          placeholder={t("store_manager.qrConfigure.maxPointsPlaceholder")}
           keyboardType="decimal-pad"
           value={maxPointsInput}
           onChangeText={(v) => {
@@ -367,7 +367,7 @@ export default function ConfigureStreaks() {
         {/* Actions */}
         <View className="gap-y-3">
           <Button
-            label={t("storeManager.qrConfigure.saveRules")}
+            label={t("store_manager.qrConfigure.saveRules")}
             onPress={handleSave}
             disabled={isSubmitting}
             loading={isSubmitting}

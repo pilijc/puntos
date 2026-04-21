@@ -1,7 +1,7 @@
 import "react-native-url-polyfill/auto";
 import "react-native-gesture-handler";
 import "../global.css";
-import "@/i18n";
+import "@/translation";
 import { Slot, useRouter, Stack, usePathname } from "expo-router";
 import { useFonts } from "expo-font";
 import { useSafeAreaInsets } from "react-native-safe-area-context";

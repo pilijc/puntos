@@ -1,4 +1,5 @@
 import React, { useCallback, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { ActivityIndicator, Platform, Pressable, useColorScheme } from "react-native";
 import { View, Text, SafeAreaView, ScrollView } from "@/tw";
 import { useSuperAdminStoresStore } from "@/store/super-admin/super-admin-stores-store";
@@ -67,7 +68,7 @@ function StatCard({
     <View className="flex-1 min-w-0 rounded-xl bg-white dark:bg-neutral-900 border border-slate-100 dark:border-neutral-700 p-4">
       <View className="flex-row items-start gap-3">
         <View className="w-10 h-10 rounded-xl items-center justify-center shrink-0">{icon}</View>
-        <View className="flex-1 min-w-0 gap-y-1">
+        <View className="flex-1 min-w-0 gap-y-0.5">
           <Text className="text-xs font-poppins text-textMuted dark:text-darkTextMuted text-left">
             {label}
           </Text>
@@ -93,6 +94,7 @@ export default function SubscriptionConfig() {
   const subscriptionState = useSuperAdminSubscriptionStore();
   const isWeb = Platform.OS === "web";
   const isDark = useColorScheme() === "dark";
+  const { t: translate } = useTranslation();
   const mutedIcon = isDark ? "#a3a3a3" : "#64748b";
   const plans = subscriptionState.plans;
   const proAmountInput = subscriptionState.proAmountInput;
@@ -117,7 +119,7 @@ export default function SubscriptionConfig() {
           subscriptionState.setProAmountInput(amt != null ? String(amt) : "");
         } catch (e) {
           subscriptionState.setFormError(
-            e instanceof Error ? e.message : "Failed to load subscription plans.",
+            e instanceof Error ? e.message : translate("super_admin.subscription.formError.loadPlansFailed"),
           );
         }
 
@@ -131,7 +133,7 @@ export default function SubscriptionConfig() {
           subscriptionState.setPublicUsers(users);
         } catch (e) {
           subscriptionState.setFormError(
-            e instanceof Error ? e.message : "Failed to load manager subscriptions.",
+            e instanceof Error ? e.message : translate("super_admin.subscription.formError.loadSubsFailed"),
           );
           subscriptionState.setManagerSubscriptions([]);
           subscriptionState.setDashboardStats(null);
@@ -188,7 +190,7 @@ export default function SubscriptionConfig() {
     subscriptionState.setFormError(null);
     const amount = Number(proAmountInput);
     if (!Number.isFinite(amount) || amount <= 0) {
-      subscriptionState.setFormError("Please enter a valid Pro price (PHP).");
+      subscriptionState.setFormError(translate("super_admin.subscription.formError.invalidPrice"));
       return;
     }
 
@@ -213,7 +215,7 @@ export default function SubscriptionConfig() {
 
       subscriptionState.setShowSuccessModal(true);
     } catch (e) {
-      subscriptionState.setFormError(e instanceof Error ? e.message : "Failed to save Pro price.");
+      subscriptionState.setFormError(e instanceof Error ? e.message : translate("super_admin.subscription.formError.saveFailed"));
     } finally {
       subscriptionState.setSaving(false);
     }
@@ -246,7 +248,7 @@ export default function SubscriptionConfig() {
         const payments = await getManagerSubscriptionPaymentsByOwner(ownerId);
         subscriptionState.setPaymentsForOwner(ownerId, payments);
       } catch (e) {
-        subscriptionState.setFormError(e instanceof Error ? e.message : "Failed to load payments ledger.");
+        subscriptionState.setFormError(e instanceof Error ? e.message : translate("super_admin.subscription.formError.loadLedgerFailed"));
       } finally {
         subscriptionState.setPaymentsLoading(ownerId, false);
       }
@@ -273,7 +275,7 @@ export default function SubscriptionConfig() {
               columns={[
                 {
                   key: "payment_reference",
-                  header: "Payment reference",
+                  header: translate("super_admin.subscription.ledger.paymentRef"),
                   flex: 3,
                   align: "left",
                   render: (p: any) =>
@@ -283,14 +285,14 @@ export default function SubscriptionConfig() {
                 },
                 {
                   key: "amount",
-                  header: "Amount",
+                  header: translate("super_admin.subscription.ledger.amount"),
                   flex: 2,
                   align: "center",
                   render: (p: any) => `₱${Number(p.amount_paid ?? 0).toFixed(2)}`,
                 },
                 {
                   key: "billing_period_start",
-                  header: "Billing period start",
+                  header: translate("super_admin.subscription.ledger.billingStart"),
                   flex: 2,
                   align: "center",
                   render: (p: any) =>
@@ -300,7 +302,7 @@ export default function SubscriptionConfig() {
                 },
                 {
                   key: "billing_period_end",
-                  header: "Billing period end",
+                  header: translate("super_admin.subscription.ledger.billingEnd"),
                   flex: 3,
                   align: "center",
                   render: (p: any) =>
@@ -311,7 +313,7 @@ export default function SubscriptionConfig() {
            
                 {
                   key: "status",
-                  header: "Status",
+                  header: translate("super_admin.subscription.ledger.status"),
                   flex: 1,
                   align: "left",
                   render: (p: any) => (
@@ -325,7 +327,7 @@ export default function SubscriptionConfig() {
             ]}
             rows={payments}
             rowKey={(p: any, idx: number) => String(p.id ?? `${row.owner_id}-${idx}`)}
-            emptyText="No payments yet."
+            emptyText={translate("super_admin.subscription.ledger.empty")}
             />
           </View>
         </View>
@@ -343,7 +345,7 @@ export default function SubscriptionConfig() {
     const cols: Array<TableColumn<(typeof subscribedManagers)[number]>> = [
       {
         key: "manager",
-        header: "Store manager",
+        header: translate("super_admin.subscription.table.managerCol"),
         flex: 2,
         align: "left",
         render: (row) => (
@@ -359,13 +361,13 @@ export default function SubscriptionConfig() {
       },
       {
         key: "plan",
-        header: "Plan",
+        header: translate("super_admin.subscription.table.planCol"),
         width: 150,
         align: "center",
         render: (row) => (
           <View className="px-2 py-0.5 rounded-full bg-primary/10">
             <Text className="text-[10px] font-poppins-bold uppercase tracking-wider text-primary">
-              {row.subscription_id ? "Pro" : "Basic"}
+              {row.subscription_id ? translate("super_admin.subscription.table.planPro") : translate("super_admin.subscription.table.planBasic")}
             </Text>
           </View>
         ),
@@ -373,7 +375,7 @@ export default function SubscriptionConfig() {
       },
       {
         key: "payments",
-        header: "View payments",
+        header: translate("super_admin.subscription.table.paymentsCol"),
         width: 150,
         align: "center",
         render: (row) => {
@@ -415,7 +417,7 @@ export default function SubscriptionConfig() {
     <SafeAreaView edges={["top", "left", "right"]} className="flex-1 bg-backgroundMuted dark:bg-neutral-900">
       <View className="bg-white dark:bg-darkBackground border-b border-neutral-100 dark:border-darkBorder px-6 py-3 flex-row items-center justify-between">
         <Text className="text-xl font-poppins-bold text-textPrimary dark:text-darkTextPrimary py-1">
-          Subscription
+          {translate("super_admin.subscription.title")}
         </Text>
       </View>
 
@@ -516,11 +518,11 @@ export default function SubscriptionConfig() {
                       </Text>
                     </View>
                     <Text className="text-xs font-poppins text-textMuted dark:text-darkTextMuted mb-2">
-                      Free
+                      {translate("super_admin.subscription.basic.price")}
                     </Text>
                     <View className="pt-1 border-t border-slate-100 dark:border-slate-700">
-                      <FeatureLine text={"1 store with full loyalty tools"} />
-                      <FeatureLine text={"Stamps, rewards, QR, and staff tools"} />
+                      <FeatureLine text={translate("super_admin.subscription.basic.feature1")} />
+                      <FeatureLine text={translate("super_admin.subscription.basic.feature2")} />
                     </View>
                   </View>
                 </View>
@@ -547,19 +549,19 @@ export default function SubscriptionConfig() {
 
                     <Text className="text-xs font-poppins text-textMuted dark:text-darkTextMuted mb-2">
                       {toAmountNumber(proAmountInput) != null
-                        ? `Built for multiple locations · ${formatPeso(toAmountNumber(proAmountInput))}/month`
-                        : "Built for multiple locations"}
+                        ? `${translate("super_admin.subscription.pro.builtFor")} · ${formatPeso(toAmountNumber(proAmountInput))}/month`
+                        : translate("super_admin.subscription.pro.builtFor")}
                     </Text>
 
                     <View className="pt-1 border-t border-orange-100/80 dark:border-orange-900/40">
-                      <FeatureLine text={"Add and run more than one store"} />
-                      <FeatureLine text={"Priority support"} />
-                      <FeatureLine text={"Access to new premium features as we release them"} />
+                      <FeatureLine text={translate("super_admin.subscription.pro.feature1")} />
+                      <FeatureLine text={translate("super_admin.subscription.pro.feature2")} />
+                      <FeatureLine text={translate("super_admin.subscription.pro.feature3")} />
                     </View>
 
                     <View className="mt-4">
                       <TextField
-                        label="Pro monthly amount (PHP)"
+                        label={translate("super_admin.subscription.pro.priceLabel")}
                         value={proAmountInput}
                         onChangeText={subscriptionState.setProAmountInput}
                         keyboardType="numeric"
@@ -577,7 +579,7 @@ export default function SubscriptionConfig() {
                           <Button
                             variant="primary"
                             loading={subscriptionState.saving}
-                            label="Save Changes"
+                            label={translate("super_admin.subscription.pro.saveChanges")}
                             onPress={handleSave}
                             disabled={subscriptionState.saving}
                             fullWidth={true}
@@ -594,19 +596,19 @@ export default function SubscriptionConfig() {
               <View className="bg-white dark:bg-darkBackgroundCard rounded-2xl border border-slate-100 dark:border-neutral-800 p-4">
                 <View className="flex-row items-center gap-2 mb-2">
                   <Text className="text-sm font-poppins-semibold text-slate-800 dark:text-slate-100">
-                    Manager subscriptions
+                    {translate("super_admin.subscription.managerSubs.title")}
                   </Text>
                 </View>
 
                 <Text className="text-xs font-poppins text-slate-500 dark:text-darkTextMuted leading-4 mb-4 px-0.5">
-                  Billing state per store manager.
+                  {translate("super_admin.subscription.managerSubs.detail")}
                 </Text>
 
                 <Table
                   columns={tableColumns}
                   rows={subscribedManagers}
                   rowKey={(row, idx) => String(row.id ?? row.owner_id ?? idx)}
-                  emptyText="No manager subscriptions found."
+                  emptyText={translate("super_admin.subscription.managerSubs.empty")}
                   isRowExpanded={(row) => isExpanded(row)}
                   renderExpandedRow={(row) => renderLedger(row)}
                   hideExpandedTopBorder={true}
@@ -619,10 +621,10 @@ export default function SubscriptionConfig() {
             ) : (
               <View className="bg-white dark:bg-darkBackgroundCard rounded-2xl border border-slate-100 dark:border-neutral-800 p-4 mt-4">
                 <Text className="text-sm font-poppins-semibold text-slate-800 dark:text-slate-100 mb-1">
-                  Manager subscriptions
+                  {translate("super_admin.subscription.managerSubs.title")}
                 </Text>
                 <Text className="text-[10px] font-poppins text-slate-500 dark:text-darkTextMuted leading-4">
-                  No manager subscriptions found.
+                  {translate("super_admin.subscription.managerSubs.empty")}
                 </Text>
               </View>
             )}
@@ -632,12 +634,12 @@ export default function SubscriptionConfig() {
 
       <Modal
         visible={subscriptionState.showSuccessModal}
-        title="Successfully Saved!"
+        title={translate("super_admin.subscription.modal.successTitle")}
         onClose={() => subscriptionState.setShowSuccessModal(false)}
         showCloseButton={false}
         buttons={[
           {
-            label: "Okay",
+            label: translate("super_admin.subscription.modal.okay"),
             variant: "success",
             onPress: () => subscriptionState.setShowSuccessModal(false),
           },
@@ -648,7 +650,7 @@ export default function SubscriptionConfig() {
             <MaterialIcons name="check" size={32} color="#10B981" />
           </View>
           <Text className="text-sm leading-6 font-poppins text-slate-500 dark:text-slate-400 text-center px-2">
-            Pro pricing has been saved. Basic remains free.
+            {translate("super_admin.subscription.modal.successDetail")}
           </Text>
         </View>
       </Modal>

@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { View, Text, Image, TouchableOpacity } from "@/tw";
 import {
   ScrollView,
@@ -32,6 +33,7 @@ function StampCard({
   stamp: any;
   rewardTitle?: string | null;
 }) {
+  const { t: translate } = useTranslation();
   const storeStr = stamp.stores as {
     name?: string;
     logo?: string;
@@ -40,7 +42,7 @@ function StampCard({
     status?: string;
   } | undefined;
 
-  const storeName = storeStr?.name ?? "Store";
+  const storeName = storeStr?.name ?? translate("user.rewards.store");
   const storeAddress = storeStr?.address ?? "";
   const count = stamp.stamps_count ?? 0;
   const target = stamp.target ?? 7;
@@ -85,20 +87,20 @@ function StampCard({
     const daysUntilEnd = Math.ceil(msLeft / 86400000);
 
     if (daysUntilEnd <= 0) {
-      deadlineStr = "Expired";
+      deadlineStr = translate("user.activity.stampLog.expired");
       deadlineUrgent = true;
     } else if (daysUntilEnd === 1) {
-      deadlineStr = "Expires today!";
+      deadlineStr = translate("user.activity.stampLog.expiresToday");
       deadlineUrgent = true;
     } else if (daysUntilEnd <= 7) {
-      deadlineStr = `Expires in ${daysUntilEnd} days!`;
+      deadlineStr = translate("user.activity.stampLog.expiresInDays", { count: daysUntilEnd });
       deadlineUrgent = true;
     } else {
-      deadlineStr = `Valid until ${expiresAt.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}`;
+      deadlineStr = translate("user.activity.stampLog.validUntil", { date: expiresAt.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) });
       deadlineUrgent = false;
     }
   } else if (stamp.card_status === 'expired') {
-    deadlineStr = "Program expired";
+    deadlineStr = translate("user.activity.stampLog.programExpired");
     deadlineUrgent = true;
   }
 
@@ -120,7 +122,7 @@ function StampCard({
             {storeName}
           </Text>
           <Text className="text-[11px] font-poppins text-neutral-500 line-clamp-1" numberOfLines={1}>
-            {storeAddress || "Reward Program"}
+            {storeAddress || translate("user.activity.stampLog.rewardProgram")}
           </Text>
         </View>
         <View className="items-end justify-center pr-1">
@@ -250,7 +252,7 @@ function StampCard({
             className={`text-[11px] font-poppins-semibold flex-1 ${isCompleted ? 'text-neutral-900 dark:text-white' : 'text-neutral-700 dark:text-neutral-300'}`}
             numberOfLines={1}
           >
-            {rewardTitle ? rewardTitle : `${target} Stamps Reward`}
+            {rewardTitle ? rewardTitle : translate("user.activity.stampLog.stampsReward", { count: target })}
           </Text>
         </View>
 
@@ -260,7 +262,7 @@ function StampCard({
             className="bg-primary pt-[6px] pb-[6px] px-4 rounded-full shadow-sm flex-row items-center justify-center"
             activeOpacity={0.7}
           >
-            <Text className="text-[10px] font-poppins-bold text-white tracking-[1px]">CLAIM</Text>
+            <Text className="text-[10px] font-poppins-bold text-white tracking-[1px]">{translate("user.rewards.claim")}</Text>
           </TouchableOpacity>
         ) : (
           <TouchableOpacity
@@ -280,6 +282,7 @@ function StampCard({
 
 // ─── Main Screen ──────────────────────────────────────────────────────────────
 export default function StampLogScreen() {
+  const { t: translate } = useTranslation();
   const router = useRouter();
   const insets = useSafeAreaInsets();
 
@@ -417,10 +420,10 @@ export default function StampLogScreen() {
           </TouchableOpacity>
           <View className="flex-1">
             <Text className="text-base font-poppins-bold text-neutral-900 dark:text-white tracking-[0.2px]" numberOfLines={1}>
-              {parsedStoreId ? `${displayStoreName} Stamps` : "Stamp Log"}
+              {parsedStoreId ? `${displayStoreName} ${translate("user.activity.stampLog.stampsSuffix")}` : translate("user.rewards.stampLog")}
             </Text>
             <Text className="text-[11px] font-poppins text-neutral-500">
-              Loyalty Progress
+              {translate("user.activity.stampLog.loyaltyProgress")}
             </Text>
           </View>
         </View>
@@ -457,7 +460,7 @@ export default function StampLogScreen() {
 
             {/* How to Earn Banner Text */}
             <Text className="text-[11px] font-poppins text-neutral-500 text-center mt-3 mb-6 px-4">
-              Earn 1 stamp per purchase! Complete your card to unlock the reward.
+              {translate("user.activity.stampLog.earnInfo")}
             </Text>
           </View>
         )}
@@ -467,7 +470,7 @@ export default function StampLogScreen() {
           <View className="flex-row items-center gap-x-2 mb-4 px-1">
             <History size={16} color="#475569" className="dark:text-neutral-400" />
             <Text className="text-sm font-poppins-bold text-neutral-800 dark:text-neutral-200">
-              Stamp History
+              {translate("user.activity.stampLog.stampHistory")}
             </Text>
           </View>
 
@@ -476,7 +479,7 @@ export default function StampLogScreen() {
               <View className="items-center py-4">
                 <Clock size={24} color="#d1d5db" className="mb-2" />
                 <Text className="text-center text-[11px] font-poppins text-neutral-400">
-                  No stamps earned yet. {"\n"}Your history will appear here.
+                  {translate("user.activity.stampLog.noStampsYet")}
                 </Text>
               </View>
             ) : (
@@ -492,7 +495,7 @@ export default function StampLogScreen() {
                     <View className={`flex-1 flex-row pb-${idx !== stampEvents.length - 1 ? '6' : '1'} items-start justify-between`}>
                       <View>
                         <Text className="text-xs font-poppins-semibold text-neutral-800 dark:text-neutral-200">
-                          Stamp Earned
+                          {translate("user.activity.stampLog.stampEarned")}
                         </Text>
                         <Text className="text-[10px] font-poppins text-neutral-500 mt-0.5">
                           {new Date(evt.created_at).toLocaleDateString("en-US", {
@@ -503,7 +506,7 @@ export default function StampLogScreen() {
                       {(evt as any).points && (
                         <View className="bg-orange-50 dark:bg-orange-900/30 px-2 py-0.5 rounded flex-row items-center border border-orange-100 dark:border-orange-800/50">
                           <Text className="text-[10px] font-poppins-semibold text-[#FF6600]">
-                            +{(evt as any).points} pts
+                            {translate("user.activity.stampLog.ptsEarned", { count: (evt as any).points })}
                           </Text>
                         </View>
                       )}
@@ -520,7 +523,7 @@ export default function StampLogScreen() {
           <View className="flex-row items-center gap-x-2 mb-4 px-1">
             <Gift size={16} color="#d97706" />
             <Text className="text-sm font-poppins-bold text-neutral-800 dark:text-neutral-200">
-              Reward History
+              {translate("user.activity.stampLog.rewardHistory")}
             </Text>
           </View>
 
@@ -529,7 +532,7 @@ export default function StampLogScreen() {
               <View className="items-center py-4">
                 <Gift size={24} color="#d1d5db" className="mb-2" />
                 <Text className="text-center text-[11px] font-poppins text-neutral-400">
-                  No rewards redeemed yet.
+                  {translate("user.activity.stampLog.noRewardsYet")}
                 </Text>
               </View>
             ) : (
@@ -561,7 +564,7 @@ export default function StampLogScreen() {
                       </View>
                       <View className="bg-amber-50 dark:bg-amber-900/30 px-2 py-0.5 rounded flex-row items-center border border-amber-100 dark:border-amber-800/50">
                         <Text className="text-[10px] font-poppins-semibold text-amber-600 dark:text-amber-500">
-                          Claimed
+                          {translate("user.activity.stampLog.claimed")}
                         </Text>
                       </View>
                     </View>

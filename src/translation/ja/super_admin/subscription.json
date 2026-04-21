@@ -1,0 +1,48 @@
+{
+  "title": "サブスクリプション",
+  "basic": {
+    "price": "無料",
+    "feature1": "フルのロイヤリティツール付き1店舗",
+    "feature2": "スタンプ、特典、QR、スタッフ機能"
+  },
+  "pro": {
+    "builtFor": "複数の店舗向け",
+    "priceLabel": "Proプランの月額（PHP）",
+    "feature1": "複数店舗の追加・運営が可能",
+    "feature2": "優先サポート",
+    "feature3": "新しいプレミアム機能への早期アクセス",
+    "saveChanges": "変更を保存"
+  },
+  "managerSubs": {
+    "title": "マネージャーのサブスクリプション",
+    "detail": "ストアマネージャーごとの請求状態。",
+    "empty": "マネージャーのサブスクリプションが見つかりません。"
+  },
+  "table": {
+    "managerCol": "ストアマネージャー",
+    "planCol": "プラン",
+    "paymentsCol": "支払いを確認",
+    "planBasic": "ベーシック",
+    "planPro": "プロ"
+  },
+  "ledger": {
+    "paymentRef": "支払い参照番号",
+    "amount": "金額",
+    "billingStart": "請求期間開始",
+    "billingEnd": "請求期間終了",
+    "status": "ステータス",
+    "empty": "まだ支払いはありません。"
+  },
+  "formError": {
+    "invalidPrice": "有効なProプランの価格（PHP）を入力してください。",
+    "saveFailed": "Proプランの価格の保存に失敗しました。",
+    "loadPlansFailed": "サブスクリプションプランの読み込みに失敗しました。",
+    "loadSubsFailed": "マネージャーのサブスクリプションの読み込みに失敗しました。",
+    "loadLedgerFailed": "支払い履歴の読み込みに失敗しました。"
+  },
+  "modal": {
+    "successTitle": "保存完了！",
+    "successDetail": "Proプランの価格が保存されました。ベーシックプランは引き続き無料です。",
+    "okay": "OK"
+  }
+}

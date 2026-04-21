@@ -61,10 +61,10 @@ export default function ViewStaff() {
   }, [fetchStaff, setRefreshing]);
 
   const confirmDelete = (staffId: string, name: string | null) => {
-    const displayName = name ?? t("storeManager.staff.removeFallbackName");
+    const displayName = name ?? t("store_manager.staff.removeFallbackName");
     setModal({
-      title: t("storeManager.staff.removeTitle"),
-      message: t("storeManager.staff.removeMessage", { name: displayName }),
+      title: t("store_manager.staff.removeTitle"),
+      message: t("store_manager.staff.removeMessage", { name: displayName }),
       buttons: [
         {
           label: t("label.cancel"),
@@ -73,13 +73,13 @@ export default function ViewStaff() {
           disabled: deleting === staffId,
         },
         {
-          label: t("storeManager.staff.removeAction"),
+          label: t("store_manager.staff.removeAction"),
           variant: "primary",
           onPress: async () => {
             setDeleting(staffId);
             setModal({
-              title: t("storeManager.staff.removeTitle"),
-              message: t("storeManager.staff.removeMessage", { name: displayName }),
+              title: t("store_manager.staff.removeTitle"),
+              message: t("store_manager.staff.removeMessage", { name: displayName }),
               buttons: [
                 {
                   label: t("label.cancel"),
@@ -88,7 +88,7 @@ export default function ViewStaff() {
                   disabled: true,
                 },
                 {
-                  label: t("storeManager.staff.removeAction"),
+                  label: t("store_manager.staff.removeAction"),
                   onPress: async () => {},
                   variant: "primary",
                   loading: true,
@@ -102,8 +102,8 @@ export default function ViewStaff() {
               setModal(null);
             } catch {
               setModal({
-                title: t("storeManager.staff.removeFailedTitle"),
-                message: t("storeManager.staff.removeFailedMessage"),
+                title: t("store_manager.staff.removeFailedTitle"),
+                message: t("store_manager.staff.removeFailedMessage"),
                 buttons: [{ label: t("label.ok"), onPress: () => setModal(null), variant: "secondary" }],
               });
             } finally {
@@ -125,8 +125,8 @@ export default function ViewStaff() {
         buttons={modal?.buttons}
       />
       <AppHeader
-        title={t("storeManager.staff.title")}
-        description={t("storeManager.staff.description")}
+        title={t("store_manager.staff.title")}
+        description={t("store_manager.staff.description")}
         onBackPress={() => {
           router.push(`/(store_manager)/view-store/${storeId}`);
         }}
@@ -157,9 +157,9 @@ export default function ViewStaff() {
               </View>
               <View className="flex-1">
                 <Text className="text-sm font-poppins-bold text-slate-800 dark:text-slate-100">
-                  {loading ? "—" : t("storeManager.staff.memberCount", { count: staff.length })}
+                  {loading ? "—" : t("store_manager.staff.memberCount", { count: staff.length })}
                 </Text>
-                <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">{t("storeManager.staff.subtitle")}</Text>
+                <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">{t("store_manager.staff.subtitle")}</Text>
               </View>
               {staff.length > 0 && (
                 <TouchableOpacity
@@ -172,7 +172,7 @@ export default function ViewStaff() {
                   className="flex-row items-center gap-x-0.5"
                   activeOpacity={0.7}
                 >
-                  <Text className="text-xs font-poppins-semibold text-primary">{t("storeManager.staff.add")}</Text>
+                  <Text className="text-xs font-poppins-semibold text-primary">{t("label.add")}</Text>
                   <ChevronRight size={14} color="#FF6600" />
                 </TouchableOpacity>
               )}
@@ -183,9 +183,9 @@ export default function ViewStaff() {
             ) : staff.length === 0 ? (
               <View className="mx-4 bg-white dark:bg-neutral-800 rounded-xl border border-slate-100 dark:border-neutral-700 px-4 py-14 items-center gap-y-2">
                 <UserRoundX size={36} color="#CBD5E1" />
-                <Text className="text-sm font-poppins-semibold text-slate-400 dark:text-slate-500">{t("storeManager.staff.emptyTitle")}</Text>
+                <Text className="text-sm font-poppins-semibold text-slate-400 dark:text-slate-500">{t("store_manager.staff.emptyTitle")}</Text>
                 <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500 text-center px-6">
-                  {t("storeManager.staff.emptyBody")}
+                  {t("store_manager.staff.emptyBody")}
                 </Text>
                 <TouchableOpacity
                   onPress={() =>
@@ -197,7 +197,7 @@ export default function ViewStaff() {
                   className="mt-2 bg-primary px-5 py-2.5 rounded-xl"
                   activeOpacity={0.85}
                 >
-                  <Text className="text-xs font-poppins-semibold text-white">{t("storeManager.staff.addFirst")}</Text>
+                  <Text className="text-xs font-poppins-semibold text-white">{t("store_manager.staff.addFirst")}</Text>
                 </TouchableOpacity>
               </View>
             ) : (

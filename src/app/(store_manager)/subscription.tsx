@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { ActivityIndicator, Animated, Linking, Platform, useColorScheme } from "react-native";
 import { View, Text, SafeAreaView, ScrollView } from "@/tw";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -8,7 +9,6 @@ import { isPaidUnlimitedPlan } from "@/services/store-manager/subscription-limit
 import { Table, type TableColumn } from "@/components/ui/table";
 import { Modal } from "@/components/modal";
 import { useStoreManagerSubscriptionStore } from "@/store/store-manager/subscription-store";
-import { useTranslation } from "react-i18next";
 import {
 	getAuthenticatedUserId,
 	getManagerSubscription,
@@ -48,11 +48,11 @@ function pickBasicAndProPlans(plans: Array<Record<string, unknown>>) {
 }
 
 export default function SubscriptionScreen() {
+	const { t: translate } = useTranslation();
 	const insets = useSafeAreaInsets();
 	const isWeb = Platform.OS === "web";
 	const scrollBottom = Math.max(insets.bottom, 40);
 	const colorScheme = useColorScheme();
-	const { t: translate } = useTranslation();
 	const {
 		ownerId,
 		plans,
@@ -320,213 +320,7 @@ export default function SubscriptionScreen() {
 	}, [performCancel, translate]);
 
 	const proAmount = toAmountNumber(proPlan?.amount);
-
-
-	const checkoutSession = {
-		id: "cs_e8e8ce7fb4d8ef22ae3e1245",
-		type: "checkout_session",
-		attributes: {
-		  billing: {
-			address: {
-			  city: null,
-			  country: null,
-			  line1: null,
-			  line2: null,
-			  postal_code: null,
-			  state: null,
-			},
-			email: null,
-			name: null,
-			phone: null,
-		  },
-		  billing_information_fields_editable: "enabled",
-		  cancel_url: "http://localhost:8081/subscription/cancel",
-		  checkout_url:
-			"https://checkout.paymongo.com/cs_e8e8ce7fb4d8ef22ae3e1245_client_b9d8e3fcb6d9b3212baba1fe#cGtfdGVzdF8yTnVXb3hTY2lEUzJQdlVnamU4cHlkcWQ=",
-		  client_key: "cs_e8e8ce7fb4d8ef22ae3e1245_client_b9d8e3fcb6d9b3212baba1fe",
-		  customer_email: null,
-		  customer_id: null,
-		  description: null,
-		  line_items: [
-			{
-			  amount: 29900,
-			  currency: "PHP",
-			  description: "Subscription",
-			  images: [],
-			  name: "Pro Monthly Plan",
-			  quantity: 1,
-			},
-		  ],
-		  livemode: false,
-		  merchant: "Puntos",
-		  paid_at: 1776386511,
-		  payments: [
-			{
-			  id: "pay_9DCoC7e2pEYu7Yu42geu3K8D",
-			  type: "payment",
-			  attributes: {
-				access_url: null,
-				amount: 29900,
-				balance_transaction_id: "bal_txn_diacghwEXz3YqM9kCFJHJdbY",
-				billing: {
-				  address: {
-					city: null,
-					country: null,
-					line1: null,
-					line2: null,
-					postal_code: null,
-					state: null,
-				  },
-				  email: "kayshamir2004@gmail.com",
-				  name: "Kay Sh",
-				  phone: "9178208391",
-				},
-				currency: "PHP",
-				description: null,
-				digital_withholding_vat_amount: 0,
-				disputed: false,
-				external_reference_number: null,
-				fee: 748,
-				instant_settlement: null,
-				livemode: false,
-				net_amount: 29152,
-				origin: "api",
-				payment_intent_id: "pi_B6s3Jw7Jm9uAtFLr5qgRKD32",
-				payout: null,
-				source: {
-				  id: "src_WD5z9Pu4ATbj7NhDkATL21Uy",
-				  type: "gcash",
-				  provider: {
-					id: null,
-				  },
-				  provider_id: null,
-				},
-				statement_descriptor: "Puntos",
-				status: "paid",
-				tax_amount: null,
-				metadata: {
-				  slug: "pro",
-				  owner_id: "cb72aec9-c64d-460a-a0a2-40740ec8abd2",
-				},
-				promotion: null,
-				refunds: [],
-				taxes: [],
-				available_at: 1776762000,
-				created_at: 1776386511,
-				credited_at: 1776906000,
-				paid_at: 1776386511,
-				updated_at: 1776386511,
-			  },
-			},
-		  ],
-		  payment_intent: {
-			id: "pi_B6s3Jw7Jm9uAtFLr5qgRKD32",
-			type: "payment_intent",
-			attributes: {
-			  amount: 29900,
-			  capture_type: "automatic",
-			  client_key: "pi_B6s3Jw7Jm9uAtFLr5qgRKD32_client_7Ntby6ecxjpFeJ3zWvnmKmC2",
-			  currency: "PHP",
-			  description: null,
-			  livemode: false,
-			  original_amount: 29900,
-			  statement_descriptor: "Puntos",
-			  status: "succeeded",
-			  last_payment_error: null,
-			  payment_method_allowed: ["card", "gcash"],
-			  payments: [
-				{
-				  id: "pay_9DCoC7e2pEYu7Yu42geu3K8D",
-				  type: "payment",
-				  attributes: {
-					access_url: null,
-					amount: 29900,
-					balance_transaction_id: "bal_txn_diacghwEXz3YqM9kCFJHJdbY",
-					billing: {
-					  address: {
-						city: null,
-						country: null,
-						line1: null,
-						line2: null,
-						postal_code: null,
-						state: null,
-					  },
-					  email: "kayshamir2004@gmail.com",
-					  name: "Kay Sh",
-					  phone: "9178208391",
-					},
-					currency: "PHP",
-					description: null,
-					digital_withholding_vat_amount: 0,
-					disputed: false,
-					external_reference_number: null,
-					fee: 748,
-					instant_settlement: null,
-					livemode: false,
-					net_amount: 29152,
-					origin: "api",
-					payment_intent_id: "pi_B6s3Jw7Jm9uAtFLr5qgRKD32",
-					payout: null,
-					source: {
-					  id: "src_WD5z9Pu4ATbj7NhDkATL21Uy",
-					  type: "gcash",
-					  provider: {
-						id: null,
-					  },
-					  provider_id: null,
-					},
-					statement_descriptor: "Puntos",
-					status: "paid",
-					tax_amount: null,
-					metadata: {
-					  slug: "pro",
-					  owner_id: "cb72aec9-c64d-460a-a0a2-40740ec8abd2",
-					},
-					promotion: null,
-					refunds: [],
-					taxes: [],
-					available_at: 1776762000,
-					created_at: 1776386511,
-					credited_at: 1776906000,
-					paid_at: 1776386511,
-					updated_at: 1776386511,
-				  },
-				},
-			  ],
-			  next_action: null,
-				card: {
-			  payment_method_options: {
-				  request_three_d_secure: "any",
-				},
-			  },
-			  metadata: {
-				slug: "pro",
-				owner_id: "cb72aec9-c64d-460a-a0a2-40740ec8abd2",
-			  },
-			  setup_future_usage: null,
-			  created_at: 1776386508,
-			  updated_at: 1776386511,
-			},
-		  },
-		  payment_method_types: [],
-		  payment_method_used: "gcash",
-		  reference_number: null,
-		  send_email_receipt: false,
-		  show_description: true,
-		  show_line_items: true,
-		  status: "active",
-		  success_url: "http://localhost:8081/subscription/success",
-		  created_at: 1776386502,
-		  updated_at: 1776386508,
-		  metadata: {
-			owner_id: "cb72aec9-c64d-460a-a0a2-40740ec8abd2",
-			slug: "pro",
-		  },
-		},
-	  };
-
-	  console.log(checkoutSession.attributes.payment_intent.attributes.payments[0].id)
-
+	
 	return (
 		<SafeAreaView
 			edges={["top", "left", "right"]}

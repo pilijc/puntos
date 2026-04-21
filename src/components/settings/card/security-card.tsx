@@ -7,7 +7,6 @@ import ChangePasswordModal from "@/components/settings/modal/change-password-mod
 import { useTranslation } from "react-i18next";
 import { useDeleteAccount } from "@/hooks/user/use-delete-account";
 
-
 interface SecurityCardProps {
     disabled?: boolean;
     warning?: boolean;
@@ -50,7 +49,7 @@ export const SecurityCard: React.FC<SecurityCardProps> = ({ disabled = false, wa
                         </Text>
                         {disabled && (
                             <Text className="text-xs text-yellow-600 dark:text-yellow-400 font-poppins-regular mt-1">
-                                Complete password setup to access
+                                {translate('settings.account.security.completePasswordSetup')}
                             </Text>
                         )}
                     </View>

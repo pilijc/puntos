@@ -1,0 +1,12 @@
+{
+  "headerDefaultDescription": "View & manage store info",
+  "unnamedStore": "Unnamed Store",
+  "notSet": "Not set",
+  "open": "Open: {{time}}",
+  "close": "Close: {{time}}",
+  "noLocationSet": "No location set",
+  "mapOnlyAndroidWeb": "Map only available on Android & Web",
+  "status": {
+    "pending_review": "Under Review"
+  }
+}

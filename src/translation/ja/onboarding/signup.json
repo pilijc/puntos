@@ -1,0 +1,72 @@
+{
+  "title": "新規登録",
+  "titleManager": "ストアマネージャーとして登録",
+  "button": "新規登録",
+  "divider": "または次の方法で続ける",
+  "google": "Googleで続ける",
+  "creating": "アカウントを作成中...",
+  "continue": "次へ",
+  "back": "戻る",
+  "ownerPrompt": "店舗オーナーとして登録しますか？",
+  "roleSelect": {
+    "title": "アプリの使い方を選択してください",
+    "subtitle": "あなたに合う方を選んでください。後から設定で変更できます。",
+    "customerLabel": "お客様として利用する",
+    "customerDescription": "リワードを獲得して、ロイヤルティ機能を利用したい",
+    "ownerLabel": "店舗オーナーとして利用する",
+    "ownerDescription": "店舗・リワード・お客様の管理をしたい"
+  },
+  "alreadyHaveAccount": "既にアカウントをお持ちですか？",
+  "login": "ログイン",
+  "success": "アカウントが作成されました！",
+  "successManager": "ストアマネージャーアカウントが作成されました！",
+  "error": {
+    "nameRequired": "名前は必須です",
+    "nameInvalid": "名前には文字、スペース、ハイフン、アポストロフィのみ使用できます",
+    "emailRequired": "メールアドレスは必須です",
+    "emailInvalid": "有効なメールアドレスを入力してください",
+    "emailRegistered": "このメールアドレスは既に登録されています。ログインしてください。",
+    "passwordRequired": "パスワードは必須です",
+    "passwordConfirm": "パスワードを確認してください",
+    "passwordMatch": "パスワードが一致しません",
+    "passwordLimit": "パスワードは8文字以上である必要があります",
+    "termsRequired": "規約に同意する必要があります",
+    "failed": "登録に失敗しました",
+    "failedManager": "ストアマネージャーの登録に失敗しました",
+    "googleFailed": "Googleでの登録に失敗しました",
+    "tryDifferentEmail": "別のメールアドレスを試す",
+    "goToLogin": "ログイン画面へ"
+  },
+  "stepper": {
+    "step1": {
+      "title": "お名前を教えてください",
+      "description": "あなたについてもっと教えてください"
+    },
+    "step2": {
+      "title": "メールアドレスを教えてください",
+      "description": "アカウントの作成に使用します"
+    },
+    "step3": {
+      "title": "パスワードを作成",
+      "description": "8文字以上である必要があります"
+    },
+    "step4": {
+      "title": "あと少しです！",
+      "description": "利用規約を確認し、同意してください"
+    },
+    "label": {
+      "name": "お名前",
+      "email": "メールアドレス",
+      "password": "パスワード",
+      "confirmPassword": "パスワードの確認",
+      "terms": "利用規約",
+      "termsAgree": "利用規約に同意します"
+    },
+    "placeholder": {
+      "name": "山田 太郎",
+      "email": "example@domain.com",
+      "password": "パスワードを入力",
+      "confirmPassword": "パスワードを再入力"
+    }
+  }
+}

@@ -43,7 +43,7 @@ export const NotificationCard = () => {
                         onPress: () => setModal(null),
                     },
                     {
-                        label: translate('settings.notificationsPrivacy.openSettings'),
+                        label: translate('label.settings'),
                         onPress: () => {
                             setModal(null);
                             togglePreference('near_store_notifications');
@@ -66,7 +66,7 @@ export const NotificationCard = () => {
                 onPress={handlePress}
                 className="flex-row p-3 bg-background dark:bg-darkBackgroundMuted items-center will-change-pressable"
             >
-                <View className="h-8 w-8 items-center justify-center rounded-lg bg-orange-50 dark:bg-orange-900/20">
+                <View className="h-8 w-8 -mt-0.5 rounded-lg items-center justify-center">
                     <Bell size={18} color="#FF6600" />
                 </View>
                 <View className="ml-3 flex-1">

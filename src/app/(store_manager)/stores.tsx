@@ -436,7 +436,7 @@ export default function StoreManagerStores() {
                               className="text-xs font-poppins text-slate-400 dark:text-slate-500 flex-1"
                               numberOfLines={1}
                             >
-                              {store.address ?? translate("storeManager.stores.noAddress")}
+                              {store.address ?? translate("store_manager.stores.noAddress")}
                             </Text>
                           </View>
                         </View>

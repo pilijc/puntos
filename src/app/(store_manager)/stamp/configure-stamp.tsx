@@ -105,8 +105,8 @@ export default function ConfigureStamp() {
         })
         .catch((e) => {
           setModal({
-            title: t("storeManager.stampConfigure.cannotEditTitle"),
-            message: (e as Error).message ?? t("storeManager.stampConfigure.cannotEditDefault"),
+            title: t("store_manager.stampConfigure.cannotEditTitle"),
+            message: (e as Error).message ?? t("store_manager.stampConfigure.cannotEditDefault"),
             buttons: [
               {
                 label: t("label.ok"),
@@ -137,24 +137,24 @@ export default function ConfigureStamp() {
   const handleSave = async () => {
     if (!total_stamps || total_stamps < 1) {
       setModal({
-        title: t("storeManager.stampConfigure.almostThere"),
-        message: t("storeManager.stampConfigure.stampsRequiredInvalid"),
+        title: t("label.almostThere"),
+        message: t("store_manager.stampConfigure.stampsRequiredInvalid"),
         buttons: [{ label: t("label.ok"), onPress: () => setModal(null) }],
       });
       return;
     }
     if (!reward_id) {
       setModal({
-        title: t("storeManager.stampConfigure.almostThere"),
-        message: t("storeManager.stampConfigure.selectReward"),
+        title: t("label.almostThere"),
+        message: t("store_manager.stampConfigure.selectReward"),
         buttons: [{ label: t("label.ok"), onPress: () => setModal(null) }],
       });
       return;
     }
     if (expiration_mode === "card" && (!expiration_days || expiration_days < 1)) {
       setModal({
-        title: t("storeManager.stampConfigure.almostThere"),
-        message: t("storeManager.stampConfigure.expirationDaysInvalid"),
+        title: t("label.almostThere"),
+        message: t("store_manager.stampConfigure.expirationDaysInvalid"),
         buttons: [{ label: t("label.ok"), onPress: () => setModal(null) }],
       });
       return;
@@ -182,7 +182,7 @@ export default function ConfigureStamp() {
       setSelectedReward(null);
       setModal({
         title: t("label.success"),
-        message: isEdit ? t("storeManager.stampConfigure.successUpdate") : t("storeManager.stampConfigure.successCreate"),
+        message: isEdit ? t("store_manager.stampConfigure.successUpdate") : t("store_manager.stampConfigure.successCreate"),
         buttons: [{
           label: t("label.ok"),
           onPress: () => {
@@ -194,7 +194,7 @@ export default function ConfigureStamp() {
     } catch (error) {
       setModal({
         title: t("label.error"),
-        message: (error as Error).message ?? t("storeManager.stampConfigure.saveFailed"),
+        message: (error as Error).message ?? t("store_manager.stampConfigure.saveFailed"),
         buttons: [{ label: t("label.ok"), onPress: () => setModal(null) }],
       });
     } finally {
@@ -224,7 +224,7 @@ export default function ConfigureStamp() {
         buttons={modal?.buttons}
       />
       <AppHeader
-        title={isEdit ? t("storeManager.stampConfigure.editTitle") : t("storeManager.stampConfigure.newTitle")}
+        title={isEdit ? t("store_manager.stampConfigure.editTitle") : t("store_manager.stampConfigure.newTitle")}
         onBackPress={() => {
           router.push({ pathname: "/(store_manager)/stamp", params: { storeId } });
         }}
@@ -255,13 +255,13 @@ export default function ConfigureStamp() {
             <View className="rounded-xl bg-amber-50 dark:bg-amber-900/20 p-4">
               <View className="flex-row items-center gap-x-2">
                 <Text className="text-sm font-poppins-bold text-amber-700 dark:text-amber-400">
-                  {t("storeManager.stampConfigure.beforeYouStart")}
+                  {t("store_manager.stampConfigure.beforeYouStart")}
                 </Text>
               </View>
               <View>
                 {[
-                  t("storeManager.stampConfigure.rule1"),
-                  t("storeManager.stampConfigure.rule2"),
+                  t("store_manager.stampConfigure.rule1"),
+                  t("store_manager.stampConfigure.rule2"),
                 ].map((rule, i) => (
                   <View
                     key={i}
@@ -279,8 +279,8 @@ export default function ConfigureStamp() {
 
             <View className="gap-y-1.5">
               <TextField
-                label={t("storeManager.stampConfigure.stampsToRedeem")}
-                placeholder={t("storeManager.stampConfigure.stampsPlaceholder")}
+                label={t("store_manager.stampConfigure.stampsToRedeem")}
+                placeholder={t("label.eg10Placeholder")}
                 keyboardType="decimal-pad"
                 value={total_stamps > 0 ? String(total_stamps) : ""}
                 onChangeText={(v) => setTotalStamps(parseInt(v) || 0)}
@@ -292,7 +292,7 @@ export default function ConfigureStamp() {
               <View className="flex-row items-center justify-between">
                 <View className="flex-row items-center gap-x-1">
                   <Text className="text-sm font-poppins-semibold text-slate-700 dark:text-slate-300">
-                    {t("storeManager.stampConfigure.reward")}
+                    {t("store_manager.stampConfigure.reward")}
                   </Text>
                   <Text className="text-sm font-poppins text-red-500 dark:text-red-400 ">*</Text>
                 </View>
@@ -306,7 +306,7 @@ export default function ConfigureStamp() {
                     className="px-2 py-1"
                     hitSlop={8 as any}
                   >
-                    <Text className="text-xs font-poppins-semibold text-primary">{t("storeManager.stampConfigure.clear")}</Text>
+                    <Text className="text-xs font-poppins-semibold text-primary">{t("store_manager.stampConfigure.clear")}</Text>
                   </TouchableOpacity>
                 )}
               </View>
@@ -315,10 +315,10 @@ export default function ConfigureStamp() {
                   <Gift size={26} color="#94A3B8" />
                   <View className="items-center gap-y-1">
                     <Text className="text-sm font-poppins-semibold text-slate-600 dark:text-slate-400">
-                      {t("storeManager.stampConfigure.noRewardsTitle")}
+                      {t("store_manager.stampConfigure.noRewardsTitle")}
                     </Text>
                     <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500 text-center">
-                      {t("storeManager.stampConfigure.noRewardsBody")}
+                      {t("store_manager.stampConfigure.noRewardsBody")}
                     </Text>
                   </View>
                   <TouchableOpacity
@@ -328,7 +328,7 @@ export default function ConfigureStamp() {
                       router.push({ pathname: "/(store_manager)/reward", params: { storeId } })
                     }
                   >
-                    <Text className="text-white text-xs font-poppins-bold">{t("storeManager.stampConfigure.createReward")}</Text>
+                    <Text className="text-white text-xs font-poppins-bold">{t("store_manager.stampConfigure.createReward")}</Text>
                   </TouchableOpacity>
                 </View>
               ) : (
@@ -350,10 +350,10 @@ export default function ConfigureStamp() {
                   )}
                   <View className="flex-1">
                     <Text className="text-sm font-poppins-semibold text-slate-900 dark:text-slate-100">
-                      {selectedReward?.title ?? (reward_id ? t("storeManager.stampConfigure.loadingReward") : t("storeManager.stampConfigure.chooseReward"))}
+                      {selectedReward?.title ?? (reward_id ? t("store_manager.stampConfigure.loadingReward") : t("store_manager.stampConfigure.chooseReward"))}
                     </Text>
                     <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500 mt-0.5">
-                      {selectedReward ? t("storeManager.reward.pts", { points: selectedReward.points_cost }) : t("storeManager.stampConfigure.opensList")}
+                      {selectedReward ? t("store_manager.reward.pts", { points: selectedReward.points_cost }) : t("store_manager.stampConfigure.opensList")}
                     </Text>
                   </View>
                   <ChevronRight size={20} color="#94A3B8" />
@@ -366,12 +366,12 @@ export default function ConfigureStamp() {
             <View className="gap-y-1">
               <View className="flex-row items-center gap-x-1">
                 <Text className="text-sm font-poppins-semibold text-slate-700 dark:text-slate-300">
-                  {t("storeManager.stampConfigure.expirationMode")}
+                  {t("store_manager.stampConfigure.expirationMode")}
                 </Text>
                 <Text className="text-sm font-poppins text-red-500 dark:text-red-400 ">*</Text>
               </View>
               <Text className="text-xs font-poppins text-slate-500 dark:text-slate-400">
-                {t("storeManager.stampConfigure.expirationModeHint")}
+                {t("store_manager.stampConfigure.expirationModeHint")}
               </Text>
             </View>
 
@@ -391,12 +391,12 @@ export default function ConfigureStamp() {
                   <View className="flex-row items-center justify-between">
                     <View className="flex-1 pr-3">
                       <Text className="text-sm font-poppins pr-8 text-textSecondary dark:text-darkTextSecondary mt-1 font-poppins-semibold">
-                        {t(`storeManager.stampConfigure.expiration.${opt.key}.label`)}
+                        {t(`store_manager.stampConfigure.expiration.${opt.key}.label`)}
                       </Text>
                       <Text
                         className="text-xs font-poppins pr-8 text-textMuted dark:text-darkTextMuted mt-1"
                       >
-                        {t(`storeManager.stampConfigure.expiration.${opt.key}.description`)}
+                        {t(`store_manager.stampConfigure.expiration.${opt.key}.description`)}
                       </Text>
                     </View>
                     <View
@@ -414,8 +414,8 @@ export default function ConfigureStamp() {
             {expiration_mode === "card" && (
               <View className="gap-y-1.5 pl-1">
                 <TextField
-                  label={t("storeManager.stampConfigure.expirationDays")}
-                  placeholder={t("storeManager.stampConfigure.expirationDaysPlaceholder")}
+                  label={t("store_manager.stampConfigure.expirationDays")}
+                  placeholder={t("store_manager.stampConfigure.expirationDaysPlaceholder")}
                   keyboardType="numeric"
                   value={expiration_days > 0 ? String(expiration_days) : ""}
                   onChangeText={(v) => setExpirationDays(parseInt(v) || 0)}

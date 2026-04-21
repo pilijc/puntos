@@ -1,0 +1,69 @@
+{
+  "title": "Sign Up",
+  "titleManager": "Sign Up as Store Manager",
+  "button": "Sign Up",
+  "divider": "or continue with",
+  "google": "Continue with Google",
+  "creating": "Creating Account...",
+  "continue": "Continue",
+  "back": "Back",
+  "ownerPrompt": "Sign up as Store Owner?",
+  "roleSelect": {
+    "title": "Choose how you’ll use the app",
+    "subtitle": "Pick the option that fits you best. You can update this later in settings.",
+    "customerLabel": "I’m a Customer",
+    "customerDescription": "I want to earn rewards and use loyalty features",
+    "ownerLabel": "I’m a Store Owner",
+    "ownerDescription": "I want to manage my store, rewards, and customers"
+  },
+  "alreadyHaveAccount": "Already have an account?",
+  "login": "Login",
+  "success": "Account created!",
+  "successManager": "Store Manager account created!",
+  "error": {
+    "nameRequired": "Name is required",
+    "nameInvalid": "Name can only contain letters, spaces, hyphens, and apostrophes",
+    "emailRequired": "Email is required",
+    "emailInvalid": "Please enter a valid email",
+    "emailRegistered": "Email is already registered. Please login instead.",
+    "passwordRequired": "Password is required",
+    "passwordConfirm": "Please confirm your password",
+    "passwordMatch": "Passwords do not match",
+    "passwordLimit": "Password must be at least 8 characters",
+    "termsRequired": "You must accept the terms",
+    "failed": "Signup failed",
+    "failedManager": "Store manager signup failed",
+    "googleFailed": "Google Sign-Up Failed",
+    "tryDifferentEmail": "Try Different Email",
+    "goToLogin": "Go to Login"
+  },
+  "stepper": {
+    "step1": {
+      "title": "What's your name?",
+      "description": "Let's get to know you better"
+    },
+    "step2": {
+      "title": "What's your email?",
+      "description": "We'll use this for your account"
+    },
+    "step3": {
+      "title": "Create a password",
+      "description": "Must be at least 8 characters"
+    },
+    "step4": {
+      "description": "Please review and accept our terms"
+    },
+    "label": {
+      "name": "Name",
+      "email": "Email Address",
+      "confirmPassword": "Confirm Password",
+      "terms": "Terms and Conditions",
+      "termsAgree": "I agree to the Terms and Conditions"
+    },
+    "placeholder": {
+      "name": "John Doe",
+      "password": "Enter your password",
+      "confirmPassword": "Confirm your password"
+    }
+  }
+}

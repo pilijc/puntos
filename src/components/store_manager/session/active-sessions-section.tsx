@@ -33,7 +33,7 @@ export function ActiveSessionSection() {
             {/* header row - matching settings item style */}
             <View className="px-2.5 py-3 flex-row items-center border-b border-slate-50 dark:border-slate-800/50">
                 <View className="h-8 w-8 -mt-0.5 rounded-lg items-center justify-center">
-                    <Activity size={15} color="#0f172a" className="dark:text-white" />
+                    <Activity size={15} color="#ff6600" className="dark:text-white" />
                 </View>
 
                 <View className="flex-1 ml-2">

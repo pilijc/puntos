@@ -52,7 +52,7 @@ export const LocationCard = () => {
                         onPress: () => setModal(null),
                     },
                     {
-                        label: translate('settings.notificationsPrivacy.openSettings'),
+                        label: translate('label.settings'),
                         onPress: () => {
                             setModal(null);
                             togglePreference('location_enabled');
@@ -75,8 +75,8 @@ export const LocationCard = () => {
                 onPress={handlePress}
                 className="flex-row p-3 bg-background dark:bg-darkBackgroundMuted items-center will-change-pressable"
             >
-                <View className="h-8 w-8 items-center justify-center rounded-lg bg-yellow-50 dark:bg-yellow-900/20">
-                    <MapPin size={18} color="#d8d336" />
+                <View className="h-8 w-8 -mt-0.5 rounded-lg items-center justify-center">
+                    <MapPin size={18} color="#ff6600" />
                 </View>
                 <View className="ml-3 flex-1">
                     <Text className="text-base font-poppins-semibold text-textPrimary dark:text-darkTextPrimary">

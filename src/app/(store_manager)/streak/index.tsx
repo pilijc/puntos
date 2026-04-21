@@ -69,7 +69,7 @@ export default function ViewStreak() {
     : visibleEndedStreaks;
 
   const showError = (message: string) =>
-    setModal({ title: t("storeManager.streak.error"), message, buttons: [{ label: t("label.ok"), onPress: () => setModal(null) }] });
+    setModal({ title: t("store_manager.streak.error"), message, buttons: [{ label: t("label.ok"), onPress: () => setModal(null) }] });
 
   const handlePublish = (streak: Streak) => {
     const hasOtherUpcoming = streaks.some(
@@ -77,19 +77,19 @@ export default function ViewStreak() {
     );
     if (hasOtherUpcoming) {
       setModal({
-        title: t("storeManager.streak.upcomingExistsTitle"),
-        message: t("storeManager.streak.upcomingExistsMessage"),
+        title: t("store_manager.streak.upcomingExistsTitle"),
+        message: t("store_manager.streak.upcomingExistsMessage"),
         buttons: [{ label: t("label.ok"), onPress: () => setModal(null) }],
       });
       return;
     }
 
     setModal({
-      title: t("storeManager.streak.publishTitle"),
-      message: t("storeManager.streak.publishMessage"),
+      title: t("store_manager.streak.publishTitle"),
+      message: t("store_manager.streak.publishMessage"),
       buttons: [
         { label: t("label.cancel"),  variant: "secondary", onPress: () => setModal(null) },
-        { label: t("storeManager.streak.publish"), variant: "primary", onPress: () => { setModal(null); doPublish(streak.id!); } },
+        { label: t("store_manager.streak.publish"), variant: "primary", onPress: () => { setModal(null); doPublish(streak.id!); } },
       ],
     });
   };
@@ -107,7 +107,7 @@ export default function ViewStreak() {
       await publishStreakProgram(programId);
       load();
     } catch (e) {
-      showError((e as Error).message ?? t("storeManager.streak.publishFailed"));
+      showError((e as Error).message ?? t("store_manager.streak.publishFailed"));
     } finally {
       setActing(null);
     }
@@ -115,11 +115,11 @@ export default function ViewStreak() {
 
   const handleActivate = (streak: Streak) => {
     setModal({
-      title: t("storeManager.streak.activateTitle"),
-      message: t("storeManager.streak.activateMessage"),
+      title: t("store_manager.streak.activateTitle"),
+      message: t("store_manager.streak.activateMessage"),
       buttons: [
         { label: t("label.cancel"),   variant: "secondary", onPress: () => setModal(null) },
-        { label: t("storeManager.streak.activate"), variant: "primary", onPress: () => { setModal(null); doActivate(streak.id!); } },
+        { label: t("store_manager.streak.activate"), variant: "primary", onPress: () => { setModal(null); doActivate(streak.id!); } },
       ],
     });
   };
@@ -130,7 +130,7 @@ export default function ViewStreak() {
       await activateStreakProgram(programId);
       load();
     } catch (e) {
-      showError((e as Error).message ?? t("storeManager.streak.activateFailed"));
+      showError((e as Error).message ?? t("store_manager.streak.activateFailed"));
     } finally {
       setActing(null);
     }
@@ -138,22 +138,22 @@ export default function ViewStreak() {
 
   const handleEnd = (streak: Streak) => {
     setModal({
-      title: t("storeManager.streak.endTitle"),
-      message: t("storeManager.streak.endMessage"),
+      title: t("store_manager.streak.endTitle"),
+      message: t("store_manager.streak.endMessage"),
       buttons: [
         { label: t("label.cancel"),      variant: "secondary", onPress: () => setModal(null) },
-        { label: t("storeManager.streak.endProgram"), variant: "danger",   onPress: () => { setModal(null); doEnd(streak.id!); } },
+        { label: t("store_manager.streak.endProgram"), variant: "danger",   onPress: () => { setModal(null); doEnd(streak.id!); } },
       ],
     });
   };
 
   const handleDelete = (streak: Streak) => {
     setModal({
-      title: t("storeManager.streak.deleteTitle"),
-      message: t("storeManager.streak.deleteMessage"),
+      title: t("store_manager.streak.deleteTitle"),
+      message: t("store_manager.streak.deleteMessage"),
       buttons: [
         { label: t("label.cancel"), variant: "secondary", onPress: () => setModal(null) },
-				{ label: t("storeManager.streak.deleteProgram"), variant: "danger", onPress: () => { setModal(null); doDelete(streak.id!); } },
+				{ label: t("store_manager.streak.deleteProgram"), variant: "danger", onPress: () => { setModal(null); doDelete(streak.id!); } },
       ],
     });
   };
@@ -164,7 +164,7 @@ export default function ViewStreak() {
       await endStreakProgram(programId);
       load();
     } catch (e) {
-      showError((e as Error).message ?? t("storeManager.streak.endFailed"));
+      showError((e as Error).message ?? t("store_manager.streak.endFailed"));
     } finally {
       setActing(null);
     }
@@ -176,7 +176,7 @@ export default function ViewStreak() {
       await deleteStreakProgram(programId);
       load();
     } catch (e) {
-      showError((e as Error).message ?? t("storeManager.streak.deleteFailed"));
+      showError((e as Error).message ?? t("store_manager.streak.deleteFailed"));
     } finally {
       setActing(null);
     }
@@ -203,8 +203,8 @@ export default function ViewStreak() {
       />
 
       <AppHeader
-        title={t("storeManager.streak.title")}
-        description={t("storeManager.streak.description")}
+        title={t("store_manager.streak.title")}
+        description={t("store_manager.streak.description")}
         onBackPress={() => {
           router.push(`/(store_manager)/view-store/${storeId}`);
         }}
@@ -237,7 +237,7 @@ export default function ViewStreak() {
                         : "text-xs font-poppins-medium text-slate-400 dark:text-slate-500"
                     }
                   >
-                    {t(`storeManager.streak.tabs.${tab.key}`)}
+                    {t(`store_manager.streak.tabs.${tab.key}`)}
                   </Text>
                   {count > 0 && (
                     <View className="rounded-full min-w-[18px] items-center bg-white/20">
@@ -307,17 +307,17 @@ export default function ViewStreak() {
           <View className="items-center gap-y-1 -mt-4">
             <Text className="text-sm font-poppins-semibold text-textMuted">
               {activeTab === "active"
-                ? t("storeManager.streak.emptyActiveTitle")
+                ? t("store_manager.streak.emptyActiveTitle")
                 : activeTab === "upcoming"
-                ? t("storeManager.streak.emptyUpcomingTitle")
-                : t("storeManager.streak.emptyEndedTitle")}
+                ? t("store_manager.streak.emptyUpcomingTitle")
+                : t("store_manager.streak.emptyEndedTitle")}
             </Text>
             <Text className="text-sm font-poppins text-textMuted text-center">
               {activeTab === "active"
-                ? t("storeManager.streak.emptyActiveBody")
+                ? t("store_manager.streak.emptyActiveBody")
                 : activeTab === "upcoming"
-                ? t("storeManager.streak.emptyUpcomingBody")
-                : t("storeManager.streak.emptyEndedBody")}
+                ? t("store_manager.streak.emptyUpcomingBody")
+                : t("store_manager.streak.emptyEndedBody")}
             </Text>
           </View>
         </View>

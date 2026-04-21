@@ -82,21 +82,21 @@ export default function TransactionsScreen() {
   const filterOptions = useMemo(
     () =>
       [
-        { label: translate("storeManager.transactions.filters.all"), value: "all" as const },
+        { label: translate("label.all"), value: "all" as const },
         {
-          label: translate("storeManager.transactions.filters.qr"),
+          label: translate("label.qrPurchase"),
           value: "qr" as const,
           icon: TYPE_META.qr.icon,
           color: TYPE_META.qr.color,
         },
         {
-          label: translate("storeManager.transactions.filters.stamp"),
+          label: translate("label.stamp"),
           value: "stamp" as const,
           icon: TYPE_META.stamp.icon,
           color: TYPE_META.stamp.color,
         },
         {
-          label: translate("storeManager.transactions.filters.streak"),
+          label: translate("label.streak"),
           value: "streak" as const,
           icon: TYPE_META.streak.icon,
           color: TYPE_META.streak.color,
@@ -197,7 +197,7 @@ export default function TransactionsScreen() {
     <SafeAreaView edges={["top", "left", "right"]} className="flex-1 bg-backgroundMuted dark:bg-darkBackground">
       <View className="bg-white dark:bg-darkBackground border-b border-neutral-100 dark:border-darkBorder px-6 py-3 flex-row items-center justify-between">
         <Text className="text-xl font-poppins-bold text-textPrimary dark:text-darkTextPrimary py-1">
-          {translate("storeManager.transactions.title")}
+          {translate("label.transactions")}
         </Text>
       </View>
 

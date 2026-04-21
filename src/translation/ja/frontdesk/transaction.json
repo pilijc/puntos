@@ -1,0 +1,62 @@
+{
+  "transactionModal": {
+    "title": "購入金額を入力",
+    "description": "お客様の購入金額を入力すると、付与ポイントが計算されます。"
+  },
+  "title": "QRコードをスキャン",
+  "store": "現在の店舗",
+  "scan": {
+    "title": "スキャン準備完了",
+    "description": "購入金額を入力して、QRコードのスキャンを開始してください"
+  },
+  "recent": {
+    "title": "最近の取引",
+    "view": "すべて表示",
+    "empty": "取引はまだありません",
+    "purchase": "の購入",
+    "time": {
+      "justNow": "たった今",
+      "minute": "分前",
+      "minutes": "分前",
+      "hour": "時間前",
+      "hours": "時間前",
+      "day": "日前",
+      "days": "日前"
+    }
+  },
+  "success": {
+    "title": "成功！",
+    "pointsAwarded": "付与ポイント",
+    "scanAnother": "続けてスキャン"
+  },
+  "camera": {
+    "title": "枠内にQRコードを合わせてください",
+    "description": "スキャナーがQRコードを自動で検出して処理します",
+    "permission": {
+      "title": "カメラアクセスが必要です",
+      "description": "QRコードをスキャンしてお客様にポイントを付与するため、カメラの使用を許可してください"
+    }
+  },
+  "error": {
+    "qr": {
+      "title": "QRコードの読み取りに失敗しました",
+      "description": "QRコードの処理に失敗しました。もう一度お試しください。"
+    },
+    "amount": {
+      "invalid": "金額が正しくありません",
+      "lessThanZero": "購入金額は0より大きい金額を入力してください。"
+    },
+    "unknown": "問題が発生しました。もう一度お試しください。"
+  },
+  "access": {
+    "checking": "QRアクセスの確認中...",
+    "disabled": "QRアクセスが無効です",
+    "disabledDetail": "QRスキャンの有効化はストアマネージャーのみが行えます。",
+    "wait": "ストアマネージャーがこの機能を有効にするまでお待ちください。"
+  },
+  "passwordSetup": {
+    "title": "パスワード設定が必要です",
+    "message": "ダッシュボードの全機能を利用し、アカウントのセキュリティを確保するため、パスワード設定を完了してください。",
+    "button": "パスワードを設定"
+  }
+}

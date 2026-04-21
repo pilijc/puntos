@@ -13,10 +13,13 @@ export function useDeviceSession(userId?: string) {
         setBlockedSessions,
         setActiveSessions,
         setIsCheckingLimit,
+        setServerTimeMs,
         clearBlockedSessions,
     } = useDeviceSessionStore();
 
-    // internal effect to handle heartbeat lifecycle automatically if userId is provided
+    // single canonical heartbeat effect — activates only when userId is provided.
+    // covers both: foreground transitions via AppState and long continuous sessions via setInterval.
+    // no manual startHeartbeat callback is needed — pass userId to useDeviceSession() at the call site.
     useEffect(() => {
         if (!userId) return;
 
@@ -31,7 +34,7 @@ export function useDeviceSession(userId?: string) {
         const sub = AppState.addEventListener("change", handler);
 
         // 2. pulse continuously every 5 minutes while the app is actively open
-        // This prevents the 15-min timeout from incorrectly killing an active user's session
+        // this prevents the 15-min timeout from incorrectly killing an active user's session
         const intervalId = setInterval(pulseHeartbeat, 5 * 60 * 1000);
 
         return () => {
@@ -58,7 +61,7 @@ export function useDeviceSession(userId?: string) {
                     return { allowed: true, activeSessions: [] };
                 } else {
                     setBlockedSessions(result.activeSessions);
-                    return { allowed: false, activeSessions: result.activeSessions }
+                    return { allowed: false, activeSessions: result.activeSessions };
                 }
             } finally {
                 setIsCheckingLimit(false);
@@ -71,34 +74,19 @@ export function useDeviceSession(userId?: string) {
         await deactivateCurrentDeviceSessionService(uid);
     }, []);
 
-    const startHeartbeat = useCallback((uid: string) => {
-        const pulseHeartbeat = () => {
-            refreshDeviceHeartbeatService(uid).catch(() => {});
-        };
-
-        const handler = (state: AppStateStatus) => {
-            if (state === "active") pulseHeartbeat();
-        };
-        
-        const sub = AppState.addEventListener("change", handler);
-        const intervalId = setInterval(pulseHeartbeat, 5 * 60 * 1000);
-
-        return () => {
-            sub.remove();
-            clearInterval(intervalId);
-        };
-    }, []);
-
     const fetchActiveSessions = useCallback(async () => {
         try {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) return;
             const data = await getActiveDeviceSessionsService(user.id);
             setActiveSessions(data);
+            // store the approximate server time captured at the moment of the fetch so
+            // DeviceSessionCard can display "last active" relative to it instead of Date.now()
+            setServerTimeMs(Date.now());
         } catch (error) {
             console.error("Failed to fetch active sessions: ", error);
         }
-    }, [setActiveSessions]);
+    }, [setActiveSessions, setServerTimeMs]);
 
     const validateHomeRouteSession = useCallback(async (homeRoute?: string) => {
         if (homeRoute && (homeRoute === "/(store_manager)" || homeRoute.startsWith("/(store_manager)"))) {
@@ -118,7 +106,6 @@ export function useDeviceSession(userId?: string) {
         checkAndRegisterSession,
         validateHomeRouteSession,
         signOutCurrentDevice,
-        startHeartbeat,
         fetchActiveSessions,
-    }
+    };
 }

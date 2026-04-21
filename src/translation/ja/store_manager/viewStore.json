@@ -1,0 +1,33 @@
+{
+  "fallbackTitle": "店舗の詳細",
+  "fallbackDescription": "店舗情報の表示と管理",
+  "menu": {
+    "staff": {
+      "label": "スタッフ",
+      "description": "チーム管理"
+    },
+    "streak": {
+      "label": "ストリーク",
+      "description": "毎日の特典"
+    },
+    "stamp": {
+      "label": "スタンプ",
+      "description": "スタンプカード"
+    },
+    "qr": {
+      "label": "QR購入",
+      "description": "スキャンで特典"
+    },
+    "rewards": {
+      "label": "リワード",
+      "description": "交換アイテム"
+    },
+    "media": {
+      "label": "詳細",
+      "description": "店舗を管理"
+    }
+  },
+  "recentTransactions": "最近の取引",
+  "seeAll": "すべて見る",
+  "noTransactionsYet": "取引はまだありません"
+}
