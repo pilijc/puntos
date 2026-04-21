@@ -41,9 +41,6 @@ export async function getRewards(options: {
   } else if (sortBy === "newest") {
     query = query.order("created_at", { ascending: false });
   } else {
-    // Default to "popular" - if there's no popularity column, fallback to created_at
-    // Check database.txt: store_rewards does NOT have a popularity column.
-    // We can use created_at as a fallback or if we add a popularity column later.
     query = query.order("created_at", { ascending: false });
   }
 
