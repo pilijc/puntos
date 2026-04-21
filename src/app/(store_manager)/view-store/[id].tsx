@@ -284,18 +284,18 @@ export default function ViewStore() {
               </View>
 
               {txLoading ? (
-                <View className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 px-4 py-8 items-center">
+                <View className="bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 px-4 py-8 items-center">
                   <Loader2 className="animate-spin" size={28} color="#CBD5E1" />
                 </View>
               ) : recentTxs.length === 0 ? (
-                <View className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 px-4 py-10 items-center gap-y-2">
+                <View className="bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 px-4 py-10 items-center gap-y-2">
                   <ReceiptText size={32} color="#CBD5E1" />
                   <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">
                     {t("storeManager.viewStore.noTransactionsYet")}
                   </Text>
                 </View>
               ) : (
-                <View className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 overflow-hidden">
+                <View className="bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 overflow-hidden">
                   {recentTxs.map((tx, idx) => (
                     <View
                       key={tx.id}
@@ -357,18 +357,18 @@ export default function ViewStore() {
             </View>
 
             {txLoading ? (
-              <View className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 px-4 py-8 items-center">
+              <View className="bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 px-4 py-8 items-center">
                 <Loader2 className="animate-spin" size={28} color="#CBD5E1" />
               </View>
             ) : recentTxs.length === 0 ? (
-              <View className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 px-4 py-10 items-center gap-y-2">
+              <View className="bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 px-4 py-10 items-center gap-y-2">
                 <ReceiptText size={32} color="#CBD5E1" />
                 <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">
                   {t("storeManager.viewStore.noTransactionsYet")}
                 </Text>
               </View>
             ) : (
-              <View className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 overflow-hidden">
+              <View className="bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 overflow-hidden">
                 {recentTxs.map((tx, idx) => (
                   <View
                     key={tx.id}

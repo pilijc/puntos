@@ -28,6 +28,27 @@ export type ManagerSubscriptionRow = {
   updated_at?: string | null;
 };
 
+export type SubscriptionDashboardTrend = "up" | "down" | "flat";
+
+export type SubscriptionDashboardCompare = {
+  trend: SubscriptionDashboardTrend;
+  subtitle: string;
+};
+
+export type SubscriptionDashboardStats = {
+  totalAmountCollected: number;
+  totalAmountCollectedCompare: SubscriptionDashboardCompare | null;
+
+  activeSubscribers: number;
+  activeSubscribersCompare: SubscriptionDashboardCompare | null;
+
+  newSubscribersThisMonth: number;
+  newSubscribersThisMonthCompare: SubscriptionDashboardCompare | null;
+
+  scheduledCancellations: number;
+  scheduledCancellationsCompare: SubscriptionDashboardCompare | null;
+};
+
 export type PublicUserRow = {
   id: string;
   email?: string | null;

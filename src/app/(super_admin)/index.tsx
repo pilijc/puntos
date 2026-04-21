@@ -96,7 +96,7 @@ export default function SuperAdminDashboard() {
           className={isWeb ? 'mb-6' : 'mb-6 px-6'}
         >
           {!isWeb && <SectionHeader title={translate("superAdmin.dashboard.analytics.user.title")} onAction={() => { }} />}
-          <View className="bg-white dark:bg-darkBackgroundMuted rounded-2xl p-8 border border-slate-100 dark:border-darkBorder items-center justify-center min-h-[220px]">
+          <View className="bg-white dark:bg-darkBackgroundMuted rounded-xl p-8 border border-slate-100 dark:border-darkBorder items-center justify-center min-h-[220px]">
             <Users size={48} color="#FF6600" />
             <Text className="text-lg font-[Poppins-Bold] text-[#0F172A] dark:text-darkTextPrimary mt-3">
               {translate("superAdmin.dashboard.analytics.user.insights")}
@@ -120,7 +120,7 @@ export default function SuperAdminDashboard() {
           className={isWeb ? 'mb-8' : 'mb-8 px-6'}
         >
           {!isWeb && <SectionHeader title={translate("superAdmin.dashboard.analytics.store.title")} onAction={() => { }} />}
-          <View className="bg-white dark:bg-darkBackgroundMuted rounded-2xl p-8 border border-slate-100 dark:border-darkBorder items-center justify-center min-h-[220px]">
+          <View className="bg-white dark:bg-darkBackgroundMuted rounded-xl p-8 border border-slate-100 dark:border-darkBorder items-center justify-center min-h-[220px]">
             <BarChart3 size={48} color="#FF6600" />
             <Text className="text-lg font-[Poppins-Bold] text-[#0F172A] dark:text-darkTextPrimary mt-3">
               {translate("superAdmin.dashboard.analytics.store.insights")}

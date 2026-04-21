@@ -18,9 +18,9 @@ const WEB_MAX_WIDTH = 896;
 export default function AddStaff() {
   const { t } = useTranslation();
   const router = useRouter();
-  const insets = useSafeAreaInsets();
   const { storeId, staffId } = useLocalSearchParams<{ storeId: string; staffId?: string }>();
   const isEditMode = !!staffId;
+  const isWeb = Platform.OS === "web";
   const {
     name,
     email,
@@ -174,10 +174,10 @@ export default function AddStaff() {
             <View style={Platform.OS === "web" ? { width: "100%", maxWidth: WEB_MAX_WIDTH } : undefined}>
               <View className="mx-4 mt-2 mb-4 gap-y-4 rounded-xl border border-slate-100 bg-white p-4 dark:border-neutral-700 dark:bg-neutral-800">
                 <View>
-                  <Text className="text-sm font-poppins-bold text-slate-800 dark:text-slate-100">
+                  <Text className="text-sm font-poppins-bold text-textPrimary dark:text-darkTextPrimary">
                     {isEditMode ? t("storeManager.staffForm.profileSectionEdit") : t("storeManager.staffForm.profileSectionAdd")}
                   </Text>
-                  <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">
+                  <Text className="text-xs font-poppins text-textSecondary dark:text-darkTextSecondary">
                     {isEditMode
                       ? t("storeManager.staffForm.profileHintEdit")
                       : t("storeManager.staffForm.profileHintAdd")}
@@ -244,6 +244,7 @@ export default function AddStaff() {
                         paddingHorizontal: 12,
                         textAlignVertical: "center",
                         includeFontPadding: false,
+                        fontSize: 13,
                       }}
                       keyboardType="default"
                       placeholder={t("storeManager.staffForm.passwordPlaceholder")}
@@ -253,8 +254,33 @@ export default function AddStaff() {
                   </View>
                 )}
 
-                <View className="gap-y-3" style={{ paddingBottom: insets.bottom }}>
-                  <Button
+                <View className="gap-y-3">
+                  {isWeb ? (
+                    <View className="flex-row gap-x-3 justify-center items-center">
+                      <Button
+                        label={t("storeManager.staffForm.cancel")}
+                        onPress={() => {
+                          router.push({
+                            pathname: "/(store_manager)/staff",
+                            params: { storeId },
+                          });
+                        }}
+                        disabled={isSubmitting}
+                        fullWidth={false}
+                        variant="secondary"
+                      />
+                      <Button
+                        label={isEditMode ? t("storeManager.staffForm.saveChanges") : t("storeManager.staffForm.confirm")}
+                        onPress={openConfirm}
+                        disabled={isSubmitting}
+                        loading={isSubmitting}
+                        fullWidth={false}
+                        variant="primary"
+                      />
+                    </View>
+                  ) : (
+                    <View className="gap-y-3">
+                      <Button
                     label={isEditMode ? t("storeManager.staffForm.saveChanges") : t("storeManager.staffForm.confirm")}
                     onPress={openConfirm}
                     disabled={isSubmitting}
@@ -275,6 +301,8 @@ export default function AddStaff() {
                     fullWidth={true}
                     variant="secondary"
                   />
+                  </View>
+                  )}
                 </View>
               </View>
             </View>
@@ -287,7 +315,7 @@ export default function AddStaff() {
           className="absolute inset-0 items-center justify-center bg-black/40 px-6"
           pointerEvents="box-none"
         >
-          <View className="w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl dark:border-slate-700 dark:bg-slate-900">
+          <View className="w-full max-w-sm rounded-xl border border-slate-200 bg-white p-5 shadow-2xl dark:border-slate-700 dark:bg-slate-900">
             <Text className="mb-2 text-base font-poppins-bold text-slate-900 dark:text-slate-100">
               {isEditMode ? t("storeManager.staffForm.confirmEditTitle") : t("storeManager.staffForm.confirmAddTitle")}
             </Text>

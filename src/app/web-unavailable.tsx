@@ -24,7 +24,7 @@ export default function WebUnavailable() {
   return (
     <SafeAreaView className="flex-1 bg-slate-50 dark:bg-darkBackground">
       <View className="flex-1 px-4 py-8 justify-center items-center">
-        <View className="w-full max-w-md rounded-2xl border border-slate-100 dark:border-darkBorder bg-white dark:bg-darkBackground px-6 py-8 shadow-sm">
+        <View className="w-full max-w-md rounded-xl border border-slate-100 dark:border-darkBorder bg-white dark:bg-darkBackground px-6 py-8 shadow-sm">
           <View className="items-center gap-5">
             <Image
               source={require("../assets/images/found.png")}

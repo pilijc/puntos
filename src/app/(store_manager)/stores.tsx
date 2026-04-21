@@ -51,7 +51,7 @@ function StoreCard({ store, router }: { store: StoreRow; router: any }) {
 
   return (
     <TouchableOpacity
-      className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl overflow-hidden mb-3"
+      className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-xl overflow-hidden mb-3"
       activeOpacity={0.95}
       onPress={() =>
         router.push(`/(store_manager)/view-store/${store.id}`)
@@ -113,7 +113,7 @@ function StoreCard({ store, router }: { store: StoreRow; router: any }) {
 
 function SkeletonCard() {
   return (
-    <View className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden mb-3">
+    <View className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden mb-3">
       <View className="p-4 flex-row gap-3">
         <View className="w-[60px] h-[60px] rounded-xl bg-slate-100 dark:bg-slate-800" />
         <View className="flex-1 justify-center gap-y-2">
@@ -389,7 +389,7 @@ export default function StoreManagerStores() {
           {!loading && filtered.length > 0 && !error && Platform.OS === "web" ? (
             <View className="items-center">
               <View
-                className="w-full max-w-4xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl overflow-hidden"
+                className="w-full max-w-4xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-xl overflow-hidden"
               >
                 {filtered.map((store, idx) => {
                   const status = store.status ?? "inactive";
@@ -459,7 +459,7 @@ export default function StoreManagerStores() {
             </View>
           ) : !loading && filtered.length > 0 && !error && Platform.OS === "android" ? (
             <View>
-              <View className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl overflow-hidden">
+              <View className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-xl overflow-hidden">
                 {filtered.map((store, idx) => {
                   const status = store.status ?? "inactive";
                   const badgeStyle = storeStatusBadgeStyle(status);
@@ -534,8 +534,8 @@ export default function StoreManagerStores() {
           )}
           {!loading && filtered.length === 0 && !error && (
             <View className="items-center">
-              <View className="w-full max-w-4xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl px-6 py-8 items-center gap-4">
-                <View className="bg-white dark:bg-slate-900 rounded-2xl">
+              <View className="w-full max-w-4xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-xl px-6 py-8 items-center gap-4">
+                <View className="bg-white dark:bg-slate-900 rounded-xl">
                   <Image source={require("@/assets/images/found.png")} style={{ width: 190, height: 190 }} contentFit="contain" />
                 </View>
                 <View className="items-center">

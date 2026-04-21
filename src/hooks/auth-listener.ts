@@ -115,6 +115,7 @@ export function useAuthListener() {
               } else if (err instanceof AccountBlockedError) {
                 useAuthStore.getState().setRestricted(true);
               } else {
+                consumeIntentionalSignOut();
                 console.error("Auth listener session error:", err);
               }
             }

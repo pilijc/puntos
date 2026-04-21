@@ -108,9 +108,9 @@
             }
         },
         "signup": {
-            "title": "Sign Up",
-            "titleManager": "Sign Up as Store Manager",
-            "button": "Sign Up",
+            "title": "Sign up",
+            "titleManager": "Sign up as Store Manager",
+            "button": "Sign up",
             "divider": "or continue with",
             "google": "Continue with Google",
             "creating": "Creating Account...",
@@ -176,6 +176,28 @@
                     "email": "email@domain.com",
                     "password": "Enter your password",
                     "confirmPassword": "Confirm your password"
+                }
+            },
+            "terms": {
+                "1": {
+                    "title": "Account & eligibility",
+                    "description": "You must provide accurate information. You are responsible for keeping your account secure."
+                },
+                "2": {
+                    "title": "Use of the app",
+                    "description": "Do not misuse the service or attempt to access restricted features. We may update or suspend features to improve reliability."
+                },
+                "3": {
+                    "title": "Privacy",
+                    "description": "We process personal data to provide the service. We do not sell your personal information."
+                },
+                "4": {
+                    "title": "Payments (if applicable)",
+                    "description": "Subscriptions renew until cancelled. Charges are non-refundable unless required by law."
+                },
+                "5": {
+                    "title": "Updates",
+                    "description": "These terms may change. Continued use means you accept the updated terms."
                 }
             }
         }

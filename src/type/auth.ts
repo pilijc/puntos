@@ -19,6 +19,7 @@ export interface AuthState {
   setRestricted: (v: boolean) => void;
   setSessionExpiredNotice: (v: boolean) => void;
   reset: () => void;
+  resetAuthForm: () => void;
 };
 
 export interface GoogleAuth {

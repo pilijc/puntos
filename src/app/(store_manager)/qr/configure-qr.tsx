@@ -221,10 +221,10 @@ export default function ConfigureStreaks() {
           style={Platform.OS === "web" ? { width: "100%", maxWidth: WEB_MAX_WIDTH } : undefined}
         >
           <View>
-            <Text className="text-md font-poppins-bold text-slate-900 dark:text-slate-100">
+            <Text className="text-md font-poppins-bold text-textPrimary dark:text-darkTextPrimary">
             {t("storeManager.qrConfigure.heading")}
             </Text>
-            <Text className="text-sm font-poppins text-slate-500 dark:text-slate-400">
+            <Text className="text-sm font-poppins text-textSecondary dark:text-darkTextSecondary">
               {t("storeManager.qrConfigure.subheading")}
             </Text>
           </View>
@@ -244,7 +244,7 @@ export default function ConfigureStreaks() {
                   key={opt.key}
                   activeOpacity={0.8}
                   onPress={() => setEarningType(opt.key)}
-                  className={`flex-1 rounded-2xl border p-3 gap-y-1 bg-white dark:bg-slate-900 ${
+                  className={`flex-1 rounded-xl border p-3 gap-y-1 bg-white dark:bg-slate-900 ${
                     selected
                       ? "border-primary"
                       : "border-slate-200 dark:border-slate-700"

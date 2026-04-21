@@ -179,7 +179,7 @@ export default function SubscriptionScreen() {
 				render: (r) => (
 					<View className="min-w-0">
 						<Text
-							className="text-xs font-poppins-semibold text-slate-800 dark:text-slate-100"
+							className="text-xs font-poppins text-textSecondary"
 							numberOfLines={1}
 						>
 							{String(r.payment_reference ?? "—")}
@@ -193,7 +193,7 @@ export default function SubscriptionScreen() {
 				flex: 2,
 				align: "center",
 				render: (r) => (
-					<Text className="text-xs font-poppins text-slate-700 dark:text-slate-200">
+					<Text className="text-xs font-poppins text-textSecondary">
 						{formatDateLong(r.paid_at ?? r.created_at)}
 					</Text>
 				),
@@ -217,7 +217,7 @@ export default function SubscriptionScreen() {
 				flex: 1,
 				align: "right",
 				render: (r) => (
-					<Text className="text-xs font-poppins text-slate-700 dark:text-slate-200"> 
+					<Text className="text-xs font-poppins text-textSecondary"> 
             PHP&nbsp;{Number(r.amount_paid ?? 0).toFixed(2)}
 					</Text>
 				),
@@ -240,6 +240,7 @@ export default function SubscriptionScreen() {
 
 		try {
 			s.setStartingCheckout(true);
+			console.log('Starting checkout for:', { ownerId: s.ownerId, selectedSlug, amount, name });
 			const checkoutUrl = await useSubscriptionCheckout(s.ownerId, selectedSlug, amount, name);
 			if (checkoutUrl) {
 				await Linking.openURL(checkoutUrl);
@@ -320,6 +321,212 @@ export default function SubscriptionScreen() {
 
 	const proAmount = toAmountNumber(proPlan?.amount);
 
+
+	const checkoutSession = {
+		id: "cs_e8e8ce7fb4d8ef22ae3e1245",
+		type: "checkout_session",
+		attributes: {
+		  billing: {
+			address: {
+			  city: null,
+			  country: null,
+			  line1: null,
+			  line2: null,
+			  postal_code: null,
+			  state: null,
+			},
+			email: null,
+			name: null,
+			phone: null,
+		  },
+		  billing_information_fields_editable: "enabled",
+		  cancel_url: "http://localhost:8081/subscription/cancel",
+		  checkout_url:
+			"https://checkout.paymongo.com/cs_e8e8ce7fb4d8ef22ae3e1245_client_b9d8e3fcb6d9b3212baba1fe#cGtfdGVzdF8yTnVXb3hTY2lEUzJQdlVnamU4cHlkcWQ=",
+		  client_key: "cs_e8e8ce7fb4d8ef22ae3e1245_client_b9d8e3fcb6d9b3212baba1fe",
+		  customer_email: null,
+		  customer_id: null,
+		  description: null,
+		  line_items: [
+			{
+			  amount: 29900,
+			  currency: "PHP",
+			  description: "Subscription",
+			  images: [],
+			  name: "Pro Monthly Plan",
+			  quantity: 1,
+			},
+		  ],
+		  livemode: false,
+		  merchant: "Puntos",
+		  paid_at: 1776386511,
+		  payments: [
+			{
+			  id: "pay_9DCoC7e2pEYu7Yu42geu3K8D",
+			  type: "payment",
+			  attributes: {
+				access_url: null,
+				amount: 29900,
+				balance_transaction_id: "bal_txn_diacghwEXz3YqM9kCFJHJdbY",
+				billing: {
+				  address: {
+					city: null,
+					country: null,
+					line1: null,
+					line2: null,
+					postal_code: null,
+					state: null,
+				  },
+				  email: "kayshamir2004@gmail.com",
+				  name: "Kay Sh",
+				  phone: "9178208391",
+				},
+				currency: "PHP",
+				description: null,
+				digital_withholding_vat_amount: 0,
+				disputed: false,
+				external_reference_number: null,
+				fee: 748,
+				instant_settlement: null,
+				livemode: false,
+				net_amount: 29152,
+				origin: "api",
+				payment_intent_id: "pi_B6s3Jw7Jm9uAtFLr5qgRKD32",
+				payout: null,
+				source: {
+				  id: "src_WD5z9Pu4ATbj7NhDkATL21Uy",
+				  type: "gcash",
+				  provider: {
+					id: null,
+				  },
+				  provider_id: null,
+				},
+				statement_descriptor: "Puntos",
+				status: "paid",
+				tax_amount: null,
+				metadata: {
+				  slug: "pro",
+				  owner_id: "cb72aec9-c64d-460a-a0a2-40740ec8abd2",
+				},
+				promotion: null,
+				refunds: [],
+				taxes: [],
+				available_at: 1776762000,
+				created_at: 1776386511,
+				credited_at: 1776906000,
+				paid_at: 1776386511,
+				updated_at: 1776386511,
+			  },
+			},
+		  ],
+		  payment_intent: {
+			id: "pi_B6s3Jw7Jm9uAtFLr5qgRKD32",
+			type: "payment_intent",
+			attributes: {
+			  amount: 29900,
+			  capture_type: "automatic",
+			  client_key: "pi_B6s3Jw7Jm9uAtFLr5qgRKD32_client_7Ntby6ecxjpFeJ3zWvnmKmC2",
+			  currency: "PHP",
+			  description: null,
+			  livemode: false,
+			  original_amount: 29900,
+			  statement_descriptor: "Puntos",
+			  status: "succeeded",
+			  last_payment_error: null,
+			  payment_method_allowed: ["card", "gcash"],
+			  payments: [
+				{
+				  id: "pay_9DCoC7e2pEYu7Yu42geu3K8D",
+				  type: "payment",
+				  attributes: {
+					access_url: null,
+					amount: 29900,
+					balance_transaction_id: "bal_txn_diacghwEXz3YqM9kCFJHJdbY",
+					billing: {
+					  address: {
+						city: null,
+						country: null,
+						line1: null,
+						line2: null,
+						postal_code: null,
+						state: null,
+					  },
+					  email: "kayshamir2004@gmail.com",
+					  name: "Kay Sh",
+					  phone: "9178208391",
+					},
+					currency: "PHP",
+					description: null,
+					digital_withholding_vat_amount: 0,
+					disputed: false,
+					external_reference_number: null,
+					fee: 748,
+					instant_settlement: null,
+					livemode: false,
+					net_amount: 29152,
+					origin: "api",
+					payment_intent_id: "pi_B6s3Jw7Jm9uAtFLr5qgRKD32",
+					payout: null,
+					source: {
+					  id: "src_WD5z9Pu4ATbj7NhDkATL21Uy",
+					  type: "gcash",
+					  provider: {
+						id: null,
+					  },
+					  provider_id: null,
+					},
+					statement_descriptor: "Puntos",
+					status: "paid",
+					tax_amount: null,
+					metadata: {
+					  slug: "pro",
+					  owner_id: "cb72aec9-c64d-460a-a0a2-40740ec8abd2",
+					},
+					promotion: null,
+					refunds: [],
+					taxes: [],
+					available_at: 1776762000,
+					created_at: 1776386511,
+					credited_at: 1776906000,
+					paid_at: 1776386511,
+					updated_at: 1776386511,
+				  },
+				},
+			  ],
+			  next_action: null,
+				card: {
+			  payment_method_options: {
+				  request_three_d_secure: "any",
+				},
+			  },
+			  metadata: {
+				slug: "pro",
+				owner_id: "cb72aec9-c64d-460a-a0a2-40740ec8abd2",
+			  },
+			  setup_future_usage: null,
+			  created_at: 1776386508,
+			  updated_at: 1776386511,
+			},
+		  },
+		  payment_method_types: [],
+		  payment_method_used: "gcash",
+		  reference_number: null,
+		  send_email_receipt: false,
+		  show_description: true,
+		  show_line_items: true,
+		  status: "active",
+		  success_url: "http://localhost:8081/subscription/success",
+		  created_at: 1776386502,
+		  updated_at: 1776386508,
+		  metadata: {
+			owner_id: "cb72aec9-c64d-460a-a0a2-40740ec8abd2",
+			slug: "pro",
+		  },
+		},
+	  };
+
+	  console.log(checkoutSession.attributes.payment_intent.attributes.payments[0].id)
+
 	return (
 		<SafeAreaView
 			edges={["top", "left", "right"]}
@@ -351,7 +558,7 @@ export default function SubscriptionScreen() {
 						style={{ maxWidth: isWeb ? 896 : undefined }}
 						className="w-full gap-4"
 					>
-						<View className="relative w-full overflow-hidden rounded-2xl bg-primary p-5 elevation-2">
+						<View className="relative w-full overflow-hidden rounded-xl bg-primary p-5 elevation-2">
 							<View className="absolute inset-0 pointer-events-none">
 								<View className="absolute -top-16 -right-16 h-56 w-56 rounded-full bg-white/10" />
 								<View className="absolute -bottom-20 -left-20 h-72 w-72 rounded-full bg-white/8" />
@@ -359,7 +566,7 @@ export default function SubscriptionScreen() {
 								<View className="absolute bottom-10 -left-24 h-10 w-72 -rotate-12 rounded-full bg-white/8" />
 							</View>
 							{cancellingSubscription ? (
-								<View className="absolute inset-0 z-10 rounded-2xl bg-black/25 items-center justify-center">
+								<View className="absolute inset-0 z-10 rounded-xl bg-black/25 items-center justify-center">
 									<ActivityIndicator size="large" color="#FF6600" />
 								</View>
 							) : null}
@@ -391,7 +598,7 @@ export default function SubscriptionScreen() {
 											: `PHP ${activePlanAmount.toFixed(2)}`}
 									</Text>
 									{activePlanAmount !== 0 ? (
-										<Text className="text-sm font-poppins text-white/80 mb-1">
+										<Text className="text-sm font-poppins-bold text-white/80 mb-1">
 											{translate("storeManager.subscription.billing.perMonth")}
 										</Text>
 									) : null}
@@ -399,7 +606,7 @@ export default function SubscriptionScreen() {
 
 								<View className="flex-row gap-6 mt-5">
 									<View className="flex-1">
-										<Text className="text-xs font-poppins text-white/80">
+										<Text className="text-xs font-poppins-semibold text-white/80">
 											{periodLabel}
 										</Text>
 										<Text className="mt-1 text-sm font-poppins-semibold text-white">
@@ -407,7 +614,7 @@ export default function SubscriptionScreen() {
 										</Text>
 									</View>
 									<View className="flex-1">
-										<Text className="text-xs font-poppins text-white/80">
+										<Text className="text-xs font-poppins-semibold text-white/80">
 											{translate("storeManager.subscription.billing.estimatedCost")}
 										</Text>
 										<Text className="mt-1 text-sm font-poppins-semibold text-white">
@@ -419,10 +626,11 @@ export default function SubscriptionScreen() {
 								<View className="flex-row flex-wrap gap-3 mt-6 justify-start">
 									{!isPaidPro && proPlan ? (
 										<Button
-											variant="primary"
+											variant="accent"
 											label={translate("storeManager.subscription.billing.upgradeToPro")}
 											roundedFull
 											icon="Sparkles"
+											elevation={true}
 											loading={startingCheckout}
 											onPress={() => {
 												const amount = proAmount ?? 0;
@@ -449,7 +657,7 @@ export default function SubscriptionScreen() {
 							</View>
 						</View>
 
-						<View className="bg-white dark:bg-darkBackgroundCard rounded-2xl border border-slate-100 dark:border-neutral-800 p-4">
+						<View className="bg-white dark:bg-darkBackgroundCard rounded-xl border border-slate-100 dark:border-neutral-800 p-4">
 							<View className="flex-row items-center gap-2 mb-2">
 								<Text className="text-sm font-poppins-semibold text-slate-800 dark:text-slate-100">
 									{translate("storeManager.subscription.billing.recentBilling.title")}

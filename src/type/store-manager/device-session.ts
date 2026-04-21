@@ -1,4 +1,4 @@
-export const MAX_DEVICE_SESSIONS = 2;
+export const MAX_DEVICE_SESSIONS = 3;
 export const SESSION_TIMEOUT_MS = 15 * 60 * 1000; // 15 minutes
 export type DeviceType = "mobile" | "tablet" | "web";
 

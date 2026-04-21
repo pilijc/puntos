@@ -18,7 +18,7 @@ import { AppHeader } from "@/components/header";
 import { Button } from "@/components/button";
 import { Modal } from "@/components/modal";
 import { RewardPickerModal } from "@/components/store_manager/stamp/reward-picker-modal";
-import { Info, Gift, Check, ChevronRight } from "lucide-react-native";
+import { Gift, Check, ChevronRight } from "lucide-react-native";
 import { TextField } from "@/components/text-field";
 import { useTranslation } from "react-i18next";
 
@@ -28,6 +28,7 @@ export default function ConfigureStamp() {
   const insets = useSafeAreaInsets();
   const { storeId, stampId } = useLocalSearchParams<{ storeId: string; stampId?: string }>();
   const isEdit = !!stampId;
+  const isWeb = Platform.OS === "web";
   const programId = stampId ? Number(stampId) : null;
   const {
     total_stamps,
@@ -233,18 +234,23 @@ export default function ConfigureStamp() {
         style={{ flex: 1 }}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
-        contentContainerStyle={{ padding: 16, gap: 16 }}
+        contentContainerStyle={{
+          padding: 16,
+          gap: 16,
+          ...(isWeb ? { alignItems: "center" as const } : {}),
+        }}
       >
-        <View className="bg-white dark:bg-slate-900 rounded-xl p-4 gap-y-4">
-          <View className="gap-y-4">
-            <View className="gap-y-1">
-              <Text className="text-base font-poppins-bold text-slate-900 dark:text-slate-100">
-                {t("storeManager.stampConfigure.stampDetails")}
-              </Text>
-              <Text className="text-sm font-poppins text-slate-500 dark:text-slate-400">
-                {t("storeManager.stampConfigure.stampDetailsBody")}
-              </Text>
-            </View>
+        <View style={{ width: "100%", maxWidth: isWeb ? 896 : undefined }} className="w-full">
+          <View className="bg-white dark:bg-slate-900 rounded-xl p-4 gap-y-4">
+            <View className="gap-y-4">
+              <View className="gap-y-1">
+                <Text className="text-base font-poppins-bold text-textPrimary dark:text-darkTextPrimary">
+                  {t("storeManager.stampConfigure.stampDetails")}
+                </Text>
+                <Text className="text-sm font-poppins text-textSecondary dark:text-darkTextSecondary">
+                  {t("storeManager.stampConfigure.stampDetailsBody")}
+                </Text>
+              </View>
 
             <View className="rounded-xl bg-amber-50 dark:bg-amber-900/20 p-4">
               <View className="flex-row items-center gap-x-2">
@@ -419,21 +425,45 @@ export default function ConfigureStamp() {
             )}
           </View>
 
-          <View className="gap-y-3">
-            <Button
-              label={isEdit ? t("storeManager.stampConfigure.saveChanges") : t("storeManager.stampConfigure.launchProgram")}
-              onPress={handleSave}
-              disabled={isSubmitting}
-              variant="primary"
-            />
-            <Button
-              label={t("storeManager.stampConfigure.cancel")}
-              onPress={() => {
-                router.push({ pathname: "/(store_manager)/stamp", params: { storeId } });
-              }}
-              variant="secondary"
-            />
-          </View>
+          {isWeb ? (
+            <View className="flex-row gap-x-3 justify-center items-center">
+              <Button
+                label={t("storeManager.stampConfigure.cancel")}
+                onPress={() => {
+                  router.push({ pathname: "/(store_manager)/stamp", params: { storeId } });
+                }}
+                variant="secondary"
+                fullWidth={false}
+              />
+              <Button
+                label={isEdit ? t("storeManager.stampConfigure.saveChanges") : t("storeManager.stampConfigure.launchProgram")}
+                onPress={handleSave}
+                disabled={isSubmitting}
+                variant="primary"
+                fullWidth={false}
+              />
+            </View>   
+          ) : (
+            <View className="gap-y-3">
+              <Button
+                label={isEdit ? t("storeManager.stampConfigure.saveChanges") : t("storeManager.stampConfigure.launchProgram")}
+                onPress={handleSave}
+                disabled={isSubmitting}
+                variant="primary"
+                fullWidth={true}
+              />
+              <Button
+                label={t("storeManager.stampConfigure.cancel")}
+                onPress={() => {
+                  router.push({ pathname: "/(store_manager)/stamp", params: { storeId } });
+                }}
+                variant="secondary"
+                fullWidth={true}
+              />
+            </View>
+          )}
+ 
+        </View>
         </View>
       </ScrollView>
 

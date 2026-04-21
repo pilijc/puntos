@@ -38,6 +38,15 @@ export const useAuthStore = create<AuthState>()(
           isRestricted: false,
           sessionExpiredNotice: false,
         }),
+      resetAuthForm: () =>
+        set({
+          name: "",
+          email: "",
+          password: "",
+          confirmPassword: "",
+          showPassword: false,
+          showConfirmPassword: false,
+        }),
     }),
     {
       name: "sessionToken",
