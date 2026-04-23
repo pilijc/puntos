@@ -4,7 +4,7 @@ import { Text, View } from "@/tw";
 import { Eye, EyeOff, Users, Store, RotateCcw } from "lucide-react-native";
 import Svg, {
   Path, Defs, LinearGradient, Stop, G,
-  Text as SvgText, Circle
+  Text as SvgText,
 } from "react-native-svg";
 
 const isWeb = Platform.OS === "web";
@@ -57,17 +57,19 @@ export function DashboardActivityLineChart({
 }: DashboardActivityLineChartProps) {
   const maxVal = Math.max(...userSeries, ...storeSeries, 5);
   const VIEWBOX_WIDTH = 800;
-  const VIEWBOX_HEIGHT = 320;
-  const CHART_PADDING_X = 65;
-  const CHART_PADDING_Y = 50;
+  const VIEWBOX_HEIGHT = 300;
+  const CHART_PADDING_X = 60;
+  const CHART_PADDING_TOP = 20;
+  const CHART_PADDING_BOTTOM = 50;
 
   const chartWidth = VIEWBOX_WIDTH - CHART_PADDING_X * 2;
-  const chartHeight = VIEWBOX_HEIGHT - CHART_PADDING_Y * 2;
+  const chartHeight = VIEWBOX_HEIGHT - CHART_PADDING_TOP - CHART_PADDING_BOTTOM;
+  const chartBaseline = VIEWBOX_HEIGHT - CHART_PADDING_BOTTOM;
 
   const getPoints = (series: number[]) =>
     series.map((val, i) => ({
       x: CHART_PADDING_X + (i / (series.length - 1)) * chartWidth,
-      y: VIEWBOX_HEIGHT - CHART_PADDING_Y - (val / maxVal) * chartHeight,
+      y: chartBaseline - (val / maxVal) * chartHeight,
     }));
 
   const userPoints = useMemo(() => getPoints(userSeries), [userSeries, maxVal]);
@@ -78,7 +80,7 @@ export function DashboardActivityLineChart({
 
   const getAreaPath = (smoothPath: string, points: { x: number; y: number }[]) => {
     if (!smoothPath) return "";
-    return `${smoothPath} L ${points[points.length - 1].x},${VIEWBOX_HEIGHT - CHART_PADDING_Y} L ${points[0].x},${VIEWBOX_HEIGHT - CHART_PADDING_Y} Z`;
+    return `${smoothPath} L ${points[points.length - 1].x},${chartBaseline} L ${points[0].x},${chartBaseline} Z`;
   };
 
   const userAreaPath = useMemo(() => getAreaPath(userPath, userPoints), [userPath, userPoints]);
@@ -87,14 +89,14 @@ export function DashboardActivityLineChart({
   // Y-axis tick values
   const yTicks = [0, 1, 2, 3, 4].map((i) => ({
     val: Math.round((maxVal / 4) * (4 - i)),
-    y: CHART_PADDING_Y + (i / 4) * chartHeight,
+    y: CHART_PADDING_TOP + (i / 4) * chartHeight,
   }));
 
   return (
     <View className="bg-white dark:bg-darkBackgroundCard rounded-2xl shadow-sm border border-slate-100 dark:border-darkBorder mb-6 overflow-hidden">
 
       {/* ── Header ── */}
-      <View className="flex-row justify-between items-center px-6 pt-6 pb-2">
+      <View className="pt-6 pb-2 flex-row justify-between items-start" style={{ paddingHorizontal: "7.5%" }}>
         <View>
           <Text className="text-base font-poppins-bold text-slate-800 dark:text-darkTextPrimary">
             Platform Activity
@@ -103,17 +105,15 @@ export function DashboardActivityLineChart({
             {weekRange}
           </Text>
         </View>
-
-        {/* Legend pills */}
-        <View className="flex-row gap-2">
-          <View className="flex-row items-center bg-orange-50 dark:bg-orange-950/20 px-3 py-1.5 rounded-full border border-orange-100/50 dark:border-orange-900/10">
-            <View className="w-2 h-2 rounded-full bg-orange-500 mr-2 shadow-sm shadow-orange-200" />
+        <View style={{ flexDirection: "column", gap: 4, alignItems: "flex-end" }}>
+          <View className="flex-row items-center">
+            <View className="w-2 h-2 rounded-full bg-orange-500 mr-1.5" />
             <Text className="text-[8px] font-poppins-bold text-orange-600 dark:text-orange-400 uppercase tracking-wider">
               Users
             </Text>
           </View>
-          <View className="flex-row items-center bg-blue-50 dark:bg-blue-950/20 px-3 py-1.5 rounded-full border border-blue-100/50 dark:border-blue-900/10">
-            <View className="w-2 h-2 rounded-full bg-blue-500 mr-2 shadow-sm shadow-blue-200" />
+          <View className="flex-row items-center">
+            <View className="w-2 h-2 rounded-full bg-blue-500 mr-1.5" />
             <Text className="text-[8px] font-poppins-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider">
               Stores
             </Text>
@@ -122,12 +122,12 @@ export function DashboardActivityLineChart({
       </View>
 
       {/* ── Chart Area ── */}
-      <View style={{ height: isWeb ? 280 : 200, width: "100%" }} className="mt-2">
+      <View style={{ height: isWeb ? 300 : 150, width: "100%" }}>
         <Svg
           width="100%"
           height="100%"
           viewBox={`0 0 ${VIEWBOX_WIDTH} ${VIEWBOX_HEIGHT}`}
-          preserveAspectRatio="xMidYMid meet"
+          preserveAspectRatio="none"
         >
           <Defs>
             <LinearGradient id="userAreaGrad" x1="0" y1="0" x2="0" y2="1">
@@ -187,13 +187,12 @@ export function DashboardActivityLineChart({
           {/* Interactive highlight elements */}
           {labels.map((label, i) => {
             const up = userPoints[i];
-            const sp = storePoints[i];
             return (
               <G key={i}>
                 {/* X labels */}
                 <SvgText
                   x={up.x}
-                  y={VIEWBOX_HEIGHT - 20}
+                  y={chartBaseline + 28}
                   fill="#64748B"
                   fontSize="11"
                   fontWeight="600"
@@ -206,14 +205,15 @@ export function DashboardActivityLineChart({
             );
           })}
         </Svg>
+
       </View>
 
       {/* ── Toggle Button Area ── */}
-      <View className="px-6 py-6 border-t border-slate-50 dark:border-darkBorder">
+      <View className="pt-4 pb-4 border-t border-slate-50 dark:border-darkBorder" style={{ paddingHorizontal: "7.5%" }}>
         <TouchableOpacity
           onPress={onToggleDetails}
           activeOpacity={0.8}
-          className={`flex-col items-center justify-center gap-2 py-5 rounded-3xl border shadow-sm ${
+          className={`flex-col items-center justify-center py-4 rounded-3xl border shadow-sm ${
             showDetails
               ? "bg-slate-900 border-slate-800 dark:bg-darkBackgroundMuted dark:border-darkBorder"
               : "bg-white border-slate-200 dark:bg-darkBackgroundMuted dark:border-darkBorder"
@@ -230,21 +230,12 @@ export function DashboardActivityLineChart({
                {showDetails ? <EyeOff size={12} color="#fff" strokeWidth={2.5} /> : <Eye size={12} color="#64748B" strokeWidth={2.5} />}
             </View>
           </View>
-          <Text
-            className={`text-[10px] font-poppins-bold mt-1 ${
-              showDetails
-                ? "text-white"
-                : "text-slate-700 dark:text-darkTextPrimary"
-            }`}
-          >
-            {showDetails ? "Hide Activity Details" : "View Recent Activity"}
-          </Text>
         </TouchableOpacity>
       </View>
 
       {/* ── Details Lists (Conditional) ── */}
       {showDetails && (
-        <View className="px-6 pb-8 gap-8">
+        <View className="pb-8 gap-8" style={{ paddingHorizontal: "7.5%" }}>
 
           {/* User Sign-ins Section */}
           <View>

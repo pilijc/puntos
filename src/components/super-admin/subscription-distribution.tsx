@@ -1,55 +1,72 @@
 import React, { useMemo } from "react";
-import { useColorScheme } from "react-native";
+import { TouchableOpacity, useColorScheme } from "react-native";
 import { View, Text } from "@/tw";
 import Svg, { Circle, Text as SvgText, G } from "react-native-svg";
+import { Store, RotateCcw } from "lucide-react-native";
 import { useDashboardStore } from "@/store/dashboard-store";
+import {
+  Timeframe,
+  getItemDate,
+  startOfDay,
+  MONTH_NAMES,
+} from "@/services/super-admin/dashboard-analytics-service";
 
-export function SubscriptionDistribution() {
+interface SubscriptionDistributionProps {
+  timeframe: Timeframe;
+  payerLimit: number;
+  onLoadMorePayers: () => void;
+  onResetPayers?: () => void;
+}
+
+export function SubscriptionDistribution({
+  timeframe,
+  payerLimit,
+  onLoadMorePayers,
+  onResetPayers,
+}: SubscriptionDistributionProps) {
   const { stores, subscriptions, loading } = useDashboardStore();
-  
+  const isDark = useColorScheme() === "dark";
+
   const radius = 36;
   const strokeWidth = 14;
   const circumference = 2 * Math.PI * radius;
 
-  // Calculate stats based on real data
+  const storesByOwner = useMemo(() => {
+    const map = new Map<string, typeof stores>();
+    for (const store of stores) {
+      if (!store.owner_id) continue;
+      const existing = map.get(store.owner_id);
+      if (existing) existing.push(store);
+      else map.set(store.owner_id, [store]);
+    }
+    return map;
+  }, [stores]);
+
+  const subByOwner = useMemo(
+    () => new Map(subscriptions.map((s) => [s.owner_id, s])),
+    [subscriptions]
+  );
+
   const stats = useMemo(() => {
     if (!stores.length) return null;
 
-    // --- Fix #3: pre-index lookups into Maps to avoid O(owners × subscriptions) scans ---
-    // Build a Map of owner_id → subscription row (O(subscriptions))
-    const subByOwner = new Map(subscriptions.map(s => [s.owner_id, s]));
-
-    // Build a Map of owner_id → store[] for the top-payers section (O(stores))
-    const storesByOwner = new Map<string, typeof stores>();
-    for (const store of stores) {
-      if (!store.owner_id) continue;
-      const existing = storesByOwner.get(store.owner_id);
-      if (existing) {
-        existing.push(store);
-      } else {
-        storesByOwner.set(store.owner_id, [store]);
-      }
-    }
-
-    // Group stores by owner to get unique managers
-    const ownerIds = Array.from(new Set(stores.map(s => s.owner_id).filter(Boolean)));
+    const ownerIds = Array.from(
+      new Set(stores.map((s) => s.owner_id).filter(Boolean))
+    );
     const totalOwners = ownerIds.length || 1;
 
     let proCount = 0;
     let basicCount = 0;
 
-    ownerIds.forEach(id => {
-      const sub = subByOwner.get(id);  // O(1) lookup
+    ownerIds.forEach((id) => {
+      const sub = subByOwner.get(id);
       if (sub) {
-        // Pro: paid or availed
-        // Basic: pending or unpaid
-        if (sub.payment_status === 'paid' || sub.payment_status === 'availed') {
+        if (sub.payment_status === "paid" || sub.payment_status === "availed") {
           proCount++;
         } else {
           basicCount++;
         }
       } else {
-        // Those not in subscription table are essentially "Free/Basic"
         basicCount++;
       }
     });
@@ -57,45 +74,65 @@ export function SubscriptionDistribution() {
     const proPercent = proCount / totalOwners;
     const basicPercent = basicCount / totalOwners;
 
-    // Get Top Payers (those with 'paid' status)
-    const topPayers = subscriptions
-      .filter(sub => sub.payment_status === 'paid')
-      .slice(0, 3)
-      .map(sub => {
-        const ownerStores = storesByOwner.get(sub.owner_id) ?? [];  // O(1) lookup
-        const name = ownerStores[0]?.owner_name || "Unknown Manager";
-        // Calculate a pseudo-percent for the bar (using active stores count)
-        const activeStores = ownerStores.filter(
-          s => s.status === 'active' || s.is_active
-        ).length;
-        return {
-          name,
-          label: `${activeStores} Store${activeStores !== 1 ? 's' : ''}`,
-          percent: Math.min(100, activeStores * 20), // Max 5 stores for 100% bar
-          activeStores,
-        };
-      });
-
     return {
       proPercent,
-      basicPercent,
       proDisplay: Math.round(proPercent * 100),
-      basicDisplay: Math.round(basicPercent * 100),
       segments: [
-        { percent: proPercent, color: "#FF6600", label: "Pro Plan", sub: `${Math.round(proPercent * 100)}%` },
-        { percent: basicPercent, color: "#E2E8F0", label: "Basic", sub: `${Math.round(basicPercent * 100)}%` },
+        {
+          color: "#FF6600",
+          label: "Pro Plan",
+          sub: `${Math.round(proPercent * 100)}%`,
+        },
+        {
+          color: "#E2E8F0",
+          label: "Basic",
+          sub: `${Math.round(basicPercent * 100)}%`,
+        },
       ],
-      leaders: topPayers,
     };
-  }, [stores, subscriptions]);
+  }, [stores, subByOwner]);
 
-  // Fix #2: split loading and empty-data into distinct guards.
-  // The old `loading || !stats` caused a perpetual "Loading distribution..."
-  // on empty deployments because !stats remained true after fetch completed.
+  const payersList = useMemo(() => {
+    const nowDay = startOfDay(new Date()).getTime();
+    const maxDiff = timeframe === "today" ? 0 : timeframe === "7d" ? 6 : 29;
+    const dateKeys = ["updated_at", "current_period_start", "created_at"];
+
+    const filtered = subscriptions
+      .filter((sub) => sub.payment_status === "paid")
+      .map((sub) => ({ sub, date: getItemDate(sub, dateKeys) }))
+      .filter(({ date }) => {
+        if (!date) return false;
+        const diffDays = Math.floor(
+          (nowDay - startOfDay(date).getTime()) / (1000 * 60 * 60 * 24)
+        );
+        return diffDays >= 0 && diffDays <= maxDiff;
+      })
+      .sort((a, b) => (b.date?.getTime() ?? 0) - (a.date?.getTime() ?? 0));
+
+    const list = filtered.slice(0, payerLimit).map(({ sub, date }) => {
+      const ownerStores = storesByOwner.get(sub.owner_id) ?? [];
+      const name =
+        ownerStores[0]?.owner_name ||
+        (sub as any).owner_name ||
+        "Unknown Manager";
+      const activeStores = ownerStores.filter(
+        (s) => s.status === "active" || s.is_active
+      ).length;
+      const dateLabel = date
+        ? `${MONTH_NAMES[date.getMonth()]} ${date.getDate()}`
+        : "N/A";
+      return { key: sub.owner_id, name, activeStores, dateLabel };
+    });
+
+    return { list, hasMore: filtered.length > payerLimit };
+  }, [subscriptions, storesByOwner, timeframe, payerLimit]);
+
   if (loading) {
     return (
       <View className="bg-white dark:bg-darkBackgroundCard rounded-xl p-5 mb-[8px] items-center justify-center h-48 border border-transparent dark:border-darkBorder">
-        <Text className="text-xs font-poppins text-textMuted dark:text-darkTextMuted">Loading distribution...</Text>
+        <Text className="text-xs font-poppins text-textMuted dark:text-darkTextMuted">
+          Loading distribution...
+        </Text>
       </View>
     );
   }
@@ -103,13 +140,12 @@ export function SubscriptionDistribution() {
   if (!stats) {
     return (
       <View className="bg-white dark:bg-darkBackgroundCard rounded-xl p-5 mb-[8px] items-center justify-center h-48 border border-transparent dark:border-darkBorder">
-        <Text className="text-xs font-poppins text-textMuted dark:text-darkTextMuted">No subscription data yet.</Text>
+        <Text className="text-xs font-poppins text-textMuted dark:text-darkTextMuted">
+          No subscription data yet.
+        </Text>
       </View>
     );
   }
-
-  const { segments, proDisplay, leaders } = stats;
-  const isDark = useColorScheme() === "dark";
 
   return (
     <View className="bg-white dark:bg-darkBackgroundCard rounded-xl p-5 mb-[8px] border border-transparent dark:border-darkBorder">
@@ -122,7 +158,6 @@ export function SubscriptionDistribution() {
         {/* Donut Chart */}
         <View className="w-[110px] h-[110px] justify-center items-center mr-6">
           <Svg width="110" height="110" viewBox="0 0 100 100">
-            {/* Background Circle (Basic) */}
             <Circle
               cx="50"
               cy="50"
@@ -131,8 +166,7 @@ export function SubscriptionDistribution() {
               stroke={isDark ? "#262626" : "#E2E8F0"}
               strokeWidth={strokeWidth}
             />
-            {/* Pro Segment Overlay */}
-            <G rotation="-90" origin="50, 50">
+            <G transform="rotate(-90, 50, 50)">
               {stats.proPercent > 0 && (
                 <Circle
                   cx="50"
@@ -155,18 +189,24 @@ export function SubscriptionDistribution() {
               fontWeight="bold"
               fontFamily="Poppins-Bold"
             >
-              {proDisplay}%
+              {stats.proDisplay}%
             </SvgText>
           </Svg>
         </View>
 
         {/* Legend */}
         <View className="flex-1 justify-center gap-3">
-          {segments.map((seg, i) => (
+          {stats.segments.map((seg, i) => (
             <View key={i} className="flex-row items-center">
-              <View className="w-2.5 h-2.5 rounded-full mr-2.5" style={{ backgroundColor: seg.color }} />
+              <View
+                className="w-2.5 h-2.5 rounded-full mr-2.5"
+                style={{ backgroundColor: seg.color }}
+              />
               <Text className="text-xs font-poppins-bold text-[#475569] dark:text-darkTextPrimary">
-                {seg.label} <Text className="font-poppins text-[#94A3B8] dark:text-darkTextMuted">({seg.sub})</Text>
+                {seg.label}{" "}
+                <Text className="font-poppins text-[#94A3B8] dark:text-darkTextMuted">
+                  ({seg.sub})
+                </Text>
               </Text>
             </View>
           ))}
@@ -174,37 +214,85 @@ export function SubscriptionDistribution() {
       </View>
 
       {/* Divider */}
-      <View className="h-[1px] bg-slate-100 dark:bg-darkBorder mb-6" />
+      <View className="h-[1px] bg-slate-100 dark:bg-darkBorder mb-5" />
 
-      {/* Leaders Section */}
-      <Text className="text-[10px] font-poppins-bold text-[#475569] dark:text-darkTextPrimary mb-4 uppercase tracking-wider">
-        Subscription Payers
-      </Text>
-
-      <View className="flex-col gap-4">
-        {leaders.length === 0 ? (
-          <Text className="text-[11px] font-poppins text-textMuted dark:text-darkTextMuted text-center py-4">
-            No payers found yet.
+      {/* Payers Section Header */}
+      <View className="flex-row items-center justify-between mb-4">
+        <View className="flex-row items-center gap-2">
+          <View className="w-1.5 h-4 rounded-full bg-orange-500" />
+          <Text className="text-[11px] font-poppins-bold text-slate-800 dark:text-darkTextPrimary uppercase tracking-widest">
+            Subscription Payers
           </Text>
+        </View>
+        <View className="flex-row items-center gap-2">
+          <View className="bg-orange-50 px-2 py-0.5 rounded-md">
+            <Text className="text-[9px] font-poppins-bold text-orange-600">
+              {payersList.list.length} Records
+            </Text>
+          </View>
+          {onResetPayers && payersList.list.length > 5 && (
+            <TouchableOpacity onPress={onResetPayers} activeOpacity={0.6}>
+              <RotateCcw size={14} color="#EA580C" strokeWidth={2.5} />
+            </TouchableOpacity>
+          )}
+        </View>
+      </View>
+
+      {/* Payers List */}
+      <View className="bg-slate-50/50 dark:bg-darkBackgroundMuted/30 rounded-2xl overflow-hidden border border-slate-100 dark:border-darkBorder">
+        {payersList.list.length === 0 ? (
+          <View className="py-10 items-center">
+            <Store size={24} color="#CBD5E1" strokeWidth={1.5} />
+            <Text className="text-xs font-poppins text-slate-400 mt-2">
+              No payers in this timeframe
+            </Text>
+          </View>
         ) : (
-          leaders.map((leader, i) => (
-            <View key={i}>
-              <View className="flex-row justify-between items-center mb-1.5">
-                <Text className="text-xs font-poppins-bold text-[#1E293B] dark:text-darkTextPrimary">
-                  {leader.name}
-                </Text>
-                <Text className="text-[10px] font-poppins text-[#64748B] dark:text-darkTextMuted">
-                  {leader.label}
-                </Text>
+          <>
+            {payersList.list.map((item, idx) => (
+              <View
+                key={item.key}
+                className={`flex-row items-center px-4 py-4 ${
+                  idx < payersList.list.length - 1
+                    ? "border-b border-white dark:border-darkBorder/40"
+                    : ""
+                }`}
+              >
+                <View className="w-9 h-9 rounded-full bg-white dark:bg-darkBackgroundCard items-center justify-center mr-3 shadow-sm border border-orange-50">
+                  <Text className="text-xs font-poppins-bold text-orange-500">
+                    {item.name?.charAt(0)?.toUpperCase() ?? "?"}
+                  </Text>
+                </View>
+                <View className="flex-1">
+                  <Text className="text-sm font-poppins-bold text-slate-700 dark:text-darkTextPrimary">
+                    {item.name}
+                  </Text>
+                  <Text className="text-[10px] font-poppins text-slate-400 dark:text-darkTextMuted">
+                    {item.activeStores} Active Store{item.activeStores !== 1 ? "s" : ""}
+                  </Text>
+                </View>
+                <View className="items-end">
+                  <Text className="text-[10px] font-poppins-bold text-slate-500 dark:text-darkTextSecondary bg-white dark:bg-darkBackground p-1 px-2 rounded-lg">
+                    {item.dateLabel}
+                  </Text>
+                </View>
               </View>
-              <View className="w-full h-1.5 bg-[#F1F5F9] dark:bg-darkBackgroundMuted rounded-full overflow-hidden">
-                <View
-                  className="h-full bg-[#FF6600] rounded-full"
-                  style={{ width: `${leader.percent}%` }}
-                />
+            ))}
+
+            {payersList.hasMore && (
+              <View className="py-4 items-center border-t border-slate-50 dark:border-darkBorder/30">
+                <TouchableOpacity
+                  onPress={onLoadMorePayers}
+                  activeOpacity={0.7}
+                  className="flex-row items-center gap-2 bg-orange-50 dark:bg-orange-950/20 px-5 py-2.5 rounded-full border border-orange-100/50 dark:border-orange-900/10 shadow-sm shadow-orange-100/50"
+                >
+                  <Text className="text-[11px] font-poppins-bold text-orange-600 uppercase tracking-tighter">
+                    Show More
+                  </Text>
+                </TouchableOpacity>
               </View>
-            </View>
-          ))
+            )}
+          </>
         )}
       </View>
     </View>

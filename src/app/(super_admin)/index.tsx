@@ -9,11 +9,10 @@ import { StatCard } from "@/components/ui/stat-card";
 import { DashboardMetricTile } from "@/components/stores/dashboard-metric-tile";
 import { SubscriptionDistribution } from "@/components/super-admin/subscription-distribution";
 import { DashboardActivityLineChart } from "@/components/super-admin/dashboard-activity-line-chart";
-import { 
-  buildTimeframeSeries, 
-  getActiveUsersCount, 
-  getDetailItems, 
-  Timeframe 
+import {
+  buildTimeframeSeries,
+  getDetailItems,
+  Timeframe
 } from "@/services/super-admin/dashboard-analytics-service";
 
 const isWeb = Platform.OS === "web";
@@ -26,14 +25,28 @@ export default function SuperAdminDashboard() {
   const [showDetails, setShowDetails] = useState(false);
   const [userLimit, setUserLimit] = useState(5);
   const [storeLimit, setStoreLimit] = useState(5);
+  const [payerLimit, setPayerLimit] = useState(5);
 
   useEffect(() => {
     setUserLimit(5);
     setStoreLimit(5);
+    setPayerLimit(5);
   }, [timeframe]);
 
-  const activeUsersCount = useMemo(() => getActiveUsersCount(users), [users]);
-  const userRetentionPercent = useMemo(() => Math.round((activeUsersCount / Math.max(1, users.length)) * 100), [activeUsersCount, users.length]);
+  const returningUsersCount = useMemo(() => {
+    return users.filter(u => {
+      const lastSignIn = u.last_sign_in_at;
+      const createdAt = u.created_at;
+      if (!lastSignIn || !createdAt) return false;
+      const diff = new Date(lastSignIn).getTime() - new Date(createdAt).getTime();
+      return diff > 24 * 60 * 60 * 1000;
+    }).length;
+  }, [users]);
+
+  const userRetentionPercent = useMemo(
+    () => Math.round((returningUsersCount / Math.max(1, users.length)) * 100),
+    [returningUsersCount, users.length]
+  );
 
   const userMetrics = useMemo(() => buildTimeframeSeries(users, ["last_sign_in_at", "last_login", "last_login_at", "last_sign_in", "updated_at", "created_at", "createdAt", "inserted_at"], timeframe), [users, timeframe]);
   const storeMetrics = useMemo(() => buildTimeframeSeries(stores, ["updated_at", "created_at", "createdAt", "inserted_at"], timeframe), [stores, timeframe]);
@@ -76,11 +89,9 @@ export default function SuperAdminDashboard() {
         className="flex-1"
         contentContainerStyle={{
           paddingBottom: 40,
-          ...(isWeb ? {
-            paddingHorizontal: 16,
-            paddingTop: 16,
-            alignItems: "center" as const
-          } : {}),
+          paddingHorizontal: 16,
+          paddingTop: 16,
+          ...(isWeb ? { alignItems: "center" as const } : {}),
         }}
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#FF6600" />}
@@ -88,7 +99,7 @@ export default function SuperAdminDashboard() {
         <View style={isWeb ? { maxWidth: 896, width: "100%" } : {}} className={isWeb ? "w-full" : ""}>
           {/* ── Sub-Header (Welcome Message) ── */}
           {!isWeb && (
-            <View className="px-6 pt-6 pb-2">
+            <View className="pt-6 pb-2">
               <Text className="text-sm text-[#94A3B8] dark:text-darkTextSecondary font-poppins">
                 {translate("superAdmin.dashboard.welcome")}
                 <Text className="text-orange-500 font-poppins-bold">
@@ -98,9 +109,7 @@ export default function SuperAdminDashboard() {
             </View>
           )}
 
-          <View
-            className={isWeb ? "mb-6 mt-2" : "px-6 mb-6 mt-2"}
-          >
+          <View className="mb-6 mt-2">
             <View className="flex-row gap-2 mb-2">
               <StatCard label={translate("superAdmin.dashboard.metrics.totalUsers")} val={users.length} Icon={Users} />
               <StatCard label={translate("superAdmin.dashboard.metrics.totalStores")} val={stores.length} Icon={Store} />
@@ -118,9 +127,7 @@ export default function SuperAdminDashboard() {
             </View>
           </View>
 
-          <View
-            className={isWeb ? "mb-4" : "px-6 mb-4"}
-          >
+          <View className="mb-4">
             <View className="flex-row rounded-xl bg-[#EEF2F7] dark:bg-darkBackgroundMuted p-1 self-start">
               {([
                 { id: "today", label: "Today" },
@@ -156,7 +163,12 @@ export default function SuperAdminDashboard() {
             onResetStores={() => setStoreLimit(5)}
           />
 
-          <SubscriptionDistribution />
+          <SubscriptionDistribution
+            timeframe={timeframe}
+            payerLimit={payerLimit}
+            onLoadMorePayers={() => setPayerLimit(p => p + 5)}
+            onResetPayers={() => setPayerLimit(5)}
+          />
         </View>
       </ScrollView>
     </SafeAreaView>
