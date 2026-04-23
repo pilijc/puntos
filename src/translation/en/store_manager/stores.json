@@ -1,0 +1,14 @@
+{
+  "title": "Merchant Stores",
+  "tabs": {},
+  "badge": {},
+  "noAddress": "No address provided",
+  "empty": {
+    "allTitle": "No stores yet",
+    "activeTitle": "No active stores",
+    "pendingTitle": "No pending stores",
+    "inactiveTitle": "No inactive stores",
+    "hintAll": "Tap the + button to create your first store.",
+    "hintFiltered": "Try a different tab or add a new store."
+  }
+}

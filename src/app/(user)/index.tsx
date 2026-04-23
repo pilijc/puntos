@@ -793,7 +793,7 @@ export default function Discover() {
                     <View className="flex-1 justify-between">
                       <View className="flex-row items-center gap-x-2">
                         <Text className="text-lg text-neutral-900 dark:text-darkTextPrimary flex-1 font-poppins-semibold">
-                          {translate("user.discover.rewards")}
+                          {translate("label.rewards")}
                         </Text>
                       </View>
 

@@ -77,7 +77,7 @@ export default function StoreManagerDashboard() {
         >
             <View className="bg-white dark:bg-darkBackground border-b border-neutral-100 dark:border-darkBorder px-6 py-3">
                 <Text className="text-xl font-poppins-bold text-textPrimary dark:text-darkTextPrimary py-1">
-                    {translate("storeManager.dashboard.title")}
+                    {translate("label.dashboard")}
                 </Text>
             </View>
 
@@ -124,16 +124,16 @@ export default function StoreManagerDashboard() {
                     <View className="w-full mb-8">
                         <View className="flex-row gap-[10px] mb-[14px]">
                             <DashboardMetricTile
-                                label={translate("storeManager.dashboard.metrics.inStore")}
+                                label={translate("store_manager.dashboard.metrics.inStore")}
                                 value={activeUsers}
-                                subtitle={translate("storeManager.dashboard.metrics.realTimeUsers")}
+                                subtitle={translate("store_manager.dashboard.metrics.realTimeUsers")}
                                 icon={Users}
                                 loading={metricsLoading}
                             />
                             <DashboardMetricTile
-                                label={translate("storeManager.dashboard.metrics.totalScanned")}
+                                label={translate("store_manager.dashboard.metrics.totalScanned")}
                                 value={todayTransactions}
-                                subtitle={translate("storeManager.dashboard.metrics.redeemedToday")}
+                                subtitle={translate("store_manager.dashboard.metrics.redeemedToday")}
                                 icon={ScanLine}
                                 loading={metricsLoading}
                             />
@@ -161,7 +161,7 @@ export default function StoreManagerDashboard() {
                 ) : (
                     <View className="py-10 items-center">
                         <Text className="font-poppins text-textPrimary">
-                            {translate("storeManager.dashboard.noStores")}
+                            {translate("store_manager.dashboard.noStores")}
                         </Text>
                     </View>
                 )}

@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { ActivityIndicator, Linking, Platform } from "react-native";
 import { View, Text, SafeAreaView, ScrollView } from "@/tw";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -47,6 +48,7 @@ function pickBasicAndProPlans(plans: Array<Record<string, unknown>>) {
 }
 
 export default function SubscriptionScreen() {
+	const { t: translate } = useTranslation();
 	const insets = useSafeAreaInsets();
 	const isWeb = Platform.OS === "web";
 	const scrollBottom = Math.max(insets.bottom, 40);

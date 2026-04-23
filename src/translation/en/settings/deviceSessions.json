@@ -1,0 +1,17 @@
+{
+  "title": "Active Sessions",
+  "subtitle": "You can have up to {{max}} active sessions at a time.",
+  "noSessions": "No active sessions found.",
+  "limitReached": "Device Limit Reached",
+  "limitWarningTitle": "Active Session Limit",
+  "limitWarningBody": "You can have up to {{max}} active sessions. Please log out of another device to continue.",
+  "checkAgain": "Check Again",
+  "yourActiveDevices": "Your Active Devices",
+  "webBrowser": "Web Browser",
+  "unknownDevice": "Unknown Device",
+  "justNow": "Just now",
+  "minutesAgo": "{{minutes}}m ago",
+  "hoursAgo": "{{hours}}h ago",
+  "daysAgo": "{{days}}d ago",
+  "lastActive": "Last active {{time}}"
+}

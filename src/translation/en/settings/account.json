@@ -1,0 +1,46 @@
+{
+  "title": "Account Settings",
+  "security": {
+    "title": "Security",
+    "description": "Password, Delete Account",
+    "completePasswordSetup": "Complete password setup to access",
+    "changePassword": {
+      "title": "Change Password",
+      "description": "Enter your current and new password",
+      "label": {
+        "current": "Current Password",
+        "new": "New Password",
+        "repeat": "Repeat New Password"
+      },
+      "input": {
+        "current": "Enter Current Password",
+        "new": "Enter New Password",
+        "repeat": "Enter Repeat New Password"
+      },
+      "success": "Your password has been changed successfully.",
+      "error": {
+        "missingFields": "Please fill in all fields.",
+        "passwordMatch": "New passwords do not match.",
+        "passwordLimit": "Password must be at least 8 characters.",
+        "incorrect": "Current password is incorrect",
+        "failed": "Failed to update password"
+      }
+    },
+    "deleteAccount": {
+      "title": "Delete Account",
+      "description": "Are you sure you want to delete your account? This action cannot be undone"
+    }
+  },
+  "language": {
+    "title": "Language",
+    "en": "English",
+    "jp": "Japanese"
+  },
+  "appearance": {
+    "title": "Appearance",
+    "description": "Customize how the app looks",
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
+  }
+}

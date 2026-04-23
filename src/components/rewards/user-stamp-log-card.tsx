@@ -272,7 +272,7 @@ export default function UserStampLogCard({
               onPress={() => {
                 Alert.alert(
                   translate("user.rewards.messages.notice"),
-                  translate("user.rewards.messages.claimConfirm", { rewardTitle: activeProgramReward?.reward_title ?? translate("user.rewards.points") }),
+                  translate("user.rewards.messages.claimConfirm", { rewardTitle: activeProgramReward?.reward_title ?? translate("label.points") }),
                   [
                     { text: translate("label.cancel"), style: "cancel" },
                     { text: translate("user.rewards.claim"), onPress: () => Alert.alert(translate("user.rewards.messages.success"), translate("user.rewards.messages.claimSuccess")) }

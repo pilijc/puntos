@@ -1,0 +1,18 @@
+{
+  "title": "Stamp Program",
+  "description": "Reward customers with stamps",
+  "endFailed": "Failed to end program.",
+  "deleteFailed": "Failed to delete program.",
+  "activateFailed": "Failed to activate program.",
+  "tabs": {
+    "draft": "Draft",
+    "ended": "Ended"
+  },
+  "emptyDraftTitle": "No Draft Stamp Program",
+  "emptyActiveTitle": "No Active Program",
+  "emptyEndedTitle": "No Ended Programs",
+  "emptyActiveBody": "Launch a stamp program to start rewarding your customers.",
+  "emptyDraftBody": "Draft stamp programs will appear here.",
+  "emptyEndedBody": "Ended stamp programs will appear here.",
+  "createProgram": "Create New Program"
+}

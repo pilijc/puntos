@@ -3,27 +3,28 @@ import { View, Text } from '@/tw';
 import { Smartphone, Tablet, Monitor, MapPin, Clock } from 'lucide-react-native';
 import { ManagerDeviceSession } from '@/type/store-manager/device-session';
 import { useTranslation } from 'react-i18next';
+import { useDeviceSessionStore } from '@/store/store-manager/device-session-store';
 
 function DeviceIcon({ type }: { type: string }) {
     if (type === "tablet") {
         return (
-            <View className="w-10 h-10 rounded-xl items-center justify-center bg-teal-50 dark:bg-teal-900/40">
-                <Tablet size={15} color="#0d9488" className="dark:text-teal-400" />
+            <View className="w-10 h-10 rounded-xl items-center justify-center">
+                <Tablet size={15} color="#ff6600" className="dark:text-orange-400" />
             </View>
         );
     }
 
     if (type === "web") {
         return (
-            <View className="w-10 h-10 rounded-xl items-center justify-center bg-orange-50 dark:bg-orange-900/40">
-                <Monitor size={15} color="#f97316" className="dark:text-orange-400" />
+            <View className="w-10 h-10 rounded-xl items-center justify-center">
+                <Monitor size={15} color="#ff6600" className="dark:text-orange-400" />
             </View>
         );
     }
     
     return (
-        <View className="w-10 h-10 rounded-xl items-center justify-center bg-indigo-50 dark:bg-indigo-900/40">
-            <Smartphone size={15} color="#6366f1" className="dark:text-indigo-400" />
+        <View className="w-10 h-10 rounded-xl items-center justify-center">
+            <Smartphone size={15} color="#ff6600" className="dark:text-orange-400" />
         </View>
     );
 }
@@ -34,8 +35,10 @@ function resolveDisplayName(session: ManagerDeviceSession, t: any): string {
     return session.device_type === "web" ? t("settings.deviceSessions.webBrowser") : t("settings.deviceSessions.unknownDevice");
 }
 
-function timeAgo(isoString: string, t: any): string {
-    const diff = Date.now() - new Date(isoString).getTime();
+// nowMs is the trusted reference point (server time stored in Zustand).
+// falls back to Date.now() only when no fetch has occurred yet in this session.
+function timeAgo(isoString: string, nowMs: number, t: any): string {
+    const diff = nowMs - new Date(isoString).getTime();
     const minutes = Math.floor(diff / 60_000);
     if (minutes < 1) return t("settings.deviceSessions.justNow");
     if (minutes < 60) return t("settings.deviceSessions.minutesAgo", { minutes });
@@ -51,6 +54,8 @@ interface DeviceSessionCardProps {
 
 export function DeviceSessionCard({ session }: DeviceSessionCardProps) {
     const { t } = useTranslation();
+    const serverTimeMs = useDeviceSessionStore((s) => s.serverTimeMs);
+    const nowMs = serverTimeMs ?? Date.now();
     const displayName = resolveDisplayName(session, t);
 
     return (
@@ -79,7 +84,7 @@ export function DeviceSessionCard({ session }: DeviceSessionCardProps) {
                 <View className="flex-row items-center gap-1">
                     <Clock size={12} color="#8b8d98" className="dark:text-slate-500" />
                     <Text className='text-textSecondary dark:text-darkTextSecondary text-xs font-poppins'>
-                        {t("settings.deviceSessions.lastActive", { time: timeAgo(session.last_active_at, t) })}
+                        {t("settings.deviceSessions.lastActive", { time: timeAgo(session.last_active_at, nowMs, t) })}
                     </Text>
                 </View>
             </View>

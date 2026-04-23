@@ -1,0 +1,21 @@
+{
+  "loadingProfile": "プロフィールを読み込み中...",
+  "searchBar": "場所を検索",
+  "nearbyStores": "近くの店舗",
+  "discoverMore": "他の店舗を探す",
+  "backToList": "店舗一覧に戻る",
+  "rewards": "報酬",
+  "metersAway": "{{meters}}m 先",
+  "storeHoursPlaceholder": "営業時間 10:00 - 22:00",
+  "rewardPlaceholder": {
+    "title": "コーヒー無料券",
+    "description": "お好きなドリンクを1杯無料",
+    "points": "{{points}} pts"
+  },
+  "geofence": {
+    "singleTitle": "{{name}} が近くにあります",
+    "singleBody": "{{name}} に行って報酬をゲットしましょう！",
+    "multiTitle": "近くに {{count}} 件の店舗があります",
+    "multiBody": "近くの店舗に行って報酬をゲットしましょう！"
+  }
+}

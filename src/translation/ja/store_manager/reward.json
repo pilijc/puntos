@@ -1,0 +1,15 @@
+{
+  "title": "リワード",
+  "description": "お客様が交換できるアイテム",
+  "rewardCount": "リワード {{count}}件",
+  "rewardCount_plural": "リワード {{count}}件",
+  "subtitle": "ポイントで交換できるアイテム",
+  "add": "追加",
+  "loading": "リワードを読み込み中...",
+  "emptyTitle": "リワードはまだありません",
+  "emptyBody": "ロイヤルティポイントで交換できるリワードを作成しましょう。",
+  "addFirst": "最初のリワードを追加",
+  "pts": "{{points}} ポイント",
+  "stockLeft": "残り{{count}}",
+  "outOfStock": "在庫切れ"
+}

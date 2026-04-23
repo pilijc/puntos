@@ -140,7 +140,7 @@ export default function SuperAdminStores() {
 			{/* ── Main Header (Uniform Style) ── */}
 			<View className="bg-white dark:bg-darkBackground border-b border-neutral-100 dark:border-darkBorder px-6 py-3">
 				<Text className="text-xl font-poppins-bold text-textPrimary dark:text-darkTextPrimary py-1">
-					{translate("superAdmin.stores.title", { defaultValue: "Store Approvals" })}
+					{translate("super_admin.stores.title", { defaultValue: "Store Approvals" })}
 				</Text>
 			</View>
 

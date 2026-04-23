@@ -19,10 +19,10 @@ export function DashboardStampDistribution({
         return (
             <View className="bg-white dark:bg-darkBackgroundCard rounded-xl p-5 elevation-1 mb-[14px] border border-transparent dark:border-darkBorder">
                 <Text className="text-lg font-poppins-bold text-textPrimary dark:text-darkTextPrimary leading-6">
-                    {translate("storeManager.dashboard.stampProgress.title")}
+                    {translate("store_manager.dashboard.stampProgress.title")}
                 </Text>
                 <Text className="text-[12px] font-poppins text-textMuted dark:text-darkTextMuted mt-0.5">
-                    {translate("storeManager.dashboard.stampProgress.noProgram")}
+                    {translate("store_manager.dashboard.stampProgress.noProgram")}
                 </Text>
             </View>
         );
@@ -34,10 +34,10 @@ export function DashboardStampDistribution({
     return (
         <View className="bg-white dark:bg-darkBackgroundCard rounded-xl p-5 elevation-1 mb-[14px] border border-transparent dark:border-darkBorder">
             <Text className="text-lg font-poppins-bold text-textPrimary dark:text-darkTextPrimary leading-6">
-                {translate("storeManager.dashboard.stampProgress.title")}
+                {translate("store_manager.dashboard.stampProgress.title")}
             </Text>
             <Text className="text-[12px] font-poppins text-textMuted dark:text-darkTextMuted mt-0.5 mb-5">
-                {translate("storeManager.dashboard.stampProgress.distribution", { users: totalUsers, goal: maxStamps })}
+                {translate("store_manager.dashboard.stampProgress.distribution", { users: totalUsers, goal: maxStamps })}
             </Text>
 
             {buckets.map((bucket, i) => {
@@ -49,10 +49,10 @@ export function DashboardStampDistribution({
                     <View key={`bucket-${i}`} className="mb-3">
                         <View className="flex-row justify-between mb-1">
                             <Text className="text-[11px] font-poppins-bold text-textSecondary dark:text-darkTextPrimary">
-                                {bucket.label} {translate("storeManager.dashboard.stampProgress.stamps")}
+                                {bucket.label} {translate("store_manager.dashboard.stampProgress.stamps")}
                             </Text>
                             <Text className="text-[11px] font-poppins text-textMuted dark:text-darkTextSecondary">
-                                {bucket.count} {bucket.count !== 1 ? translate("storeManager.dashboard.stampProgress.users") : translate("storeManager.dashboard.stampProgress.user")}
+                                {bucket.count} {bucket.count !== 1 ? translate("store_manager.dashboard.stampProgress.users") : translate("store_manager.dashboard.stampProgress.user")}
                             </Text>
                         </View>
 

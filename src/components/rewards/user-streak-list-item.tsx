@@ -3,6 +3,7 @@ import { View as TWView, Text as TWText } from "@/tw";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useRouter } from "expo-router";
 import React from "react";
+import { useTranslation } from "react-i18next";
 
 interface UserStreakListItemProps {
   stamp: {
@@ -16,20 +17,21 @@ interface UserStreakListItemProps {
   };
 }
 
-const getTier = (completed: number) => {
-  if (completed >= 5) return { label: "Gold", color: "text-amber-500" };
-  if (completed >= 3) return { label: "Silver", color: "text-slate-400" };
-  return { label: "Bronze", color: "text-amber-700" };
+const getTier = (completed: number, t: any) => {
+  if (completed >= 5) return { label: t("user.rewards.streaks.tiers.gold"), color: "text-amber-500" };
+  if (completed >= 3) return { label: t("user.rewards.streaks.tiers.silver"), color: "text-slate-400" };
+  return { label: t("user.rewards.streaks.tiers.bronze"), color: "text-amber-700" };
 };
 
 export default function UserStreakListItem({ stamp }: UserStreakListItemProps) {
   const router = useRouter();
+  const { t: translate } = useTranslation();
   const targetDays = stamp.target || 7;
   const completed = stamp.stamps_count;
   const bonus = 500;
   const progress = Math.round((completed / targetDays) * 100);
   const safeProgress = Math.min(Math.max(progress, 0), 100);
-  const tier = getTier(completed);
+  const tier = getTier(completed, translate);
 
   return (
     <TouchableOpacity
@@ -43,10 +45,12 @@ export default function UserStreakListItem({ stamp }: UserStreakListItemProps) {
           </TWView>
           <TWView>
             <TWText className="font-poppins-semibold text-neutral-900 dark:text-white">
-              {stamp.stores?.name ?? "Store"}
+              {stamp.stores?.name ?? translate("user.rewards.store")}
             </TWText>
             <TWText className="text-xs text-neutral-500 font-poppins mt-1">
-              {stamp.stores?.is_active ? "Active Partner Store" : "Inactive"}
+              {stamp.stores?.is_active 
+                ? translate("user.rewards.streaks.activeStore") 
+                : translate("user.rewards.streaks.inactiveStore")}
             </TWText>
           </TWView>
         </TWView>
@@ -56,14 +60,14 @@ export default function UserStreakListItem({ stamp }: UserStreakListItemProps) {
       <TWView className="flex-row items-center justify-between mt-4">
         <TWView className="flex-row items-center gap-x-2">
           <TWText className="text-xs font-poppins-medium text-neutral-400">
-            {completed}/{targetDays} COMPLETED
+            {translate("user.rewards.completed", { current: completed, target: targetDays })}
           </TWText>
           <TWText className={`text-xs font-poppins-semibold ${tier.color}`}>
             {tier.label}
           </TWText>
         </TWView>
         <TWText className="text-xs font-poppins-semibold text-primary">
-          +{bonus} bonus pts
+          {translate("user.rewards.streaks.bonusPts", { count: bonus })}
         </TWText>
       </TWView>
 
@@ -76,12 +80,12 @@ export default function UserStreakListItem({ stamp }: UserStreakListItemProps) {
 
       <TWView className="flex-row items-center justify-between mt-3">
         <TWText className="text-[11px] text-neutral-400 font-poppins-medium">
-          {progress}% complete
+          {translate("user.rewards.streaks.percentComplete", { percent: progress })}
         </TWText>
         <TWView className="flex-row items-center gap-x-1">
           <MaterialIcons name="bolt" size={14} color="#FF6600" />
           <TWText className="text-[11px] text-neutral-500 font-poppins-medium">
-            Keep stamping to reach your target!
+            {translate("user.rewards.streaks.reachingTarget")}
           </TWText>
         </TWView>
       </TWView>
