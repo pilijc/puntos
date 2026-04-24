@@ -78,7 +78,7 @@ export default function SuperAdminDashboard() {
           </Text>
           {isWeb && (
             <Text className="text-xs text-[#94A3B8] dark:text-darkTextSecondary font-poppins">
-              {translate("super_admin.dashboard.welcome")}
+              {translate("superAdmin.dashboard.welcome")}
               <Text className="text-orange-500 font-poppins-bold">
                 {adminInfo?.username?.split(" ")[0] || "Admin"}
               </Text>!
