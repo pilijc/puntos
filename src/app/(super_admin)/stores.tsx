@@ -5,6 +5,8 @@ import {
 	Platform,
 	FlatList,
 	ActivityIndicator,
+	NativeSyntheticEvent,
+	NativeScrollEvent,
 } from "react-native";
 import { View, Text, TouchableOpacity } from "@/tw";
 import { useTranslation } from "react-i18next";
@@ -69,6 +71,16 @@ export default function SuperAdminStores() {
 		? Math.max(0, (ownerActiveStoreCounts[selectedStore.owner_id] ?? 0) - ((selectedStore.status === "active" || selectedStore.is_active) ? 1 : 0))
 		: 0;
 
+	const handleWebScroll = useCallback(
+		(event: NativeSyntheticEvent<NativeScrollEvent>) => {
+			const { contentOffset, layoutMeasurement, contentSize } = event.nativeEvent;
+			if (contentOffset.y + layoutMeasurement.height >= contentSize.height - 200 && hasMore && !isFetching) {
+				loadMore();
+			}
+		},
+		[hasMore, isFetching, loadMore]
+	);
+
 	const renderStoreItem = useCallback(
 		({ item: store }: { item: typeof filtered[number] }) => {
 			const activeStoresCount = Math.max(
@@ -104,7 +116,7 @@ export default function SuperAdminStores() {
 				<Modal
 					visible={!!errorModal}
 					onClose={dismissErrorModal}
-					title={errorModal?.title ?? (errorModal?.type === "success" ? "Success" : "Error")}
+					title={errorModal?.title ?? (errorModal?.type === "success" ? translate("label.success") : translate("label.error"))}
 					message={errorModal?.message ?? ""}
 					buttons={[{ label: translate("label.ok"), onPress: dismissErrorModal, variant: errorModal?.type === "success" ? "success" : "primary" }]}
 					showCloseButton={false}
@@ -156,6 +168,8 @@ export default function SuperAdminStores() {
 					}}
 					showsVerticalScrollIndicator={false}
 					refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#FF6600" colors={["#FF6600"]} />}
+					onScroll={handleWebScroll}
+					scrollEventThrottle={200}
 				>
 					<View style={{ maxWidth: 896 }} className="w-full">
 
@@ -193,7 +207,7 @@ export default function SuperAdminStores() {
 								scrollEnabled={false}
 								showsVerticalScrollIndicator={false}
 								removeClippedSubviews={false}
-								initialNumToRender={filtered.length}
+								initialNumToRender={10}
 								ListHeaderComponent={
 									error && !loading ? (
 										<View className="flex-row items-center gap-2 bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 rounded-xl p-3 mb-4">
@@ -207,9 +221,9 @@ export default function SuperAdminStores() {
 										<View className="items-center pt-16 gap-3">
 											<MaterialIcons name="storefront" size={52} color="#CBD5E1" />
 											<Text className="text-base font-poppins-bold text-slate-600 dark:text-darkTextSecondary">
-												{activeFilter === "All" ? translate("superAdmin.stores.noStores") : translate("superAdmin.stores.noFilteredStores", { status: FILTER_LABELS[activeFilter] })}
+												{activeFilter === "All" ? translate("super_admin.stores.noStores") : translate("super_admin.stores.noFilteredStores", { status: FILTER_LABELS[activeFilter] })}
 											</Text>
-											<Text className="text-sm font-poppins text-slate-400 text-center px-8">{translate("superAdmin.stores.pullToRefresh")}</Text>
+											<Text className="text-sm font-poppins text-slate-400 text-center px-8">{translate("super_admin.stores.pullToRefresh")}</Text>
 										</View>
 									) : null
 								}
@@ -281,9 +295,9 @@ export default function SuperAdminStores() {
 										<View className="items-center pt-16 gap-3">
 											<MaterialIcons name="storefront" size={52} color="#CBD5E1" />
 											<Text className="text-base font-poppins-bold text-slate-600 dark:text-darkTextSecondary">
-												{activeFilter === "All" ? translate("superAdmin.stores.noStores") : translate("superAdmin.stores.noFilteredStores", { status: FILTER_LABELS[activeFilter] })}
+												{activeFilter === "All" ? translate("super_admin.stores.noStores") : translate("super_admin.stores.noFilteredStores", { status: FILTER_LABELS[activeFilter] })}
 											</Text>
-											<Text className="text-sm font-poppins text-slate-400 text-center px-8">{translate("superAdmin.stores.pullToRefresh")}</Text>
+											<Text className="text-sm font-poppins text-slate-400 text-center px-8">{translate("super_admin.stores.pullToRefresh")}</Text>
 										</View>
 									) : null
 								}
@@ -325,7 +339,7 @@ export default function SuperAdminStores() {
 			<Modal
 				visible={!!errorModal}
 				onClose={dismissErrorModal}
-				title={errorModal?.title ?? (errorModal?.type === "success" ? "Success" : "Error")}
+				title={errorModal?.title ?? (errorModal?.type === "success" ? translate("label.success") : translate("label.error"))}
 				message={errorModal?.message ?? ""}
 				buttons={[
 					{

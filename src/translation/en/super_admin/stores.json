@@ -2,6 +2,7 @@
   "title": "Store Approvals",
   "noStores": "No stores yet",
   "noFilteredStores": "No {{status}} stores",
+  "pullToRefresh": "Pull to refresh",
   "filter": {},
   "modal": {
     "approveTitle": "Approve Store",

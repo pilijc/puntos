@@ -1,5 +1,15 @@
 {
+  "title": "Dashboard",
   "welcome": "Welcome, ",
+  "platformActivity": "Platform Activity",
+  "usersLegend": "Users",
+  "storesLegend": "Stores",
+  "recentUserSignins": "Recent User Sign-ins",
+  "recentlyRegisteredStores": "Recently Registered Stores",
+  "records": "Records",
+  "showMore": "Show More",
+  "noNewUsers": "No new users this timeframe",
+  "noNewStores": "No new stores this timeframe",
   "metrics": {
     "totalUsers": "Total Users",
     "totalStores": "Total Stores",
