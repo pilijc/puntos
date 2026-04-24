@@ -1,6 +1,15 @@
 {
-  "types": {},
-  "filters": {},
+  "types": {
+    "qr": "QR Purchase",
+    "stamp": "Stamp",
+    "streak": "Streak"
+  },
+  "filters": {
+    "all": "All",
+    "qr": "QR Purchase",
+    "stamp": "Stamp",
+    "streak": "Streak"
+  },
   "empty": {
     "noStoresTitle": "No Stores Found",
     "noStoresBody": "Create a store to start tracking transactions.",

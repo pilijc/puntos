@@ -3,6 +3,7 @@
   "description": "Reward customers with streak points",
   "tabs": {
     "upcoming": "Upcoming",
+    "active": "Active",
     "ended": "Ended"
   },
   "emptyActiveTitle": "No Active Program",

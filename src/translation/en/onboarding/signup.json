@@ -65,5 +65,27 @@
       "password": "Enter your password",
       "confirmPassword": "Confirm your password"
     }
+  },
+  "terms": {
+    "1": {
+      "title": "Terms of Service",
+      "description": "By using our service, you agree to our Terms of Service and Privacy Policy."
+    },
+    "2": {
+      "title": "Privacy Policy",
+      "description": "We collect your data to provide and improve our service. By using our service, you agree to our Privacy Policy."
+    },
+    "3": {
+      "title": "Cookie Policy",
+      "description": "We use cookies to improve your experience and analyze traffic. By using our service, you agree to our Cookie Policy."
+    },
+    "4": {
+      "title": "Refund Policy",
+      "description": "We have a 30-day refund policy for our service. By using our service, you agree to our Refund Policy."
+    },
+    "5": {
+      "title": "Cancellation Policy",
+      "description": "We have a 30-day cancellation policy for our service. By using our service, you agree to our Cancellation Policy."
+    }
   }
 }

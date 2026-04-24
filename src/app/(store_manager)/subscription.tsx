@@ -29,6 +29,11 @@ function toAmountNumber(value: unknown): number | null {
 	return null;
 }
 
+function formatPhpAmount(value: number | null | undefined): string {
+	const n = typeof value === "number" && Number.isFinite(value) ? value : 0;
+	return `PHP ${n.toFixed(2)}`;
+}
+
 function formatDateLong(value: string | number | Date | null | undefined): string {
 	if (!value) return "—";
 	const d = value instanceof Date ? value : new Date(value);
@@ -140,7 +145,29 @@ export default function SubscriptionScreen() {
 	}, [basicPlan, currentSubscriptionId, proId, proPlan]);
 
 	const nextPaymentDate = managerRow?.current_period_end ?? null;
-	const estimatedCost = activePlanAmount;
+	const upcomingBillingAmount = activePlanAmount;
+
+	const currentPeriodAmount = useMemo(() => {
+		if (!managerRow?.current_period_start || !managerRow?.current_period_end) return null;
+		const start = new Date(managerRow.current_period_start).getTime();
+		const end = new Date(managerRow.current_period_end).getTime();
+		if (Number.isNaN(start) || Number.isNaN(end)) return null;
+
+		const paidRows = invoices.filter((r) => String(r.payment_status ?? "").toLowerCase() === "paid");
+		if (paidRows.length === 0) return null;
+
+		// Prefer the invoice that matches the current billing period.
+		for (const r of paidRows) {
+			const ps = r.billing_period_start ? new Date(r.billing_period_start).getTime() : NaN;
+			const pe = r.billing_period_end ? new Date(r.billing_period_end).getTime() : NaN;
+			if (!Number.isNaN(ps) && !Number.isNaN(pe) && ps === start && pe === end) {
+				return toAmountNumber(r.amount_paid ?? r.amount_due) ?? null;
+			}
+		}
+
+		const r = paidRows[0];
+		return toAmountNumber(r.amount_paid ?? r.amount_due) ?? null;
+	}, [invoices, managerRow?.current_period_end, managerRow?.current_period_start]);
 
 	const planListForGate = useMemo(
 		() =>
@@ -155,7 +182,12 @@ export default function SubscriptionScreen() {
 
 	const isPaidPro = isPaidUnlimitedPlan(managerRow, planListForGate);
 	const cancelScheduled = Boolean(managerRow?.cancel_at_period_end);
-	const periodLabel = cancelScheduled ? "Access until" : "Next payment";
+	const isBasicPlanSelected =
+		currentSubscriptionId == null || (basicId != null && currentSubscriptionId === basicId);
+	const isBasicFree = !isPaidPro && isBasicPlanSelected && upcomingBillingAmount === 0;
+	const periodLabel = cancelScheduled
+		? translate("storeManager.subscription.billing.period.accessUntil")
+		: translate("storeManager.subscription.billing.period.nextPayment");
 	const accessEndMessage = useMemo(() => {
 		const end = nextPaymentDate;
 		if (!end) return null;
@@ -355,15 +387,11 @@ export default function SubscriptionScreen() {
 							) : null}
 							<View className="w-full">
 								<View className="flex-row items-center gap-2">
-									<View className="px-2 py-1 rounded-full bg-white/15">
-										<Text className="text-[10px] font-poppins-bold uppercase tracking-wider text-white">
-											Active plan
+									{activePlanName && activePlanName !== "—" ? (
+										<Text className="text-xs font-poppins-semibold bg-white/15 text-white px-2 py-0.5 rounded-full">
+											{activePlanName}
 										</Text>
-									</View>
-
-									<Text className="text-xs font-poppins-semibold bg-white/15 text-white px-2 py-0.5 rounded-full">
-										{activePlanName}
-									</Text>
+									) : null}
 								</View>
 
 								{accessEndMessage && cancelScheduled ? (
@@ -376,11 +404,13 @@ export default function SubscriptionScreen() {
 
 								<View className="flex-row items-end gap-1 mt-4">
 									<Text className="text-4xl font-poppins-bold text-white">
-										{activePlanAmount === 0 ? "Free" : `PHP ${activePlanAmount.toFixed(2)}`}
+										{isBasicFree || (currentPeriodAmount) === 0
+											? translate("storeManager.subscription.billing.free")
+											: formatPhpAmount(currentPeriodAmount)}
 									</Text>
-									{activePlanAmount !== 0 ? (
-										<Text className="text-sm font-poppins text-white/80 mb-1">
-											/mo
+									{!isBasicFree && (currentPeriodAmount) !== 0 ? (
+										<Text className="text-sm font-poppins-bold text-white/80 mb-1">
+											{translate("storeManager.subscription.billing.perMonth")}
 										</Text>
 									) : null}
 								</View>
@@ -395,12 +425,21 @@ export default function SubscriptionScreen() {
 										</Text>
 									</View>
 									<View className="flex-1">
-										<Text className="text-xs font-poppins text-white/80">
-											Estimated cost
+										<Text className="text-xs font-poppins-semibold text-white/80">
+											{translate("storeManager.subscription.billing.upcomingAmount")}
 										</Text>
 										<Text className="mt-1 text-sm font-poppins-semibold text-white">
-											{activePlanAmount === 0 ? "PHP 0.00" : `PHP ${estimatedCost.toFixed(2)}`}
+											{isBasicFree
+												? translate("storeManager.subscription.billing.free")
+												: upcomingBillingAmount === 0
+													? "PHP 0.00"
+													: formatPhpAmount(upcomingBillingAmount)}
 										</Text>
+										{currentPeriodAmount != null && upcomingBillingAmount !== currentPeriodAmount ? (
+											<Text className="mt-1 text-[10px] font-poppins text-white/80 leading-4">
+												{translate("storeManager.subscription.billing.upcomingPriceNote")}
+											</Text>
+										) : null}
 									</View>
 								</View>
 
@@ -417,7 +456,7 @@ export default function SubscriptionScreen() {
 												const name = String(proPlan?.name ?? "Pro plan");
 												void handleSubscribe(amount, name);
 											}}
-											disabled={startingCheckout || !ownerId || proAmount == null}
+											disabled={startingCheckout || proAmount == null}
 										/>
 									) : null}
 									{isPaidPro && !cancelScheduled ? (

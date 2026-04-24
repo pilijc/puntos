@@ -16,7 +16,7 @@ import { useDeviceSession } from "@/hooks/store-manager/use-device-session";
 import { DeviceLimitModal } from "@/components/store_manager/session/device-limit-modal";
 
 export default function Login() {
-  const {email, password, setEmail, setPassword, showPassword, setShowPassword } = useAuthStore();
+  const {email, password, setEmail, setPassword, showPassword, setShowPassword, resetAuthForm, reset } = useAuthStore();
   const { restricted } = useLocalSearchParams();
   const emptyState = { email: "", password: "" };
   const [loading, setLoading] = useState(false);
@@ -105,7 +105,8 @@ export default function Login() {
         setShowDeviceLimitModal(true);
         return;
       }
-
+      resetAuthForm();
+      reset();
       router.replace(data.homeRoute);
     } catch (error: any) {
       console.log("error login component", error);

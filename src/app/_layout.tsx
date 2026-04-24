@@ -22,6 +22,7 @@ import { useAuthStore } from "@/store/auth-store";
 import { isOneSignalNativeAvailable } from "@/services/push-service";
 import { useStamps } from "@/hooks/use-stamps";
 import { checkDeviceSessionLimitService, upsertDeviceSessionService } from "@/services/store-manager/device-session-service";
+import { useTranslation } from "react-i18next";
 
 let OneSignal: typeof import("react-native-onesignal").OneSignal | null = null;
 
@@ -55,6 +56,8 @@ export default function Layout() {
   const sessionToken = useAuthStore((s) => s.sessionToken);
   const isRestricted = useAuthStore((s) => s.isRestricted);
   const fetchStamps = useStamps((s) => s.fetchStamps);
+  const [sessionExpiredNotice, setSessionExpiredNotice] = useState(false);
+  const { t: translate } = useTranslation();
 
   useEffect(() => {
     const checkSession = async () => {
@@ -182,6 +185,16 @@ export default function Layout() {
             },
           },
         ]}
+      />
+      <Modal
+        visible={sessionExpiredNotice}
+        onClose={() => setSessionExpiredNotice(false)}
+        title={translate("label.sessionExpired")}
+        message={translate("label.sessionExpiredMessage")}
+        buttons={[]}
+        showCloseButton={false}
+        dismissOnBackdrop={false}
+        timer={1500}
       />
     </GestureHandlerRootView>
   );
