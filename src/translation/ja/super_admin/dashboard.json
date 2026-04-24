@@ -1,5 +1,15 @@
 {
+  "title": "ダッシュボード",
   "welcome": "ようこそ、",
+  "platformActivity": "プラットフォーム活動",
+  "usersLegend": "ユーザー",
+  "storesLegend": "店舗",
+  "recentUserSignins": "最近のユーザーサインイン",
+  "recentlyRegisteredStores": "最近登録された店舗",
+  "records": "件",
+  "showMore": "もっと見る",
+  "noNewUsers": "この期間の新規ユーザーはいません",
+  "noNewStores": "この期間の新規店舗はありません",
   "metrics": {
     "totalUsers": "全ユーザー",
     "totalStores": "全店舗",

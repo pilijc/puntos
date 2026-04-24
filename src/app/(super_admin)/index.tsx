@@ -12,7 +12,9 @@ import { DashboardActivityLineChart } from "@/components/super-admin/dashboard-a
 import {
   buildTimeframeSeries,
   getDetailItems,
-  Timeframe
+  Timeframe,
+  USER_DATE_KEYS,
+  STORE_DATE_KEYS,
 } from "@/services/super-admin/dashboard-analytics-service";
 
 const isWeb = Platform.OS === "web";
@@ -48,15 +50,15 @@ export default function SuperAdminDashboard() {
     [returningUsersCount, users.length]
   );
 
-  const userMetrics = useMemo(() => buildTimeframeSeries(users, ["last_sign_in_at", "last_login", "last_login_at", "last_sign_in", "updated_at", "created_at", "createdAt", "inserted_at"], timeframe), [users, timeframe]);
-  const storeMetrics = useMemo(() => buildTimeframeSeries(stores, ["updated_at", "created_at", "createdAt", "inserted_at"], timeframe), [stores, timeframe]);
+  const userMetrics = useMemo(() => buildTimeframeSeries(users, USER_DATE_KEYS, timeframe), [users, timeframe]);
+  const storeMetrics = useMemo(() => buildTimeframeSeries(stores, STORE_DATE_KEYS, timeframe), [stores, timeframe]);
   const combinedSeries = useMemo(() => userMetrics.series.map((v, i) => v + (storeMetrics.series[i] ?? 0)), [userMetrics.series, storeMetrics.series]);
 
   const peakIndex = useMemo(() => combinedSeries.findIndex((v) => v === Math.max(...combinedSeries, 0)), [combinedSeries]);
   const mostActiveLabel = useMemo(() => userMetrics.labels[peakIndex] ?? "-", [peakIndex, userMetrics.labels]);
 
-  const userList = useMemo(() => getDetailItems(users, ["last_sign_in_at", "last_login", "last_login_at", "last_sign_in", "updated_at", "created_at", "createdAt", "inserted_at"], "User", timeframe, userLimit), [users, timeframe, userLimit]);
-  const storeList = useMemo(() => getDetailItems(stores, ["updated_at", "created_at", "createdAt", "inserted_at"], "Store", timeframe, storeLimit), [stores, timeframe, storeLimit]);
+  const userList = useMemo(() => getDetailItems(users, USER_DATE_KEYS, "User", timeframe, userLimit), [users, timeframe, userLimit]);
+  const storeList = useMemo(() => getDetailItems(stores, STORE_DATE_KEYS, "Store", timeframe, storeLimit), [stores, timeframe, storeLimit]);
 
   if (loading && !refreshing) {
     return (
@@ -72,7 +74,7 @@ export default function SuperAdminDashboard() {
       <View className="bg-white dark:bg-darkBackground border-b border-neutral-100 dark:border-darkBorder px-6 py-3 flex-row items-center justify-between">
         <View className="flex-row items-baseline gap-2">
           <Text className="text-xl font-poppins-bold text-textPrimary dark:text-darkTextPrimary py-1">
-            {translate("superAdmin.dashboard.title")}
+            {translate("super_admin.dashboard.title")}
           </Text>
           {isWeb && (
             <Text className="text-xs text-[#94A3B8] dark:text-darkTextSecondary font-poppins">
@@ -101,7 +103,7 @@ export default function SuperAdminDashboard() {
           {!isWeb && (
             <View className="pt-6 pb-2">
               <Text className="text-sm text-[#94A3B8] dark:text-darkTextSecondary font-poppins">
-                {translate("superAdmin.dashboard.welcome")}
+                {translate("super_admin.dashboard.welcome")}
                 <Text className="text-orange-500 font-poppins-bold">
                   {adminInfo?.username?.split(" ")[0] || "Admin"}
                 </Text>!
@@ -111,19 +113,19 @@ export default function SuperAdminDashboard() {
 
           <View className="mb-6 mt-2">
             <View className="flex-row gap-2 mb-2">
-              <StatCard label={translate("superAdmin.dashboard.metrics.totalUsers")} val={users.length} Icon={Users} />
-              <StatCard label={translate("superAdmin.dashboard.metrics.totalStores")} val={stores.length} Icon={Store} />
-              <StatCard label={translate("superAdmin.dashboard.metrics.activeStores")} val={activeStoresCount} Icon={Activity} />
+              <StatCard label={translate("super_admin.dashboard.metrics.totalUsers")} val={users.length} Icon={Users} />
+              <StatCard label={translate("super_admin.dashboard.metrics.totalStores")} val={stores.length} Icon={Store} />
+              <StatCard label={translate("super_admin.dashboard.metrics.activeStores")} val={activeStoresCount} Icon={Activity} />
             </View>
             <View className="flex-row gap-[10px]">
               <DashboardMetricTile
-                label={timeframe === "today" ? "Peak Hour" : timeframe === "7d" ? "Most Active Day" : "Most Active Week"}
+                label={timeframe === "today" ? translate("super_admin.dashboard.peakHour") : timeframe === "7d" ? translate("super_admin.dashboard.mostActiveDay") : translate("super_admin.dashboard.mostActiveWeek")}
                 value={mostActiveLabel}
-                subtitle={timeframe === "today" ? "Today" : timeframe === "7d" ? "Last 7 days" : "Last 30 days"}
+                subtitle={timeframe === "today" ? translate("super_admin.dashboard.rangeToday") : timeframe === "7d" ? translate("super_admin.dashboard.rangeLast7") : translate("super_admin.dashboard.rangeLast30")}
                 icon={CalendarDays}
                 loading={false}
               />
-              <DashboardMetricTile label="Returning Customers" value={`${userRetentionPercent}%`} subtitle="Retention rate" icon={Activity} loading={false} />
+              <DashboardMetricTile label={translate("super_admin.dashboard.returningCustomers")} value={`${userRetentionPercent}%`} subtitle={translate("super_admin.dashboard.retentionRate")} icon={Activity} loading={false} />
             </View>
           </View>
 

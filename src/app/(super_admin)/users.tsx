@@ -1,5 +1,5 @@
 import React, { useCallback } from "react";
-import { ActivityIndicator, RefreshControl, ScrollView, StatusBar, FlatList, Platform } from "react-native";
+import { ActivityIndicator, RefreshControl, ScrollView, StatusBar, FlatList, Platform, NativeSyntheticEvent, NativeScrollEvent } from "react-native";
 import { View, Text } from "@/tw";
 import { ScreenWrapper } from "@/components/ui/screen-wrapper";
 import { UsersModal as Modal } from "@/components/users/UsersModal";
@@ -45,6 +45,16 @@ export default function UsersScreen() {
     tabCounts,
   } = useSuperAdminUsers();
   const { t: translate } = useTranslation();
+
+  const handleWebScroll = useCallback(
+    (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+      const { contentOffset, layoutMeasurement, contentSize } = event.nativeEvent;
+      if (contentOffset.y + layoutMeasurement.height >= contentSize.height - 200) {
+        onEndReached();
+      }
+    },
+    [onEndReached]
+  );
 
   const renderItem = useCallback(
     ({ item }: { item: any }) => (
@@ -95,6 +105,8 @@ export default function UsersScreen() {
             alignItems: "center" as const,
           }}
           showsVerticalScrollIndicator={false}
+          onScroll={handleWebScroll}
+          scrollEventThrottle={200}
         >
           <View style={{ maxWidth: 896 }} className="w-full">
             <UsersSearchHeader
@@ -124,7 +136,7 @@ export default function UsersScreen() {
                 contentContainerStyle={{ paddingBottom: 16 }}
                 scrollEnabled={false}
                 removeClippedSubviews={false}
-                initialNumToRender={listData.length}
+                initialNumToRender={15}
                 ListFooterComponent={
                   loadingMore ? (
                     <View className="py-4 items-center">
@@ -135,7 +147,7 @@ export default function UsersScreen() {
                 ListEmptyComponent={
                   <View className="items-center justify-center pt-20">
                     <Text className={`${TYPO.subtitle} dark:text-darkTextSecondary`}>
-                      {translate("superAdmin.users.noUsersFound")}
+                      {translate("super_admin.users.noUsersFound")}
                     </Text>
                   </View>
                 }
@@ -180,7 +192,7 @@ export default function UsersScreen() {
               ListEmptyComponent={
                 <View className="items-center justify-center pt-20">
                   <Text className={`${TYPO.subtitle} dark:text-darkTextSecondary`}>
-                    {translate("superAdmin.users.noUsersFound")}
+                    {translate("super_admin.users.noUsersFound")}
                   </Text>
                 </View>
               }
