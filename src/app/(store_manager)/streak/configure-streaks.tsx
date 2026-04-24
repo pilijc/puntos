@@ -22,6 +22,7 @@ export default function ConfigureStreaks() {
   const insets = useSafeAreaInsets();
   const { storeId, streakId } = useLocalSearchParams<{ storeId: string; streakId?: string }>();
   const isEditMode = !!streakId;
+  const isWeb = Platform.OS === "web";
   const {
     points_mode, setPointsMode,
     fixed_points_per_day, setFixedPointsPerDay,
@@ -307,17 +308,26 @@ export default function ConfigureStreaks() {
           style={{ flex: 1 }}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
-          contentContainerStyle={{ padding: 16, paddingBottom: 32, gap: 20 }}
+          contentContainerStyle={{
+            padding: 16,
+            paddingBottom: 32,
+            gap: 20,
+            ...(isWeb ? { alignItems: "center" as const } : {}),
+          }}
         >
-          <View className="bg-white dark:bg-slate-900 rounded-xl p-4 gap-y-4">
-          <View>
-            <Text className="text-md font-poppins-bold text-slate-900 dark:text-slate-100">
-              {t("store_manager.streakConfigure.howEarningWorks")}
-            </Text>
-            <Text className="text-sm font-poppins text-slate-500 dark:text-slate-400 mt-1">
-              {t("store_manager.streakConfigure.howEarningWorksBody")}
-            </Text>
-          </View>
+          <View
+            style={{ width: "100%", maxWidth: isWeb ? 896 : undefined }}
+            className="w-full"
+          >
+            <View className="bg-white dark:bg-slate-900 rounded-xl p-4 gap-y-4">
+            <View>
+              <Text className="text-md font-poppins-bold text-textPrimary dark:text-darkTextPrimary">
+                {t("storeManager.streakConfigure.howEarningWorks")}
+              </Text>
+              <Text className="text-sm font-poppins text-textSecondary dark:text-darkTextSecondary mt-1">
+                {t("storeManager.streakConfigure.howEarningWorksBody")}
+              </Text>
+            </View>
 
           {/* Points mode toggle */}
           <View className="gap-y-2">
@@ -527,24 +537,47 @@ export default function ConfigureStreaks() {
           </View>
 
           {/* Actions */}
-          <View className="gap-y-3 mt-3">
-            <Button
-              label={isEditMode ? t("label.saveChanges") : t("store_manager.streakConfigure.saveDraft")}
-              onPress={handleSave}
-              disabled={isSubmitting}
-              loading={isSubmitting}
-              fullWidth={true}
-              variant="primary"
-            />
-            <Button
-              label={t("label.cancel")}
-              onPress={() => {
-                router.push({ pathname: "/(store_manager)/streak", params: { storeId } });
-              }}
-              disabled={isSubmitting}
-              fullWidth={true}
-              variant="secondary"
-            />
+          {isWeb ? (
+            <View className="flex-row gap-x-3 justify-center items-center">
+              <Button
+                label={t("storeManager.streakConfigure.cancel")}
+                onPress={() => {
+                  router.push({ pathname: "/(store_manager)/streak", params: { storeId } });
+                }}
+                disabled={isSubmitting}
+                fullWidth={false}
+                variant="secondary"
+              />
+              <Button
+                label={isEditMode ? t("storeManager.streakConfigure.saveChanges") : t("storeManager.streakConfigure.saveDraft")}
+                onPress={handleSave}
+                disabled={isSubmitting}
+                loading={isSubmitting}
+                fullWidth={false}
+                variant="primary"
+              />
+            </View>
+          ) : (
+            <View className="gap-y-3 mt-3">
+              <Button
+                label={isEditMode ? t("storeManager.streakConfigure.saveChanges") : t("storeManager.streakConfigure.saveDraft")}
+                onPress={handleSave}
+                disabled={isSubmitting}
+                loading={isSubmitting}
+                fullWidth={true}
+                variant="primary"
+              />
+              <Button
+                label={t("storeManager.streakConfigure.cancel")}
+                onPress={() => {
+                  router.push({ pathname: "/(store_manager)/streak", params: { storeId } });
+                }}
+                disabled={isSubmitting}
+                fullWidth={true}
+                variant="secondary"
+              />
+            </View>
+          )}
           </View>
         </View>
       </ScrollView>

@@ -13,7 +13,6 @@ export type ManagerSubscriptionRow = {
   paymongo_subscription_id?: string | null;
 };
 
-/** Row from `manager_subscription_payments` (billing history). */
 export type ManagerSubscriptionPaymentRow = {
   id?: number;
   owner_id: string;
@@ -93,7 +92,6 @@ export async function getSubscriptionPlans() {
   return data ?? [];
 }
 
-/** Current manager billing row (one per owner). */
 export async function getManagerSubscription(
   ownerId: string,
 ): Promise<ManagerSubscriptionRow | null> {
@@ -227,6 +225,7 @@ export async function useSubscriptionCheckout(
       console.error("Checkout failed:", result);
       return null;
     }
+    console.log('Checkout result:', result);
     return result?.checkout_url ?? null;
   } catch (err) {
     console.error("useSubscriptionCheckout error:", err);

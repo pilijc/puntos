@@ -3,7 +3,19 @@ import { useTranslation } from "react-i18next";
 import { ActivityIndicator, Platform, Pressable, useColorScheme } from "react-native";
 import { View, Text, SafeAreaView, ScrollView } from "@/tw";
 import { useSuperAdminStoresStore } from "@/store/super-admin/super-admin-stores-store";
-import { Check, ChevronDown, ChevronUp, Sparkles, Store } from "lucide-react-native";
+import {
+  ArrowUpDown,
+  Check,
+  ChevronDown,
+  ChevronUp,
+  Sparkles,
+  Store,
+  TrendingDown,
+  TrendingUp,
+  UserRoundMinus,
+  UserRoundPlus,
+  UsersRound,
+} from "lucide-react-native";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { Button } from "@/components/button";
 import { TextField } from "@/components/text-field";
@@ -15,8 +27,10 @@ import {
   getManagerSubscriptions,
   getPublicUsersByIds,
   getManagerSubscriptionPaymentsByOwner,
+  getSubscriptionDashboardStats,
   updateProSubscriptionAmount,
 } from "@/services/super-admin/subscription-service";
+import type { SubscriptionDashboardCompare } from "@/type/super-admin/subscription";
 
 function FeatureLine({ text }: { text: string }) {
   return (
@@ -25,6 +39,52 @@ function FeatureLine({ text }: { text: string }) {
       <Text className="flex-1 text-xs font-poppins leading-5 text-textPrimary dark:text-darkTextPrimary">
         {text}
       </Text>
+    </View>
+  );
+}
+
+const TREND_UP = "#16a34a";
+const TREND_DOWN = "#dc2626";
+const TREND_FLAT = "#94a3b8";
+
+function StatCard({
+  icon,
+  label,
+  value,
+  compare,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  compare?: SubscriptionDashboardCompare | null;
+}) {
+  const trend = compare?.trend;
+  const TrendGlyph =
+    trend === "up" ? TrendingUp : trend === "down" ? TrendingDown : ArrowUpDown;
+  const trendColor =
+    trend === "up" ? TREND_UP : trend === "down" ? TREND_DOWN : TREND_FLAT;
+
+  return (
+    <View className="flex-1 min-w-0 rounded-xl bg-white dark:bg-neutral-900 border border-slate-100 dark:border-neutral-700 p-4">
+      <View className="flex-row items-start gap-3">
+        <View className="w-10 h-10 rounded-xl items-center justify-center shrink-0">{icon}</View>
+        <View className="flex-1 min-w-0 gap-y-0.5">
+          <Text className="text-xs font-poppins text-textMuted dark:text-darkTextMuted text-left">
+            {label}
+          </Text>
+          <Text className="text-xl font-poppins-bold text-textPrimary dark:text-darkTextPrimary text-left">
+            {value}
+          </Text>
+          {compare ? (
+            <View className="flex-row items-center gap-2">
+              <TrendGlyph size={14} color={trendColor} />
+              <Text className="flex-1 text-[10px] font-poppins text-textMuted dark:text-darkTextMuted text-left leading-4">
+                {compare.subtitle}
+              </Text>
+            </View>
+          ) : null}
+        </View>
+      </View>
     </View>
   );
 }
@@ -40,6 +100,7 @@ export default function SubscriptionConfig() {
   const proAmountInput = subscriptionState.proAmountInput;
   const savedProAmount = subscriptionState.savedProAmount;
   const formError = subscriptionState.formError;
+  const dashboardStats = subscriptionState.dashboardStats;
 
   React.useEffect(() => {
     fetchStores();
@@ -65,6 +126,8 @@ export default function SubscriptionConfig() {
         try {
           const managerSubscriptions = await getManagerSubscriptions();
           subscriptionState.setManagerSubscriptions(managerSubscriptions);
+          const stats = await getSubscriptionDashboardStats(managerSubscriptions);
+          subscriptionState.setDashboardStats(stats);
 
           const users = await getPublicUsersByIds(managerSubscriptions.map((m) => m.owner_id));
           subscriptionState.setPublicUsers(users);
@@ -73,6 +136,7 @@ export default function SubscriptionConfig() {
             e instanceof Error ? e.message : translate("super_admin.subscription.formError.loadSubsFailed"),
           );
           subscriptionState.setManagerSubscriptions([]);
+          subscriptionState.setDashboardStats(null);
           subscriptionState.setPublicUsers([]);
         }
       } finally {
@@ -108,7 +172,7 @@ export default function SubscriptionConfig() {
 
   const formatPeso = useCallback((amount: number | null) => {
     if (amount == null) return "";
-    return `₱ ${amount.toFixed(2)}`;
+    return `PHP ${amount.toFixed(2)}`;
   }, []);
 
   const formatDateLong = useCallback((value: string | number | Date | null | undefined) => {
@@ -139,6 +203,8 @@ export default function SubscriptionConfig() {
       ]);
       subscriptionState.setPlans(plans);
       subscriptionState.setManagerSubscriptions(managerSubscriptions);
+      const stats = await getSubscriptionDashboardStats(managerSubscriptions);
+      subscriptionState.setDashboardStats(stats);
       const users = await getPublicUsersByIds(managerSubscriptions.map((m) => m.owner_id));
       subscriptionState.setPublicUsers(users);
 
@@ -162,8 +228,8 @@ export default function SubscriptionConfig() {
       const name = (user?.name ?? "").trim();
       return {
         ...sub,
-        display_name: name || store?.owner_name || sub.owner_id,
-        email: user?.email ?? null,
+        display_name: name || store?.owner_name || "Puntos User",
+        email: user?.email ?? "—",
       };
     });
   }, [subscriptionState.managerSubscriptions, subscriptionState.publicUsers, stores]);
@@ -284,7 +350,7 @@ export default function SubscriptionConfig() {
         align: "left",
         render: (row) => (
           <View className="min-w-0">
-            <Text className="text-[12px] font-poppins-semibold text-slate-800 dark:text-slate-100" numberOfLines={1}>
+            <Text className="text-[12px] font-poppins text-textSecondary dark:text-darkTextSecondary" numberOfLines={1}>
               {row.display_name}
             </Text>
             {/* <Text className="text-[10px] font-poppins text-slate-500 dark:text-slate-400" numberOfLines={1}>
@@ -370,9 +436,78 @@ export default function SubscriptionConfig() {
           }}
           showsVerticalScrollIndicator={false}
         >
-          <View style={{ maxWidth: isWeb ? 896 : undefined }} className="w-full">
-            <View className="w-full rounded-xl border border-slate-100 dark:border-neutral-700 bg-white dark:bg-neutral-800 overflow-hidden p-4 gap-4">
+          <View style={{ maxWidth: isWeb ? 896 : undefined }} className="w-full gap-y-4">
 
+          <View className={`${isWeb ? "gap-4" : "flex-col gap-3"}`}>
+              {isWeb ? (
+                <>
+                  <View className="flex-row gap-x-2">
+                    <StatCard
+                      icon={<TrendingUp size={24} color="#FF6600" />}
+                      label="Total collected"
+                      value={
+                        dashboardStats != null
+                          ? `PHP ${dashboardStats.totalAmountCollected.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                          : "—"
+                      }
+                      compare={dashboardStats?.totalAmountCollectedCompare ?? null}
+                    />
+                    <StatCard
+                      icon={<UsersRound size={24} color="#FF6600" />}
+                      label="Active subscribers"
+                      value={dashboardStats != null ? String(dashboardStats.activeSubscribers) : "—"}
+                      compare={dashboardStats?.activeSubscribersCompare ?? null}
+                    />
+                    <StatCard
+                      icon={<UserRoundPlus size={24} color="#FF6600" />}
+                      label="New subscribers"
+                      value={dashboardStats != null ? String(dashboardStats.newSubscribersThisMonth) : "—"}
+                      compare={dashboardStats?.newSubscribersThisMonthCompare ?? null}
+                    />
+                    <StatCard
+                      icon={<UserRoundMinus size={24} color="#FF6600" />}
+                      label="Cancellations"
+                      value={dashboardStats != null ? String(dashboardStats.scheduledCancellations) : "—"}
+                      compare={dashboardStats?.scheduledCancellationsCompare ?? null}
+                    />
+                  </View>
+         
+                </>
+              ) : (
+                <>
+                  <StatCard
+                    icon={<TrendingUp size={24} color="#FF6600" />}
+                    label="Total collected"
+                    value={
+                      dashboardStats != null
+                        ? `PHP ${dashboardStats.totalAmountCollected.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                        : "—"
+                    }
+                    compare={dashboardStats?.totalAmountCollectedCompare ?? null}
+                  />
+                  <StatCard
+                    icon={<UsersRound size={24} color="#FF6600" />}
+                    label="Active subscribers"
+                    value={dashboardStats != null ? String(dashboardStats.activeSubscribers) : "—"}
+                    compare={dashboardStats?.activeSubscribersCompare ?? null}
+                  />
+                  <StatCard
+                    icon={<UserRoundPlus size={24} color="#FF6600" />}
+                    label="New subscribers (this month)"
+                    value={dashboardStats != null ? String(dashboardStats.newSubscribersThisMonth) : "—"}
+                    compare={dashboardStats?.newSubscribersThisMonthCompare ?? null}
+                  />
+                  <StatCard
+                    icon={<UserRoundMinus size={24} color="#FF6600" />}
+                    label="Scheduled cancellations"
+                    value={dashboardStats != null ? String(dashboardStats.scheduledCancellations) : "—"}
+                    compare={dashboardStats?.scheduledCancellationsCompare ?? null}
+                  />
+                </>
+              )}
+            </View>
+
+            <View className="w-full rounded-xl border border-slate-100 dark:border-neutral-700 bg-white dark:bg-neutral-800 overflow-hidden p-4">
               <View className={isWeb ? "flex-row gap-4 items-stretch" : "flex-col gap-4"}>
                 <View className="flex-1 min-w-0">
                   <View className="relative rounded-2xl border border-slate-100 bg-white p-4 h-full dark:border-slate-700 dark:bg-neutral-900">
@@ -458,7 +593,7 @@ export default function SubscriptionConfig() {
             </View>
 
             {subscribedManagers.length > 0 ? (
-              <View className="bg-white dark:bg-darkBackgroundCard rounded-2xl border border-slate-100 dark:border-neutral-800 p-4 mt-4">
+              <View className="bg-white dark:bg-darkBackgroundCard rounded-2xl border border-slate-100 dark:border-neutral-800 p-4">
                 <View className="flex-row items-center gap-2 mb-2">
                   <Text className="text-sm font-poppins-semibold text-slate-800 dark:text-slate-100">
                     {translate("super_admin.subscription.managerSubs.title")}

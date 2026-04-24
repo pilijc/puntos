@@ -22,6 +22,7 @@ import { useAuthStore } from "@/store/auth-store";
 import { isOneSignalNativeAvailable } from "@/services/push-service";
 import { useStamps } from "@/hooks/use-stamps";
 import { checkDeviceSessionLimitService, upsertDeviceSessionService } from "@/services/store-manager/device-session-service";
+import { markIntentionalSignOut } from "@/lib/intentional-signout";
 import { useTranslation } from "react-i18next";
 
 let OneSignal: typeof import("react-native-onesignal").OneSignal | null = null;
@@ -45,6 +46,7 @@ export async function initOneSignal(): Promise<string | null> {
 
 export default function Layout() {
   useAuthListener();
+  const { t } = useTranslation();
   const router = useRouter();
   const pathname = usePathname();
   const [fontsLoaded] = useFonts({
@@ -55,6 +57,8 @@ export default function Layout() {
   });
   const sessionToken = useAuthStore((s) => s.sessionToken);
   const isRestricted = useAuthStore((s) => s.isRestricted);
+  const sessionExpiredNotice = useAuthStore((s) => s.sessionExpiredNotice);
+  const setSessionExpiredNotice = useAuthStore((s) => s.setSessionExpiredNotice);
   const fetchStamps = useStamps((s) => s.fetchStamps);
   const [sessionExpiredNotice, setSessionExpiredNotice] = useState(false);
   const { t: translate } = useTranslation();
@@ -97,6 +101,7 @@ export default function Layout() {
                 await upsertDeviceSessionService(userId);
               } else {
                 // Device limit reached — sign out and send to login so the modal can handle it
+                markIntentionalSignOut();
                 await supabase.auth.signOut();
                 router.replace("/(auth)/login");
                 return;
@@ -178,6 +183,7 @@ export default function Layout() {
             variant: "primary",
             onPress: async () => {
               const { setRestricted } = useAuthStore.getState();
+              markIntentionalSignOut();
               await supabase.auth.signOut();
               await AsyncStorage.removeItem("sessionToken");
               setRestricted(false);
@@ -189,12 +195,12 @@ export default function Layout() {
       <Modal
         visible={sessionExpiredNotice}
         onClose={() => setSessionExpiredNotice(false)}
-        title={translate("label.sessionExpired")}
-        message={translate("label.sessionExpiredMessage")}
+        title={t("onboarding.sessionExpired.title")}
+        message={t("onboarding.sessionExpired.message")}
         buttons={[]}
         showCloseButton={false}
         dismissOnBackdrop={false}
-        timer={1500}
+        timer={1000}
       />
     </GestureHandlerRootView>
   );

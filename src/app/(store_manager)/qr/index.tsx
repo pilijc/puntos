@@ -145,12 +145,12 @@ export default function QRIndex() {
               <QRSkeleton />
             ) : !config ? (
               <View className="bg-white dark:bg-neutral-800 rounded-xl border border-slate-100 dark:border-neutral-700 px-4 py-14 items-center gap-y-2 mx-4">
-                <View className="w-14 h-14 rounded-2xl items-center justify-center">
+                <View className="w-14 h-14 rounded-xl items-center justify-center">
                   <QrCode size={28} color="gray" />
                 </View>
-                <Text className="text-sm font-poppins-semibold text-slate-500 dark:text-slate-400">{t("store_manager.qr.notConfiguredTitle")}</Text>
-                <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500 text-center px-6 mb-2">
-                  {t("store_manager.qr.notConfiguredBody")}
+                <Text className="text-sm font-poppins-semibold text-textSecondary dark:text-darkTextSecondary">{t("storeManager.qr.notConfiguredTitle")}</Text>
+                <Text className="text-xs font-poppins text-textSecondary dark:text-darkTextSecondary text-center px-6 mb-2">
+                  {t("storeManager.qr.notConfiguredBody")}
                 </Text>
                 <Button
                   label={t("store_manager.qr.configureNow")}
