@@ -4,7 +4,7 @@ import { Text, TouchableOpacity } from "@/tw";
 import * as LucideIcons from "lucide-react-native";
 import { Image as ExpoImage, type ImageSource } from "expo-image";
 
-type ButtonVariant = "primary" | "success" | "danger" | "secondary" | "ghost";
+type ButtonVariant = "primary" | "accent" | "success" | "danger" | "secondary" | "ghost";
 type IconName = keyof typeof LucideIcons;
 
 interface ButtonProps {
@@ -22,6 +22,7 @@ interface ButtonProps {
   disabled?: boolean;
   keyboardDismiss?: boolean;
   authButton?: boolean;
+  elevation?: boolean;
 }
 
 const config: Record<
@@ -38,6 +39,12 @@ const config: Record<
     text: "text-white",
     iconColor: "#fff",
     spinnerColor: "#fff"
+  },
+  accent: {
+    container: "bg-white",
+    text: "text-primary",
+    iconColor: "#FF6600",
+    spinnerColor: "#FF6600"
   },
   success: {
     container: "bg-emerald-500",
@@ -80,6 +87,7 @@ export function Button({
   disabled = false,
   keyboardDismiss = false,
   authButton = false,
+  elevation = false,
 }: ButtonProps) {
   let { container, text, iconColor, spinnerColor } = config[variant];
 
@@ -106,7 +114,11 @@ export function Button({
       activeOpacity={0.8}
       disabled={disabled || loading}
       onPress={onPress}
-      onPressIn={keyboardDismiss ? () => { Keyboard.dismiss(); onPress(); } : undefined}
+      onPressIn={keyboardDismiss ? () => { Keyboard.dismiss(); onPress(); } : undefined} 
+      style={
+        elevation ? { elevation: 10, shadowColor: "#000", shadowOpacity: 0.05, shadowRadius: 1, shadowOffset: { width: 0, height: 2 } } : { elevation: 0 }
+   
+      }
       className={`${sizeClass} ${roundedFull ? "rounded-full" : "rounded-xl"} ${container} items-center flex-row justify-center gap-x-2`}
     >
       {loading ? (

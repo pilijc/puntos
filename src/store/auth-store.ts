@@ -14,6 +14,7 @@ export const useAuthStore = create<AuthState>()(
       showConfirmPassword: false,
       sessionToken: null,
       isRestricted: false,
+      sessionExpiredNotice: false,
 
       setName: (name) => set({ name }),
       setEmail: (email) => set({ email }),
@@ -23,6 +24,7 @@ export const useAuthStore = create<AuthState>()(
       setShowConfirmPassword: (showConfirmPassword) => set({ showConfirmPassword }),
       setSessionToken: (sessionToken) => set({ sessionToken }),
       setRestricted: (isRestricted) => set({ isRestricted }),
+      setSessionExpiredNotice: (sessionExpiredNotice) => set({ sessionExpiredNotice }),
 
       reset: () =>
         set({
@@ -34,6 +36,16 @@ export const useAuthStore = create<AuthState>()(
           showConfirmPassword: false,
           sessionToken: null,
           isRestricted: false,
+          sessionExpiredNotice: false,
+        }),
+      resetAuthForm: () =>
+        set({
+          name: "",
+          email: "",
+          password: "",
+          confirmPassword: "",
+          showPassword: false,
+          showConfirmPassword: false,
         }),
     }),
     {

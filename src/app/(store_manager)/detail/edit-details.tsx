@@ -290,7 +290,7 @@ export default function EditDetails() {
         }}
       >
         <View
-          className="bg-white dark:bg-neutral-800 rounded-2xl border border-slate-100 dark:border-neutral-700 p-4 gap-y-4"
+          className="bg-white dark:bg-neutral-800 rounded-xl border border-slate-100 dark:border-neutral-700 p-4 gap-y-4"
           style={isWeb ? { width: "100%", maxWidth: WEB_MAX_WIDTH } : undefined}
         >
           <View className="gap-y-4">
@@ -303,7 +303,6 @@ export default function EditDetails() {
             />
 
             <View className="gap-y-2">
-              <Text className="text-sm font-poppins-semibold text-textSecondary dark:text-textSecondary mb-1.5">{t("label.storeType")}</Text>
               <Text className="text-sm font-poppins-semibold text-textSecondary dark:text-textSecondary mb-1.5">{t("label.storeType")}</Text>
               <View className="flex-row flex-wrap gap-2">
                 {store_types_options.map((opt) => {
