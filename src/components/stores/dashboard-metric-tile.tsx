@@ -4,48 +4,35 @@ import { View, Text } from "@/tw";
 import { DashboardMetricTileProps } from "@/type/store-manager/metric";
 import { DashboardMetricTileSkeleton } from '@/components/skeleton/store_manager/dashboard-metric-tile-skeleton';
 
-export const DashboardMetricTile: React.FC<DashboardMetricTileProps> = ({
+export const DashboardMetricTile: React.FC<Omit<DashboardMetricTileProps, 'subtitle'>> = ({
     label,
     value,
-    subtitle,
     icon,
     loading,
 }) => {
     const isDark = useColorScheme() === "dark";
-
     const IconComponent = icon as React.ElementType;
 
     return (
-        <View className="bg-white dark:bg-darkBackgroundCard rounded-xl p-3 flex-row items-center gap-[10px] flex-1 elevation-1 border border-transparent dark:border-darkBorder">
-            <View className="w-10 h-10 rounded-full bg-[#f8fafc] dark:bg-darkBackgroundMuted items-center justify-center">
-                <IconComponent
-                    size={20}
-                    color={isDark ? "#A3A3A3" : "#94A3B8"}
-                />
-            </View>
+        <View className="bg-white dark:bg-darkBackgroundCard rounded-xl p-2 flex-1 elevation-1 border border-transparent dark:border-darkBorder justify-center">
+            <Text className="text-[11px] font-poppins-bold text-textMuted dark:text-darkTextSecondary tracking-[0.5px] uppercase mb-[2px]">
+                {label}
+            </Text>
 
-            <View className="flex-1">
-                <Text className="text-[10px] font-poppins-bold text-textMuted dark:text-darkTextSecondary tracking-[0.4px] uppercase mb-[2px]">
-                    {label}
-                </Text>
-
-                <View className="flex-row items-center flex-wrap gap-[4px]">
-                    {loading ? (
-                        <DashboardMetricTileSkeleton />
-                    ) : (
-                        <Text key="content-val" className="text-[22px] font-poppins-bold text-textPrimary dark:text-darkTextPrimary">
-                            {value}
-                        </Text>
-                    )}
+            <View className="flex-row items-center gap-[8px] mt-1">
+                <View style={{ marginTop: -2 }}>
+                    <IconComponent
+                        size={22}
+                        color={isDark ? "#A3A3A3" : "#94A3B8"}
+                    />
                 </View>
 
-                {!!subtitle && (
-                    <View className="flex-row items-center mt-[2px] gap-[4px]">
-                        <View className="w-[5px] h-[5px] rounded-full bg-success" />
-                        <Text className="text-[9px] font-poppins text-textMuted dark:text-darkTextMuted" numberOfLines={1}>
-                            {subtitle}
-                        </Text>
-                    </View>
+                {loading ? (
+                    <DashboardMetricTileSkeleton />
+                ) : (
+                    <Text key="content-val" className="text-[24px] font-poppins-bold text-textPrimary dark:text-darkTextPrimary leading-tight">
+                        {value}
+                    </Text>
                 )}
             </View>
         </View>

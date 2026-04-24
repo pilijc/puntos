@@ -56,3 +56,13 @@ export interface StoreUserLoyalty {
     user_id: string;
     purchase_count: number;
 }
+
+export interface RecentTransaction {
+    id: string;
+    created_at: string;
+    points_earned: number;
+    user: {
+        username: string;
+        display_name: string;
+    };
+}

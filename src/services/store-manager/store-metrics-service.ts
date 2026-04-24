@@ -1,5 +1,4 @@
 import { supabase } from "@/supabase/supabase";
-import * as turf from "@turf/turf";
 import { RetentionData, StampBucket } from "@/type/store-manager/metric";
 
 function getLocalDateRange(): { today: string; sevenDaysAgo: string } {
@@ -17,8 +16,6 @@ function getLocalDateRange(): { today: string; sevenDaysAgo: string } {
 
 export async function getStoreMetrics(
     storeId: number,
-    lat: number | null,
-    lng: number | null,
     radiusMeters: number = 100
 ) {
     let activeUserCount = 0;
@@ -69,14 +66,24 @@ export async function getStoreMetrics(
         console.error("Dashboard metrics error:", error);
     }
 
+    //NEWLY ADDED
+    const avgDailyScans = Math.round(
+        weeklyActivity.reduce((a, b) => a + b, 0) / 7
+    );
+    const peakHour = todayTxCount > 0 ? "14:00 - 15:00" : "N/A"; //mocked will come back l8r
+
     return {
         activeUsers: activeUserCount,
         todayTransactions: todayTxCount,
         weeklyActivity: weeklyActivity,
+        avgDailyScans,
+        peakHour,
     };
 }
 
-export async function getRetentionData(storeId: number): Promise<RetentionData> {
+export async function getRetentionData(
+    storeId: number,
+): Promise<RetentionData> {
     const { data, error } = await supabase
         .from("store_user_loyalty")
         .select("purchase_count")
@@ -88,7 +95,7 @@ export async function getRetentionData(storeId: number): Promise<RetentionData> 
     }
 
     const total = data.length;
-    const returningCount = data.filter(row => row.purchase_count > 1).length;
+    const returningCount = data.filter((row) => row.purchase_count > 1).length;
     const newCount = total - returningCount;
 
     const returningPercent = total > 0 ? Math.round((returningCount / total) * 100) : 0;
@@ -97,7 +104,9 @@ export async function getRetentionData(storeId: number): Promise<RetentionData> 
     return { returningCount, newCount, returningPercent, newPercent };
 }
 
-export async function getStampDistribution(storeId: number): Promise<{
+export async function getStampDistribution(
+    storeId: number,
+): Promise<{
     buckets: StampBucket[];
     maxStamps: number;
 }> {
@@ -105,7 +114,7 @@ export async function getStampDistribution(storeId: number): Promise<{
         .from("store_stamps")
         .select("id, total_stamps")
         .eq("store_id", storeId)
-        .eq("is_active", true)
+        .eq("status", "active")
         .limit(1);
 
     if (programError || !programs || programs.length === 0) {
@@ -128,19 +137,16 @@ export async function getStampDistribution(storeId: number): Promise<{
         return { buckets: [], maxStamps: 0 };
     }
 
-    const distinctValues = maxStamps + 1;
-    
+    const distinctValues = maxStamps;
     const targetBuckets = Math.min(distinctValues, 5);
     const segmentSize = Math.ceil(distinctValues / targetBuckets);
 
     const rawBuckets: { min: number; max: number; count: number }[] = [];
-    let currentMin = 0;
+    let currentMin = 1;
 
     for (let i = 0; i < targetBuckets; i++) {
         const currentMax = Math.min(currentMin + segmentSize - 1, maxStamps);
-        
         rawBuckets.push({ min: currentMin, max: currentMax, count: 0 });
-        
         currentMin = currentMax + 1;
         if (currentMin > maxStamps) break;
     }
@@ -163,4 +169,33 @@ export async function getStampDistribution(storeId: number): Promise<{
     }));
 
     return { buckets, maxStamps };
+}
+
+export async function getRecentTransactions(
+    storeId: number, 
+    limit: number = 10,
+): Promise<any[]> {
+    const { data, error } = await supabase
+        .from('qr_transactions')
+        .select(`
+            id,
+            created_at,
+            points_earned,
+            users:user_id (
+                username,
+                display_name
+            )
+        `)
+        .eq('store_id', storeId)
+        .order('created_at', { ascending: false })
+        .limit(limit);
+
+    if (error || !data) return [];
+
+    return data.map((row: any) => ({
+        id: row.id,
+        created_at: row.created_at,
+        points_earned: row.points_earned,
+        user: row.users || { username: 'Unknown', display_name: 'Unknown User' }
+    }));
 }

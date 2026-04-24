@@ -15,7 +15,9 @@ export function getLast7Labels(): string[] {
     for (let i = 6; i >= 0; i--) {
         const d = new Date();
         d.setDate(d.getDate() - i);
-        labels.push(`${d.getDate()}/${d.getMonth() + 1}`);
+        labels.push(
+            d.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+        );
     }
     return labels;
 }
@@ -30,8 +32,8 @@ export function timeStringToDate(s: string, fallbackHour = 9, fallbackMin = 0): 
     const h = Math.min(23, Math.max(0, parseInt(match[1], 10)));
     const m = Math.min(59, Math.max(0, parseInt(match[2], 10)));
     return new Date(2000, 0, 1, h, m);
-  }
+}
   
 export function dateToTimeString(d: Date): string {
     return `${d.getHours().toString().padStart(2, "0")}:${d.getMinutes().toString().padStart(2, "0")}`;
-    }
+}
