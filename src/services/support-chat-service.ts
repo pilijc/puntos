@@ -1,11 +1,14 @@
 import type { RealtimeChannel } from "@supabase/supabase-js";
 import { supabase } from "@/supabase/supabase";
 import {
+  SupportAttachmentInput,
   SupportConversation,
   SupportConversationStatus,
   SupportMessage,
   SupportSenderRole,
 } from "@/type/support-chat";
+
+const SUPPORT_ATTACHMENTS_BUCKET = "support-attachments";
 
 const CONVERSATION_SELECT = `
   id,
@@ -17,7 +20,7 @@ const CONVERSATION_SELECT = `
   last_message_sender,
   created_at,
   updated_at,
-  stores!store_id(name),
+  stores!store_id(name, logo),
   users!owner_id(name)
 `;
 
@@ -33,6 +36,7 @@ function mapConversation(row: any): SupportConversation {
     created_at: row.created_at,
     updated_at: row.updated_at,
     store_name: row.stores?.name ?? null,
+    store_logo: row.stores?.logo ?? null,
     owner_name: row.users?.name ?? null,
   };
 }
@@ -124,7 +128,7 @@ export async function loadSupportMessages(conversationId: string): Promise<Suppo
     .order("created_at", { ascending: true });
 
   if (error) throw new Error(error.message);
-  return (data ?? []) as SupportMessage[];
+  return attachSignedUrls((data ?? []) as SupportMessage[]);
 }
 
 export async function sendSupportMessage(
@@ -147,6 +151,7 @@ export async function sendSupportMessage(
       sender_id: user.id,
       sender_role: senderRole,
       body: body.trim(),
+      message_kind: "text",
       read_by_store_at: senderRole === "store_manager" ? new Date().toISOString() : null,
       read_by_admin_at: senderRole === "super_admin" ? new Date().toISOString() : null,
     })
@@ -155,6 +160,108 @@ export async function sendSupportMessage(
 
   if (error) throw new Error(error.message);
   return data as SupportMessage;
+}
+
+function sanitizeFileName(name: string) {
+  const cleaned = name.replace(/[^a-zA-Z0-9._-]/g, "-").replace(/-+/g, "-");
+  return cleaned || `attachment-${Date.now()}`;
+}
+
+function fileExtensionFromMime(mimeType: string) {
+  if (mimeType.includes("/")) return mimeType.split("/")[1]?.replace("jpeg", "jpg") || "bin";
+  return "bin";
+}
+
+async function uriToBlob(uri: string): Promise<Blob> {
+  const response = await fetch(uri);
+  if (!response.ok) throw new Error("Failed to read attachment");
+  return response.blob();
+}
+
+async function signedUrlForPath(path: string): Promise<string | null> {
+  const { data, error } = await supabase.storage
+    .from(SUPPORT_ATTACHMENTS_BUCKET)
+    .createSignedUrl(path, 60 * 60);
+
+  if (error) return null;
+  return data.signedUrl;
+}
+
+export async function attachSignedUrls(messages: SupportMessage[]): Promise<SupportMessage[]> {
+  return Promise.all(
+    messages.map(async (message) => {
+      if (!message.attachment_path) return message;
+      const signedUrl = await signedUrlForPath(message.attachment_path);
+      return { ...message, attachment_url: signedUrl };
+    }),
+  );
+}
+
+export async function uploadSupportAttachment(
+  conversationId: string,
+  attachment: SupportAttachmentInput,
+): Promise<{
+  path: string;
+  signedUrl: string | null;
+}> {
+  const safeName = sanitizeFileName(attachment.name);
+  const nameWithExtension = safeName.includes(".")
+    ? safeName
+    : `${safeName}.${fileExtensionFromMime(attachment.mimeType)}`;
+  const path = `support/${conversationId}/${Date.now()}-${nameWithExtension}`;
+  const blob = await uriToBlob(attachment.uri);
+
+  const { error } = await supabase.storage
+    .from(SUPPORT_ATTACHMENTS_BUCKET)
+    .upload(path, blob, {
+      contentType: attachment.mimeType,
+      upsert: false,
+    });
+
+  if (error) throw new Error(error.message);
+
+  return {
+    path,
+    signedUrl: await signedUrlForPath(path),
+  };
+}
+
+export async function sendSupportAttachmentMessage(
+  conversationId: string,
+  attachment: SupportAttachmentInput,
+  senderRole: SupportSenderRole,
+  body?: string,
+): Promise<SupportMessage> {
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+
+  if (userError) throw new Error(userError.message);
+  if (!user) throw new Error("User not authenticated");
+
+  const uploaded = await uploadSupportAttachment(conversationId, attachment);
+
+  const { data, error } = await supabase
+    .from("support_messages")
+    .insert({
+      conversation_id: conversationId,
+      sender_id: user.id,
+      sender_role: senderRole,
+      body: body?.trim() || null,
+      message_kind: attachment.kind,
+      attachment_path: uploaded.path,
+      attachment_name: attachment.name,
+      attachment_type: attachment.mimeType,
+      attachment_size: attachment.size ?? null,
+      read_by_store_at: senderRole === "store_manager" ? new Date().toISOString() : null,
+      read_by_admin_at: senderRole === "super_admin" ? new Date().toISOString() : null,
+    })
+    .select("*")
+    .single();
+
+  if (error) throw new Error(error.message);
+  return { ...(data as SupportMessage), attachment_url: uploaded.signedUrl };
 }
 
 export async function markSupportMessagesRead(
@@ -204,7 +311,10 @@ export function subscribeToSupportMessages(
         table: "support_messages",
         filter: `conversation_id=eq.${conversationId}`,
       },
-      (payload) => onInsert(payload.new as SupportMessage),
+      async (payload) => {
+        const [message] = await attachSignedUrls([payload.new as SupportMessage]);
+        onInsert(message);
+      },
     )
     .on(
       "postgres_changes",
@@ -214,7 +324,11 @@ export function subscribeToSupportMessages(
         table: "support_messages",
         filter: `conversation_id=eq.${conversationId}`,
       },
-      (payload) => onUpdate?.(payload.new as SupportMessage),
+      async (payload) => {
+        if (!onUpdate) return;
+        const [message] = await attachSignedUrls([payload.new as SupportMessage]);
+        onUpdate(message);
+      },
     )
     .subscribe();
 }

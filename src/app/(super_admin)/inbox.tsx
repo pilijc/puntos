@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  Image,
   KeyboardAvoidingView,
   LayoutAnimation,
   Platform,
@@ -24,6 +25,7 @@ import {
 } from "lucide-react-native";
 import { useSupportChatStore } from "@/store/support-chat-store";
 import { SupportConversation, SupportInboxFilter } from "@/type/support-chat";
+import { SharedChatArea } from "@/components/chat/shared-chat-area";
 
 const FILTERS: { key: SupportInboxFilter; label: string }[] = [
   { key: "all", label: "All" },
@@ -90,10 +92,12 @@ export default function SuperAdminInbox() {
     loading,
     loadingMessages,
     sending,
+    uploadingAttachment,
     error,
     loadAdminConversations,
     openConversation,
     sendMessage,
+    sendAttachment,
     setStatus,
     subscribeInbox,
     cleanupRealtime,
@@ -359,22 +363,37 @@ export default function SuperAdminInbox() {
                     borderLeftColor: "#FF6600",
                   }}
                 >
-                  <View
-                    style={{
-                      width: 44,
-                      height: 44,
-                      borderRadius: 22,
-                      backgroundColor: bg,
-                      alignItems: "center",
-                      justifyContent: "center",
-                      marginRight: 12,
-                      flexShrink: 0,
-                    }}
-                  >
-                    <Text style={{ fontSize: 14, fontFamily: "Poppins-Bold", color: text }}>
-                      {getInitials(name)}
-                    </Text>
-                  </View>
+                  {conversation.store_logo ? (
+                    <Image
+                      source={{ uri: conversation.store_logo }}
+                      style={{
+                        width: 44,
+                        height: 44,
+                        borderRadius: 22,
+                        marginRight: 12,
+                        flexShrink: 0,
+                        backgroundColor: "#F1F5F9",
+                      }}
+                      resizeMode="cover"
+                    />
+                  ) : (
+                    <View
+                      style={{
+                        width: 44,
+                        height: 44,
+                        borderRadius: 22,
+                        backgroundColor: bg,
+                        alignItems: "center",
+                        justifyContent: "center",
+                        marginRight: 12,
+                        flexShrink: 0,
+                      }}
+                    >
+                      <Text style={{ fontSize: 14, fontFamily: "Poppins-Bold", color: text }}>
+                        {getInitials(name)}
+                      </Text>
+                    </View>
+                  )}
 
                   <View style={{ flex: 1 }}>
                     <View
@@ -382,7 +401,7 @@ export default function SuperAdminInbox() {
                         flexDirection: "row",
                         justifyContent: "space-between",
                         alignItems: "center",
-                        marginBottom: 4,
+                        marginBottom: 1,
                       }}
                     >
                       <Text
@@ -453,7 +472,7 @@ export default function SuperAdminInbox() {
     if (!activeConversation) {
       if (!isLargeScreen) return null;
       return (
-        <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: "#F8FAFC" }}>
+        <View className="flex-1 items-center justify-center bg-backgroundMuted dark:bg-neutral-900">
           <View
             style={{
               width: 64,
@@ -481,10 +500,10 @@ export default function SuperAdminInbox() {
 
     return (
       <View
+        className="bg-backgroundMuted dark:bg-neutral-900"
         style={{
           flex: !isLargeScreen && !activeConversationId ? 0 : 1,
           display: !isLargeScreen && !activeConversationId ? "none" : "flex",
-          backgroundColor: "#F8FAFC",
           borderLeftWidth: 1,
           borderLeftColor: "#F1F5F9",
         }}
@@ -510,27 +529,41 @@ export default function SuperAdminInbox() {
               <ArrowLeft size={22} color="#1e293b" />
             </TouchableOpacity>
           )}
-          <View
-            style={{
-              width: 36,
-              height: 36,
-              borderRadius: 18,
-              backgroundColor: bg,
-              alignItems: "center",
-              justifyContent: "center",
-              marginRight: 10,
-            }}
-          >
-            <Text style={{ fontSize: 12, fontFamily: "Poppins-Bold", color: text }}>
-              {getInitials(name)}
-            </Text>
-          </View>
+          {activeConversation.store_logo ? (
+            <Image
+              source={{ uri: activeConversation.store_logo }}
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: 18,
+                marginRight: 10,
+                backgroundColor: "#F1F5F9",
+              }}
+              resizeMode="cover"
+            />
+          ) : (
+            <View
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: 18,
+                backgroundColor: bg,
+                alignItems: "center",
+                justifyContent: "center",
+                marginRight: 10,
+              }}
+            >
+              <Text style={{ fontSize: 12, fontFamily: "Poppins-Bold", color: text }}>
+                {getInitials(name)}
+              </Text>
+            </View>
+          )}
           <View style={{ flex: 1, paddingRight: 10 }}>
             <Text numberOfLines={1} style={{ fontSize: 15, fontFamily: "Poppins-Bold", color: "#0F172A", lineHeight: 20 }}>
               {name}
             </Text>
             <Text style={{ fontSize: 11, fontFamily: "Poppins-Regular", color: "#94A3B8" }}>
-              Store Manager
+              {activeConversation.owner_name || "Store Manager"}
             </Text>
           </View>
           <TouchableOpacity onPress={toggleArchive} style={{ padding: 8, borderRadius: 20 }}>
@@ -542,167 +575,24 @@ export default function SuperAdminInbox() {
           </TouchableOpacity>
         </View>
 
-        <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
-          <ScrollView
-            ref={scrollViewRef}
-            onContentSizeChange={() => scrollViewRef.current?.scrollToEnd({ animated: true })}
-            onLayout={() => scrollViewRef.current?.scrollToEnd({ animated: true })}
-            style={{ flex: 1 }}
-            contentContainerStyle={{
-              paddingHorizontal: 16,
-              paddingTop: 24,
-              paddingBottom: Math.max(insets.bottom, 20),
-              ...(isWeb ? { alignItems: "center" as const } : {}),
-            }}
-            showsVerticalScrollIndicator={false}
-          >
-            <View style={isWeb ? { width: "100%", maxWidth: 768 } : { width: "100%" }}>
-              {loadingMessages ? (
-                <View style={{ alignItems: "center", justifyContent: "center", paddingTop: 80 }}>
-                  <ActivityIndicator color="#FF6600" />
-                </View>
-              ) : activeMessages.length === 0 ? (
-                <View style={{ alignItems: "center", justifyContent: "center", paddingTop: 80 }}>
-                  <Text style={{ fontSize: 13, fontFamily: "Poppins-Medium", color: "#94A3B8" }}>
-                    No messages yet
-                  </Text>
-                </View>
-              ) : (
-                activeMessages.map((msg, index) => {
-                  const isAdmin = msg.sender_role === "super_admin";
-                  const nextMsg = activeMessages[index + 1];
-                  const isLastInGroup = !nextMsg || nextMsg.sender_role !== msg.sender_role;
-                  return (
-                    <View
-                      key={msg.id}
-                      style={{
-                        maxWidth: "80%",
-                        alignSelf: isAdmin ? "flex-end" : "flex-start",
-                        marginBottom: isLastInGroup ? 20 : 4,
-                      }}
-                    >
-                      <View
-                        style={{
-                          paddingHorizontal: 16,
-                          paddingVertical: 12,
-                          backgroundColor: isAdmin ? "#FF6600" : "#FFFFFF",
-                          borderWidth: isAdmin ? 0 : 1,
-                          borderColor: "#F1F5F9",
-                          borderTopLeftRadius: 16,
-                          borderTopRightRadius: 16,
-                          borderBottomLeftRadius: isAdmin ? 16 : isLastInGroup ? 4 : 16,
-                          borderBottomRightRadius: isAdmin ? (isLastInGroup ? 4 : 16) : 16,
-                        }}
-                      >
-                        <Text
-                          style={{
-                            fontSize: 14,
-                            fontFamily: "Poppins-Regular",
-                            lineHeight: 22,
-                            color: isAdmin ? "#FFFFFF" : "#334155",
-                          }}
-                        >
-                          {msg.body}
-                        </Text>
-                      </View>
-                      {isLastInGroup && (
-                        <Text
-                          style={{
-                            fontSize: 11,
-                            fontFamily: "Poppins-Regular",
-                            color: "#94A3B8",
-                            marginTop: 6,
-                            textAlign: isAdmin ? "right" : "left",
-                            marginLeft: isAdmin ? 0 : 4,
-                          }}
-                        >
-                          {formatTime(msg.created_at)}
-                        </Text>
-                      )}
-                    </View>
-                  );
-                })
-              )}
-            </View>
-          </ScrollView>
-
-          <View
-            style={{
-              paddingHorizontal: 16,
-              paddingTop: 12,
-              paddingBottom: Math.max(insets.bottom, 12),
-              backgroundColor: "#FFFFFF",
-              borderTopWidth: 1,
-              borderTopColor: "#F1F5F9",
-              flexDirection: "row",
-              alignItems: "flex-end",
-            }}
-          >
-            <TouchableOpacity
-              disabled
-              style={{ width: 44, height: 44, alignItems: "center", justifyContent: "center", borderRadius: 22, opacity: 0.4 }}
-            >
-              <Paperclip size={20} color="#94a3b8" />
-            </TouchableOpacity>
-
-            <View
-              style={{
-                flex: 1,
-                marginHorizontal: 8,
-                backgroundColor: "#F8FAFC",
-                borderRadius: 24,
-                paddingHorizontal: 16,
-                paddingVertical: 4,
-                borderWidth: 1,
-                borderColor: "#E2E8F0",
-                minHeight: 44,
-                maxWidth: 768,
-                justifyContent: "center",
-              }}
-            >
-              <TextInput
-                value={messageText}
-                onChangeText={setMessageText}
-                placeholder="Reply to store..."
-                placeholderTextColor="#94a3b8"
-                style={{
-                  fontFamily: "Poppins-Regular",
-                  fontSize: 14,
-                  color: "#0F172A",
-                  paddingVertical: 8,
-                  maxHeight: 120,
-                }}
-                multiline
-                textAlignVertical="center"
-                editable={activeConversation.status !== "archived" && !sending}
-              />
-            </View>
-
-            <TouchableOpacity
-              onPress={handleSend}
-              disabled={!messageText.trim() || sending || activeConversation.status === "archived"}
-              style={{
-                width: 44,
-                height: 44,
-                borderRadius: 22,
-                alignItems: "center",
-                justifyContent: "center",
-                backgroundColor:
-                  messageText.trim() && !sending && activeConversation.status !== "archived" ? "#FF6600" : "transparent",
-              }}
-            >
-              {sending ? (
-                <ActivityIndicator color="#FF6600" />
-              ) : (
-                <Send
-                  size={20}
-                  color={messageText.trim() && activeConversation.status !== "archived" ? "#ffffff" : "#cbd5e1"}
-                  style={messageText.trim() ? { marginLeft: -2 } : {}}
-                />
-              )}
-            </TouchableOpacity>
-          </View>
-        </KeyboardAvoidingView>
+        <SharedChatArea
+          messages={activeMessages}
+          loadingMessages={loadingMessages}
+          emptyMessage={
+            <Text style={{ fontSize: 13, fontFamily: "Poppins-Medium", color: "#94A3B8" }}>
+              No messages yet
+            </Text>
+          }
+          onSendMessage={async (text) => await sendMessage(text, "super_admin")}
+          onSendAttachment={async (attachment) => await sendAttachment(attachment, "super_admin")}
+          sending={sending}
+          uploadingAttachment={uploadingAttachment}
+          disabled={activeConversation.status === "archived"}
+          placeholder="Reply to store..."
+          currentUserRole="super_admin"
+          isWeb={isWeb}
+          bottomInset={insets.bottom}
+        />
       </View>
     );
   };

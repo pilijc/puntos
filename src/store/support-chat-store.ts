@@ -7,12 +7,14 @@ import {
   loadSupportMessages,
   markSupportMessagesRead,
   removeSupportChannel,
+  sendSupportAttachmentMessage,
   sendSupportMessage,
   setSupportConversationStatus,
   subscribeToSupportConversations,
   subscribeToSupportMessages,
 } from "@/services/support-chat-service";
 import {
+  SupportAttachmentInput,
   SupportConversation,
   SupportConversationStatus,
   SupportMessage,
@@ -26,6 +28,7 @@ interface SupportChatState {
   loading: boolean;
   loadingMessages: boolean;
   sending: boolean;
+  uploadingAttachment: boolean;
   error: string | null;
   inboxChannel: RealtimeChannel | null;
   messageChannel: RealtimeChannel | null;
@@ -34,6 +37,7 @@ interface SupportChatState {
   loadAdminConversations: () => Promise<void>;
   openConversation: (conversationId: string, reader?: "store" | "admin") => Promise<void>;
   sendMessage: (body: string, senderRole: SupportSenderRole) => Promise<void>;
+  sendAttachment: (attachment: SupportAttachmentInput, senderRole: SupportSenderRole, body?: string) => Promise<void>;
   markRead: (conversationId: string, reader: "store" | "admin") => Promise<void>;
   setStatus: (conversationId: string, status: SupportConversationStatus) => Promise<void>;
   subscribeInbox: () => void;
@@ -65,6 +69,7 @@ export const useSupportChatStore = create<SupportChatState>((set, get) => ({
   loading: false,
   loadingMessages: false,
   sending: false,
+  uploadingAttachment: false,
   error: null,
   inboxChannel: null,
   messageChannel: null,
@@ -145,6 +150,34 @@ export const useSupportChatStore = create<SupportChatState>((set, get) => ({
     }
   },
 
+  sendAttachment: async (attachment, senderRole, body) => {
+    const conversationId = get().activeConversationId;
+    if (!conversationId) return;
+
+    set({ uploadingAttachment: true, error: null });
+    try {
+      const message = await sendSupportAttachmentMessage(
+        conversationId,
+        attachment,
+        senderRole,
+        body,
+      );
+      set((state) => ({
+        messagesByConversationId: {
+          ...state.messagesByConversationId,
+          [conversationId]: upsertMessage(
+            state.messagesByConversationId[conversationId] ?? [],
+            message,
+          ),
+        },
+      }));
+    } catch (e: any) {
+      set({ error: e?.message ?? "Failed to upload attachment" });
+    } finally {
+      set({ uploadingAttachment: false });
+    }
+  },
+
   markRead: async (conversationId, reader) => {
     try {
       await markSupportMessagesRead(conversationId, reader);
@@ -198,6 +231,17 @@ export const useSupportChatStore = create<SupportChatState>((set, get) => ({
               message,
             ),
           },
+          // Increment unread count in real-time for the receiving role
+          conversations: state.conversations.map((conv) => {
+            if (conv.id !== conversationId) return conv;
+            if (message.sender_role === "super_admin" && !message.read_by_store_at) {
+              return { ...conv, unread_store_count: (conv.unread_store_count ?? 0) + 1 };
+            }
+            if (message.sender_role === "store_manager" && !message.read_by_admin_at) {
+              return { ...conv, unread_admin_count: (conv.unread_admin_count ?? 0) + 1 };
+            }
+            return conv;
+          }),
         }));
       },
       (message) => {
