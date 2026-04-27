@@ -99,7 +99,7 @@ export function DashboardActivityLineChart({
     <View className="bg-white dark:bg-darkBackgroundCard rounded-2xl shadow-sm border border-slate-100 dark:border-darkBorder mb-6 overflow-hidden">
 
       {/* ── Header ── */}
-      <View className="pt-6 pb-2 flex-row justify-between items-start" style={{ paddingHorizontal: "7.5%" }}>
+      <View className="pt-6 pb-2 flex-row justify-between items-start" style={{ paddingHorizontal: "4%" }}>
         <View>
           <Text className="text-base font-poppins-bold text-slate-800 dark:text-darkTextPrimary">
             {translate("super_admin.dashboard.platformActivity")}
@@ -212,7 +212,7 @@ export function DashboardActivityLineChart({
       </View>
 
       {/* ── Toggle Button Area ── */}
-      <View className="pt-4 pb-4 border-t border-slate-50 dark:border-darkBorder" style={{ paddingHorizontal: "7.5%" }}>
+      <View className="pt-4 pb-4 border-t border-slate-50 dark:border-darkBorder" style={{ paddingHorizontal: "4%" }}>
         <TouchableOpacity
           onPress={onToggleDetails}
           activeOpacity={0.8}
@@ -238,7 +238,7 @@ export function DashboardActivityLineChart({
 
       {/* ── Details Lists (Conditional) ── */}
       {showDetails && (
-        <View className="pb-8 gap-8" style={{ paddingHorizontal: "7.5%" }}>
+        <View className="pb-8 gap-8" style={{ paddingHorizontal: "4%" }}>
 
           {/* User Sign-ins Section */}
           <View>

@@ -1,5 +1,5 @@
 import { Tabs } from "expo-router";
-import { useColorScheme, Platform, Text, View, Image } from "react-native";
+import { useColorScheme, Platform, Text, View, Image, useWindowDimensions } from "react-native";
 import React, { useCallback } from "react";
 import { usePathname } from "expo-router";
 import { BottomTabBar, type BottomTabBarButtonProps, type BottomTabBarProps } from "@react-navigation/bottom-tabs";
@@ -11,6 +11,7 @@ import { LayoutDashboard, Users, Store, Settings, CreditCard } from 'lucide-reac
 import { useSuperAdminLayout } from "@/hooks/super-admin/use-super-admin-layout";
 
 const WEB_SIDEBAR_WIDTH = 260;
+const WEB_SIDEBAR_BREAKPOINT = 768;
 const WEB_SIDEBAR_INSET_X = 16;
 const WEB_SIDEBAR_BRAND_PADDING_X = 24;
 const WEB_TAB_ICON_SIZE = 18;
@@ -163,9 +164,10 @@ export default function SuperAdminLayout() {
   const isDark = colorScheme === 'dark';
   const insets = useSafeAreaInsets();
   
-  // Standard React Native platform detection
   const isWeb = Platform.OS === "web";
-  
+  const { width } = useWindowDimensions();
+  const useSidebar = isWeb && width >= WEB_SIDEBAR_BREAKPOINT;
+
   const pathname = usePathname() || "/";
   const activeTab = activeSidebarTabFromPath(withTrailingSlash(pathname));
 
@@ -178,19 +180,19 @@ export default function SuperAdminLayout() {
 
   return (
     <Tabs
-        tabBar={isWeb ? renderWebTabBar : undefined}
+        tabBar={useSidebar ? renderWebTabBar : undefined}
         screenOptions={{
             headerShown: false,
-            tabBarPosition: isWeb ? "left" : "bottom",
-            tabBarLabelPosition: isWeb ? "beside-icon" : undefined,
-            ...(isWeb ? { animation: "none" as const } : {}),
-            tabBarActiveBackgroundColor: isWeb
+            tabBarPosition: useSidebar ? "left" : "bottom",
+            tabBarLabelPosition: useSidebar ? "beside-icon" : undefined,
+            ...(useSidebar ? { animation: "none" as const } : {}),
+            tabBarActiveBackgroundColor: useSidebar
                 ? isDark
                     ? WEB_TAB_ACTIVE_BG_DARK
                     : WEB_TAB_ACTIVE_BG_LIGHT
                 : undefined,
-            tabBarInactiveBackgroundColor: isWeb ? "transparent" : undefined,
-            tabBarStyle: isWeb
+            tabBarInactiveBackgroundColor: useSidebar ? "transparent" : undefined,
+            tabBarStyle: useSidebar
                 ? {
                         backgroundColor: "transparent",
                         borderTopWidth: 0,
@@ -210,17 +212,17 @@ export default function SuperAdminLayout() {
                     },
             tabBarActiveTintColor: TAB_ACCENT,
             tabBarInactiveTintColor: isDark ? "#737373" : "#8B8D98",
-            tabBarButton: isWeb
+            tabBarButton: useSidebar
                 ? (btnProps) => <WebSuperAdminTabBarButton {...btnProps} />
                 : undefined,
-            tabBarItemStyle: isWeb
+            tabBarItemStyle: useSidebar
                 ? { alignSelf: "stretch", width: "100%" }
                 : undefined,
             tabBarLabelStyle: {
-                fontSize: isWeb ? 12 : 10,
+                fontSize: useSidebar ? 12 : 10,
                 fontFamily: "Poppins-Medium",
-                marginBottom: isWeb ? 0 : insets.bottom > 0 ? 0 : 4,
-                ...(isWeb ? { paddingRight: 8 } : {}),
+                marginBottom: useSidebar ? 0 : insets.bottom > 0 ? 0 : 4,
+                ...(useSidebar ? { paddingRight: 8 } : {}),
             },
         }}
     >
@@ -229,12 +231,12 @@ export default function SuperAdminLayout() {
         options={{
             title: translate("layout.overview"),
             tabBarIcon: ({ color, size }) => (
-                <LayoutDashboard 
-                    size={isWeb ? WEB_TAB_ICON_SIZE : size} 
-                    color={isWeb && activeTab === "index" ? TAB_ACCENT : color} 
+                <LayoutDashboard
+                    size={useSidebar ? WEB_TAB_ICON_SIZE : size}
+                    color={useSidebar && activeTab === "index" ? TAB_ACCENT : color}
                 />
             ),
-            tabBarLabel: isWeb
+            tabBarLabel: useSidebar
                 ? ({ color, position }) => (
                         <WebSidebarTabLabel
                             text={translate("layout.overview")}
@@ -251,12 +253,12 @@ export default function SuperAdminLayout() {
         options={{
             title: translate("layout.users"),
             tabBarIcon: ({ color, size }) => (
-                <Users 
-                    size={isWeb ? WEB_TAB_ICON_SIZE : size} 
-                    color={isWeb && activeTab === "users" ? TAB_ACCENT : color} 
+                <Users
+                    size={useSidebar ? WEB_TAB_ICON_SIZE : size}
+                    color={useSidebar && activeTab === "users" ? TAB_ACCENT : color}
                 />
             ),
-            tabBarLabel: isWeb
+            tabBarLabel: useSidebar
                 ? ({ color, position }) => (
                         <WebSidebarTabLabel
                             text={translate("layout.users")}
@@ -273,12 +275,12 @@ export default function SuperAdminLayout() {
 			options={{
 				title: "Subscriptions",
 				tabBarIcon: ({ color, size }) => (
-					<CreditCard 
-							size={isWeb ? WEB_TAB_ICON_SIZE : size} 
-							color={isWeb && activeTab === "subscriptions" ? TAB_ACCENT : color} 
+					<CreditCard
+							size={useSidebar ? WEB_TAB_ICON_SIZE : size}
+							color={useSidebar && activeTab === "subscriptions" ? TAB_ACCENT : color}
 					/>
 				),
-				tabBarLabel: isWeb
+				tabBarLabel: useSidebar
 					? ({ color, position }) => (
 									<WebSidebarTabLabel
 											text="Subscriptions"
@@ -295,12 +297,12 @@ export default function SuperAdminLayout() {
         options={{
             title: translate("layout.stores"),
             tabBarIcon: ({ color, size }) => (
-                <Store 
-                    size={isWeb ? WEB_TAB_ICON_SIZE : size} 
-                    color={isWeb && activeTab === "stores" ? TAB_ACCENT : color} 
+                <Store
+                    size={useSidebar ? WEB_TAB_ICON_SIZE : size}
+                    color={useSidebar && activeTab === "stores" ? TAB_ACCENT : color}
                 />
             ),
-            tabBarLabel: isWeb
+            tabBarLabel: useSidebar
                 ? ({ color, position }) => (
                         <WebSidebarTabLabel
                             text={translate("layout.stores")}
@@ -317,12 +319,12 @@ export default function SuperAdminLayout() {
         options={{
             title: translate("layout.settings"),
             tabBarIcon: ({ color, size }) => (
-                <Settings 
-                    size={isWeb ? WEB_TAB_ICON_SIZE : size} 
-                    color={isWeb && activeTab === "settings" ? TAB_ACCENT : color} 
+                <Settings
+                    size={useSidebar ? WEB_TAB_ICON_SIZE : size}
+                    color={useSidebar && activeTab === "settings" ? TAB_ACCENT : color}
                 />
             ),
-            tabBarLabel: isWeb
+            tabBarLabel: useSidebar
                 ? ({ color, position }) => (
                         <WebSidebarTabLabel
                             text={translate("layout.settings")}
