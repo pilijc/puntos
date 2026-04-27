@@ -100,7 +100,7 @@ export default function UsersScreen() {
           className="flex-1"
           contentContainerStyle={{
             paddingHorizontal: 16,
-            paddingTop: 16,
+            paddingTop: 7,
             paddingBottom: 110,
             alignItems: "center" as const,
           }}
@@ -108,7 +108,7 @@ export default function UsersScreen() {
           onScroll={handleWebScroll}
           scrollEventThrottle={200}
         >
-          <View style={{ maxWidth: 896 }} className="w-full">
+          <View style={{ maxWidth: 896, width: "100%", paddingTop: 8, paddingBottom: 8 }}>
             <UsersSearchHeader
               search={search}
               onSearchChange={setSearch}
@@ -147,7 +147,7 @@ export default function UsersScreen() {
                 ListEmptyComponent={
                   <View className="items-center justify-center pt-20">
                     <Text className={`${TYPO.subtitle} dark:text-darkTextSecondary`}>
-                      {translate("super_admin.users.noUsersFound")}
+                      {translate("superAdmin.users.noUsersFound")}
                     </Text>
                   </View>
                 }
@@ -192,7 +192,7 @@ export default function UsersScreen() {
               ListEmptyComponent={
                 <View className="items-center justify-center pt-20">
                   <Text className={`${TYPO.subtitle} dark:text-darkTextSecondary`}>
-                    {translate("super_admin.users.noUsersFound")}
+                    {translate("superAdmin.users.noUsersFound")}
                   </Text>
                 </View>
               }

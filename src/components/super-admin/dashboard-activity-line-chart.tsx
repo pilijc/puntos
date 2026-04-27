@@ -74,7 +74,7 @@ export function DashboardActivityLineChart({
       <View className="pt-6 pb-2 flex-row justify-between items-start" style={{ paddingHorizontal: "4%" }}>
         <View>
           <Text className="text-base font-poppins-bold text-slate-800 dark:text-darkTextPrimary">
-            {translate("super_admin.dashboard.platformActivity")}
+            {translate("superAdmin.dashboard.platformActivity")}
           </Text>
           <Text className="text-[11px] font-poppins-medium text-slate-400 dark:text-darkTextMuted mt-0.5">
             {weekRange}
@@ -84,13 +84,13 @@ export function DashboardActivityLineChart({
           <View className="flex-row items-center">
             <View className="w-2 h-2 rounded-full bg-orange-500 mr-1.5" />
             <Text className="text-[8px] font-poppins-bold text-orange-600 dark:text-orange-400 uppercase tracking-wider">
-              {translate("super_admin.dashboard.usersLegend")}
+              {translate("superAdmin.dashboard.usersLegend")}
             </Text>
           </View>
           <View className="flex-row items-center">
             <View className="w-2 h-2 rounded-full bg-blue-500 mr-1.5" />
             <Text className="text-[8px] font-poppins-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider">
-              {translate("super_admin.dashboard.storesLegend")}
+              {translate("superAdmin.dashboard.storesLegend")}
             </Text>
           </View>
         </View>
@@ -173,21 +173,20 @@ export function DashboardActivityLineChart({
         <TouchableOpacity
           onPress={onToggleDetails}
           activeOpacity={0.8}
-          className={`flex-col items-center justify-center py-4 rounded-3xl border shadow-sm ${
-            showDetails
-              ? "bg-slate-900 border-slate-800 dark:bg-darkBackgroundMuted dark:border-darkBorder"
-              : "bg-white border-slate-200 dark:bg-darkBackgroundMuted dark:border-darkBorder"
-          }`}
+          className={`flex-col items-center justify-center py-4 rounded-3xl border shadow-sm ${showDetails
+            ? "bg-slate-900 border-slate-800 dark:bg-darkBackgroundMuted dark:border-darkBorder"
+            : "bg-white border-slate-200 dark:bg-darkBackgroundMuted dark:border-darkBorder"
+            }`}
         >
           <View className="flex-row items-center -space-x-2.5">
             <View className="w-8 h-8 rounded-full bg-orange-100 items-center justify-center border-2 border-white dark:border-slate-800 shadow-sm">
-               <Users size={12} color="#EA580C" strokeWidth={2.5} />
+              <Users size={12} color="#EA580C" strokeWidth={2.5} />
             </View>
             <View className="w-8 h-8 rounded-full bg-blue-100 items-center justify-center border-2 border-white dark:border-slate-800 shadow-sm">
-               <Store size={12} color="#2563EB" strokeWidth={2.5} />
+              <Store size={12} color="#2563EB" strokeWidth={2.5} />
             </View>
             <View className={`w-8 h-8 rounded-full items-center justify-center border-2 border-white dark:border-slate-800 shadow-sm ${showDetails ? 'bg-slate-700' : 'bg-slate-100'}`}>
-               {showDetails ? <EyeOff size={12} color="#fff" strokeWidth={2.5} /> : <Eye size={12} color="#64748B" strokeWidth={2.5} />}
+              {showDetails ? <EyeOff size={12} color="#fff" strokeWidth={2.5} /> : <Eye size={12} color="#64748B" strokeWidth={2.5} />}
             </View>
           </View>
         </TouchableOpacity>
@@ -203,12 +202,12 @@ export function DashboardActivityLineChart({
               <View className="flex-row items-center gap-2">
                 <View className="w-1.5 h-4 rounded-full bg-orange-500" />
                 <Text className="text-[11px] font-poppins-bold text-slate-800 dark:text-darkTextPrimary uppercase tracking-widest">
-                  {translate("super_admin.dashboard.recentUserSignins")}
+                  {translate("superAdmin.dashboard.recentUserSignins")}
                 </Text>
               </View>
               <View className="flex-row items-center gap-2">
                 <View className="bg-orange-50 px-2 py-0.5 rounded-md">
-                   <Text className="text-[9px] font-poppins-bold text-orange-600">{userList.list.length} {translate("super_admin.dashboard.records")}</Text>
+                  <Text className="text-[9px] font-poppins-bold text-orange-600">{userList.list.length} {translate("superAdmin.dashboard.records")}</Text>
                 </View>
                 {onResetUsers && userList.list.length > 5 && (
                   <TouchableOpacity onPress={onResetUsers} activeOpacity={0.6}>
@@ -222,18 +221,17 @@ export function DashboardActivityLineChart({
               {userList.list.length === 0 ? (
                 <View className="py-10 items-center">
                   <Users size={24} color="#CBD5E1" strokeWidth={1.5} />
-                  <Text className="text-xs font-poppins text-slate-400 mt-2">{translate("super_admin.dashboard.noNewUsers")}</Text>
+                  <Text className="text-xs font-poppins text-slate-400 mt-2">{translate("superAdmin.dashboard.noNewUsers")}</Text>
                 </View>
               ) : (
                 <>
                   {userList.list.map((item, idx) => (
                     <View
                       key={item.key}
-                      className={`flex-row items-center justify-between px-4 py-4 ${
-                        idx < userList.list.length - 1
-                          ? "border-b border-white dark:border-darkBorder/40"
-                          : ""
-                      }`}
+                      className={`flex-row items-center justify-between px-4 py-4 ${idx < userList.list.length - 1
+                        ? "border-b border-white dark:border-darkBorder/40"
+                        : ""
+                        }`}
                     >
                       <View className="w-9 h-9 rounded-full bg-white dark:bg-darkBackgroundCard items-center justify-center mr-3 shadow-sm border border-orange-50">
                         <Text className="text-xs font-poppins-bold text-orange-500">
@@ -263,7 +261,7 @@ export function DashboardActivityLineChart({
                         className="flex-row items-center gap-2 bg-orange-50 dark:bg-orange-950/20 px-5 py-2.5 rounded-full border border-orange-100/50 dark:border-orange-900/10 shadow-sm shadow-orange-100/50"
                       >
                         <Text className="text-[11px] font-poppins-bold text-orange-600 uppercase tracking-tighter">
-                          {translate("super_admin.dashboard.showMore")}
+                          {translate("superAdmin.dashboard.showMore")}
                         </Text>
                       </TouchableOpacity>
                     </View>
@@ -279,12 +277,12 @@ export function DashboardActivityLineChart({
               <View className="flex-row items-center gap-2">
                 <View className="w-1.5 h-4 rounded-full bg-blue-600" />
                 <Text className="text-[11px] font-poppins-bold text-slate-800 dark:text-darkTextPrimary uppercase tracking-widest">
-                  {translate("super_admin.dashboard.recentlyRegisteredStores")}
+                  {translate("superAdmin.dashboard.recentlyRegisteredStores")}
                 </Text>
               </View>
               <View className="flex-row items-center gap-2">
                 <View className="bg-blue-50 px-2 py-0.5 rounded-md">
-                   <Text className="text-[9px] font-poppins-bold text-blue-600">{storeList.list.length} {translate("super_admin.dashboard.records")}</Text>
+                  <Text className="text-[9px] font-poppins-bold text-blue-600">{storeList.list.length} {translate("superAdmin.dashboard.records")}</Text>
                 </View>
                 {onResetStores && storeList.list.length > 5 && (
                   <TouchableOpacity onPress={onResetStores} activeOpacity={0.6}>
@@ -298,18 +296,17 @@ export function DashboardActivityLineChart({
               {storeList.list.length === 0 ? (
                 <View className="py-10 items-center">
                   <Store size={24} color="#CBD5E1" strokeWidth={1.5} />
-                  <Text className="text-xs font-poppins text-slate-400 mt-2">{translate("super_admin.dashboard.noNewStores")}</Text>
+                  <Text className="text-xs font-poppins text-slate-400 mt-2">{translate("superAdmin.dashboard.noNewStores")}</Text>
                 </View>
               ) : (
                 <>
                   {storeList.list.map((item, idx) => (
                     <View
                       key={item.key}
-                      className={`flex-row items-center justify-between px-4 py-4 ${
-                        idx < storeList.list.length - 1
-                          ? "border-b border-white dark:border-darkBorder/40"
-                          : ""
-                      }`}
+                      className={`flex-row items-center justify-between px-4 py-4 ${idx < storeList.list.length - 1
+                        ? "border-b border-white dark:border-darkBorder/40"
+                        : ""
+                        }`}
                     >
                       <View className="w-9 h-9 rounded-full bg-white dark:bg-darkBackgroundCard items-center justify-center mr-3 shadow-sm border border-blue-50">
                         <Store size={14} color="#3B82F6" strokeWidth={2} />
@@ -337,7 +334,7 @@ export function DashboardActivityLineChart({
                         className="flex-row items-center gap-2 bg-blue-50 dark:bg-blue-950/20 px-5 py-2.5 rounded-full border border-blue-100/50 dark:border-blue-900/10 shadow-sm shadow-blue-100/50"
                       >
                         <Text className="text-[11px] font-poppins-bold text-blue-600 uppercase tracking-tighter">
-                          {translate("super_admin.dashboard.showMore")}
+                          {translate("superAdmin.dashboard.showMore")}
                         </Text>
                       </TouchableOpacity>
                     </View>

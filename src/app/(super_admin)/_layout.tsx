@@ -121,6 +121,7 @@ function WebSuperAdminSidebarTabBar({ isDark, ...props }: BottomTabBarProps & { 
                 borderRightWidth: 1,
                 borderRightColor: isDark ? WEB_SIDEBAR_BORDER_DARK : WEB_SIDEBAR_BORDER_LIGHT,
                 zIndex: 10,
+                overflow: "hidden",
             }}
         >
             <View
@@ -149,7 +150,7 @@ function WebSuperAdminSidebarTabBar({ isDark, ...props }: BottomTabBarProps & { 
                 </Text>
             </View>
 
-            <View style={{ flex: 1, minHeight: 0 }}>
+            <View style={{ flex: 1, minHeight: 0, overflow: "hidden" }}>
                 <BottomTabBar {...props} />
             </View>
         </View>
@@ -216,7 +217,7 @@ export default function SuperAdminLayout() {
                 ? (btnProps) => <WebSuperAdminTabBarButton {...btnProps} />
                 : undefined,
             tabBarItemStyle: useSidebar
-                ? { alignSelf: "stretch", width: "100%" }
+                ? { alignSelf: "stretch", width: WEB_SIDEBAR_WIDTH }
                 : undefined,
             tabBarLabelStyle: {
                 fontSize: useSidebar ? 12 : 10,
@@ -273,7 +274,7 @@ export default function SuperAdminLayout() {
 			<Tabs.Screen
 			name="subscriptions"
 			options={{
-				title: "Subscriptions",
+				title: translate("layout.subscriptions"),
 				tabBarIcon: ({ color, size }) => (
 					<CreditCard
 							size={useSidebar ? WEB_TAB_ICON_SIZE : size}
@@ -283,7 +284,7 @@ export default function SuperAdminLayout() {
 				tabBarLabel: useSidebar
 					? ({ color, position }) => (
 									<WebSidebarTabLabel
-											text="Subscriptions"
+											text={translate("layout.subscriptions")}
 											navColor={color}
 											position={position}
 											isRowActive={activeTab === "subscriptions"}
