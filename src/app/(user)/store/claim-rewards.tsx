@@ -101,10 +101,22 @@ export default function ClaimRewardsScreen() {
   const handleCloseDrawer = useCallback(() => {
     setDrawerVisible(false);
      resetCode();
+     
+     // Refresh rewards and points after closing drawer  
+     if (status === "redeemed" && userId && storeId) {
+       Promise.all([
+         getRewards({ storeId: storeId as string, limit: 20 }),
+         getUserAvailablePoints(userId, storeId),
+       ]).then(([storeRewards, points]) => {
+         setRewards(storeRewards);
+         setUserPoints(points);
+       });
+     }
+     
      setTimeout(() => {
       setSelectedReward(null);
     }, 300);
-  }, [resetCode]);
+  }, [resetCode, status, userId, storeId]);
 
   useEffect(() => {
     if (!userId || !storeId) return;

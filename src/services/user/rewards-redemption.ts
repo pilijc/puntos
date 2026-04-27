@@ -34,7 +34,6 @@ export async function generateRedemptionCode(
   try {
     const { data: user, error: userError } = await supabase.auth.getUser();
     if (userError || !user.user) {
-      console.error("User authentication failed:", userError);
       return { success: false, message: "User not authenticated" };
     }
 
@@ -46,23 +45,19 @@ export async function generateRedemptionCode(
       .single();
 
     if (rewardError || !reward) {
-      console.error("Reward not found:", rewardError, "rewardId:", rewardId, "storeId:", storeId);
       return { success: false, message: "Reward not found" };
     }
 
     if (!reward.is_active) {
-      console.error("Reward is not active:", reward.id);
       return { success: false, message: "Reward is not active" };
     }
 
     if (reward.stock !== null && reward.stock <= 0) {
-      console.error("Reward is out of stock:", reward.id, "stock:", reward.stock);
       return { success: false, message: "Reward is out of stock" };
     }
 
      const availablePoints = await getUserAvailablePoints(userId, storeId);
-    console.log("Available points:", availablePoints, "Required:", reward.points_cost);
-    
+       
     if (availablePoints < reward.points_cost) {
       return { success: false, message: "Insufficient points" };
     }
@@ -88,13 +83,11 @@ export async function generateRedemptionCode(
       .single();
 
     if (codeError || !redemptionCode) {
-      console.error("Database error inserting redemption code:", codeError);
       return { success: false, message: "Failed to generate redemption code" };
     }
 
     return { success: true, code: redemptionCode };
   } catch (error) {
-    console.error("Error generating redemption code:", error);
     return { success: false, message: "An error occurred" };
   }
 }
@@ -119,13 +112,11 @@ export async function getActiveRedemptionCodes(
       .order("created_at", { ascending: false });
 
     if (error) {
-      console.error("Error fetching active redemption codes:", error);
       return [];
     }
 
     return (data || []) as ActiveRedemptionWithReward[];
   } catch (error) {
-    console.error("Error fetching active redemption codes:", error);
     return [];
   }
 }
@@ -140,7 +131,6 @@ export function listenToRedemptionStatus(
 
   const subscribeWithRetry = () => {
     if (retryCount >= maxRetries) {
-      console.error(`Max retries (${maxRetries}) reached for redemption status listener. Real-time may not be enabled for reward_redemption_codes table.`);
       return null;
     }
 
@@ -170,21 +160,16 @@ export function listenToRedemptionStatus(
         }
       )
       .subscribe((status) => {
-        console.log(`Redemption status listener for code ${codeId}:`, status);
+         
         if (status === "SUBSCRIBED") {
-          //console.log(`Successfully subscribed to redemption status for code ${codeId}`);
           retryCount = 0;
         } else if (status === "TIMED_OUT" || status === "CLOSED" || status === "CHANNEL_ERROR") {
-          //console.error(`Redemption status listener failed for code ${codeId}:`, status);
           retryCount++;
           if (retryCount < maxRetries) {
-            console.log(`Reconnecting in ${delay/1000}s... (attempt ${retryCount}/${maxRetries})`);
             setTimeout(() => {
               subscribeWithRetry();
             }, delay);
-          } else {
-            console.error(`Max retries reached. Real-time may need to be enabled for reward_redemption_codes table in Supabase.`);
-          }
+          } 
         }
       });
 
@@ -214,7 +199,6 @@ export async function cancelRedemptionCode(
 
     return { success: true, message: "Redemption code cancelled" };
   } catch (error) {
-    console.error("Error cancelling redemption code:", error);
     return { success: false, message: "An error occurred" };
   }
 }
@@ -248,7 +232,6 @@ export async function deductPoints(
         };
 
     } catch (error) {
-        console.error("Error deducting points:", error);
         return {
             success: false,
             message: "An error occurred while deducting points"
@@ -271,12 +254,9 @@ export function listenToUserRedemptions(
         filter: `user_id=eq.${userId}`,
       },
       (payload) => {
-        console.log("User redemption realtime triggered:", payload);
         const newRedemption = payload.new;
         onNewRedemption(newRedemption);
       }
     )
-    .subscribe((status) => {
-      console.log(`User redemptions listener status for user ${userId}:`, status);
-    });
+   
 }

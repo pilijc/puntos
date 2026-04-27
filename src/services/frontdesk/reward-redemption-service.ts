@@ -1,6 +1,6 @@
 import {supabase} from "@/supabase/supabase" ;
 import {RedemptionVerificationResult, RedemptionProcessResult, RedemptionHistoryItem, RedemptionCodeWithReward} from "@/type/frontdesk/reward-redemption";
-import { getUserAvailablePoints } from "../user/points-service";
+import { getUserPoints } from "../user/points-service";
 
 export async function verifyRedemptionCode(code: string, staffId: string): 
 Promise<RedemptionVerificationResult> {
@@ -26,7 +26,21 @@ Promise<RedemptionVerificationResult> {
 
     const codeWithReward = codeData as RedemptionCodeWithReward;
 
-    const availablePoints = await getUserAvailablePoints(codeWithReward.user_id, codeWithReward.store_id);
+    const pointsSummary = await getUserPoints(codeWithReward.user_id, codeWithReward.store_id);
+    
+    // Get all active codes except the current one being verified
+    const { data: otherActiveCodes } = await supabase
+      .from("reward_redemption_codes")
+      .select("points_cost")
+      .eq("user_id", codeWithReward.user_id)
+      .eq("store_id", codeWithReward.store_id)
+      .eq("status", "active")
+      .gt("expires_at", new Date().toISOString())
+      .neq("id", codeWithReward.id);
+    
+    const otherReservedPoints = otherActiveCodes?.reduce((sum, c) => sum + (c.points_cost || 0), 0) || 0;
+    const availablePoints = Math.max(0, pointsSummary.availablePoints - otherReservedPoints);
+    
     if (availablePoints < codeWithReward.reward.points_cost) {
       return { success: false, message: "Insufficient points" };
     }
@@ -40,7 +54,6 @@ Promise<RedemptionVerificationResult> {
       code: codeWithReward,
     };
   } catch (error) {
-    console.error("Verification error:", error);
     return { success: false, message: "Verification failed" };
   }
 }
@@ -71,19 +84,6 @@ export async function processRedemption(
 
     const now = new Date().toISOString();
 
-    // Update redemption code status to "redeemed" before releasing points
-    const { error: codeUpdateError } = await supabase
-      .from("reward_redemption_codes")
-      .update({
-        status: "redeemed",
-        redeemed_at: now,
-      })
-      .eq("id", verification.code.id);
-
-    if (codeUpdateError) {
-      return { success: false, message: "Failed to update redemption code status" };
-    }
-
     const { data: redemption, error: redemptionError } = await supabase
       .from("reward_redemptions")
       .insert({
@@ -97,33 +97,26 @@ export async function processRedemption(
       .single();
 
     if (redemptionError || !redemption) {
-      // Rollback the code status update if redemption insertion fails
-      await supabase
-        .from("reward_redemption_codes")
-        .update({
-          status: "active",
-          redeemed_at: null,
-        })
-        .eq("id", verification.code.id);
-      
       return { success: false, message: "Failed to record redemption" };
     }
 
-    const { deductPoints } = await import("@/services/user/rewards-redemption");
-    
-    const pointsResult = await deductPoints(
-      verification.code.user_id,
-      verification.code.store_id.toString(),
-      verification.code.points_cost
-    );
+    // Update redemption code status to "redeemed" after redemption is recorded
+    const { error: codeUpdateError } = await supabase
+      .from("reward_redemption_codes")
+      .update({
+        status: "redeemed",
+        redeemed_at: now,
+      })
+      .eq("id", verification.code.id);
 
-    if (!pointsResult.success) {
+    if (codeUpdateError) {
+      // Rollback redemption if code status update fails
       await supabase
         .from("reward_redemptions")
         .delete()
         .eq("id", redemption.id);
       
-      return { success: false, message: pointsResult.message };
+      return { success: false, message: "Failed to update redemption code status" };
     }
 
     // Decrement reward stock
@@ -134,18 +127,16 @@ export async function processRedemption(
       })
       .eq("id", verification.code!.reward_id);
 
-    if (stockUpdateError) {
-      console.error("Error updating reward stock:", stockUpdateError);
-    }
-
+    // Calculate remaining points after redemption
+    const pointsSummary = await getUserPoints(verification.code.user_id, verification.code.store_id);
+    
     return {
       success: true,
       redemptionId: redemption.id,
       pointsDeducted: verification.code.points_cost,
-      remainingPoints: pointsResult.remainingPoints || 0,
+      remainingPoints: pointsSummary.availablePoints,
     };
   } catch (error) {
-    console.error("Error processing redemption:", error);
     return { success: false, message: "An error occurred" };
   }
 }
@@ -176,7 +167,6 @@ export async function getRedemptionHistory(
       .range(offset, offset + limit - 1);
 
     if (error) {
-      console.error("Error fetching redemption history:", error);
       return { items: [], hasMore: false };
     }
 
@@ -194,9 +184,9 @@ export async function getRedemptionHistory(
 
     return { items, hasMore };
   } catch (error) {
-    console.error("Error fetching redemption history:", error);
     return { items: [], hasMore: false };
   }
+
 }
 
 export function parseRedemptionQR(qrData: string): string | null {
@@ -218,7 +208,6 @@ export function listenToRewardRedemptions(
 
   const subscribeWithRetry = () => {
     if (retryCount >= maxRetries) {
-      console.error(`Max retries (${maxRetries}) reached for reward redemptions listener. Real-time may not be enabled for reward_redemptions table.`);
       return null;
     }
 
