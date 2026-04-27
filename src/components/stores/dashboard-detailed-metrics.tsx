@@ -21,62 +21,57 @@ export function DashboardDetailedMetrics({ transactions = [], loading }: Props) 
     }
 
     return (
-        <View className="bg-white dark:bg-darkBackgroundCard rounded-xl p-5 shadow-sm mt-4 border border-border dark:border-darkBorder mb-6 will-change-animation">
-            <View className="flex-row justify-between items-start mb-4">
-                <View className="flex-1 pr-2">
-                    <Text className="text-lg font-poppins-bold text-textPrimary dark:text-darkTextPrimary">
-                        {translate("store_manager.dashboard.detailedMetrics.title", "Recent Transactions")}
-                    </Text>
-                    <Text className="text-sm font-poppins text-textMuted dark:text-darkTextMuted mt-1">
-                        {translate("store_manager.dashboard.detailedMetrics.subtitle", "A quick overview of your most recent transactions and point operations.")}
-                    </Text>
-                </View>
+        <View className="bg-white dark:bg-darkBackgroundCard rounded-xl p-4 elevation-1 border border-transparent dark:border-darkBorder mb-6 mt-2">
+            <View className="flex-row justify-between items-center mb-4">
+                <Text className="text-lg font-poppins-bold text-textPrimary dark:text-darkTextPrimary">
+                    {translate("store_manager.dashboard.detailedMetrics.title", "Recent Transactions")}
+                </Text>
 
                 <TouchableOpacity 
-                    className="flex-row items-center py-1.5 px-3 rounded-full bg-orange-50 dark:bg-orange-900/20 border border-orange-100 dark:border-orange-900/30 ml-2"
+                    className="py-1 px-2"
                     onPress={() => router.push("/(store_manager)/transactions")}
                 >
-                    <Text className="text-xs font-poppins-bold text-primary mr-1 mt-1">
+                    <Text className="text-xs font-poppins-bold text-[#ff6600]">
                         {translate("label.viewAll", "View All")}
                     </Text>
                 </TouchableOpacity>
             </View>
 
-            <View className="w-full overflow-hidden rounded-lg border border-slate-200 dark:border-darkBorder">
+            <View className="w-full">
                 {/* Table Header */}
-                <View className="flex-row bg-slate-50 dark:bg-darkBackgroundMuted p-3 border-b border-slate-200 dark:border-darkBorder">
-                    <Text className="flex-1 text-xs font-poppins-bold text-textSecondary dark:text-darkTextSecondary">{translate("label.dateAndTime", "Date & Time")}</Text>
-                    <Text className="flex-[2] text-xs font-poppins-bold text-textSecondary dark:text-darkTextSecondary">{translate("label.user", "User")}</Text>
-                    <Text className="flex-1 text-xs font-poppins-bold text-textSecondary dark:text-darkTextSecondary text-right">{translate("label.points", "Points")}</Text>
+                <View className="flex-row pb-3 mb-1 border-b border-slate-50 dark:border-darkBorder/30">
+                    <Text className="flex-1 text-[11px] font-poppins-bold text-textSecondary dark:text-darkTextSecondary uppercase tracking-wider">{translate("label.dateAndTime", "Date")}</Text>
+                    <Text className="flex-[2] text-[11px] font-poppins-bold text-textSecondary dark:text-darkTextSecondary uppercase tracking-wider">{translate("label.user", "User")}</Text>
+                    <Text className="flex-1 text-[11px] font-poppins-bold text-textSecondary dark:text-darkTextSecondary uppercase tracking-wider text-right">{translate("label.points", "Points")}</Text>
                 </View>
 
                 {/* Table Body */}
                 {(!displayTransactions || displayTransactions.length === 0) ? (
-                    <View className="p-5 items-center">
-                        <Text className="text-sm font-poppins text-textMuted dark:text-darkTextMuted">
+                    <View className="p-8 items-center">
+                        <Text className="text-sm font-poppins text-textSecondary dark:text-darkTextSecondary">
                             {translate("store_manager.dashboard.detailedMetrics.noTransactions", "No recent transactions found.")}
                         </Text>
                     </View>
                 ) : (
                     displayTransactions.map((tx, index) => {
                         const date = new Date(tx.created_at);
-                        const dateStr = date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+                        const dateStr = date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
                         const timeStr = date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
 
                         return (
                             <View 
                                 key={tx.id || index.toString()} 
-                                className={`flex-row p-3 items-center ${index !== displayTransactions.length - 1 ? 'border-b border-slate-100 dark:border-darkBorder' : ''}`}
+                                className={`flex-row py-3.5 items-center ${index !== displayTransactions.length - 1 ? 'border-b border-slate-50 dark:border-darkBorder/20' : ''}`}
                             >
                                 <View className="flex-1">
-                                    <Text className="text-xs font-poppins text-textPrimary dark:text-darkTextPrimary">{dateStr}</Text>
-                                    <Text className="text-[10px] font-poppins text-textMuted dark:text-darkTextMuted">{timeStr}</Text>
+                                    <Text className="text-[13px] font-poppins-bold text-textPrimary dark:text-darkTextPrimary">{dateStr}</Text>
+                                    <Text className="text-[11px] font-poppins text-textSecondary dark:text-darkTextSecondary">{timeStr}</Text>
                                 </View>
                                 <View className="flex-[2] px-2">
-                                    <Text className="text-xs font-poppins-bold text-textPrimary dark:text-darkTextPrimary" numberOfLines={1}>
+                                    <Text className="text-[13px] font-poppins-bold text-textPrimary dark:text-darkTextPrimary" numberOfLines={1}>
                                         {tx.user?.display_name || tx.user?.username || 'Unknown User'}
                                     </Text>
-                                    <Text className="text-[10px] font-poppins text-textMuted dark:text-darkTextMuted" numberOfLines={1}>
+                                    <Text className="text-[11px] font-poppins text-textSecondary dark:text-darkTextSecondary" numberOfLines={1}>
                                         {tx.user?.username ? `@${tx.user.username}` : ''}
                                     </Text>
                                 </View>

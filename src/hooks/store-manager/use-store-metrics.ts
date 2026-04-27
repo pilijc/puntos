@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { getStoreMetrics, getRetentionData, getStampDistribution, getRecentTransactions } from "@/services/store-manager/store-metrics-service";
-import { RecentTransaction, RetentionData, StampBucket } from "@/type/store-manager/metric";
+import { RecentTransaction, RetentionData, StampBucket, ActivityChartData } from "@/type/store-manager/metric";
 
 export function useStoreDashboardMetrics(
     storeId: number,
@@ -8,9 +8,13 @@ export function useStoreDashboardMetrics(
 ) {
     const [activeUsers, setActiveUsers] = useState(0);
     const [todayTransactions, setTodayTransactions] = useState(0);
-    const [weeklyActivity, setWeeklyActivity] = useState<number[]>([0, 0, 0, 0, 0, 0, 0]);
-    const [avgDailyScans, setAvgDailyScans] = useState(0);
-    const [peakHour, setPeakHour] = useState("N/A");
+    const [weeklyActivity, setWeeklyActivity] = useState<ActivityChartData>({
+        scans: Array(14).fill(0),
+        unique_visitors: Array(14).fill(0),
+        redemptions: Array(14).fill(0),
+        new_members: Array(14).fill(0),
+        points_earned: Array(14).fill(0),
+    });
     
     const [retention, setRetention] = useState<RetentionData>({
         returningCount: 0,
@@ -38,8 +42,6 @@ export function useStoreDashboardMetrics(
             setActiveUsers(metricsData.activeUsers);
             setTodayTransactions(metricsData.todayTransactions);
             setWeeklyActivity(metricsData.weeklyActivity);
-            setAvgDailyScans(metricsData.avgDailyScans || 0);
-            setPeakHour(metricsData.peakHour || "N/A");
             setRetention(retentionData);
             setStampBuckets(stampDistData.buckets);
             setStampMaxStamps(stampDistData.maxStamps);
@@ -65,8 +67,6 @@ export function useStoreDashboardMetrics(
         activeUsers,
         todayTransactions,
         weeklyActivity,
-        avgDailyScans,
-        peakHour,
         retention,
         stampBuckets,
         stampMaxStamps,

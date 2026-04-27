@@ -13,11 +13,11 @@ export function DashboardStampDistribution({ buckets, maxStamps, loading }: Stam
 
     if (buckets.length === 0) {
         return (
-            <View className="bg-white dark:bg-darkBackgroundCard rounded-xl p-5 shadow-sm mb-4 border border-slate-100 dark:border-darkBorder">
+            <View className="bg-white dark:bg-darkBackgroundCard rounded-xl p-4 elevation-1 border border-transparent dark:border-darkBorder" style={{ flex: 1 }}>
                 <Text className="text-lg font-poppins-bold text-textPrimary dark:text-darkTextPrimary leading-6">
                     {translate("store_manager.dashboard.stampProgress.title", "Stamp Progress")}
                 </Text>
-                <Text className="text-[12px] font-poppins text-textMuted dark:text-darkTextMuted mt-0.5">
+                <Text className="text-xs font-poppins text-textSecondary dark:text-darkTextSecondary mt-0.5">
                     {translate("store_manager.dashboard.stampProgress.noProgram", "No active stamp program found")}
                 </Text>
             </View>
@@ -28,11 +28,11 @@ export function DashboardStampDistribution({ buckets, maxStamps, loading }: Stam
     const maxCount = Math.max(...buckets.map(b => b.count));
 
     return (
-        <View className="bg-white dark:bg-darkBackgroundCard rounded-xl p-5 elevation-1 mb-4 border border-transparent dark:border-darkBorder">
+        <View className="bg-white dark:bg-darkBackgroundCard rounded-xl p-4 elevation-1 border border-transparent dark:border-darkBorder" style={{ flex: 1 }}>
             <Text className="text-lg font-poppins-bold text-textPrimary dark:text-darkTextPrimary leading-6">
                 {translate("store_manager.dashboard.stampProgress.title", "Stamp Progress")}
             </Text>
-            <Text className="text-xs font-poppins text-textMuted dark:text-darkTextMuted mt-0.5 mb-5">
+            <Text className="text-xs font-poppins text-textSecondary dark:text-darkTextSecondary mt-0.5 mb-2">
                 {translate("store_manager.dashboard.stampProgress.distribution", "Distribution of {{users}} users", {
                     users: totalUsers,
                     goal: maxStamps,

@@ -3,11 +3,10 @@ import { View } from "@/tw";
 
 export function DashboardDetailedMetricsSkeleton() {
     return (
-        <View className="bg-white dark:bg-darkBackgroundCard rounded-xl p-5 shadow-sm mt-4 border border-slate-100 dark:border-darkBorder mb-6 animate-pulse will-change-animation">
-            <View className="flex-row justify-between items-start mb-4">
+        <View className="bg-white dark:bg-darkBackgroundCard rounded-xl p-4 elevation-1 border border-border dark:border-darkBorder mb-6 animate-pulse will-change-animation mt-2">
+            <View className="flex-row justify-between items-center mb-3">
                 <View className="flex-1 pr-2">
-                    <View className="h-6 w-1/3 bg-slate-200 dark:bg-darkBackgroundMuted rounded mb-2" />
-                    <View className="h-4 w-3/4 bg-slate-200 dark:bg-darkBackgroundMuted rounded" />
+                    <View className="h-6 w-1/3 bg-slate-200 dark:bg-darkBackgroundMuted rounded" />
                 </View>
                 <View className="h-7 w-20 bg-slate-200 dark:bg-darkBackgroundMuted rounded-full" />
             </View>
@@ -24,7 +23,7 @@ export function DashboardDetailedMetricsSkeleton() {
                 {[1, 2, 3, 4, 5].map((i) => (
                     <View 
                         key={i} 
-                        className={`flex-row p-4 items-center ${i !== 5 ? 'border-b border-slate-100 dark:border-darkBorder' : ''}`}
+                        className={`flex-row p-3 items-center ${i !== 5 ? 'border-b border-slate-100 dark:border-darkBorder' : ''}`}
                     >
                         <View className="flex-1">
                             <View className="h-3 w-16 bg-slate-200 dark:bg-darkBackgroundMuted rounded mb-1" />

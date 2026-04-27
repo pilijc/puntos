@@ -1,17 +1,17 @@
 import { supabase } from "@/supabase/supabase";
 import { RetentionData, StampBucket } from "@/type/store-manager/metric";
 
-function getLocalDateRange(): { today: string; sevenDaysAgo: string } {
+function getLocalDateRange(): { today: string; pastDate: string } {
     const now = new Date();
 
     //en-CA give YYYY-MM-DD format
     const todayStr = now.toLocaleDateString("en-CA");
 
-    const sevenDaysAgoDate = new Date(now);
-    sevenDaysAgoDate.setDate(sevenDaysAgoDate.getDate() - 6);
-    const sevenDaysAgoStr = sevenDaysAgoDate.toLocaleDateString("en-CA");
+    const pastDateObj = new Date(now);
+    pastDateObj.setDate(pastDateObj.getDate() - 13); // 14 days including today
+    const pastDateStr = pastDateObj.toLocaleDateString("en-CA");
 
-    return { today: todayStr, sevenDaysAgo: sevenDaysAgoStr };
+    return { today: todayStr, pastDate: pastDateStr };
 }
 
 export async function getStoreMetrics(
@@ -20,7 +20,13 @@ export async function getStoreMetrics(
 ) {
     let activeUserCount = 0;
     let todayTxCount = 0;
-    let weeklyActivity = [0, 0, 0, 0, 0, 0, 0];
+    const activityData: import("@/type/store-manager/metric").ActivityChartData = {
+        scans: Array(14).fill(0),
+        unique_visitors: Array(14).fill(0),
+        redemptions: Array(14).fill(0),
+        new_members: Array(14).fill(0),
+        points_earned: Array(14).fill(0),
+    };
 
     try {
         const { data, error } = await supabase.rpc('get_users_near_store', {
@@ -33,51 +39,49 @@ export async function getStoreMetrics(
         }
 
         // weekly activity & todays scans
-        const { today, sevenDaysAgo } = getLocalDateRange();
+        const { today, pastDate } = getLocalDateRange();
 
         const { data: dailyData, error: dailyError } = await supabase
             .from("store_daily_metrics")
-            .select("metric_date, scans_count")
+            .select("metric_date, scans_count, unique_visitors, redemptions_count, new_members_count, points_earned")
             .eq("store_id", storeId)
-            .gte("metric_date", sevenDaysAgo)
+            .gte("metric_date", pastDate)
             .lte("metric_date", today)
             .order("metric_date", {ascending: true});
 
         if(!dailyError && dailyData) {
-            //builds map for quick lookup {2026-03-30: 5, .....}
-            const scansByDate: Record<string, number> = {};
+            //builds map for quick lookup
+            const dataByDate: Record<string, any> = {};
             dailyData.forEach(row => {
-                scansByDate[row.metric_date] = row.scans_count;
+                dataByDate[row.metric_date] = row;
             });
 
-            const sevenDaysAgoDate = new Date();
-            sevenDaysAgoDate.setDate(sevenDaysAgoDate.getDate() - 6);
+            const pastDateObj = new Date();
+            pastDateObj.setDate(pastDateObj.getDate() - 13);
 
-            for (let i = 0; i < 7; i++) {
-                const dateObj = new Date(sevenDaysAgoDate);
-                dateObj.setDate(sevenDaysAgoDate.getDate() + i);
+            for (let i = 0; i < 14; i++) {
+                const dateObj = new Date(pastDateObj);
+                dateObj.setDate(pastDateObj.getDate() + i);
                 const dateStr = dateObj.toLocaleDateString("en-CA");
-                weeklyActivity[i] = scansByDate[dateStr] ?? 0;
+                
+                const row = dataByDate[dateStr] || {};
+                activityData.scans[i] = row.scans_count || 0;
+                activityData.unique_visitors[i] = row.unique_visitors || 0;
+                activityData.redemptions[i] = row.redemptions_count || 0;
+                activityData.new_members[i] = row.new_members_count || 0;
+                activityData.points_earned[i] = row.points_earned || 0;
             }
 
-            todayTxCount = weeklyActivity[6];
+            todayTxCount = activityData.scans[13];
         }
     } catch (error) {
         console.error("Dashboard metrics error:", error);
     }
 
-    //NEWLY ADDED
-    const avgDailyScans = Math.round(
-        weeklyActivity.reduce((a, b) => a + b, 0) / 7
-    );
-    const peakHour = todayTxCount > 0 ? "14:00 - 15:00" : "N/A"; //mocked will come back l8r
-
     return {
         activeUsers: activeUserCount,
         todayTransactions: todayTxCount,
-        weeklyActivity: weeklyActivity,
-        avgDailyScans,
-        peakHour,
+        weeklyActivity: activityData,
     };
 }
 

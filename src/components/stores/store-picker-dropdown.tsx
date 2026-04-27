@@ -19,7 +19,7 @@ export function StorePickerDropdown({
             {/* button for dropdown */}
             {selectedStore && (
                 <TouchableOpacity
-                    className="bg-white dark:bg-darkBackgroundCard px-[14px] py-[10px] rounded-full flex-row items-center gap-[8px] elevation-4"
+                    className="bg-slate-50 dark:bg-darkBackgroundMuted border border-slate-200 dark:border-darkBorder px-[14px] py-[8px] rounded-full flex-row items-center gap-[6px]"
                     onPress={onOpen}
                 >
                     <Text
@@ -41,35 +41,39 @@ export function StorePickerDropdown({
                     className="flex-1 bg-black/30 justify-start items-end pt-[80px] pr-[20px]"
                     onPress={onClose}
                 >
-                    <View className="bg-white dark:bg-darkBackgroundCard rounded-[16px] p-[8px] min-w-[200px] max-w-[250px] elevation-10 border border-transparent dark:border-darkBorder">
+                    <View className="bg-white dark:bg-darkBackgroundCard rounded-[24px] p-2 min-w-[220px] max-w-[280px] shadow-2xl elevation-10 border border-slate-100 dark:border-darkBorder">
                         {stores.map((s, index) => {
                             const isActive = s.id === selectedStore?.id;
                             const isLast = index === stores.length - 1;
                             return (
-                                <React.Fragment key={s.id}>
-                                    <TouchableOpacity
-                                        className={`flex-row items-center justify-between py-[12px] px-[16px] rounded-[10px] ${isActive ? "bg-orange-50 dark:bg-orange-950/30" : ""}`}
-                                        onPress={() => {
-                                            onSelect(s.id);
-                                            onClose();
-                                        }}
-                                    >
-                                        <View className="flex-1">
+                                <View key={s.id}>
+                                    <View className="px-1">
+                                        <Pressable
+                                            style={({ pressed }) => [
+                                                { backgroundColor: pressed ? (isDark ? '#262626' : '#f8fafc') : 'transparent' },
+                                                isActive ? { backgroundColor: '#fff7ed' } : {}
+                                            ]}
+                                            className="px-4 py-3.5 flex-row items-center justify-between rounded-2xl"
+                                            onPress={() => {
+                                                onSelect(s.id);
+                                                onClose();
+                                            }}
+                                        >
                                             <Text
-                                                className={`text-sm font-poppins ${isActive ? "text-primary font-poppins-medium" : "text-textSecondary dark:text-darkTextSecondary"}`}
+                                                className={`text-[15px] font-poppins flex-1 ${isActive ? "text-[#FF6600] font-poppins-bold" : "text-slate-600 dark:text-darkTextSecondary"}`}
                                                 numberOfLines={1}
                                             >
                                                 {s.name}
                                             </Text>
-                                        </View>
-                                        {isActive && (
-                                            <Check size={18} color="#FF6600" />
-                                        )}
-                                    </TouchableOpacity>
+                                            {isActive && (
+                                                <Check size={18} color="#FF6600" strokeWidth={2.5} />
+                                            )}
+                                        </Pressable>
+                                    </View>
                                     {!isLast && (
-                                        <View className="h-[1px] bg-gray-100 dark:bg-neutral-600 mx-2 my-[1px]" />
+                                        <View className="mx-6 border-b border-slate-50 dark:border-darkBorder/30" />
                                     )}
-                                </React.Fragment>
+                                </View>
                             );
                         })}
                     </View>

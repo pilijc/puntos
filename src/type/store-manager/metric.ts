@@ -8,13 +8,24 @@ export interface DashboardMetricTileProps {
     loading?: boolean;
 }
 
+export type ActivityMetricType = 'scans' | 'unique_visitors' | 'redemptions' | 'new_members' | 'points_earned';
+
+export interface ActivityChartData {
+    scans: number[];
+    unique_visitors: number[];
+    redemptions: number[];
+    new_members: number[];
+    points_earned: number[];
+}
+
 export interface DashboardActivityChartProps {
-    data: number[];
+    data: ActivityChartData;
     labels: string[];
     weekRange: string;
     loading?: boolean;
+    selectedMetric?: ActivityMetricType;
+    onMetricChange?: (metric: ActivityMetricType) => void;
 }
-
 
 export interface RetentionData {
     returningCount: number;
