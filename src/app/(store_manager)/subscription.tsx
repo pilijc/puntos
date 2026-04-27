@@ -150,27 +150,13 @@ export default function SubscriptionScreen() {
 	const nextPaymentDate = managerRow?.current_period_end ?? null;
 	const upcomingBillingAmount = activePlanAmount;
 
-	const currentPeriodAmount = useMemo(() => {
-		if (!managerRow?.current_period_start || !managerRow?.current_period_end) return null;
-		const start = new Date(managerRow.current_period_start).getTime();
-		const end = new Date(managerRow.current_period_end).getTime();
-		if (Number.isNaN(start) || Number.isNaN(end)) return null;
-
-		const paidRows = invoices.filter((r) => String(r.payment_status ?? "").toLowerCase() === "paid");
+	const lastPaidAmount = useMemo(() => {
+		const paidRows = invoices.filter(
+			(r) => String(r.payment_status ?? "").toLowerCase() === "paid",
+		);
 		if (paidRows.length === 0) return null;
-
-		// Prefer the invoice that matches the current billing period.
-		for (const r of paidRows) {
-			const ps = r.billing_period_start ? new Date(r.billing_period_start).getTime() : NaN;
-			const pe = r.billing_period_end ? new Date(r.billing_period_end).getTime() : NaN;
-			if (!Number.isNaN(ps) && !Number.isNaN(pe) && ps === start && pe === end) {
-				return toAmountNumber(r.amount_paid ?? r.amount_due) ?? null;
-			}
-		}
-
-		const r = paidRows[0];
-		return toAmountNumber(r.amount_paid ?? r.amount_due) ?? null;
-	}, [invoices, managerRow?.current_period_end, managerRow?.current_period_start]);
+		return toAmountNumber(paidRows[0].amount_paid) ?? null;
+	}, [invoices]);
 
 	const planListForGate = useMemo(
 		() =>
@@ -188,6 +174,13 @@ export default function SubscriptionScreen() {
 	const isBasicPlanSelected =
 		currentSubscriptionId == null || (basicId != null && currentSubscriptionId === basicId);
 	const isBasicFree = !isPaidPro && isBasicPlanSelected && upcomingBillingAmount === 0;
+
+	const shouldShowUpcomingBill = useMemo(() => {
+		if (cancelScheduled || isBasicFree) return false;
+		if (lastPaidAmount === null) return false;
+		return upcomingBillingAmount !== lastPaidAmount;
+	}, [cancelScheduled, isBasicFree, lastPaidAmount, upcomingBillingAmount]);
+
 	const periodLabel = cancelScheduled
 		? translate("storeManager.subscription.billing.period.accessUntil")
 		: translate("storeManager.subscription.billing.period.nextPayment");
@@ -233,13 +226,38 @@ export default function SubscriptionScreen() {
 				header: translate("storeManager.subscription.billing.invoices.columns.status"),
 				flex: 1,
 				align: "center",
-				render: (r) => (
-					<View className="px-2 py-0.5 rounded-full bg-green-100 dark:bg-green-900/25">
-						<Text className="text-xs font-poppins-bold uppercase text-green-700 dark:text-green-300">
-							{String(r.payment_status ?? "—")}
+				render: (r) => {
+					const status = String(r.payment_status ?? "").toLowerCase();
+				  
+					const styles = {
+					  paid: {
+						container: "bg-green-100 dark:bg-green-900/25",
+						text: "text-green-700 dark:text-green-300",
+					  },
+					  failed: {
+						container: "bg-red-100 dark:bg-red-900/25",
+						text: "text-red-700 dark:text-red-300",
+					  },
+					  pending: {
+						container: "bg-yellow-100 dark:bg-yellow-900/25",
+						text: "text-yellow-700 dark:text-yellow-300",
+					  },
+					  default: {
+						container: "bg-gray-100 dark:bg-gray-800",
+						text: "text-gray-700 dark:text-gray-300",
+					  },
+					};
+				  
+					const style = styles[status as keyof typeof styles] ?? styles.default;
+				  
+					return (
+					  <View className={`px-2 py-0.5 rounded-full ${style.container}`}>
+						<Text className={`text-xs font-poppins-bold uppercase ${style.text}`}>
+						  {status || "—"}
 						</Text>
-					</View>
-				),
+					  </View>
+					);
+				  },
 			},
 			{
 				key: "amount",
@@ -411,46 +429,42 @@ export default function SubscriptionScreen() {
 									</View>
 								) : null}
 
-								<View className="flex-row items-end gap-1 mt-4">
-									<Text className="text-4xl font-poppins-bold text-white">
-										{isBasicFree || (currentPeriodAmount) === 0
-											? translate("storeManager.subscription.billing.free")
-											: formatPhpAmount(currentPeriodAmount)}
+							<View className="flex-row items-end gap-1 mt-4">
+								<Text className="text-4xl font-poppins-bold text-white">
+									{isBasicFree || lastPaidAmount === 0 || lastPaidAmount === null
+										? translate("storeManager.subscription.billing.free")
+										: formatPhpAmount(lastPaidAmount)}
+								</Text>
+								{!isBasicFree && lastPaidAmount != null && lastPaidAmount !== 0 ? (
+									<Text className="text-sm font-poppins-bold text-white/80 mb-1">
+										{translate("storeManager.subscription.billing.perMonth")}
 									</Text>
-									{!isBasicFree && (currentPeriodAmount) !== 0 ? (
-										<Text className="text-sm font-poppins-bold text-white/80 mb-1">
-											{translate("storeManager.subscription.billing.perMonth")}
-										</Text>
-									) : null}
-								</View>
+								) : null}
+							</View>
 
-								<View className="flex-row gap-6 mt-5">
-									<View className="flex-1">
-										<Text className="text-xs font-poppins-semibold text-white/80">
-											{periodLabel}
-										</Text>
-										<Text className="mt-1 text-sm font-poppins-semibold text-white">
-											{formatDateLong(nextPaymentDate)}
-										</Text>
-									</View>
+							<View className="flex-row gap-6 mt-5">
+								<View className="flex-1">
+									<Text className="text-xs font-poppins-semibold text-white/80">
+										{periodLabel}
+									</Text>
+									<Text className="mt-1 text-sm font-poppins-semibold text-white">
+										{formatDateLong(nextPaymentDate)}
+									</Text>
+								</View>
+								{shouldShowUpcomingBill ? (
 									<View className="flex-1">
 										<Text className="text-xs font-poppins-semibold text-white/80">
 											{translate("storeManager.subscription.billing.upcomingAmount")}
 										</Text>
 										<Text className="mt-1 text-sm font-poppins-semibold text-white">
-											{isBasicFree
-												? translate("storeManager.subscription.billing.free")
-												: upcomingBillingAmount === 0
-													? "PHP 0.00"
-													: formatPhpAmount(upcomingBillingAmount)}
+											{formatPhpAmount(upcomingBillingAmount)}
 										</Text>
-										{currentPeriodAmount != null && upcomingBillingAmount !== currentPeriodAmount ? (
-											<Text className="mt-1 text-[10px] font-poppins text-white/80 leading-4">
-												{translate("storeManager.subscription.billing.upcomingPriceNote")}
-											</Text>
-										) : null}
+										<Text className="mt-1 text-[10px] font-poppins text-white/80 leading-4">
+											{translate("storeManager.subscription.billing.upcomingPriceNote")}
+										</Text>
 									</View>
-								</View>
+								) : null}
+							</View>
 
 								<View className="flex-row flex-wrap gap-3 mt-6 justify-start">
 									{!isPaidPro && proPlan ? (
