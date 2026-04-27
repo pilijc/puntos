@@ -1,12 +1,16 @@
-import React from "react";
-import { ScrollView, ActivityIndicator, RefreshControl, Platform, useColorScheme, TouchableOpacity } from "react-native";
-import { SafeAreaView, Text, View } from "@/tw";
+import React, { useEffect, useMemo, useState } from "react";
+import { ActivityIndicator, Platform, RefreshControl, ScrollView } from "react-native";
+import { router } from "expo-router";
+import { SafeAreaView, Text, TouchableOpacity, View } from "@/tw";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useSuperAdminDashboard } from "@/hooks/super-admin/use-super-admin-dashboard";
 import { StatCard } from "@/components/ui/stat-card";
-import { Users, Store, BarChart3, MessageSquare } from "lucide-react-native";
+import { Activity, CalendarDays, Eye, EyeOff, MessageSquare, RotateCcw, Store, Users } from "lucide-react-native";
 import { useTranslation } from "react-i18next";
-import { WEB_PAGE_PADDING, WEB_CARD_PADDING, WEB_CARD_MAX_WIDTH } from "@/type/super-admin/layout";
+import { DashboardActivityChart } from "@/components/stores/dashboard-activity-chart";
+import { DashboardMetricTile } from "@/components/stores/dashboard-metric-tile";
+import { SubscriptionDistribution } from "@/components/super-admin/subscription-distribution";
+import { WEB_CARD_PADDING, WEB_CARD_MAX_WIDTH } from "@/type/super-admin/layout";
 
 const isWeb = Platform.OS === "web";
 type Timeframe = "today" | "7d" | "1m";
@@ -146,12 +150,55 @@ function getDetailItems(items: any[], dateKeys: string[], prefix: string, timefr
   return { list, hasMore: allFiltered.length > limit };
 }
 
+const USER_DATE_KEYS = ["created_at", "createdAt", "last_sign_in_at", "updated_at"];
+const STORE_DATE_KEYS = ["created_at", "createdAt", "updated_at", "approved_at"];
+
 export default function SuperAdminDashboard() {
   const { users, stores, adminInfo, loading, refreshing, activeStoresCount, onRefresh } = useSuperAdminDashboard();
   const { t: translate } = useTranslation();
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
   const insets = useSafeAreaInsets();
+
+  const [timeframe, setTimeframe] = useState<Timeframe>("7d");
+  const [showUserDetails, setShowUserDetails] = useState(false);
+  const [showStoreDetails, setShowStoreDetails] = useState(false);
+  const [userLimit, setUserLimit] = useState(5);
+  const [storeLimit, setStoreLimit] = useState(5);
+
+  useEffect(() => {
+    setUserLimit(5);
+    setStoreLimit(5);
+  }, [timeframe]);
+
+  const returningUsersCount = useMemo(() => {
+    return users.filter(u => {
+      const lastSignIn = u.last_sign_in_at;
+      const createdAt = u.created_at;
+      if (!lastSignIn || !createdAt) return false;
+      const diff = new Date(lastSignIn).getTime() - new Date(createdAt).getTime();
+      return diff > 24 * 60 * 60 * 1000;
+    }).length;
+  }, [users]);
+
+  const userRetentionPercent = useMemo(
+    () => Math.round((returningUsersCount / Math.max(1, users.length)) * 100),
+    [returningUsersCount, users.length]
+  );
+
+  const userMetrics = useMemo(() => buildTimeframeSeries(users, USER_DATE_KEYS, timeframe), [users, timeframe]);
+  const storeMetrics = useMemo(() => buildTimeframeSeries(stores, STORE_DATE_KEYS, timeframe), [stores, timeframe]);
+  const combinedSeries = useMemo(
+    () => userMetrics.series.map((v, i) => v + (storeMetrics.series[i] ?? 0)),
+    [userMetrics.series, storeMetrics.series]
+  );
+
+  const peakIndex = useMemo(() => {
+    const peak = Math.max(...combinedSeries, 0);
+    return combinedSeries.findIndex((v) => v === peak);
+  }, [combinedSeries]);
+  const mostActiveLabel = useMemo(() => userMetrics.labels[peakIndex] ?? "-", [peakIndex, userMetrics.labels]);
+
+  const userList = useMemo(() => getDetailItems(users, USER_DATE_KEYS, "User", timeframe, userLimit), [users, timeframe, userLimit]);
+  const storeList = useMemo(() => getDetailItems(stores, STORE_DATE_KEYS, "Store", timeframe, storeLimit), [stores, timeframe, storeLimit]);
 
   if (loading && !refreshing) {
     return (
