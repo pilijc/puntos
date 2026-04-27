@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { ScrollView, TouchableOpacity, View as RNView, useColorScheme, Dimensions } from "react-native";
 import { View, Text, Image } from "@/tw";
 import { ChevronLeft, Gift, Gem, Star, Lock, Trophy, Sparkles, CheckCircle2 } from "lucide-react-native";
@@ -18,6 +19,7 @@ import { useRedemptionCode } from "@/hooks/useRedemptionCode";
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 export default function ClaimRewardsScreen() {
+  const { t: translate } = useTranslation();
   const { storeId, storeName, storeLogo, storeAddress } = useLocalSearchParams<{ storeId?: string; storeName?: string; storeLogo?: string; storeAddress?: string }>();
   const [rewards, setRewards] = useState<Reward[]>([]);
   const [userPoints, setUserPoints] = useState(0);
@@ -181,7 +183,7 @@ export default function ClaimRewardsScreen() {
           </TouchableOpacity>
           <RNView style={{ flex: 1, alignItems: "center" }}>
             <Text style={{ color: heroSub, fontFamily: "Poppins_400Regular", fontSize: 11, letterSpacing: 2 }}>
-              REWARD WALLET
+              {translate("user.rewards.claimRewards.rewardWallet")}
             </Text>
           </RNView>
           <RNView style={{ width: 36 }} />
@@ -246,7 +248,7 @@ export default function ClaimRewardsScreen() {
                 <RNView style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
                   <RNView style={{ width: 16, height: 1, backgroundColor: "rgba(255,102,0,0.3)" }} />
                   <Text style={{ color: "#FF6600", fontFamily: "Poppins-Medium", fontSize: 9, letterSpacing: 1.4 }}>
-                    {storeAddress || "REWARD WALLET"}
+                    {storeAddress || translate("user.rewards.claimRewards.rewardWallet")}
                   </Text>
                   <RNView style={{ width: 16, height: 1, backgroundColor: "rgba(255,102,0,0.3)" }} />
                 </RNView>
@@ -268,7 +270,7 @@ export default function ClaimRewardsScreen() {
             </RNView>
           </Animated.View>
           <Text style={{ color: heroSub, fontFamily: "Poppins_400Regular", fontSize: 12, marginTop: 4 }}>
-            Your balance
+            {translate("user.rewards.claimRewards.yourBalance")}
           </Text>
         </RNView>
       </RNView>
@@ -357,10 +359,10 @@ export default function ClaimRewardsScreen() {
               </RNView>
               <RNView style={{ flex: 1 }}>
                 <Text className="text-neutral-800 font-poppins-semibold text-xs">
-                  Earn more points
+                  {translate("user.rewards.claimRewards.earnMorePoints")}
                 </Text>
                 <Text className="text-neutral-500 font-poppins text-[11px] mt-0.5">
-                  Scan the QR code at checkout on your next visit
+                  {translate("user.rewards.claimRewards.scanQrCode")}
                 </Text>
               </RNView>
             </RNView>
@@ -371,7 +373,7 @@ export default function ClaimRewardsScreen() {
             <RNView style={{ flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 4 }}>
               <Star size={14} color="#FF6600" fill="#FF6600" />
               <Text className="text-neutral-800 font-poppins-bold text-sm">
-                Ready to Claim
+                {translate("user.rewards.claimRewards.readyToClaim")}
               </Text>
               <RNView style={{
                 backgroundColor: "#FF6600", borderRadius: 99,
@@ -430,7 +432,7 @@ export default function ClaimRewardsScreen() {
                       }}
                     >
                       <CheckCircle2 size={12} color="#FFFFFF" />
-                      <Text className="text-white font-poppins-bold text-[11px]">Claim</Text>
+                      <Text className="text-white font-poppins-bold text-[11px]">{translate("user.rewards.streakDetail.claimBtn")}</Text>
                     </TouchableOpacity>
                   </RNView>
                 </RNView>
@@ -443,7 +445,7 @@ export default function ClaimRewardsScreen() {
             <RNView style={{ flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 4 }}>
               <Lock size={14} color="#9CA3AF" />
               <Text className="text-neutral-400 font-poppins-bold text-sm">
-                Almost There
+                {translate("user.rewards.claimRewards.almostThere")}
               </Text>
             </RNView>
 
@@ -495,7 +497,7 @@ export default function ClaimRewardsScreen() {
                       <RNView style={{ flexDirection: "row", alignItems: "center", gap: 3 }}>
                         <Gem size={11} color="#9CA3AF" />
                         <Text className="text-neutral-400 font-poppins-semibold text-xs">
-                          {item.points_cost.toLocaleString()} needed
+                          {translate("user.rewards.claimRewards.needed", { count: item.points_cost.toLocaleString() })}
                         </Text>
                       </RNView>
                       <RNView style={{
@@ -504,7 +506,7 @@ export default function ClaimRewardsScreen() {
                         borderRadius: 99,
                       }}>
                         <Text style={{ color: lockPillText, fontFamily: "Poppins_600SemiBold", fontSize: 10 }}>
-                          +{item.deficit} pts
+                          {translate("user.rewards.claimRewards.ptsDeficit", { count: item.deficit })}
                         </Text>
                       </RNView>
                     </RNView>
@@ -525,7 +527,7 @@ export default function ClaimRewardsScreen() {
           {/* Footer */}
           <RNView style={{ alignItems: "center", paddingTop: 4 }}>
             <Text className="text-[10px] tracking-[2px] text-neutral-300 font-poppins-medium">
-              POWERED BY PUNTOS
+              {translate("label.poweredBy")}
             </Text>
           </RNView>
         </ScrollView>

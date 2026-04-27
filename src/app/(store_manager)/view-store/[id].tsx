@@ -42,12 +42,12 @@ export default function ViewStore() {
 
   const menuItems = useMemo(
     () => [
-      { key: "staff", label: t("storeManager.viewStore.menu.staff.label"), description: t("storeManager.viewStore.menu.staff.description"), icon: <UsersRound size={18} color="#FF6600" />, route: "/(store_manager)/staff" as const },
-      { key: "streak", label: t("storeManager.viewStore.menu.streak.label"), description: t("storeManager.viewStore.menu.streak.description"), icon: <Flame size={18} color="#FF6600" />, route: "/(store_manager)/streak" as const },
-      { key: "stamp", label: t("storeManager.viewStore.menu.stamp.label"), description: t("storeManager.viewStore.menu.stamp.description"), icon: <Stamp size={18} color="#FF6600" />, route: "/(store_manager)/stamp/" as const },
-      { key: "qr", label: t("storeManager.viewStore.menu.qr.label"), description: t("storeManager.viewStore.menu.qr.description"), icon: <QrCode size={18} color="#FF6600" />, route: "/(store_manager)/qr" as const },
-      { key: "rewards", label: t("storeManager.viewStore.menu.rewards.label"), description: t("storeManager.viewStore.menu.rewards.description"), icon: <Gift size={18} color="#FF6600" />, route: "/(store_manager)/reward" as const },
-      { key: "media", label: t("storeManager.viewStore.menu.media.label"), description: t("storeManager.viewStore.menu.media.description"), icon: <Building2 size={18} color="#FF6600" />, route: "/(store_manager)/detail" as const },
+      { key: "staff", label: t("store_manager.viewStore.menu.staff.label"), description: t("store_manager.viewStore.menu.staff.description"), icon: <UsersRound size={18} color="#FF6600" />, route: "/(store_manager)/staff" as const },
+      { key: "streak", label: t("label.streak"), description: t("store_manager.viewStore.menu.streak.description"), icon: <Flame size={18} color="#FF6600" />, route: "/(store_manager)/streak" as const },
+      { key: "stamp", label: t("label.stamp"), description: t("store_manager.viewStore.menu.stamp.description"), icon: <Stamp size={18} color="#FF6600" />, route: "/(store_manager)/stamp/" as const },
+      { key: "qr", label: t("label.qrPurchase"), description: t("store_manager.viewStore.menu.qr.description"), icon: <QrCode size={18} color="#FF6600" />, route: "/(store_manager)/qr" as const },
+      { key: "rewards", label: t("label.rewards"), description: t("store_manager.viewStore.menu.rewards.description"), icon: <Gift size={18} color="#FF6600" />, route: "/(store_manager)/reward" as const },
+      { key: "media", label: t("store_manager.viewStore.menu.media.label"), description: t("store_manager.viewStore.menu.media.description"), icon: <Building2 size={18} color="#FF6600" />, route: "/(store_manager)/detail" as const },
     ],
     [t]
   );
@@ -122,8 +122,8 @@ export default function ViewStore() {
         timer={modal?.timer ? 3000 : undefined}
       />
       <AppHeader
-        title={store?.name || t("storeManager.viewStore.fallbackTitle")}
-        description={store?.address || t("storeManager.viewStore.fallbackDescription")}
+        title={store?.name || t("store_manager.viewStore.fallbackTitle")}
+        description={store?.address || t("store_manager.viewStore.fallbackDescription")}
         onBackPress={() => {
           router.push("/(store_manager)/stores");
         }}
@@ -269,7 +269,7 @@ export default function ViewStore() {
             <View style={{ width: "100%", maxWidth: 860 }}>
               <View className="flex-row items-center justify-between mb-3">
                 <Text className="text-sm font-poppins-bold text-textSecondary dark:text-textSecondary ml-1">
-                  {t("storeManager.viewStore.recentTransactions")}
+                  {t("store_manager.viewStore.recentTransactions")}
                 </Text>
                 <TouchableOpacity
                   activeOpacity={0.7}
@@ -278,24 +278,24 @@ export default function ViewStore() {
                     router.push({ pathname: "/(store_manager)/transactions", params: { storeId: String(storeId) } })
                   }
                 >
-                  <Text className="text-xs font-poppins text-primary">{t("storeManager.viewStore.seeAll")}</Text>
+                  <Text className="text-xs font-poppins text-primary">{t("store_manager.viewStore.seeAll")}</Text>
                   <ChevronRight size={14} color="#FF6600" />
                 </TouchableOpacity>
               </View>
 
               {txLoading ? (
-                <View className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 px-4 py-8 items-center">
+                <View className="bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 px-4 py-8 items-center">
                   <Loader2 className="animate-spin" size={28} color="#CBD5E1" />
                 </View>
               ) : recentTxs.length === 0 ? (
-                <View className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 px-4 py-10 items-center gap-y-2">
+                <View className="bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 px-4 py-10 items-center gap-y-2">
                   <ReceiptText size={32} color="#CBD5E1" />
                   <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">
-                    {t("storeManager.viewStore.noTransactionsYet")}
+                    {t("store_manager.viewStore.noTransactionsYet")}
                   </Text>
                 </View>
               ) : (
-                <View className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 overflow-hidden">
+                <View className="bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 overflow-hidden">
                   {recentTxs.map((tx, idx) => (
                     <View
                       key={tx.id}
@@ -342,7 +342,7 @@ export default function ViewStore() {
           <View className="px-4">
             <View className="flex-row items-center justify-between mb-3">
               <Text className="text-sm font-poppins-bold text-textSecondary dark:text-textSecondary ml-1">
-                {t("storeManager.viewStore.recentTransactions")}
+                {t("store_manager.viewStore.recentTransactions")}
               </Text>
               <TouchableOpacity
                 activeOpacity={0.7}
@@ -351,24 +351,24 @@ export default function ViewStore() {
                   router.push({ pathname: "/(store_manager)/transactions", params: { storeId: String(storeId) } })
                 }
               >
-                <Text className="text-xs font-poppins text-primary">{t("storeManager.viewStore.seeAll")}</Text>
+                <Text className="text-xs font-poppins text-primary">{t("store_manager.viewStore.seeAll")}</Text>
                 <ChevronRight size={14} color="#FF6600" />
               </TouchableOpacity>
             </View>
 
             {txLoading ? (
-              <View className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 px-4 py-8 items-center">
+              <View className="bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 px-4 py-8 items-center">
                 <Loader2 className="animate-spin" size={28} color="#CBD5E1" />
               </View>
             ) : recentTxs.length === 0 ? (
-              <View className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 px-4 py-10 items-center gap-y-2">
+              <View className="bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 px-4 py-10 items-center gap-y-2">
                 <ReceiptText size={32} color="#CBD5E1" />
                 <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">
-                  {t("storeManager.viewStore.noTransactionsYet")}
+                  {t("store_manager.viewStore.noTransactionsYet")}
                 </Text>
               </View>
             ) : (
-              <View className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 overflow-hidden">
+              <View className="bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 overflow-hidden">
                 {recentTxs.map((tx, idx) => (
                   <View
                     key={tx.id}

@@ -69,7 +69,7 @@ export default function ViewStamp() {
     } catch (e) {
       setModal({
         title: t("label.error"),
-        message: (e as Error).message ?? t("storeManager.stamp.endFailed"),
+        message: (e as Error).message ?? t("store_manager.stamp.endFailed"),
         buttons: [{ label: t("label.ok"), variant: "secondary", onPress: () => setModal(null) }],
       });
     } finally {
@@ -84,7 +84,7 @@ export default function ViewStamp() {
     } catch (e) {
       setModal({
         title: t("label.error"),
-        message: (e as Error).message ?? t("storeManager.stamp.deleteFailed"),
+        message: (e as Error).message ?? t("store_manager.stamp.deleteFailed"),
         buttons: [{ label: t("label.ok"), variant: "secondary", onPress: () => setModal(null) }],
       });
     }
@@ -97,7 +97,7 @@ export default function ViewStamp() {
     } catch (e) {
       setModal({
         title: t("label.error"),
-        message: (e as Error).message ?? t("storeManager.stamp.activateFailed"),
+        message: (e as Error).message ?? t("store_manager.stamp.activateFailed"),
         buttons: [{ label: t("label.ok"), variant: "secondary", onPress: () => setModal(null) }],
       });
     }
@@ -165,8 +165,8 @@ export default function ViewStamp() {
       />
 
       <AppHeader
-        title={t("storeManager.stamp.title")}
-        description={t("storeManager.stamp.description")}
+        title={t("store_manager.stamp.title")}
+        description={t("store_manager.stamp.description")}
         onBackPress={() => {
           router.push(`/(store_manager)/view-store/${storeId}`);
         }}
@@ -200,7 +200,7 @@ export default function ViewStamp() {
                         : "text-xs font-poppins-medium text-slate-400 dark:text-slate-500"
                     }
                   >
-                    {t(`storeManager.stamp.tabs.${tab.key}`)}
+                    {t(`store_manager.stamp.tabs.${tab.key}`)}
                   </Text>
                   {count > 0 && (
                     <View className="rounded-full min-w-[18px] items-center bg-white/20">
@@ -240,7 +240,7 @@ export default function ViewStamp() {
                         : "text-xs font-poppins-medium text-slate-400 dark:text-slate-500"
                     }
                   >
-                    {t(`storeManager.stamp.tabs.${tab.key}`)}
+                    {t(`store_manager.stamp.tabs.${tab.key}`)}
                   </Text>
                   {count > 0 && (
                     <View className={`rounded-full min-w-[18px] items-center px-1.5 ${active ? "bg-white/20" : ""}`}>
@@ -268,17 +268,17 @@ export default function ViewStamp() {
             </View>
             <Text className="text-sm font-poppins-bold text-slate-500 dark:text-slate-300">
               {activeTab === "draft"
-                ? t("storeManager.stamp.emptyDraftTitle")
+                ? t("store_manager.stamp.emptyDraftTitle")
                 : activeTab === "active"
-                  ? t("storeManager.stamp.emptyActiveTitle")
-                  : t("storeManager.stamp.emptyEndedTitle")}
+                  ? t("store_manager.stamp.emptyActiveTitle")
+                  : t("store_manager.stamp.emptyEndedTitle")}
             </Text>
             <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500 text-center">
               {activeTab === "active"
-                ? t("storeManager.stamp.emptyActiveBody")
+                ? t("store_manager.stamp.emptyActiveBody")
                 : activeTab === "draft"
-                  ? t("storeManager.stamp.emptyDraftBody")
-                  : t("storeManager.stamp.emptyEndedBody")}
+                  ? t("store_manager.stamp.emptyDraftBody")
+                  : t("store_manager.stamp.emptyEndedBody")}
             </Text>
           </View>
         </View>
@@ -324,7 +324,7 @@ export default function ViewStamp() {
 
           {activeTab === "active" && activeStamps.length === 0 && (
             <Button
-              label={t("storeManager.stamp.createProgram")}
+              label={t("store_manager.stamp.createProgram")}
               onPress={() => router.push({ pathname: "/(store_manager)/stamp/configure-stamp", params: { storeId } })}
               variant="primary"
               fullWidth

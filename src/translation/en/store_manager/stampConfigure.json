@@ -1,0 +1,41 @@
+{
+  "editTitle": "Edit Stamp Program",
+  "newTitle": "New Stamp Program",
+  "cannotEditTitle": "Cannot Edit",
+  "cannotEditDefault": "This stamp program cannot be edited.",
+  "stampsRequiredInvalid": "Please enter a valid number of stamps required.",
+  "selectReward": "Please select a reward for this stamp program.",
+  "expirationDaysInvalid": "Please enter a valid number of days for card expiration.",
+  "successUpdate": "Stamp program updated successfully!",
+  "successCreate": "Stamp program created successfully!",
+  "saveFailed": "Failed to create stamp program.",
+  "stampDetails": "Stamp Details",
+  "stampDetailsBody": "Set the rules for your digital loyalty card.",
+  "beforeYouStart": "Before You Start",
+  "rule1": "Only 1 stamp program can be active per store at a time.",
+  "rule2": "When you end a program, users cannot earn new stamps, but can still redeem during the grace period.",
+  "stampsToRedeem": "Stamps Required to Redeem",
+  "reward": "Reward",
+  "clear": "Clear",
+  "noRewardsTitle": "No rewards yet",
+  "noRewardsBody": "You need at least one reward before launching a stamp program.",
+  "createReward": "Create a Reward",
+  "loadingReward": "Loading reward…",
+  "chooseReward": "Tap to choose a reward",
+  "opensList": "Opens a searchable list",
+  "expirationMode": "Expiration Mode",
+  "expirationModeHint": "Choose how stamp cards expire for your customers.",
+  "expirationDays": "Expiration Period (days)",
+  "expirationDaysPlaceholder": "e.g. 30",
+  "launchProgram": "Launch Stamp Program",
+  "expiration": {
+    "none": {
+      "label": "No Expiration",
+      "description": "Stamps never expire until the user completes the card."
+    },
+    "card": {
+      "label": "Card Expiration",
+      "description": "The entire stamp card expires if not completed within a set number of days."
+    }
+  }
+}

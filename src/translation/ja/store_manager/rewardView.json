@@ -1,0 +1,16 @@
+{
+  "title": "リワード",
+  "description": "交換アイテムの詳細",
+  "loading": "リワードを読み込み中...",
+  "notFoundTitle": "リワードが見つかりません",
+  "deleteBlockedTitle": "おっと！",
+  "deleteBlockedMessage": "このリワードは有効なスタンププログラムの景品として使用中で、在庫が残っている間は削除できません。在庫をなくすかスタンププログラムを更新してください。",
+  "verifyStampError": "スタンププログラムとの関連を確認できませんでした。",
+  "deleteTitle": "リワードを削除しますか？",
+  "deleteMessage": "「{{title}}」を削除します。この操作は取り消せません。",
+  "deleteError": "リワードを削除できませんでした。",
+  "pointsCost": "必要ポイント",
+  "stock": "在庫",
+  "delete": "削除",
+  "edit": "編集"
+}

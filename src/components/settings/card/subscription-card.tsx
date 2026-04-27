@@ -67,12 +67,6 @@ export function SubscriptionCard() {
             {planLabel}
           </Text>
         </View>
-
-        {loading ? (
-          <ActivityIndicator size="small" color="#94a3b8" />
-        ) : (
-          <ChevronRight size={15} color="#94a3b8" />
-        )}
       </TouchableOpacity>
     </View>
   );

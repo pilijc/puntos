@@ -1,0 +1,62 @@
+{
+  "transactionModal": {
+    "title": "Enter Purchase Amount",
+    "description": "Enter the customer's purchase amount to calculate points."
+  },
+  "title": "Scan QR Code",
+  "store": "Current Store",
+  "scan": {
+    "title": "Ready to Scan",
+    "description": "Enter the purchase amount to start scanning QR codes"
+  },
+  "recent": {
+    "title": "Recent Transactions",
+    "view": "View All",
+    "empty": "No transactions yet",
+    "purchase": "Purchase",
+    "time": {
+      "justNow": "Just now",
+      "minute": "minute ago",
+      "minutes": "minutes ago",
+      "hour": "hour ago",
+      "hours": "hours ago",
+      "day": "day ago",
+      "days": "days ago"
+    }
+  },
+  "success": {
+    "title": "Success!",
+    "pointsAwarded": "Points Awarded",
+    "scanAnother": "Scan Another"
+  },
+  "camera": {
+    "title": "Position the QR code within the frame",
+    "description": "The Scanner will automatically detect and process the QR Code",
+    "permission": {
+      "title": "Camera Access Required",
+      "description": "Allow camera access to scan QR codes and awards points to customer"
+    }
+  },
+  "error": {
+    "qr": {
+      "title": "QR Code Failed",
+      "description": "Failed to process QR code. Please try again."
+    },
+    "amount": {
+      "invalid": "Invalid Amount",
+      "lessThanZero": "Please enter a valid purchase amount greater than 0."
+    },
+    "unknown": "Something went wrong. Please try again."
+  },
+  "access": {
+    "checking": "Checking QR access...",
+    "disabled": "QR Access Disabled",
+    "disabledDetail": "Only the store manager can enable QR scanning.",
+    "wait": "Please wait for the store manager to enable this feature."
+  },
+  "passwordSetup": {
+    "title": "Password Setup Required",
+    "message": "Complete your password setup to access all dashboard features and ensure proper account security.",
+    "button": "Set Password"
+  }
+}

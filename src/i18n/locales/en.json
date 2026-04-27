@@ -52,6 +52,10 @@
                 "invalidLogin": "Invalid login credentials"
             }
         },
+        "sessionExpired": {
+            "title": "Session ended",
+            "message": "Your session has expired for security reasons. Please sign in again to continue."
+        },
         "forgotPassword": {
             "title": "Forgot password",
             "subtitle": "Enter your email address and we'll send you a link to reset your password.",
@@ -104,9 +108,9 @@
             }
         },
         "signup": {
-            "title": "Sign Up",
-            "titleManager": "Sign Up as Store Manager",
-            "button": "Sign Up",
+            "title": "Sign up",
+            "titleManager": "Sign up as Store Manager",
+            "button": "Sign up",
             "divider": "or continue with",
             "google": "Continue with Google",
             "creating": "Creating Account...",
@@ -172,6 +176,28 @@
                     "email": "email@domain.com",
                     "password": "Enter your password",
                     "confirmPassword": "Confirm your password"
+                }
+            },
+            "terms": {
+                "1": {
+                    "title": "Account & eligibility",
+                    "description": "You must provide accurate information. You are responsible for keeping your account secure."
+                },
+                "2": {
+                    "title": "Use of the app",
+                    "description": "Do not misuse the service or attempt to access restricted features. We may update or suspend features to improve reliability."
+                },
+                "3": {
+                    "title": "Privacy",
+                    "description": "We process personal data to provide the service. We do not sell your personal information."
+                },
+                "4": {
+                    "title": "Payments (if applicable)",
+                    "description": "Subscriptions renew until cancelled. Charges are non-refundable unless required by law."
+                },
+                "5": {
+                    "title": "Updates",
+                    "description": "These terms may change. Continued use means you accept the updated terms."
                 }
             }
         }
@@ -1054,6 +1080,52 @@
         },
         "subscription": {
             "title": "Subscription",
+            "billing": {
+                "title": "Billing & Subscription",
+                "activePlanBadge": "Active plan",
+                "free": "Free",
+                "perMonth": "/mo",
+                "estimatedCost": "Estimated cost",
+                "upgradeToPro": "Upgrade to Pro",
+                "cancelSubscription": "Cancel Subscription",
+                "fallbackPlanName": {
+                    "pro": "Pro plan"
+                },
+                "period": {
+                    "accessUntil": "Access until",
+                    "nextPayment": "Next payment"
+                },
+                "messages": {
+                    "accessUntilNoBill": "Your subscription will remain active until {{date}}. You will not be billed again."
+                },
+                "errors": {
+                    "mustBeSignedInToSubscribe": "You must be signed in to subscribe.",
+                    "checkoutStartFailed": "Could not start checkout. Your session may be invalid. Please log in again and retry.",
+                    "pleaseTryAgain": "Please try again."
+                },
+                "cancel": {
+                    "confirmTitle": "Cancel subscription?",
+                    "confirmMessage": "You will keep your current benefits until the end of this billing period. After that date you will not be charged again.",
+                    "goBack": "Go back",
+                    "confirmCta": "Confirm cancel",
+                    "failedTitle": "Could not cancel",
+                    "successTitle": "Subscription"
+                },
+                "recentBilling": {
+                    "title": "Recent billing",
+                    "subtitle": "Payment history for your account."
+                },
+                "invoices": {
+                    "empty": "No invoices yet.",
+                    "end": "You've reached the end.",
+                    "columns": {
+                        "paymentReference": "Payment reference",
+                        "paidDate": "Paid date",
+                        "status": "Status",
+                        "amount": "Amount"
+                    }
+                }
+            },
             "welcome": {
                 "planBadge": "Basic plan",
                 "headline": "You're on Basic",

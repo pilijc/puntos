@@ -17,6 +17,7 @@ import { useTranslation } from "react-i18next";
 import TranslateButton from "@/components/ui/translate-button";
 import { AppHeader } from "@/components/header";
 import { Button } from "@/components/button";
+import { Modal, type ModalButton } from "@/components/modal";
 
 export default function SignUp() {
   const { t: translate } = useTranslation();
@@ -26,8 +27,10 @@ export default function SignUp() {
   const [currentStep, setCurrentStep] = useState(() => (isWeb ? 1 : 0));
   const totalSteps = 4;
   const [loading, setLoading] = useState(false);
-  const [loadingGoogle, setLoadingGoogle] = useState(false);
   const isSigningUp = useRef(false);
+  const [loadingGoogle, setLoadingGoogle] = useState(false);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [role, setRole] = useState(() => (isWeb ? "manager" : "user"));
   const {
     name,
     setName,
@@ -42,12 +45,13 @@ export default function SignUp() {
     showConfirmPassword,
     setShowConfirmPassword,
     reset,
+    resetAuthForm,
   } = useAuthStore();
-
-  const [acceptedTerms, setAcceptedTerms] = useState(false);
-
-  const [role, setRole] = useState(() => (isWeb ? "manager" : "user"));
-
+  const [modal, setModal] = useState<{
+    title: string;
+    message: string;
+    buttons: ModalButton[];
+  } | null>(null);
   const [errors, setErrors] = useState({
     name: '',
     email: '',
@@ -191,16 +195,19 @@ export default function SignUp() {
 
     try {
       setLoading(true);
-      console.log("Starting signup with role:", role);
       const data = await signUpService(email, password, name, role);
-      console.log("Signup service completed successfully, data:", data);
-      reset();
       setAcceptedTerms(false);
       setRole('user');
       setCurrentStep(1);
 
-      Alert.alert(translate("onboarding.login.welcome"), translate("onboarding.signup.success"));
-      console.log("About to redirect to:", data.homeRoute ?? "/(user)");
+      setModal({
+        title: translate("onboarding.login.welcome"),
+        message: translate("onboarding.signup.success"),
+        buttons: [
+          { label: "OK", variant: "primary", onPress: () => router.replace(data.homeRoute ?? "/(user)") },
+        ],
+      });
+      resetAuthForm();
       router.replace(data.homeRoute ?? "/(user)");
     } catch (error: any) {
       if (error?.message?.includes("already registered") ||
@@ -210,16 +217,15 @@ export default function SignUp() {
           ...prev,
           email: translate("onboarding.signup.error.emailRegistered"),
         }));
-        Alert.alert(translate("onboarding.signup.error.failed"), translate("onboarding.signup.error.emailRegistered"), [
-          {
-            text: translate("onboarding.signup.error.tryDifferentEmail"),
-            onPress: () => setCurrentStep(2)
-          },
-          {
-            text: translate("onboarding.signup.error.goToLogin"),
-            onPress: () => router.replace("/(auth)/login")
-          }
-        ]);
+        setModal({
+          title: translate("onboarding.signup.error.failed"),
+          message: translate("onboarding.signup.error.emailRegistered"),
+          buttons: [
+            { label: "OK", variant: "primary", onPress: () => setCurrentStep(2) },
+            { label: "Try Different Email", variant: "secondary", onPress: () => setCurrentStep(2) },
+            { label: "Go to Login", variant: "secondary", onPress: () => router.replace("/(auth)/login") },
+          ],
+        });
       } else {
         if (error.name === "AccountBlockedError") {
         const { useAuthStore } = require("@/store/auth-store");
@@ -243,7 +249,6 @@ export default function SignUp() {
 
   const handleStoreManagerSignup = async () => {
     if (isSigningUp.current) {
-      console.log("Store Manager signup already in progress (ref check), ignoring call");
       return;
     }
 
@@ -251,16 +256,19 @@ export default function SignUp() {
 
     try {
       setLoading(true);
-      console.log("Starting store manager signup with role:", role);
       const data = await signUpService(email, password, name, role);
-      console.log("Store manager signup service completed successfully, data:", data);
       reset();
       setAcceptedTerms(false);
       setRole('user');
       setCurrentStep(1);
 
-      Alert.alert(translate("onboarding.login.welcome"), translate("onboarding.signup.successManager"));
-      console.log("About to redirect to:", data.homeRoute ?? "/(store_manager)");
+      setModal({
+        title: translate("onboarding.login.welcome"),
+        message: translate("onboarding.signup.successManager"),
+        buttons: [
+          { label: "OK", variant: "primary", onPress: () => router.replace(data.homeRoute ?? "/(store_manager)") },
+        ],
+      });
       router.replace(data.homeRoute ?? "/(store_manager)");
     } catch (error: any) {
       if (error?.message?.includes("already registered") ||
@@ -270,16 +278,15 @@ export default function SignUp() {
           ...prev,
           email: translate("onboarding.signup.error.emailRegistered"),
         }));
-        Alert.alert(translate("onboarding.signup.error.failedManager"), translate("onboarding.signup.error.emailRegistered"), [
-          {
-            text: translate("onboarding.signup.error.tryDifferentEmail"),
-            onPress: () => setCurrentStep(2)
-          },
-          {
-            text: translate("onboarding.signup.error.goToLogin"),
-            onPress: () => router.replace("/(auth)/login")
-          }
-        ]);
+        setModal({
+          title: translate("onboarding.signup.error.failedManager"),
+          message: translate("onboarding.signup.error.emailRegistered"),
+          buttons: [
+            { label: "OK", variant: "primary", onPress: () => setCurrentStep(2) },
+            { label: "Try Different Email", variant: "secondary", onPress: () => setCurrentStep(2) },
+            { label: "Go to Login", variant: "secondary", onPress: () => router.replace("/(auth)/login") },
+          ],
+        });
       } else {
         if (error.name === "AccountBlockedError") {
         const { useAuthStore } = require("@/store/auth-store");
@@ -290,7 +297,13 @@ export default function SignUp() {
         ...prev,
         password: error?.message ?? translate("onboarding.signup.error.failedManager"),
       }));
-      Alert.alert(translate("onboarding.signup.error.failedManager"), error?.message ?? translate("onboarding.signup.error.failedManager"));
+      setModal({
+        title: translate("onboarding.signup.error.failedManager"),
+        message: error?.message ?? translate("onboarding.signup.error.failedManager"),
+        buttons: [
+          { label: "OK", variant: "primary", onPress: () => setCurrentStep(2) },
+        ],
+      });
       }
       setLoading(false);
       isSigningUp.current = false;
@@ -306,7 +319,13 @@ export default function SignUp() {
       const data = await signUpWithGoogleService();
       if (!data) { return; }
 
-      Alert.alert(translate("onboarding.login.welcome"), translate("onboarding.signup.success"));
+      setModal({
+        title: translate("onboarding.login.welcome"),
+        message: translate("onboarding.signup.success"),
+        buttons: [
+          { label: "OK", variant: "primary", onPress: () => router.replace(data.homeRoute ?? "/(user)") },
+        ],
+      });
       router.replace(data.homeRoute ?? "/(user)");
     } catch (error: any) {
       if (error.name === "AccountBlockedError") {
@@ -316,10 +335,14 @@ export default function SignUp() {
       }
       setLoadingGoogle(false);
       reset();
-      const message =
-        error?.msg ??
-        (typeof error?.message === "string" ? error.message : "Something went wrong");
-      Alert.alert(translate("onboarding.signup.error.googleFailed"), message);
+      const message = error?.msg ?? error?.message ?? "Something went wrong";
+      setModal({
+        title: translate("onboarding.signup.error.googleFailed"),
+        message,
+        buttons: [
+          { label: "OK", variant: "primary", onPress: () => router.replace("/(auth)/login") },
+        ],
+      });
     } finally {
       setLoadingGoogle(false);
     }
@@ -327,6 +350,13 @@ export default function SignUp() {
 
   return (
     <SafeAreaView className={isWeb ? "flex-1 bg-slate-50 dark:bg-darkBackground" : "flex-1 bg-white dark:bg-darkBackground"}>
+      <Modal
+        visible={!!modal}
+        onClose={() => setModal(null)}
+        title={modal?.title ?? ""}
+        message={modal?.message}
+        buttons={modal?.buttons}
+      />
       <AppHeader
         title={""}
         onBackPress={handleBack}
@@ -424,6 +454,8 @@ export default function SignUp() {
                             <Button
                               label={translate("onboarding.signup.google")}
                               onPress={handleSignupWithGoogle}
+                              loading={loadingGoogle}
+                              disabled={loadingGoogle}
                               variant="secondary"
                               fullWidth={true}
                               authButton={true}
@@ -504,7 +536,7 @@ export default function SignUp() {
                   <Button
                     label={loading ? translate("onboarding.signup.creating") : (currentStep === totalSteps ? translate("onboarding.signup.button") : translate("onboarding.signup.continue"))}
                     onPress={handleNext}
-                    disabled={loading}
+                    disabled={loading || (currentStep === 4 && !acceptedTerms)}
                     loading={loading}
                     fullWidth={true}
                     authButton={true}
@@ -523,6 +555,8 @@ export default function SignUp() {
                       <Button
                         label={translate("onboarding.signup.google")}
                         onPress={handleSignupWithGoogle}
+                        loading={loadingGoogle}
+                        disabled={loadingGoogle}
                         variant="secondary"
                         fullWidth={true}
                         authButton={true}

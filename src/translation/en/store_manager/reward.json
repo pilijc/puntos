@@ -1,0 +1,13 @@
+{
+  "description": "Redeemable items for your customers",
+  "rewardCount": "{{count}} reward",
+  "rewardCount_plural": "{{count}} rewards",
+  "subtitle": "Items customers can redeem with points",
+  "loading": "Loading rewards...",
+  "emptyTitle": "No rewards yet",
+  "emptyBody": "Create redeemable rewards that customers can claim using their loyalty points.",
+  "addFirst": "Add First Reward",
+  "pts": "{{points}} pts",
+  "stockLeft": "{{count}} left",
+  "outOfStock": "Out of stock"
+}

@@ -53,7 +53,7 @@ function StoreCard({ store, translate }: { store: any; translate: any }) {
         </View>
         <View className="ml-3 flex-1">
           <Text className="text-[13px] font-poppins-bold text-textPrimary dark:text-darkTextPrimary">
-            {store.name ?? store.store_name ?? translate("superAdmin.users.unnamedStore")}
+            {store.name ?? store.store_name ?? translate("super_admin.users.unnamedStore")}
           </Text>
           {(store.phone ?? store.contact_number ?? store.phoneNumber) ? (
             <View className="flex-row items-center mt-1">
@@ -116,10 +116,10 @@ function UserContent({
         <View className={`px-2.5 py-1 rounded-lg ${getBadge(selectedUser).bg}`}>
           <Text className={`text-[9px] font-poppins-bold uppercase ${getBadge(selectedUser).text}`}>
             {selectedUser.status === "Blocked"
-              ? translate("superAdmin.users.status.blocked", { defaultValue: "Blocked" })
+              ? translate("super_admin.users.status.blocked", { defaultValue: "Blocked" })
               : selectedUser.roleLabel
-              ? translate(`superAdmin.users.roles.${selectedUser.roleLabel.toLowerCase().replace(/[\s-]/g, "")}`, { defaultValue: selectedUser.roleLabel })
-              : translate("superAdmin.users.roles.user", { defaultValue: "User" })}
+              ? translate(`super_admin.users.roles.${selectedUser.roleLabel.toLowerCase().replace(/[\s-]/g, "")}`, { defaultValue: selectedUser.roleLabel })
+              : translate("super_admin.users.roles.user", { defaultValue: "User" })}
           </Text>
         </View>
       </View>
@@ -130,7 +130,7 @@ function UserContent({
           <View className="flex-row items-center mb-2">
             <MaterialIcons name="business" size={11} color={COLORS.primary} />
             <Text className="text-[10px] font-poppins-bold text-textMuted uppercase tracking-wider ml-1">
-              {translate("superAdmin.users.managedStores")}
+              {translate("super_admin.users.managedStores")}
             </Text>
             <View className="ml-2 bg-primary/10 px-1.5 py-0.5 rounded-full">
               <Text className="text-[9px] font-poppins-bold text-primary">
@@ -176,7 +176,7 @@ function UserContent({
                       </View>
                       <View className="ml-3 flex-1">
                         <Text className="text-[13px] font-poppins-bold text-textPrimary dark:text-darkTextPrimary">
-                          {store.name ?? store.store_name ?? translate("superAdmin.users.unnamedStore")}
+                          {store.name ?? store.store_name ?? translate("super_admin.users.unnamedStore")}
                         </Text>
                         {(store.phone ?? store.contact_number ?? store.phoneNumber) ? (
                           <View className="flex-row items-center mt-1">
@@ -227,7 +227,7 @@ function UserContent({
         <View className="flex-row items-center bg-amber-50 dark:bg-amber-500/10 border border-amber-100 dark:border-amber-500/20 rounded-xl px-3 py-2.5">
           <MaterialIcons name="info-outline" size={14} color="#D97706" />
           <Text className="text-[11px] font-poppins-medium text-amber-700 dark:text-amber-500 ml-2">
-            {translate("superAdmin.users.noStoresAssigned")}
+            {translate("super_admin.users.noStoresAssigned")}
           </Text>
         </View>
       )}
@@ -238,7 +238,7 @@ function UserContent({
           <View className="flex-row items-center mb-2">
             <MaterialIcons name="storefront" size={11} color={COLORS.primary} />
             <Text className="text-[10px] font-poppins-bold text-textMuted uppercase tracking-wider ml-1">
-              {translate("superAdmin.users.branchAssignment")}
+              {translate("super_admin.users.branchAssignment")}
             </Text>
           </View>
           {stores.map((store: any, i: number) => (
@@ -359,8 +359,8 @@ export function BlockUserModal({
     if (!visible || !selectedUser) return null;
 
     const actionLabel = willBlock
-      ? translate("superAdmin.users.blockModal.blockAction")
-      : translate("superAdmin.users.blockModal.unblockAction");
+      ? translate("super_admin.users.blockModal.blockAction")
+      : translate("super_admin.users.blockModal.unblockAction");
 
     return (
       <RNView style={StyleSheet.absoluteFillObject} pointerEvents="box-none">
@@ -409,8 +409,8 @@ export function BlockUserModal({
               }}
             >
               {willBlock
-                ? translate("superAdmin.users.blockModal.blockTitle")
-                : translate("superAdmin.users.blockModal.unblockTitle")}
+                ? translate("super_admin.users.blockModal.blockTitle")
+                : translate("super_admin.users.blockModal.unblockTitle")}
             </Text>
             <Pressable
               onPress={onClose}
@@ -444,8 +444,8 @@ export function BlockUserModal({
               }}
             >
               {willBlock
-                ? translate("superAdmin.users.blockModal.blockMessage")
-                : translate("superAdmin.users.blockModal.unblockMessage")}
+                ? translate("super_admin.users.blockModal.blockMessage")
+                : translate("super_admin.users.blockModal.unblockMessage")}
             </Text>
 
             {/* User info + stores */}
@@ -497,17 +497,17 @@ export function BlockUserModal({
       visible={visible}
       onClose={onClose}
       title={willBlock
-        ? translate("superAdmin.users.blockModal.blockTitle")
-        : translate("superAdmin.users.blockModal.unblockTitle")}
+        ? translate("super_admin.users.blockModal.blockTitle")
+        : translate("super_admin.users.blockModal.unblockTitle")}
       message={willBlock
-        ? translate("superAdmin.users.blockModal.blockMessage")
-        : translate("superAdmin.users.blockModal.unblockMessage")}
+        ? translate("super_admin.users.blockModal.blockMessage")
+        : translate("super_admin.users.blockModal.unblockMessage")}
       buttons={[
         { label: translate("label.cancel"), onPress: onClose, variant: "secondary" },
         {
           label: willBlock
-            ? translate("superAdmin.users.blockModal.blockAction")
-            : translate("superAdmin.users.blockModal.unblockAction"),
+            ? translate("super_admin.users.blockModal.blockAction")
+            : translate("super_admin.users.blockModal.unblockAction"),
           onPress: onConfirm,
           variant: willBlock ? "danger" : "success",
           loading: updatingUserId === selectedUser?.id,

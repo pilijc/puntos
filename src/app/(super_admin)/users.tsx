@@ -1,5 +1,5 @@
 import React, { useCallback } from "react";
-import { ActivityIndicator, RefreshControl, StatusBar, FlatList, Platform } from "react-native";
+import { ActivityIndicator, RefreshControl, ScrollView, StatusBar, FlatList, Platform, NativeSyntheticEvent, NativeScrollEvent } from "react-native";
 import { View, Text } from "@/tw";
 import { ScreenWrapper } from "@/components/ui/screen-wrapper";
 import { UsersModal as Modal } from "@/components/users/UsersModal";
@@ -46,6 +46,16 @@ export default function UsersScreen() {
   } = useSuperAdminUsers();
   const { t: translate } = useTranslation();
 
+  const handleWebScroll = useCallback(
+    (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+      const { contentOffset, layoutMeasurement, contentSize } = event.nativeEvent;
+      if (contentOffset.y + layoutMeasurement.height >= contentSize.height - 200) {
+        onEndReached();
+      }
+    },
+    [onEndReached]
+  );
+
   const renderItem = useCallback(
     ({ item }: { item: any }) => (
       <UserListItem item={item} onPress={openBlockModal} />
@@ -56,66 +66,141 @@ export default function UsersScreen() {
   return (
     <ScreenWrapper className="flex-1 bg-background dark:bg-darkBackground">
       <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
-      <UsersSearchHeader
-        search={search}
-        onSearchChange={setSearch}
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
-        statusFilter={statusFilter}
-        onFilterPress={() => setShowFilterModal(true)}
-        counts={tabCounts()}
-      />
-      {loading && !refreshing && listData.length === 0 ? (
-        <View className="flex-1 justify-center items-center">
-          <ActivityIndicator size="large" color={COLORS.primary} />
-        </View>
-      ) : (
-        <FlatList
-          data={listData}
-          renderItem={renderItem}
-          keyExtractor={(item) =>
-            item.isHeader ? `header-${item.title}` : `user-${item.id}`
-          }
-          getItemLayout={getItemLayout}
-          stickyHeaderIndices={stickyHeaders}
-          contentContainerStyle={[
-            {
-              paddingBottom: 110,
-              paddingTop: isWeb ? 8 : 0,
-            },
-            isWeb && {
-              width: "100%",
-              maxWidth: 1000,
-              alignSelf: "center",
-              paddingHorizontal: 16,
-            },
-          ]}
-          style={isWeb ? { backgroundColor: isDark ? "#111827" : "#F8FAFC" } : undefined}
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-          }
-          onEndReached={onEndReached}
-          onEndReachedThreshold={0.5}
-          removeClippedSubviews={true}
-          initialNumToRender={15}
-          maxToRenderPerBatch={10}
-          windowSize={10}
-          ListFooterComponent={
-            loadingMore ? (
-              <View className="py-4 items-center">
-                <ActivityIndicator size="small" color={COLORS.primary} />
-              </View>
-            ) : null
-          }
-          ListEmptyComponent={
-            <View className="items-center justify-center pt-20">
-              <Text className={`${TYPO.subtitle} dark:text-darkTextSecondary`}>
-                {translate("superAdmin.users.noUsersFound")}
-              </Text>
-            </View>
-          }
+      
+      {/* ── Title Header ── */}
+      {/* On Web, show the Title Header full-width here. On Mobile, show nothing as it is part of the standard call below. */}
+      {isWeb && (
+        <UsersSearchHeader
+          search={search}
+          onSearchChange={setSearch}
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          statusFilter={statusFilter}
+          onFilterPress={() => setShowFilterModal(true)}
+          counts={tabCounts()}
+          hideControls={true}
         />
       )}
+      
+      {/* On Mobile, keep the original full header outside ScrollView */}
+      {!isWeb && (
+        <UsersSearchHeader
+          search={search}
+          onSearchChange={setSearch}
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          statusFilter={statusFilter}
+          onFilterPress={() => setShowFilterModal(true)}
+          counts={tabCounts()}
+        />
+      )}
+
+      {isWeb ? (
+        <ScrollView
+          className="flex-1"
+          contentContainerStyle={{
+            paddingHorizontal: 16,
+            paddingTop: 16,
+            paddingBottom: 110,
+            alignItems: "center" as const,
+          }}
+          showsVerticalScrollIndicator={false}
+          onScroll={handleWebScroll}
+          scrollEventThrottle={200}
+        >
+          <View style={{ maxWidth: 896 }} className="w-full">
+            <UsersSearchHeader
+              search={search}
+              onSearchChange={setSearch}
+              activeTab={activeTab}
+              onTabChange={setActiveTab}
+              statusFilter={statusFilter}
+              onFilterPress={() => setShowFilterModal(true)}
+              counts={tabCounts()}
+              hideTitle={true}
+            />
+
+            {loading && !refreshing && listData.length === 0 ? (
+              <View className="flex-1 justify-center items-center py-20">
+                <ActivityIndicator size="large" color={COLORS.primary} />
+              </View>
+            ) : (
+              <FlatList
+                data={listData}
+                renderItem={renderItem}
+                keyExtractor={(item) =>
+                  item.isHeader ? `header-${item.title}` : `user-${item.id}`
+                }
+                getItemLayout={getItemLayout}
+                stickyHeaderIndices={stickyHeaders}
+                contentContainerStyle={{ paddingBottom: 16 }}
+                scrollEnabled={false}
+                removeClippedSubviews={false}
+                initialNumToRender={15}
+                ListFooterComponent={
+                  loadingMore ? (
+                    <View className="py-4 items-center">
+                      <ActivityIndicator size="small" color={COLORS.primary} />
+                    </View>
+                  ) : null
+                }
+                ListEmptyComponent={
+                  <View className="items-center justify-center pt-20">
+                    <Text className={`${TYPO.subtitle} dark:text-darkTextSecondary`}>
+                      {translate("super_admin.users.noUsersFound")}
+                    </Text>
+                  </View>
+                }
+              />
+            )}
+          </View>
+        </ScrollView>
+      ) : (
+        <View className="flex-1 px-0">
+          {loading && !refreshing && listData.length === 0 ? (
+            <View className="flex-1 justify-center items-center">
+              <ActivityIndicator size="large" color={COLORS.primary} />
+            </View>
+          ) : (
+            <FlatList
+              data={listData}
+              renderItem={renderItem}
+              keyExtractor={(item) =>
+                item.isHeader ? `header-${item.title}` : `user-${item.id}`
+              }
+              getItemLayout={getItemLayout}
+              stickyHeaderIndices={stickyHeaders}
+              contentContainerStyle={{
+                paddingBottom: 110,
+              }}
+              refreshControl={
+                <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+              }
+              onEndReached={onEndReached}
+              onEndReachedThreshold={0.5}
+              removeClippedSubviews={true}
+              initialNumToRender={15}
+              maxToRenderPerBatch={10}
+              windowSize={10}
+              ListFooterComponent={
+                loadingMore ? (
+                  <View className="py-4 items-center">
+                    <ActivityIndicator size="small" color={COLORS.primary} />
+                  </View>
+                ) : null
+              }
+              ListEmptyComponent={
+                <View className="items-center justify-center pt-20">
+                  <Text className={`${TYPO.subtitle} dark:text-darkTextSecondary`}>
+                    {translate("super_admin.users.noUsersFound")}
+                  </Text>
+                </View>
+              }
+            />
+          )}
+        </View>
+      )}
+
       <BlockUserModal
         visible={showBlockModal}
         selectedUser={selectedUser}

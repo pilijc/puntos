@@ -63,8 +63,8 @@ export default function ViewReward() {
       const linkedToStamp = await isStoreRewardLinkedToStampProgram(storeId, rewardId);
       if (linkedToStamp && reward.stock > 0) {
         setModal({
-          title: t("storeManager.rewardView.deleteBlockedTitle"),
-          message: t("storeManager.rewardView.deleteBlockedMessage"),
+          title: t("label.oops"),
+          message: t("store_manager.rewardView.deleteBlockedMessage"),
           buttons: [{ label: t("label.ok"), variant: "secondary", onPress: () => setModal(null) }],
         });
         return;
@@ -72,15 +72,15 @@ export default function ViewReward() {
     } catch (e) {
       setModal({
         title: t("label.error"),
-        message: (e as Error).message ?? t("storeManager.rewardView.verifyStampError"),
+        message: (e as Error).message ?? t("store_manager.rewardView.verifyStampError"),
         buttons: [{ label: t("label.ok"), onPress: () => setModal(null), variant: "secondary" }],
       });
       return;
     }
 
     setModal({
-      title: t("storeManager.rewardView.deleteTitle"),
-      message: t("storeManager.rewardView.deleteMessage", { title: reward.title }),
+      title: t("store_manager.rewardView.deleteTitle"),
+      message: t("store_manager.rewardView.deleteMessage", { title: reward.title }),
       buttons: [
         { label: t("label.cancel"), variant: "secondary", onPress: () => setModal(null) },
         {
@@ -95,7 +95,7 @@ export default function ViewReward() {
             } catch (e) {
               setModal({
                 title: t("label.error"),
-                message: (e as Error).message ?? t("storeManager.rewardView.deleteError"),
+                message: (e as Error).message ?? t("store_manager.rewardView.deleteError"),
                 buttons: [{ label: t("label.ok"), onPress: () => setModal(null), variant: "secondary" }],
               });
             } finally {
@@ -118,8 +118,8 @@ export default function ViewReward() {
       />
 
       <AppHeader
-        title={t("storeManager.rewardView.title")}
-        description={t("storeManager.rewardView.description")}
+        title={t("store_manager.rewardView.title")}
+        description={t("store_manager.rewardView.description")}
         onBackPress={() => {
           router.push({ pathname: "/(store_manager)/reward", params: { storeId } });
         }}
@@ -147,12 +147,12 @@ export default function ViewReward() {
             {loading ? (
               <View className="items-center justify-center py-20">
                 <ActivityIndicator size="large" color="#FF6600" />
-                <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500 mt-3">{t("storeManager.rewardView.loading")}</Text>
+                <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500 mt-3">{t("store_manager.rewardView.loading")}</Text>
               </View>
             ) : !reward ? (
               <View className="mx-4 bg-white dark:bg-neutral-800 rounded-xl border border-slate-100 dark:border-neutral-700 px-4 py-14 items-center gap-y-2">
                 <Gift size={36} color="#CBD5E1" />
-                <Text className="text-sm font-poppins-semibold text-slate-400 dark:text-slate-500">{t("storeManager.rewardView.notFoundTitle")}</Text>
+                <Text className="text-sm font-poppins-semibold text-slate-400 dark:text-slate-500">{t("store_manager.rewardView.notFoundTitle")}</Text>
               </View>
             ) : (
               <View className="mx-4 bg-white dark:bg-neutral-800 rounded-xl border border-slate-100 dark:border-neutral-700 p-4 gap-y-4">
@@ -173,15 +173,15 @@ export default function ViewReward() {
 
                 <View className="flex-row border-t border-slate-100 dark:border-neutral-700 pt-2 gap-y-2">
                   <View className="flex-1 border-r border-slate-100 dark:border-neutral-700 pr-3">
-                    <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">{t("storeManager.rewardView.pointsCost")}</Text>
+                    <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">{t("store_manager.rewardView.pointsCost")}</Text>
                     <View className="flex-row items-center gap-x-1 mt-0.5">
-                      <Text className="text-sm font-poppins-semibold text-textPrimary">{t("storeManager.reward.pts", { points: formatPoints(reward.points_cost) })}</Text>
+                      <Text className="text-sm font-poppins-semibold text-textPrimary">{t("store_manager.reward.pts", { points: formatPoints(reward.points_cost) })}</Text>
                     </View>
                   </View>
                   <View className="flex-1 pl-3">
-                    <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">{t("storeManager.rewardView.stock")}</Text>
+                    <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">{t("store_manager.rewardView.stock")}</Text>
                     <Text className="text-sm font-poppins-semibold text-slate-800 dark:text-slate-100 mt-0.5">
-                      {reward.stock > 0 ? t("storeManager.reward.stockLeft", { count: reward.stock }) : t("storeManager.reward.outOfStock")}
+                      {reward.stock > 0 ? t("store_manager.reward.stockLeft", { count: reward.stock }) : t("store_manager.reward.outOfStock")}
                     </Text>
                   </View>
                 </View>
@@ -189,7 +189,7 @@ export default function ViewReward() {
                 <View className="flex-row gap-x-2 pt-2">
                   <View className="flex-1">
                     <Button
-                      label={t("storeManager.rewardView.delete")}
+                      label={t("store_manager.rewardView.delete")}
                       onPress={handleDelete}
                       variant="danger"
                       fullWidth
@@ -199,7 +199,7 @@ export default function ViewReward() {
                   </View>
                   <View className="flex-1">
                     <Button
-                      label={t("storeManager.rewardView.edit")}
+                      label={t("label.edit")}
                       onPress={() =>
                         router.push({
                           pathname: "/(store_manager)/reward/add-rewards",
