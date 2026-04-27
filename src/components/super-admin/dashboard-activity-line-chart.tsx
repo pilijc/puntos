@@ -8,6 +8,7 @@ import Svg, {
   Path, Defs, LinearGradient, Stop, G,
   Text as SvgText,
 } from "react-native-svg";
+import { AnimatedChartLines } from "./animated-chart-lines";
 
 const isWeb = Platform.OS === "web";
 
@@ -24,23 +25,6 @@ interface DashboardActivityLineChartProps {
   onLoadMoreStores: () => void;
   onResetUsers?: () => void;
   onResetStores?: () => void;
-}
-
-/**
- * Generates a cubic bezier path string from an array of points
- */
-function getSmoothPath(points: { x: number; y: number }[]) {
-  if (points.length < 2) return "";
-  let d = `M ${points[0].x},${points[0].y}`;
-  
-  for (let i = 0; i < points.length - 1; i++) {
-    const p0 = points[i];
-    const p1 = points[i + 1];
-    const cp1x = p0.x + (p1.x - p0.x) / 2;
-    const cp2x = p0.x + (p1.x - p0.x) / 2;
-    d += ` C ${cp1x},${p0.y} ${cp2x},${p1.y} ${p1.x},${p1.y}`;
-  }
-  return d;
 }
 
 export function DashboardActivityLineChart({
@@ -78,18 +62,6 @@ export function DashboardActivityLineChart({
   const userPoints = useMemo(() => getPoints(userSeries), [userSeries, maxVal]);
   const storePoints = useMemo(() => getPoints(storeSeries), [storeSeries, maxVal]);
 
-  const userPath = useMemo(() => getSmoothPath(userPoints), [userPoints]);
-  const storePath = useMemo(() => getSmoothPath(storePoints), [storePoints]);
-
-  const getAreaPath = (smoothPath: string, points: { x: number; y: number }[]) => {
-    if (!smoothPath) return "";
-    return `${smoothPath} L ${points[points.length - 1].x},${chartBaseline} L ${points[0].x},${chartBaseline} Z`;
-  };
-
-  const userAreaPath = useMemo(() => getAreaPath(userPath, userPoints), [userPath, userPoints]);
-  const storeAreaPath = useMemo(() => getAreaPath(storePath, storePoints), [storePath, storePoints]);
-
-  // Y-axis tick values
   const yTicks = [0, 1, 2, 3, 4].map((i) => ({
     val: Math.round((maxVal / 4) * (4 - i)),
     y: CHART_PADDING_TOP + (i / 4) * chartHeight,
@@ -165,34 +137,20 @@ export function DashboardActivityLineChart({
             </G>
           ))}
 
-          {/* Areas (Smoothing applied) */}
-          <Path d={storeAreaPath} fill="url(#storeAreaGrad)" />
-          <Path d={userAreaPath} fill="url(#userAreaGrad)" />
-
-          {/* Lines (Smoothing applied) */}
-          <Path
-            d={storePath}
-            fill="none"
-            stroke="#3B82F6"
-            strokeWidth="3"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-          <Path
-            d={userPath}
-            fill="none"
-            stroke="#FF6600"
-            strokeWidth="3"
-            strokeLinecap="round"
-            strokeLinejoin="round"
+          {/* Animated lines + fill areas */}
+          <AnimatedChartLines
+            userPoints={userPoints}
+            storePoints={storePoints}
+            userSeries={userSeries}
+            storeSeries={storeSeries}
+            chartBaseline={chartBaseline}
           />
 
-          {/* Interactive highlight elements */}
+          {/* X-axis labels */}
           {labels.map((label, i) => {
             const up = userPoints[i];
             return (
               <G key={i}>
-                {/* X labels */}
                 <SvgText
                   x={up.x}
                   y={chartBaseline + 28}
@@ -208,7 +166,6 @@ export function DashboardActivityLineChart({
             );
           })}
         </Svg>
-
       </View>
 
       {/* ── Toggle Button Area ── */}
@@ -298,19 +255,19 @@ export function DashboardActivityLineChart({
                       </View>
                     </View>
                   ))}
-                    {userList.hasMore && (
-                      <View className="py-4 items-center border-t border-slate-50 dark:border-darkBorder/30">
-                        <TouchableOpacity
-                          onPress={onLoadMoreUsers}
-                          activeOpacity={0.7}
-                          className="flex-row items-center gap-2 bg-orange-50 dark:bg-orange-950/20 px-5 py-2.5 rounded-full border border-orange-100/50 dark:border-orange-900/10 shadow-sm shadow-orange-100/50"
-                        >
-                          <Text className="text-[11px] font-poppins-bold text-orange-600 uppercase tracking-tighter">
-                            {translate("super_admin.dashboard.showMore")}
-                          </Text>
-                        </TouchableOpacity>
-                      </View>
-                    )}
+                  {userList.hasMore && (
+                    <View className="py-4 items-center border-t border-slate-50 dark:border-darkBorder/30">
+                      <TouchableOpacity
+                        onPress={onLoadMoreUsers}
+                        activeOpacity={0.7}
+                        className="flex-row items-center gap-2 bg-orange-50 dark:bg-orange-950/20 px-5 py-2.5 rounded-full border border-orange-100/50 dark:border-orange-900/10 shadow-sm shadow-orange-100/50"
+                      >
+                        <Text className="text-[11px] font-poppins-bold text-orange-600 uppercase tracking-tighter">
+                          {translate("super_admin.dashboard.showMore")}
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                  )}
                 </>
               )}
             </View>
@@ -372,19 +329,19 @@ export function DashboardActivityLineChart({
                       </View>
                     </View>
                   ))}
-                    {storeList.hasMore && (
-                      <View className="py-4 items-center border-t border-slate-50 dark:border-darkBorder/30">
-                        <TouchableOpacity
-                          onPress={onLoadMoreStores}
-                          activeOpacity={0.7}
-                          className="flex-row items-center gap-2 bg-blue-50 dark:bg-blue-950/20 px-5 py-2.5 rounded-full border border-blue-100/50 dark:border-blue-900/10 shadow-sm shadow-blue-100/50"
-                        >
-                          <Text className="text-[11px] font-poppins-bold text-blue-600 uppercase tracking-tighter">
-                            {translate("super_admin.dashboard.showMore")}
-                          </Text>
-                        </TouchableOpacity>
-                      </View>
-                    )}
+                  {storeList.hasMore && (
+                    <View className="py-4 items-center border-t border-slate-50 dark:border-darkBorder/30">
+                      <TouchableOpacity
+                        onPress={onLoadMoreStores}
+                        activeOpacity={0.7}
+                        className="flex-row items-center gap-2 bg-blue-50 dark:bg-blue-950/20 px-5 py-2.5 rounded-full border border-blue-100/50 dark:border-blue-900/10 shadow-sm shadow-blue-100/50"
+                      >
+                        <Text className="text-[11px] font-poppins-bold text-blue-600 uppercase tracking-tighter">
+                          {translate("super_admin.dashboard.showMore")}
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                  )}
                 </>
               )}
             </View>
