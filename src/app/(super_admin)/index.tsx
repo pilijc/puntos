@@ -1,7 +1,9 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, Platform, RefreshControl, ScrollView } from "react-native";
+import { router } from "expo-router";
 import { SafeAreaView, Text, View, TouchableOpacity } from "@/tw";
-import { Users, Store, Activity, CalendarDays } from "lucide-react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Users, Store, Activity, CalendarDays, MessageSquare } from "lucide-react-native";
 import { useTranslation } from "react-i18next";
 
 import { useSuperAdminDashboard } from "@/hooks/super-admin/use-super-admin-dashboard";
@@ -17,11 +19,13 @@ import {
   STORE_DATE_KEYS,
 } from "@/services/super-admin/dashboard-analytics-service";
 
+
 const isWeb = Platform.OS === "web";
 
 export default function SuperAdminDashboard() {
   const { users, stores, adminInfo, loading, refreshing, activeStoresCount, onRefresh } = useSuperAdminDashboard();
   const { t: translate } = useTranslation();
+  const insets = useSafeAreaInsets();
 
   const [timeframe, setTimeframe] = useState<Timeframe>("7d");
   const [showDetails, setShowDetails] = useState(false);
@@ -52,9 +56,17 @@ export default function SuperAdminDashboard() {
 
   const userMetrics = useMemo(() => buildTimeframeSeries(users, USER_DATE_KEYS, timeframe), [users, timeframe]);
   const storeMetrics = useMemo(() => buildTimeframeSeries(stores, STORE_DATE_KEYS, timeframe), [stores, timeframe]);
-  const combinedSeries = useMemo(() => userMetrics.series.map((v, i) => v + (storeMetrics.series[i] ?? 0)), [userMetrics.series, storeMetrics.series]);
+  const combinedSeries = useMemo(
+    () => userMetrics.series.map((v, i) => v + (storeMetrics.series[i] ?? 0)),
+    [userMetrics.series, storeMetrics.series]
+  );
 
-  const peakIndex = useMemo(() => combinedSeries.findIndex((v) => v === Math.max(...combinedSeries, 0)), [combinedSeries]);
+
+
+  const peakIndex = useMemo(() => {
+    const peak = Math.max(...combinedSeries, 0);
+    return combinedSeries.findIndex((v) => v === peak);
+  }, [combinedSeries]);
   const mostActiveLabel = useMemo(() => userMetrics.labels[peakIndex] ?? "-", [peakIndex, userMetrics.labels]);
 
   const userList = useMemo(() => getDetailItems(users, USER_DATE_KEYS, "User", timeframe, userLimit), [users, timeframe, userLimit]);
@@ -173,6 +185,24 @@ export default function SuperAdminDashboard() {
           />
         </View>
       </ScrollView>
+
+      {/* Floating Action Button for Chat */}
+      <TouchableOpacity
+        onPress={() => router.push("/(super_admin)/inbox" as any)}
+        className="w-14 h-14 bg-[#FFF0E6] rounded-full items-center justify-center z-50 border border-[#FFD4B5]"
+        style={isWeb
+          ? { position: 'fixed' as any, bottom: 24, right: 24 }
+          : { position: 'absolute', bottom: Math.max(insets.bottom, 8) + 4, right: 24 }
+        }
+      >
+        <MessageSquare size={24} color="#FF6600" />
+        {/* Red message indicator badge */}
+        <View className="absolute top-0 -right-1 w-[22px] h-[22px] bg-red-500 rounded-full border-2 border-white items-center justify-center">
+          <Text className="text-[10px] font-poppins-bold text-white mt-0.5">
+            1
+          </Text>
+        </View>
+      </TouchableOpacity>
     </SafeAreaView>
   );
 }
