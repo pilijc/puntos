@@ -109,13 +109,13 @@ export default function SuperAdminDashboard() {
         contentContainerStyle={{
           paddingBottom: 40,
           paddingHorizontal: 16,
-          paddingTop: 16,
+          paddingTop: 8,
         }}
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#FF6600" />}
       >
         {!isWeb && (
-          <View className="pt-6 pb-2">
+          <View className="pt-1 pb-2">
             <Text className="text-sm text-[#94A3B8] dark:text-darkTextSecondary font-poppins">
               {translate("superAdmin.dashboard.welcome")}
               <Text className="text-orange-500 font-poppins-bold">
