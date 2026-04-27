@@ -1,0 +1,14 @@
+{
+  "title": "Reward",
+  "description": "Redeemable item details",
+  "loading": "Loading reward...",
+  "notFoundTitle": "Reward not found",
+  "deleteBlockedMessage": "This reward is currently being used as a prize in an active stamp program and cannot be deleted while it has remaining stock. Please deplete the reward's stock or update the stamp program before trying again.",
+  "verifyStampError": "Could not verify stamp program link.",
+  "deleteTitle": "Delete reward?",
+  "deleteMessage": "\"{{title}}\" will be removed. This cannot be undone.",
+  "deleteError": "Could not delete reward.",
+  "pointsCost": "Points cost",
+  "stock": "Stock",
+  "delete": "Delete"
+}

@@ -1,0 +1,35 @@
+{
+  "noUsersFound": "No users found",
+  "title": "Users",
+  "searchPlaceholder": "Search...",
+  "filter": "Filter",
+  "tabs": {
+    "user": "Users",
+    "manager": "Managers",
+    "staff": "Staff"
+  },
+  "roles": {
+    "sadmin": "S-ADMIN",
+    "manager": "MANAGER",
+    "staff": "STAFF",
+    "frontdesk": "FRONT DESK",
+    "blocked": "BLOCKED",
+    "user": "USER"
+  },
+  "defaultUserName": "User",
+  "status": {
+    "blocked": "Blocked"
+  },
+  "blockModal": {
+    "blockTitle": "Block User",
+    "unblockTitle": "Unblock User",
+    "blockMessage": "Are you sure you want to restrict access for this user?",
+    "unblockMessage": "Are you sure you want to restore access for this user?",
+    "blockAction": "Block User",
+    "unblockAction": "Unblock"
+  },
+  "managedStores": "Managed Stores",
+  "unnamedStore": "Unnamed Store",
+  "noStoresAssigned": "No stores assigned to this manager yet.",
+  "branchAssignment": "Branch Assignment"
+}

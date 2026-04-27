@@ -1,0 +1,18 @@
+{
+  "title": "通知とプライバシー",
+  "alerts": {
+    "title": "付近のお知らせ",
+    "description": "特典が近くにあるときに通知を受け取ります"
+  },
+  "location": {
+    "title": "位置情報のアクセス",
+    "allow": "アクセスを許可",
+    "denied": "アクセスを拒否"
+  },
+  "permissions": "{{services}}の権限は、デバイスの設定で変更できます。今すぐ設定を開きますか？",
+  "services": {
+    "location": "位置情報",
+    "notifications": "通知"
+  },
+  "openSettings": "設定を開く"
+}

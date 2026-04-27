@@ -1,5 +1,5 @@
 import { View, Text, TextInput, Pressable, ScrollView, Image, TouchableOpacity } from "@/tw";
-import React from "react";
+import React, { useMemo } from "react";
 import { StepProps, PasswordStepProps, TermsStepProps, StepperProps, StepHeaderProps, RoleStepProps } from "@/type/auth";
 import { useTranslation } from "react-i18next";
 import { TextField } from "./text-field";
@@ -25,7 +25,7 @@ export const STEP_DATA = [
     descriptionKey: "onboarding.signup.stepper.step3.description"
   },
   {
-    titleKey: "onboarding.signup.stepper.step4.title",
+    titleKey: "label.almostThere",
     descriptionKey: "onboarding.signup.stepper.step4.description"
   }
 ];
@@ -48,11 +48,11 @@ export function StepHeader({ currentStep }: StepHeaderProps) {
       </View>
 
       <View>
-        <Text className={`text-lg font-poppins-bold text-textSecondary dark:text-darkTextPrimary ${align}`}>
+        <Text className={`text-lg font-poppins-bold text-textPrimary dark:text-darkTextPrimary ${align}`}>
           {translate(stepInfo.titleKey)}
         </Text>
 
-        <Text className={`text-textMuted dark:text-darkTextSecondary font-poppins ${align} text-sm`}>
+        <Text className={`text-textSecondary dark:text-darkTextSecondary font-poppins ${align} text-sm`}>
           {translate(stepInfo.descriptionKey)}
         </Text>
       </View>
@@ -108,7 +108,7 @@ export function EmailStep({ value, onChange, error }: StepProps) {
         label={translate("onboarding.signup.stepper.label.email")}
         value={value}
         onChangeText={onChange}
-        placeholder={translate("onboarding.signup.stepper.placeholder.email")}
+        placeholder={translate("label.emailPlaceholder")}
         keyboardType="email-address"
       />
       {error && (
@@ -139,7 +139,7 @@ export function PasswordStep({
       <View className="gap-y-2">
         <View className="gap-y-2">
           <TextField
-            label={translate("onboarding.signup.stepper.label.password")}
+            label={translate("label.password")}
             value={password}
             onChangeText={onPasswordChange}
             placeholder={translate("onboarding.signup.stepper.placeholder.password")}
@@ -306,26 +306,66 @@ export function RoleStep({ value, onChange, error }: RoleStepProps) {
 
 export function TermsStep({ accepted, onToggle, error }: TermsStepProps) {
   const { t: translate } = useTranslation();
+  const termSectionKeys = useMemo(() => ["1", "2", "3", "4", "5"] as const, []);
+
   return (
     <View className="gap-y-4 pr-0.5">
       <Text className="text-sm font-poppins-medium text-neutral-700 dark:text-darkTextSecondary">
         {translate("onboarding.signup.stepper.label.terms")}
       </Text>
-      <Pressable
-        onPress={onToggle}
-        className="flex-row items-center gap-x-3 p-4 rounded-xl border border-neutral-200 dark:border-darkBorder bg-neutral-50 dark:bg-darkBackgroundMuted"
-      >
-        <View
-          className={`w-5 h-5 rounded border-2 ${accepted ? 'border-primary bg-primary' : 'border-neutral-300 dark:border-neutral-600'}`}
-        >
-          {accepted && (
-            <CheckIcon size={12} color="white" />
-          )}
+
+      <View className="rounded-xl border border-neutral-200/90 dark:border-darkBorder bg-white dark:bg-darkBackgroundCard overflow-hidden">
+        <View style={{ height: 260 }}>
+          <ScrollView
+            className="px-4"
+            showsVerticalScrollIndicator={true}
+            contentContainerStyle={{ paddingBottom: 14 }}
+          >
+            <View className="h-3" />
+
+            <View className="gap-y-2">
+              {termSectionKeys.map((k) => {
+                const title = translate(`onboarding.signup.terms.${k}.title`);
+                const description = translate(`onboarding.signup.terms.${k}.description`);
+
+                return (
+                  <View key={k}>
+                    <Text className="font-poppins-semibold text-xs text-textPrimary dark:text-darkTextPrimary leading-[18px]">
+                      {k}. {title}
+                    </Text>
+                    <Text className="text-xs font-poppins text-textSecondary dark:text-darkTextSecondary leading-[18px]">
+                      {description}
+                    </Text>
+                  </View>
+                );
+              })}
+            </View>
+
+            <View className="h-5" />
+            <Pressable
+              onPress={onToggle}
+              accessibilityRole="checkbox"
+              accessibilityState={{ checked: accepted }}
+              className="flex-row items-center gap-x-3"
+            >
+              <View
+                className={`w-4 h-4 rounded-sm border items-center justify-center ${
+                  accepted
+                    ? "border-primary bg-primary"
+                    : "border-neutral-300 dark:border-neutral-600"
+                }`}
+              >
+                {accepted && <CheckIcon size={12} color="white" />}
+              </View>
+              <View className="flex-1">
+                <Text className="font-poppins-medium text-xs text-neutral-800 dark:text-darkTextPrimary leading-[18px]">
+                  {translate("onboarding.signup.stepper.label.termsAgree")}
+                </Text>
+              </View>
+            </Pressable>
+          </ScrollView>
         </View>
-        <Text className="font-poppins text-neutral-700 dark:text-darkTextSecondary flex-1">
-          {translate("onboarding.signup.stepper.label.termsAgree")}
-        </Text>
-      </Pressable>
+      </View>
 
       {error && (
         <Text className="text-red-500 dark:text-red-400 text-sm font-poppins rounded-xl p-4 text-center bg-red-50 dark:bg-red-900/20">

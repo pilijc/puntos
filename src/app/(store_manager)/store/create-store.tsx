@@ -78,7 +78,7 @@ export default function CreateStore() {
 
   const showError = (message: string) =>
     setModal({
-      title: t("storeManager.createStore.errorTitle"),
+      title: t("store_manager.createStore.errorTitle"),
       message,
       buttons: [{ label: t("label.ok"), onPress: () => setModal(null), variant: "secondary" }],
     });
@@ -87,8 +87,8 @@ export default function CreateStore() {
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permissionResult.granted) {
       setModal({
-        title: t("storeManager.createStore.permissionPhotosTitle"),
-        message: t("storeManager.createStore.permissionPhotos"),
+        title: t("store_manager.createStore.permissionPhotosTitle"),
+        message: t("store_manager.createStore.permissionPhotos"),
         buttons: [{ label: t("label.ok"), onPress: () => setModal(null), variant: "secondary" }],
       });
       return;
@@ -106,7 +106,7 @@ export default function CreateStore() {
 
     const asset = pickerResult.assets[0];
     if (!asset.base64) {
-      showError(t("storeManager.createStore.couldNotReadImage"));
+      showError(t("store_manager.createStore.couldNotReadImage"));
       return;
     }
 
@@ -122,7 +122,7 @@ export default function CreateStore() {
         const url = await maybeUpload();
         setLogo(url);
       } catch (e: any) {
-        showError(e?.message ?? t("storeManager.createStore.uploadFailed"));
+        showError(e?.message ?? t("store_manager.createStore.uploadFailed"));
       } finally {
         setIsUploadingImage(false);
       }
@@ -135,7 +135,7 @@ export default function CreateStore() {
         const url = await maybeUpload();
         setBusinessDocumentImage(url);
       } catch (e: any) {
-        showError(e?.message ?? t("storeManager.createStore.uploadFailed"));
+        showError(e?.message ?? t("store_manager.createStore.uploadFailed"));
       } finally {
         setIsUploadingImage(false);
       }
@@ -158,7 +158,7 @@ export default function CreateStore() {
         else next.push(url);
         setPictures(next);
       } catch (e: any) {
-        showError(e?.message ?? t("storeManager.createStore.uploadFailed"));
+        showError(e?.message ?? t("store_manager.createStore.uploadFailed"));
       } finally {
         setIsUploadingImage(false);
       }
@@ -174,26 +174,26 @@ export default function CreateStore() {
 
   const getStoreStepMissing = () => {
     const missing: string[] = [];
-    if (!storeName.trim()) missing.push(t("storeManager.createStore.missing.storeName"));
-    if (!storeType.trim()) missing.push(t("storeManager.createStore.missing.storeType"));
-    if (!logo) missing.push(t("storeManager.createStore.missing.storeLogo"));
-    if (picturesCount < 3) missing.push(t("storeManager.createStore.missing.storePicturesMin"));
-    if (picturesCount > 6) missing.push(t("storeManager.createStore.missing.storePicturesMax"));
+    if (!storeName.trim()) missing.push(t("label.storeName"));
+    if (!storeType.trim()) missing.push(t("label.storeType"));
+    if (!logo) missing.push(t("label.storeLogo"));
+    if (picturesCount < 3) missing.push(t("store_manager.createStore.missing.storePicturesMin"));
+    if (picturesCount > 6) missing.push(t("store_manager.createStore.missing.storePicturesMax"));
     return missing;
   };
 
   const getBusinessStepMissing = () => {
     const missing: string[] = [];
-    if (!registrationNumber.trim()) missing.push(t("storeManager.createStore.missing.registrationNumber"));
-    if (!businessDocumentImage) missing.push(t("storeManager.createStore.missing.businessDocumentImage"));
+    if (!registrationNumber.trim()) missing.push(t("store_manager.createStore.missing.registrationNumber"));
+    if (!businessDocumentImage) missing.push(t("store_manager.createStore.missing.businessDocumentImage"));
     return missing;
   };
 
   const getLocationStepMissing = () => {
     const missing: string[] = [];
-    if (!address.trim()) missing.push(t("storeManager.createStore.missing.address"));
-    if (!hasPin) missing.push(t("storeManager.createStore.missing.pinLocation"));
-    if (effectiveRadius < 50 || effectiveRadius > 500) missing.push(t("storeManager.createStore.missing.radius"));
+    if (!address.trim()) missing.push(t("store_manager.createStore.missing.address"));
+    if (!hasPin) missing.push(t("store_manager.createStore.missing.pinLocation"));
+    if (effectiveRadius < 50 || effectiveRadius > 500) missing.push(t("store_manager.createStore.missing.radius"));
     return missing;
   };
 
@@ -234,8 +234,8 @@ export default function CreateStore() {
     const { status } = await Location.requestForegroundPermissionsAsync();
     if (status !== "granted") {
       setModal({
-        title: t("storeManager.createStore.permissionLocationTitle"),
-        message: t("storeManager.createStore.permissionLocationBody"),
+        title: t("store_manager.createStore.permissionLocationTitle"),
+        message: t("store_manager.createStore.permissionLocationBody"),
         buttons: [{ label: t("label.ok"), onPress: () => setModal(null), variant: "secondary" }],
       });
       return;
@@ -248,7 +248,7 @@ export default function CreateStore() {
       (await Location.getLastKnownPositionAsync({}).catch(() => null));
 
     if (!loc) {
-      showError(t("storeManager.createStore.couldNotGetLocation"));
+      showError(t("store_manager.createStore.couldNotGetLocation"));
       return;
     }
 
@@ -265,8 +265,8 @@ export default function CreateStore() {
       const missing = getStoreStepMissing();
       if (missing.length > 0) {
         setModal({
-          title: t("storeManager.createStore.storeDetailsRequired"),
-          message: t("storeManager.createStore.pleaseComplete", { fields: missing.join(", ") }),
+          title: t("store_manager.createStore.storeDetailsRequired"),
+          message: t("store_manager.createStore.pleaseComplete", { fields: missing.join(", ") }),
           buttons: [{ label: t("label.ok"), onPress: () => setModal(null), variant: "secondary" }],
         });
         return;
@@ -279,8 +279,8 @@ export default function CreateStore() {
       const missing = getBusinessStepMissing();
       if (missing.length > 0) {
         setModal({
-          title: t("storeManager.createStore.businessDetailsRequired"),
-          message: t("storeManager.createStore.pleaseComplete", { fields: missing.join(", ") }),
+          title: t("store_manager.createStore.businessDetailsRequired"),
+          message: t("store_manager.createStore.pleaseComplete", { fields: missing.join(", ") }),
           buttons: [{ label: t("label.ok"), onPress: () => setModal(null), variant: "secondary" }],
         });
         return;
@@ -293,11 +293,11 @@ export default function CreateStore() {
       const missing = getLocationStepMissing();
 
       setModal({
-        title: t("storeManager.createStore.missingDetails"),
+        title: t("store_manager.createStore.missingDetails"),
         message:
           missing.length > 0
-            ? t("storeManager.createStore.pleaseComplete", { fields: missing.join(", ") })
-            : t("storeManager.createStore.completeAllFields"),
+            ? t("store_manager.createStore.pleaseComplete", { fields: missing.join(", ") })
+            : t("store_manager.createStore.completeAllFields"),
         buttons: [{ label: t("label.ok"), onPress: () => setModal(null), variant: "secondary" }],
       });
       return;
@@ -308,7 +308,7 @@ export default function CreateStore() {
         setIsSubmitting(true);
         const { data: { user } } = await supabase.auth.getUser();
         if (!user?.id) {
-          showError(t("storeManager.createStore.createFailed"));
+          showError(t("store_manager.createStore.createFailed"));
           return;
         }
 
@@ -376,11 +376,11 @@ export default function CreateStore() {
         });
 
         setModal({
-          title: t("storeManager.createStore.storeCreatedTitle"),
-          message: t("storeManager.createStore.storeCreatedMessage"),
+          title: t("store_manager.createStore.storeCreatedTitle"),
+          message: t("store_manager.createStore.storeCreatedMessage"),
           buttons: [
             {
-              label: t("storeManager.createStore.viewStore"),
+              label: t("store_manager.createStore.viewStore"),
               variant: "primary",
               onPress: () => {
                 setModal(null);
@@ -391,7 +391,7 @@ export default function CreateStore() {
         });
         resetForm();
       } catch (e: any) {
-        showError(e?.message ?? t("storeManager.createStore.createFailed"));
+        showError(e?.message ?? t("store_manager.createStore.createFailed"));
       } finally {
         setIsSubmitting(false);
       }
@@ -410,7 +410,7 @@ export default function CreateStore() {
         buttons={modal?.buttons}
       />
       <AppHeader
-        title={t("storeManager.createStore.title")}
+        title={t("store_manager.createStore.title")}
         onBackPress={() => {
           router.push("/(store_manager)/stores");
         }}
@@ -432,9 +432,9 @@ export default function CreateStore() {
               <View className="gap-2">
                 <View className="w-full bg-white dark:bg-neutral-800 rounded-xl border border-slate-100 dark:border-neutral-700 p-4 gap-4 overflow-hidden">
                   <TextField
-                    label={t("storeManager.createStore.storeName")}
+                    label={t("label.storeName")}
                     required
-                    placeholder={t("storeManager.detailEdit.storeNamePlaceholder")}
+                    placeholder={t("store_manager.detailEdit.storeNamePlaceholder")}
                     value={storeName}
                     onChangeText={setStoreName}
                     sanitize={(v) => v}
@@ -442,7 +442,7 @@ export default function CreateStore() {
     
                   <View className="flex-col gap-2 justify-start">
                     <Text className="text-slate-700 dark:text-slate-300 text-sm font-poppins-medium px-1">
-                      {t("storeManager.createStore.storeType")} <Text className="text-red-500 dark:text-red-400">*</Text>
+                      {t("label.storeType")} <Text className="text-red-500 dark:text-red-400">*</Text>
                     </Text>
                     <View className="flex-row flex-wrap gap-2 mt-1">
                       {store_types_options.map((type) => {
@@ -463,7 +463,7 @@ export default function CreateStore() {
                                 selected ? "text-primary dark:text-slate-100" : "text-slate-600 dark:text-slate-300"
                               }`}
                             >
-                          {t(`storeManager.storeTypes.${type.value}`)}
+                          {t(`store_manager.storeTypes.${type.value}`)}
                         </Text>
                           </TouchableOpacity>
                         );
@@ -474,7 +474,7 @@ export default function CreateStore() {
                   <View className="flex-row gap-4 gap-y-2">
                     <View className="flex-1 flex-col gap-2">
                       <Text className="text-slate-700 dark:text-slate-300 text-sm font-poppins-medium px-1">
-                        {t("storeManager.createStore.storeLogo")} <Text className="text-red-500 dark:text-red-400">*</Text>
+                        {t("label.storeLogo")} <Text className="text-red-500 dark:text-red-400">*</Text>
                       </Text>
                       <TouchableOpacity
                         onPress={() => pickImage("logo")}
@@ -495,7 +495,7 @@ export default function CreateStore() {
                         ) : (
                           <>
                             <ImagePlus size={18} color="#94A3B8" />
-                            <Text className="text-[10px] text-slate-500 font-poppins">{t("storeManager.createStore.logo")}</Text>
+                            <Text className="text-[10px] text-slate-500 font-poppins">{t("store_manager.createStore.logo")}</Text>
                           </>
                         )}
                       </TouchableOpacity>
@@ -504,10 +504,10 @@ export default function CreateStore() {
     
                   <View className="flex-col gap-2">
                     <Text className="text-slate-700 dark:text-slate-300 text-sm font-poppins-medium px-1">
-                      {t("storeManager.createStore.storePictures")} <Text className="text-red-500 dark:text-red-400">*</Text>
+                      {t("store_manager.createStore.storePictures")} <Text className="text-red-500 dark:text-red-400">*</Text>
                     </Text>
                     <Text className="text-slate-600 dark:text-slate-400 text-xs font-poppins mb-3 px-1">
-                      {t("storeManager.createStore.storePicturesHint")}
+                      {t("store_manager.createStore.storePicturesHint")}
                     </Text>
                     <View className="flex-row flex-wrap gap-2">
                       {[0, 1, 2, 3, 4, 5].map((index) => {
@@ -538,7 +538,7 @@ export default function CreateStore() {
                                 className="flex-1 rounded-xl border border-dashed border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/30 items-center justify-center min-h-[80px]"
                               >
                                 <ImagePlus size={20} color="#94A3B8" />
-                                <Text className="text-[10px] text-slate-500 font-poppins mt-0.5">{t("storeManager.detailEdit.add")}</Text>
+                                <Text className="text-[10px] text-slate-500 font-poppins mt-0.5">{t("label.add")}</Text>
                               </TouchableOpacity>
                             )}
                           </View>
@@ -554,8 +554,8 @@ export default function CreateStore() {
               <View className="gap-2">
                 <View className="bg-white dark:bg-neutral-800 rounded-xl border border-slate-100 dark:border-neutral-700 p-4 gap-4">
                   <TextField
-                    label={t("storeManager.createStore.phoneNumber")}
-                    placeholder={t("storeManager.detailEdit.phonePlaceholder")}
+                    label={t("store_manager.createStore.phoneNumber")}
+                    placeholder={t("store_manager.detailEdit.phonePlaceholder")}
                     keyboardType="phone-pad"
                     value={phone}
                     onChangeText={(t) => {
@@ -568,9 +568,9 @@ export default function CreateStore() {
                   />
     
                   <TextField
-                    label={t("storeManager.createStore.registrationNumber")}
+                    label={t("store_manager.createStore.registrationNumber")}
                     required
-                    placeholder={t("storeManager.detailEdit.registrationPlaceholder")}
+                    placeholder={t("store_manager.detailEdit.registrationPlaceholder")}
                     value={registrationNumber}
                     onChangeText={setRegistrationNumber}
                     sanitize={(v) => v}
@@ -578,7 +578,7 @@ export default function CreateStore() {
     
                   <View className="flex flex-col gap-2">
                     <Text className="text-slate-700 dark:text-slate-300 text-sm font-poppins-medium px-1">
-                      {t("storeManager.createStore.businessDocument")} <Text className="text-red-500 dark:text-red-400">*</Text>
+                      {t("label.businessDocument")} <Text className="text-red-500 dark:text-red-400">*</Text>
                     </Text>
                     <TouchableOpacity
                       onPress={() => {
@@ -606,7 +606,7 @@ export default function CreateStore() {
                       ) : (
                         <>
                           <FileText size={24} color="#94A3B8" />
-                          <Text className="text-xs text-slate-500 font-poppins mt-1">{t("storeManager.createStore.uploadDocumentImage")}</Text>
+                          <Text className="text-xs text-slate-500 font-poppins mt-1">{t("store_manager.createStore.uploadDocumentImage")}</Text>
                         </>
                       )}
                     </TouchableOpacity>
@@ -614,7 +614,7 @@ export default function CreateStore() {
     
                   <View className="flex-row gap-3">
                     <View className="flex-1 flex-col gap-1.5">
-                      <Text className="text-slate-700 dark:text-slate-300 text-sm font-poppins-medium px-1">{t("storeManager.createStore.openingTime")}</Text>
+                      <Text className="text-slate-700 dark:text-slate-300 text-sm font-poppins-medium px-1">{t("store_manager.createStore.openingTime")}</Text>
                       <TouchableOpacity
                         onPress={() => setShowOpenTimePicker(true)}
                         className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/50 h-12 px-4 justify-center"
@@ -643,7 +643,7 @@ export default function CreateStore() {
                               />
                               <View className="px-4">
                                 <Button
-                                  label={t("storeManager.detailEdit.done")}
+                                  label={t("store_manager.detailEdit.done")}
                                   onPress={() => setShowOpenTimePicker(false)}
                                   variant="primary"
                                   fullWidth
@@ -655,7 +655,7 @@ export default function CreateStore() {
                       )}
                     </View>
                     <View className="flex-1 flex-col gap-1.5">
-                      <Text className="text-slate-700 dark:text-slate-300 text-sm font-poppins-medium px-1">{t("storeManager.createStore.closingTime")}</Text>
+                      <Text className="text-slate-700 dark:text-slate-300 text-sm font-poppins-medium px-1">{t("store_manager.createStore.closingTime")}</Text>
                       <TouchableOpacity
                         onPress={() => setShowCloseTimePicker(true)}
                         className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/50 h-12 px-4 justify-center"
@@ -682,7 +682,7 @@ export default function CreateStore() {
                                   if (d) setStoreClose(dateToTimeString(d));
                                 }}
                               />
-                              <Button label={t("storeManager.detailEdit.done")} onPress={() => setShowCloseTimePicker(false)} variant="primary" fullWidth />
+                              <Button label={t("store_manager.detailEdit.done")} onPress={() => setShowCloseTimePicker(false)} variant="primary" fullWidth />
                             </TouchableOpacity>
                           </TouchableOpacity>
                         </RNModal>
@@ -697,12 +697,12 @@ export default function CreateStore() {
               <View className="gap-2">
                 <View className="bg-white dark:bg-neutral-800 rounded-xl border border-slate-100 dark:border-neutral-700 p-4 gap-5">
                   <View className="flex-row items-center justify-between">
-                    <Text className="text-xs font-poppins text-slate-500 dark:text-slate-400">{t("storeManager.createStore.tapMapPin")}</Text>
+                    <Text className="text-xs font-poppins text-slate-500 dark:text-slate-400">{t("store_manager.createStore.tapMapPin")}</Text>
                     
                     { isWeb && (
                       <TouchableOpacity className="flex-row items-center gap-1" activeOpacity={0.8} onPress={handleGetCurrent}>
                         <MapPin color="#FF6600" />
-                        <Text className="text-primary text-xs font-poppins-bold">{t("storeManager.createStore.getCurrent")}</Text>
+                        <Text className="text-primary text-xs font-poppins-bold">{t("store_manager.createStore.getCurrent")}</Text>
                       </TouchableOpacity>
                     )}
                   </View>
@@ -722,7 +722,7 @@ export default function CreateStore() {
                         <View className="h-[400px] items-center justify-center gap-y-2 px-6 bg-slate-50 dark:bg-slate-900">
                           <MapPin color={isDark ? "#525252" : "#94A3B8"} />
                           <Text className="text-xs font-poppins text-center text-slate-500 dark:text-slate-400">
-                            {t("storeManager.createStore.mapFallbackWeb")}
+                            {t("store_manager.createStore.mapFallbackWeb")}
                           </Text>
                         </View>
                       )}
@@ -730,9 +730,9 @@ export default function CreateStore() {
                   </View>
     
                   <TextField
-                    label={t("storeManager.createStore.landmarkAddress")}
+                    label={t("store_manager.createStore.landmarkAddress")}
                     required
-                    placeholder={t("storeManager.createStore.addressPlaceholder")}
+                    placeholder={t("store_manager.createStore.addressPlaceholder")}
                     value={address}
                     onChangeText={setAddress}
                     multiline
@@ -742,9 +742,9 @@ export default function CreateStore() {
                   <View className="mt-2">
                     <View className="flex-row justify-between items-center mb-2">
                       <Text className="text-slate-700 dark:text-slate-300 text-sm font-poppins-medium">
-                        {t("storeManager.createStore.storeRadius")} <Text className="text-red-500 dark:text-red-400">*</Text>
+                        {t("store_manager.createStore.storeRadius")} <Text className="text-red-500 dark:text-red-400">*</Text>
                       </Text>
-                      <Text className="text-primary text-sm font-poppins-bold">{t("storeManager.detailEdit.radiusMeters", { meters: radius || 50 })}</Text>
+                      <Text className="text-primary text-sm font-poppins-bold">{t("store_manager.detailEdit.radiusMeters", { meters: radius || 50 })}</Text>
                     </View>
                     <Slider
                       minimumValue={50}
@@ -757,8 +757,8 @@ export default function CreateStore() {
                       thumbTintColor="#FF6600"
                     />
                     <View className="flex-row justify-between mt-1">
-                      <Text className="text-xs text-slate-500 font-poppins">{t("storeManager.detailEdit.radiusMin")}</Text>
-                      <Text className="text-xs text-slate-500 font-poppins">{t("storeManager.detailEdit.radiusMax")}</Text>
+                      <Text className="text-xs text-slate-500 font-poppins">{t("store_manager.detailEdit.radiusMin")}</Text>
+                      <Text className="text-xs text-slate-500 font-poppins">{t("store_manager.detailEdit.radiusMax")}</Text>
                     </View>
                   </View>
                 </View>
@@ -771,9 +771,9 @@ export default function CreateStore() {
           <View className="gap-2">
             <View className="bg-white dark:bg-neutral-800 rounded-xl border border-slate-100 dark:border-neutral-700 p-4 gap-4">
               <TextField
-                label={t("storeManager.createStore.storeName")}
+                label={t("label.storeName")}
                 required
-                placeholder={t("storeManager.detailEdit.storeNamePlaceholder")}
+                placeholder={t("store_manager.detailEdit.storeNamePlaceholder")}
                 value={storeName}
                 onChangeText={setStoreName}
                 sanitize={(v) => v}
@@ -781,7 +781,7 @@ export default function CreateStore() {
 
               <View className="flex-1 flex-col gap-2 justify-start">
                 <Text className="text-slate-700 dark:text-slate-300 text-sm font-poppins-medium px-1">
-                  {t("storeManager.createStore.storeType")} <Text className="text-red-500 dark:text-red-400">*</Text>
+                  {t("label.storeType")} <Text className="text-red-500 dark:text-red-400">*</Text>
                 </Text>
                 <View className="flex-row flex-wrap gap-2 mt-1">
                   {store_types_options.map((type) => {
@@ -804,7 +804,7 @@ export default function CreateStore() {
                               : "text-slate-600 dark:text-slate-300"
                           }`}
                         >
-                          {t(`storeManager.storeTypes.${type.value}`)}
+                          {t(`store_manager.storeTypes.${type.value}`)}
                         </Text>
                       </TouchableOpacity>
                     );
@@ -815,7 +815,7 @@ export default function CreateStore() {
               <View className="flex-row gap-4 gap-y-2">
                 <View className="flex-1 flex-col gap-2">
                   <Text className="text-slate-700 dark:text-slate-300 text-sm font-poppins-medium px-1">
-                    {t("storeManager.createStore.storeLogo")} <Text className="text-red-500 dark:text-red-400">*</Text>
+                    {t("label.storeLogo")} <Text className="text-red-500 dark:text-red-400">*</Text>
                   </Text>
                   <TouchableOpacity
                     onPress={() => pickImage("logo")}
@@ -840,7 +840,7 @@ export default function CreateStore() {
                     ) : (
                       <>
                         <ImagePlus size={18} color="#94A3B8" />
-                        <Text className="text-[10px] text-slate-500 font-poppins">{t("storeManager.createStore.logo")}</Text>
+                        <Text className="text-[10px] text-slate-500 font-poppins">{t("store_manager.createStore.logo")}</Text>
                       </>
                     )}
                   </TouchableOpacity>
@@ -849,10 +849,10 @@ export default function CreateStore() {
               
               <View className="flex-1 flex-col gap-2">
                 <Text className="text-slate-700 dark:text-slate-300 text-sm font-poppins-medium px-1">
-                  {t("storeManager.createStore.storePictures")} <Text className="text-red-500 dark:text-red-400">*</Text>
+                  {t("store_manager.createStore.storePictures")} <Text className="text-red-500 dark:text-red-400">*</Text>
                 </Text>
                 <Text className="text-slate-600 dark:text-slate-400 text-xs font-poppins mb-3 px-1">
-                  {t("storeManager.createStore.storePicturesHint")}
+                  {t("store_manager.createStore.storePicturesHint")}
                 </Text>
                 <View className="flex-row flex-wrap gap-2">
                   {[0, 1, 2, 3, 4, 5].map((index) => {
@@ -883,7 +883,7 @@ export default function CreateStore() {
                             className="flex-1 rounded-xl border border-dashed border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/30 items-center justify-center min-h-[80px]"
                           >
                             <ImagePlus size={20} color="#94A3B8" />
-                            <Text className="text-[10px] text-slate-500 font-poppins mt-0.5">{t("storeManager.createStore.add")}</Text>
+                            <Text className="text-[10px] text-slate-500 font-poppins mt-0.5">{t("label.add")}</Text>
                           </TouchableOpacity>
                         )}
                       </View>
@@ -899,8 +899,8 @@ export default function CreateStore() {
           <View className="gap-2">
             <View className="bg-white dark:bg-neutral-800 rounded-xl border border-slate-100 dark:border-neutral-700 p-4 gap-4">
               <TextField
-                label={t("storeManager.createStore.phoneNumber")}
-                placeholder={t("storeManager.detailEdit.phonePlaceholder")}
+                label={t("store_manager.createStore.phoneNumber")}
+                placeholder={t("store_manager.detailEdit.phonePlaceholder")}
                 keyboardType="phone-pad"
                 value={phone}
                 onChangeText={t => {
@@ -913,9 +913,9 @@ export default function CreateStore() {
               />
 
               <TextField
-                label={t("storeManager.createStore.registrationNumber")}
+                label={t("store_manager.createStore.registrationNumber")}
                 required
-                placeholder={t("storeManager.detailEdit.registrationPlaceholder")}
+                placeholder={t("store_manager.detailEdit.registrationPlaceholder")}
                 value={registrationNumber}
                 onChangeText={setRegistrationNumber}
                 sanitize={(v) => v}
@@ -923,7 +923,7 @@ export default function CreateStore() {
 
               <View className="flex flex-col gap-2">
                 <Text className="text-slate-700 dark:text-slate-300 text-sm font-poppins-medium px-1">
-                  {t("storeManager.createStore.businessDocument")} <Text className="text-red-500 dark:text-red-400">*</Text>
+                  {t("label.businessDocument")} <Text className="text-red-500 dark:text-red-400">*</Text>
                 </Text>
                 <TouchableOpacity
                   onPress={() => {
@@ -952,7 +952,7 @@ export default function CreateStore() {
                     <>
                       <FileText size={24} color="#94A3B8" />
                       <Text className="text-xs text-slate-500 font-poppins mt-1">
-                        {t("storeManager.detailEdit.uploadDocumentImage")}
+                        {t("store_manager.detailEdit.uploadDocumentImage")}
                       </Text>
                     </>
                   )}
@@ -962,7 +962,7 @@ export default function CreateStore() {
               <View className="flex-row gap-3">
                 <View className="flex-1 flex-col gap-1.5">
                   <Text className="text-slate-700 dark:text-slate-300 text-sm font-poppins-medium px-1">
-                    {t("storeManager.createStore.openingTime")}
+                    {t("store_manager.createStore.openingTime")}
                   </Text>
                   <TouchableOpacity
                     onPress={() => setShowOpenTimePicker(true)}
@@ -1004,7 +1004,7 @@ export default function CreateStore() {
                             />
                             <View className="px-4">
                               <Button
-                                label={t("storeManager.detailEdit.done")}
+                                label={t("store_manager.detailEdit.done")}
                                 onPress={() => setShowOpenTimePicker(false)}
                                 variant="primary"
                                 fullWidth
@@ -1018,7 +1018,7 @@ export default function CreateStore() {
                 </View>
                 <View className="flex-1 flex-col gap-1.5">
                   <Text className="text-slate-700 dark:text-slate-300 text-sm font-poppins-medium px-1">
-                    {t("storeManager.createStore.closingTime")}
+                    {t("store_manager.createStore.closingTime")}
                   </Text>
                   <TouchableOpacity
                     onPress={() => setShowCloseTimePicker(true)}
@@ -1059,7 +1059,7 @@ export default function CreateStore() {
                               }}
                             />
                             <Button
-                              label={t("storeManager.detailEdit.done")}
+                              label={t("store_manager.detailEdit.done")}
                               onPress={() => setShowCloseTimePicker(false)}
                               variant="primary"
                               fullWidth
@@ -1080,7 +1080,7 @@ export default function CreateStore() {
             <View className="bg-white dark:bg-neutral-800 rounded-xl border border-slate-100 dark:border-neutral-700 p-4 gap-5">
               <View className="flex-row items-center justify-between">
                 <Text className="text-xs font-poppins text-slate-500 dark:text-slate-400">
-                  {t("storeManager.createStore.tapMapPin")}
+                  {t("store_manager.createStore.tapMapPin")}
                 </Text>
                 
                 { isWeb && (
@@ -1091,7 +1091,7 @@ export default function CreateStore() {
                   >
                     <MapPin size={16} color="#FF6600" />
                     <Text className="text-primary text-xs font-poppins-bold">
-                      {t("storeManager.createStore.getCurrent")}
+                      {t("store_manager.createStore.getCurrent")}
                     </Text>
                   </TouchableOpacity>
                 )}
@@ -1143,7 +1143,7 @@ export default function CreateStore() {
                     <View className="h-[400px] items-center justify-center gap-y-2 px-6 bg-slate-50 dark:bg-slate-900">
                       <MapPin color={isDark ? "#525252" : "#94A3B8"} />
                       <Text className="text-xs font-poppins text-center text-slate-500 dark:text-slate-400">
-                        {t("storeManager.createStore.mapFallbackWeb")}
+                        {t("store_manager.createStore.mapFallbackWeb")}
                       </Text>
                     </View>
                   )}
@@ -1151,9 +1151,9 @@ export default function CreateStore() {
               </View>
 
               <TextField
-                label={t("storeManager.createStore.landmarkAddress")}
+                label={t("store_manager.createStore.landmarkAddress")}
                 required
-                placeholder={t("storeManager.detailEdit.addressPlaceholder")}
+                placeholder={t("store_manager.createStore.addressPlaceholder")}
                 value={address}
                 onChangeText={setAddress}
                 multiline
@@ -1172,8 +1172,8 @@ export default function CreateStore() {
                   )}
                 </View>
                 <TextField
-                  label={t("storeManager.createStore.timezone")}
-                  placeholder={t("storeManager.createStore.timezonePlaceholder")}
+                  label={t("store_manager.createStore.timezone")}
+                  placeholder={t("store_manager.createStore.timezonePlaceholder")}
                   value={timezone}
                   onChangeText={setTimezone}
                   sanitize={(v) => v}
@@ -1193,12 +1193,12 @@ export default function CreateStore() {
             <View className="mt-2">
               <View className="flex-row justify-between items-center mb-2">
                 <Text className="text-slate-700 dark:text-slate-300 text-sm font-poppins-medium">
-                  {t("storeManager.createStore.storeRadius")}{" "}
+                  {t("store_manager.createStore.storeRadius")}{" "}
                   <Text className="text-red-500 dark:text-red-400">*</Text>
                 </Text>
                 <Text className="text-primary text-sm font-poppins font-bold">
            
-                  {t("storeManager.detailEdit.radiusMeters", { meters: radius || 50 })}
+                  {t("store_manager.detailEdit.radiusMeters", { meters: radius || 50 })}
                 </Text>
               </View>
               <Slider
@@ -1212,8 +1212,8 @@ export default function CreateStore() {
                 thumbTintColor="#FF6600"
               />
               <View className="flex-row justify-between mt-1">
-                <Text className="text-xs text-slate-500 font-poppins">{t("storeManager.detailEdit.radiusMin")}</Text>
-                <Text className="text-xs text-slate-500 font-poppins">{t("storeManager.detailEdit.radiusMax")}</Text>
+                <Text className="text-xs text-slate-500 font-poppins">{t("store_manager.detailEdit.radiusMin")}</Text>
+                <Text className="text-xs text-slate-500 font-poppins">{t("store_manager.detailEdit.radiusMax")}</Text>
               </View>
             </View>
             </View>
@@ -1230,12 +1230,12 @@ export default function CreateStore() {
             <View className="flex-row gap-3">
               {activeStep !== "store" && (
                 <View className="flex-1">
-                  <Button label={t("storeManager.createStore.back")} onPress={goBack} variant="secondary" loading={false} fullWidth />
+                  <Button label={t("store_manager.createStore.back")} onPress={goBack} variant="secondary" loading={false} fullWidth />
                 </View>
               )}
               <View className="flex-1">
                 <Button
-                  label={activeStep === "location" ? t("storeManager.createStore.createStore") : t("storeManager.createStore.continue")}
+                  label={activeStep === "location" ? t("store_manager.createStore.createStore") : t("store_manager.createStore.continue")}
                   onPress={goNext}
                   variant="primary"
                   loading={isSubmitting}

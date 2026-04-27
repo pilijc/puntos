@@ -1,0 +1,19 @@
+{
+  "title": "スタンププログラム",
+  "description": "スタンプでお客様に特典",
+  "endFailed": "プログラムの終了に失敗しました。",
+  "deleteFailed": "プログラムの削除に失敗しました。",
+  "activateFailed": "プログラムの有効化に失敗しました。",
+  "tabs": {
+    "draft": "下書き",
+    "active": "有効",
+    "ended": "終了"
+  },
+  "emptyDraftTitle": "下書きのスタンププログラムはありません",
+  "emptyActiveTitle": "有効なプログラムはありません",
+  "emptyEndedTitle": "終了したプログラムはありません",
+  "emptyActiveBody": "スタンププログラムを開始してお客様に特典を提供しましょう。",
+  "emptyDraftBody": "下書きのプログラムはここに表示されます。",
+  "emptyEndedBody": "終了したプログラムはここに表示されます。",
+  "createProgram": "新しいプログラムを作成"
+}

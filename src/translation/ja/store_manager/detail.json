@@ -1,0 +1,17 @@
+{
+  "headerDefaultDescription": "店舗情報の表示と管理",
+  "edit": "編集",
+  "unnamedStore": "名称未設定の店舗",
+  "notSet": "未設定",
+  "open": "開店: {{time}}",
+  "close": "閉店: {{time}}",
+  "businessDocument": "事業書類",
+  "location": "所在地",
+  "noLocationSet": "所在地が未設定です",
+  "mapOnlyAndroidWeb": "地図はAndroidとWebでのみ利用できます",
+  "status": {
+    "active": "有効",
+    "inactive": "無効",
+    "pending_review": "審査中"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "title": "取引履歴",
+  "types": {
+    "qr": "QR購入",
+    "stamp": "スタンプ",
+    "streak": "ストリーク"
+  },
+  "filters": {
+    "all": "すべて",
+    "qr": "QR購入",
+    "stamp": "スタンプ",
+    "streak": "ストリーク"
+  },
+  "empty": {
+    "noStoresTitle": "店舗が見つかりません",
+    "noStoresBody": "取引を記録するには、まず店舗を作成してください。",
+    "noTransactionsTitle": "取引がありません",
+    "noTransactionsBody": "お客様がポイントを獲得し始めると、ここに表示されます。"
+  },
+  "endOfList": "これ以上ありません"
+}

@@ -113,10 +113,10 @@ export default function FrontDeskScan() {
             
             if (requiresPasswordSetup) {
               setPasswordSetupModal({
-                title: "Password Setup Required",
-                message: "Complete your password setup to access all dashboard features and ensure proper account security.",
+                title: translate("frontdesk.transaction.passwordSetup.title"),
+                message: translate("frontdesk.transaction.passwordSetup.message"),
                 buttons: [{
-                  label: "Set Password",
+                  label: translate("frontdesk.transaction.passwordSetup.button"),
                   variant: "primary",
                   onPress: () => {
                     setPasswordSetupModal(null);
@@ -214,31 +214,31 @@ export default function FrontDeskScan() {
         {qrAccessEnabled === null ? (
           // Loading state
           <View className="flex-1 items-center justify-center px-4">
-            <View className="bg-white dark:bg-darkBackgroundCard rounded-2xl border border-neutral-100 dark:border-darkBorder shadow-sm p-8 items-center">
+            <View className="bg-white dark:bg-darkBackgroundCard rounded-xl border border-neutral-100 dark:border-darkBorder shadow-sm p-8 items-center">
               <View className="w-12 h-12 bg-gray-100 dark:bg-gray-800 rounded-full items-center justify-center mb-3">
                 <MaterialIcons name="hourglass-empty" size={24} color="#9CA3AF" />
               </View>
               <Text className="text-sm font-poppins-medium text-gray-500 dark:text-gray-400">
-                Checking QR access...
+                {translate("frontdesk.transaction.access.checking")}
               </Text>
             </View>
           </View>
         ) : !qrAccessEnabled ? (
           // QR Disabled state - clean message only, centered
           <View className="flex-1 items-center justify-center px-4">
-            <View className="bg-white dark:bg-darkBackgroundCard rounded-2xl border border-neutral-100 dark:border-darkBorder shadow-sm p-8">
+            <View className="bg-white dark:bg-darkBackgroundCard rounded-xl border border-neutral-100 dark:border-darkBorder shadow-sm p-8">
               <View className="items-center">
                 <View className="w-16 h-16 bg-amber-50 dark:bg-amber-900/20 rounded-full items-center justify-center mb-4">
                   <Lock size={32} color="#F59E0B" />
                 </View>
                 <Text className="text-lg font-poppins-bold text-gray-900 dark:text-gray-100 mb-2">
-                  QR Access Disabled
+                  {translate("frontdesk.transaction.access.disabled")}
                 </Text>
                 <Text className="text-sm font-poppins text-gray-500 dark:text-gray-400 text-center mb-4">
-                  Only the store manager can enable QR scanning.
+                  {translate("frontdesk.transaction.access.disabledDetail")}
                 </Text>
                 <Text className="text-xs font-poppins text-gray-400 dark:text-gray-500 text-center">
-                  Please wait for the store manager to enable this feature.
+                  {translate("frontdesk.transaction.access.wait")}
                 </Text>
               </View>
             </View>

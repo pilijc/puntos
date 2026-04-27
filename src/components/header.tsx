@@ -2,6 +2,7 @@ import React from "react";
 import { useColorScheme } from "react-native";
 import { View, Text, TouchableOpacity } from "@/tw";
 import { ChevronLeft } from "lucide-react-native";
+import { Platform } from "react-native";
 
 type AppHeaderProps = {
   title: string;
@@ -23,6 +24,7 @@ export function AppHeader({
   className = "bg-white dark:bg-darkBackground ",
 }: AppHeaderProps) {
   const isDark = useColorScheme() === "dark";
+  const isWeb = Platform.OS === "web";
 
   return (
     <View className={`px-2 py-2 ${className}`}>

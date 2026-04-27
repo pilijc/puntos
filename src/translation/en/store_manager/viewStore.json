@@ -1,0 +1,29 @@
+{
+  "fallbackTitle": "Store Details",
+  "fallbackDescription": "View & manage store info",
+  "menu": {
+    "staff": {
+      "label": "Staff",
+      "description": "Manage team"
+    },
+    "streak": {
+      "description": "Daily rewards"
+    },
+    "stamp": {
+      "description": "Punch cards"
+    },
+    "qr": {
+      "description": "Scan rewards"
+    },
+    "rewards": {
+      "description": "Redeemable items"
+    },
+    "media": {
+      "label": "Details",
+      "description": "Manage Store"
+    }
+  },
+  "recentTransactions": "Recent Transactions",
+  "seeAll": "See all",
+  "noTransactionsYet": "No transactions yet"
+}

@@ -51,6 +51,10 @@
                 "invalidLogin": "ログイン情報が正しくありません"
             }
         },
+        "sessionExpired": {
+            "title": "セッションが終了しました",
+            "message": "セキュリティのため、セッションの有効期限が切れました。続行するには再度サインインしてください。"
+        },
         "forgotPassword": {
             "title": "パスワードをお忘れですか",
             "subtitle": "メールアドレスを入力してください。パスワードリセット用のリンクをお送りします。",
@@ -171,6 +175,28 @@
                     "email": "example@domain.com",
                     "password": "パスワードを入力",
                     "confirmPassword": "パスワードを再入力"
+                }
+            },
+            "terms": {
+                "1": {
+                    "title": "アカウント・利用条件",
+                    "description": "正確な情報を登録してください。アカウントの管理はご自身の責任で行ってください。"
+                },
+                "2": {
+                    "title": "サービスの利用",
+                    "description": "不正利用や制限機能への不正アクセスをしないでください。品質向上のため機能を更新・停止する場合があります。"
+                },
+                "3": {
+                    "title": "プライバシー",
+                    "description": "サービス提供のために個人情報を取り扱います。個人情報を販売することはありません。"
+                },
+                "4": {
+                    "title": "支払い（該当する場合）",
+                    "description": "サブスクリプションは解約まで自動更新されます。法令で定められる場合を除き返金はできません。"
+                },
+                "5": {
+                    "title": "変更",
+                    "description": "本規約は変更されることがあります。継続利用は変更後の規約への同意を意味します。"
                 }
             }
         }
@@ -1079,6 +1105,52 @@
         },
         "subscription": {
             "title": "サブスクリプション",
+            "billing": {
+                "title": "お支払い・サブスクリプション",
+                "activePlanBadge": "現在のプラン",
+                "free": "無料",
+                "perMonth": "/月",
+                "estimatedCost": "見積り費用",
+                "upgradeToPro": "Proにアップグレード",
+                "cancelSubscription": "サブスクリプションを解約",
+                "fallbackPlanName": {
+                    "pro": "Proプラン"
+                },
+                "period": {
+                    "accessUntil": "利用期限",
+                    "nextPayment": "次回支払い"
+                },
+                "messages": {
+                    "accessUntilNoBill": "{{date}}までご利用いただけます。以降は請求されません。"
+                },
+                "errors": {
+                    "mustBeSignedInToSubscribe": "サブスクを開始するにはログインが必要です。",
+                    "checkoutStartFailed": "決済を開始できませんでした。セッションが無効の可能性があります。再度ログインしてもう一度お試しください。",
+                    "pleaseTryAgain": "もう一度お試しください。"
+                },
+                "cancel": {
+                    "confirmTitle": "サブスクリプションを解約しますか？",
+                    "confirmMessage": "この請求期間の終了までは現在の特典をご利用いただけます。その日以降は請求されません。",
+                    "goBack": "戻る",
+                    "confirmCta": "解約する",
+                    "failedTitle": "解約できませんでした",
+                    "successTitle": "サブスクリプション"
+                },
+                "recentBilling": {
+                    "title": "最近のお支払い",
+                    "subtitle": "アカウントのお支払い履歴です。"
+                },
+                "invoices": {
+                    "empty": "請求履歴はまだありません。",
+                    "end": "これ以上ありません。",
+                    "columns": {
+                        "paymentReference": "支払い参照",
+                        "paidDate": "支払い日",
+                        "status": "ステータス",
+                        "amount": "金額"
+                    }
+                }
+            },
             "welcome": {
                 "planBadge": "ベーシックプラン",
                 "headline": "現在はベーシックです",

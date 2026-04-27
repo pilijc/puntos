@@ -48,6 +48,7 @@ function ProgressRing({
   streakDays: number;
   targetDays: number;
 }) {
+  const { t: translate } = useTranslation();
   const animatedValue = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -100,7 +101,7 @@ function ProgressRing({
           {streakDays}
         </Text>
         <Text className="text-neutral-400 font-poppins-medium text-[11px]">
-          of {targetDays} days
+          {translate("user.rewards.streakDetail.ofDays", { targetDays })}
         </Text>
       </View>
     </RNView>
@@ -138,6 +139,7 @@ function RecentActivityCalendar({
   earnedDates: Set<string>;
   endDate?: string | null;
 }) {
+  const { t: translate } = useTranslation();
   const [expanded, setExpanded] = React.useState(false);
   const scrollRef = React.useRef<any>(null);
   const STRIP_DAYS = 90;
@@ -211,7 +213,7 @@ function RecentActivityCalendar({
         {earned ? (
           <Flame size={12} color="#FFFFFF" />
         ) : isEndMarker ? (
-          <Text style={{ fontSize: 8, color: "#FF6600", fontWeight: "700" }}>End</Text>
+          <Text style={{ fontSize: 8, color: "#FF6600", fontWeight: "700" }}>{translate("user.rewards.streakDetail.endMarker")}</Text>
         ) : (
           <Text style={{ fontSize: 9, color: isToday ? "#FF6600" : "#9ca3af", fontWeight: "600" }}>
             {day}
@@ -290,15 +292,15 @@ function RecentActivityCalendar({
     <View className="flex-row items-center gap-x-3 flex-wrap gap-y-1">
       <View className="flex-row items-center gap-x-1">
         <RNView style={{ width: 12, height: 12, borderRadius: 3, backgroundColor: "#FF6600" }} />
-        <Text className="text-[10px] text-neutral-400 font-poppins">Earned</Text>
+        <Text className="text-[10px] text-neutral-400 font-poppins">{translate("user.rewards.streakDetail.earned")}</Text>
       </View>
       <View className="flex-row items-center gap-x-1">
         <RNView style={{ width: 12, height: 12, borderRadius: 3, backgroundColor: "#FFF7ED", borderWidth: 1.5, borderColor: "#FF6600" }} />
-        <Text className="text-[10px] text-neutral-400 font-poppins">Today</Text>
+        <Text className="text-[10px] text-neutral-400 font-poppins">{translate("user.rewards.streakDetail.today")}</Text>
       </View>
       <View className="flex-row items-center gap-x-1">
         <RNView style={{ width: 12, height: 12, borderRadius: 3, backgroundColor: "#f3f4f6" }} />
-        <Text className="text-[10px] text-neutral-400 font-poppins">Missed</Text>
+        <Text className="text-[10px] text-neutral-400 font-poppins">{translate("user.rewards.streakDetail.missed")}</Text>
       </View>
       {showEnd && endDate && !endDateIsPast && (
         <View className="flex-row items-center gap-x-1">
@@ -307,7 +309,7 @@ function RecentActivityCalendar({
             backgroundColor: "#FFF7ED",
             borderWidth: 1.5, borderColor: "#FF6600", borderStyle: "dashed",
           }} />
-          <Text className="text-[10px] text-neutral-400 font-poppins">End</Text>
+          <Text className="text-[10px] text-neutral-400 font-poppins">{translate("user.rewards.streakDetail.endMarker")}</Text>
         </View>
       )}
     </View>
@@ -365,7 +367,7 @@ function RecentActivityCalendar({
           <View className="flex-row items-center justify-between mt-2">
             <Legend />
             <TouchableOpacity onPress={() => setExpanded(true)}>
-              <Text className="text-[11px] text-primary font-poppins-semibold">Full calendar ›</Text>
+              <Text className="text-[11px] text-primary font-poppins-semibold">{translate("user.rewards.streakDetail.fullCalendar")}</Text>
             </TouchableOpacity>
           </View>
         </>
@@ -374,7 +376,7 @@ function RecentActivityCalendar({
           <View className="flex-row items-center justify-between mb-3">
             <Text className="text-sm font-poppins-semibold text-neutral-900 dark:text-white">{monthLabel}</Text>
             <TouchableOpacity onPress={() => setExpanded(false)}>
-              <Text className="text-[11px] text-primary font-poppins-semibold">‹ Compact view</Text>
+              <Text className="text-[11px] text-primary font-poppins-semibold">{translate("user.rewards.streakDetail.compactView")}</Text>
             </TouchableOpacity>
           </View>
           <View className="flex-row mb-1">
@@ -497,16 +499,16 @@ export default function StoreStreakDetail() {
       <View className="flex-1 items-center justify-center p-6 bg-background dark:bg-darkBackground">
         <Flame size={48} color="#d1d5db" />
         <Text className="text-base font-poppins-semibold text-neutral-700 dark:text-neutral-300 mt-3">
-          No streak found
+          {translate("user.rewards.streakDetail.noStreakTitle")}
         </Text>
         <Text className="text-xs font-poppins text-neutral-500 mt-2 text-center">
-          This store does not have an active streak program available for your account.
+          {translate("user.rewards.streakDetail.noStreakBody")}
         </Text>
         <TouchableOpacity
           onPress={() => router.back()}
           className="mt-5 px-6 py-2.5 border border-primary rounded-full"
         >
-          <Text className="text-primary font-poppins-semibold text-sm">Go back</Text>
+          <Text className="text-primary font-poppins-semibold text-sm">{translate("user.rewards.streakDetail.goBack")}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -545,20 +547,20 @@ export default function StoreStreakDetail() {
 
     if (daysUntilEnd > 0) {
       const margin = daysUntilEnd - daysLeft;
-      const endingText = daysUntilEnd === 1 ? "Program ending today!" : `Program ending in ${daysUntilEnd} days!`;
+      const endingText = daysUntilEnd === 1 ? translate("user.rewards.streakDetail.endingToday") : translate("user.rewards.streakDetail.endingInDays", { days: daysUntilEnd });
       
       if (margin < 0) {
         deadlineTier = "failed";
         deadlineLabel = endingText;
       } else if (margin === 0) {
         deadlineTier = "critical";
-        deadlineLabel = `${endingText} No days to spare — don't skip!`;
+        deadlineLabel = translate("user.rewards.streakDetail.noDaysToSpare", { endingText });
       } else if (margin <= 3) {
         deadlineTier = "urgent";
-        deadlineLabel = `${endingText} You need ${daysLeft} more visits.`;
+        deadlineLabel = translate("user.rewards.streakDetail.needMoreVisits", { endingText, days: daysLeft });
       } else {
         deadlineTier = "expiring";
-        deadlineLabel = `Complete before ${fmt} — ${daysUntilEnd} days left.`;
+        deadlineLabel = translate("user.rewards.streakDetail.completeBefore", { date: fmt, days: daysUntilEnd });
       }
     }
   }
@@ -585,7 +587,7 @@ export default function StoreStreakDetail() {
           <ChevronLeft size={24} color="#FF6600" />
         </TouchableOpacity>
         <Text className="text-base font-poppins-semibold text-neutral-900 dark:text-white">
-          Streak Log
+          {translate("user.rewards.streakDetail.title")}
         </Text>
       </View>
 
@@ -616,23 +618,23 @@ export default function StoreStreakDetail() {
         {Number(program?.completion_bonus_points ?? 0) > 0 ? (
           <View className="bg-orange-50/60 dark:bg-darkPrimaryBgMuted/40 px-4 py-2.5 flex-row items-center justify-between border-t border-orange-100/50 dark:border-darkPrimaryBorder/50">
             <Text className="text-[11px] font-poppins text-neutral-600 dark:text-neutral-400">
-              Complete streak to earn
+              {translate("user.rewards.streakDetail.completeToEarn")}
             </Text>
             <View className="flex-row items-center gap-x-1.5">
               <Gem size={12} color="#FF6600" />
               <Text className="text-xs font-poppins-bold text-primary">
-                +{Number(program.completion_bonus_points)} Bonus
+                {translate("user.rewards.streakDetail.plusBonus", { count: Number(program.completion_bonus_points) })}
               </Text>
             </View>
           </View>
         ) : program?.reward_description ? (
           <View className="bg-orange-50/60 dark:bg-darkPrimaryBgMuted/40 px-4 py-2.5 flex-row items-center justify-between border-t border-orange-100/50 dark:border-darkPrimaryBorder/50">
             <Text className="text-[11px] font-poppins text-neutral-600 dark:text-neutral-400">
-              Complete streak to unlock
+              {translate("user.rewards.streakDetail.completeToUnlock")}
             </Text>
             <View className="flex-row items-center gap-x-1.5">
               <Gem size={12} color="#FF6600" />
-              <Text className="text-xs font-poppins-bold text-primary">Reward</Text>
+              <Text className="text-xs font-poppins-bold text-primary">{translate("user.rewards.streakDetail.rewardLabel")}</Text>
             </View>
           </View>
         ) : null}
@@ -684,8 +686,8 @@ export default function StoreStreakDetail() {
             }`}
           >
             {isCompleted
-              ? "Streak Completed!"
-              : `${daysLeft} day${daysLeft !== 1 ? "s" : ""} to go`}
+              ? translate("user.rewards.streakDetail.streakCompleted")
+              : translate("user.rewards.streakDetail.daysToGo", { count: daysLeft })}
           </Text>
         </View>
 
@@ -696,7 +698,7 @@ export default function StoreStreakDetail() {
               <View className="flex-row items-center gap-x-1">
                 <CalendarDays size={11} color="#9ca3af" />
                 <Text className="text-[10px] font-poppins text-neutral-400">
-                  Started{" "}
+                  {translate("user.rewards.streakDetail.started")}
                   {new Date(program.start_at).toLocaleDateString("en-US", {
                     month: "short", day: "numeric", year: "numeric",
                   })}
@@ -710,7 +712,7 @@ export default function StoreStreakDetail() {
               <View className="flex-row items-center gap-x-1">
                 <CalendarDays size={11} color="#9ca3af" />
                 <Text className="text-[10px] font-poppins text-neutral-400">
-                  {isCompleted ? "Ended" : "Ends"}{" "}
+                  {isCompleted ? translate("user.rewards.streakDetail.ended") : translate("user.rewards.streakDetail.ends")}
                   {parseLocalDate(program.end_date).toLocaleDateString("en-US", {
                     month: "short", day: "numeric", year: "numeric",
                   })}
@@ -725,17 +727,17 @@ export default function StoreStreakDetail() {
       <View className="px-4 pt-3 pb-4 gap-y-3">
         <View className="flex-row gap-x-2.5">
           <StatCard
-            label="Current Streak"
+            label={translate("user.rewards.streakDetail.currentStreak")}
             value={streakDays === 0 ? "0" : `${streakDays}${getOrdinalSuffix(streakDays)}`}
             icon={<Flame size={16} color="#FF6600" />}
           />
           <StatCard
-            label="Target Days"
+            label={translate("user.rewards.streakDetail.targetDays")}
             value={`${targetDays}`}
             icon={<Crosshair size={16} color="#6366f1" />}
           />
           <StatCard
-            label="Pts Earned"
+            label={translate("user.rewards.streakDetail.ptsEarned")}
             value={`${Number(streak.points_earned ?? 0)}`}
             icon={<Star size={16} color="#f59e0b" />}
           />
@@ -751,11 +753,11 @@ export default function StoreStreakDetail() {
                 <View className="flex-1">
                   <Text className="text-[13px] font-poppins-semibold text-neutral-900 dark:text-white">
                     {daysLeft === 1
-                      ? "One more visit and you're done!"
-                      : `${daysLeft} more visits to complete your streak`}
+                      ? translate("user.rewards.streakDetail.oneMoreVisit")
+                      : translate("user.rewards.streakDetail.moreVisitsParam", { count: daysLeft })}
                   </Text>
                   <Text className="text-[11px] font-poppins text-neutral-500 mt-0.5">
-                    Come within range of {storeName} to earn your next streak day.
+                    {translate("user.rewards.streakDetail.comeWithinRange", { name: storeName })}
                   </Text>
                 </View>
               </View>
@@ -771,11 +773,11 @@ export default function StoreStreakDetail() {
                   <Gem size={28} color="#FF6600" />
                   <View>
                     <Text style={{ fontSize: 13, fontWeight: "700", color: "#FF6600", lineHeight: 17 }}>
-                      {Number(program.completion_bonus_points)} bonus pts
+                      {translate("user.rewards.streakDetail.bonusPtsVal", { count: Number(program.completion_bonus_points) })}
                     </Text>
                     {!isCompleted && (
                       <Text style={{ fontSize: 10, color: "#FF6600", opacity: 0.6, lineHeight: 14 }}>
-                        earn on completion
+                        {translate("user.rewards.streakDetail.earnOnCompletion")}
                       </Text>
                     )}
                   </View>
@@ -792,7 +794,7 @@ export default function StoreStreakDetail() {
                   }}
                 >
                   <Text style={{ fontSize: 11, fontWeight: "700", color: isCompleted ? "#FFFFFF" : "#c1c1c1" }}>
-                    {isCompleted ? "Claim" : "Locked"}
+                    {isCompleted ? translate("user.rewards.streakDetail.claimBtn") : translate("user.rewards.streakDetail.lockedBtn")}
                   </Text>
                 </TouchableOpacity>
               </View>

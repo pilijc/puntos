@@ -15,10 +15,10 @@ export function useSuperAdminStores() {
   const { stores, fetchStores, approveStore, rejectStore } = storeState;
   const FILTER_LABELS: Record<Filter, string> = useMemo(
     () => ({
-      All: translate("superAdmin.stores.filter.all"),
-      pending_review: translate("superAdmin.stores.filter.pending"),
-      active: translate("superAdmin.stores.filter.active"),
-      inactive: translate("superAdmin.stores.filter.inactive"),
+      All: translate("label.all"),
+      pending_review: translate("label.pending"),
+      active: translate("label.active"),
+      inactive: translate("label.inactive"),
     }),
     [translate],
   );
@@ -62,16 +62,54 @@ export function useSuperAdminStores() {
     setRefreshing(false);
   };
 
+  const ownerActiveStoreCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const store of stores) {
+      if ((store.status === "active" || store.is_active) && store.owner_id) {
+        counts[store.owner_id] = (counts[store.owner_id] ?? 0) + 1;
+      }
+    }
+    return counts;
+  }, [stores]);
+
+  const hasProSubscription = useCallback((ownerId: string | null) => {
+    if (!ownerId) return false;
+    const sub = subscriptions.find((s) => s.owner_id === ownerId);
+    // Based on subscription-limits.ts, it must have a subscription and payment_status === "paid"
+    return !!sub && !!sub.subscription_id && sub.payment_status === "paid";
+  }, [subscriptions]);
+
   const loadMore = async () => {
     if (storeState.isFetching || !storeState.hasMore) return;
     await fetchStores({ loadMore: true });
   };
 
   const handleApprove = (store: AdminStoreRow) => {
+    const ownerId = store.owner_id;
+    const activeCount = ownerId ? (ownerActiveStoreCounts[ownerId] ?? 0) : 0;
+    const isPro = hasProSubscription(ownerId);
+
+    // If owner already has 1 or more active stores and is NOT Pro
+    if (activeCount >= 1 && !isPro) {
+      setConfirmModal({
+        title: translate("superAdmin.stores.modal.exceededTitle", { defaultValue: "Store Exceeded Subscriptions" }),
+        message: translate("superAdmin.stores.modal.exceededMessage", {
+          name: store.owner_name || "The manager",
+          storeName: store.name,
+          defaultValue: `${store.owner_name || "The manager"} already has an active store. To approve "${store.name}", they must upgrade to a Pro subscription.`
+        }),
+        label: translate("superAdmin.stores.modal.exceededAction", { defaultValue: "I Understand" }),
+        variant: "primary",
+        hideCancel: true,
+        onConfirm: () => setConfirmModal(null),
+      });
+      return;
+    }
+
     setConfirmModal({
-      title: translate("superAdmin.stores.modal.approveTitle"),
-      message: translate("superAdmin.stores.modal.approveMessage", { name: store.name }),
-      label: translate("superAdmin.stores.modal.approveAction"),
+      title: translate("super_admin.stores.modal.approveTitle"),
+      message: translate("super_admin.stores.modal.approveMessage", { name: store.name }),
+      label: translate("super_admin.stores.modal.approveAction"),
       variant: "primary",
       onConfirm: async () => {
         setConfirmModal(null);
@@ -82,8 +120,8 @@ export function useSuperAdminStores() {
           setSelectedStore(null);
           useSuperAdminStoresStore.setState({
             errorModal: {
-              title: translate("superAdmin.stores.modal.successTitle"),
-              message: translate("superAdmin.stores.modal.successMessage", { name: store.name }),
+              title: translate("super_admin.stores.modal.successTitle"),
+              message: translate("super_admin.stores.modal.successMessage", { name: store.name }),
               type: "success",
             },
           });
@@ -94,9 +132,9 @@ export function useSuperAdminStores() {
 
   const handleReject = (store: AdminStoreRow) => {
     setConfirmModal({
-      title: translate("superAdmin.stores.modal.rejectTitle"),
-      message: translate("superAdmin.stores.modal.rejectMessage", { name: store.name }),
-      label: translate("superAdmin.stores.modal.rejectAction"),
+      title: translate("super_admin.stores.modal.rejectTitle"),
+      message: translate("super_admin.stores.modal.rejectMessage", { name: store.name }),
+      label: translate("super_admin.stores.modal.rejectAction"),
       variant: "danger",
       onConfirm: async () => {
         setConfirmModal(null);
@@ -105,8 +143,8 @@ export function useSuperAdminStores() {
         if (success) {
           useSuperAdminStoresStore.setState({
             errorModal: {
-              title: translate("superAdmin.stores.modal.errorTitle"),
-              message: translate("superAdmin.stores.modal.errorMessage", { name: store.name }),
+              title: translate("super_admin.stores.modal.errorTitle"),
+              message: translate("super_admin.stores.modal.errorMessage", { name: store.name }),
               type: "error",
             },
           });
@@ -151,5 +189,7 @@ export function useSuperAdminStores() {
     pendingCount,
     FILTER_LABELS,
     subscriptions,
+    ownerActiveStoreCounts,
+    hasProSubscription,
   };
 }
