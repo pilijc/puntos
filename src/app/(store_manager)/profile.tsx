@@ -3,6 +3,7 @@ import { SafeAreaView, View, Text, TouchableOpacity, Alert, Platform } from "rea
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { router } from "expo-router";
 import { supabase } from "@/supabase/supabase";
+import { markIntentionalSignOut } from "@/lib/intentional-signout";
 import { useDeviceSession } from "@/hooks/store-manager/use-device-session";
 
 export default function StoreManagerProfile() {
@@ -14,6 +15,7 @@ export default function StoreManagerProfile() {
             if (confirmed) {
                 const { data: { user } } = await supabase.auth.getUser();
                 if (user) await signOutCurrentDevice(user.id);
+                markIntentionalSignOut();
                 await supabase.auth.signOut();
                 router.push("/(onboarding)/welcome");
             }
@@ -29,6 +31,7 @@ export default function StoreManagerProfile() {
                     const { data: { user } } = await supabase.auth.getUser();
                     if (user) await signOutCurrentDevice(user.id);
                     
+                    markIntentionalSignOut();
                     await supabase.auth.signOut();
                     router.push(
                       Platform.OS === "web"

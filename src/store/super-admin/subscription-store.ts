@@ -3,6 +3,7 @@ import type {
   ManagerSubscriptionPaymentRow,
   ManagerSubscriptionRow,
   PublicUserRow,
+  SubscriptionDashboardStats,
   SubscriptionPlan,
 } from "@/type/super-admin/subscription";
 
@@ -15,6 +16,7 @@ type SubscriptionStoreState = {
   paymentsLoading: Record<string, boolean>;
   proAmountInput: string;
   savedProAmount: number | null;
+  dashboardStats: SubscriptionDashboardStats | null;
   formError: string | null;
   loading: boolean;
   saving: boolean;
@@ -28,6 +30,7 @@ type SubscriptionStoreState = {
   setPaymentsLoading: (ownerId: string, loading: boolean) => void;
   setProAmountInput: (value: string) => void;
   setSavedProAmount: (value: number | null) => void;
+  setDashboardStats: (value: SubscriptionDashboardStats | null) => void;
   setFormError: (value: string | null) => void;
   setLoading: (value: boolean) => void;
   setSaving: (value: boolean) => void;
@@ -44,6 +47,7 @@ export const useSuperAdminSubscriptionStore = create<SubscriptionStoreState>((se
   paymentsLoading: {},
   proAmountInput: "",
   savedProAmount: null,
+  dashboardStats: null,
   formError: null,
   loading: false,
   saving: false,
@@ -72,6 +76,7 @@ export const useSuperAdminSubscriptionStore = create<SubscriptionStoreState>((se
     })),
   setProAmountInput: (value) => set({ proAmountInput: value }),
   setSavedProAmount: (value) => set({ savedProAmount: value }),
+  setDashboardStats: (value) => set({ dashboardStats: value }),
   setFormError: (value) => set({ formError: value }),
   setLoading: (value) => set({ loading: value }),
   setSaving: (value) => set({ saving: value }),
@@ -87,6 +92,7 @@ export const useSuperAdminSubscriptionStore = create<SubscriptionStoreState>((se
       paymentsLoading: {},
       proAmountInput: "",
       savedProAmount: null,
+      dashboardStats: null,
       formError: null,
       loading: false,
       saving: false,

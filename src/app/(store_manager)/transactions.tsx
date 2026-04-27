@@ -35,8 +35,8 @@ function AvatarInitials({ name }: { name: string }) {
     .toUpperCase();
 
   return (
-    <View className="size-10 rounded-full bg-backgroundMuted dark:bg-darkBackgroundCard items-center justify-center">
-      <Text className="text-[13px] font-poppins-bold text-textMuted dark:text-darkTextSecondary">
+    <View className="size-10 rounded-full bg-primary/5 items-center justify-center">
+      <Text className="text-[13px] font-poppins-bold text-primary dark:text-darkTextMuted">
         {initials}
       </Text>
     </View>
@@ -111,7 +111,7 @@ export default function TransactionsScreen() {
         return (
           <View className={isWeb ? "pt-3 pb-2 w-full" : "px-6 pt-3 pb-2"}>
             <View className={isWeb ? "w-full max-w-4xl self-center" : ""}>
-              <Text className="text-xs font-poppins-semibold text-textMuted dark:text-darkTextMuted">
+              <Text className="text-xs font-poppins-semibold text-textSecondary dark:text-darkTextSecondary">
                 {item.label}
               </Text>
             </View>
@@ -163,10 +163,10 @@ export default function TransactionsScreen() {
                   </Text>
                 </View>
                 <View className="flex-row items-center justify-between">
-                  <Text className="text-xs font-poppins text-textMuted dark:text-darkTextMuted">
-                    {translate(`store_manager.transactions.types.${tx.type}`)}
+                  <Text className="text-xs font-poppins text-textSecondary dark:text-darkTextSecondary">
+                    {translate(`storeManager.transactions.types.${tx.type}`)}
                   </Text>
-                  <Text className="text-[10px] font-poppins text-textMuted dark:text-darkTextMuted">
+                  <Text className="text-[10px] font-poppins text-textSecondary dark:text-darkTextSecondary">
                     {formatTxTime(tx.date)}
                   </Text>
                 </View>
@@ -179,7 +179,7 @@ export default function TransactionsScreen() {
   );
 
   const emptyIllustration = (
-    <View className="bg-white dark:bg-darkBackground rounded-2xl ">
+    <View className="bg-white dark:bg-darkBackground rounded-xl ">
       <Image source={require("@/assets/images/found.png")} style={{ width: 180, height: 180 }} resizeMode="contain" />
     </View>
   );
@@ -293,16 +293,16 @@ export default function TransactionsScreen() {
       ) : stores.length === 0 ? (
         <View className={isWeb ? "px-4 pb-4 items-center mt-4" : "px-4 pb-4"}>
           <View
-            className={`w-full bg-white dark:bg-darkBackground rounded-2xl overflow-hidden justify-start ${isWeb ? "max-w-4xl p-6" : "p-5"}`}
+            className={`w-full bg-white dark:bg-darkBackground rounded-xl overflow-hidden justify-start ${isWeb ? "max-w-4xl p-6" : "p-5"}`}
           >
             <View className="items-center justify-center gap-y-4">
               {emptyIllustration}
               <View className="items-center justify-center">
-                <Text className="text-base font-poppins-bold text-textSecondary dark:text-darkTextSecondary text-center">
-                  {translate("store_manager.transactions.empty.noStoresTitle")}
+                <Text className="text-base font-poppins-bold text-textPrimary dark:text-darkTextPrimary text-center">
+                  {translate("storeManager.transactions.empty.noStoresTitle")}
                 </Text>
-                <Text className="text-xs font-poppins text-textMuted dark:text-darkTextMuted text-center px-8">
-                  {translate("store_manager.transactions.empty.noStoresBody")}
+                <Text className="text-xs font-poppins text-textSecondary dark:text-darkTextSecondary text-center px-8">
+                  {translate("storeManager.transactions.empty.noStoresBody")}
                 </Text>
               </View>
             </View>
@@ -311,16 +311,16 @@ export default function TransactionsScreen() {
       ) : listItems.length === 0 ? (
         <View className={isWeb ? "px-4 pb-4 items-center" : "px-4 pb-4 mt-4"}>
           <View
-            className={`w-full bg-white dark:bg-darkBackground rounded-2xl overflow-hidden justify-start ${isWeb ? "max-w-4xl p-6 py-10" : "p-5 py-8"}`}
+            className={`w-full bg-white dark:bg-darkBackground rounded-xl overflow-hidden justify-start ${isWeb ? "max-w-4xl p-6 py-10" : "p-5 py-8"}`}
           >
             <View className="items-center justify-center gap-y-5">
               {emptyIllustration}
               <View className="items-center justify-center">
-                <Text className="text-base font-poppins-bold text-textSecondary dark:text-darkTextSecondary text-center">
-                  {translate("store_manager.transactions.empty.noTransactionsTitle")}
+                <Text className="text-base font-poppins-bold text-textPrimary dark:text-darkTextPrimary text-center">
+                  {translate("storeManager.transactions.empty.noTransactionsTitle")}
                 </Text>
-                <Text className="text-xs font-poppins text-textMuted dark:text-darkTextMuted text-center px-8">
-                  {translate("store_manager.transactions.empty.noTransactionsBody")}
+                <Text className="text-xs font-poppins text-textSecondary dark:text-darkTextSecondary text-center px-8">
+                  {translate("storeManager.transactions.empty.noTransactionsBody")}
                 </Text>
               </View>
             </View>
@@ -340,8 +340,8 @@ export default function TransactionsScreen() {
               </View>
             ) : !hasMore && listItems.length > 0 ? (
               <View className="items-center py-2">
-                <Text className="text-xs font-poppins text-textMuted dark:text-darkTextMuted py-3">
-                  {translate("store_manager.transactions.endOfList")}
+                <Text className="text-xs font-poppins text-textSecondary dark:text-darkTextSecondary py-3">
+                  {translate("storeManager.transactions.endOfList")}
                 </Text>
               </View>
             ) : null

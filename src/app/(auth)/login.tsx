@@ -7,6 +7,7 @@ import { loginService, signInWithGoogleLoginService } from "@/services/auth-serv
 import { useTranslation, Trans } from "react-i18next";
 import { Modal, type ModalButton } from "@/components/modal";
 import { supabase } from "@/supabase/supabase";
+import { markIntentionalSignOut } from "@/lib/intentional-signout";
 import TranslateButton from "@/components/ui/translate-button";
 import { AppHeader } from "@/components/header";
 import { TextField } from "@/components/text-field";
@@ -16,7 +17,7 @@ import { useDeviceSession } from "@/hooks/store-manager/use-device-session";
 import { DeviceLimitModal } from "@/components/store_manager/session/device-limit-modal";
 
 export default function Login() {
-  const {email, password, setEmail, setPassword, showPassword, setShowPassword } = useAuthStore();
+  const {email, password, setEmail, setPassword, showPassword, setShowPassword, resetAuthForm } = useAuthStore();
   const { restricted } = useLocalSearchParams();
   const emptyState = { email: "", password: "" };
   const [loading, setLoading] = useState(false);
@@ -81,7 +82,6 @@ export default function Login() {
     try {
       setLoading(true);
       const data = await loginService(trimmedEmail, password);
-      console.log("login component", data);
       if (!data.success) {
         setModal({
           title: "You are not assigned to a store",
@@ -91,6 +91,7 @@ export default function Login() {
               label: "OK",
               variant: "secondary",
               onPress: async () => {
+                markIntentionalSignOut();
                 await supabase.auth.signOut();
                 setModal(null);
               }
@@ -105,7 +106,7 @@ export default function Login() {
         setShowDeviceLimitModal(true);
         return;
       }
-
+      resetAuthForm();
       router.replace(data.homeRoute);
     } catch (error: any) {
       console.log("error login component", error);
@@ -136,7 +137,7 @@ export default function Login() {
         setShowDeviceLimitModal(true);
         return;
       }
-
+      resetAuthForm();
       router.replace(data.homeRoute ?? "/(user)");
     } catch (error: any) {
       if (error?.name === "AccountBlockedError") {
@@ -215,6 +216,8 @@ export default function Login() {
       <Button
         label={translate("onboarding.signup.google")}
         onPress={handleSignInWithGoogle}
+        loading={loadingGoogle}
+        disabled={loadingGoogle}
         variant="secondary"
         fullWidth={true}
         authButton={true}
@@ -248,6 +251,7 @@ export default function Login() {
         onCheckAgain={handleCheckAgain}
         onCancel={async () => {
           setShowDeviceLimitModal(false);
+          markIntentionalSignOut();
           await supabase.auth.signOut();
         }}
       />
@@ -294,10 +298,10 @@ export default function Login() {
                         />
                       </View>
                       <View className="w-full">
-                        <Text className="text-lg font-poppins-bold text-textSecondary dark:text-darkTextPrimary">
+                        <Text className="text-lg font-poppins-bold text-textPrimary dark:text-darkTextPrimary">
                           {translate("onboarding.login.welcome")}
                         </Text>
-                        <Text className="text-sm font-poppins text-textMuted dark:text-darkTextSecondary">
+                        <Text className="text-sm font-poppins text-textSecondary dark:text-darkTextSecondary">
                           {translate("onboarding.login.subhead")}
                         </Text>
                       </View>

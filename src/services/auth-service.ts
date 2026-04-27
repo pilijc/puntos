@@ -1,4 +1,5 @@
 import { supabase } from "@/supabase/supabase";
+import { markIntentionalSignOut } from "@/lib/intentional-signout";
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
 import { Alert } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -29,6 +30,7 @@ export async function checkIfAccountDeletedService(userId: string): Promise<void
   if (error) throw error;
 
   if (userSettings?.deleted_at) {
+    markIntentionalSignOut();
     await supabase.auth.signOut();
     throw new AccountDeletedError();
   }
@@ -55,6 +57,7 @@ export async function softDeleteUserService(userId: string): Promise<void> {
     .eq("user_id", userId);
 
   if (error) throw error;
+  markIntentionalSignOut();
   await supabase.auth.signOut();
 }
 
@@ -210,6 +213,7 @@ export async function loginService(email: string, password: string) {
           .single();
 
         if (error || !storeStaff?.store_id) {
+          markIntentionalSignOut();
           await supabase.auth.signOut();   
           await AsyncStorage.removeItem("sessionToken");
           

@@ -336,6 +336,7 @@ export default function SuperAdminLayout() {
                 : undefined,
         }}
       />
+      <Tabs.Screen name="inbox" options={{ href: null, tabBarStyle: { display: "none" } }} />
     </Tabs>
   );
 }

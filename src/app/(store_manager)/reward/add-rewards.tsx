@@ -279,7 +279,7 @@ export default function Rewards() {
               numberOfLines={4}
               value={description}
               onChangeText={setDescription}
-							style={{ textAlignVertical: "top", minHeight: 88, paddingLeft: 12, fontSize: 13 }}
+							style={{ textAlignVertical: "top", minHeight: 88, paddingLeft: 12, fontSize: 13, paddingTop: 12 }}
             />
           </View>
 

@@ -1,7 +1,16 @@
 {
   "title": "Merchant Stores",
-  "tabs": {},
-  "badge": {},
+  "tabs": {
+    "all": "All",
+    "active": "Active",
+    "pending": "Pending",
+    "inactive": "Inactive"
+  },
+  "badge": {
+    "active": "Active",
+    "pending_review": "Pending review",
+    "inactive": "Inactive"
+  },
   "noAddress": "No address provided",
   "empty": {
     "allTitle": "No stores yet",
