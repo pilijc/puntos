@@ -58,6 +58,7 @@ export default function Layout() {
   const sessionToken = useAuthStore((s) => s.sessionToken);
   const isRestricted = useAuthStore((s) => s.isRestricted);
   const sessionExpiredNotice = useAuthStore((s) => s.sessionExpiredNotice);
+  const setSessionExpiredNotice = useAuthStore((s) => s.setSessionExpiredNotice);
   const fetchStamps = useStamps((s) => s.fetchStamps);
 
   useEffect(() => {
@@ -191,15 +192,21 @@ export default function Layout() {
       />
       <Modal
         visible={sessionExpiredNotice}
-        onClose={() => {
-          useAuthStore.getState().setSessionExpiredNotice(false);
-        }}
+        onClose={() => setSessionExpiredNotice(false)}
         title={t("onboarding.sessionExpired.title")}
         message={t("onboarding.sessionExpired.message")}
-        buttons={[]}
         showCloseButton={false}
         dismissOnBackdrop={false}
-        timer={1000}
+        timer={3000}
+        buttons={[
+          {
+            label: t("onboarding.sessionExpiredButton"),
+            onPress: () => {
+              setSessionExpiredNotice(false);
+            },
+            variant: "primary",
+          },
+        ]}
       />
     </GestureHandlerRootView>
   );
