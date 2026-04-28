@@ -44,20 +44,7 @@ export default function SuperAdminDashboard() {
     setPayerLimit(5);
   }, [timeframe]);
 
-  const returningUsersCount = useMemo(() => {
-    return users.filter(u => {
-      const lastSignIn = u.last_sign_in_at;
-      const createdAt = u.created_at;
-      if (!lastSignIn || !createdAt) return false;
-      const diff = new Date(lastSignIn).getTime() - new Date(createdAt).getTime();
-      return diff > 24 * 60 * 60 * 1000;
-    }).length;
-  }, [users]);
 
-  const userRetentionPercent = useMemo(
-    () => Math.round((returningUsersCount / Math.max(1, users.length)) * 100),
-    [returningUsersCount, users.length]
-  );
 
   const userMetrics = useMemo(() => buildTimeframeSeries(users, USER_DATE_KEYS, timeframe), [users, timeframe]);
   const storeMetrics = useMemo(() => buildTimeframeSeries(stores, STORE_DATE_KEYS, timeframe), [stores, timeframe]);
@@ -129,13 +116,13 @@ export default function SuperAdminDashboard() {
           <View style={{ flexDirection: "row", gap: 16, alignItems: "flex-start" }}>
             {/* Left column */}
             <View style={{ flex: 1 }}>
-              <View className="mb-1.5 mt-2">
-                <View className="flex-row gap-2 mb-1">
+              <View className="mb-6 mt-4">
+                <View className="flex-row gap-4 mb-4">
                   <StatCard label={translate("superAdmin.dashboard.metrics.totalUsers")} val={users.length} Icon={Users} />
                   <StatCard label={translate("superAdmin.dashboard.metrics.totalStores")} val={stores.length} Icon={Store} />
                   <StatCard label={translate("superAdmin.dashboard.metrics.activeStores")} val={activeStoresCount} Icon={Activity} />
                 </View>
-                <View className="flex-row gap-[10px]">
+                <View className="flex-row gap-[16px]">
                   <DashboardMetricTile
                     label={timeframe === "today" ? translate("superAdmin.dashboard.peakHour") : timeframe === "7d" ? translate("superAdmin.dashboard.mostActiveDay") : translate("superAdmin.dashboard.mostActiveWeek")}
                     value={mostActiveLabel}
@@ -143,7 +130,6 @@ export default function SuperAdminDashboard() {
                     icon={CalendarDays}
                     loading={false}
                   />
-                  <DashboardMetricTile label={translate("superAdmin.dashboard.returningCustomers")} value={`${userRetentionPercent}%`} subtitle={translate("superAdmin.dashboard.retentionRate")} icon={Activity} loading={false} />
                 </View>
               </View>
               <View className="mb-4">
@@ -182,7 +168,7 @@ export default function SuperAdminDashboard() {
               />
             </View>
             {/* Right column */}
-            <View style={{ width: rightColWidth }}>
+            <View style={{ width: rightColWidth }} className="mt-4">
               <SubscriptionDistribution
                 timeframe={timeframe}
                 payerLimit={payerLimit}
@@ -193,8 +179,8 @@ export default function SuperAdminDashboard() {
           </View>
         ) : (
           <>
-            <View className="mb-2 mt-2">
-              <View className="flex-row gap-2 mb-1">
+            <View className="mb-8 mt-4">
+              <View className="flex-row gap-4 mb-6">
                 <StatCard label={translate("superAdmin.dashboard.metrics.totalUsers")} val={users.length} Icon={Users} />
                 <StatCard label={translate("superAdmin.dashboard.metrics.totalStores")} val={stores.length} Icon={Store} />
                 <StatCard label={translate("superAdmin.dashboard.metrics.activeStores")} val={activeStoresCount} Icon={Activity} />
@@ -207,7 +193,6 @@ export default function SuperAdminDashboard() {
                   icon={CalendarDays}
                   loading={false}
                 />
-                <DashboardMetricTile label={translate("superAdmin.dashboard.returningCustomers")} value={`${userRetentionPercent}%`} subtitle={translate("superAdmin.dashboard.retentionRate")} icon={Activity} loading={false} />
               </View>
             </View>
             <View className="mb-4">

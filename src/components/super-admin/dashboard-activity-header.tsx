@@ -9,7 +9,7 @@ interface DashboardActivityHeaderProps {
 export function DashboardActivityHeader({ weekRange }: DashboardActivityHeaderProps) {
   const { t: translate } = useTranslation();
   return (
-    <View className="pt-6 pb-2 flex-row justify-between items-start" style={{ paddingHorizontal: "4%" }}>
+    <View className="pt-6 pb-2 flex-row justify-between items-start" style={{ paddingLeft: "2.5%", paddingRight: "7.5%" }}>
       <View>
         <Text className="text-base font-poppins-bold text-slate-800 dark:text-darkTextPrimary">
           {translate("superAdmin.dashboard.platformActivity")}
