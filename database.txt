@@ -650,7 +650,7 @@
     "extra": null
   },
   {
-    "object_type": "column",
+"object_type": "column",                                            
     "table_name": "purchases",
     "column_name": "store_id",
     "data_type": "bigint",
@@ -672,7 +672,7 @@
     "extra": null
   },
   {
-    "object_type": "column",
+                  "object_type": "column",
     "table_name": "purchases",
     "column_name": "created_at",
     "data_type": "timestamp with time zone",
