@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, Platform, RefreshControl, ScrollView } from "react-native";
+import { ActivityIndicator, Platform, RefreshControl, ScrollView, useWindowDimensions } from "react-native";
 import { router } from "expo-router";
 import { SafeAreaView, Text, View, TouchableOpacity } from "@/tw";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -11,7 +11,6 @@ import { StatCard } from "@/components/ui/stat-card";
 import { DashboardMetricTile } from "@/components/stores/dashboard-metric-tile";
 import { SubscriptionDistribution } from "@/components/super-admin/subscription-distribution";
 import { DashboardActivityLineChart } from "@/components/super-admin/dashboard-activity-line-chart";
-import { useSupportChatStore } from "@/store/support-chat-store";
 import {
   buildTimeframeSeries,
   getDetailItems,
@@ -27,11 +26,11 @@ export default function SuperAdminDashboard() {
   const { users, stores, adminInfo, loading, refreshing, activeStoresCount, onRefresh } = useSuperAdminDashboard();
   const { t: translate } = useTranslation();
   const insets = useSafeAreaInsets();
+  const { width: windowWidth } = useWindowDimensions();
 
-  const conversations = useSupportChatStore((state) => state.conversations);
-  const totalUnread = conversations
-    .filter((c) => c.status !== "archived")
-    .reduce((sum, c) => sum + (c.unread_admin_count ?? 0), 0);
+  // Two-column layout only when the content area is wide enough
+  const showTwoColumns = isWeb && windowWidth >= 1024;
+  const rightColWidth = windowWidth >= 1280 ? 360 : 300;
 
   const [timeframe, setTimeframe] = useState<Timeframe>("7d");
   const [showDetails, setShowDetails] = useState(false);
@@ -45,7 +44,20 @@ export default function SuperAdminDashboard() {
     setPayerLimit(5);
   }, [timeframe]);
 
+  const returningUsersCount = useMemo(() => {
+    return users.filter(u => {
+      const lastSignIn = u.last_sign_in_at;
+      const createdAt = u.created_at;
+      if (!lastSignIn || !createdAt) return false;
+      const diff = new Date(lastSignIn).getTime() - new Date(createdAt).getTime();
+      return diff > 24 * 60 * 60 * 1000;
+    }).length;
+  }, [users]);
 
+  const userRetentionPercent = useMemo(
+    () => Math.round((returningUsersCount / Math.max(1, users.length)) * 100),
+    [returningUsersCount, users.length]
+  );
 
   const userMetrics = useMemo(() => buildTimeframeSeries(users, USER_DATE_KEYS, timeframe), [users, timeframe]);
   const storeMetrics = useMemo(() => buildTimeframeSeries(stores, STORE_DATE_KEYS, timeframe), [stores, timeframe]);
@@ -79,7 +91,7 @@ export default function SuperAdminDashboard() {
       <View className="bg-white dark:bg-darkBackground border-b border-neutral-100 dark:border-darkBorder px-6 py-3 flex-row items-center justify-between">
         <View className="flex-row items-baseline gap-2">
           <Text className="text-xl font-poppins-bold text-textPrimary dark:text-darkTextPrimary py-1">
-            {translate("super_admin.dashboard.title")}
+            {translate("superAdmin.dashboard.title")}
           </Text>
           {isWeb && (
             <Text className="text-xs text-[#94A3B8] dark:text-darkTextSecondary font-poppins">
@@ -97,85 +109,149 @@ export default function SuperAdminDashboard() {
         contentContainerStyle={{
           paddingBottom: 40,
           paddingHorizontal: 16,
-          paddingTop: 16,
-          ...(isWeb ? { alignItems: "center" as const } : {}),
+          paddingTop: 8,
         }}
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#FF6600" />}
       >
-        <View style={isWeb ? { maxWidth: 896, width: "100%" } : {}} className={isWeb ? "w-full" : ""}>
-          {/* ── Sub-Header (Welcome Message) ── */}
-          {!isWeb && (
-            <View className="pt-6 pb-2">
-              <Text className="text-sm text-[#94A3B8] dark:text-darkTextSecondary font-poppins">
-                {translate("super_admin.dashboard.welcome")}
-                <Text className="text-orange-500 font-poppins-bold">
-                  {adminInfo?.username?.split(" ")[0] || "Admin"}
-                </Text>!
-              </Text>
-            </View>
-          )}
+        {!isWeb && (
+          <View className="pt-1 pb-2">
+            <Text className="text-sm text-[#94A3B8] dark:text-darkTextSecondary font-poppins">
+              {translate("superAdmin.dashboard.welcome")}
+              <Text className="text-orange-500 font-poppins-bold">
+                {adminInfo?.username?.split(" ")[0] || "Admin"}
+              </Text>!
+            </Text>
+          </View>
+        )}
 
-          <View className="mb-6 mt-2">
-            <View className="flex-row gap-2 mb-2">
-              <StatCard label={translate("super_admin.dashboard.metrics.totalUsers")} val={users.length} Icon={Users} />
-              <StatCard label={translate("super_admin.dashboard.metrics.totalStores")} val={stores.length} Icon={Store} />
-              <StatCard label={translate("super_admin.dashboard.metrics.activeStores")} val={activeStoresCount} Icon={Activity} />
+        {showTwoColumns ? (
+          <View style={{ flexDirection: "row", gap: 16, alignItems: "flex-start" }}>
+            {/* Left column */}
+            <View style={{ flex: 1 }}>
+              <View className="mb-1.5 mt-2">
+                <View className="flex-row gap-2 mb-1">
+                  <StatCard label={translate("superAdmin.dashboard.metrics.totalUsers")} val={users.length} Icon={Users} />
+                  <StatCard label={translate("superAdmin.dashboard.metrics.totalStores")} val={stores.length} Icon={Store} />
+                  <StatCard label={translate("superAdmin.dashboard.metrics.activeStores")} val={activeStoresCount} Icon={Activity} />
+                </View>
+                <View className="flex-row gap-[10px]">
+                  <DashboardMetricTile
+                    label={timeframe === "today" ? translate("superAdmin.dashboard.peakHour") : timeframe === "7d" ? translate("superAdmin.dashboard.mostActiveDay") : translate("superAdmin.dashboard.mostActiveWeek")}
+                    value={mostActiveLabel}
+                    subtitle={timeframe === "today" ? translate("superAdmin.dashboard.rangeToday") : timeframe === "7d" ? translate("superAdmin.dashboard.rangeLast7") : translate("superAdmin.dashboard.rangeLast30")}
+                    icon={CalendarDays}
+                    loading={false}
+                  />
+                  <DashboardMetricTile label={translate("superAdmin.dashboard.returningCustomers")} value={`${userRetentionPercent}%`} subtitle={translate("superAdmin.dashboard.retentionRate")} icon={Activity} loading={false} />
+                </View>
+              </View>
+              <View className="mb-4">
+                <View className="flex-row rounded-xl bg-[#EEF2F7] dark:bg-darkBackgroundMuted p-1 self-start">
+                  {([
+                    { id: "today", label: "Today" },
+                    { id: "7d", label: "7d" },
+                    { id: "1m", label: "1m" },
+                  ] as Array<{ id: Timeframe; label: string }>).map((opt) => {
+                    const active = timeframe === opt.id;
+                    return (
+                      <TouchableOpacity
+                        key={opt.id}
+                        onPress={() => setTimeframe(opt.id)}
+                        className={`px-4 py-1.5 rounded-lg ${active ? "bg-white dark:bg-darkBackgroundCard" : ""}`}
+                      >
+                        <Text className={`text-[11px] font-poppins-bold ${active ? "text-primary" : "text-textMuted dark:text-darkTextMuted"}`}>{opt.label}</Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </View>
+              <DashboardActivityLineChart
+                userSeries={userMetrics.series}
+                storeSeries={storeMetrics.series}
+                labels={userMetrics.labels}
+                weekRange={userMetrics.rangeLabel}
+                showDetails={showDetails}
+                onToggleDetails={() => setShowDetails(!showDetails)}
+                userList={userList}
+                storeList={storeList}
+                onLoadMoreUsers={() => setUserLimit(p => p + 5)}
+                onLoadMoreStores={() => setStoreLimit(p => p + 5)}
+                onResetUsers={() => setUserLimit(5)}
+                onResetStores={() => setStoreLimit(5)}
+              />
             </View>
-            <View className="flex-row gap-[10px]">
-              <DashboardMetricTile
-                label={timeframe === "today" ? translate("super_admin.dashboard.peakHour") : timeframe === "7d" ? translate("super_admin.dashboard.mostActiveDay") : translate("super_admin.dashboard.mostActiveWeek")}
-                value={mostActiveLabel}
-                subtitle={timeframe === "today" ? translate("super_admin.dashboard.rangeToday") : timeframe === "7d" ? translate("super_admin.dashboard.rangeLast7") : translate("super_admin.dashboard.rangeLast30")}
-                icon={CalendarDays}
-                loading={false}
+            {/* Right column */}
+            <View style={{ width: rightColWidth }}>
+              <SubscriptionDistribution
+                timeframe={timeframe}
+                payerLimit={payerLimit}
+                onLoadMorePayers={() => setPayerLimit(p => p + 5)}
+                onResetPayers={() => setPayerLimit(5)}
               />
             </View>
           </View>
-
-          <View className="mb-4">
-            <View className="flex-row rounded-xl bg-[#EEF2F7] dark:bg-darkBackgroundMuted p-1 self-start">
-              {([
-                { id: "today", label: "Today" },
-                { id: "7d", label: "7d" },
-                { id: "1m", label: "1m" },
-              ] as Array<{ id: Timeframe; label: string }>).map((opt) => {
-                const active = timeframe === opt.id;
-                return (
-                  <TouchableOpacity
-                    key={opt.id}
-                    onPress={() => setTimeframe(opt.id)}
-                    className={`px-4 py-1.5 rounded-lg ${active ? "bg-white dark:bg-darkBackgroundCard" : ""}`}
-                  >
-                    <Text className={`text-[11px] font-poppins-bold ${active ? "text-primary" : "text-textMuted dark:text-darkTextMuted"}`}>{opt.label}</Text>
-                  </TouchableOpacity>
-                );
-              })}
+        ) : (
+          <>
+            <View className="mb-2 mt-2">
+              <View className="flex-row gap-2 mb-1">
+                <StatCard label={translate("superAdmin.dashboard.metrics.totalUsers")} val={users.length} Icon={Users} />
+                <StatCard label={translate("superAdmin.dashboard.metrics.totalStores")} val={stores.length} Icon={Store} />
+                <StatCard label={translate("superAdmin.dashboard.metrics.activeStores")} val={activeStoresCount} Icon={Activity} />
+              </View>
+              <View className="flex-row gap-[10px]">
+                <DashboardMetricTile
+                  label={timeframe === "today" ? translate("superAdmin.dashboard.peakHour") : timeframe === "7d" ? translate("superAdmin.dashboard.mostActiveDay") : translate("superAdmin.dashboard.mostActiveWeek")}
+                  value={mostActiveLabel}
+                  subtitle={timeframe === "today" ? translate("superAdmin.dashboard.rangeToday") : timeframe === "7d" ? translate("superAdmin.dashboard.rangeLast7") : translate("superAdmin.dashboard.rangeLast30")}
+                  icon={CalendarDays}
+                  loading={false}
+                />
+                <DashboardMetricTile label={translate("superAdmin.dashboard.returningCustomers")} value={`${userRetentionPercent}%`} subtitle={translate("superAdmin.dashboard.retentionRate")} icon={Activity} loading={false} />
+              </View>
             </View>
-          </View>
-
-          <DashboardActivityLineChart
-            userSeries={userMetrics.series}
-            storeSeries={storeMetrics.series}
-            labels={userMetrics.labels}
-            weekRange={userMetrics.rangeLabel}
-            showDetails={showDetails}
-            onToggleDetails={() => setShowDetails(!showDetails)}
-            userList={userList}
-            storeList={storeList}
-            onLoadMoreUsers={() => setUserLimit(p => p + 5)}
-            onLoadMoreStores={() => setStoreLimit(p => p + 5)}
-            onResetUsers={() => setUserLimit(5)}
-            onResetStores={() => setStoreLimit(5)}
-          />
-
-          <SubscriptionDistribution
-            timeframe={timeframe}
-            payerLimit={payerLimit}
-            onLoadMorePayers={() => setPayerLimit(p => p + 5)}
-            onResetPayers={() => setPayerLimit(5)}
-          />
-        </View>
+            <View className="mb-4">
+              <View className="flex-row rounded-xl bg-[#EEF2F7] dark:bg-darkBackgroundMuted p-1 self-start">
+                {([
+                  { id: "today", label: "Today" },
+                  { id: "7d", label: "7d" },
+                  { id: "1m", label: "1m" },
+                ] as Array<{ id: Timeframe; label: string }>).map((opt) => {
+                  const active = timeframe === opt.id;
+                  return (
+                    <TouchableOpacity
+                      key={opt.id}
+                      onPress={() => setTimeframe(opt.id)}
+                      className={`px-4 py-1.5 rounded-lg ${active ? "bg-white dark:bg-darkBackgroundCard" : ""}`}
+                    >
+                      <Text className={`text-[11px] font-poppins-bold ${active ? "text-primary" : "text-textMuted dark:text-darkTextMuted"}`}>{opt.label}</Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            </View>
+            <DashboardActivityLineChart
+              userSeries={userMetrics.series}
+              storeSeries={storeMetrics.series}
+              labels={userMetrics.labels}
+              weekRange={userMetrics.rangeLabel}
+              showDetails={showDetails}
+              onToggleDetails={() => setShowDetails(!showDetails)}
+              userList={userList}
+              storeList={storeList}
+              onLoadMoreUsers={() => setUserLimit(p => p + 5)}
+              onLoadMoreStores={() => setStoreLimit(p => p + 5)}
+              onResetUsers={() => setUserLimit(5)}
+              onResetStores={() => setStoreLimit(5)}
+            />
+            <SubscriptionDistribution
+              timeframe={timeframe}
+              payerLimit={payerLimit}
+              onLoadMorePayers={() => setPayerLimit(p => p + 5)}
+              onResetPayers={() => setPayerLimit(5)}
+            />
+          </>
+        )}
       </ScrollView>
 
       {/* Floating Action Button for Chat */}
@@ -188,13 +264,12 @@ export default function SuperAdminDashboard() {
         }
       >
         <MessageSquare size={24} color="#FF6600" />
-        {totalUnread > 0 && (
-          <View className="absolute top-0 -right-1 w-[22px] h-[22px] bg-red-500 rounded-full border-2 border-white items-center justify-center">
-            <Text className="text-[10px] font-poppins-bold text-white mt-0.5">
-              {totalUnread > 99 ? "99+" : totalUnread}
-            </Text>
-          </View>
-        )}
+        {/* Red message indicator badge */}
+        <View className="absolute top-0 -right-1 w-[22px] h-[22px] bg-red-500 rounded-full border-2 border-white items-center justify-center">
+          <Text className="text-[10px] font-poppins-bold text-white mt-0.5">
+            1
+          </Text>
+        </View>
       </TouchableOpacity>
     </SafeAreaView>
   );
