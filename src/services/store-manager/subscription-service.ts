@@ -18,6 +18,9 @@ export type ManagerSubscriptionPaymentRow = {
   owner_id: string;
   payment_reference?: string | null;
   amount_paid: string | number | null;
+  amount_due?: string | number | null;
+  billing_period_start?: string | null;
+  billing_period_end?: string | null;
   payment_status?: string | null;
   paid_at?: string | null;
   created_at?: string | null;
@@ -35,7 +38,9 @@ export async function getManagerSubscriptionPayments(
 ): Promise<ManagerSubscriptionPaymentRow[]> {
   const { data, error } = await supabase
     .from("manager_subscription_payments")
-    .select("id,owner_id,payment_reference,amount_paid,payment_status,paid_at,created_at")
+    .select(
+      "id,owner_id,payment_reference,amount_paid,amount_due,payment_status,paid_at,created_at,billing_period_start,billing_period_end",
+    )
     .eq("owner_id", ownerId)
     .order("created_at", { ascending: false });
 

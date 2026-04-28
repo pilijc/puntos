@@ -5,7 +5,10 @@
     "activePlanBadge": "現在のプラン",
     "free": "無料",
     "perMonth": "/月",
+    "currentPeriodAmount": "今月のお支払い",
+    "upcomingAmount": "次回のお支払い",
     "estimatedCost": "見積り費用",
+    "upcomingPriceNote": "料金の変更は次回以降のお支払いにのみ適用されます。",
     "upgradeToPro": "Proにアップグレード",
     "cancelSubscription": "サブスクリプションを解約",
     "fallbackPlanName": {

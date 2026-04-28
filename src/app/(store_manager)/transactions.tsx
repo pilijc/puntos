@@ -180,7 +180,15 @@ export default function TransactionsScreen() {
 
   const emptyIllustration = (
     <View className="bg-white dark:bg-darkBackground rounded-xl ">
-      <Image source={require("@/assets/images/found.png")} style={{ width: 180, height: 180 }} resizeMode="contain" />
+      <Image
+        source={require("@/assets/images/found.png")}
+        style={{
+          width: Platform.OS === "web" ? 180 : 120,
+          height: Platform.OS === "web" ? 180 : 120,
+        }}
+        resizeMode="contain"
+      />
+
     </View>
   );
   const triggerColor = isDark ? "#737373" : "#94A3B8";
@@ -204,7 +212,7 @@ export default function TransactionsScreen() {
       {storesLoading ? (
         <StoresAndFunnelSkeleton />
       ) : stores.length >= 1 ? (
-        <View className={isWeb ? "bg-backgroundMuted dark:bg-darkBackground px-4 pt-4 pb-3 items-center" : "flex-row items-center bg-background dark:bg-darkBackground border-b border-neutral-100 dark:border-darkBorder pl-5"}>
+        <View className={isWeb ? "bg-backgroundMuted dark:bg-darkBackground px-4 pt-4 pb-3 items-center" : "flex-row items-center bg-background dark:bg-darkBackground border-b border-neutral-100 dark:border-darkBorder pl-5 mb-4"}>
           
           {isWeb ? (
             <View className="w-full max-w-4xl bg-white dark:bg-darkBackground border border-neutral-100 dark:border-darkBorder rounded-xl overflow-hidden flex-row items-center">
@@ -291,7 +299,7 @@ export default function TransactionsScreen() {
       {loading || storesLoading ? (
         <TransactionSkeleton />
       ) : stores.length === 0 ? (
-        <View className={isWeb ? "px-4 pb-4 items-center mt-4" : "px-4 pb-4"}>
+        <View className={isWeb ? "px-4 pb-4 items-center mt-4" : "px-4 pb-4 mt-4"}>
           <View
             className={`w-full bg-white dark:bg-darkBackground rounded-xl overflow-hidden justify-start ${isWeb ? "max-w-4xl p-6" : "p-5"}`}
           >
@@ -299,10 +307,10 @@ export default function TransactionsScreen() {
               {emptyIllustration}
               <View className="items-center justify-center">
                 <Text className="text-base font-poppins-bold text-textPrimary dark:text-darkTextPrimary text-center">
-                  {translate("storeManager.transactions.empty.noStoresTitle")}
+                  {translate("storeManager.transactions.empty.noTransactionsTitle")}
                 </Text>
                 <Text className="text-xs font-poppins text-textSecondary dark:text-darkTextSecondary text-center px-8">
-                  {translate("storeManager.transactions.empty.noStoresBody")}
+                  {translate("storeManager.transactions.empty.noTransactionsBody")}
                 </Text>
               </View>
             </View>
