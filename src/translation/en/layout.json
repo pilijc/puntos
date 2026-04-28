@@ -6,7 +6,9 @@
   "users": "Users",
   "stores": "Stores",
   "subscription": "Subscription",
+  "subscriptions": "Subscriptions",
   "settings": "Settings",
   "scan": "Scan",
-  "transactions": "Transactions"
+  "transactions": "Transactions",
+  "inbox": "Inbox"
 }

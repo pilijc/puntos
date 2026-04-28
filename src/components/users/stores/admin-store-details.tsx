@@ -4,18 +4,15 @@ import Carousel from 'react-native-reanimated-carousel';
 import { View, Text, TouchableOpacity } from "@/tw";
 import { useTranslation } from "react-i18next";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { ArrowLeft, Store as StoreIcon, Briefcase, BadgeCheck, AlertTriangle, Flame, Sun, Moon, RefreshCw, MapPin, Map, CheckCircle, ChevronLeft, ChevronRight } from "lucide-react-native";
+import { ChevronLeft, ChevronRight } from "lucide-react-native";
 import { Image } from "expo-image";
-import { BlurView } from "expo-blur";
 import Mapbox, { Camera, MapView, MarkerView } from "@rnmapbox/maps";
 import { ScreenWrapper } from "@/components/ui/screen-wrapper";
-import { Button } from "@/components/button";
 import { AdminStoreRow } from "@/services/store-service";
 import { ImageViewerModal } from "@/components/ui/image-viewer-modal";
 import { getStoreCategoryBadge, getEffectiveStatus, StoreStatusKey } from "@/type/super-admin/user";
 import { shouldUseInteractiveMapbox } from "@/utils/mapbox-platform";
 import { canOwnerCreateAnotherStore } from "@/services/store-manager/subscription-limits";
-
 
 Mapbox.setAccessToken(process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN!);
 
@@ -28,30 +25,28 @@ type StatusKey = StoreStatusKey;
 
 const STATUS_CONFIG: Record<StatusKey, {
   icon: "schedule" | "check-circle" | "cancel";
-  bg: string; border: string; badgeBg: string; text: string;
+  color: string; bg: string; border: string;
 }> = {
-  pending_review: { icon: "schedule", bg: "#ffffff", border: "#f5e4a8", badgeBg: "#fef0c0", text: "#7a5c00" },
-  active: { icon: "check-circle", bg: "#ffffff", border: "#d4fce2", badgeBg: "#dcfce7", text: twColors.success },
-  inactive: { icon: "cancel", bg: "#ffffff", border: "#fecaca", badgeBg: "#fee2e2", text: twColors.danger },
+  pending_review: { icon: "schedule",    color: "#92400e", bg: "#fef3c7", border: "#fde68a" },
+  active:         { icon: "check-circle", color: twColors.success, bg: "#dcfce7", border: "#bbf7d0" },
+  inactive:       { icon: "cancel",       color: twColors.danger,  bg: "#fee2e2", border: "#fecaca" },
 };
 
-const SectionHeader = ({ title }: { title: string }) => (
-  <Text className="text-base font-poppins-bold text-textPrimary dark:text-darkTextPrimary mb-3">{title}</Text>
-);
-const FieldLabel = ({ children }: { children: string }) => (
-  <Text className="text-[10px] font-poppins-bold text-textSecondary uppercase tracking-wider mb-1 px-1">{children}</Text>
-);
-const FieldCard = ({ children, noPad }: { children: React.ReactNode; noPad?: boolean }) => (
-  <View className={`bg-white dark:bg-darkBackgroundCard rounded-xl min-h-[48px] justify-center ${noPad ? 'p-2.5' : 'p-3'}`}>
-    {children}
-  </View>
-);
-const ReadOnlyField = ({ label, value }: { label: string; value?: string | null }) => (
-  <View className="mb-1.5">
-    <FieldLabel>{label}</FieldLabel>
-    <FieldCard>
-      <Text className="text-sm font-poppins-medium text-textPrimary dark:text-darkTextPrimary">{value || "—"}</Text>
-    </FieldCard>
+const InfoRow = ({
+  icon, label, value,
+}: {
+  icon: React.ComponentProps<typeof MaterialIcons>["name"];
+  label: string;
+  value?: string | null;
+}) => (
+  <View className="flex-row items-start gap-3 py-3 border-b border-slate-50 dark:border-neutral-800/60 last:border-0">
+    <View className="w-8 h-8 rounded-xl bg-slate-50 dark:bg-neutral-800 items-center justify-center mt-0.5">
+      <MaterialIcons name={icon} size={16} color="#94A3B8" />
+    </View>
+    <View className="flex-1">
+      <Text className="text-[10px] font-poppins-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-0.5">{label}</Text>
+      <Text className="text-sm font-poppins-medium text-slate-700 dark:text-slate-200 leading-5">{value || "—"}</Text>
+    </View>
   </View>
 );
 
@@ -74,8 +69,8 @@ export function AdminStoreDetails({
 
   const STATUS_LABELS: Record<StatusKey, string> = {
     pending_review: translate("super_admin.stores.status.pending"),
-    active: translate("super_admin.stores.status.active"),
-    inactive: translate("super_admin.stores.status.inactive"),
+    active:         translate("super_admin.stores.status.active"),
+    inactive:       translate("super_admin.stores.status.inactive"),
   };
 
   const [viewingDocUri, setViewingDocUri] = useState<string | null>(null);
@@ -101,169 +96,206 @@ export function AdminStoreDetails({
         const res = await canOwnerCreateAnotherStore(ownerId);
         if (!cancelled) setCanCreateAnotherStore(res.allowed);
       } catch {
-        // If checks fail, don't block admin UI.
         if (!cancelled) setCanCreateAnotherStore(true);
       }
     })();
 
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, [store.owner_id]);
 
   const registeredDate = useMemo(() => {
-    return new Date(store.created_at).toLocaleDateString(i18n.language === "ja" ? "ja-JP" : "en-US", {
-      month: "short", day: "numeric", year: "numeric",
-    });
+    return new Date(store.created_at).toLocaleDateString(
+      i18n.language === "ja" ? "ja-JP" : "en-US",
+      { month: "short", day: "numeric", year: "numeric" }
+    );
   }, [store.created_at, i18n.language]);
 
+  const approvedDate = useMemo(() => {
+    if (!store.approved_at) return null;
+    return new Date(store.approved_at).toLocaleDateString("en-US", {
+      year: "numeric", month: "short", day: "numeric",
+    });
+  }, [store.approved_at]);
+
+  const BANNER_HEIGHT = isWeb ? 260 : 190;
+  const LOGO_SIZE = isWeb ? 96 : 84;
+  const LOGO_OFFSET = isWeb ? -LOGO_SIZE / 2 : -LOGO_SIZE / 2 + 4;
+
   return (
-    <ScreenWrapper className="flex-1 bg-backgroundMuted dark:bg-darkBackgroundMuted">
-
-
-
-
+    <ScreenWrapper className="flex-1 bg-[#F1F5F9] dark:bg-darkBackgroundMuted">
       <ScrollView
         className="flex-1"
         contentContainerStyle={[
-          { paddingBottom: isPending ? 60 : 20 },
-          require('react-native').Platform.OS === 'web' && {
-            width: '100%',
-            maxWidth: 950,
-            alignSelf: 'center',
-            backgroundColor: 'transparent',
-          }
+          { paddingBottom: isPending ? 80 : 32 },
+          isWeb && { width: "100%", maxWidth: 840, alignSelf: "center", backgroundColor: "transparent" },
         ]}
         showsVerticalScrollIndicator={false}
         bounces={false}
-        style={require('react-native').Platform.OS === 'web' ? { backgroundColor: isDark ? '#000000' : '#F8FAFC' } : { backgroundColor: '#F8FAFC' }}
+        style={{ backgroundColor: isDark ? "#0A0A0A" : "#F1F5F9" }}
       >
-        <View 
-          className="relative w-full bg-slate-900 overflow-visible"
-          style={require('react-native').Platform.OS === 'web' ? { height: 240 } : { height: 170 }}
-        >
-          <View className="absolute top-6 left-6 z-50">
+        {/* ── Banner ── */}
+        <View className="relative w-full overflow-visible" style={{ height: BANNER_HEIGHT, backgroundColor: "#0F172A" }}>
+          <TouchableOpacity
+            activeOpacity={0.9}
+            onPress={() => store.store_pictures?.[0] && setViewingDocUri(store.store_pictures[0])}
+            className="w-full h-full"
+          >
+            {store.store_pictures && store.store_pictures.length > 0 ? (
+              <Image
+                source={{ uri: store.store_pictures[0] }}
+                style={{ width: "100%", height: "100%" }}
+                contentFit="cover"
+                contentPosition="center"
+              />
+            ) : (
+              <View className="w-full h-full items-center justify-center bg-slate-800">
+                <MaterialIcons name="storefront" size={56} color="#334155" />
+              </View>
+            )}
+          </TouchableOpacity>
+
+          {/* Scrim */}
+          <View
+            className="absolute inset-0"
+            style={{ backgroundColor: "rgba(0,0,0,0.28)" }}
+            pointerEvents="none"
+          />
+
+          {/* Back button */}
+          <View className="absolute top-5 left-5 z-50">
             <TouchableOpacity
               onPress={onBack}
-              activeOpacity={0.7}
-              className="w-10 h-10 rounded-full bg-white dark:bg-darkBackgroundCard items-center justify-center shadow-sm shadow-black/10 border border-slate-100 dark:border-darkBorder"
+              activeOpacity={0.75}
+              className="w-9 h-9 rounded-full bg-white/90 dark:bg-neutral-900/90 items-center justify-center shadow-md shadow-black/20"
             >
-              <ChevronLeft size={24} color={isDark ? "#F8FAFC" : "#0F172A"} className="-ml-0.5" />
+              <ChevronLeft size={20} color={isDark ? "#F1F5F9" : "#0F172A"} />
             </TouchableOpacity>
           </View>
-          <TouchableOpacity 
-             activeOpacity={0.9} 
-             onPress={() => store.store_pictures?.[0] && setViewingDocUri(store.store_pictures[0])}
-             className="w-full h-full"
-          >
-             {store.store_pictures && store.store_pictures.length > 0 ? (
-                <View className="w-full h-full overflow-hidden">
-                  <Image 
-                    source={{ uri: store.store_pictures[0] }} 
-                    style={{ width: "100%", height: "100%" }} 
-                    contentFit="cover" 
-                    contentPosition="center"
-                  />
-                </View>
-             ) : (
-                <View className="w-full h-full overflow-hidden bg-[#F1F5F9] dark:bg-neutral-800 items-center justify-center">
-                   <MaterialIcons name="storefront" size={64} color={isDark ? "#52525B" : "#CBD5E1"} />
-                </View>
-             )}
-          </TouchableOpacity>
-           
-           {/* Removed bottom blur overlay */}
-          <View className="absolute top-0 bottom-0 left-0 right-0 bg-black/25 dark:bg-black/45" pointerEvents="none" />
 
-          <View className="absolute top-6 right-6 px-3.5 py-1.5 rounded-full flex-row items-center gap-1.5 bg-white/95 dark:bg-darkBackground/95 shadow-sm shadow-black/20 z-10">
-            <View className={`w-2 h-2 rounded-full`} style={{ backgroundColor: statusCfg.text }} />
-            <Text className="text-[10px] font-poppins-bold tracking-wider text-slate-800 dark:text-slate-200 mt-[1px] uppercase">
+          {/* Status pill */}
+          <View
+            className="absolute top-5 right-5 z-10 flex-row items-center gap-1.5 px-3 py-1.5 rounded-full shadow-sm shadow-black/20"
+            style={{ backgroundColor: statusCfg.bg, borderWidth: 1, borderColor: statusCfg.border }}
+          >
+            <View className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: statusCfg.color }} />
+            <Text className="text-[10px] font-poppins-bold uppercase tracking-wider" style={{ color: statusCfg.color }}>
               {STATUS_LABELS[statusKey]}
             </Text>
           </View>
 
-          <TouchableOpacity 
-            activeOpacity={0.8}
+          {/* Logo */}
+          <TouchableOpacity
+            activeOpacity={0.85}
             onPress={() => store.logo && setViewingDocUri(store.logo)}
-            className="absolute left-6 w-[88px] h-[88px] rounded-full overflow-hidden z-20 shadow-xl shadow-black/30 bg-white"
-            style={require('react-native').Platform.OS === 'web' ? { bottom: -30 } : { bottom: -40 }}
+            className="absolute left-5 z-20 rounded-full bg-white shadow-xl shadow-black/30 overflow-hidden"
+            style={{ width: LOGO_SIZE, height: LOGO_SIZE, bottom: LOGO_OFFSET, borderWidth: 3, borderColor: "#ffffff" }}
           >
-             {store.logo ? (
-               <Image source={{ uri: store.logo }} style={{ width: "100%", height: "100%" }} contentFit="cover" />
-             ) : (
-               <MaterialIcons name="storefront" size={36} color="#94A3B8" />
-             )}
+            {store.logo ? (
+              <Image source={{ uri: store.logo }} style={{ width: "100%", height: "100%" }} contentFit="cover" />
+            ) : (
+              <View className="flex-1 items-center justify-center bg-slate-100">
+                <MaterialIcons name="storefront" size={32} color="#94A3B8" />
+              </View>
+            )}
           </TouchableOpacity>
         </View>
 
-        <View 
-          className="px-5 space-y-3"
-          style={require('react-native').Platform.OS === 'web' ? { paddingTop: 60 } : { paddingTop: 40 }}
-        >
+        {/* ── Content ── */}
+        <View className="px-4 gap-y-3" style={{ paddingTop: LOGO_SIZE / 2 + 16 }}>
 
-          <View className="bg-white dark:bg-darkBackgroundCard rounded-3xl p-6 shadow-sm shadow-slate-200/40 dark:shadow-none mb-4 border border-slate-100 dark:border-neutral-800/50">
-            <View className="flex-row justify-between items-start mb-1">
-              <Text className="flex-1 text-lg font-poppins-bold text-slate-800 dark:text-slate-100 leading-[26px]" numberOfLines={2}>
+          {/* Store Identity Card */}
+          <View className="bg-white dark:bg-darkBackgroundCard rounded-3xl p-5 border border-slate-100 dark:border-neutral-800/50 shadow-sm shadow-slate-100 dark:shadow-none">
+            {/* Name + owner */}
+            <View className="mb-3">
+              <Text className="text-xl font-poppins-bold text-slate-900 dark:text-slate-50 leading-7" numberOfLines={2}>
                 {store.name || "Unnamed Store"}
               </Text>
-              <View className="pt-1">
-                <MaterialIcons name="work-outline" size={18} color="#CBD5E1" />
-              </View>
-            </View>
-
-            <Text className="text-xs font-poppins-medium text-slate-500 mb-2">
-              {store.owner_name ? `By: ${store.owner_name}` : "By: Not specified"}
-            </Text>
-
-            {/* SUBSCRIPTION INDICATOR */}
-            {subscription ? (
-               <View className={`flex-row items-center gap-1 self-start px-2 py-0.5 rounded-full border mb-3 ${subscription.payment_status === 'paid' ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-100 dark:border-emerald-800' : 'bg-red-50 dark:bg-red-900/20 border-red-100 dark:border-red-800'}`}>
-                 <MaterialIcons name={subscription.payment_status === 'paid' ? "verified" : "warning"} size={10} color={subscription.payment_status === 'paid' ? "#10B981" : "#EF4444"} />
-                 <Text className={`text-[9px] font-poppins-bold tracking-wider uppercase ${subscription.payment_status === 'paid' ? 'text-emerald-700 dark:text-emerald-400' : 'text-red-700 dark:text-red-400'}`}>
-                    Subscription {subscription.payment_status}
-                 </Text>
-               </View>
-            ) : !canCreateAnotherStore && (
-               <View className="flex-row items-center gap-1 self-start px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 mb-3">
-                 <MaterialIcons name="local-fire-department" size={10} color="#2563EB" />
-                 <Text className="text-[9px] font-poppins-bold tracking-wider text-blue-700 dark:text-blue-400 uppercase">
-                    Subscription Required
-                 </Text>
-               </View>
-            )}
-
-            <View className={`self-start px-2 py-0.5 rounded-full ${getStoreCategoryBadge(store.type).bg} mb-1.5 flex-row items-center justify-center`}>
-              <Text
-                className={`text-[10px] font-poppins-semibold ${getStoreCategoryBadge(store.type).text}`}
-                style={{ lineHeight: 16, includeFontPadding: false } as any}
-              >
-                {store.type || "General"}
+              <Text className="text-xs font-poppins-medium text-slate-400 dark:text-slate-500 mt-0.5">
+                {store.owner_name ? `Owner: ${store.owner_name}` : "Owner not specified"}
               </Text>
             </View>
 
-            {store.registration_number && (
-              <View className="mb-1.5">
-                <Text className="text-[10px] font-poppins-semibold tracking-wider text-[#94A3B8] uppercase mb-1">{translate("super_admin.stores.details.registrationNumber", { defaultValue: "Registration No." })}</Text>
-                <Text className="text-xs font-poppins-semibold text-slate-800 dark:text-slate-200">
-                  {store.registration_number}
+            {/* Badges row */}
+            <View className="flex-row flex-wrap gap-2 mb-4">
+              {/* Category */}
+              <View className={`px-2.5 py-1 rounded-full ${getStoreCategoryBadge(store.type).bg} flex-row items-center gap-1`}>
+                <Text className={`text-[10px] font-poppins-bold uppercase tracking-wide ${getStoreCategoryBadge(store.type).text}`}>
+                  {store.type || "General"}
                 </Text>
               </View>
+
+              {/* Subscription */}
+              {subscription ? (
+                <View
+                  className={`flex-row items-center gap-1 px-2.5 py-1 rounded-full border ${
+                    subscription.payment_status === "paid"
+                      ? "bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800"
+                      : "bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800"
+                  }`}
+                >
+                  <MaterialIcons
+                    name={subscription.payment_status === "paid" ? "verified" : "warning"}
+                    size={11}
+                    color={subscription.payment_status === "paid" ? "#10B981" : "#EF4444"}
+                  />
+                  <Text className={`text-[10px] font-poppins-bold uppercase tracking-wide ${
+                    subscription.payment_status === "paid"
+                      ? "text-emerald-700 dark:text-emerald-400"
+                      : "text-red-700 dark:text-red-400"
+                  }`}>
+                    Subscription {subscription.payment_status}
+                  </Text>
+                </View>
+              ) : !canCreateAnotherStore && (
+                <View className="flex-row items-center gap-1 px-2.5 py-1 rounded-full bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800">
+                  <MaterialIcons name="star-outline" size={11} color="#D97706" />
+                  <Text className="text-[10px] font-poppins-bold uppercase tracking-wide text-amber-700 dark:text-amber-400">
+                    Subscription Required
+                  </Text>
+                </View>
+              )}
+
+              {/* Registered date */}
+              <View className="flex-row items-center gap-1 px-2.5 py-1 rounded-full bg-slate-50 dark:bg-neutral-800 border border-slate-100 dark:border-neutral-700">
+                <MaterialIcons name="calendar-today" size={10} color="#94A3B8" />
+                <Text className="text-[10px] font-poppins-semibold text-slate-400 dark:text-slate-500">
+                  {registeredDate}
+                </Text>
+              </View>
+            </View>
+
+            {/* Divider */}
+            <View className="h-px bg-slate-100 dark:bg-neutral-800 mb-4" />
+
+            {/* Info rows */}
+            {store.registration_number && (
+              <InfoRow
+                icon="badge"
+                label={translate("super_admin.stores.details.registrationNumber", { defaultValue: "Registration No." })}
+                value={store.registration_number}
+              />
             )}
 
-            <View className="mb-1.5">
-              <Text className="text-[10px] font-poppins-semibold tracking-wider text-[#94A3B8] uppercase mb-1.5">{translate("super_admin.stores.details.operatingHours", { defaultValue: "Operating Hours" })}</Text>
-              <View className="bg-[#F8FAFC] dark:bg-darkBackgroundMuted rounded-xl p-3 border border-slate-100 dark:border-neutral-800">
-                <View className="flex-row items-center px-1">
-                  <View className="flex-1 flex-row items-center justify-center gap-2">
-                    <MaterialIcons name="wb-sunny" size={14} color="#FF6600" />
-                    <Text className="text-xs font-poppins-semibold text-slate-800 dark:text-slate-100">
+            {/* Operating Hours */}
+            <View className="flex-row items-start gap-3 py-3 border-b border-slate-50 dark:border-neutral-800/60">
+              <View className="w-8 h-8 rounded-xl bg-slate-50 dark:bg-neutral-800 items-center justify-center mt-0.5">
+                <MaterialIcons name="schedule" size={16} color="#94A3B8" />
+              </View>
+              <View className="flex-1">
+                <Text className="text-[10px] font-poppins-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">
+                  {translate("super_admin.stores.details.operatingHours", { defaultValue: "Operating Hours" })}
+                </Text>
+                <View className="flex-row items-center gap-2">
+                  <View className="flex-row items-center gap-1.5 bg-amber-50 dark:bg-amber-900/20 px-3 py-1.5 rounded-xl border border-amber-100 dark:border-amber-800/40">
+                    <MaterialIcons name="wb-sunny" size={13} color="#F59E0B" />
+                    <Text className="text-xs font-poppins-semibold text-amber-700 dark:text-amber-400">
                       {store.store_open ? store.store_open.slice(0, 5) : "09:00"}
                     </Text>
                   </View>
-                  <View className="w-[1.5px] h-3 bg-slate-300 dark:bg-neutral-600 rounded-full mx-2" />
-                  <View className="flex-1 flex-row items-center justify-center gap-2">
-                    <MaterialIcons name="nights-stay" size={14} color="#FF6600" />
-                    <Text className="text-xs font-poppins-semibold text-slate-800 dark:text-slate-100">
+                  <View className="w-4 h-px bg-slate-200 dark:bg-neutral-700" />
+                  <View className="flex-row items-center gap-1.5 bg-indigo-50 dark:bg-indigo-900/20 px-3 py-1.5 rounded-xl border border-indigo-100 dark:border-indigo-800/40">
+                    <MaterialIcons name="nights-stay" size={13} color="#6366F1" />
+                    <Text className="text-xs font-poppins-semibold text-indigo-700 dark:text-indigo-400">
                       {store.store_close ? store.store_close.slice(0, 5) : "21:00"}
                     </Text>
                   </View>
@@ -271,94 +303,112 @@ export function AdminStoreDetails({
               </View>
             </View>
 
-            <View>
-              <Text className="text-[10px] font-poppins-semibold tracking-wider text-[#94A3B8] uppercase mb-1.5">About This Store</Text>
-              <Text className="text-[11px] font-poppins text-slate-400 dark:text-slate-500 italic leading-5">
-                No store information has been provided yet by the manager.
-              </Text>
-              {store.status !== 'pending_review' && (
-                <View className={`mt-4 flex-row text-center items-center gap-2 self-start px-3 py-2 rounded-xl border ${statusKey === 'inactive' ? 'bg-red-50 dark:bg-red-900/10 border-red-100 dark:border-red-800/30' : 'bg-emerald-50 dark:bg-emerald-900/10 border-emerald-100 dark:border-emerald-800/30'}`}>
-                  <View className={`w-5 h-5 rounded-full items-center justify-center ${statusKey === 'inactive' ? 'bg-red-500' : 'bg-emerald-500'}`}>
-                    <MaterialIcons name={statusKey === 'inactive' ? 'refresh' : 'verified'} size={12} color="#ffffff" />
-                  </View>
-                  <Text
-                    className={`text-[10px] font-poppins-bold uppercase tracking-wider ${statusKey === 'inactive' ? 'text-red-700 dark:text-red-400' : 'text-emerald-700 dark:text-emerald-400'}`}
-                    style={{ lineHeight: 14, includeFontPadding: false } as any}
-                  >
-                    {statusKey === 'inactive'
-                      ? 'Requires Resubmission'
-                      : `Approved Date: ${store.approved_at ? new Date(store.approved_at).toLocaleDateString("en-US", { year: 'numeric', month: 'short', day: 'numeric' }) : "N/A"}`}
-                  </Text>
-                </View>
-              )}
-            </View>
-
-            {store.store_pictures && store.store_pictures.length > 0 && (
-              <View className="mt-8 border-t border-slate-100 dark:border-neutral-800 pt-6">
-                <View className="flex-row items-center justify-between mb-1.5">
-                  <Text className="text-sm font-poppins-bold text-slate-800 dark:text-slate-100">Store Pictures</Text>
-                  <Text className="text-[10px] font-poppins-semibold text-textMuted dark:text-slate-500 uppercase tracking-widest">
-                    {store.store_pictures.length} {store.store_pictures.length === 1 ? 'PHOTO' : 'PHOTOS'}
-                  </Text>
-                </View>
-
-                <View 
-                  className="relative w-full rounded-[16px] overflow-hidden bg-[#F8FAFC] dark:bg-darkBackgroundMuted" 
-                  onLayout={(e) => setLayoutWidth(e.nativeEvent.layout.width)}
-                  style={require('react-native').Platform.OS === 'web' ? { height: 450 } : { height: 180 }}
+            {/* Approval status (non-pending) */}
+            {store.status !== "pending_review" && (
+              <View
+                className={`mt-3 flex-row items-center gap-2.5 px-3.5 py-2.5 rounded-2xl border self-start ${
+                  statusKey === "inactive"
+                    ? "bg-red-50 dark:bg-red-900/10 border-red-100 dark:border-red-800/30"
+                    : "bg-emerald-50 dark:bg-emerald-900/10 border-emerald-100 dark:border-emerald-800/30"
+                }`}
+              >
+                <View
+                  className={`w-6 h-6 rounded-full items-center justify-center ${
+                    statusKey === "inactive" ? "bg-red-500" : "bg-emerald-500"
+                  }`}
                 >
-                  {(layoutWidth > 0 && Carousel) ? (
+                  <MaterialIcons
+                    name={statusKey === "inactive" ? "refresh" : "verified"}
+                    size={13}
+                    color="#ffffff"
+                  />
+                </View>
+                <Text
+                  className={`text-[10px] font-poppins-bold uppercase tracking-wider ${
+                    statusKey === "inactive"
+                      ? "text-red-700 dark:text-red-400"
+                      : "text-emerald-700 dark:text-emerald-400"
+                  }`}
+                  style={{ lineHeight: 14, includeFontPadding: false } as any}
+                >
+                  {statusKey === "inactive"
+                    ? "Requires Resubmission"
+                    : `Approved ${approvedDate ?? "N/A"}`}
+                </Text>
+              </View>
+            )}
+
+            {/* Store Photos */}
+            {store.store_pictures && store.store_pictures.length > 0 && (
+              <View className="mt-5 pt-5 border-t border-slate-100 dark:border-neutral-800">
+                <View className="flex-row items-center justify-between mb-3">
+                  <Text className="text-sm font-poppins-bold text-slate-800 dark:text-slate-100">Store Photos</Text>
+                  <View className="bg-slate-100 dark:bg-neutral-800 px-2.5 py-1 rounded-full">
+                    <Text className="text-[10px] font-poppins-semibold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
+                      {store.store_pictures.length} {store.store_pictures.length === 1 ? "Photo" : "Photos"}
+                    </Text>
+                  </View>
+                </View>
+
+                <View
+                  className="relative w-full rounded-2xl overflow-hidden bg-slate-100 dark:bg-neutral-800"
+                  onLayout={(e) => setLayoutWidth(e.nativeEvent.layout.width)}
+                  style={{ height: isWeb ? 420 : 200 }}
+                >
+                  {layoutWidth > 0 && Carousel ? (
                     <View className="flex-1 relative">
                       <Carousel
                         ref={scrollRef}
                         loop
                         width={layoutWidth}
-                        height={require('react-native').Platform.OS === 'web' ? 450 : 180}
+                        height={isWeb ? 420 : 200}
                         autoPlay={false}
                         data={store.store_pictures}
-                        scrollAnimationDuration={1000}
+                        scrollAnimationDuration={700}
                         onSnapToItem={(index) => setCurrentPicIndex(index)}
                         renderItem={({ item: uri }) => (
-                          <TouchableOpacity 
-                             activeOpacity={0.9} 
-                             onPress={() => setViewingDocUri(uri)}
-                             className="w-full h-full"
+                          <TouchableOpacity
+                            activeOpacity={0.9}
+                            onPress={() => setViewingDocUri(uri)}
+                            className="w-full h-full"
                           >
                             <Image source={{ uri }} style={{ width: "100%", height: "100%" }} contentFit="cover" />
                           </TouchableOpacity>
                         )}
                       />
 
-                      {/* Web Navigation Arrows */}
-                      {require('react-native').Platform.OS === 'web' && store.store_pictures.length > 1 && (
+                      {isWeb && store.store_pictures.length > 1 && (
                         <>
                           <TouchableOpacity
                             onPress={() => scrollRef.current?.prev()}
-                            className="absolute left-4 top-1/2 -mt-6 w-12 h-12 bg-black/30 hover:bg-black/50 rounded-full items-center justify-center z-30 transition-colors"
+                            className="absolute left-3 top-1/2 -mt-5 w-10 h-10 bg-black/40 rounded-full items-center justify-center z-30"
                           >
-                            <ChevronLeft size={32} color="white" />
+                            <ChevronLeft size={22} color="white" />
                           </TouchableOpacity>
                           <TouchableOpacity
                             onPress={() => scrollRef.current?.next()}
-                            className="absolute right-4 top-1/2 -mt-6 w-12 h-12 bg-black/30 hover:bg-black/50 rounded-full items-center justify-center z-30 transition-colors"
+                            className="absolute right-3 top-1/2 -mt-5 w-10 h-10 bg-black/40 rounded-full items-center justify-center z-30"
                           >
-                            <ChevronRight size={32} color="white" />
+                            <ChevronRight size={22} color="white" />
                           </TouchableOpacity>
                         </>
                       )}
                     </View>
                   ) : (
-                    <View className="w-full h-full items-center justify-center">
+                    <View className="w-full h-full">
                       {store.store_pictures[0] && (
                         <Image source={{ uri: store.store_pictures[0] }} style={{ width: "100%", height: "100%" }} contentFit="cover" />
                       )}
                     </View>
                   )}
- 
+
                   {store.store_pictures.length > 1 && (
-                    <View className="absolute bottom-2 left-0 right-0 flex-row justify-center gap-1.5 z-10" pointerEvents="none">
+                    <View className="absolute bottom-3 left-0 right-0 flex-row justify-center gap-1.5 z-10" pointerEvents="none">
                       {store.store_pictures.map((_, idx) => (
-                        <View key={idx} className={`h-1.5 rounded-full transition-all ${idx === currentPicIndex ? 'w-4 bg-primary' : 'w-1.5 bg-white/70'}`} />
+                        <View
+                          key={idx}
+                          className={`h-1.5 rounded-full ${idx === currentPicIndex ? "w-4 bg-white" : "w-1.5 bg-white/50"}`}
+                        />
                       ))}
                     </View>
                   )}
@@ -367,82 +417,74 @@ export function AdminStoreDetails({
             )}
           </View>
 
-          <View className="bg-white dark:bg-darkBackgroundCard rounded-3xl p-6 shadow-sm shadow-slate-200/40 dark:shadow-none mb-4 border border-slate-100 dark:border-neutral-800/50">
-            <View className="flex-row items-center gap-1.5 mb-5">
-              <MaterialIcons name="location-on" size={18} color="#D93025" />
+          {/* Location & Contact Card */}
+          <View className="bg-white dark:bg-darkBackgroundCard rounded-3xl overflow-hidden border border-slate-100 dark:border-neutral-800/50 shadow-sm shadow-slate-100 dark:shadow-none">
+            <View className="flex-row items-center gap-2 px-5 pt-5 pb-4">
+              <View className="w-8 h-8 rounded-xl bg-red-50 dark:bg-red-900/20 items-center justify-center">
+                <MaterialIcons name="location-on" size={16} color="#EF4444" />
+              </View>
               <Text className="text-sm font-poppins-bold text-slate-800 dark:text-slate-100">Location & Contact</Text>
             </View>
 
-            {(store.latitude !== null && store.longitude !== null && store.latitude !== undefined && store.longitude !== undefined) ? (
-              <View style={{ width: "100%", height: 160, borderRadius: 16, overflow: "hidden", marginBottom: 20 }} className="bg-slate-50 dark:bg-neutral-800">
-                {(shouldUseInteractiveMapbox() && MapView && Mapbox) ? (
-                  <View style={{ flex: 1, position: "relative" }}>
-                    <MapView
-                      style={{ flex: 1, width: "100%", height: "100%" }}
-                      surfaceView={false}
-                      styleURL={
-                        isDark
-                          ? "mapbox://styles/mapbox/navigation-night-v1"
-                          : "mapbox://styles/mapbox/streets-v12"
-                      }
-                      scrollEnabled={false}
-                      zoomEnabled={false}
-                      rotateEnabled={false}
-                      pitchEnabled={false}
-                      attributionEnabled={false}
-                      logoEnabled={false}
+            {/* Map */}
+            {store.latitude != null && store.longitude != null ? (
+              <View style={{ width: "100%", height: 170 }}>
+                {shouldUseInteractiveMapbox() && MapView && Mapbox ? (
+                  <MapView
+                    style={{ flex: 1 }}
+                    surfaceView={false}
+                    styleURL={isDark ? "mapbox://styles/mapbox/navigation-night-v1" : "mapbox://styles/mapbox/streets-v12"}
+                    scrollEnabled={false}
+                    zoomEnabled={false}
+                    rotateEnabled={false}
+                    pitchEnabled={false}
+                    attributionEnabled={false}
+                    logoEnabled={false}
+                  >
+                    <Camera
+                      centerCoordinate={[Number(store.longitude), Number(store.latitude)]}
+                      zoomLevel={15}
+                      animationMode="none"
+                    />
+                    <MarkerView
+                      coordinate={[Number(store.longitude), Number(store.latitude)]}
+                      anchor={{ x: 0.5, y: 1 }}
                     >
-                      <Camera
-                        centerCoordinate={[Number(store.longitude), Number(store.latitude)]}
-                        zoomLevel={15}
-                        animationMode="none"
+                      <Image
+                        source={require("../../../assets/images/markers/default.png")}
+                        style={{ width: 36, height: 36 }}
+                        contentFit="contain"
                       />
-                      <MarkerView
-                        coordinate={[Number(store.longitude), Number(store.latitude)]}
-                        anchor={{ x: 0.5, y: 1 }}
-                      >
-                        <View style={{ alignItems: "center", justifyContent: "flex-end" }}>
-                          <Image
-                            source={require("../../../assets/images/markers/default.png")}
-                            style={{ width: 36, height: 36 }}
-                            contentFit="contain"
-                          />
-                        </View>
-                      </MarkerView>
-                    </MapView>
-                  </View>
+                    </MarkerView>
+                  </MapView>
                 ) : (
-                  <View className="flex-1 w-full h-full items-center justify-center gap-y-1">
+                  <View className="flex-1 items-center justify-center gap-y-1 bg-slate-50 dark:bg-neutral-800">
                     <MaterialIcons name="map" size={28} color={isDark ? "#525252" : "#CBD5E1"} />
-                    <Text className="text-[10px] font-poppins text-slate-400 dark:text-slate-500 px-3 text-center">
-                      Map only on Android & Web
+                    <Text className="text-[10px] font-poppins text-slate-400 dark:text-slate-500 text-center px-4">
+                      Map preview available on Android & Web
                     </Text>
                   </View>
                 )}
               </View>
             ) : (
-              <View className="h-[120px] bg-slate-50 dark:bg-neutral-800/50 rounded-2xl items-center justify-center mb-5 border border-slate-100 dark:border-neutral-800">
-                <MaterialIcons name="map" size={28} color="#CBD5E1" />
-                <Text className="text-xs font-poppins text-slate-400 mt-2">No map coordinates</Text>
+              <View className="mx-5 mb-1 h-[100px] bg-slate-50 dark:bg-neutral-800/50 rounded-2xl items-center justify-center border border-slate-100 dark:border-neutral-800">
+                <MaterialIcons name="map" size={26} color="#CBD5E1" />
+                <Text className="text-[11px] font-poppins text-slate-400 mt-1.5">No coordinates provided</Text>
               </View>
             )}
 
-            <View>
-              <Text className="text-[10px] font-poppins-semibold tracking-wider text-slate-400 dark:text-slate-500 uppercase mb-1">Store Address</Text>
-              <Text className="text-xs font-poppins-medium text-slate-700 dark:text-slate-300 leading-5">{store.address || "—"}</Text>
+            <View className="px-5 pt-4 pb-5 gap-y-0.5">
+              <InfoRow icon="place" label="Store Address" value={store.address} />
+              {store.phone && <InfoRow icon="phone" label="Phone Number" value={store.phone} />}
             </View>
-
-            {store.phone && (
-              <View className="mt-5">
-                <Text className="text-[10px] font-poppins-semibold tracking-wider text-slate-400 dark:text-slate-500 uppercase mb-1">Phone Number</Text>
-                <Text className="text-xs font-poppins-medium text-slate-700 dark:text-slate-300">{store.phone}</Text>
-              </View>
-            )}
           </View>
 
-          <View className="bg-white dark:bg-darkBackgroundCard rounded-3xl p-6 shadow-sm shadow-slate-200/40 dark:shadow-none mb-6 border border-slate-100 dark:border-neutral-800/50">
-            <View className="flex-row items-center gap-1.5 mb-5">
-              <MaterialIcons name="verified" size={18} color="#15803d" />
+          {/* Verification Card */}
+          <View className="bg-white dark:bg-darkBackgroundCard rounded-3xl p-5 border border-slate-100 dark:border-neutral-800/50 shadow-sm shadow-slate-100 dark:shadow-none">
+            <View className="flex-row items-center gap-2 mb-4">
+              <View className="w-8 h-8 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 items-center justify-center">
+                <MaterialIcons name="verified" size={16} color="#10B981" />
+              </View>
               <Text className="text-sm font-poppins-bold text-slate-800 dark:text-slate-100">Verification</Text>
             </View>
 
@@ -450,45 +492,57 @@ export function AdminStoreDetails({
               <TouchableOpacity
                 onPress={() => setViewingDocUri(store.business_document_image)}
                 activeOpacity={0.7}
-                className="bg-[#F8FAFC] dark:bg-neutral-800/40 rounded-2xl p-4 flex-row items-center mb-4 border border-slate-100 dark:border-neutral-800"
+                className="bg-slate-50 dark:bg-neutral-800/50 rounded-2xl p-3.5 flex-row items-center border border-slate-100 dark:border-neutral-800"
               >
-                <View className="w-10 h-10 bg-white dark:bg-darkBackgroundCard rounded drop-shadow-sm border border-slate-100 dark:border-neutral-700 items-center justify-center overflow-hidden">
-                  <Image source={{ uri: store.business_document_image }} style={{ width: 40, height: 40 }} contentFit="cover" />
+                <View className="w-12 h-12 rounded-xl overflow-hidden border border-slate-100 dark:border-neutral-700 bg-white">
+                  <Image source={{ uri: store.business_document_image }} style={{ width: 48, height: 48 }} contentFit="cover" />
                 </View>
                 <View className="ml-3 flex-1">
-                  <Text className="text-xs font-poppins-semibold text-slate-800 dark:text-slate-100">Business License</Text>
-                  <Text className="text-[9px] font-poppins-medium text-slate-400 mt-0.5 uppercase tracking-wider">IMG • Tap to View</Text>
+                  <Text className="text-sm font-poppins-semibold text-slate-800 dark:text-slate-100">Business License</Text>
+                  <Text className="text-[10px] font-poppins-medium text-slate-400 mt-0.5 uppercase tracking-wider">Tap to view full document</Text>
                 </View>
-                <MaterialIcons name="check-circle" size={18} color="#15803d" />
+                <View className="w-8 h-8 rounded-full bg-emerald-50 dark:bg-emerald-900/20 items-center justify-center">
+                  <MaterialIcons name="check-circle" size={18} color="#10B981" />
+                </View>
               </TouchableOpacity>
             ) : (
-              <View className="bg-[#F8FAFC] dark:bg-neutral-800/40 rounded-2xl p-4 items-center justify-center border border-slate-100 dark:border-neutral-800 mb-1.5">
-                <Text className="text-[10px] font-poppins-semibold text-slate-400 uppercase tracking-widest">No Documents Provided</Text>
+              <View className="bg-slate-50 dark:bg-neutral-800/40 rounded-2xl p-5 items-center justify-center border border-dashed border-slate-200 dark:border-neutral-700">
+                <MaterialIcons name="folder-off" size={24} color="#CBD5E1" />
+                <Text className="text-[11px] font-poppins-semibold text-slate-400 mt-2 uppercase tracking-widest">No Documents Provided</Text>
               </View>
             )}
-
-
           </View>
 
+          {/* Action Buttons */}
           {isPending && (
-            <View className="flex-row gap-3 pt-2">
-              <View className="flex-1">
-                <Button variant="danger" label={translate("super_admin.stores.details.rejectApplication")} onPress={() => onReject(store)} fullWidth />
-              </View>
-              <View className="flex-1">
-                <Button variant="primary" label={translate("super_admin.stores.details.approveStore")} onPress={() => onApprove(store)} fullWidth />
-              </View>
+            <View className="flex-row gap-3 pt-1">
+              <TouchableOpacity
+                onPress={() => onReject(store)}
+                activeOpacity={0.8}
+                className="flex-1 flex-row items-center justify-center gap-2 py-3.5 rounded-2xl border-2 border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20"
+              >
+                <MaterialIcons name="cancel" size={18} color="#EF4444" />
+                <Text className="text-sm font-poppins-bold text-red-600 dark:text-red-400">
+                  {translate("super_admin.stores.details.rejectApplication")}
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => onApprove(store)}
+                activeOpacity={0.8}
+                className="flex-1 flex-row items-center justify-center gap-2 py-3.5 rounded-2xl bg-emerald-500"
+              >
+                <MaterialIcons name="check-circle" size={18} color="#ffffff" />
+                <Text className="text-sm font-poppins-bold text-white">
+                  {translate("super_admin.stores.details.approveStore")}
+                </Text>
+              </TouchableOpacity>
             </View>
           )}
-
         </View>
       </ScrollView>
 
       {viewingDocUri && (
-        <ImageViewerModal
-          uri={viewingDocUri}
-          onClose={() => setViewingDocUri(null)}
-        />
+        <ImageViewerModal uri={viewingDocUri} onClose={() => setViewingDocUri(null)} />
       )}
     </ScreenWrapper>
   );

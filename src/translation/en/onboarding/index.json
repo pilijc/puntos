@@ -1,4 +1,9 @@
 {
   "welcome": "Welcome to <brand>{{appName}}</brand>",
-  "subhead": "Start earning today"
+  "subhead": "Start earning today",
+  "sessionExpired": {
+    "title": "Session expired",
+    "message": "Please sign in again to continue."
+  },
+  "sessionExpiredButton": "Sign in"
 }
