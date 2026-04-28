@@ -129,7 +129,7 @@ export default function SuperAdminDashboard() {
           <View style={{ flexDirection: "row", gap: 16, alignItems: "flex-start" }}>
             {/* Left column */}
             <View style={{ flex: 1 }}>
-              <View className="mb-1 mt-1">
+              <View className="mb-1.5 mt-2">
                 <View className="flex-row gap-2 mb-1">
                   <StatCard label={translate("superAdmin.dashboard.metrics.totalUsers")} val={users.length} Icon={Users} />
                   <StatCard label={translate("superAdmin.dashboard.metrics.totalStores")} val={stores.length} Icon={Store} />

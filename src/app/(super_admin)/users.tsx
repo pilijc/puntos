@@ -108,7 +108,7 @@ export default function UsersScreen() {
           onScroll={handleWebScroll}
           scrollEventThrottle={200}
         >
-          <View style={{ maxWidth: 896, width: "100%", paddingTop: 8, paddingBottom: 8 }}>
+          <View style={{ maxWidth: 896, width: "100%", paddingTop: 5, paddingBottom: 6 }}>
             <UsersSearchHeader
               search={search}
               onSearchChange={setSearch}
