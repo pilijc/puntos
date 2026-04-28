@@ -310,19 +310,30 @@ export default function SubscriptionConfig() {
                       ? formatDateLong(p.billing_period_end)
                       : "—",
                 },
-           
                 {
                   key: "status",
                   header: translate("super_admin.subscription.ledger.status"),
                   flex: 1,
                   align: "left",
-                  render: (p: any) => (
-                    <View className="px-2 py-0.5 rounded-full bg-emerald-100/60 dark:bg-emerald-900/25">
-                      <Text className="text-[10px] font-poppins-bold uppercase text-emerald-700 dark:text-emerald-300">
-                        {String(p.payment_status ?? "—")}
-                      </Text>
-                    </View>
-                  ),
+                  render: (p: any) => {
+                    const status = String(p.payment_status ?? "—").toLowerCase();
+                    let bgClass = "bg-emerald-100/60 dark:bg-emerald-900/25";
+                    let textClass = "text-emerald-700 dark:text-emerald-300";
+                    if (status === "failed") {
+                      bgClass = "bg-red-100/60 dark:bg-red-900/25";
+                      textClass = "text-red-700 dark:text-red-300";
+                    } else if (status === "paid") {
+                      bgClass = "bg-emerald-100/60 dark:bg-emerald-900/25";
+                      textClass = "text-emerald-700 dark:text-emerald-300";
+                    }
+                    return (
+                      <View className={`px-2 py-0.5 rounded-full ${bgClass}`}>
+                        <Text className={`text-[10px] font-poppins-bold uppercase ${textClass}`}>
+                          {String(p.payment_status ?? "—")}
+                        </Text>
+                      </View>
+                    );
+                  },
                 },
             ]}
             rows={payments}
