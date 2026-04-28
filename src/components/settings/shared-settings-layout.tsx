@@ -14,6 +14,7 @@ import { SecurityCard } from "@/components/settings/card/security-card";
 import { LanguageCard } from "@/components/settings/card/language-card";
 import { AppearanceCard } from "@/components/settings/card/appearance-card";
 import { SubscriptionCard } from "@/components/settings/card/subscription-card";
+import { ChatSupportCard } from "@/components/settings/card/chat-support-card";
 
 interface SharedSettingsLayoutProps {
     headerRight?: React.ReactNode;
@@ -88,6 +89,8 @@ export const SharedSettingsLayout = ({
                               <>
                                 <View className="h-px bg-slate-100 dark:bg-slate-800" />
                                 <SubscriptionCard />
+                                <View className="h-px bg-slate-100 dark:bg-slate-800" />
+                                <ChatSupportCard />
                                 <View className="h-px bg-slate-100 dark:bg-slate-800" />
                               </>
                             ) : null}

@@ -69,7 +69,7 @@ export function Table<Row>(props: {
                 }}
                 className={`px-3 ${headerPaddingYClassName} ${alignClass(col.align)}`}
               >
-                <Text className="text-xs font-poppins-semibold text-textSecondary dark:text-darkTextSecondary">
+                <Text className="text-xs font-poppins-semibold text-textPrimary dark:text-darkTextPrimary">
                   {col.header}
                 </Text>
               </View>

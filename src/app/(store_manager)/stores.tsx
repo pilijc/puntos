@@ -51,7 +51,7 @@ function StoreCard({ store, router }: { store: StoreRow; router: any }) {
 
   return (
     <TouchableOpacity
-      className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl overflow-hidden mb-3"
+      className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-xl overflow-hidden mb-3"
       activeOpacity={0.95}
       onPress={() =>
         router.push(`/(store_manager)/view-store/${store.id}`)
@@ -81,7 +81,7 @@ function StoreCard({ store, router }: { store: StoreRow; router: any }) {
               <Text
                 className={`text-[9px] leading-4 font-poppins-bold uppercase tracking-wider ${badgeStyle.text}`}
               >
-                {translate(`store_manager.stores.badge.${badgeLabelKey}`)}
+                {translate(`storeManager.stores.badge.${badgeLabelKey}`)}
               </Text>
             </View>
           </View>
@@ -91,7 +91,7 @@ function StoreCard({ store, router }: { store: StoreRow; router: any }) {
               className="text-xs font-poppins text-slate-400 dark:text-slate-500 flex-1"
               numberOfLines={1}
             >
-              {store.address ?? translate("store_manager.stores.noAddress")}
+              {store.address ?? translate("storeManager.stores.noAddress")}
             </Text>
           </View>
           {store.type ? (
@@ -113,7 +113,7 @@ function StoreCard({ store, router }: { store: StoreRow; router: any }) {
 
 function SkeletonCard() {
   return (
-    <View className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden mb-3">
+    <View className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden mb-3">
       <View className="p-4 flex-row gap-3">
         <View className="w-[60px] h-[60px] rounded-xl bg-slate-100 dark:bg-slate-800" />
         <View className="flex-1 justify-center gap-y-2">
@@ -159,7 +159,7 @@ export default function StoreManagerStores() {
     () =>
       (["all", "active", "pending", "inactive"] as const).map((key) => ({
         key,
-        label: translate(`store_manager.stores.tabs.${key}`),
+        label: translate(`storeManager.stores.tabs.${key}`),
       })),
     [translate],
   );
@@ -245,7 +245,7 @@ export default function StoreManagerStores() {
       <View className="bg-white border-b border-slate-100 dark:bg-slate-900 dark:border-slate-800 px-6 py-4 flex-row items-center justify-start">
         <View className="flex-row items-center gap-2">
           <Text className="text-xl font-poppins-bold text-slate-900 dark:text-slate-100">
-            {translate("store_manager.stores.title")}
+            {translate("storeManager.stores.title")}
           </Text>
         </View>
       </View>
@@ -389,7 +389,7 @@ export default function StoreManagerStores() {
           {!loading && filtered.length > 0 && !error && Platform.OS === "web" ? (
             <View className="items-center">
               <View
-                className="w-full max-w-4xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl overflow-hidden"
+                className="w-full max-w-4xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-xl overflow-hidden"
               >
                 {filtered.map((store, idx) => {
                   const status = store.status ?? "inactive";
@@ -442,7 +442,7 @@ export default function StoreManagerStores() {
                         </View>
                         <View className={`h-5 px-2 rounded-full ${badgeStyle.bg} items-center justify-center`}>
                           <Text className={`text-[10px] leading-4 font-poppins-semibold ${badgeStyle.text}`}>
-                            {translate(`store_manager.stores.badge.${badgeLabelKey}`)}
+                            {translate(`storeManager.stores.badge.${badgeLabelKey}`)}
                           </Text>
                         </View>
                         <ChevronRight size={20} color="#94A3B8" />
@@ -459,7 +459,7 @@ export default function StoreManagerStores() {
             </View>
           ) : !loading && filtered.length > 0 && !error && Platform.OS === "android" ? (
             <View>
-              <View className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl overflow-hidden">
+              <View className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-xl overflow-hidden">
                 {filtered.map((store, idx) => {
                   const status = store.status ?? "inactive";
                   const badgeStyle = storeStatusBadgeStyle(status);
@@ -505,14 +505,14 @@ export default function StoreManagerStores() {
                               className="text-xs font-poppins text-slate-400 dark:text-slate-500 flex-1"
                               numberOfLines={1}
                             >
-                              {store.address ?? translate("store_manager.stores.noAddress")}
+                              {store.address ?? translate("storeManager.stores.noAddress")}
                             </Text>
                           </View>
                         </View>
 
                         <View className={`h-5 px-2 rounded-full ${badgeStyle.bg} items-center justify-center`}>
                           <Text className={`text-[10px] leading-4 font-poppins-semibold ${badgeStyle.text}`}>
-                            {translate(`store_manager.stores.badge.${badgeLabelKey}`)}
+                            {translate(`storeManager.stores.badge.${badgeLabelKey}`)}
                           </Text>
                         </View>
 
@@ -534,24 +534,24 @@ export default function StoreManagerStores() {
           )}
           {!loading && filtered.length === 0 && !error && (
             <View className="items-center">
-              <View className="w-full max-w-4xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl px-6 py-8 items-center gap-4">
-                <View className="bg-white dark:bg-slate-900 rounded-2xl">
+              <View className="w-full max-w-4xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-xl px-6 py-8 items-center gap-4">
+                <View className="bg-white dark:bg-slate-900 rounded-xl">
                   <Image source={require("@/assets/images/found.png")} style={{ width: 190, height: 190 }} contentFit="contain" />
                 </View>
                 <View className="items-center">
                   <Text className="text-base font-poppins-bold text-slate-600 dark:text-slate-300 text-center">
                     {activeTab === "all"
-                      ? translate("store_manager.stores.empty.allTitle")
+                      ? translate("storeManager.stores.empty.allTitle")
                       : activeTab === "active"
-                        ? translate("store_manager.stores.empty.activeTitle")
+                        ? translate("storeManager.stores.empty.activeTitle")
                         : activeTab === "pending"
-                          ? translate("store_manager.stores.empty.pendingTitle")
-                          : translate("store_manager.stores.empty.inactiveTitle")}
+                          ? translate("storeManager.stores.empty.pendingTitle")
+                          : translate("storeManager.stores.empty.inactiveTitle")}
                   </Text>
                   <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500 text-center px-8">
                     {activeTab === "all"
-                      ? translate("store_manager.stores.empty.hintAll")
-                      : translate("store_manager.stores.empty.hintFiltered")}
+                      ? translate("storeManager.stores.empty.hintAll")
+                      : translate("storeManager.stores.empty.hintFiltered")}
                   </Text>
                 </View>
               </View>

@@ -301,7 +301,7 @@ export default function ViewStreak() {
         </View>
       ) : tabStreaks.length === 0 ? (
         <View className="flex-1 items-center justify-center px-8 gap-y-2">
-          <View className="w-20 h-20 rounded-2xl items-center justify-center">
+          <View className="w-20 h-20 rounded-xl items-center justify-center">
             <Flame size={36} color="gray" />
           </View>
           <View className="items-center gap-y-1 -mt-4">

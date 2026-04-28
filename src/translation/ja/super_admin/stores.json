@@ -2,6 +2,7 @@
   "title": "店舗承認",
   "noStores": "店舗がまだありません",
   "noFilteredStores": "{{status}}の店舗はありません",
+  "pullToRefresh": "引っ張って更新",
   "filter": {
     "all": "すべて",
     "pending": "保留中",

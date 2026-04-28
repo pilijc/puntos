@@ -1,4 +1,5 @@
 import { supabase } from "@/supabase/supabase";
+import { markIntentionalSignOut } from "@/lib/intentional-signout";
 import { UserProfile, UserPreferences } from "@/type/settings";
 
 export async function getUserProfileService(userId: string): Promise<UserProfile | null> {
@@ -105,7 +106,8 @@ export async function deleteUserAccountService(): Promise<void> {
     }
 
     await softDeleteUserAccountService(user.id);
-    
+
+    markIntentionalSignOut();
     await supabase.auth.signOut();
 }
 
