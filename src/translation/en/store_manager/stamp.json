@@ -6,6 +6,7 @@
   "activateFailed": "Failed to activate program.",
   "tabs": {
     "draft": "Draft",
+    "active": "Active",
     "ended": "Ended"
   },
   "emptyDraftTitle": "No Draft Stamp Program",

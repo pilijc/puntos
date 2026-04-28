@@ -11,6 +11,7 @@ import { StatCard } from "@/components/ui/stat-card";
 import { DashboardMetricTile } from "@/components/stores/dashboard-metric-tile";
 import { SubscriptionDistribution } from "@/components/super-admin/subscription-distribution";
 import { DashboardActivityLineChart } from "@/components/super-admin/dashboard-activity-line-chart";
+import { useSupportChatStore } from "@/store/support-chat-store";
 import {
   buildTimeframeSeries,
   getDetailItems,
@@ -26,6 +27,11 @@ export default function SuperAdminDashboard() {
   const { users, stores, adminInfo, loading, refreshing, activeStoresCount, onRefresh } = useSuperAdminDashboard();
   const { t: translate } = useTranslation();
   const insets = useSafeAreaInsets();
+
+  const conversations = useSupportChatStore((state) => state.conversations);
+  const totalUnread = conversations
+    .filter((c) => c.status !== "archived")
+    .reduce((sum, c) => sum + (c.unread_admin_count ?? 0), 0);
 
   const [timeframe, setTimeframe] = useState<Timeframe>("7d");
   const [showDetails, setShowDetails] = useState(false);
@@ -196,12 +202,13 @@ export default function SuperAdminDashboard() {
         }
       >
         <MessageSquare size={24} color="#FF6600" />
-        {/* Red message indicator badge */}
-        <View className="absolute top-0 -right-1 w-[22px] h-[22px] bg-red-500 rounded-full border-2 border-white items-center justify-center">
-          <Text className="text-[10px] font-poppins-bold text-white mt-0.5">
-            1
-          </Text>
-        </View>
+        {totalUnread > 0 && (
+          <View className="absolute top-0 -right-1 w-[22px] h-[22px] bg-red-500 rounded-full border-2 border-white items-center justify-center">
+            <Text className="text-[10px] font-poppins-bold text-white mt-0.5">
+              {totalUnread > 99 ? "99+" : totalUnread}
+            </Text>
+          </View>
+        )}
       </TouchableOpacity>
     </SafeAreaView>
   );

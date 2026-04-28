@@ -1,5 +1,10 @@
 {
   "welcome": "<brand>{{appName}}</brand>へようこそ",
   "subhead": "今すぐポイントを貯め始めましょう",
-  "footer": "続行することで、<tos>利用規約</tos>および<privacy>プライバシーポリシー</privacy>に同意したものとみなされます"
+  "footer": "続行することで、<tos>利用規約</tos>および<privacy>プライバシーポリシー</privacy>に同意したものとみなされます",
+  "sessionExpired": {
+    "title": "セッションの有効期限が切れました",
+    "message": "続行するには、もう一度サインインしてください。"
+  },
+  "sessionExpiredButton": "サインイン"
 }

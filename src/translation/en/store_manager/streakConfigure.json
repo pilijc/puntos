@@ -27,6 +27,8 @@
   "selectDate": "Select date",
   "selectTime": "Select time",
   "saveDraft": "Save as Draft",
+  "saveChanges": "Save Changes",
+  "cancel": "Cancel",
   "streakLengthInvalid": "Streak length must be at least 1 day.",
   "fixedPointsInvalid": "Please enter a valid points per day amount.",
   "startingPointsInvalid": "Please enter a valid starting points amount.",

@@ -170,7 +170,7 @@ export default function OnboardingWelcome() {
         </View>
       ) : (
         <View className="flex-1 items-center justify-center p-4">
-          <View className="w-full max-w-md border border-slate-100 dark:border-neutral-700 rounded-xl bg-white dark:bg-darkBackground overflow-hidden">
+          <View className="w-full max-w-md rounded-xl bg-white dark:bg-darkBackground overflow-hidden">
             <View className="p-6 items-center">
               <Image
                 source={require("../../assets/images/puntos-person.png")}
