@@ -32,7 +32,7 @@ export function DashboardRetentionChart({ data, loading }: Props) {
         },
         {
             name: translate("store_manager.dashboard.retention.new", "New"),
-            population: hasData ? data.newCount : 1, // dummy value if no data just to render empty pie
+            population: data.newCount,
             color: isDark ? "#334155" : "#e2e8f0",
             legendFontColor: isDark ? "#e5e5e5" : "#334155",
             legendFontSize: 10
@@ -56,19 +56,34 @@ export function DashboardRetentionChart({ data, loading }: Props) {
                     <View className={`w-full ${chartWidth > 450 ? 'flex-row items-center justify-between' : 'items-center'}`}>
                         {/* Chart Column */}
                         <View className={chartWidth > 450 ? 'flex-1 items-center' : 'items-center w-full'}>
-                            <PieChart
-                                data={chartData}
-                                width={chartWidth > 450 ? chartWidth / 2 : chartWidth}
-                                height={chartWidth > 450 ? 140 : 100}
-                                chartConfig={{
-                                    color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
-                                }}
-                                accessor={"population"}
-                                backgroundColor={"transparent"}
-                                paddingLeft={chartWidth > 450 ? (chartWidth / 8).toString() : (chartWidth / 4).toString()}
-                                center={[0, 0]}
-                                hasLegend={false}
-                            />
+                            {hasData ? (
+                                <PieChart
+                                    data={chartData}
+                                    width={chartWidth > 450 ? chartWidth / 2 : chartWidth}
+                                    height={chartWidth > 450 ? 140 : 100}
+                                    chartConfig={{
+                                        color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
+                                    }}
+                                    accessor={"population"}
+                                    backgroundColor={"transparent"}
+                                    paddingLeft={chartWidth > 450 ? (chartWidth / 8).toString() : (chartWidth / 4).toString()}
+                                    center={[0, 0]}
+                                    hasLegend={false}
+                                />
+                            ) : (
+                                <View 
+                                    style={{ 
+                                        width: chartWidth > 450 ? chartWidth / 2 : chartWidth,
+                                        height: chartWidth > 450 ? 140 : 100,
+                                    }}
+                                    className="items-center justify-center"
+                                >
+                                    <View 
+                                        className="border-[6px] border-slate-50 dark:border-darkBorder/20 rounded-full opacity-50"
+                                        style={{ width: 60, height: 60 }}
+                                    />
+                                </View>
+                            )}
                         </View>
 
                         {/* Divider for Web */}

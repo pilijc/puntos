@@ -81,7 +81,8 @@ export default function StoreManagerDashboard() {
 
   const [containerWidth, setContainerWidth] = useState(0);
   const [scrollIndex, setScrollIndex] = useState(0);
-  const TILE_WIDTH = 276; // 260 width + 16 gap
+  const ITEM_GAP = 16;
+  const TILE_WIDTH = 260 + ITEM_GAP; 
 
   const handleMetricScroll = (direction: 'left' | 'right') => {
     let newIndex = direction === 'left' ? scrollIndex - 1 : scrollIndex + 1;

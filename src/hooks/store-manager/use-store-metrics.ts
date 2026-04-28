@@ -54,12 +54,6 @@ export function useStoreDashboardMetrics(
     }, [storeId, radius]);
 
     useEffect(() => {
-        if (storeId) {
-            setLoading(true);
-        }
-    }, [storeId]);
-
-    useEffect(() => {
         fetchMetrics(true);
     }, [fetchMetrics]);
 

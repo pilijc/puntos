@@ -1,5 +1,5 @@
 import { supabase } from "@/supabase/supabase";
-import { RetentionData, StampBucket } from "@/type/store-manager/metric";
+import { RetentionData, StampBucket, RecentTransaction, ActivityChartData } from "@/type/store-manager/metric";
 
 function getLocalDateRange(): { today: string; pastDate: string } {
     const now = new Date();
@@ -20,7 +20,7 @@ export async function getStoreMetrics(
 ) {
     let activeUserCount = 0;
     let todayTxCount = 0;
-    const activityData: import("@/type/store-manager/metric").ActivityChartData = {
+    const activityData: ActivityChartData = {
         scans: Array(14).fill(0),
         unique_visitors: Array(14).fill(0),
         redemptions: Array(14).fill(0),
@@ -181,7 +181,7 @@ export async function getStampDistribution(
 export async function getRecentTransactions(
     storeId: number, 
     limit: number = 10,
-): Promise<any[]> {
+): Promise<RecentTransaction[]> {
     const { data, error } = await supabase
         .from('qr_transactions')
         .select(`
@@ -199,10 +199,13 @@ export async function getRecentTransactions(
 
     if (error || !data) return [];
 
-    return data.map((row: any) => ({
+    return (data as any[]).map((row) => ({
         id: row.id,
         created_at: row.created_at,
         points_earned: row.points_earned,
-        user: row.users || { username: 'Unknown', display_name: 'Unknown User' }
+        user: row.users ? {
+            username: row.users.username,
+            display_name: row.users.display_name
+        } : undefined
     }));
 }
