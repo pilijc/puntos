@@ -12,6 +12,7 @@ import { View, Text, SafeAreaView, TouchableOpacity as TwTouchableOpacity } from
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Send, Paperclip, ArrowLeft, Search, MessageSquare, X } from "lucide-react-native";
+import { useTranslation } from "react-i18next";
 
 type FilterType = "all" | "unread" | "read" | "archived";
 
@@ -101,6 +102,7 @@ const FILTERS: { key: FilterType; label: string }[] = [
 ];
 
 export default function SuperAdminInbox() {
+  const { t: translate } = useTranslation();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
@@ -189,7 +191,7 @@ export default function SuperAdminInbox() {
         <Text
           style={{ flex: 1, fontSize: 20, fontFamily: "Poppins-Bold", color: "#0F172A" }}
         >
-          Inbox
+          {translate("layout.inbox")}
         </Text>
         {totalUnread > 0 && (
           <View
@@ -238,7 +240,7 @@ export default function SuperAdminInbox() {
           <TextInput
             value={searchQuery}
             onChangeText={setSearchQuery}
-            placeholder="Search stores or messages..."
+            placeholder={translate("superAdmin.users.searchPlaceholder")}
             placeholderTextColor="#9CA3AF"
             style={{
               flex: 1,
@@ -334,8 +336,8 @@ export default function SuperAdminInbox() {
               }}
             >
               {searchQuery
-                ? `No results for "${searchQuery}"`
-                : `No ${activeFilter} conversations`}
+                ? translate("superAdmin.dashboard.noRecords")
+                : translate("superAdmin.dashboard.noRecords")}
             </Text>
           </View>
         ) : (
@@ -513,7 +515,7 @@ export default function SuperAdminInbox() {
           <Text
             style={{ fontSize: 14, fontFamily: "Poppins-Medium", color: "#94A3B8" }}
           >
-            Select a store to view conversation
+            {translate("superAdmin.stores.tapToView")}
           </Text>
         </View>
       );

@@ -4,6 +4,7 @@
   "searchPlaceholder": "Search...",
   "filter": "Filter",
   "tabs": {
+    "all": "All",
     "user": "Users",
     "manager": "Managers",
     "staff": "Staff"

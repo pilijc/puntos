@@ -27,6 +27,8 @@ export interface DetailItem {
   key: string;
   title: string;
   subtitle: string;
+  dateLabel: string;
+  status: string;
 }
 
 export interface DetailList {
@@ -166,6 +168,8 @@ export function getDetailItems(items: DashboardRecord[], dateKeys: string[], pre
       key: `${prefix}-${idx}-${item?.id ?? idx}`,
       title: String(name),
       subtitle: `${dateLabel} • ${status}`,
+      dateLabel,
+      status,
     };
   });
 

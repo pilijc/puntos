@@ -168,6 +168,12 @@ const resources = {
         subscription: en_super_admin_subscription,
         users: en_super_admin_users,
       },
+      superAdmin: {
+        dashboard: en_super_admin_dashboard,
+        stores: en_super_admin_stores,
+        subscription: en_super_admin_subscription,
+        users: en_super_admin_users,
+      },
       user: {
         activity: en_user_activity,
         discover: en_user_discover,
@@ -248,6 +254,12 @@ const resources = {
         viewStore: ja_store_manager_viewStore,
       },
       super_admin: {
+        dashboard: ja_super_admin_dashboard,
+        stores: ja_super_admin_stores,
+        subscription: ja_super_admin_subscription,
+        users: ja_super_admin_users,
+      },
+      superAdmin: {
         dashboard: ja_super_admin_dashboard,
         stores: ja_super_admin_stores,
         subscription: ja_super_admin_subscription,
