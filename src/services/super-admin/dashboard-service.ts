@@ -44,7 +44,7 @@ export async function getDashboardData(): Promise<DashboardData> {
       .order("created_at", { ascending: false }),
     supabase
       .from("manager_subscriptions")
-      .select("id, owner_id, payment_status"),
+      .select("id, owner_id, payment_status, updated_at, current_period_start, created_at"),
   ]);
 
   const processedUsers = (userData || []).map((u) => ({

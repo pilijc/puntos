@@ -7,6 +7,7 @@
   "noLocationSet": "No location set",
   "mapOnlyAndroidWeb": "Map only available on Android & Web",
   "status": {
-    "pending_review": "Under Review"
+    "pending_review": "Under Review",
+    "active": "Active"
   }
 }

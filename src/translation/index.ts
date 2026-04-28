@@ -139,7 +139,6 @@ const resources = {
         transactions: en_store_manager_transactions,
         viewStore: en_store_manager_viewStore,
       },
-      // Back-compat alias: app screens use `storeManager.*` keys.
       storeManager: {
         createStore: en_store_manager_createStore,
         dashboard: en_store_manager_dashboard,

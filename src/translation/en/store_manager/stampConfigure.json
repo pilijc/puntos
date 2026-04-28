@@ -28,6 +28,8 @@
   "expirationDays": "Expiration Period (days)",
   "expirationDaysPlaceholder": "e.g. 30",
   "launchProgram": "Launch Stamp Program",
+  "cancel": "Cancel",
+  "saveChanges": "Save Changes",
   "expiration": {
     "none": {
       "label": "No Expiration",
