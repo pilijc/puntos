@@ -11,6 +11,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 import { LayoutDashboard, Store, ArrowLeftRight, Settings, CreditCard } from "lucide-react-native";
 import { useDeviceSession } from "@/hooks/store-manager/use-device-session";
+import { useManagerStoresStore } from "@/store/manager-stores-store";
+import { useSupportChatStore } from "@/store/support-chat-store";
 
 const WEB_SIDEBAR_WIDTH = 260;
 const WEB_SIDEBAR_INSET_X = 16;
@@ -240,8 +242,34 @@ export default function StoreManagerLayout() {
     const [currentUserId, setCurrentUserId] = useState<string | undefined>(undefined);
     const { } = useDeviceSession(currentUserId);
 
+    // Bootstrap support chat so unread count shows in settings
+    const stores = useManagerStoresStore((state) => state.stores);
+    const fetchStores = useManagerStoresStore((state) => state.fetchStores);
+    const { loadManagerConversation, conversations, activeConversationId, subscribeInbox, subscribeMessages, cleanupRealtime } = useSupportChatStore();
+
+    useEffect(() => {
+        fetchStores();
+    }, [fetchStores]);
+
+    useEffect(() => {
+        const activeStore = stores[0];
+        if (!activeStore || !currentUserId) return;
+        loadManagerConversation(activeStore.id, currentUserId);
+    }, [stores, currentUserId, loadManagerConversation]);
+
+    useEffect(() => {
+        if (!activeConversationId) return;
+        subscribeMessages(activeConversationId);
+    }, [activeConversationId, subscribeMessages]);
+
+    useEffect(() => {
+        subscribeInbox();
+        return () => cleanupRealtime();
+    }, [subscribeInbox, cleanupRealtime]);
+
     const activeTab = activeSidebarTabFromPath(path);
     const storesRowActive = activeTab === "stores";
+    const chatUnread = conversations.reduce((sum, c) => sum + (c.unread_store_count ?? 0), 0);
 
     useEffect(() => {
         const verifyAccess = async () => {
@@ -457,6 +485,8 @@ export default function StoreManagerLayout() {
                 name="settings"
                 options={{
                     title: translate("label.settings"),
+                    tabBarBadge: chatUnread > 0 ? (chatUnread > 99 ? "99+" : chatUnread) : undefined,
+                    tabBarBadgeStyle: { backgroundColor: "#FF6600", fontSize: 10 },
                     tabBarIcon: ({ color, size }) => (
                         <Settings
                             size={
