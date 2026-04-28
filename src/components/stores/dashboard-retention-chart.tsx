@@ -92,7 +92,7 @@ export function DashboardRetentionChart({ data, loading }: Props) {
 
                             {chartData.map((item, index) => {
                                 const total = data.returningCount + data.newCount;
-                                const percentage = total > 0 ? (item.population / total * 100).toFixed(0) : (index === 0 ? "0" : "100");
+                                const percentage = total > 0 ? (item.population / total * 100).toFixed(0) : "0";
                                 
                                 return (
                                     <View key={index} className="flex-row items-center justify-between mb-2">

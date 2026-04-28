@@ -57,6 +57,7 @@ export default function StoreManagerDashboard() {
     refresh: refreshMetrics,
   } = useStoreDashboardMetrics(
     selectedStore?.id ?? 0,
+    selectedStore?.radius ?? 100
   );
 
   const handleRefresh = useCallback(async () => {

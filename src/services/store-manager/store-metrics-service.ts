@@ -146,10 +146,13 @@ export async function getStampDistribution(
     const segmentSize = Math.ceil(distinctValues / targetBuckets);
 
     const rawBuckets: { min: number; max: number; count: number }[] = [];
-    let currentMin = 1;
+    let currentMin = 0;
 
     for (let i = 0; i < targetBuckets; i++) {
-        const currentMax = Math.min(currentMin + segmentSize - 1, maxStamps);
+        const currentMax = i === 0 
+            ? Math.max(0, segmentSize - 1) 
+            : Math.min(currentMin + segmentSize - 1, maxStamps);
+            
         rawBuckets.push({ min: currentMin, max: currentMax, count: 0 });
         currentMin = currentMax + 1;
         if (currentMin > maxStamps) break;
