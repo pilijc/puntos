@@ -27,8 +27,8 @@ export function SubscriptionDistribution({
   const { stores, subscriptions, users, loading } = useDashboardStore();
   const isDark = useColorScheme() === "dark";
 
-  const radius = 36;
-  const strokeWidth = 14;
+  const radius = 25;
+  const strokeWidth = 50;
   const circumference = 2 * Math.PI * radius;
 
   const usersByOwner = useMemo(
@@ -53,31 +53,25 @@ export function SubscriptionDistribution({
   );
 
   const stats = useMemo(() => {
-    if (!stores.length) return null;
+    if (!users.length) return null;
 
-    const ownerIds = Array.from(
-      new Set(stores.map((s) => s.owner_id).filter(Boolean))
+    const managers = users.filter((u) => 
+      ["manager", "store_owner", "store_manager"].includes(u?.role_type)
     );
-    const totalOwners = ownerIds.length || 1;
-
+    const totalManagers = managers.length;
     let proCount = 0;
-    let basicCount = 0;
 
-    ownerIds.forEach((id) => {
-      const sub = subByOwner.get(id);
-      if (sub) {
-        if (sub.payment_status === "paid" || sub.payment_status === "availed") {
-          proCount++;
-        } else {
-          basicCount++;
-        }
-      } else {
-        basicCount++;
+    managers.forEach((m) => {
+      const sub = subByOwner.get(m.id);
+      if (sub && (sub.payment_status === "paid" || sub.payment_status === "availed")) {
+        proCount++;
       }
     });
 
-    const proPercent = proCount / totalOwners;
-    const basicPercent = basicCount / totalOwners;
+    const safeTotal = Math.max(1, totalManagers);
+    const basicCount = totalManagers - proCount;
+    const proPercent = proCount / safeTotal;
+    const basicPercent = basicCount / safeTotal;
 
     return {
       proPercent,
@@ -95,7 +89,7 @@ export function SubscriptionDistribution({
         },
       ],
     };
-  }, [stores, subByOwner]);
+  }, [users, subByOwner]);
 
   const payersList = useMemo(() => {
     const nowDay = startOfDay(new Date()).getTime();
@@ -161,9 +155,9 @@ export function SubscriptionDistribution({
       </Text>
 
       <View className="flex-row items-center mb-8">
-        {/* Donut Chart */}
+        {/* Pie Chart */}
         <View className="w-[110px] h-[110px] justify-center items-center mr-6">
-          <Svg width="110" height="110" viewBox="0 0 100 100">
+          <Svg width="110" height="110" viewBox="0 0 100 100" style={{ borderRadius: 55, overflow: "hidden" }}>
             <Circle
               cx="50"
               cy="50"
@@ -182,21 +176,9 @@ export function SubscriptionDistribution({
                   stroke="#FF6600"
                   strokeWidth={strokeWidth}
                   strokeDasharray={`${stats.proPercent * circumference} ${circumference}`}
-                  strokeLinecap="round"
                 />
               )}
             </G>
-            <SvgText
-              x="50"
-              y="55"
-              textAnchor="middle"
-              fill={isDark ? "#CBD5E1" : "#475569"}
-              fontSize="16"
-              fontWeight="bold"
-              fontFamily="Poppins-Bold"
-            >
-              {stats.proDisplay}%
-            </SvgText>
           </Svg>
         </View>
 
