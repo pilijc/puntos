@@ -6,7 +6,9 @@
   "users": "ユーザー",
   "stores": "店舗",
   "subscription": "サブスクリプション",
+  "subscriptions": "サブスクリプション",
   "settings": "設定",
   "scan": "スキャン",
-  "transactions": "取引履歴"
+  "transactions": "取引履歴",
+  "inbox": "受信トレイ"
 }

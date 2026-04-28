@@ -3,10 +3,17 @@ import { useRouter } from "expo-router";
 import { View, Text, TouchableOpacity } from "@/tw";
 import { ChevronRight, MessageCircle } from "lucide-react-native";
 import { useTranslation } from "react-i18next";
+import { useSupportChatStore } from "@/store/support-chat-store";
 
 export function ChatSupportCard() {
   const router = useRouter();
   const { t: translate } = useTranslation();
+
+  const conversations = useSupportChatStore((state) => state.conversations);
+  const unreadCount = conversations.reduce(
+    (total, c) => total + (c.unread_store_count ?? 0),
+    0,
+  );
 
   return (
     <View className="bg-white dark:bg-darkBackground px-2.5 py-3 overflow-hidden">
@@ -20,9 +27,35 @@ export function ChatSupportCard() {
         </View>
 
         <View className="flex-1 ml-2">
-          <Text className="text-md font-poppins-semibold text-textPrimary dark:text-darkTextPrimary">
-            Chat Support
-          </Text>
+          <View className="flex-row items-center gap-1.5">
+            <Text className="text-md font-poppins-semibold text-textPrimary dark:text-darkTextPrimary">
+              Chat Support
+            </Text>
+            {unreadCount > 0 && (
+              <View
+                style={{
+                  backgroundColor: "#EF4444",
+                  borderRadius: 10,
+                  minWidth: 18,
+                  height: 18,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  paddingHorizontal: 4,
+                }}
+              >
+                <Text
+                  style={{
+                    color: "#FFFFFF",
+                    fontSize: 10,
+                    fontFamily: "Poppins-Bold",
+                    lineHeight: 13,
+                  }}
+                >
+                  {unreadCount > 99 ? "99+" : unreadCount}
+                </Text>
+              </View>
+            )}
+          </View>
           <Text className="text-xs font-poppins text-textMuted dark:text-darkTextMuted">
             Get help from Super Admin
           </Text>

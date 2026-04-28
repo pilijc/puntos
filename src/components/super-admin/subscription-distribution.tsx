@@ -1,8 +1,8 @@
 import React, { useMemo } from "react";
-import { TouchableOpacity, useColorScheme } from "react-native";
+import { Image, TouchableOpacity, useColorScheme } from "react-native";
 import { View, Text } from "@/tw";
 import Svg, { Circle, Text as SvgText, G } from "react-native-svg";
-import { Store, RotateCcw } from "lucide-react-native";
+import { Store, RotateCcw, User } from "lucide-react-native";
 import { useDashboardStore } from "@/store/dashboard-store";
 import {
   Timeframe,
@@ -24,12 +24,17 @@ export function SubscriptionDistribution({
   onLoadMorePayers,
   onResetPayers,
 }: SubscriptionDistributionProps) {
-  const { stores, subscriptions, loading } = useDashboardStore();
+  const { stores, subscriptions, users, loading } = useDashboardStore();
   const isDark = useColorScheme() === "dark";
 
   const radius = 36;
   const strokeWidth = 14;
   const circumference = 2 * Math.PI * radius;
+
+  const usersByOwner = useMemo(
+    () => new Map(users.map((u) => [u.id, u])),
+    [users]
+  );
 
   const storesByOwner = useMemo(() => {
     const map = new Map<string, typeof stores>();
@@ -121,7 +126,8 @@ export function SubscriptionDistribution({
       const dateLabel = date
         ? `${MONTH_NAMES[date.getMonth()]} ${date.getDate()}`
         : "N/A";
-      return { key: sub.owner_id, name, activeStores, dateLabel };
+      const avatar = usersByOwner.get(sub.owner_id)?.avatar ?? null;
+      return { key: sub.owner_id, name, activeStores, dateLabel, avatar };
     });
 
     return { list, hasMore: filtered.length > payerLimit };
@@ -258,11 +264,19 @@ export function SubscriptionDistribution({
                     : ""
                 }`}
               >
-                <View className="w-9 h-9 rounded-full bg-white dark:bg-darkBackgroundCard items-center justify-center mr-3 shadow-sm border border-orange-50">
-                  <Text className="text-xs font-poppins-bold text-orange-500">
-                    {item.name?.charAt(0)?.toUpperCase() ?? "?"}
-                  </Text>
-                </View>
+                {item.avatar ? (
+                  <Image
+                    source={{ uri: item.avatar }}
+                    style={{ width: 36, height: 36, borderRadius: 18, marginRight: 12, backgroundColor: isDark ? "#262626" : "#F1F5F9" }}
+                  />
+                ) : (
+                  <View
+                    style={{ width: 36, height: 36, borderRadius: 18, marginRight: 12, backgroundColor: "#FF660015" }}
+                    className="items-center justify-center border border-primary/10"
+                  >
+                    <User size={18} color="#FF6600" />
+                  </View>
+                )}
                 <View className="flex-1">
                   <Text className="text-sm font-poppins-bold text-slate-700 dark:text-darkTextPrimary">
                     {item.name}

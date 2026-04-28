@@ -5,7 +5,10 @@
     "activePlanBadge": "Active plan",
     "free": "Free",
     "perMonth": "/mo",
+    "currentPeriodAmount": "Current billing",
+    "upcomingAmount": "Upcoming billing",
     "estimatedCost": "Estimated cost",
+    "upcomingPriceNote": "Price changes apply to upcoming billing only.",
     "upgradeToPro": "Upgrade to Pro",
     "cancelSubscription": "Cancel Subscription",
     "fallbackPlanName": {
