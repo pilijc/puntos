@@ -139,7 +139,6 @@ const resources = {
         transactions: en_store_manager_transactions,
         viewStore: en_store_manager_viewStore,
       },
-      // Back-compat alias: app screens use `storeManager.*` keys.
       storeManager: {
         createStore: en_store_manager_createStore,
         dashboard: en_store_manager_dashboard,
@@ -164,6 +163,12 @@ const resources = {
         viewStore: en_store_manager_viewStore,
       },
       super_admin: {
+        dashboard: en_super_admin_dashboard,
+        stores: en_super_admin_stores,
+        subscription: en_super_admin_subscription,
+        users: en_super_admin_users,
+      },
+      superAdmin: {
         dashboard: en_super_admin_dashboard,
         stores: en_super_admin_stores,
         subscription: en_super_admin_subscription,
@@ -249,6 +254,12 @@ const resources = {
         viewStore: ja_store_manager_viewStore,
       },
       super_admin: {
+        dashboard: ja_super_admin_dashboard,
+        stores: ja_super_admin_stores,
+        subscription: ja_super_admin_subscription,
+        users: ja_super_admin_users,
+      },
+      superAdmin: {
         dashboard: ja_super_admin_dashboard,
         stores: ja_super_admin_stores,
         subscription: ja_super_admin_subscription,

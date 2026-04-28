@@ -536,7 +536,15 @@ export default function StoreManagerStores() {
             <View className="items-center">
               <View className="w-full max-w-4xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-xl px-6 py-8 items-center gap-4">
                 <View className="bg-white dark:bg-slate-900 rounded-xl">
-                  <Image source={require("@/assets/images/found.png")} style={{ width: 190, height: 190 }} contentFit="contain" />
+                  <Image
+                    source={require("@/assets/images/found.png")}
+                    style={{
+                      width: Platform.OS === "web" ? 180 : 120,
+                      height: Platform.OS === "web" ? 180 : 120,
+                    }}
+                    contentFit="contain"
+                  />
+            
                 </View>
                 <View className="items-center">
                   <Text className="text-base font-poppins-bold text-slate-600 dark:text-slate-300 text-center">

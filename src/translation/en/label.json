@@ -46,5 +46,7 @@
   "streak": "Streak",
   "free": "Free",
   "unpaid": "Unpaid",
-  "paid": "Paid"
+  "paid": "Paid",
+  "sessionExpired": "Session ended",
+  "sessionExpiredMessage": "Your session has expired for security reasons. Please sign in again to continue."
 }
