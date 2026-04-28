@@ -53,7 +53,6 @@ export function SharedChatArea({
   const [messageText, setMessageText] = useState("");
   const [drawerOpen, setDrawerOpen] = useState(false);
   const scrollViewRef = useRef<ScrollView>(null);
-  const scrollBottom = Math.max(bottomInset, 4);
 
   const handleSend = async () => {
     if (!messageText.trim() || sending || disabled) return;
@@ -111,56 +110,85 @@ export function SharedChatArea({
     return `${(value / (1024 * 1024)).toFixed(1)} MB`;
   };
 
-  const renderAttachment = (msg: SupportMessage, isMe: boolean) => {
-    if (!msg.attachment_url && !msg.attachment_name) return null;
+  /** True when the message has a non-image file attachment */
+  const isFileAttachment = (msg: SupportMessage) =>
+    (!!msg.attachment_url || !!msg.attachment_name) && msg.message_kind !== "image";
 
-    if (msg.message_kind === "image" && msg.attachment_url) {
-      return (
-        <TouchableOpacity
-          activeOpacity={0.85}
-          onPress={() => msg.attachment_url && Linking.openURL(msg.attachment_url)}
-        >
-          <Image
-            source={{ uri: msg.attachment_url }}
-            style={{
-              width: 220,
-              height: 220,
-              borderRadius: 16,
-              backgroundColor: isMe ? "rgba(255,255,255,0.18)" : "#E2E8F0",
-            }}
-            resizeMode="cover"
-          />
-        </TouchableOpacity>
-      );
-    }
-
+  /** Image attachment — rendered inside the colored bubble */
+  const renderImageAttachment = (msg: SupportMessage, isMe: boolean) => {
+    if (msg.message_kind !== "image" || !msg.attachment_url) return null;
     return (
       <TouchableOpacity
         activeOpacity={0.85}
         onPress={() => msg.attachment_url && Linking.openURL(msg.attachment_url)}
-        className="flex-row items-center"
+      >
+        <Image
+          source={{ uri: msg.attachment_url }}
+          style={{
+            width: 220,
+            height: 220,
+            borderRadius: 16,
+            backgroundColor: isMe ? "rgba(255,255,255,0.18)" : "#E2E8F0",
+          }}
+          resizeMode="cover"
+        />
+      </TouchableOpacity>
+    );
+  };
+
+  /** File attachment — standalone card with isMe-aware colors, matching message bubble spacing */
+  const renderFileCard = (msg: SupportMessage, isMe: boolean, hasBodyBelow: boolean) => {
+    if (!isFileAttachment(msg)) return null;
+    return (
+      <TouchableOpacity
+        activeOpacity={0.85}
+        onPress={() => msg.attachment_url && Linking.openURL(msg.attachment_url)}
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          backgroundColor: isMe ? "#FF6600" : "#FFFFFF",
+          borderRadius: 16,
+          borderWidth: isMe ? 0 : 1,
+          borderColor: "#E2E8F0",
+          paddingHorizontal: 16,
+          paddingVertical: 12,
+          marginBottom: hasBodyBelow ? 6 : 0,
+          minWidth: 210,
+        }}
       >
         <View
-          className={`w-10 h-10 rounded-full items-center justify-center mr-3 ${
-            isMe ? "bg-white/20" : "bg-slate-100 dark:bg-neutral-800"
-          }`}
+          style={{
+            width: 40,
+            height: 40,
+            borderRadius: 20,
+            backgroundColor: isMe ? "rgba(255,255,255,0.20)" : "#F1F5F9",
+            alignItems: "center",
+            justifyContent: "center",
+            marginRight: 12,
+            flexShrink: 0,
+          }}
         >
           <FileText size={20} color={isMe ? "#FFFFFF" : "#64748B"} />
         </View>
-        <View className="flex-1">
+        <View style={{ flex: 1 }}>
           <Text
             numberOfLines={1}
-            className={`text-[14px] font-poppins-semibold ${
-              isMe ? "text-white" : "text-slate-800 dark:text-slate-100"
-            }`}
+            style={{
+              fontSize: 13,
+              fontFamily: "Poppins-SemiBold",
+              color: isMe ? "#FFFFFF" : "#0F172A",
+            }}
           >
             {msg.attachment_name || "Attachment"}
           </Text>
           {!!msg.attachment_size && (
             <Text
-              className={`text-[11px] font-poppins ${
-                isMe ? "text-white/80" : "text-slate-400 dark:text-neutral-500"
-              }`}
+              style={{
+                fontSize: 11,
+                fontFamily: "Poppins-Regular",
+                color: isMe ? "rgba(255,255,255,0.75)" : "#94A3B8",
+                marginTop: 2,
+              }}
             >
               {formatFileSize(msg.attachment_size)}
             </Text>
@@ -194,7 +222,7 @@ export function SharedChatArea({
           </Text>
         </View>
 
-        <View style={{ maxWidth: isWeb ? 896 : undefined }} className="w-full flex-1">
+        <View style={{ maxWidth: isWeb ? 896 : undefined }} className="w-full">
           {loadingMessages && messages.length === 0 ? (
             <View className="items-center justify-center py-20">
               <ActivityIndicator color="#FF6600" />
@@ -213,40 +241,63 @@ export function SharedChatArea({
               const isMe = msg.sender_role === currentUserRole;
               const nextMsg = messages[index + 1];
               const isLastInGroup = !nextMsg || nextMsg.sender_role !== msg.sender_role;
+              const hasFile = isFileAttachment(msg);
+              const hasImage = msg.message_kind === "image" && !!msg.attachment_url;
+              const hasBody = !!msg.body;
+
+              const bubbleRadius = isMe
+                ? isLastInGroup
+                  ? "rounded-t-2xl rounded-bl-2xl rounded-br-[4px]"
+                  : "rounded-2xl rounded-br-[4px]"
+                : isLastInGroup
+                  ? "rounded-t-2xl rounded-br-2xl rounded-bl-[4px]"
+                  : "rounded-2xl rounded-bl-[4px]";
+
+              const bubbleColor = isMe
+                ? "bg-primary"
+                : "bg-white dark:bg-darkBackgroundCard border border-slate-100 dark:border-neutral-800";
 
               return (
                 <View
                   key={msg.id}
                   className={`mb-1 max-w-[80%] ${isMe ? "self-end" : "self-start"} ${isLastInGroup ? "mb-2" : ""}`}
                 >
-                  <View
-                    className={`px-4 py-3 ${isMe
-                      ? "bg-primary"
-                      : "bg-white dark:bg-darkBackgroundCard border border-slate-100 dark:border-neutral-800"
-                      } ${isMe
-                        ? isLastInGroup
-                          ? "rounded-t-2xl rounded-bl-2xl rounded-br-[4px]"
-                          : "rounded-2xl rounded-br-[4px]"
-                        : isLastInGroup
-                          ? "rounded-t-2xl rounded-br-2xl rounded-bl-[4px]"
-                          : "rounded-2xl rounded-bl-[4px]"
-                      }`}
-                  >
-                    {renderAttachment(msg, isMe)}
-                    {!!msg.body && (
-                      <Text
-                        className={`text-[15px] font-poppins leading-6 ${
-                          isMe ? "text-white" : "text-slate-800 dark:text-slate-100"
-                        } ${msg.attachment_path ? "mt-2" : ""}`}
-                      >
-                        {msg.body}
-                      </Text>
-                    )}
-                  </View>
+                  {/*
+                   * FILE ATTACHMENT — rendered as a standalone white card,
+                   * identical to the web platform design (white bg, border,
+                   * icon circle, filename + size). Not inside any colored bubble.
+                   */}
+                  {hasFile && renderFileCard(msg, isMe, hasBody)}
+
+                  {/*
+                   * IMAGE attachment OR text body — rendered inside the colored bubble.
+                   * Only shown when there's something to show in the bubble.
+                   */}
+                  {(hasImage || hasBody) && (
+                    hasImage && !hasBody ? (
+                      // Image-only: render bare, no bubble outline or padding
+                      renderImageAttachment(msg, isMe)
+                    ) : (
+                      <View className={`px-4 py-3 ${bubbleColor} ${bubbleRadius}`}>
+                        {hasImage && renderImageAttachment(msg, isMe)}
+                        {hasBody && (
+                          <Text
+                            className={`text-[15px] font-poppins leading-6 ${
+                              isMe ? "text-white" : "text-slate-800 dark:text-slate-100"
+                            } ${hasImage ? "mt-2" : ""}`}
+                          >
+                            {msg.body}
+                          </Text>
+                        )}
+                      </View>
+                    )
+                  )}
+
                   {isLastInGroup && (
                     <Text
-                      className={`text-[11px] font-poppins text-slate-400 dark:text-neutral-500 mt-1.5 ${isMe ? "text-right" : "text-left ml-1"
-                        }`}
+                      className={`text-[11px] font-poppins text-slate-400 dark:text-neutral-500 mt-1.5 ${
+                        isMe ? "text-right" : "text-left ml-1"
+                      }`}
                     >
                       {formatMessageTime(msg.created_at)}
                     </Text>
@@ -308,7 +359,10 @@ export function SharedChatArea({
             alignItems: "center",
             justifyContent: "center",
             marginBottom: 4,
-            backgroundColor: messageText.trim() && !sending && !uploadingAttachment && !disabled ? "#FF6600" : "transparent",
+            backgroundColor:
+              messageText.trim() && !sending && !uploadingAttachment && !disabled
+                ? "#FF6600"
+                : "transparent",
           }}
         >
           {sending || uploadingAttachment ? (
