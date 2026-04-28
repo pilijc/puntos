@@ -4,7 +4,7 @@ import { View, Text } from "@/tw";
 import { DashboardMetricTileProps } from "@/type/store-manager/metric";
 import { DashboardMetricTileSkeleton } from '@/components/skeleton/store_manager/dashboard-metric-tile-skeleton';
 
-interface Props extends Omit<DashboardMetricTileProps, 'subtitle'> {
+interface Props extends DashboardMetricTileProps {
     compact?: boolean;
 }
 

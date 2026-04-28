@@ -7,11 +7,12 @@ import { useTranslation } from "react-i18next";
 import { DashboardDetailedMetricsSkeleton } from "@/components/skeleton/store_manager/dashboard-detailed-metrics-skeleton";
 
 interface Props {
+    storeId: number;
     transactions: RecentTransaction[];
     loading?: boolean;
 }
 
-export function DashboardDetailedMetrics({ transactions = [], loading }: Props) {
+export function DashboardDetailedMetrics({ storeId, transactions = [], loading }: Props) {
     const router = useRouter();
     const { t: translate } = useTranslation();
     const displayTransactions = transactions.slice(0, 5);
@@ -29,7 +30,10 @@ export function DashboardDetailedMetrics({ transactions = [], loading }: Props) 
 
                 <TouchableOpacity 
                     className="py-1 px-2"
-                    onPress={() => router.push("/(store_manager)/transactions")}
+                    onPress={() => router.push({
+                        pathname: "/(store_manager)/transactions",
+                        params: { storeId }
+                    })}
                 >
                     <Text className="text-xs font-poppins-bold text-[#ff6600]">
                         {translate("label.viewAll", "View All")}
@@ -69,10 +73,7 @@ export function DashboardDetailedMetrics({ transactions = [], loading }: Props) 
                                 </View>
                                 <View className="flex-[2] px-2">
                                     <Text className="text-[13px] font-poppins-bold text-textPrimary dark:text-darkTextPrimary" numberOfLines={1}>
-                                        {tx.user?.display_name || tx.user?.username || 'Unknown User'}
-                                    </Text>
-                                    <Text className="text-[11px] font-poppins text-textSecondary dark:text-darkTextSecondary" numberOfLines={1}>
-                                        {tx.user?.username ? `@${tx.user.username}` : ''}
+                                        {tx.user?.name || 'Unknown User'}
                                     </Text>
                                 </View>
                                 <Text className="flex-1 text-sm font-poppins-bold text-[#ff6600] text-right">

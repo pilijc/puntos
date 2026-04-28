@@ -141,7 +141,7 @@ export async function getStampDistribution(
         return { buckets: [], maxStamps: 0 };
     }
 
-    const distinctValues = maxStamps;
+    const distinctValues = maxStamps + 1;
     const targetBuckets = Math.min(distinctValues, 5);
     const segmentSize = Math.ceil(distinctValues / targetBuckets);
 
@@ -189,8 +189,8 @@ export async function getRecentTransactions(
             created_at,
             points_earned,
             users:user_id (
-                username,
-                display_name
+                name,
+                avatar_url
             )
         `)
         .eq('store_id', storeId)
@@ -204,8 +204,8 @@ export async function getRecentTransactions(
         created_at: row.created_at,
         points_earned: row.points_earned,
         user: row.users ? {
-            username: row.users.username,
-            display_name: row.users.display_name
+            name: row.users.name,
+            avatar_url: row.users.avatar_url
         } : undefined
     }));
 }

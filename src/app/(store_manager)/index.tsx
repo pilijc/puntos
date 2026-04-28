@@ -244,6 +244,7 @@ export default function StoreManagerDashboard() {
 
                 {/* Row 3: Recent Transactions (full width) */}
                 <DashboardDetailedMetrics
+                  storeId={selectedStore?.id ?? 0}
                   transactions={recentTransactions}
                   loading={metricsLoading}
                 />
@@ -297,6 +298,7 @@ export default function StoreManagerDashboard() {
 
                 {/* Recent Transactions */}
                 <DashboardDetailedMetrics
+                  storeId={selectedStore?.id ?? 0}
                   transactions={recentTransactions}
                   loading={metricsLoading}
                 />

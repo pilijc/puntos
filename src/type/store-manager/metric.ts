@@ -73,7 +73,7 @@ export interface RecentTransaction {
     created_at: string;
     points_earned: number;
     user: {
-        username: string;
-        display_name: string;
+        name: string;
+        avatar_url?: string;
     };
 }
