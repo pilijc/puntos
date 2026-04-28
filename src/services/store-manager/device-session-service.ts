@@ -53,7 +53,14 @@ function resolveDeviceModel(): string {
 async function getServerTimeMs(): Promise<number> {
     try {
         const url = process.env.EXPO_PUBLIC_API_URL || "";
-        const res = await fetch(`${url}/rest/v1/`, { method: "HEAD" });
+        const anonKey = process.env.EXPO_PUBLIC_ANON_KEY || "";
+        const res = await fetch(`${url}/rest/v1/`, {
+            method: "HEAD",
+            headers: {
+                apikey: anonKey,
+                Authorization: `Bearer ${anonKey}`,
+            },
+        });
         const dateStr = res.headers.get("Date");
         if (dateStr) {
             return new Date(dateStr).getTime();
