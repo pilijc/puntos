@@ -4,13 +4,14 @@ import { ActivityIndicator, Platform, Pressable, useColorScheme } from "react-na
 import { View, Text, SafeAreaView, ScrollView } from "@/tw";
 import { useSuperAdminStoresStore } from "@/store/super-admin/super-admin-stores-store";
 import {
+  ArrowDown,
+  ArrowUp,
   ArrowUpDown,
   Check,
   ChevronDown,
   ChevronUp,
   Sparkles,
   Store,
-  TrendingDown,
   TrendingUp,
   UserRoundMinus,
   UserRoundPlus,
@@ -60,23 +61,55 @@ function StatCard({
 }) {
   const trend = compare?.trend;
   const TrendGlyph =
-    trend === "up" ? TrendingUp : trend === "down" ? TrendingDown : ArrowUpDown;
+    trend === "up" ? ArrowUp : trend === "down" ? ArrowDown : ArrowUpDown;
   const trendColor =
     trend === "up" ? TREND_UP : trend === "down" ? TREND_DOWN : TREND_FLAT;
 
+  const formattedValue = React.useMemo(() => {
+    const trimmed = String(value ?? "").trim();
+    if (trimmed === "—") return { kind: "dash" as const };
+    if (trimmed.toUpperCase().startsWith("PHP ")) {
+      return { kind: "currency" as const, currency: "PHP", amount: trimmed.slice(4).trim() };
+    }
+    return { kind: "plain" as const, text: trimmed };
+  }, [value]);
+
   return (
     <View className="flex-1 min-w-0 rounded-xl bg-white dark:bg-neutral-900 border border-slate-100 dark:border-neutral-700 p-4">
-      <View className="flex-row items-start gap-3">
-        <View className="w-10 h-10 rounded-xl items-center justify-center shrink-0">{icon}</View>
+      <View className="flex-row items-center gap-1">
+        <View className="w-8 h-8 rounded-xl items-center justify-center shrink-0 self-center">{icon}</View>
         <View className="flex-1 min-w-0 gap-y-0.5">
           <Text className="text-xs font-poppins text-textMuted dark:text-darkTextMuted text-left">
             {label}
           </Text>
-          <Text className="text-xl font-poppins-bold text-textPrimary dark:text-darkTextPrimary text-left">
-            {value}
-          </Text>
+          {formattedValue.kind === "dash" ? (
+            <Text className="text-xl font-poppins-bold text-textPrimary dark:text-darkTextPrimary text-left">
+              —
+            </Text>
+          ) : formattedValue.kind === "currency" ? (
+            <View className="flex-row flex-wrap items-baseline min-w-0">
+              <Text className="text-xs font-poppins text-textMuted dark:text-darkTextMuted mr-1">
+                {formattedValue.currency}
+              </Text>
+              <Text
+                className="text-xl font-poppins-bold text-textPrimary dark:text-darkTextPrimary text-left shrink min-w-0"
+                adjustsFontSizeToFit={true}
+                minimumFontScale={0.75}
+              >
+                {formattedValue.amount}
+              </Text>
+            </View>
+          ) : (
+            <Text
+              className="text-xl font-poppins-bold text-textPrimary dark:text-darkTextPrimary text-left shrink min-w-0"
+              adjustsFontSizeToFit={true}
+              minimumFontScale={0.75}
+            >
+              {formattedValue.text}
+            </Text>
+          )}
           {compare ? (
-            <View className="flex-row items-center gap-2">
+            <View className="flex-row items-center gap-1">
               <TrendGlyph size={14} color={trendColor} />
               <Text className="flex-1 text-[10px] font-poppins text-textMuted dark:text-darkTextMuted text-left leading-4">
                 {compare.subtitle}
@@ -487,7 +520,7 @@ export default function SubscriptionConfig() {
               ) : (
                 <>
                   <StatCard
-                    icon={<TrendingUp size={24} color="#FF6600" />}
+                    icon={<ArrowUp size={24} color="#FF6600" />}
                     label="Total collected"
                     value={
                       dashboardStats != null
