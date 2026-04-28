@@ -45,20 +45,7 @@ export default function SuperAdminDashboard() {
     setPayerLimit(5);
   }, [timeframe]);
 
-  const returningUsersCount = useMemo(() => {
-    return users.filter(u => {
-      const lastSignIn = u.last_sign_in_at;
-      const createdAt = u.created_at;
-      if (!lastSignIn || !createdAt) return false;
-      const diff = new Date(lastSignIn).getTime() - new Date(createdAt).getTime();
-      return diff > 24 * 60 * 60 * 1000;
-    }).length;
-  }, [users]);
 
-  const userRetentionPercent = useMemo(
-    () => Math.round((returningUsersCount / Math.max(1, users.length)) * 100),
-    [returningUsersCount, users.length]
-  );
 
   const userMetrics = useMemo(() => buildTimeframeSeries(users, USER_DATE_KEYS, timeframe), [users, timeframe]);
   const storeMetrics = useMemo(() => buildTimeframeSeries(stores, STORE_DATE_KEYS, timeframe), [stores, timeframe]);
@@ -143,7 +130,6 @@ export default function SuperAdminDashboard() {
                 icon={CalendarDays}
                 loading={false}
               />
-              <DashboardMetricTile label={translate("super_admin.dashboard.returningCustomers")} value={`${userRetentionPercent}%`} subtitle={translate("super_admin.dashboard.retentionRate")} icon={Activity} loading={false} />
             </View>
           </View>
 
