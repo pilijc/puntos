@@ -74,7 +74,7 @@ function getConversationName(conversation: SupportConversation) {
 }
 
 export default function SuperAdminInbox() {
-  const { t: translate } = useTranslation();
+
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
@@ -239,7 +239,7 @@ export default function SuperAdminInbox() {
           <TextInput
             value={searchQuery}
             onChangeText={setSearchQuery}
-            placeholder={translate("superAdmin.users.searchPlaceholder")}
+            placeholder="Search stores..."
             placeholderTextColor="#9CA3AF"
             style={{
               flex: 1,
