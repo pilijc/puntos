@@ -3,6 +3,7 @@ import { create } from "zustand";
 import {
   getOrCreateSupportConversation,
   hydrateUnreadCounts,
+  listManagerConversations,
   listSupportConversations,
   loadSupportMessages,
   markSupportMessagesRead,
@@ -34,6 +35,7 @@ interface SupportChatState {
   messageChannel: RealtimeChannel | null;
 
   loadManagerConversation: (storeId: number, ownerId: string) => Promise<SupportConversation | null>;
+  loadAllManagerConversations: (ownerId: string) => Promise<void>;
   loadAdminConversations: () => Promise<void>;
   openConversation: (conversationId: string, reader?: "store" | "admin") => Promise<void>;
   sendMessage: (body: string, senderRole: SupportSenderRole) => Promise<void>;
@@ -93,6 +95,15 @@ export const useSupportChatStore = create<SupportChatState>((set, get) => ({
       return null;
     } finally {
       set({ loading: false });
+    }
+  },
+
+  loadAllManagerConversations: async (ownerId) => {
+    try {
+      const conversations = await listManagerConversations(ownerId);
+      set({ conversations: sortConversations(conversations) });
+    } catch {
+      // non-critical — just for badge counts
     }
   },
 

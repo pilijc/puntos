@@ -14,7 +14,7 @@ import { getTransactionsPageForStore } from "@/services/store-manager/transactio
 import { TransactionItem, type_badge } from "@/type/store-manager/transaction";
 import { formatTxTime } from "@/utils/store_manager/transaction";
 import { Modal, ModalButton } from "@/components/modal";
-import { Building2, Gift, QrCode, UsersRound, Stamp, Flame, ChevronLeft, ChevronRight, Loader2, ReceiptText } from "lucide-react-native";
+import { Building2, Gift, QrCode, UsersRound, Stamp, Flame, ChevronLeft, ChevronRight, Loader2, ReceiptText, Headset } from "lucide-react-native";
 import { AppHeader } from "@/components/header";
 import { useTranslation } from "react-i18next";
 
@@ -127,6 +127,10 @@ export default function ViewStore() {
         onBackPress={() => {
           router.push("/(store_manager)/stores");
         }}
+        rightIcon={<Headset size={20} color="#FF6600" />}
+        onRightIconPress={() =>
+          router.push(`/(store_manager)/chat-support?storeId=${storeId}&from=view-store`)
+        }
       />
 
       <ScrollView

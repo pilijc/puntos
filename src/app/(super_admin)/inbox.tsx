@@ -585,7 +585,7 @@ export default function SuperAdminInbox() {
             </Text>
           }
           onSendMessage={async (text) => await sendMessage(text, "super_admin")}
-          onSendAttachment={async (attachment) => await sendAttachment(attachment, "super_admin")}
+          onSendAttachment={async (attachment, body) => await sendAttachment(attachment, "super_admin", body)}
           sending={sending}
           uploadingAttachment={uploadingAttachment}
           disabled={activeConversation.status === "archived"}

@@ -5,14 +5,13 @@ import {
   KeyboardAvoidingView,
   Linking,
   LayoutAnimation,
-  Modal,
   Platform,
   ScrollView,
   TextInput,
   TouchableOpacity,
 } from "react-native";
 import { View, Text } from "@/tw";
-import { FileText, Image as ImageIcon, Plus, Send, X } from "lucide-react-native";
+import { Check, FileText, Image as ImageIcon, Plus, Send, X } from "lucide-react-native";
 import * as DocumentPicker from "expo-document-picker";
 import * as ImagePicker from "expo-image-picker";
 import { SupportAttachmentInput, SupportMessage } from "@/type/support-chat";
@@ -26,7 +25,7 @@ export interface SharedChatAreaProps {
   loadingMessages: boolean;
   emptyMessage: string | React.ReactNode;
   onSendMessage: (text: string) => Promise<void>;
-  onSendAttachment?: (attachment: SupportAttachmentInput) => Promise<void>;
+  onSendAttachment?: (attachment: SupportAttachmentInput, body?: string) => Promise<void>;
   sending: boolean;
   uploadingAttachment?: boolean;
   disabled: boolean;
@@ -51,31 +50,40 @@ export function SharedChatArea({
   bottomInset,
 }: SharedChatAreaProps) {
   const [messageText, setMessageText] = useState("");
-  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [popoverOpen, setPopoverOpen] = useState(false);
+  const [pendingAttachment, setPendingAttachment] = useState<SupportAttachmentInput | null>(null);
   const scrollViewRef = useRef<ScrollView>(null);
 
   const handleSend = async () => {
-    if (!messageText.trim() || sending || disabled) return;
+    const hasText = messageText.trim();
+    const hasAttachment = !!pendingAttachment && !!onSendAttachment;
+    if ((!hasText && !hasAttachment) || sending || uploadingAttachment || disabled) return;
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-    const outgoing = messageText;
-    setMessageText("");
-    await onSendMessage(outgoing);
+    if (hasAttachment) {
+      const attachment = pendingAttachment!;
+      const body = hasText ? messageText.trim() : undefined;
+      setPendingAttachment(null);
+      setMessageText("");
+      await onSendAttachment!(attachment, body);
+    } else {
+      const outgoing = messageText;
+      setMessageText("");
+      await onSendMessage(outgoing);
+    }
   };
 
   const handlePickImage = async () => {
-    if (!onSendAttachment || disabled || uploadingAttachment) return;
+    if (!onSendAttachment || disabled) return;
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) return;
-
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       quality: 0.85,
     });
-
     if (result.canceled || !result.assets[0]) return;
     const asset = result.assets[0];
-    setDrawerOpen(false);
-    await onSendAttachment({
+    setPopoverOpen(false);
+    setPendingAttachment({
       uri: asset.uri,
       name: asset.fileName || `image-${Date.now()}.jpg`,
       mimeType: asset.mimeType || "image/jpeg",
@@ -85,17 +93,15 @@ export function SharedChatArea({
   };
 
   const handlePickFile = async () => {
-    if (!onSendAttachment || disabled || uploadingAttachment) return;
-
+    if (!onSendAttachment || disabled) return;
     const result = await DocumentPicker.getDocumentAsync({
       copyToCacheDirectory: true,
       multiple: false,
     });
-
     if (result.canceled || !result.assets[0]) return;
     const asset = result.assets[0];
-    setDrawerOpen(false);
-    await onSendAttachment({
+    setPopoverOpen(false);
+    setPendingAttachment({
       uri: asset.uri,
       name: asset.name || `file-${Date.now()}`,
       mimeType: asset.mimeType || "application/octet-stream",
@@ -241,6 +247,8 @@ export function SharedChatArea({
               const isMe = msg.sender_role === currentUserRole;
               const nextMsg = messages[index + 1];
               const isLastInGroup = !nextMsg || nextMsg.sender_role !== msg.sender_role;
+              const isLastMyMessage =
+                isMe && !messages.slice(index + 1).some((m) => m.sender_role === currentUserRole);
               const hasFile = isFileAttachment(msg);
               const hasImage = msg.message_kind === "image" && !!msg.attachment_url;
               const hasBody = !!msg.body;
@@ -294,20 +302,123 @@ export function SharedChatArea({
                   )}
 
                   {isLastInGroup && (
-                    <Text
-                      className={`text-[11px] font-poppins text-slate-400 dark:text-neutral-500 mt-1.5 ${
-                        isMe ? "text-right" : "text-left ml-1"
-                      }`}
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        justifyContent: isMe ? "flex-end" : "flex-start",
+                        marginTop: 4,
+                        gap: 4,
+                        marginLeft: isMe ? 0 : 4,
+                      }}
                     >
-                      {formatMessageTime(msg.created_at)}
-                    </Text>
+                      {isMe && isLastMyMessage && !sending && !uploadingAttachment && (
+                        <>
+                          <Check size={10} color="#94A3B8" />
+                          <Text style={{ fontSize: 11, fontFamily: "Poppins-Regular", color: "#94A3B8" }}>
+                            Sent ·{" "}
+                          </Text>
+                        </>
+                      )}
+                      <Text style={{ fontSize: 11, fontFamily: "Poppins-Regular", color: "#94A3B8" }}>
+                        {formatMessageTime(msg.created_at)}
+                      </Text>
+                    </View>
                   )}
                 </View>
               );
             })
           )}
+
+          {/* Messenger-style Sending... indicator */}
+          {(sending || uploadingAttachment) && (
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "flex-end",
+                marginTop: 2,
+                marginBottom: 6,
+                gap: 5,
+              }}
+            >
+              <ActivityIndicator size="small" color="#94A3B8" />
+              <Text style={{ fontSize: 11, fontFamily: "Poppins-Regular", color: "#94A3B8" }}>
+                Sending...
+              </Text>
+            </View>
+          )}
         </View>
       </ScrollView>
+
+      {/* Pending attachment preview strip */}
+      {pendingAttachment && (
+        <View
+          style={{
+            paddingHorizontal: 16,
+            paddingTop: 10,
+            paddingBottom: 4,
+            backgroundColor: "#F8FAFC",
+            borderTopWidth: 1,
+            borderTopColor: "#F1F5F9",
+          }}
+        >
+          {pendingAttachment.kind === "image" ? (
+            <View style={{ position: "relative", alignSelf: "flex-start" }}>
+              <Image
+                source={{ uri: pendingAttachment.uri }}
+                style={{ width: 80, height: 80, borderRadius: 12, backgroundColor: "#E2E8F0" }}
+                resizeMode="cover"
+              />
+              <TouchableOpacity
+                onPress={() => setPendingAttachment(null)}
+                style={{
+                  position: "absolute",
+                  top: -6,
+                  right: -6,
+                  width: 22,
+                  height: 22,
+                  borderRadius: 11,
+                  backgroundColor: "#0F172A",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <X size={12} color="#FFFFFF" />
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                backgroundColor: "#FFFFFF",
+                borderRadius: 12,
+                borderWidth: 1,
+                borderColor: "#E2E8F0",
+                paddingHorizontal: 12,
+                paddingVertical: 8,
+                alignSelf: "flex-start",
+                maxWidth: 260,
+              }}
+            >
+              <FileText size={16} color="#64748B" style={{ marginRight: 8, flexShrink: 0 }} />
+              <Text
+                numberOfLines={1}
+                style={{ fontSize: 13, fontFamily: "Poppins-Medium", color: "#0F172A", flex: 1 }}
+              >
+                {pendingAttachment.name}
+              </Text>
+              <TouchableOpacity
+                onPress={() => setPendingAttachment(null)}
+                style={{ marginLeft: 8, flexShrink: 0 }}
+              >
+                <X size={14} color="#94A3B8" />
+              </TouchableOpacity>
+            </View>
+          )}
+        </View>
+      )}
 
       <View
         className="px-4 py-3 bg-backgroundMuted dark:bg-neutral-900 border-t border-neutral-100 dark:border-darkBorder flex-row items-end justify-center"
@@ -315,7 +426,7 @@ export function SharedChatArea({
       >
         <TouchableOpacity
           disabled={!onSendAttachment || disabled || uploadingAttachment}
-          onPress={() => setDrawerOpen(true)}
+          onPress={() => setPopoverOpen((v) => !v)}
           style={{
             width: 44,
             height: 44,
@@ -333,7 +444,7 @@ export function SharedChatArea({
           <TextInput
             value={messageText}
             onChangeText={setMessageText}
-            placeholder={placeholder}
+            placeholder={pendingAttachment ? "Add a caption..." : placeholder}
             placeholderTextColor="#94a3b8"
             className="text-textPrimary dark:text-darkTextPrimary outline-none"
             style={{
@@ -345,13 +456,13 @@ export function SharedChatArea({
             }}
             multiline
             textAlignVertical="center"
-            editable={!disabled && !sending}
+            editable={!disabled && !sending && !uploadingAttachment}
           />
         </View>
 
         <TouchableOpacity
           onPress={handleSend}
-          disabled={!messageText.trim() || sending || uploadingAttachment || disabled}
+          disabled={(!messageText.trim() && !pendingAttachment) || sending || uploadingAttachment || disabled}
           style={{
             width: 44,
             height: 44,
@@ -360,91 +471,98 @@ export function SharedChatArea({
             justifyContent: "center",
             marginBottom: 4,
             backgroundColor:
-              messageText.trim() && !sending && !uploadingAttachment && !disabled
+              (messageText.trim() || pendingAttachment) && !sending && !uploadingAttachment && !disabled
                 ? "#FF6600"
                 : "transparent",
           }}
         >
-          {sending || uploadingAttachment ? (
-            <ActivityIndicator color="#FF6600" />
-          ) : (
-            <Send
+          <Send
               size={20}
-              color={messageText.trim() && !disabled && !uploadingAttachment ? "#ffffff" : "#cbd5e1"}
-              style={messageText.trim() ? { marginLeft: -2 } : {}}
+              color={(messageText.trim() || pendingAttachment) && !disabled ? "#ffffff" : "#cbd5e1"}
+              style={(messageText.trim() || pendingAttachment) ? { marginLeft: -2 } : {}}
             />
-          )}
         </TouchableOpacity>
       </View>
 
-      <Modal
-        visible={drawerOpen}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setDrawerOpen(false)}
-      >
-        <TouchableOpacity
-          activeOpacity={1}
-          onPress={() => setDrawerOpen(false)}
-          style={{
-            flex: 1,
-            backgroundColor: "rgba(15,23,42,0.28)",
-            justifyContent: "flex-end",
-          }}
-        >
+      {/* Popover menu anchored above the + button */}
+      {popoverOpen && (
+        <>
+          {/* Invisible backdrop to close on outside tap */}
           <TouchableOpacity
             activeOpacity={1}
-            onPress={(event) => event.stopPropagation()}
+            onPress={() => setPopoverOpen(false)}
             style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+            }}
+          />
+          {/* Popover card */}
+          <View
+            style={{
+              position: "absolute",
+              bottom: Math.max(bottomInset, 12) + 56 + 12,
+              left: 8,
               backgroundColor: "#FFFFFF",
-              borderTopLeftRadius: 24,
-              borderTopRightRadius: 24,
-              paddingHorizontal: 20,
-              paddingTop: 14,
-              paddingBottom: Math.max(bottomInset, 16),
+              borderRadius: 14,
+              borderWidth: 1,
+              borderColor: "#E2E8F0",
+              minWidth: 190,
+              overflow: "hidden",
             }}
           >
-            <View className="w-10 h-1 rounded-full bg-slate-200 self-center mb-4" />
-            <View className="flex-row items-center justify-between mb-2">
-              <Text className="text-base font-poppins-bold text-slate-900">Add attachment</Text>
-              <TouchableOpacity
-                onPress={() => setDrawerOpen(false)}
-                className="w-9 h-9 rounded-full bg-slate-100 items-center justify-center"
-              >
-                <X size={18} color="#64748B" />
-              </TouchableOpacity>
-            </View>
-
             <TouchableOpacity
               onPress={handlePickImage}
-              className="flex-row items-center py-4"
               disabled={uploadingAttachment}
+              activeOpacity={0.7}
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                paddingHorizontal: 16,
+                paddingVertical: 13,
+                borderBottomWidth: 1,
+                borderBottomColor: "#F1F5F9",
+              }}
             >
-              <View className="w-11 h-11 rounded-full bg-orange-50 items-center justify-center mr-3">
-                <ImageIcon size={21} color="#FF6600" />
-              </View>
-              <View>
-                <Text className="text-[15px] font-poppins-semibold text-slate-900">Upload image</Text>
-                <Text className="text-xs font-poppins text-slate-400">Choose a photo from your device</Text>
-              </View>
+              <ImageIcon size={17} color="#FF6600" style={{ marginRight: 12 }} />
+              <Text
+                style={{
+                  fontSize: 14,
+                  fontFamily: "Poppins-Medium",
+                  color: "#0F172A",
+                }}
+              >
+                Upload image
+              </Text>
             </TouchableOpacity>
 
             <TouchableOpacity
               onPress={handlePickFile}
-              className="flex-row items-center py-4"
               disabled={uploadingAttachment}
+              activeOpacity={0.7}
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                paddingHorizontal: 16,
+                paddingVertical: 13,
+              }}
             >
-              <View className="w-11 h-11 rounded-full bg-slate-100 items-center justify-center mr-3">
-                <FileText size={21} color="#64748B" />
-              </View>
-              <View>
-                <Text className="text-[15px] font-poppins-semibold text-slate-900">Attach file</Text>
-                <Text className="text-xs font-poppins text-slate-400">PDF, documents, or spreadsheets</Text>
-              </View>
+              <FileText size={17} color="#64748B" style={{ marginRight: 12 }} />
+              <Text
+                style={{
+                  fontSize: 14,
+                  fontFamily: "Poppins-Medium",
+                  color: "#0F172A",
+                }}
+              >
+                Attach file
+              </Text>
             </TouchableOpacity>
-          </TouchableOpacity>
-        </TouchableOpacity>
-      </Modal>
+          </View>
+        </>
+      )}
     </KeyboardAvoidingView>
   );
 }
