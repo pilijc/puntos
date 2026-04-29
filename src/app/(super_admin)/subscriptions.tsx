@@ -33,7 +33,6 @@ import {
 } from "@/services/super-admin/subscription-service";
 import type { ManagerSubscriptionPaymentRow, SubscriptionDashboardCompare } from "@/type/super-admin/subscription";
 
-/** Strips thousands-separator commas and whitespace before converting to a number. */
 function parseAmount(raw: unknown): number | null {
   if (typeof raw === "number" && Number.isFinite(raw)) return raw;
   if (typeof raw === "string") {
@@ -186,7 +185,7 @@ export default function SubscriptionConfig() {
       subscriptionState.setLoading(false);
     }
   })();
-  }, [fetchStores, translate]); // fetchStores and translate are stable refs; listed to satisfy exhaustive-deps
+  }, [fetchStores, translate]); 
 
   const basicPlan = useMemo(
     () => plans.find((p) => String(p.slug ?? "").trim().toLowerCase() === "basic") ?? null,
@@ -200,7 +199,7 @@ export default function SubscriptionConfig() {
   const hasProAmountChanges = useMemo(() => {
     const current = parseAmount(proAmountInput);
     if (current === null || current <= 0) return false;
-    if (savedProAmount == null) return true; // no saved value yet — any valid entry is a change
+    if (savedProAmount == null) return true;
     return current !== savedProAmount;
   }, [proAmountInput, savedProAmount]);
 
