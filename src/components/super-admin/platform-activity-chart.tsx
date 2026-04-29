@@ -2,7 +2,12 @@ import React, { useMemo } from "react";
 import { Platform } from "react-native";
 import { View } from "@/tw";
 import Svg, {
-  Path, Defs, LinearGradient, Stop, G,
+  Circle,
+  Defs,
+  G,
+  LinearGradient,
+  Path,
+  Stop,
   Text as SvgText,
 } from "react-native-svg";
 import { AnimatedChartLines } from "./animated-chart-lines";
@@ -11,8 +16,8 @@ const isWeb = Platform.OS === "web";
 
 const VIEWBOX_WIDTH = 800;
 const VIEWBOX_HEIGHT = 300;
-const CHART_PADDING_X = 60;
-const CHART_PADDING_TOP = 20;
+const CHART_PADDING_X = 40;
+const CHART_PADDING_TOP = 30;
 const CHART_PADDING_BOTTOM = 50;
 
 interface PlatformActivityChartProps {
@@ -22,7 +27,8 @@ interface PlatformActivityChartProps {
 }
 
 export function PlatformActivityChart({ userSeries, storeSeries, labels }: PlatformActivityChartProps) {
-  const maxVal = Math.max(...userSeries, ...storeSeries, 5);
+  const rawMax = Math.max(...userSeries, ...storeSeries, 1);
+  const niceMax = Math.ceil(rawMax / 4) * 4;
 
   const chartWidth = VIEWBOX_WIDTH - CHART_PADDING_X * 2;
   const chartHeight = VIEWBOX_HEIGHT - CHART_PADDING_TOP - CHART_PADDING_BOTTOM;
@@ -31,16 +37,11 @@ export function PlatformActivityChart({ userSeries, storeSeries, labels }: Platf
   const getPoints = (series: number[]) =>
     series.map((val, i) => ({
       x: CHART_PADDING_X + (i / (series.length - 1)) * chartWidth,
-      y: chartBaseline - (val / maxVal) * chartHeight,
+      y: chartBaseline - (val / niceMax) * chartHeight,
     }));
 
-  const userPoints = useMemo(() => getPoints(userSeries), [userSeries, maxVal]);
-  const storePoints = useMemo(() => getPoints(storeSeries), [storeSeries, maxVal]);
-
-  const yTicks = [0, 1, 2, 3, 4].map((i) => ({
-    val: Math.round((maxVal / 4) * (4 - i)),
-    y: CHART_PADDING_TOP + (i / 4) * chartHeight,
-  }));
+  const userPoints = useMemo(() => getPoints(userSeries), [userSeries, niceMax]);
+  const storePoints = useMemo(() => getPoints(storeSeries), [storeSeries, niceMax]);
 
   return (
     <View style={{ height: isWeb ? 300 : 150, width: "100%" }}>
@@ -61,25 +62,15 @@ export function PlatformActivityChart({ userSeries, storeSeries, labels }: Platf
           </LinearGradient>
         </Defs>
 
-        {yTicks.map(({ val, y }, i) => (
-          <G key={i}>
-            <SvgText
-              x={CHART_PADDING_X - 15}
-              y={y + 4}
-              fill="#94A3B8"
-              fontSize="10"
-              textAnchor="end"
-              fontFamily="Poppins-SemiBold"
-            >
-              {val}
-            </SvgText>
-            <Path
-              d={`M ${CHART_PADDING_X} ${y} L ${VIEWBOX_WIDTH - CHART_PADDING_X} ${y}`}
-              stroke="#F8FAFC"
-              strokeWidth="1.5"
-              strokeDasharray={i === 4 ? "0" : "5,5"}
-            />
-          </G>
+        {/* Subtle horizontal reference lines — no numbers */}
+        {[0.25, 0.5, 0.75].map((frac, i) => (
+          <Path
+            key={i}
+            d={`M ${CHART_PADDING_X} ${CHART_PADDING_TOP + frac * chartHeight} L ${VIEWBOX_WIDTH - CHART_PADDING_X} ${CHART_PADDING_TOP + frac * chartHeight}`}
+            stroke="#F1F5F9"
+            strokeWidth="1.5"
+            strokeDasharray="4,6"
+          />
         ))}
 
         <AnimatedChartLines
@@ -90,18 +81,61 @@ export function PlatformActivityChart({ userSeries, storeSeries, labels }: Platf
           chartBaseline={chartBaseline}
         />
 
+        {/* Dot + value label above every non-zero user point */}
+        {userSeries.map((val, i) => {
+          if (val <= 0) return null;
+          const pt = userPoints[i];
+          return (
+            <G key={`u-${i}`}>
+              <Circle cx={pt.x} cy={pt.y} r="3" fill="#FF6600" />
+              <SvgText
+                x={pt.x}
+                y={pt.y - 14}
+                fill="#FF6600"
+                fontSize="8"
+                fontFamily="Poppins-SemiBold"
+                textAnchor="middle"
+              >
+                {val}
+              </SvgText>
+            </G>
+          );
+        })}
+
+        {/* Dot + value label above every non-zero store point */}
+        {storeSeries.map((val, i) => {
+          if (val <= 0) return null;
+          const pt = storePoints[i];
+          const userAbove = userPoints[i]?.y < pt.y + 24;
+          return (
+            <G key={`s-${i}`}>
+              <Circle cx={pt.x} cy={pt.y} r="3" fill="#3B82F6" />
+              <SvgText
+                x={pt.x}
+                y={userAbove ? pt.y + 26 : pt.y - 14}
+                fill="#3B82F6"
+                fontSize="8"
+                fontFamily="Poppins-SemiBold"
+                textAnchor="middle"
+              >
+                {val}
+              </SvgText>
+            </G>
+          );
+        })}
+
+        {/* X-axis date labels */}
         {labels.map((label, i) => {
-          const up = userPoints[i];
+          const pt = userPoints[i];
           return (
             <G key={i}>
               <SvgText
-                x={up.x}
+                x={pt.x}
                 y={chartBaseline + 28}
                 fill="#64748B"
                 fontSize="11"
-                fontWeight="600"
-                textAnchor="middle"
                 fontFamily="Poppins-SemiBold"
+                textAnchor="middle"
               >
                 {label}
               </SvgText>

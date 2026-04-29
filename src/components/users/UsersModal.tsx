@@ -62,6 +62,8 @@ export function UsersModal({
     return () => clearTimeout(id);
   }, [visible, typeof timer, onClose]);
 
+  if (Platform.OS === "web" && !visible) return null;
+
   return (
     <RNModal
       visible={visible}
