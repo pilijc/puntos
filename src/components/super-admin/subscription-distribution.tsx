@@ -1,7 +1,7 @@
 import React, { useMemo } from "react";
 import { Image, TouchableOpacity, useColorScheme } from "react-native";
 import { View, Text } from "@/tw";
-import Svg, { Circle, Text as SvgText, G } from "react-native-svg";
+import Svg, { Circle, G } from "react-native-svg";
 import { Store, RotateCcw, User } from "lucide-react-native";
 import { useDashboardStore } from "@/store/dashboard-store";
 import {
@@ -55,21 +55,19 @@ export function SubscriptionDistribution({
   const stats = useMemo(() => {
     if (!users.length) return null;
 
-    const managers = users.filter((u) => 
-      ["manager", "store_owner", "store_manager"].includes(u?.role_type)
-    );
-    const totalManagers = managers.length;
+    const managers = users.filter((u) => u?.role_type === "store_manager");
+    const total = managers.length;
     let proCount = 0;
 
     managers.forEach((m) => {
       const sub = subByOwner.get(m.id);
-      if (sub && (sub.payment_status === "paid" || sub.payment_status === "availed")) {
+      if (sub && sub.payment_status === "paid") {
         proCount++;
       }
     });
 
-    const safeTotal = Math.max(1, totalManagers);
-    const basicCount = totalManagers - proCount;
+    const safeTotal = Math.max(1, total);
+    const basicCount = total - proCount;
     const proPercent = proCount / safeTotal;
     const basicPercent = basicCount / safeTotal;
 
@@ -112,7 +110,7 @@ export function SubscriptionDistribution({
       const ownerStores = storesByOwner.get(sub.owner_id) ?? [];
       const name =
         ownerStores[0]?.owner_name ||
-        (sub as any).owner_name ||
+        usersByOwner.get(sub.owner_id)?.name ||
         "Unknown Manager";
       const activeStores = ownerStores.filter(
         (s) => s.status === "active" || s.is_active

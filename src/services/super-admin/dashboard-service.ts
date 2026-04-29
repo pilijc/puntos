@@ -49,7 +49,7 @@ export async function getDashboardData(): Promise<DashboardData> {
 
   const ROLE_ID_TO_TYPE: Record<number, string> = {
     1: "super_admin",
-    2: "manager",
+    2: "store_manager",
     3: "front_desk",
     4: "user",
   };

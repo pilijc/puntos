@@ -7,6 +7,7 @@ import { Users, Store, Activity, CalendarDays, MessageSquare } from "lucide-reac
 import { useTranslation } from "react-i18next";
 
 import { useSuperAdminDashboard } from "@/hooks/super-admin/use-super-admin-dashboard";
+import { useSupportChatStore } from "@/store/support-chat-store";
 import { StatCard } from "@/components/ui/stat-card";
 import { DashboardMetricTile } from "@/components/stores/dashboard-metric-tile";
 import { SubscriptionDistribution } from "@/components/super-admin/subscription-distribution";
@@ -24,6 +25,7 @@ const isWeb = Platform.OS === "web";
 
 export default function SuperAdminDashboard() {
   const { users, stores, adminInfo, loading, refreshing, activeStoresCount, onRefresh } = useSuperAdminDashboard();
+  const { conversations, loadAdminConversations, subscribeInbox, cleanupRealtime } = useSupportChatStore();
   const { t: translate } = useTranslation();
   const insets = useSafeAreaInsets();
   const { width: windowWidth } = useWindowDimensions();
@@ -37,6 +39,17 @@ export default function SuperAdminDashboard() {
   const [userLimit, setUserLimit] = useState(5);
   const [storeLimit, setStoreLimit] = useState(5);
   const [payerLimit, setPayerLimit] = useState(5);
+
+  const totalUnread = useMemo(
+    () => conversations.reduce((sum, c) => sum + (c.unread_admin_count ?? 0), 0),
+    [conversations]
+  );
+
+  useEffect(() => {
+    loadAdminConversations();
+    subscribeInbox();
+    return () => cleanupRealtime();
+  }, []);
 
   useEffect(() => {
     setUserLimit(5);
@@ -249,12 +262,13 @@ export default function SuperAdminDashboard() {
         }
       >
         <MessageSquare size={24} color="#FF6600" />
-        {/* Red message indicator badge */}
-        <View className="absolute top-0 -right-1 w-[22px] h-[22px] bg-red-500 rounded-full border-2 border-white items-center justify-center">
-          <Text className="text-[10px] font-poppins-bold text-white mt-0.5">
-            1
-          </Text>
-        </View>
+        {totalUnread > 0 && (
+          <View className="absolute top-0 -right-1 w-[22px] h-[22px] bg-red-500 rounded-full border-2 border-white items-center justify-center">
+            <Text className="text-[10px] font-poppins-bold text-white mt-0.5">
+              {totalUnread > 9 ? "9+" : totalUnread}
+            </Text>
+          </View>
+        )}
       </TouchableOpacity>
     </SafeAreaView>
   );
