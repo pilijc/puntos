@@ -1,6 +1,6 @@
 import React, { useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { ActivityIndicator, Platform, useColorScheme } from "react-native";
+import { ActivityIndicator, Platform, Pressable, useColorScheme } from "react-native";
 import { View, Text, SafeAreaView, ScrollView } from "@/tw";
 import { useSuperAdminStoresStore } from "@/store/super-admin/super-admin-stores-store";
 import {
@@ -9,6 +9,8 @@ import {
   ArrowUpDown,
   Check,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   ChevronUp,
   Sparkles,
   Store,
@@ -267,6 +269,19 @@ export default function SubscriptionConfig() {
       };
     });
   }, [subscriptionState.managerSubscriptions, subscriptionState.publicUsers, stores]);
+
+  const [page, setPage] = React.useState(1);
+
+  React.useEffect(() => {
+    setPage(1);
+  }, [subscribedManagers.length]);
+
+  const totalPages = Math.max(1, Math.ceil(subscribedManagers.length / 10));
+
+  const pagedManagers = React.useMemo(
+    () => subscribedManagers.slice((page - 1) * 10, page * 10),
+    [subscribedManagers, page],
+  );
 
   const togglePayments = useCallback(
     async (ownerId: string) => {
@@ -636,8 +651,8 @@ export default function SubscriptionConfig() {
 
                 <Table
                   columns={tableColumns}
-                  rows={subscribedManagers}
-                  rowKey={(row, idx) => String(row.id ?? row.owner_id ?? idx)}
+                  rows={pagedManagers}
+                  rowKey={(row) => String(row.id ?? row.owner_id)}
                   emptyText={translate("superAdmin.subscription.managerSubs.empty")}
                   isRowExpanded={(row) => isExpanded(row)}
                   renderExpandedRow={(row) => renderLedger(row)}
@@ -647,6 +662,46 @@ export default function SubscriptionConfig() {
                   }}
                   isRowPressDisabled={(row) => Boolean(subscriptionState.paymentsLoading[row.owner_id])}
                 />
+
+                {totalPages > 1 && (
+                  <View className="flex-row items-center justify-between mt-3 pt-3 border-t border-slate-100 dark:border-neutral-800">
+                    <Pressable
+                      onPress={() => setPage((p) => Math.max(1, p - 1))}
+                      disabled={page === 1}
+                      hitSlop={8}
+                      accessibilityRole="button"
+                      accessibilityLabel={translate("superAdmin.subscription.pagination.prev")}
+                      style={{ opacity: page === 1 ? 0.4 : 1 }}
+                    >
+                      <View className="flex-row items-center gap-1 px-2 py-1.5">
+                        <ChevronLeft size={14} color={page === 1 ? mutedIcon : "#FF6600"} />
+                        <Text className={`text-xs font-poppins-semibold ${page === 1 ? "text-textMuted dark:text-darkTextMuted" : "text-primary"}`}>
+                          {translate("superAdmin.subscription.pagination.prev")}
+                        </Text>
+                      </View>
+                    </Pressable>
+
+                    <Text className="text-xs font-poppins text-textMuted dark:text-darkTextMuted">
+                      {translate("superAdmin.subscription.pagination.pageOf", { current: page, total: totalPages })}
+                    </Text>
+
+                    <Pressable
+                      onPress={() => setPage((p) => Math.min(totalPages, p + 1))}
+                      disabled={page === totalPages}
+                      hitSlop={8}
+                      accessibilityRole="button"
+                      accessibilityLabel={translate("superAdmin.subscription.pagination.next")}
+                      style={{ opacity: page === totalPages ? 0.4 : 1 }}
+                    >
+                      <View className="flex-row items-center gap-1 px-2 py-1.5">
+                        <Text className={`text-xs font-poppins-semibold ${page === totalPages ? "text-textMuted dark:text-darkTextMuted" : "text-primary"}`}>
+                          {translate("superAdmin.subscription.pagination.next")}
+                        </Text>
+                        <ChevronRight size={14} color={page === totalPages ? mutedIcon : "#FF6600"} />
+                      </View>
+                    </Pressable>
+                  </View>
+                )}
               </View>
             ) : (
               <View className="bg-white dark:bg-darkBackgroundCard rounded-2xl border border-slate-100 dark:border-neutral-800 p-4 mt-4">
