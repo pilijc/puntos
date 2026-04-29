@@ -44,5 +44,16 @@
     "successTitle": "Successfully Saved!",
     "successDetail": "Pro pricing has been saved. Basic remains free.",
     "okay": "Okay"
+  },
+  "stats": {
+    "totalCollected": "Total collected",
+    "activeSubscribers": "Active subscribers",
+    "newSubscribers": "New subscribers",
+    "cancellations": "Cancellations"
+  },
+  "pagination": {
+    "prev": "Previous",
+    "next": "Next",
+    "pageOf": "Page {{current}} of {{total}}"
   }
 }
