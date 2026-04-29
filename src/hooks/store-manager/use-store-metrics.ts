@@ -13,7 +13,6 @@ export function useStoreDashboardMetrics(
         unique_visitors: Array(14).fill(0),
         redemptions: Array(14).fill(0),
         new_members: Array(14).fill(0),
-        points_earned: Array(14).fill(0),
     });
     
     const [retention, setRetention] = useState<RetentionData>({

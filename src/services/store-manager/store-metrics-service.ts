@@ -1,15 +1,19 @@
 import { supabase } from "@/supabase/supabase";
 import { RetentionData, StampBucket, RecentTransaction, ActivityChartData } from "@/type/store-manager/metric";
 
-function getLocalDateRange(): { today: string; pastDate: string } {
+// Use UTC dates to match the database server's clock.
+// toLocaleDateString("en-CA") relies on the device's timezone and can drift
+// several hours for managers in forward timezones (e.g. JST, PHT), causing
+// "today's" scans to appear as 0 until midnight UTC rolls over.
+function getUTCDateRange(): { today: string; pastDate: string } {
     const now = new Date();
 
-    //en-CA give YYYY-MM-DD format
-    const todayStr = now.toLocaleDateString("en-CA");
+    // toISOString() is always UTC and returns YYYY-MM-DDTHH:mm:ss.sssZ
+    const todayStr = now.toISOString().slice(0, 10);
 
     const pastDateObj = new Date(now);
-    pastDateObj.setDate(pastDateObj.getDate() - 13); // 14 days including today
-    const pastDateStr = pastDateObj.toLocaleDateString("en-CA");
+    pastDateObj.setUTCDate(pastDateObj.getUTCDate() - 13); // 14 days including today
+    const pastDateStr = pastDateObj.toISOString().slice(0, 10);
 
     return { today: todayStr, pastDate: pastDateStr };
 }
@@ -25,7 +29,6 @@ export async function getStoreMetrics(
         unique_visitors: Array(14).fill(0),
         redemptions: Array(14).fill(0),
         new_members: Array(14).fill(0),
-        points_earned: Array(14).fill(0),
     };
 
     try {
@@ -39,11 +42,11 @@ export async function getStoreMetrics(
         }
 
         // weekly activity & todays scans
-        const { today, pastDate } = getLocalDateRange();
+        const { today, pastDate } = getUTCDateRange();
 
         const { data: dailyData, error: dailyError } = await supabase
             .from("store_daily_metrics")
-            .select("metric_date, scans_count, unique_visitors, redemptions_count, new_members_count, points_earned")
+            .select("metric_date, scans_count, unique_visitors, redemptions_count, new_members_count")
             .eq("store_id", storeId)
             .gte("metric_date", pastDate)
             .lte("metric_date", today)
@@ -57,19 +60,18 @@ export async function getStoreMetrics(
             });
 
             const pastDateObj = new Date();
-            pastDateObj.setDate(pastDateObj.getDate() - 13);
+            pastDateObj.setUTCDate(pastDateObj.getUTCDate() - 13);
 
             for (let i = 0; i < 14; i++) {
                 const dateObj = new Date(pastDateObj);
-                dateObj.setDate(pastDateObj.getDate() + i);
-                const dateStr = dateObj.toLocaleDateString("en-CA");
+                dateObj.setUTCDate(pastDateObj.getUTCDate() + i);
+                const dateStr = dateObj.toISOString().slice(0, 10);
                 
                 const row = dataByDate[dateStr] || {};
                 activityData.scans[i] = row.scans_count || 0;
                 activityData.unique_visitors[i] = row.unique_visitors || 0;
                 activityData.redemptions[i] = row.redemptions_count || 0;
                 activityData.new_members[i] = row.new_members_count || 0;
-                activityData.points_earned[i] = row.points_earned || 0;
             }
 
             todayTxCount = activityData.scans[13];
@@ -88,19 +90,21 @@ export async function getStoreMetrics(
 export async function getRetentionData(
     storeId: number,
 ): Promise<RetentionData> {
-    const { data, error } = await supabase
-        .from("store_user_loyalty")
-        .select("purchase_count")
-        .eq("store_id", storeId);
+    // Use an RPC so the aggregation happens on the database side.
+    // Previously this fetched every row in store_user_loyalty and filtered
+    // in-memory, which is O(N) on the device for large stores.
+    const { data, error } = await supabase.rpc("get_retention_data", {
+        store_id_input: storeId,
+    });
 
     if (error || !data) {
         console.error("Error fetching retention data:", error);
         return { returningCount: 0, newCount: 0, returningPercent: 0, newPercent: 0 };
     }
 
-    const total = data.length;
-    const returningCount = data.filter((row) => row.purchase_count > 1).length;
-    const newCount = total - returningCount;
+    const returningCount: number = data.returning_count ?? 0;
+    const newCount: number = data.new_count ?? 0;
+    const total = returningCount + newCount;
 
     const returningPercent = total > 0 ? Math.round((returningCount / total) * 100) : 0;
     const newPercent = total > 0 ? 100 - returningPercent : 0;

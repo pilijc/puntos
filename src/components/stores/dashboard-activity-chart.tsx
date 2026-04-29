@@ -26,7 +26,6 @@ const metricOptions: { value: ActivityMetricType, label: string }[] = [
     { value: 'unique_visitors', label: 'Unique Visitors' },
     { value: 'redemptions', label: 'Redemptions' },
     { value: 'new_members', label: 'New Members' },
-    { value: 'points_earned', label: 'Points Earned' }
 ];
 
 export const DashboardActivityChart: React.FC<ExtendedDashboardActivityChartProps> = ({
