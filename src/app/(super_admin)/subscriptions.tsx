@@ -420,8 +420,6 @@ export default function SubscriptionConfig() {
         render: (row) => {
           const open = Boolean(subscriptionState.paymentsOpen[row.owner_id]);
           const loading = Boolean(subscriptionState.paymentsLoading[row.owner_id]);
-          // No inner Pressable — the Table's onRowPress handles toggle.
-          // A nested Pressable would fire both handlers and toggle open→closed immediately.
           return (
             <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
               {loading ? (
