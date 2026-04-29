@@ -18,13 +18,12 @@ export interface ActivityChartData {
 }
 
 export interface DashboardActivityChartProps {
-    data: ActivityChartData;
+    data: number[];
     labels: string[];
     weekRange: string;
     loading?: boolean;
-    selectedMetric?: ActivityMetricType;
-    onMetricChange?: (metric: ActivityMetricType) => void;
 }
+
 
 export interface RetentionData {
     returningCount: number;
@@ -65,14 +64,4 @@ export interface StoreUserLoyalty {
     store_id: number;
     user_id: string;
     purchase_count: number;
-}
-
-export interface RecentTransaction {
-    id: string;
-    created_at: string;
-    points_earned: number;
-    user: {
-        name: string;
-        avatar_url?: string;
-    };
 }

@@ -284,7 +284,7 @@ export default function RewardRedemptionScanner({
                         label=""
                         value={voucherCode}
                         onChangeText={setVoucherCode}
-                        placeholder="e.g. RWD-ABC123"
+                        placeholder="e.g. RWDABC123"
                         sanitize={(v) => v.toUpperCase().slice(0, 10)}
                       />
                     </View>

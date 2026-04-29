@@ -107,17 +107,22 @@ export function FilterBottomSheet({
           onPress={() => onClose()}
         />
 
-        {/* Centered container to align with content width (1000px) */}
-        <View 
-          style={{ width: "100%", maxWidth: 1000, alignSelf: "center", position: "relative" }} 
+        {/* Wrapper to match ScrollView padding */}
+        <View
+          style={{ width: "100%", height: "100%", paddingHorizontal: 16 }}
           pointerEvents="box-none"
         >
-          {/* Dropdown panel anchored to the filter button on the right section */}
-          <View
-            style={{
-              position: "absolute",
-              top: 130,
-              right: 0,    // Aligns with the right-aligned filter button in 1000px layout
+          {/* Centered container to align with content width (896px) */}
+          <View 
+            style={{ width: "100%", maxWidth: 896, height: "100%", alignSelf: "center", position: "relative" }} 
+            pointerEvents="box-none"
+          >
+            {/* Dropdown panel anchored to the filter button on the right section */}
+            <View
+              style={{
+                position: "absolute",
+                top: 130,
+                right: 0,    // Aligns with the right-aligned filter button in 896px layout
               width: 280,
               backgroundColor: "#ffffff",
               borderRadius: 14,
@@ -227,6 +232,7 @@ export function FilterBottomSheet({
                 Reset filter
               </Text>
             </Pressable>
+          </View>
           </View>
           </View>
         </View>

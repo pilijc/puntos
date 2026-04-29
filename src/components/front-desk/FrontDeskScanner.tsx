@@ -269,7 +269,7 @@ export default function FrontDeskScanner({
                         label=""
                         value={voucherCode}
                         onChangeText={setVoucherCode}
-                        placeholder="e.g. VCHR-1234"
+                        placeholder="e.g. VCH1R3"
                         sanitize={(v) => v.toUpperCase().slice(0, 20)}
                       />
                     </View>

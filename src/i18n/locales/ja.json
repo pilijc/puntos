@@ -1299,6 +1299,60 @@
             "unnamedStore": "店名未設定",
             "noStoresAssigned": "このマネージャーにはまだ店舗が割り当てられていません。",
             "branchAssignment": "担当店舗"
+        },
+        "subscription": {
+            "title": "サブスクリプション",
+            "formError": {
+                "loadPlansFailed": "サブスクリプションプランの読み込みに失敗しました。",
+                "loadSubsFailed": "サブスクリプションの読み込みに失敗しました。",
+                "invalidPrice": "0より大きい有効な金額を入力してください。",
+                "saveFailed": "変更の保存に失敗しました。",
+                "loadLedgerFailed": "支払い履歴の読み込みに失敗しました。"
+            },
+            "stats": {
+                "totalCollected": "合計収益",
+                "activeSubscribers": "アクティブ会員",
+                "newSubscribers": "新規会員",
+                "cancellations": "解約予定"
+            },
+            "basic": {
+                "price": "無料",
+                "feature1": "フル機能のロイヤリティツールで1店舗利用可",
+                "feature2": "スタンプ、ストリーク、報酬、QR、スタッフツール"
+            },
+            "pro": {
+                "builtFor": "複数店舗向け",
+                "feature1": "複数店舗の追加・運営が可能",
+                "feature2": "追加店舗の請求停止を回避",
+                "feature3": "優先サポート対応",
+                "priceLabel": "月額料金（PHP）",
+                "saveChanges": "変更を保存"
+            },
+            "ledger": {
+                "paymentRef": "参照番号",
+                "amount": "金額",
+                "billingStart": "開始日",
+                "billingEnd": "終了日",
+                "status": "ステータス",
+                "empty": "まだ支払いはありません。"
+            },
+            "table": {
+                "managerCol": "マネージャー",
+                "planCol": "プラン",
+                "paymentsCol": "支払い",
+                "planPro": "Pro",
+                "planBasic": "Basic"
+            },
+            "managerSubs": {
+                "title": "契約中のマネージャー",
+                "detail": "行をタップして各マネージャーの支払い履歴を確認できます。",
+                "empty": "まだ契約中のマネージャーはいません。"
+            },
+            "modal": {
+                "successTitle": "変更を保存しました",
+                "okay": "OK",
+                "successDetail": "Proプランの料金が正常に更新されました。"
+            }
         }
     }
 }

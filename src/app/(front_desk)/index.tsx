@@ -8,6 +8,7 @@ import { Lock } from "lucide-react-native";
 import { useCameraPermissions } from "expo-camera";
 import { processFrontDeskScan, getCurrentUserStore } from "@/services/frontdesk/scan-service";
 import { getCurrentStaffId } from "@/services/frontdesk/voucher-service";
+import { listenToRewardRedemptions } from "@/services/frontdesk/reward-redemption-service";
 import { supabase } from "@/supabase/supabase";
 import { Modal, type ModalButton } from "@/components/modal";
 import { useRecentTransactions } from "@/hooks/use-recent-transactions";
@@ -37,6 +38,9 @@ export default function FrontDeskScan() {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [successTransactionId, setSuccessTransactionId] = useState<string>("");
   const [successPoints, setSuccessPoints] = useState(0);
+  const [successModalType, setSuccessModalType] = useState<"earn" | "redeem">("earn");
+  const [successRewardName, setSuccessRewardName] = useState<string>("");
+  const [successRewardImage, setSuccessRewardImage] = useState<string | null>(null);
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string>("");
   const [isPasswordSetupComplete, setIsPasswordSetupComplete] = useState<boolean | null>(null);
@@ -60,6 +64,7 @@ export default function FrontDeskScan() {
   const [currentStaffId, setCurrentStaffId] = useState<string>("");
   const [qrAccessEnabled, setQrAccessEnabled] = useState<boolean | null>(null);
   const scrollY = useRef(new Animated.Value(0)).current;
+  const redemptionChannelRef = useRef<any | null>(null);
 
   const loadStoreInfo = useCallback(async () => {
     try {
@@ -110,7 +115,7 @@ export default function FrontDeskScan() {
             const requiresPasswordSetup = await checkPasswordSetupRequired(user.id);
             const isComplete = !requiresPasswordSetup;
             setIsPasswordSetupComplete(isComplete);
-            
+
             if (requiresPasswordSetup) {
               setPasswordSetupModal({
                 title: translate("frontdesk.transaction.passwordSetup.title"),
@@ -130,10 +135,28 @@ export default function FrontDeskScan() {
            setIsPasswordSetupComplete(false);
         }
       };
-      
+
       checkPasswordSetup();
     }, [router])
   );
+
+  // Set up reward redemption listener
+  useEffect(() => {
+    if (!storeInfo?.id) return;
+
+    redemptionChannelRef.current = listenToRewardRedemptions(
+      storeInfo.id,
+      (redemption) => {
+        fetchTransactions(storeInfo.id);
+      }
+    );
+
+    return () => {
+      if (redemptionChannelRef.current) {
+        redemptionChannelRef.current.unsubscribe();
+      }
+    };
+  }, [storeInfo?.id, fetchTransactions]);
 
   const handleBarCodeScanned = async (data: string) => {
     if (scanned || isProcessing) return;
@@ -146,6 +169,7 @@ export default function FrontDeskScan() {
         const pointsAwarded = result.pointsEarned || Math.ceil(amount * 0.1);
         setSuccessTransactionId(result.transactionId || "");
         setSuccessPoints(pointsAwarded);
+        setSuccessModalType("earn");
         setShowSuccessModal(true);
       } else {
         setModal({
@@ -171,6 +195,7 @@ export default function FrontDeskScan() {
     setPurchaseAmount("");
     setVoucherCode("");
     setShowSuccessModal(false);
+    setSuccessModalType("earn");
   };
 
   const handleErrorModalClose = () => {
@@ -296,6 +321,7 @@ export default function FrontDeskScan() {
               currentStaffId={currentStaffId}
               onSuccess={(points) => {
                 setSuccessPoints(points);
+                setSuccessModalType("earn");
                 setShowSuccessModal(true);
                 addScan({ points, timestamp: new Date(), amount: parseFloat(purchaseAmount) });
                 setVoucherCode("");
@@ -303,7 +329,7 @@ export default function FrontDeskScan() {
               }}
               onError={(message) => {
                 setModal({
-                  title: "Error",
+                  title: "Invalid",
                   message,
                   buttons: [{ label: translate("label.ok"), variant: "secondary", onPress: () => setModal(null) }],
                 });
@@ -319,7 +345,7 @@ export default function FrontDeskScan() {
                 }}
                 onError={(message) => {
                   setModal({
-                    title: "Error",
+                    title: "Invalid",
                     message,
                     buttons: [{ label: translate("label.ok"), variant: "secondary", onPress: () => setModal(null) }],
                   });
@@ -334,8 +360,8 @@ export default function FrontDeskScan() {
         )}
       </ScrollView>
 
-      {/* Amount input field - only show when QR enabled */}
-      {qrAccessEnabled === true && (
+      {/* Amount input field  */}
+      {qrAccessEnabled === true && mode === "earn" && (
         <CompactAmountInput
           value={purchaseAmount}
           onChangeText={setPurchaseAmount}
@@ -352,6 +378,9 @@ export default function FrontDeskScan() {
         visible={showSuccessModal}
         onClose={handleModalClose}
         successPoints={successPoints}
+        type={successModalType}
+        rewardName={successRewardName}
+        rewardImage={successRewardImage}
       />
 
       {/* ── Error Modal ── */}
@@ -373,6 +402,25 @@ export default function FrontDeskScan() {
         onSuccess={() => {
           // Refresh transactions
           if (storeInfo) fetchTransactions(storeInfo.id);
+          // Add redemption to recent scans
+          if (redemptionVerification?.code) {
+            addScan({
+              points: redemptionVerification.code.points_cost,
+              timestamp: new Date(),
+              amount: redemptionVerification.code.points_cost,
+              type: "redeemed",
+              method: "voucher",
+              customerName: "Customer",
+              rewardTitle: redemptionVerification.code.reward?.title || "Reward",
+              pointsCost: redemptionVerification.code.points_cost,
+            });
+            // Show success modal
+            setSuccessPoints(redemptionVerification.code.points_cost);
+            setSuccessRewardName(redemptionVerification.code.reward.title);
+            setSuccessRewardImage(redemptionVerification.code.reward.image_url);
+            setSuccessModalType("redeem");
+            setShowSuccessModal(true);
+          }
         }}
         onError={(message) => {
           setModal({

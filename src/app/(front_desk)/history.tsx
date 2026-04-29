@@ -150,7 +150,7 @@ export default function FrontDeskHistory() {
                 result.push({ kind: "header", key: `h-${section}-${index}`, label: section });
                 lastSection = section;
             }
-            result.push({ kind: "tx", key: tx.id, tx });
+            result.push({ kind: "tx", key: `${tx.id}-${index}`, tx });
         });
         return result;
     }, [staffTransactions, sortField, sortDirection, transactionType]);
