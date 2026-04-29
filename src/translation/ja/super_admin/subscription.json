@@ -44,5 +44,16 @@
     "successTitle": "保存完了！",
     "successDetail": "Proプランの価格が保存されました。ベーシックプランは引き続き無料です。",
     "okay": "OK"
+  },
+  "stats": {
+    "totalCollected": "合計収益",
+    "activeSubscribers": "アクティブ会員",
+    "newSubscribers": "新規会員",
+    "cancellations": "解約予定"
+  },
+  "pagination": {
+    "prev": "前へ",
+    "next": "次へ",
+    "pageOf": "{{current}} / {{total}} ページ"
   }
 }

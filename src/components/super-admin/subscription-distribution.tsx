@@ -1,8 +1,8 @@
 import React, { useMemo } from "react";
-import { TouchableOpacity, useColorScheme } from "react-native";
+import { Image, TouchableOpacity, useColorScheme } from "react-native";
 import { View, Text } from "@/tw";
-import Svg, { Circle, Text as SvgText, G } from "react-native-svg";
-import { Store, RotateCcw } from "lucide-react-native";
+import Svg, { Circle, G } from "react-native-svg";
+import { Store, RotateCcw, User } from "lucide-react-native";
 import { useDashboardStore } from "@/store/dashboard-store";
 import {
   Timeframe,
@@ -24,12 +24,17 @@ export function SubscriptionDistribution({
   onLoadMorePayers,
   onResetPayers,
 }: SubscriptionDistributionProps) {
-  const { stores, subscriptions, loading } = useDashboardStore();
+  const { stores, subscriptions, users, loading } = useDashboardStore();
   const isDark = useColorScheme() === "dark";
 
-  const radius = 36;
-  const strokeWidth = 14;
+  const radius = 25;
+  const strokeWidth = 50;
   const circumference = 2 * Math.PI * radius;
+
+  const usersByOwner = useMemo(
+    () => new Map(users.map((u) => [u.id, u])),
+    [users]
+  );
 
   const storesByOwner = useMemo(() => {
     const map = new Map<string, typeof stores>();
@@ -48,31 +53,23 @@ export function SubscriptionDistribution({
   );
 
   const stats = useMemo(() => {
-    if (!stores.length) return null;
+    if (!users.length) return null;
 
-    const ownerIds = Array.from(
-      new Set(stores.map((s) => s.owner_id).filter(Boolean))
-    );
-    const totalOwners = ownerIds.length || 1;
-
+    const managers = users.filter((u) => u?.role_type === "store_manager");
+    const total = managers.length;
     let proCount = 0;
-    let basicCount = 0;
 
-    ownerIds.forEach((id) => {
-      const sub = subByOwner.get(id);
-      if (sub) {
-        if (sub.payment_status === "paid" || sub.payment_status === "availed") {
-          proCount++;
-        } else {
-          basicCount++;
-        }
-      } else {
-        basicCount++;
+    managers.forEach((m) => {
+      const sub = subByOwner.get(m.id);
+      if (sub && sub.payment_status === "paid") {
+        proCount++;
       }
     });
 
-    const proPercent = proCount / totalOwners;
-    const basicPercent = basicCount / totalOwners;
+    const safeTotal = Math.max(1, total);
+    const basicCount = total - proCount;
+    const proPercent = proCount / safeTotal;
+    const basicPercent = basicCount / safeTotal;
 
     return {
       proPercent,
@@ -90,7 +87,7 @@ export function SubscriptionDistribution({
         },
       ],
     };
-  }, [stores, subByOwner]);
+  }, [users, subByOwner]);
 
   const payersList = useMemo(() => {
     const nowDay = startOfDay(new Date()).getTime();
@@ -113,7 +110,7 @@ export function SubscriptionDistribution({
       const ownerStores = storesByOwner.get(sub.owner_id) ?? [];
       const name =
         ownerStores[0]?.owner_name ||
-        (sub as any).owner_name ||
+        usersByOwner.get(sub.owner_id)?.name ||
         "Unknown Manager";
       const activeStores = ownerStores.filter(
         (s) => s.status === "active" || s.is_active
@@ -121,7 +118,8 @@ export function SubscriptionDistribution({
       const dateLabel = date
         ? `${MONTH_NAMES[date.getMonth()]} ${date.getDate()}`
         : "N/A";
-      return { key: sub.owner_id, name, activeStores, dateLabel };
+      const avatar = usersByOwner.get(sub.owner_id)?.avatar ?? null;
+      return { key: sub.owner_id, name, activeStores, dateLabel, avatar };
     });
 
     return { list, hasMore: filtered.length > payerLimit };
@@ -155,9 +153,9 @@ export function SubscriptionDistribution({
       </Text>
 
       <View className="flex-row items-center mb-8">
-        {/* Donut Chart */}
+        {/* Pie Chart */}
         <View className="w-[110px] h-[110px] justify-center items-center mr-6">
-          <Svg width="110" height="110" viewBox="0 0 100 100">
+          <Svg width="110" height="110" viewBox="0 0 100 100" style={{ borderRadius: 55, overflow: "hidden" }}>
             <Circle
               cx="50"
               cy="50"
@@ -176,21 +174,9 @@ export function SubscriptionDistribution({
                   stroke="#FF6600"
                   strokeWidth={strokeWidth}
                   strokeDasharray={`${stats.proPercent * circumference} ${circumference}`}
-                  strokeLinecap="round"
                 />
               )}
             </G>
-            <SvgText
-              x="50"
-              y="55"
-              textAnchor="middle"
-              fill={isDark ? "#CBD5E1" : "#475569"}
-              fontSize="16"
-              fontWeight="bold"
-              fontFamily="Poppins-Bold"
-            >
-              {stats.proDisplay}%
-            </SvgText>
           </Svg>
         </View>
 
@@ -258,11 +244,19 @@ export function SubscriptionDistribution({
                     : ""
                 }`}
               >
-                <View className="w-9 h-9 rounded-full bg-white dark:bg-darkBackgroundCard items-center justify-center mr-3 shadow-sm border border-orange-50">
-                  <Text className="text-xs font-poppins-bold text-orange-500">
-                    {item.name?.charAt(0)?.toUpperCase() ?? "?"}
-                  </Text>
-                </View>
+                {item.avatar ? (
+                  <Image
+                    source={{ uri: item.avatar }}
+                    style={{ width: 36, height: 36, borderRadius: 18, marginRight: 12, backgroundColor: isDark ? "#262626" : "#F1F5F9" }}
+                  />
+                ) : (
+                  <View
+                    style={{ width: 36, height: 36, borderRadius: 18, marginRight: 12, backgroundColor: "#FF660015" }}
+                    className="items-center justify-center border border-primary/10"
+                  >
+                    <User size={18} color="#FF6600" />
+                  </View>
+                )}
                 <View className="flex-1">
                   <Text className="text-sm font-poppins-bold text-slate-700 dark:text-darkTextPrimary">
                     {item.name}

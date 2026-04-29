@@ -1,3 +1,14 @@
+export function get14DayDateRange(): string {
+    const end = new Date();
+    const start = new Date();
+    start.setDate(end.getDate() - 13);
+
+    const fmt = (d: Date) => 
+        d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+        
+    return `${fmt(start)} — ${fmt(end)}`;
+}
+
 export function getWeekDateRange(): string {
     const end = new Date();
     const start = new Date();
@@ -9,19 +20,34 @@ export function getWeekDateRange(): string {
     return `${fmt(start)} — ${fmt(end)}`;
 }
 
+export function getLast14Labels(): string[] {
+    const labels = [];
+    
+    for (let i = 13; i >= 0; i--) {
+        const d = new Date();
+        d.setDate(d.getDate() - i);
+        labels.push(
+            d.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+        );
+    }
+    return labels;
+}
+
 export function getLast7Labels(): string[] {
     const labels = [];
     
     for (let i = 6; i >= 0; i--) {
         const d = new Date();
         d.setDate(d.getDate() - i);
-        labels.push(`${d.getDate()}/${d.getMonth() + 1}`);
+        labels.push(
+            d.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+        );
     }
     return labels;
 }
 
-export function getTodayIndex(): number {
-    return 6;
+export function getTodayIndex(days = 7): number {
+    return days - 1;
 }
 
 export function timeStringToDate(s: string, fallbackHour = 9, fallbackMin = 0): Date {
@@ -30,8 +56,8 @@ export function timeStringToDate(s: string, fallbackHour = 9, fallbackMin = 0): 
     const h = Math.min(23, Math.max(0, parseInt(match[1], 10)));
     const m = Math.min(59, Math.max(0, parseInt(match[2], 10)));
     return new Date(2000, 0, 1, h, m);
-  }
+}
   
 export function dateToTimeString(d: Date): string {
     return `${d.getHours().toString().padStart(2, "0")}:${d.getMinutes().toString().padStart(2, "0")}`;
-    }
+}

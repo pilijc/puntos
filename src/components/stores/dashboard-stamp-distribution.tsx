@@ -1,74 +1,65 @@
-import React from "react";
+import React, { useState } from "react";
+import { useColorScheme } from "react-native";
 import { View, Text } from "@/tw";
+import { BarChart } from "react-native-chart-kit";
 import { useTranslation } from "react-i18next";
 import { StampDistributionProps } from "@/type/store-manager/metric";
 import { DashboardStampDistributionSkeleton } from "@/components/skeleton/store_manager/dashboard-stamp-distribution-skeleton";
 
-export function DashboardStampDistribution({
-    buckets,
-    maxStamps,
-    loading,
-}: StampDistributionProps) {
+export function DashboardStampDistribution({ buckets, maxStamps, loading }: StampDistributionProps) {
     const { t: translate } = useTranslation();
 
-    if (loading) {
-        return <DashboardStampDistributionSkeleton />;
-    }
+    if (loading) return <DashboardStampDistributionSkeleton />;
 
     if (buckets.length === 0) {
         return (
-            <View className="bg-white dark:bg-darkBackgroundCard rounded-xl p-5 elevation-1 mb-[14px] border border-transparent dark:border-darkBorder">
+            <View className="bg-white dark:bg-darkBackgroundCard rounded-xl p-4 elevation-1 border border-transparent dark:border-darkBorder" style={{ flex: 1 }}>
                 <Text className="text-lg font-poppins-bold text-textPrimary dark:text-darkTextPrimary leading-6">
-                    {translate("store_manager.dashboard.stampProgress.title")}
+                    {translate("store_manager.dashboard.stampProgress.title", "Stamp Progress")}
                 </Text>
-                <Text className="text-[12px] font-poppins text-textMuted dark:text-darkTextMuted mt-0.5">
-                    {translate("store_manager.dashboard.stampProgress.noProgram")}
+                <Text className="text-xs font-poppins text-textSecondary dark:text-darkTextSecondary mt-0.5">
+                    {translate("store_manager.dashboard.stampProgress.noProgram", "No active stamp program found")}
                 </Text>
             </View>
         );
     }
 
     const totalUsers = buckets.reduce((sum, b) => sum + b.count, 0);
-    const colors = ["#FFEDD5", "#FED7AA", "#FDBA74", "#FB923C", "#FF6600"];
+    const maxCount = Math.max(...buckets.map(b => b.count));
 
     return (
-        <View className="bg-white dark:bg-darkBackgroundCard rounded-xl p-5 elevation-1 mb-[14px] border border-transparent dark:border-darkBorder">
+        <View className="bg-white dark:bg-darkBackgroundCard rounded-xl p-4 elevation-1 border border-transparent dark:border-darkBorder" style={{ flex: 1 }}>
             <Text className="text-lg font-poppins-bold text-textPrimary dark:text-darkTextPrimary leading-6">
-                {translate("store_manager.dashboard.stampProgress.title")}
+                {translate("store_manager.dashboard.stampProgress.title", "Stamp Progress")}
             </Text>
-            <Text className="text-[12px] font-poppins text-textMuted dark:text-darkTextMuted mt-0.5 mb-5">
-                {translate("store_manager.dashboard.stampProgress.distribution", { users: totalUsers, goal: maxStamps })}
+            <Text className="text-xs font-poppins text-textSecondary dark:text-darkTextSecondary mt-0.5 mb-2">
+                {translate("store_manager.dashboard.stampProgress.distribution", "Distribution of {{users}} users", {
+                    users: totalUsers,
+                    goal: maxStamps,
+                })}
             </Text>
 
-            {buckets.map((bucket, i) => {
-                const fraction = totalUsers > 0 ? bucket.count / totalUsers : 0;
-                const barWidthPercent = Math.max(fraction * 100, bucket.count > 0 ? 4 : 0);
-                const color = colors[i] ?? "#FF6600";
-
-                return (
-                    <View key={`bucket-${i}`} className="mb-3">
-                        <View className="flex-row justify-between mb-1">
-                            <Text className="text-[11px] font-poppins-bold text-textSecondary dark:text-darkTextPrimary">
-                                {bucket.label} {translate("store_manager.dashboard.stampProgress.stamps")}
+            <View className="flex-col gap-3">
+                {buckets.map((bucket, index) => {
+                    const widthPercent = maxCount === 0 ? 0 : (bucket.count / maxCount) * 100;
+                    return (
+                        <View key={index} className="flex-row items-center">
+                            <Text className="text-xs font-poppins text-textSecondary dark:text-darkTextSecondary w-10 text-right mr-3">
+                                {bucket.label}
                             </Text>
-                            <Text className="text-[11px] font-poppins text-textMuted dark:text-darkTextSecondary">
-                                {bucket.count} {bucket.count !== 1 ? translate("store_manager.dashboard.stampProgress.users") : translate("store_manager.dashboard.stampProgress.user")}
+                            <View className="flex-1 h-2.5 bg-slate-100 dark:bg-darkBackgroundMuted rounded-full overflow-hidden">
+                                <View 
+                                    className="h-full bg-[#ff6600] rounded-full" 
+                                    style={{ width: `${widthPercent}%` }} 
+                                />
+                            </View>
+                            <Text className="text-xs font-poppins-bold text-textPrimary dark:text-darkTextPrimary w-8 text-right ml-3">
+                                {bucket.count}
                             </Text>
                         </View>
-
-                        <View className="w-full h-[10px] bg-slate-100 dark:bg-darkBackgroundMuted rounded-full overflow-hidden">
-                            <View
-                                style={{
-                                    width: `${barWidthPercent}%`,
-                                    height: "100%",
-                                    backgroundColor: color,
-                                    borderRadius: 9999,
-                                }}
-                            />
-                        </View>
-                    </View>
-                );
-            })}
+                    );
+                })}
+            </View>
         </View>
     );
 }

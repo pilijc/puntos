@@ -200,10 +200,18 @@ export default function Layout() {
         onClose={() => setSessionExpiredNotice(false)}
         title={t("onboarding.sessionExpired.title")}
         message={t("onboarding.sessionExpired.message")}
-        buttons={[]}
         showCloseButton={false}
         dismissOnBackdrop={false}
-        timer={1000}
+        timer={3000}
+        buttons={[
+          {
+            label: t("onboarding.sessionExpiredButton"),
+            onPress: () => {
+              setSessionExpiredNotice(false);
+            },
+            variant: "primary",
+          },
+        ]}
       />
     </GestureHandlerRootView>
   );
