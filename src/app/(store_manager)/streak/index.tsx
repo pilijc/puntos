@@ -22,6 +22,7 @@ export default function ViewStreak() {
   const router = useRouter();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
+  const isWeb = Platform.OS === "web";
   const { storeId } = useLocalSearchParams<{ storeId: string }>();
   const {
     activeTab,
@@ -300,37 +301,35 @@ export default function ViewStreak() {
           <StreakCardSkeleton />
         </View>
       ) : tabStreaks.length === 0 ? (
-        <View className="flex-1 pt-6 items-center">
+        <View className={isWeb ? "flex-1 px-4 pb-4 items-center mt-4" : "flex-1 px-4 pb-4 mt-4"}>
           <View
-            className="w-full bg-white dark:bg-neutral-800 rounded-xl border border-slate-100 dark:border-neutral-700 px-6 py-12 items-center gap-y-3"
-            style={
-              Platform.OS === "web"
-                ? { maxWidth: WEB_MAX_WIDTH, alignItems: "center", alignSelf: "center" }
-                : { alignItems: "center", alignSelf: "center" }
-            }
+            className={`w-full bg-white dark:bg-darkBackground rounded-xl overflow-hidden items-center justify-center ${
+              isWeb ? "max-w-4xl px-6 py-12 gap-y-3" : "px-5 py-10 gap-y-3"
+            }`}
           >
             <Image
               source={require("@/assets/images/found.png")}
-              style={{ width: 80, height: 80 }}
+              style={{ width: Platform.OS === "web" ? 160 : 120, height: Platform.OS === "web" ? 160 : 120 }}
               contentFit="contain"
             />
+           <View className="items-center justify-center gap-y-1">
             <Text className="text-sm font-poppins-semibold text-slate-600 dark:text-slate-300 text-center">
-              {activeTab === "active"
-                ? t("store_manager.streak.emptyActiveTitle")
-                : activeTab === "upcoming"
-                ? t("store_manager.streak.emptyUpcomingTitle")
-                : t("store_manager.streak.emptyEndedTitle")}
-            </Text>
-            <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500 text-center">
-              {activeTab === "active"
-                ? t("store_manager.streak.emptyActiveBody")
-                : activeTab === "upcoming"
-                ? t("store_manager.streak.emptyUpcomingBody")
-                : t("store_manager.streak.emptyEndedBody")}
-            </Text>
+                {activeTab === "active"
+                  ? t("store_manager.streak.emptyActiveTitle")
+                  : activeTab === "upcoming"
+                  ? t("store_manager.streak.emptyUpcomingTitle")
+                  : t("store_manager.streak.emptyEndedTitle")}
+              </Text>
+              <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500 text-center">
+                {activeTab === "active"
+                  ? t("store_manager.streak.emptyActiveBody")
+                  : activeTab === "upcoming"
+                  ? t("store_manager.streak.emptyUpcomingBody")
+                  : t("store_manager.streak.emptyEndedBody")}
+              </Text>
+           </View>
           </View>
         </View>
-  
       ) : (
         <FlatList
           data={tabStreaks}

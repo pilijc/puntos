@@ -3,6 +3,7 @@ import { ActivityIndicator, ScrollView, useColorScheme, Platform } from "react-n
 import { View, Text, TouchableOpacity, SafeAreaView } from "@/tw";
 import { Modal } from "@/components/modal";
 import { useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
+import { Image } from "expo-image";
 import {
   getAllStampsByStoreId,
   getCollectorsByProgramId,
@@ -13,7 +14,7 @@ import {
 } from "@/services/store-manager/stamp-service";
 import { Tabs, CollectorSlice, emptyCollectorSlice } from "@/type/store-manager/stamp";
 import { Button } from "@/components/button";
-import { Plus, Stamp as StampIcon } from "lucide-react-native";
+import { Plus } from "lucide-react-native";
 import { AppHeader } from "@/components/header";
 import { useStampViewStore } from "@/store/store-manager/stamp-store";
 import { getRewardsByStoreId } from "@/services/store-manager/reward-service";
@@ -24,6 +25,7 @@ const WEB_MAX_WIDTH = 896;
 
 export default function ViewStamp() {
   const { t } = useTranslation();
+  const isWeb = Platform.OS === "web";
   const router = useRouter();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
@@ -173,44 +175,42 @@ export default function ViewStamp() {
       />
 
       {Platform.OS === "web" ? (
-        <View className="bg-backgroundMuted dark:bg-slate-950 pt-4 items-center">
-          <View style={{ width: "100%", maxWidth: WEB_MAX_WIDTH, paddingHorizontal: 16 }}>
-            <View className="w-full bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-xl overflow-hidden flex-row">
+        <View className="bg-backgroundMuted dark:bg-slate-950 px-4 pt-4 items-center">
+          <View className="w-full max-w-4xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-xl overflow-hidden flex-row">
             {Tabs.map((tab) => {
-              const active = activeTab === tab.key;
-              const count =
-                tab.key === "draft" ? draftStamps.length : tab.key === "active" ? activeStamps.length : endedStamps.length;
+                const active = activeTab === tab.key;
+                const count =
+                  tab.key === "draft" ? draftStamps.length : tab.key === "active" ? activeStamps.length : endedStamps.length;
 
-              return (
-                <TouchableOpacity
-                  key={tab.key}
-                  className={[
-                    "flex-1 py-3 items-center flex-row justify-center gap-1.5 rounded-xl mx-1 my-1",
-                    active && "bg-primary",
-                  ]
-                    .filter(Boolean)
-                    .join(" ")}
-                  onPress={() => setActiveTab(tab.key)}
-                  activeOpacity={0.7}
-                >
-                  <Text
-                    className={
-                      active
-                        ? "text-xs font-poppins-bold text-white"
-                        : "text-xs font-poppins-medium text-slate-400 dark:text-slate-500"
-                    }
+                return (
+                  <TouchableOpacity
+                    key={tab.key}
+                    className={[
+                      "flex-1 py-3 items-center flex-row justify-center gap-1.5 rounded-xl mx-1 my-1",
+                      active && "bg-primary",
+                    ]
+                      .filter(Boolean)
+                      .join(" ")}
+                    onPress={() => setActiveTab(tab.key)}
+                    activeOpacity={0.7}
                   >
-                    {t(`store_manager.stamp.tabs.${tab.key}`)}
-                  </Text>
-                  {count > 0 && (
-                    <View className="rounded-full min-w-[18px] items-center bg-white/20">
-                      <Text className="text-[10px] font-poppins-semibold text-white">{count}</Text>
-                    </View>
-                  )}
-                </TouchableOpacity>
-              );
-            })}
-            </View>
+                    <Text
+                      className={
+                        active
+                          ? "text-xs font-poppins-bold text-white"
+                          : "text-xs font-poppins-medium text-slate-400 dark:text-slate-500"
+                      }
+                    >
+                      {t(`store_manager.stamp.tabs.${tab.key}`)}
+                    </Text>
+                    {count > 0 && (
+                      <View className="rounded-full min-w-[18px] items-center bg-white/20">
+                        <Text className="text-[10px] font-poppins-semibold text-white">{count}</Text>
+                      </View>
+                    )}
+                  </TouchableOpacity>
+                );
+              })}
           </View>
         </View>
       ) : (
@@ -261,25 +261,33 @@ export default function ViewStamp() {
           <ActivityIndicator size="large" color="#FF6600" />
         </View>
       ) : tabStamps.length === 0 ? (
-        <View className="flex-1 items-center justify-center px-8 gap-y-4 bg-slate-50 dark:bg-slate-900">
-          <View className="items-center gap-y-1">
-            <View className="mb-2">
-              <StampIcon size={36} color="#a3a3a3" />
+        <View className={isWeb ? "flex-1 px-4 pb-4 items-center mt-4" : "flex-1 px-4 pb-4 mt-4"}>
+          <View
+            className={`w-full bg-white dark:bg-darkBackground rounded-xl overflow-hidden items-center justify-center ${
+              isWeb ? "max-w-4xl px-6 py-12 gap-y-3" : "px-5 py-10 gap-y-3"
+            }`}
+          >
+            <Image
+              source={require("@/assets/images/found.png")}
+              style={{ width: Platform.OS === "web" ? 160 : 120, height: Platform.OS === "web" ? 160 : 120 }}
+              contentFit="contain"
+            />
+            <View className="items-center justify-center gap-y-1">
+              <Text className="text-sm font-poppins-semibold text-slate-600 dark:text-slate-300 text-center">
+                {activeTab === "draft"
+                  ? t("store_manager.stamp.emptyDraftTitle")
+                  : activeTab === "active"
+                    ? t("store_manager.stamp.emptyActiveTitle")
+                    : t("store_manager.stamp.emptyEndedTitle")}
+              </Text>
+              <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500 text-center">
+                {activeTab === "active"
+                  ? t("store_manager.stamp.emptyActiveBody")
+                  : activeTab === "draft"
+                    ? t("store_manager.stamp.emptyDraftBody")
+                    : t("store_manager.stamp.emptyEndedBody")}
+              </Text>
             </View>
-            <Text className="text-sm font-poppins-bold text-slate-500 dark:text-slate-300">
-              {activeTab === "draft"
-                ? t("store_manager.stamp.emptyDraftTitle")
-                : activeTab === "active"
-                  ? t("store_manager.stamp.emptyActiveTitle")
-                  : t("store_manager.stamp.emptyEndedTitle")}
-            </Text>
-            <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500 text-center">
-              {activeTab === "active"
-                ? t("store_manager.stamp.emptyActiveBody")
-                : activeTab === "draft"
-                  ? t("store_manager.stamp.emptyDraftBody")
-                  : t("store_manager.stamp.emptyEndedBody")}
-            </Text>
           </View>
         </View>
       ) : (

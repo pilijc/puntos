@@ -5,9 +5,8 @@ import {
   Platform,
   ScrollView,
 } from "react-native";
-import { View, Text, TouchableOpacity, TextInput } from "@/tw";
+import { View, Text, TouchableOpacity } from "@/tw";
 import { useRouter, useLocalSearchParams, useFocusEffect } from "expo-router";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Image } from "expo-image";
 import { useStampConfigureViewStore, useStampStore } from "@/store/store-manager/stamp-store";
 import { createStamp, getStampProgramById, updateStampProgram } from "@/services/store-manager/stamp-service";
@@ -25,7 +24,6 @@ import { useTranslation } from "react-i18next";
 export default function ConfigureStamp() {
   const { t } = useTranslation();
   const router = useRouter();
-  const insets = useSafeAreaInsets();
   const { storeId, stampId } = useLocalSearchParams<{ storeId: string; stampId?: string }>();
   const isEdit = !!stampId;
   const isWeb = Platform.OS === "web";
@@ -35,10 +33,16 @@ export default function ConfigureStamp() {
     reward_id,
     expiration_mode,
     expiration_days,
+    totalStampsError,
+    rewardError,
+    expirationDaysError,
     setTotalStamps,
     setRewardId,
     setExpirationMode,
     setExpirationDays,
+    setTotalStampsError,
+    setRewardError,
+    setExpirationDaysError,
     reset,
   } = useStampStore();
   const {
@@ -60,11 +64,74 @@ export default function ConfigureStamp() {
 
   useFocusEffect(
     useCallback(() => {
-      if (!storeId) return;
-      getRewardsByStoreIdPage(storeId, 0, 1)
-        .then((rows) => setStoreHasRewards(rows.length > 0))
-        .catch(() => setStoreHasRewards(false));
-    }, [storeId])
+      let cancelled = false;
+      setTotalStampsError(false);
+      setRewardError(false);
+      setExpirationDaysError(false);
+
+      if (storeId) {
+        getRewardsByStoreIdPage(storeId, 0, 1)
+          .then((rows) => {
+            if (cancelled) return;
+            setStoreHasRewards(rows.length > 0);
+          })
+          .catch(() => {
+            if (cancelled) return;
+            setStoreHasRewards(false);
+          });
+      }
+
+      if (isEdit && programId && storeId) {
+        getStampProgramById(programId)
+          .then((program) => {
+            if (cancelled) return;
+            if (!program) throw new Error("Stamp program not found.");
+            if (String(program.store_id) !== String(storeId)) {
+              throw new Error("Invalid stamp program for this store.");
+            }
+            if (program.status !== "draft") throw new Error("Only draft stamp programs can be edited.");
+
+            setTotalStamps(program.total_stamps ?? 0);
+            setRewardId(program.reward_id != null ? String(program.reward_id) : "");
+            setExpirationMode(program.expiration_mode ?? "none");
+            setExpirationDays(program.expiration_days ?? 30);
+          })
+          .catch((e) => {
+            if (cancelled) return;
+            setModal({
+              title: t("store_manager.stampConfigure.cannotEditTitle"),
+              message: (e as Error).message ?? t("store_manager.stampConfigure.cannotEditDefault"),
+              buttons: [
+                {
+                  label: t("label.ok"),
+                  onPress: () => {
+                    setModal(null);
+                    router.push({ pathname: "/(store_manager)/stamp", params: { storeId } });
+                  },
+                },
+              ],
+            });
+          });
+      }
+
+      return () => {
+        cancelled = true;
+      };
+    }, [
+      storeId,
+      isEdit,
+      programId,
+      t,
+      router,
+      setModal,
+      setTotalStampsError,
+      setRewardError,
+      setExpirationDaysError,
+      setTotalStamps,
+      setRewardId,
+      setExpirationMode,
+      setExpirationDays,
+    ])
   );
 
   useEffect(() => {
@@ -85,80 +152,22 @@ export default function ConfigureStamp() {
     };
   }, [storeId, reward_id]);
 
-  useFocusEffect(
-    useCallback(() => {
-      if (!isEdit || !programId) return;
-      let cancelled = false;
-      getStampProgramById(programId)
-        .then((program) => {
-          if (cancelled) return;
-          if (!program) throw new Error("Stamp program not found.");
-          if (String(program.store_id) !== String(storeId)) {
-            throw new Error("Invalid stamp program for this store.");
-          }
-          if (program.status !== "draft") throw new Error("Only draft stamp programs can be edited.");
-
-          setTotalStamps(program.total_stamps ?? 0);
-          setRewardId(program.reward_id != null ? String(program.reward_id) : "");
-          setExpirationMode(program.expiration_mode ?? "none");
-          setExpirationDays(program.expiration_days ?? 30);
-        })
-        .catch((e) => {
-          setModal({
-            title: t("store_manager.stampConfigure.cannotEditTitle"),
-            message: (e as Error).message ?? t("store_manager.stampConfigure.cannotEditDefault"),
-            buttons: [
-              {
-                label: t("label.ok"),
-                onPress: () => {
-                  setModal(null);
-                  router.push({ pathname: "/(store_manager)/stamp", params: { storeId } });
-                },
-              },
-            ],
-          });
-        });
-      return () => {
-        cancelled = true;
-      };
-    }, [
-      isEdit,
-      programId,
-      storeId,
-      router,
-      setModal,
-      setTotalStamps,
-      setRewardId,
-      setExpirationMode,
-      setExpirationDays,
-    ])
-  );
-
   const handleSave = async () => {
-    if (!total_stamps || total_stamps < 1) {
-      setModal({
-        title: t("label.almostThere"),
-        message: t("store_manager.stampConfigure.stampsRequiredInvalid"),
-        buttons: [{ label: t("label.ok"), onPress: () => setModal(null) }],
-      });
+    const nextTotalStampsError = !total_stamps || total_stamps < 1;
+    const nextRewardError = !reward_id;
+    const nextExpirationDaysError = expiration_mode === "card" && (!expiration_days || expiration_days < 1);
+
+    if (nextTotalStampsError || nextRewardError || nextExpirationDaysError) {
+      setModal(null);
+      setTotalStampsError(nextTotalStampsError);
+      setRewardError(nextRewardError);
+      setExpirationDaysError(nextExpirationDaysError);
       return;
     }
-    if (!reward_id) {
-      setModal({
-        title: t("label.almostThere"),
-        message: t("store_manager.stampConfigure.selectReward"),
-        buttons: [{ label: t("label.ok"), onPress: () => setModal(null) }],
-      });
-      return;
-    }
-    if (expiration_mode === "card" && (!expiration_days || expiration_days < 1)) {
-      setModal({
-        title: t("label.almostThere"),
-        message: t("store_manager.stampConfigure.expirationDaysInvalid"),
-        buttons: [{ label: t("label.ok"), onPress: () => setModal(null) }],
-      });
-      return;
-    }
+
+    setTotalStampsError(false);
+    setRewardError(false);
+    setExpirationDaysError(false);
 
     setIsSubmitting(true);
     try {
@@ -283,9 +292,19 @@ export default function ConfigureStamp() {
                 placeholder={t("label.eg10Placeholder")}
                 keyboardType="decimal-pad"
                 value={total_stamps > 0 ? String(total_stamps) : ""}
-                onChangeText={(v) => setTotalStamps(parseInt(v) || 0)}
+                onChangeText={(v) => {
+                  const n = parseInt(v) || 0;
+                  setTotalStamps(n);
+                  if (n >= 1) setTotalStampsError(false);
+                }}
                 required
+                error={totalStampsError}
               />
+              {totalStampsError && (
+                <Text className="text-xs font-poppins text-red-500 dark:text-red-400 -mt-1">
+                  {t("store_manager.stampConfigure.stampsRequiredInvalid")}
+                </Text>
+              )}
             </View>
 
             <View className="gap-y-1.5">
@@ -301,6 +320,7 @@ export default function ConfigureStamp() {
                     onPress={() => {
                       setRewardId("");
                       setSelectedReward(null);
+                      setRewardError(false);
                     }}
                     activeOpacity={0.7}
                     className="px-2 py-1"
@@ -311,7 +331,13 @@ export default function ConfigureStamp() {
                 )}
               </View>
               {!storeHasRewards ? (
-                <View className="rounded-xl border border-dashed border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 px-4 py-5 items-center gap-y-3">
+                <View
+                  className={`rounded-xl border border-dashed bg-slate-50 dark:bg-slate-900 px-4 py-5 items-center gap-y-3 ${
+                    rewardError
+                      ? "border-red-500 dark:border-red-500"
+                      : "border-slate-300 dark:border-slate-700"
+                  }`}
+                >
                   <Gift size={26} color="#94A3B8" />
                   <View className="items-center gap-y-1">
                     <Text className="text-sm font-poppins-semibold text-slate-600 dark:text-slate-400">
@@ -335,7 +361,11 @@ export default function ConfigureStamp() {
                 <TouchableOpacity
                   activeOpacity={0.85}
                   onPress={() => setRewardPickerOpen(true)}
-                  className="flex-row items-center gap-x-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-3"
+                  className={`flex-row items-center gap-x-3 rounded-xl border bg-white dark:bg-slate-900 px-4 py-3 ${
+                    rewardError
+                      ? "border-red-500 dark:border-red-500"
+                      : "border-slate-200 dark:border-slate-700"
+                  }`}
                 >
                   {selectedReward?.image_url ? (
                     <Image
@@ -359,6 +389,11 @@ export default function ConfigureStamp() {
                   <ChevronRight size={20} color="#94A3B8" />
                 </TouchableOpacity>
               )}
+              {rewardError && (
+                <Text className="text-xs font-poppins text-red-500 dark:text-red-400 -mt-1">
+                  {t("store_manager.stampConfigure.selectReward")}
+                </Text>
+              )}
             </View>
           </View>
 
@@ -381,7 +416,10 @@ export default function ConfigureStamp() {
                 <TouchableOpacity
                   key={opt.key}
                   activeOpacity={0.8}
-                  onPress={() => setExpirationMode(opt.key)}
+                  onPress={() => {
+                    setExpirationMode(opt.key);
+                    if (opt.key !== "card") setExpirationDaysError(false);
+                  }}
                   className={`rounded-xl border px-4 py-2 gap-y-1 bg-white dark:bg-slate-900 ${
                     selected
                       ? "border-primary"
@@ -418,9 +456,19 @@ export default function ConfigureStamp() {
                   placeholder={t("store_manager.stampConfigure.expirationDaysPlaceholder")}
                   keyboardType="numeric"
                   value={expiration_days > 0 ? String(expiration_days) : ""}
-                  onChangeText={(v) => setExpirationDays(parseInt(v) || 0)}
+                  onChangeText={(v) => {
+                    const n = parseInt(v) || 0;
+                    setExpirationDays(n);
+                    if (n >= 1) setExpirationDaysError(false);
+                  }}
                   required
+                  error={expirationDaysError}
                 />
+                {expirationDaysError && (
+                  <Text className="text-xs font-poppins text-red-500 dark:text-red-400 -mt-1">
+                    {t("store_manager.stampConfigure.expirationDaysInvalid")}
+                  </Text>
+                )}
               </View>
             )}
           </View>
@@ -475,6 +523,7 @@ export default function ConfigureStamp() {
         onSelect={(r) => {
           setRewardId(r.id != null ? String(r.id) : "");
           setSelectedReward(r);
+          if (r.id != null) setRewardError(false);
         }}
       />
     </KeyboardAvoidingView>

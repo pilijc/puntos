@@ -29,12 +29,13 @@
   "saveDraft": "Save as Draft",
   "saveChanges": "Save Changes",
   "cancel": "Cancel",
-  "streakLengthInvalid": "Streak length must be at least 1 day.",
-  "fixedPointsInvalid": "Please enter a valid points per day amount.",
-  "startingPointsInvalid": "Please enter a valid starting points amount.",
-  "incrementInvalid": "Please enter a valid increment per day.",
+  "streakLengthInvalid": "Please enter a valid number of streak days.",
+  "fixedPointsInvalid": "Please enter a valid number of points per day.",
+  "startingPointsInvalid": "Please enter a valid number of starting points.",
+  "incrementInvalid": "Please enter a valid number of increment per day.",
   "startTimeAfter": "Start time must be after {{time}}.",
   "successUpdate": "Streak program updated successfully",
   "successCreate": "Streak configuration saved successfully",
-  "saveFailed": "Failed to save streak configuration"
+  "saveFailed": "Failed to save streak configuration",
+  "maxDaysCapInvalid": "Max days cap must be less than or equal to streak length."
 }

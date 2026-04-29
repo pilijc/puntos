@@ -41,6 +41,10 @@ export default function AddStaff() {
     resetStaff,
   } = useStaffStore();
 
+  const trimmedName = name.trim();
+  const trimmedEmail = email.trim();
+  const emailPattern = /\S+@\S+\.\S+/;
+
   useEffect(() => {
     const init = async () => {
       if (isEditMode && staffId) {
@@ -66,10 +70,6 @@ export default function AddStaff() {
   }, [isEditMode, staffId, setName, setEmail, setPassword, setModal, resetStaff, t]);
 
   const openConfirm = () => {
-    const trimmedName = name.trim();
-    const trimmedEmail = email.trim();
-    const emailPattern = /\S+@\S+\.\S+/;
-
     const hasNameError = !trimmedName;
     const hasEmailError = !trimmedEmail || !emailPattern.test(trimmedEmail);
     setNameError(hasNameError);
@@ -204,6 +204,11 @@ export default function AddStaff() {
                   required={true}
                   error={nameError}
                 />
+                {nameError && (
+                  <Text className="text-xs font-poppins text-red-500 dark:text-red-400 -mt-2">
+                    {t("store_manager.staffForm.fullNameRequiredInline")}
+                  </Text>
+                )}
 
                 <TextField
                   label={t("store_manager.staffForm.email")}
@@ -213,6 +218,11 @@ export default function AddStaff() {
                   required={true}
                   error={emailError}
                 />
+                {emailError && (
+                  <Text className="text-xs font-poppins text-red-500 dark:text-red-400 -mt-2">
+                    {trimmedEmail ? t("store_manager.staffForm.invalidEmailMessage") : t("store_manager.staffForm.emailRequiredInline")}
+                  </Text>
+                )}
 
                 {!isEditMode && (
                   <View className="gap-y-2">

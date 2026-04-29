@@ -3,9 +3,8 @@ import { KeyboardAvoidingView, Platform, ScrollView, useColorScheme } from "reac
 import { View, Text, TouchableOpacity } from "@/tw";
 import { Check } from "lucide-react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Button } from "@/components/button";
-import { Modal, type ModalButton } from "@/components/modal";
+import { Modal } from "@/components/modal";
 import { TextField } from "@/components/text-field";
 import { EarningType } from "@/type/store-manager/qr.purchase";
 import { useQRStore } from "@/store/store-manager/qr-store";
@@ -18,23 +17,15 @@ const WEB_MAX_WIDTH = 896;
 export default function ConfigureStreaks() {
   const { t } = useTranslation();
   const router = useRouter();
-  const insets = useSafeAreaInsets();
   const { storeId, id } = useLocalSearchParams<{ storeId?: string; id?: string }>();
   const storeIdParam = storeId ?? id;
   const colorScheme = useColorScheme();
-  const isDark = colorScheme === "dark";
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [percentageInput, setPercentageInput] = useState("");
   const [baseAmountInput, setBaseAmountInput] = useState("");
   const [fixedPointsInput, setFixedPointsInput] = useState("");
   const [minimumSpendInput, setMinimumSpendInput] = useState("");
   const [maxPointsInput, setMaxPointsInput] = useState("");
-  const [modal, setModal] = useState<{
-    title: string;
-    message: string;
-    buttons: ModalButton[];
-    timer?: boolean;
-  } | null>(null);
   const {
     percentage,
     setPercentage,
@@ -48,29 +39,88 @@ export default function ConfigureStreaks() {
     setMinimumSpend,
     max_points_per_txn,
     setMaxPointsPerTxn,
+    modal,
+    setModal,
+    errors,
+    setErrors,
     reset,
   } = useQRStore();
 
-	const showError = (message: string) =>
-		setModal({ title: t("label.almostThere"), message, buttons: [{ label: t("label.ok"), onPress: () => setModal(null), variant: "secondary" }] });
-
 	const validate = (): boolean => {
-		if (earning_type === "percentage") {
-			const pct = parseFloat(percentageInput);
-			const base = parseFloat(baseAmountInput);
-			if (!percentageInput || isNaN(pct) || pct <= 0) { showError(t("store_manager.qrConfigure.validPercentage")); return false; }
-			if (pct > 100) { showError(t("store_manager.qrConfigure.percentageOver100")); return false; }
-			if (baseAmountInput && (isNaN(base) || base <= 0)) { showError(t("store_manager.qrConfigure.validBaseAmount")); return false; }
-		} else {
-			const pts = parseFloat(fixedPointsInput);
-			if (!fixedPointsInput || isNaN(pts) || pts <= 0) { showError(t("store_manager.qrConfigure.validFixedPoints")); return false; }
-      const maxTxn = maxPointsInput ? parseFloat(maxPointsInput) : NaN;
-      if (!isNaN(maxTxn) && maxTxn > 0 && maxTxn < pts) {
-        showError(t("store_manager.qrConfigure.maxLowerThanFixed"));
-        return false;
+    let hasErrors = false;
+    const nextErrors = {
+      percentage: false,
+      percentageErrorMessage: "",
+      baseAmount: false,
+      baseAmountErrorMessage: "",
+      fixedPoints: false,
+      fixedPointsErrorMessage: "",
+      minimumSpend: false,
+      minimumSpendErrorMessage: "",
+      maxPointsPerTxn: false,
+      maxPointsPerTxnErrorMessage: "",
+    };
+
+    if (earning_type === "percentage") {
+      const pct = parseFloat(percentageInput);
+      const base = parseFloat(baseAmountInput);
+
+      if (!percentageInput || isNaN(pct) || pct <= 0) {
+        nextErrors.percentage = true;
+        nextErrors.percentageErrorMessage = t("store_manager.qrConfigure.validPercentage");
+        hasErrors = true;
+      } else if (pct > 100) {
+        nextErrors.percentage = true;
+        nextErrors.percentageErrorMessage = t("store_manager.qrConfigure.percentageOver100");
+        hasErrors = true;
       }
-		}
-		return true;
+
+      if (!baseAmountInput || isNaN(base) || base < 0) {
+        nextErrors.baseAmount = true;
+        nextErrors.baseAmountErrorMessage = t("store_manager.qrConfigure.validBaseAmount");
+        hasErrors = true;
+      }
+    } else {
+      const pts = parseFloat(fixedPointsInput);
+      const minSpend = parseFloat(minimumSpendInput);
+
+      if (!fixedPointsInput || isNaN(pts) || pts < 0) {
+        nextErrors.fixedPoints = true;
+        nextErrors.fixedPointsErrorMessage = t("store_manager.qrConfigure.validFixedPoints");
+        hasErrors = true;
+      }
+
+      if (!minimumSpendInput || isNaN(minSpend) || minSpend < 0) {
+        nextErrors.minimumSpend = true;
+        nextErrors.minimumSpendErrorMessage = t("store_manager.qrConfigure.validMinimumSpend");
+        hasErrors = true;
+      }
+
+      const maxTxn = maxPointsInput ? parseFloat(maxPointsInput) : NaN;
+      if (!isNaN(maxTxn)) {
+        if (maxTxn < 0) {
+          nextErrors.maxPointsPerTxn = true;
+          nextErrors.maxPointsPerTxnErrorMessage = t("store_manager.qrConfigure.validMaxPointsPerTxn");
+          hasErrors = true;
+        } else if (maxTxn > 0 && maxTxn < pts) {
+          nextErrors.maxPointsPerTxn = true;
+          nextErrors.maxPointsPerTxnErrorMessage = t("store_manager.qrConfigure.maxLowerThanFixed");
+          hasErrors = true;
+        }
+      }
+    }
+
+    if (earning_type === "percentage" && maxPointsInput) {
+      const maxTxn = parseFloat(maxPointsInput);
+      if (isNaN(maxTxn) || maxTxn < 0) {
+        nextErrors.maxPointsPerTxn = true;
+        nextErrors.maxPointsPerTxnErrorMessage = t("store_manager.qrConfigure.validMaxPointsPerTxn");
+        hasErrors = true;
+      }
+    }
+
+    setErrors(nextErrors);
+    return !hasErrors;
 	};
 
   useEffect(() => {
@@ -84,6 +134,19 @@ export default function ConfigureStreaks() {
     setFixedPointsInput("");
     setMinimumSpendInput("");
     setMaxPointsInput("");
+    setErrors({
+      ...errors,
+      percentage: false,
+      percentageErrorMessage: "",
+      baseAmount: false,
+      baseAmountErrorMessage: "",
+      fixedPoints: false,
+      fixedPointsErrorMessage: "",
+      minimumSpend: false,
+      minimumSpendErrorMessage: "",
+      maxPointsPerTxn: false,
+      maxPointsPerTxnErrorMessage: "",
+    });
     getQRConfig(storeIdForDb)
       .then((cfg) => {
         if (cancelled) return;
@@ -167,7 +230,28 @@ export default function ConfigureStreaks() {
 				minimum_spend,
 				max_points_per_txn,
 			});
-			reset();
+      
+      reset();
+      setPercentageInput("");
+      setBaseAmountInput("");
+      setFixedPointsInput("");
+      setMinimumSpendInput("");
+      setMaxPointsInput("");
+      setErrors({
+        ...errors,
+        percentage: false,
+        percentageErrorMessage: "",
+        baseAmount: false,
+        baseAmountErrorMessage: "",
+        fixedPoints: false,
+        fixedPointsErrorMessage: "",
+        minimumSpend: false,
+        minimumSpendErrorMessage: "",
+        maxPointsPerTxn: false,
+        maxPointsPerTxnErrorMessage: "",
+      });
+ 
+      
 			setModal({
 				title: t("label.success"),
 				message: t("store_manager.qrConfigure.successMessage"),
@@ -243,7 +327,22 @@ export default function ConfigureStreaks() {
                 <TouchableOpacity
                   key={opt.key}
                   activeOpacity={0.8}
-                  onPress={() => setEarningType(opt.key)}
+                  onPress={() => {
+                    setEarningType(opt.key);
+                    setErrors({
+                      ...errors,
+                      percentage: false,
+                      percentageErrorMessage: "",
+                      baseAmount: false,
+                      baseAmountErrorMessage: "",
+                      fixedPoints: false,
+                      fixedPointsErrorMessage: "",
+                      minimumSpend: false,
+                      minimumSpendErrorMessage: "",
+                      maxPointsPerTxn: false,
+                      maxPointsPerTxnErrorMessage: "",
+                    });
+                  }}
                   className={`flex-1 rounded-xl border p-3 gap-y-1 bg-white dark:bg-slate-900 ${
                     selected
                       ? "border-primary"
@@ -278,11 +377,23 @@ export default function ConfigureStreaks() {
                   value={percentageInput}
                   onChangeText={(v) => {
                     setPercentageInput(v);
+                    setErrors({
+                      ...errors,
+                      percentage: false,
+                      percentageErrorMessage: "",
+                    });
                     const parsed = parseFloat(v);
                     if (!isNaN(parsed)) setPercentage(Math.max(0, parsed));
+                    else setPercentage(0);
                   }}
-									required
+                  required
+                  error={errors.percentage}
                 />
+                {errors.percentage && (
+                  <Text className="text-xs font-poppins text-red-500 dark:text-red-400 mt-1">
+                    {errors.percentageErrorMessage}
+                  </Text>
+                )}
               </View>
               <View className="flex-1">
                 <TextField
@@ -292,11 +403,23 @@ export default function ConfigureStreaks() {
                   value={baseAmountInput}
                   onChangeText={(v) => {
                     setBaseAmountInput(v);
+                    setErrors({
+                      ...errors,
+                      baseAmount: false,
+                      baseAmountErrorMessage: "",
+                    });
                     const parsed = parseFloat(v);
                     if (!isNaN(parsed)) setBaseAmount(Math.max(0, parsed));
+                    else setBaseAmount(0);
                   }}
                   required
+                  error={errors.baseAmount}
                 />
+                {errors.baseAmount && (
+                  <Text className="text-xs font-poppins text-red-500 dark:text-red-400 mt-1">
+                    {errors.baseAmountErrorMessage}
+                  </Text>
+                )}
               </View>
             </View>
 
@@ -320,11 +443,23 @@ export default function ConfigureStreaks() {
 									value={fixedPointsInput}
 									onChangeText={(v) => {
 										setFixedPointsInput(v);
+                    setErrors({
+                      ...errors,
+                      fixedPoints: false,
+                      fixedPointsErrorMessage: "",
+                    });
 										const parsed = parseFloat(v);
 										if (!isNaN(parsed)) setFixedPoints(Math.max(0, parsed));
+                    else setFixedPoints(0);
 									}}
 									required
+                  error={errors.fixedPoints}
 								/>
+                {errors.fixedPoints && (
+                  <Text className="text-xs font-poppins text-red-500 dark:text-red-400 mt-1">
+                    {errors.fixedPointsErrorMessage}
+                  </Text>
+                )}
 							</View>
 							<View className="flex-1">
 								<TextField
@@ -334,11 +469,23 @@ export default function ConfigureStreaks() {
 									value={minimumSpendInput}
 									onChangeText={(v) => {
 										setMinimumSpendInput(v);
+                    setErrors({
+                      ...errors,
+                      minimumSpend: false,
+                      minimumSpendErrorMessage: "",
+                    });
 										const parsed = parseFloat(v);
 										if (!isNaN(parsed)) setMinimumSpend(Math.max(0, parsed));
+                    else setMinimumSpend(0);
 									}}
                   required
+                  error={errors.minimumSpend}
 								/>
+                {errors.minimumSpend && (
+                  <Text className="text-xs font-poppins text-red-500 dark:text-red-400 mt-1">
+                    {errors.minimumSpendErrorMessage}
+                  </Text>
+                )}
 							</View>
 						</View>
 
@@ -351,18 +498,32 @@ export default function ConfigureStreaks() {
         )}
 
         {/* Max points per transaction — shared */}
-        <TextField
-          label={t("store_manager.qrConfigure.maxPointsPerTxn")}
-          hint={t("store_manager.qrConfigure.maxPointsHint")}
-          placeholder={t("store_manager.qrConfigure.maxPointsPlaceholder")}
-          keyboardType="decimal-pad"
-          value={maxPointsInput}
-          onChangeText={(v) => {
-            setMaxPointsInput(v);
-            const parsed = parseFloat(v);
-            if (!isNaN(parsed)) setMaxPointsPerTxn(Math.max(0, parsed));
-          }}
-        />
+        <View className="gap-y-1.5">
+          <TextField
+            label={t("store_manager.qrConfigure.maxPointsPerTxn")}
+            hint={t("store_manager.qrConfigure.maxPointsHint")}
+            placeholder={t("store_manager.qrConfigure.maxPointsPlaceholder")}
+            keyboardType="decimal-pad"
+            value={maxPointsInput}
+            onChangeText={(v) => {
+              setMaxPointsInput(v);
+              setErrors({
+                ...errors,
+                maxPointsPerTxn: false,
+                maxPointsPerTxnErrorMessage: "",
+              });
+              const parsed = parseFloat(v);
+              if (!isNaN(parsed)) setMaxPointsPerTxn(Math.max(0, parsed));
+              else setMaxPointsPerTxn(0);
+            }}
+            error={errors.maxPointsPerTxn}
+          />
+          {errors.maxPointsPerTxn && (
+            <Text className="text-xs font-poppins text-red-500 dark:text-red-400 mt-1">
+              {errors.maxPointsPerTxnErrorMessage}
+            </Text>
+          )}
+        </View>
 
         {/* Actions */}
         <View className="gap-y-3">

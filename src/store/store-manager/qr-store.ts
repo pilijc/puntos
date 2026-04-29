@@ -18,6 +18,18 @@ type QRViewState = {
   toggling: boolean;
   deleting: boolean;
   modal: QRModalState;
+  errors: {
+    percentage: boolean;
+    percentageErrorMessage: string;
+    baseAmount: boolean;
+    baseAmountErrorMessage: string;
+    fixedPoints: boolean;
+    fixedPointsErrorMessage: string;
+    minimumSpend: boolean;
+    minimumSpendErrorMessage: string;
+    maxPointsPerTxn: boolean;
+    maxPointsPerTxnErrorMessage: string;
+  };
   lastLoadedStoreId: string | null;
   hasLoadedOnceForStore: boolean;
   lastFetchAttemptStoreId: string | null;
@@ -28,6 +40,18 @@ type QRViewState = {
   setToggling: (toggling: boolean) => void;
   setDeleting: (deleting: boolean) => void;
   setModal: (modal: QRModalState) => void;
+  setErrors: (errors: {
+    percentage: boolean;
+    percentageErrorMessage: string;
+    baseAmount: boolean;
+    baseAmountErrorMessage: string;
+    fixedPoints: boolean;
+    fixedPointsErrorMessage: string;
+    minimumSpend: boolean;
+    minimumSpendErrorMessage: string;
+    maxPointsPerTxn: boolean;
+    maxPointsPerTxnErrorMessage: string;
+  }) => void;
   setLastLoadedStoreId: (storeId: string | null) => void;
   setHasLoadedOnceForStore: (hasLoadedOnce: boolean) => void;
   setLastFetchAttemptStoreId: (storeId: string | null) => void;
@@ -50,6 +74,18 @@ export const useQRStore = create<QRPurchaseStore & QRViewState>((set) => ({
   toggling: false,
   deleting: false,
   modal: null,
+  errors: {
+    percentage: false,
+    percentageErrorMessage: "",
+    baseAmount: false,
+    baseAmountErrorMessage: "",
+    fixedPoints: false,
+    fixedPointsErrorMessage: "",
+    minimumSpend: false,
+    minimumSpendErrorMessage: "",
+    maxPointsPerTxn: false,
+    maxPointsPerTxnErrorMessage: "",
+  },
   lastLoadedStoreId: null,
   hasLoadedOnceForStore: false,
   lastFetchAttemptStoreId: null,
@@ -70,6 +106,7 @@ export const useQRStore = create<QRPurchaseStore & QRViewState>((set) => ({
   setToggling: (toggling) => set({ toggling }),
   setDeleting: (deleting) => set({ deleting }),
   setModal: (modal) => set({ modal }),
+  setErrors: (errors) => set({ errors }),
   setLastLoadedStoreId: (storeId) => set({ lastLoadedStoreId: storeId }),
   setHasLoadedOnceForStore: (hasLoadedOnce) => set({ hasLoadedOnceForStore: hasLoadedOnce }),
   setLastFetchAttemptStoreId: (storeId) => set({ lastFetchAttemptStoreId: storeId }),
@@ -91,6 +128,18 @@ export const useQRStore = create<QRPurchaseStore & QRViewState>((set) => ({
       toggling: false,
       deleting: false,
       modal: null,
+      errors: {
+        percentage: false,
+        percentageErrorMessage: "",
+        baseAmount: false,
+        baseAmountErrorMessage: "", 
+        fixedPoints: false,
+        fixedPointsErrorMessage: "",
+        minimumSpend: false,
+        minimumSpendErrorMessage: "",
+        maxPointsPerTxn: false,
+        maxPointsPerTxnErrorMessage: "",
+      },
       lastLoadedStoreId: null,
       hasLoadedOnceForStore: false,
       lastFetchAttemptStoreId: null,

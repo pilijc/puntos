@@ -46,6 +46,7 @@ export default function ConfigureStreaks() {
   } = useStreakStore();
 
   const [scheduleEnabled, setScheduleEnabled] = React.useState(false);
+  const [startTimeError, setStartTimeError] = React.useState(false);
   const [hasActiveProgramBarrier, setHasActiveProgramBarrier] = React.useState(false);
   const isFixed = points_mode === "fixed";
   const activationAt = start_at ? new Date(start_at) : new Date();
@@ -148,9 +149,11 @@ export default function ConfigureStreaks() {
     base.setFullYear(date.getFullYear(), date.getMonth(), date.getDate());
     if (base < minActivationAt) {
       setStartAt(minActivationAt.toISOString());
+      setStartTimeError(false);
       return;
     }
     setStartAt(base.toISOString());
+    setStartTimeError(false);
   };
 
   const updateStartAtTime = (time: Date) => {
@@ -158,9 +161,11 @@ export default function ConfigureStreaks() {
     base.setHours(time.getHours(), time.getMinutes(), 0, 0);
     if (base < minActivationAt) {
       setStartAt(minActivationAt.toISOString());
+      setStartTimeError(false);
       return;
     }
     setStartAt(base.toISOString());
+    setStartTimeError(false);
   };
 
   const handleSave = async () => {
@@ -177,11 +182,7 @@ export default function ConfigureStreaks() {
     if (hasStreakLengthError || hasFixedPointsError || hasStartingPointsError || hasIncrementError || hasMaxDaysCapError) return;
 
     if (scheduleEnabled && start_at && new Date(start_at) < minActivationAt) {
-      setModal({
-        title: t("label.almostThere"),
-        message: t("store_manager.streakConfigure.startTimeAfter", { time: minActivationAt.toLocaleString() }),
-        buttons: [{ label: t("label.ok"), onPress: () => setModal(null) }],
-      });
+      setStartTimeError(true);
       return;
     }
 
@@ -252,11 +253,13 @@ export default function ConfigureStreaks() {
   const handleScheduleToggle = (enabled: boolean) => {
     if (enabled) {
       setScheduleEnabled(true);
+      setStartTimeError(false);
       if (!start_at) {
         setStartAt(minActivationAt.toISOString());
       }
     } else {
       setScheduleEnabled(false);
+      setStartTimeError(false);
       setStartAt(null);
       setShowStartDatePicker(false);
       setShowStartTimePicker(false);
@@ -362,6 +365,11 @@ export default function ConfigureStreaks() {
                 required
                 error={fixedPointsError}
               />
+              {fixedPointsError && (
+                <Text className="text-xs font-poppins text-red-500 dark:text-red-400 -mt-1">
+                  {t("store_manager.streakConfigure.fixedPointsInvalid")}
+                </Text>
+              )}
             </View>
           )}
 
@@ -381,6 +389,11 @@ export default function ConfigureStreaks() {
                   required
                   error={startingPointsError}
                 />
+                {startingPointsError && (
+                  <Text className="text-xs font-poppins text-red-500 dark:text-red-400 -mt-1">
+                    {t("store_manager.streakConfigure.startingPointsInvalid")}
+                  </Text>
+                )}
               </View>
               <View className="flex-1 gap-y-2">
                 <TextField
@@ -396,6 +409,11 @@ export default function ConfigureStreaks() {
                   required
                   error={incrementError}
                 />
+                {incrementError && (
+                  <Text className="text-xs font-poppins text-red-500 dark:text-red-400 -mt-1">
+                    {t("store_manager.streakConfigure.incrementInvalid")}
+                  </Text>
+                )}
               </View>
             </View>
           )}
@@ -410,6 +428,11 @@ export default function ConfigureStreaks() {
               required
               error={streakLengthError}
             />
+            {streakLengthError && (
+              <Text className="text-xs font-poppins text-red-500 dark:text-red-400 -mt-1">
+                {t("store_manager.streakConfigure.streakLengthInvalid")}
+              </Text>
+            )}
           </View>
 
           {/* Max days cap */}
@@ -427,6 +450,11 @@ export default function ConfigureStreaks() {
               hint={streak_length && streak_length > 0 ? t("store_manager.streakConfigure.maxDaysCapHint", { max: streak_length }) : undefined}
               error={maxDaysCapError}
             />
+            {maxDaysCapError && (
+              <Text className="text-xs font-poppins text-red-500 dark:text-red-400 -mt-1">
+                {t("store_manager.streakConfigure.maxDaysCapInvalid")}
+              </Text>
+            )}
           </View>
 
           {/* Reward description */}
@@ -499,6 +527,12 @@ export default function ConfigureStreaks() {
                     </Text>
                   </TouchableOpacity>
                 </View>
+
+                {startTimeError && (
+                  <Text className="text-xs font-poppins text-red-500 dark:text-red-400 -mt-1">
+                    {t("store_manager.streakConfigure.startTimeAfter", { time: minActivationAt.toLocaleString() })}
+                  </Text>
+                )}
 
                 {showStartDatePicker && (
                   <DateTimePicker
