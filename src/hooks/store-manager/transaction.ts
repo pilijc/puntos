@@ -1,13 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useFocusEffect, useLocalSearchParams } from "expo-router";
-import { useStores } from "@/hooks/store-manager/use-stores";
+import { useManagerStoresStore } from "@/store/manager-stores-store";
 import { getTransactionsPageForStore } from "@/services/store-manager/transactions-service";
 import { useTransactionStore } from "@/store/store-manager/transaction";
 import { TypeFilter, ListItem } from "@/type/store-manager/transaction";
 import { buildListData } from "@/utils/store_manager/transaction";
 
 export function useTransactions() {
-  const { stores, loading: storesLoading } = useStores();
+  const { stores, isFetching: storesLoading } = useManagerStoresStore();
   const { storeId: storeIdParam } = useLocalSearchParams<{ storeId?: string }>();
   const didInitSelectedStore = useRef(false);
   const lastStoreIdParam = useRef<string | undefined>(undefined);
