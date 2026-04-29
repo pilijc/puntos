@@ -1,12 +1,13 @@
 import React, { useCallback } from "react";
 import { FlatList, useColorScheme, Platform } from "react-native";
+import { Image } from "expo-image";
 import { View, Text, TouchableOpacity, SafeAreaView } from "@/tw";
 import { Modal } from "@/components/modal";
 import { useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { getAllStreaksByStoreId, endStreakProgram, publishStreakProgram, activateStreakProgram, deleteStreakProgram } from "@/services/store-manager/streak-service";
 import { Streak, StreakTabs } from "@/type/store-manager/streak";
-import { Flame, Plus } from "lucide-react-native";
+import { Plus } from "lucide-react-native";
 import { StreakCard } from "@/components/store_manager/streak/streak-card";
 import { StreakCardSkeleton } from "@/components/skeleton/store_manager/streak-skeleton";
 import { useStreakViewStore } from "@/store/store-manager/streak-store";
@@ -19,7 +20,6 @@ export default function ViewStreak() {
   const { t } = useTranslation();
   const PAGE_SIZE = 6;
   const router = useRouter();
-  const insets = useSafeAreaInsets();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
   const { storeId } = useLocalSearchParams<{ storeId: string }>();
@@ -300,19 +300,28 @@ export default function ViewStreak() {
           <StreakCardSkeleton />
         </View>
       ) : tabStreaks.length === 0 ? (
-        <View className="flex-1 items-center justify-center px-8 gap-y-2">
-          <View className="w-20 h-20 rounded-xl items-center justify-center">
-            <Flame size={36} color="gray" />
-          </View>
-          <View className="items-center gap-y-1 -mt-4">
-            <Text className="text-sm font-poppins-semibold text-textMuted">
+        <View className="flex-1 pt-6 items-center">
+          <View
+            className="w-full bg-white dark:bg-neutral-800 rounded-xl border border-slate-100 dark:border-neutral-700 px-6 py-12 items-center gap-y-3"
+            style={
+              Platform.OS === "web"
+                ? { maxWidth: WEB_MAX_WIDTH, alignItems: "center", alignSelf: "center" }
+                : { alignItems: "center", alignSelf: "center" }
+            }
+          >
+            <Image
+              source={require("@/assets/images/found.png")}
+              style={{ width: 80, height: 80 }}
+              contentFit="contain"
+            />
+            <Text className="text-sm font-poppins-semibold text-slate-600 dark:text-slate-300 text-center">
               {activeTab === "active"
                 ? t("store_manager.streak.emptyActiveTitle")
                 : activeTab === "upcoming"
                 ? t("store_manager.streak.emptyUpcomingTitle")
                 : t("store_manager.streak.emptyEndedTitle")}
             </Text>
-            <Text className="text-sm font-poppins text-textMuted text-center">
+            <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500 text-center">
               {activeTab === "active"
                 ? t("store_manager.streak.emptyActiveBody")
                 : activeTab === "upcoming"
@@ -321,6 +330,7 @@ export default function ViewStreak() {
             </Text>
           </View>
         </View>
+  
       ) : (
         <FlatList
           data={tabStreaks}
