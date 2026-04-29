@@ -244,6 +244,11 @@ export default function Rewards() {
             required
             error={titleError}
           />
+          {titleError && (
+            <Text className="text-xs font-poppins text-red-500 dark:text-red-400 -mt-3">
+              {t("store_manager.rewardForm.titleRequiredInline")}
+            </Text>
+          )}
 
           <View className="flex-row gap-x-3">
             <View className="flex-1">
@@ -256,6 +261,11 @@ export default function Rewards() {
                 required
                 error={pointsCostError}
               />
+              {pointsCostError && (
+                <Text className="text-xs font-poppins text-red-500 dark:text-red-400 mt-1">
+                  {t("store_manager.rewardForm.pointsCostRequiredInline")}
+                </Text>
+              )}
             </View>
             <View className="flex-1">
               <TextField
@@ -267,6 +277,11 @@ export default function Rewards() {
                 required
                 error={stockError}
               />
+              {stockError && (
+                <Text className="text-xs font-poppins text-red-500 dark:text-red-400 mt-1">
+                  {t("store_manager.rewardForm.stockRequiredInline")}
+                </Text>
+              )}
             </View>
           </View>
 
@@ -323,6 +338,11 @@ export default function Rewards() {
                 </>
               )}
             </TouchableOpacity>
+            {imageError && (
+              <Text className="text-xs font-poppins text-red-500 dark:text-red-400">
+                {t("store_manager.rewardForm.imageRequiredInline")}
+              </Text>
+            )}
           </View>
 
           <View style={{ paddingBottom: insets.bottom }}>

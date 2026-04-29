@@ -19,7 +19,6 @@ export default function ConfigureStreaks() {
   const router = useRouter();
   const { storeId, id } = useLocalSearchParams<{ storeId?: string; id?: string }>();
   const storeIdParam = storeId ?? id;
-  const colorScheme = useColorScheme();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [percentageInput, setPercentageInput] = useState("");
   const [baseAmountInput, setBaseAmountInput] = useState("");
@@ -147,6 +146,7 @@ export default function ConfigureStreaks() {
       maxPointsPerTxn: false,
       maxPointsPerTxnErrorMessage: "",
     });
+
     getQRConfig(storeIdForDb)
       .then((cfg) => {
         if (cancelled) return;
