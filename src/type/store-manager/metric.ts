@@ -17,11 +17,22 @@ export interface ActivityChartData {
     new_members: number[];
 }
 
+export interface RecentTransaction {
+    id: string;
+    created_at: string;
+    user: {
+        name: string;
+        avatar_url?: string;
+    };
+}
+
 export interface DashboardActivityChartProps {
-    data: number[];
+    data: ActivityChartData;
     labels: string[];
     weekRange: string;
     loading?: boolean;
+    selectedMetric?: ActivityMetricType;
+    onMetricChange?: (metric: ActivityMetricType) => void;
 }
 
 

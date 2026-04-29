@@ -22,7 +22,7 @@ const isWeb = Platform.OS === "web";
 const MOBILE_HEIGHT = 100;
 
 const metricOptions: { value: ActivityMetricType, label: string }[] = [
-    { value: 'scans', label: 'Scans (current)' },
+    { value: 'scans', label: 'Total Scans' },
     { value: 'unique_visitors', label: 'Unique Visitors' },
     { value: 'redemptions', label: 'Redemptions' },
     { value: 'new_members', label: 'New Members' },

@@ -75,7 +75,6 @@ export default function StoreManagerDashboard() {
       unique_visitors: weeklyActivity.unique_visitors.slice(-7),
       redemptions: weeklyActivity.redemptions.slice(-7),
       new_members: weeklyActivity.new_members.slice(-7),
-      points_earned: weeklyActivity.points_earned.slice(-7),
     };
   }, [weeklyActivity, isWeb]);
 

@@ -95,15 +95,15 @@ export async function getRetentionData(
     // in-memory, which is O(N) on the device for large stores.
     const { data, error } = await supabase.rpc("get_retention_data", {
         store_id_input: storeId,
-    });
+    }).single();
 
     if (error || !data) {
         console.error("Error fetching retention data:", error);
         return { returningCount: 0, newCount: 0, returningPercent: 0, newPercent: 0 };
     }
 
-    const returningCount: number = data.returning_count ?? 0;
-    const newCount: number = data.new_count ?? 0;
+    const returningCount: number = (data as any).returning_count ?? 0;
+    const newCount: number = (data as any).new_count ?? 0;
     const total = returningCount + newCount;
 
     const returningPercent = total > 0 ? Math.round((returningCount / total) * 100) : 0;
@@ -191,7 +191,6 @@ export async function getRecentTransactions(
         .select(`
             id,
             created_at,
-            points_earned,
             users:user_id (
                 name,
                 avatar_url
@@ -206,7 +205,6 @@ export async function getRecentTransactions(
     return (data as any[]).map((row) => ({
         id: row.id,
         created_at: row.created_at,
-        points_earned: row.points_earned,
         user: row.users ? {
             name: row.users.name,
             avatar_url: row.users.avatar_url
