@@ -1,6 +1,6 @@
 import React, { useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { ActivityIndicator, Platform, Pressable, useColorScheme } from "react-native";
+import { ActivityIndicator, Platform, useColorScheme } from "react-native";
 import { View, Text, SafeAreaView, ScrollView } from "@/tw";
 import { useSuperAdminStoresStore } from "@/store/super-admin/super-admin-stores-store";
 import {
@@ -31,7 +31,17 @@ import {
   getSubscriptionDashboardStats,
   updateProSubscriptionAmount,
 } from "@/services/super-admin/subscription-service";
-import type { SubscriptionDashboardCompare } from "@/type/super-admin/subscription";
+import type { ManagerSubscriptionPaymentRow, SubscriptionDashboardCompare } from "@/type/super-admin/subscription";
+
+/** Strips thousands-separator commas and whitespace before converting to a number. */
+function parseAmount(raw: unknown): number | null {
+  if (typeof raw === "number" && Number.isFinite(raw)) return raw;
+  if (typeof raw === "string") {
+    const n = Number(raw.replace(/,/g, "").trim());
+    return Number.isFinite(n) ? n : null;
+  }
+  return null;
+}
 
 function FeatureLine({ text }: { text: string }) {
   return (
@@ -173,10 +183,10 @@ export default function SubscriptionConfig() {
           subscriptionState.setPublicUsers([]);
         }
       } finally {
-        subscriptionState.setLoading(false);
-      }
-    })();
-  }, []);
+      subscriptionState.setLoading(false);
+    }
+  })();
+  }, [fetchStores, translate]); // fetchStores and translate are stable refs; listed to satisfy exhaustive-deps
 
   const basicPlan = useMemo(
     () => plans.find((p) => String(p.slug ?? "").trim().toLowerCase() === "basic") ?? null,
@@ -188,20 +198,11 @@ export default function SubscriptionConfig() {
   );
 
   const hasProAmountChanges = useMemo(() => {
-    if (savedProAmount == null) return false;
-    const current = Number(proAmountInput);
-    if (!Number.isFinite(current)) return false;
+    const current = parseAmount(proAmountInput);
+    if (current === null || current <= 0) return false;
+    if (savedProAmount == null) return true; // no saved value yet — any valid entry is a change
     return current !== savedProAmount;
   }, [proAmountInput, savedProAmount]);
-
-  const toAmountNumber = useCallback((value: unknown): number | null => {
-    if (typeof value === "number" && Number.isFinite(value)) return value;
-    if (typeof value === "string") {
-      const n = Number(value);
-      return Number.isFinite(n) ? n : null;
-    }
-    return null;
-  }, []);
 
   const formatPeso = useCallback((amount: number | null) => {
     if (amount == null) return "";
@@ -221,8 +222,8 @@ export default function SubscriptionConfig() {
 
   const handleSave = async () => {
     subscriptionState.setFormError(null);
-    const amount = Number(proAmountInput);
-    if (!Number.isFinite(amount) || amount <= 0) {
+    const amount = parseAmount(proAmountInput);
+    if (amount === null || amount <= 0) {
       subscriptionState.setFormError(translate("superAdmin.subscription.formError.invalidPrice"));
       return;
     }
@@ -255,8 +256,9 @@ export default function SubscriptionConfig() {
   };
 
   const subscribedManagers = React.useMemo(() => {
+    const storesByOwner = new Map(stores.map((s) => [s.owner_id, s]));
     return subscriptionState.managerSubscriptions.map((sub) => {
-      const store = stores.find((s) => s.owner_id === sub.owner_id);
+      const store = storesByOwner.get(sub.owner_id);
       const user = subscriptionState.publicUsers[sub.owner_id];
       const name = (user?.name ?? "").trim();
       return {
@@ -311,58 +313,52 @@ export default function SubscriptionConfig() {
                   header: translate("superAdmin.subscription.ledger.paymentRef"),
                   flex: 3,
                   align: "left",
-                  render: (p: any) =>
-                    p.payment_reference
-                      ? p.payment_reference
-                      : "—",
+                  render: (p: ManagerSubscriptionPaymentRow) =>
+                    p.payment_reference ?? "—",
                 },
                 {
                   key: "amount",
                   header: translate("superAdmin.subscription.ledger.amount"),
                   flex: 2,
                   align: "center",
-                  render: (p: any) => `₱${Number(p.amount_paid ?? 0).toFixed(2)}`,
+                  render: (p: ManagerSubscriptionPaymentRow) =>
+                    `₱${parseAmount(p.amount_paid)?.toFixed(2) ?? "0.00"}`,
                 },
                 {
                   key: "billing_period_start",
                   header: translate("superAdmin.subscription.ledger.billingStart"),
                   flex: 2,
                   align: "center",
-                  render: (p: any) =>
-                    p.billing_period_start
-                      ? formatDateLong(p.billing_period_start)
-                      : "—",
+                  render: (p: ManagerSubscriptionPaymentRow) =>
+                    p.billing_period_start ? formatDateLong(p.billing_period_start) : "—",
                 },
                 {
                   key: "billing_period_end",
                   header: translate("superAdmin.subscription.ledger.billingEnd"),
                   flex: 3,
                   align: "center",
-                  render: (p: any) =>
-                    p.billing_period_end
-                      ? formatDateLong(p.billing_period_end)
-                      : "—",
+                  render: (p: ManagerSubscriptionPaymentRow) =>
+                    p.billing_period_end ? formatDateLong(p.billing_period_end) : "—",
                 },
                 {
                   key: "status",
                   header: translate("superAdmin.subscription.ledger.status"),
                   flex: 1,
                   align: "left",
-                  render: (p: any) => {
-                    const status = String(p.payment_status ?? "—").toLowerCase();
-                    let bgClass = "bg-emerald-100/60 dark:bg-emerald-900/25";
-                    let textClass = "text-emerald-700 dark:text-emerald-300";
-                    if (status === "failed") {
-                      bgClass = "bg-red-100/60 dark:bg-red-900/25";
-                      textClass = "text-red-700 dark:text-red-300";
-                    } else if (status === "paid") {
-                      bgClass = "bg-emerald-100/60 dark:bg-emerald-900/25";
-                      textClass = "text-emerald-700 dark:text-emerald-300";
-                    }
+                  render: (p: ManagerSubscriptionPaymentRow) => {
+                    const status = String(p.payment_status ?? "").toLowerCase();
+                    const bgClass =
+                      status === "failed"
+                        ? "bg-red-100/60 dark:bg-red-900/25"
+                        : "bg-emerald-100/60 dark:bg-emerald-900/25";
+                    const textClass =
+                      status === "failed"
+                        ? "text-red-700 dark:text-red-300"
+                        : "text-emerald-700 dark:text-emerald-300";
                     return (
                       <View className={`px-2 py-0.5 rounded-full ${bgClass}`}>
                         <Text className={`text-[10px] font-poppins-bold uppercase ${textClass}`}>
-                          {String(p.payment_status ?? "—")}
+                          {p.payment_status ?? "—"}
                         </Text>
                       </View>
                     );
@@ -370,14 +366,14 @@ export default function SubscriptionConfig() {
                 },
             ]}
             rows={payments}
-            rowKey={(p: any, idx: number) => String(p.id ?? `${row.owner_id}-${idx}`)}
+            rowKey={(p: ManagerSubscriptionPaymentRow, idx: number) => String(p.id ?? `${row.owner_id}-${idx}`)}
             emptyText={translate("superAdmin.subscription.ledger.empty")}
             />
           </View>
         </View>
       );
     },
-    [subscriptionState.paymentsByOwner],
+    [subscriptionState.paymentsByOwner, translate, formatDateLong],
   );
 
   const isExpanded = useCallback(
@@ -425,35 +421,28 @@ export default function SubscriptionConfig() {
         render: (row) => {
           const open = Boolean(subscriptionState.paymentsOpen[row.owner_id]);
           const loading = Boolean(subscriptionState.paymentsLoading[row.owner_id]);
+          // No inner Pressable — the Table's onRowPress handles toggle.
+          // A nested Pressable would fire both handlers and toggle open→closed immediately.
           return (
-            <Pressable
-              onPress={() => void togglePayments(row.owner_id)}
-              disabled={loading}
-              hitSlop={8}
-              accessibilityRole="button"
-              accessibilityLabel={open ? "Hide payments" : "View payments"}
-              style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
-            >
-              <View className="flex-row items-center justify-center">
-                {loading ? (
-                  <Text className="text-[12px] font-poppins-semibold text-primary">...</Text>
-                ) : open ? (
-                  <ChevronUp size={16} color={mutedIcon} />
-                ) : (
-                  <ChevronDown size={16} color={mutedIcon} />
-                )}
-              </View>
-            </Pressable>
+            <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+              {loading ? (
+                <Text className="text-[12px] font-poppins-semibold text-primary">...</Text>
+              ) : open ? (
+                <ChevronUp size={16} color={mutedIcon} />
+              ) : (
+                <ChevronDown size={16} color={mutedIcon} />
+              )}
+            </View>
           );
         },
       },
     ];
     return cols;
   }, [
-    subscribedManagers,
+    translate,
+    mutedIcon,
     subscriptionState.paymentsLoading,
     subscriptionState.paymentsOpen,
-    renderLedger,
     togglePayments,
   ]);
 
@@ -488,7 +477,7 @@ export default function SubscriptionConfig() {
                   <View className="flex-row gap-x-2">
                     <StatCard
                       icon={<TrendingUp size={24} color="#FF6600" />}
-                      label="Total collected"
+                      label={translate("superAdmin.subscription.stats.totalCollected")}
                       value={
                         dashboardStats != null
                           ? `PHP ${dashboardStats.totalAmountCollected.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
@@ -498,19 +487,19 @@ export default function SubscriptionConfig() {
                     />
                     <StatCard
                       icon={<UsersRound size={24} color="#FF6600" />}
-                      label="Active subscribers"
+                      label={translate("superAdmin.subscription.stats.activeSubscribers")}
                       value={dashboardStats != null ? String(dashboardStats.activeSubscribers) : "—"}
                       compare={dashboardStats?.activeSubscribersCompare ?? null}
                     />
                     <StatCard
                       icon={<UserRoundPlus size={24} color="#FF6600" />}
-                      label="New subscribers"
+                      label={translate("superAdmin.subscription.stats.newSubscribers")}
                       value={dashboardStats != null ? String(dashboardStats.newSubscribersThisMonth) : "—"}
                       compare={dashboardStats?.newSubscribersThisMonthCompare ?? null}
                     />
                     <StatCard
                       icon={<UserRoundMinus size={24} color="#FF6600" />}
-                      label="Cancellations"
+                      label={translate("superAdmin.subscription.stats.cancellations")}
                       value={dashboardStats != null ? String(dashboardStats.scheduledCancellations) : "—"}
                       compare={dashboardStats?.scheduledCancellationsCompare ?? null}
                     />
@@ -521,7 +510,7 @@ export default function SubscriptionConfig() {
                 <>
                   <StatCard
                     icon={<ArrowUp size={24} color="#FF6600" />}
-                    label="Total collected"
+                    label={translate("superAdmin.subscription.stats.totalCollected")}
                     value={
                       dashboardStats != null
                         ? `PHP ${dashboardStats.totalAmountCollected.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
@@ -531,19 +520,19 @@ export default function SubscriptionConfig() {
                   />
                   <StatCard
                     icon={<UsersRound size={24} color="#FF6600" />}
-                    label="Active subscribers"
+                    label={translate("superAdmin.subscription.stats.activeSubscribers")}
                     value={dashboardStats != null ? String(dashboardStats.activeSubscribers) : "—"}
                     compare={dashboardStats?.activeSubscribersCompare ?? null}
                   />
                   <StatCard
                     icon={<UserRoundPlus size={24} color="#FF6600" />}
-                    label="New subscribers (this month)"
+                    label={translate("superAdmin.subscription.stats.newSubscribers")}
                     value={dashboardStats != null ? String(dashboardStats.newSubscribersThisMonth) : "—"}
                     compare={dashboardStats?.newSubscribersThisMonthCompare ?? null}
                   />
                   <StatCard
                     icon={<UserRoundMinus size={24} color="#FF6600" />}
-                    label="Scheduled cancellations"
+                    label={translate("superAdmin.subscription.stats.cancellations")}
                     value={dashboardStats != null ? String(dashboardStats.scheduledCancellations) : "—"}
                     compare={dashboardStats?.scheduledCancellationsCompare ?? null}
                   />
@@ -592,8 +581,8 @@ export default function SubscriptionConfig() {
                     </View>
 
                     <Text className="text-xs font-poppins text-textMuted dark:text-darkTextMuted mb-2">
-                      {toAmountNumber(proAmountInput) != null
-                        ? `${translate("superAdmin.subscription.pro.builtFor")} · ${formatPeso(toAmountNumber(proAmountInput))}/month`
+                      {parseAmount(proAmountInput) != null
+                        ? `${translate("superAdmin.subscription.pro.builtFor")} · ${formatPeso(parseAmount(proAmountInput))}/month`
                         : translate("superAdmin.subscription.pro.builtFor")}
                     </Text>
 
