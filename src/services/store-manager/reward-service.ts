@@ -46,25 +46,10 @@ export async function getRewardById(storeId: string, rewardId: string): Promise<
   return (data ?? null) as Reward | null;
 }
 
-export async function createReward(reward: Reward): Promise<void> {
+export async function upsertReward(reward: Partial<Reward> & Pick<Reward, "store_id" | "title" | "description" | "points_cost" | "stock" | "image_url">): Promise<void> {
   const { error } = await supabase
     .from("store_rewards")
-    .insert({...reward,
-      is_active: reward.is_active ?? true});
-
-  if (error) throw new Error(error.message);
-}
-
-export async function updateReward(
-  storeId: string,
-  rewardId: string,
-  payload: Pick<Reward, "title" | "description" | "points_cost" | "stock" | "image_url" | "is_active">,
-): Promise<void> {
-  const { error } = await supabase
-    .from("store_rewards")
-    .update(payload)
-    .eq("id", rewardId)
-    .eq("store_id", storeId);
+    .upsert({ ...reward, is_active: reward.is_active ?? true }, { onConflict: "id" });
 
   if (error) throw new Error(error.message);
 }
