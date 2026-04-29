@@ -119,13 +119,21 @@ export async function processRedemption(
       return { success: false, message: "Failed to update redemption code status" };
     }
 
-    // Decrement reward stock
-    const { error: stockUpdateError } = await supabase
-      .from("store_rewards")
-      .update({
-        stock: verification.code!.reward.stock - 1,
-      })
-      .eq("id", verification.code!.reward_id);
+    // Decrement reward stock with server side checks
+     const {error: stockUpdateError, count: stockUpdateCount} = await supabase
+     .from("store_rewards")
+     .update({stock: verification.code!.reward.stock - 1})
+     .eq("id", verification.code!.reward_id)
+     .gt("stock", 0);
+
+     if (stockUpdateError || stockUpdateCount === 0){
+      await supabase.from("reward_redemptions").delete().eq("id", redemption.id);
+      await supabase.from("reward_redemption_codes")
+      .update({status: "active", redeemed_at: null})
+      .eq("id", verification.code.id);
+
+      return {success: false, message: "Reward out of stock"};
+     }
 
     // Calculate remaining points after redemption
     const pointsSummary = await getUserPoints(verification.code.user_id, verification.code.store_id);

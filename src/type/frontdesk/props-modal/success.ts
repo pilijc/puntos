@@ -4,4 +4,6 @@ export interface SuccessModalProps {
   onClose: () => void;
   successPoints: number;
   type?: "earn" | "redeem";
+  rewardName?: string;
+  rewardImage?: string | null;
 }

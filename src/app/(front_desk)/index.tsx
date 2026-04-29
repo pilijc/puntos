@@ -39,6 +39,8 @@ export default function FrontDeskScan() {
   const [successTransactionId, setSuccessTransactionId] = useState<string>("");
   const [successPoints, setSuccessPoints] = useState(0);
   const [successModalType, setSuccessModalType] = useState<"earn" | "redeem">("earn");
+  const [successRewardName, setSuccessRewardName] = useState<string>("");
+  const [successRewardImage, setSuccessRewardImage] = useState<string | null>(null);
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string>("");
   const [isPasswordSetupComplete, setIsPasswordSetupComplete] = useState<boolean | null>(null);
@@ -327,7 +329,7 @@ export default function FrontDeskScan() {
               }}
               onError={(message) => {
                 setModal({
-                  title: "Error",
+                  title: "Invalid",
                   message,
                   buttons: [{ label: translate("label.ok"), variant: "secondary", onPress: () => setModal(null) }],
                 });
@@ -343,7 +345,7 @@ export default function FrontDeskScan() {
                 }}
                 onError={(message) => {
                   setModal({
-                    title: "Error",
+                    title: "Invalid",
                     message,
                     buttons: [{ label: translate("label.ok"), variant: "secondary", onPress: () => setModal(null) }],
                   });
@@ -377,6 +379,8 @@ export default function FrontDeskScan() {
         onClose={handleModalClose}
         successPoints={successPoints}
         type={successModalType}
+        rewardName={successRewardName}
+        rewardImage={successRewardImage}
       />
 
       {/* ── Error Modal ── */}
@@ -412,6 +416,8 @@ export default function FrontDeskScan() {
             });
             // Show success modal
             setSuccessPoints(redemptionVerification.code.points_cost);
+            setSuccessRewardName(redemptionVerification.code.reward.title);
+            setSuccessRewardImage(redemptionVerification.code.reward.image_url);
             setSuccessModalType("redeem");
             setShowSuccessModal(true);
           }
