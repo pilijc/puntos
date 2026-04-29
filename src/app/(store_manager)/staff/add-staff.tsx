@@ -28,12 +28,16 @@ export default function AddStaff() {
     isSubmitting,
     showConfirm,
     modal,
+    nameError,
+    emailError,
     setName,
     setEmail,
     setPassword,
     setIsSubmitting,
     setShowConfirm,
     setModal,
+    setNameError,
+    setEmailError,
     resetStaff,
   } = useStaffStore();
 
@@ -64,25 +68,13 @@ export default function AddStaff() {
   const openConfirm = () => {
     const trimmedName = name.trim();
     const trimmedEmail = email.trim();
-
-    if (!trimmedName || !trimmedEmail) {
-      setModal({
-        title: t("store_manager.staffForm.validationTitle"),
-        message: t("store_manager.staffForm.nameEmailRequired"),
-        buttons: [{ label: t("label.ok"), onPress: () => setModal(null), variant: "secondary" }],
-      });
-      return;
-    }
-
     const emailPattern = /\S+@\S+\.\S+/;
-    if (!emailPattern.test(trimmedEmail)) {
-      setModal({
-        title: t("store_manager.staffForm.invalidEmailTitle"),
-        message: t("store_manager.staffForm.invalidEmailMessage"),
-        buttons: [{ label: t("label.ok"), onPress: () => setModal(null), variant: "secondary" }],
-      });
-      return;
-    }
+
+    const hasNameError = !trimmedName;
+    const hasEmailError = !trimmedEmail || !emailPattern.test(trimmedEmail);
+    setNameError(hasNameError);
+    setEmailError(hasEmailError);
+    if (hasNameError || hasEmailError) return;
 
     setShowConfirm(true);
   };
@@ -207,17 +199,19 @@ export default function AddStaff() {
                 <TextField
                   label={t("store_manager.staffForm.fullName")}
                   value={name}
-                  onChangeText={setName}
+                  onChangeText={(v) => { setName(v); if (v.trim()) setNameError(false); }}
                   placeholder={t("store_manager.staffForm.fullNamePlaceholder")}
                   required={true}
+                  error={nameError}
                 />
 
                 <TextField
                   label={t("store_manager.staffForm.email")}
                   value={email}
-                  onChangeText={setEmail}
+                  onChangeText={(v) => { setEmail(v); if (/\S+@\S+\.\S+/.test(v.trim())) setEmailError(false); }}
                   placeholder={t("store_manager.staffForm.emailPlaceholder")}
                   required={true}
+                  error={emailError}
                 />
 
                 {!isEditMode && (
