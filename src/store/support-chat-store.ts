@@ -3,6 +3,7 @@ import { create } from "zustand";
 import {
   getOrCreateSupportConversation,
   hydrateUnreadCounts,
+  listManagerConversations,
   listSupportConversations,
   loadSupportMessages,
   markSupportMessagesRead,
@@ -34,6 +35,7 @@ interface SupportChatState {
   messageChannel: RealtimeChannel | null;
 
   loadManagerConversation: (storeId: number, ownerId: string) => Promise<SupportConversation | null>;
+  loadAllManagerConversations: (ownerId: string) => Promise<void>;
   loadAdminConversations: () => Promise<void>;
   openConversation: (conversationId: string, reader?: "store" | "admin") => Promise<void>;
   sendMessage: (body: string, senderRole: SupportSenderRole) => Promise<void>;
@@ -96,6 +98,15 @@ export const useSupportChatStore = create<SupportChatState>((set, get) => ({
     }
   },
 
+  loadAllManagerConversations: async (ownerId) => {
+    try {
+      const conversations = await listManagerConversations(ownerId);
+      set({ conversations: sortConversations(conversations) });
+    } catch {
+      // non-critical — just for badge counts
+    }
+  },
+
   loadAdminConversations: async () => {
     set({ loading: true, error: null });
     try {
@@ -142,6 +153,9 @@ export const useSupportChatStore = create<SupportChatState>((set, get) => ({
             message,
           ),
         },
+        conversations: state.conversations.map((conv) =>
+          conv.id === conversationId ? { ...conv, status: "active" } : conv
+        ),
       }));
     } catch (e: any) {
       set({ error: e?.message ?? "Failed to send message" });
@@ -170,6 +184,9 @@ export const useSupportChatStore = create<SupportChatState>((set, get) => ({
             message,
           ),
         },
+        conversations: state.conversations.map((conv) =>
+          conv.id === conversationId ? { ...conv, status: "active" } : conv
+        ),
       }));
     } catch (e: any) {
       set({ error: e?.message ?? "Failed to upload attachment" });

@@ -245,22 +245,16 @@ export default function StoreManagerLayout() {
     // Bootstrap support chat so unread count shows in settings
     const stores = useManagerStoresStore((state) => state.stores);
     const fetchStores = useManagerStoresStore((state) => state.fetchStores);
-    const { loadManagerConversation, conversations, activeConversationId, subscribeInbox, subscribeMessages, cleanupRealtime } = useSupportChatStore();
+    const { loadAllManagerConversations, conversations, subscribeInbox, cleanupRealtime } = useSupportChatStore();
 
     useEffect(() => {
         fetchStores();
     }, [fetchStores]);
 
     useEffect(() => {
-        const activeStore = stores[0];
-        if (!activeStore || !currentUserId) return;
-        loadManagerConversation(activeStore.id, currentUserId);
-    }, [stores, currentUserId, loadManagerConversation]);
-
-    useEffect(() => {
-        if (!activeConversationId) return;
-        subscribeMessages(activeConversationId);
-    }, [activeConversationId, subscribeMessages]);
+        if (!currentUserId) return;
+        loadAllManagerConversations(currentUserId);
+    }, [currentUserId, loadAllManagerConversations]);
 
     useEffect(() => {
         subscribeInbox();
@@ -534,6 +528,7 @@ export default function StoreManagerLayout() {
             <Tabs.Screen name="detail/index" options={{ href: null }} />
             <Tabs.Screen name="detail/edit-details" options={{ href: null }} />
             <Tabs.Screen name="chat-support" options={{ href: null, tabBarStyle: { display: "none" } }} />
+            <Tabs.Screen name="manager-inbox" options={{ href: null, tabBarStyle: { display: "none" } }} />
         </Tabs>
     );
 }
