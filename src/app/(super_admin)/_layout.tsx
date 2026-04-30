@@ -7,7 +7,7 @@ import { PlatformPressable } from "@react-navigation/elements";
 import { useRoute } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
-import { LayoutDashboard, Users, Store, Settings, CreditCard } from 'lucide-react-native';
+import { LayoutDashboard, Users, Store, Settings, CreditCard, MessageSquare } from 'lucide-react-native';
 import { useSuperAdminLayout } from "@/hooks/super-admin/use-super-admin-layout";
 
 const WEB_SIDEBAR_WIDTH = 260;
@@ -22,7 +22,7 @@ const WEB_SIDEBAR_BORDER_LIGHT = "#F1F5F9";
 const WEB_SIDEBAR_BORDER_DARK = "#404040";
 const TAB_ACCENT = "#FF6600";
 
-type SidebarTabId = "index" | "users" | "stores" | "settings" | "subscriptions";
+type SidebarTabId = "index" | "users" | "stores" | "settings" | "subscriptions" | "inbox";
 type TabLabelPosition = "beside-icon" | "below-icon";
 
 function withTrailingSlash(pathname: string) {
@@ -46,6 +46,10 @@ function activeSidebarTabFromPath(path: string): SidebarTabId {
 
     if (p.includes("/subscriptions/") || p.endsWith("/subscriptions/")) {
         return "subscriptions";
+    }
+
+    if (p.includes("/inbox/") || p.endsWith("/inbox/")) {
+        return "inbox";
     }
 
     return "index";
@@ -337,7 +341,30 @@ export default function SuperAdminLayout() {
                 : undefined,
         }}
       />
-      <Tabs.Screen name="inbox" options={{ href: null, tabBarStyle: { display: "none" } }} />
+      <Tabs.Screen 
+        name="inbox" 
+        options={{ 
+          title: "Chat",
+          href: useSidebar ? "/(super_admin)/inbox" : null, 
+          tabBarIcon: ({ color, size }) => (
+              <MessageSquare
+                  size={useSidebar ? WEB_TAB_ICON_SIZE : size}
+                  color={useSidebar && activeTab === "inbox" ? TAB_ACCENT : color}
+              />
+          ),
+          tabBarLabel: useSidebar
+              ? ({ color, position }) => (
+                      <WebSidebarTabLabel
+                          text="Chat"
+                          navColor={color}
+                          position={position}
+                          isRowActive={activeTab === "inbox"}
+                      />
+                  )
+              : undefined,
+          tabBarStyle: useSidebar ? undefined : { display: "none" } 
+        }} 
+      />
     </Tabs>
   );
 }

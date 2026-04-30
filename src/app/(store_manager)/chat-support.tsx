@@ -8,6 +8,7 @@ import {
 import { View, Text, SafeAreaView } from "@/tw";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
+import { useIsFocused } from "@react-navigation/native";
 import { ArrowLeft, Headset } from "lucide-react-native";
 import { SharedChatArea } from "@/components/chat/shared-chat-area";
 import { supabase } from "@/supabase/supabase";
@@ -20,6 +21,7 @@ export default function ChatSupportScreen() {
   const insets = useSafeAreaInsets();
   const isWeb = Platform.OS === "web";
   const router = useRouter();
+  const isFocused = useIsFocused();
 
   // Accept storeId from route params (from manager-inbox or view-store header icon)
   const { storeId: storeIdParam, from } = useLocalSearchParams<{ storeId?: string; from?: string }>();
@@ -29,6 +31,7 @@ export default function ChatSupportScreen() {
   const storesLoading = useManagerStoresStore((state) => state.loading);
 
   const {
+    conversations,
     activeConversationId,
     messagesByConversationId,
     loading,
@@ -52,9 +55,19 @@ export default function ChatSupportScreen() {
     [storeIdParam, stores],
   );
 
-  const messages = activeConversationId
-    ? (messagesByConversationId[activeConversationId] ?? [])
-    : [];
+  // --- CROSS-STORE LEAK PREVENTION ---
+  // The SupportChatStore is a global Zustand state. When switching from Store A's chat
+  // directly to Store B's chat, `activeConversationId` still temporarily holds Store A's ID
+  // while Store B's conversation is being fetched from Supabase.
+  // We must verify that the currently loaded conversation actually belongs to the active store
+  // before rendering its messages, otherwise Store A's messages will flash on Store B's screen.
+  const activeConversation = conversations.find((c) => c.id === activeConversationId);
+  const isCorrectConversation = activeConversation?.store_id === activeStore?.id;
+
+  const messages =
+    activeConversationId && isCorrectConversation
+      ? (messagesByConversationId[activeConversationId] ?? [])
+      : [];
 
   useEffect(() => {
     let mounted = true;
@@ -80,10 +93,17 @@ export default function ChatSupportScreen() {
   }, [activeStore?.id, loadManagerConversation, ownerId]);
 
   useEffect(() => {
-    if (activeConversationId) {
+    // ============================================================================
+    // DO NOT REMOVE `isFocused` CHECK
+    // React Navigation / Expo Router keeps this chat screen mounted in the background
+    // stack when you press "Back". If `isFocused` is missing, incoming messages will
+    // trigger this hook while the screen is invisible, silently marking them as "read"
+    // and instantly clearing the red notification dots on the dashboard.
+    // ============================================================================
+    if (activeConversationId && isFocused) {
       markRead(activeConversationId, "store");
     }
-  }, [activeConversationId, markRead, messages.length]);
+  }, [activeConversationId, markRead, messages.length, isFocused]);
 
   const emptyMessage = useMemo(() => {
     if (storesLoading || loading || loadingMessages) return "Loading support chat...";
@@ -145,6 +165,7 @@ export default function ChatSupportScreen() {
         currentUserRole="store_manager"
         isWeb={isWeb}
         bottomInset={insets.bottom}
+        conversationId={activeConversationId || undefined}
       />
     </SafeAreaView>
   );

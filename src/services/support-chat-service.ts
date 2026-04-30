@@ -69,6 +69,14 @@ export async function listSupportConversations(): Promise<SupportConversation[]>
   const { data, error } = await supabase
     .from("support_conversations")
     .select(CONVERSATION_SELECT)
+    // ============================================================================
+    // DO NOT REMOVE THIS FILTER
+    // When a store is activated or a manager opens the chat screen for the first time,
+    // a "blank" conversation is created. We MUST filter out conversations where
+    // `last_message` is null, otherwise the Super Admin's inbox will be flooded
+    // with empty ghost conversations.
+    // ============================================================================
+    .not("last_message", "is", null)
     .order("last_message_at", { ascending: false, nullsFirst: false })
     .order("updated_at", { ascending: false });
 
@@ -173,6 +181,14 @@ export async function sendSupportMessage(
     .single();
 
   if (error) throw new Error(error.message);
+
+  // Automatically unarchive the conversation if a new message is sent
+  await supabase
+    .from("support_conversations")
+    .update({ status: "active" })
+    .eq("id", conversationId)
+    .eq("status", "archived");
+
   return data as SupportMessage;
 }
 
@@ -285,6 +301,14 @@ export async function sendSupportAttachmentMessage(
     .single();
 
   if (error) throw new Error(error.message);
+
+  // Automatically unarchive the conversation if a new message is sent
+  await supabase
+    .from("support_conversations")
+    .update({ status: "active" })
+    .eq("id", conversationId)
+    .eq("status", "archived");
+
   return { ...(data as SupportMessage), attachment_url: uploaded.signedUrl };
 }
 

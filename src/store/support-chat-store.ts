@@ -153,6 +153,9 @@ export const useSupportChatStore = create<SupportChatState>((set, get) => ({
             message,
           ),
         },
+        conversations: state.conversations.map((conv) =>
+          conv.id === conversationId ? { ...conv, status: "active" } : conv
+        ),
       }));
     } catch (e: any) {
       set({ error: e?.message ?? "Failed to send message" });
@@ -181,6 +184,9 @@ export const useSupportChatStore = create<SupportChatState>((set, get) => ({
             message,
           ),
         },
+        conversations: state.conversations.map((conv) =>
+          conv.id === conversationId ? { ...conv, status: "active" } : conv
+        ),
       }));
     } catch (e: any) {
       set({ error: e?.message ?? "Failed to upload attachment" });

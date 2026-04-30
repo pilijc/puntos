@@ -8,7 +8,7 @@ import {
   ScrollView as RNScrollView,
 } from "react-native";
 import { View, Text, TouchableOpacity, ScrollView, Image, SafeAreaView } from "@/tw";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
 import { getStoreById } from "@/services/store-service";
 import { getTransactionsPageForStore } from "@/services/store-manager/transactions-service";
 import { TransactionItem, type_badge } from "@/type/store-manager/transaction";
@@ -17,6 +17,8 @@ import { Modal, ModalButton } from "@/components/modal";
 import { Building2, Gift, QrCode, UsersRound, Stamp, Flame, ChevronLeft, ChevronRight, Loader2, ReceiptText, Headset } from "lucide-react-native";
 import { AppHeader } from "@/components/header";
 import { useTranslation } from "react-i18next";
+import { supabase } from "@/supabase/supabase";
+import { listManagerConversations, subscribeToSupportConversations, removeSupportChannel } from "@/services/support-chat-service";
 
 export default function ViewStore() {
   const { t } = useTranslation();
@@ -39,6 +41,46 @@ export default function ViewStore() {
     buttons: ModalButton[];
     timer?: boolean;
   } | null>(null);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useFocusEffect(
+    useCallback(() => {
+      async function checkUnread() {
+        try {
+          const { data: { user } } = await supabase.auth.getUser();
+          if (!user) return;
+          const convs = await listManagerConversations(user.id);
+          const storeConv = convs.find(c => c.store_id === storeId);
+          setUnreadCount(storeConv?.unread_store_count ?? 0);
+        } catch {
+          // ignore
+        }
+      }
+      
+      // Fetch immediately on focus
+      checkUnread();
+
+      // ============================================================================
+      // DO NOT CHANGE THIS SUBSCRIPTION TO 'support_conversations'
+      // We must listen directly to `support_messages` (* event) to make the unread
+      // badge fully real-time. If we listened to `support_conversations`, the badge 
+      // would only update if the conversation's 'status' changes (e.g. unarchived),
+      // completely missing normal back-and-forth messages.
+      // ============================================================================
+      const channel = supabase
+        .channel(`view_store_unread_${storeId}`)
+        .on(
+          "postgres_changes",
+          { event: "*", schema: "public", table: "support_messages" },
+          () => checkUnread()
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    }, [storeId])
+  );
 
   const menuItems = useMemo(
     () => [
@@ -127,7 +169,26 @@ export default function ViewStore() {
         onBackPress={() => {
           router.push("/(store_manager)/stores");
         }}
-        rightIcon={<Headset size={20} color="#FF6600" />}
+        rightIcon={
+          <View style={{ position: 'relative' }}>
+            <Headset size={20} color="#FF6600" />
+            {unreadCount > 0 && (
+              <View 
+                style={{
+                  position: 'absolute',
+                  top: -2,
+                  right: -2,
+                  width: 8,
+                  height: 8,
+                  borderRadius: 4,
+                  backgroundColor: '#EF4444',
+                  borderWidth: 1.5,
+                  borderColor: '#FFFFFF',
+                }}
+              />
+            )}
+          </View>
+        }
         onRightIconPress={() =>
           router.push(`/(store_manager)/chat-support?storeId=${storeId}&from=view-store`)
         }
