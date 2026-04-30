@@ -2,14 +2,14 @@ import { Tabs } from "expo-router";
 import { useColorScheme, Platform, Text, View, Image,} from "react-native";
 import React, { useCallback, useEffect, useState } from "react";
 import { usePathname, useRouter } from "expo-router";
-import { BottomTabBar, type BottomTabBarButtonProps, type BottomTabBarProps,} from "@react-navigation/bottom-tabs";
+import { BottomTabBar, type BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import { PlatformPressable } from "@react-navigation/elements";
-import { useRoute } from "@react-navigation/native";
+
 import { supabase } from "@/supabase/supabase";
 import { getRoleTypeForUser, getWebAdjustedHomeRoute } from "@/services/access-service";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
-import { LayoutDashboard, Store, ArrowLeftRight, Settings, CreditCard } from "lucide-react-native";
+import { LayoutDashboard, Store, ArrowLeftRight, Settings, CreditCard, PanelLeft, PanelLeftClose } from "lucide-react-native";
 import { useDeviceSession } from "@/hooks/store-manager/use-device-session";
 import { useManagerStoresStore } from "@/store/manager-stores-store";
 import { useSupportChatStore } from "@/store/support-chat-store";
@@ -152,44 +152,15 @@ function webSidebarIconColor(
     return isWeb && activeTab === thisTab ? TAB_ACCENT : navigationTint;
 }
 
-type WebStoreManagerTabBarButtonProps = BottomTabBarButtonProps & {
-    expanded: boolean;
-};
-
-function WebStoreManagerTabBarButton(props: WebStoreManagerTabBarButtonProps) {
-    const { expanded, ...buttonProps } = props;
-    const route = useRoute();
-    const pathname = usePathname();
-    const colorScheme = useColorScheme();
-    const isDark = colorScheme === "dark";
-
-    const activeTab = activeSidebarTabFromPath(withTrailingSlash(pathname));
-    const isThisRow = activeTab === route.name;
-    const activeBackground = isDark ? WEB_TAB_ACTIVE_BG_DARK : WEB_TAB_ACTIVE_BG_LIGHT;
-
-    return (
-        <View
-            style={{
-                alignSelf: "stretch",
-                ...(expanded && isThisRow ? { marginRight: WEB_TAB_ACTIVE_MARGIN_END } : null),
-            }}
-        >
-            <PlatformPressable
-                {...buttonProps}
-                hoverEffect={undefined}
-                aria-selected={isThisRow}
-                accessibilityState={{
-                    ...buttonProps.accessibilityState,
-                    selected: isThisRow,
-                }}
-                style={[
-                    buttonProps.style,
-                    !expanded ? { justifyContent: "center" } : null,
-                    isThisRow ? { backgroundColor: activeBackground } : null,
-                ]}
-            />
-        </View>
-    );
+function getTabIcon(routeName: string, color: string, size: number): React.ReactNode {
+    switch (routeName) {
+        case "index":        return <LayoutDashboard size={size} color={color} />;
+        case "stores":       return <Store            size={size} color={color} />;
+        case "transactions": return <ArrowLeftRight   size={size} color={color} />;
+        case "subscription": return <CreditCard       size={size} color={color} />;
+        case "settings":     return <Settings         size={size} color={color} />;
+        default:             return null;
+    }
 }
 
 type WebStoreManagerSidebarTabBarProps = BottomTabBarProps & {
@@ -197,21 +168,40 @@ type WebStoreManagerSidebarTabBarProps = BottomTabBarProps & {
     expanded: boolean;
     onHoverIn: () => void;
     onHoverOut: () => void;
+    onToggle: () => void;
 };
+
+// Hidden screens — not rendered as sidebar items.
+const HIDDEN_SCREENS = new Set([
+    "profile", "store/create-store", "view-store/[id]",
+    "streak/index", "streak/configure-streaks", "stamp/configure-stamp",
+    "stamp/index", "reward/index", "reward/add-rewards", "reward/view-reward",
+    "qr/index", "qr/configure-qr", "staff/index", "staff/add-staff",
+    "detail/index", "detail/edit-details", "chat-support",
+]);
 
 function WebStoreManagerSidebarTabBar({
     isDark,
     expanded,
     onHoverIn,
     onHoverOut,
-    ...props
+    onToggle,
+    state,
+    descriptors,
+    navigation,
 }: WebStoreManagerSidebarTabBarProps) {
+    const pathname = usePathname();
     const chromeBg = isDark ? "#262626" : "#FFFFFF";
     const sidebarWidth = expanded ? WEB_SIDEBAR_WIDTH : WEB_SIDEBAR_COLLAPSED_WIDTH;
+    const activeTab = activeSidebarTabFromPath(withTrailingSlash(pathname));
+    const activeBackground = isDark ? WEB_TAB_ACTIVE_BG_DARK : WEB_TAB_ACTIVE_BG_LIGHT;
+    const inactiveColor = isDark ? "#737373" : "#8B8D98";
+    const px = expanded ? WEB_SIDEBAR_INSET_X : WEB_SIDEBAR_COLLAPSED_INSET_X;
+
+    const visibleRoutes = state.routes.filter((r) => !HIDDEN_SCREENS.has(r.name));
 
     return (
         <View
-            // React Native Web forwards these pointer handlers even though native View types omit them.
             {...({ onMouseEnter: onHoverIn, onMouseLeave: onHoverOut } as any)}
             style={{
                 alignSelf: "stretch",
@@ -225,40 +215,123 @@ function WebStoreManagerSidebarTabBar({
                 borderRightColor: isDark ? WEB_SIDEBAR_BORDER_DARK : WEB_SIDEBAR_BORDER_LIGHT,
                 transitionProperty: "width, min-width, max-width",
                 transitionDuration: "180ms",
+                overflow: "hidden",
             }}
         >
+            {/* ── Brand header ── */}
             <View
                 style={{
                     flexDirection: "row",
                     alignItems: "center",
-                    justifyContent: expanded ? "flex-start" : "center",
-                    gap: 10,
-                    paddingHorizontal: expanded
-                        ? WEB_SIDEBAR_BRAND_PADDING_X
-                        : WEB_SIDEBAR_COLLAPSED_BRAND_PADDING_X,
+                    justifyContent: expanded ? "space-between" : "center",
+                    gap: 8,
+                    paddingHorizontal: expanded ? WEB_SIDEBAR_BRAND_PADDING_X : WEB_SIDEBAR_COLLAPSED_BRAND_PADDING_X,
                     paddingTop: 14,
+                    paddingBottom: 4,
                 }}
             >
-                <Image
-                    source={require("@/assets/images/puntos-icon.png")}
-                    style={{ width: 36, height: 36 }}
-                    resizeMode="contain"
-                />
-                {expanded ? (
-                    <Text
-                        style={{
-                            fontSize: 18,
-                            fontFamily: "Poppins-Bold",
-                            color: isDark ? "#FFFFFF" : TAB_ACCENT,
-                        }}
-                    >
-                        PUNTOS
-                    </Text>
-                ) : null}
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+                    <Image
+                        source={require("@/assets/images/puntos-icon.png")}
+                        style={{ width: 36, height: 36 }}
+                        resizeMode="contain"
+                    />
+                    {expanded ? (
+                        <Text style={{ fontSize: 18, fontFamily: "Poppins-Bold", color: isDark ? "#FFFFFF" : TAB_ACCENT }}>
+                            PUNTOS
+                        </Text>
+                    ) : null}
+                </View>
+                <PlatformPressable
+                    onPress={onToggle}
+                    hoverEffect={undefined}
+                    style={{ padding: 6, borderRadius: 8 }}
+                    accessibilityLabel={expanded ? "Collapse sidebar" : "Expand sidebar"}
+                    accessibilityRole="button"
+                >
+                    {expanded
+                        ? <PanelLeftClose size={18} color={isDark ? "#A3A3A3" : "#6B7280"} />
+                        : <PanelLeft      size={18} color={isDark ? "#A3A3A3" : "#6B7280"} />}
+                </PlatformPressable>
             </View>
 
-            <View style={{ flex: 1, minHeight: 0 }}>
-                <BottomTabBar {...props} />
+            {/* ── Nav items ── */}
+            <View style={{ flex: 1, paddingHorizontal: px, paddingTop: 8 }}>
+                {visibleRoutes.map((route) => {
+                    const options = descriptors[route.key]?.options ?? {};
+                    const isActive = activeTab === route.name;
+                    const iconColor = isActive ? TAB_ACCENT : inactiveColor;
+                    const badge = (options as any).tabBarBadge;
+
+                    const onPress = () => {
+                        const event = navigation.emit({
+                            type: "tabPress" as any,
+                            target: route.key,
+                            canPreventDefault: true,
+                        });
+                        if (!event.defaultPrevented) {
+                            navigation.navigate(route.name as never);
+                        }
+                    };
+
+                    return (
+                        <PlatformPressable
+                            key={route.key}
+                            onPress={onPress}
+                            hoverEffect={undefined}
+                            accessibilityRole="tab"
+                            accessibilityState={{ selected: isActive }}
+                            style={expanded ? {
+                                flexDirection: "row",
+                                alignItems: "center",
+                                borderRadius: 10,
+                                paddingHorizontal: 12,
+                                paddingVertical: 10,
+                                marginBottom: 2,
+                                backgroundColor: isActive ? activeBackground : "transparent",
+                                ...(isActive ? { marginRight: WEB_TAB_ACTIVE_MARGIN_END } : {}),
+                            } : {
+                                alignSelf: "stretch",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                borderRadius: 10,
+                                paddingVertical: 10,
+                                marginBottom: 2,
+                                backgroundColor: isActive ? activeBackground : "transparent",
+                            }}
+                        >
+                            {/* Icon + optional badge */}
+                            <View style={{ position: "relative" }}>
+                                {getTabIcon(route.name, iconColor, WEB_TAB_ICON_SIZE)}
+                                {badge != null && (
+                                    <View style={{
+                                        position: "absolute", top: -4, right: -8,
+                                        backgroundColor: TAB_ACCENT, borderRadius: 8,
+                                        minWidth: 16, height: 16,
+                                        alignItems: "center", justifyContent: "center",
+                                        paddingHorizontal: 3,
+                                    }}>
+                                        <Text style={{ color: "#fff", fontSize: 9, fontFamily: "Poppins-Medium" }}>
+                                            {badge}
+                                        </Text>
+                                    </View>
+                                )}
+                            </View>
+
+                            {/* Label (expanded only) */}
+                            {expanded && (
+                                <Text style={{
+                                    fontSize: 12,
+                                    fontFamily: "Poppins-Medium",
+                                    marginStart: 10,
+                                    color: isActive ? TAB_ACCENT : inactiveColor,
+                                }}>
+                                    {String(options.title ?? route.name)}
+                                </Text>
+                            )}
+                        </PlatformPressable>
+                    );
+                })}
             </View>
         </View>
     );
@@ -344,6 +417,7 @@ export default function StoreManagerLayout() {
                 expanded={webSidebarExpanded}
                 onHoverIn={() => setWebSidebarExpanded(true)}
                 onHoverOut={() => setWebSidebarExpanded(false)}
+                onToggle={() => setWebSidebarExpanded((v) => !v)}
             />
         ),
         [isDark, webSidebarExpanded],
@@ -356,29 +430,9 @@ export default function StoreManagerLayout() {
                 headerShown: false,
                 tabBarPosition: isWeb ? "left" : "bottom",
                 tabBarLabelPosition: isWeb ? "beside-icon" : undefined,
-                tabBarShowLabel: isWeb ? webSidebarExpanded : true,
                 ...(isWeb ? { animation: "none" as const } : {}),
-                tabBarActiveBackgroundColor: isWeb
-                    ? isDark
-                        ? WEB_TAB_ACTIVE_BG_DARK
-                        : WEB_TAB_ACTIVE_BG_LIGHT
-                    : undefined,
-                tabBarInactiveBackgroundColor: isWeb ? "transparent" : undefined,
                 tabBarStyle: isWeb
-                    ? {
-                          backgroundColor: "transparent",
-                          borderTopWidth: 0,
-                          borderRightWidth: 0,
-                          flex: 1,
-                          width: "100%",
-                          elevation: 0,
-                          paddingLeft: webSidebarExpanded
-                              ? WEB_SIDEBAR_INSET_X
-                              : WEB_SIDEBAR_COLLAPSED_INSET_X,
-                          paddingRight: webSidebarExpanded
-                              ? WEB_SIDEBAR_INSET_X
-                              : WEB_SIDEBAR_COLLAPSED_INSET_X,
-                      }
+                    ? { display: "none" }
                     : {
                           backgroundColor: isDark ? "#262626" : "#FFFFFF",
                           borderTopColor: isDark ? "#404040" : "#e5e5e5",
@@ -388,17 +442,6 @@ export default function StoreManagerLayout() {
                       },
                 tabBarActiveTintColor: TAB_ACCENT,
                 tabBarInactiveTintColor: isDark ? "#737373" : "#8B8D98",
-                tabBarButton: isWeb
-                    ? (btnProps) => (
-                          <WebStoreManagerTabBarButton
-                              {...btnProps}
-                              expanded={webSidebarExpanded}
-                          />
-                      )
-                    : undefined,
-                tabBarItemStyle: isWeb
-                    ? { alignSelf: "stretch", width: "100%" }
-                    : undefined,
                 tabBarLabelStyle: {
                     fontSize: isWeb ? 12 : 10,
                     fontFamily: "Poppins-Medium",
