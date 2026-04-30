@@ -1,5 +1,6 @@
 import { supabase } from "@/supabase/supabase";
 import { AdminStoreRow } from "../store-service";
+import { parsePostGISLocation } from "@/utils/location";
 
 export async function getAllStoresForAdmin(page = 1, pageSize = 50): Promise<AdminStoreRow[]> {
     const from = (page - 1) * pageSize;
@@ -8,7 +9,7 @@ export async function getAllStoresForAdmin(page = 1, pageSize = 50): Promise<Adm
     const { data, error } = await supabase
         .from("stores")
         .select(`
-            id, name, type, address, latitude, longitude, radius,
+            id, name, type, address, location, radius, timezone,
             status, is_active, logo, owner_id,
             phone, registration_number, business_document_image, store_pictures, store_open, store_close, created_at, approved_at,
             users!owner_id ( name )
@@ -18,11 +19,16 @@ export async function getAllStoresForAdmin(page = 1, pageSize = 50): Promise<Adm
 
     if (error) throw new Error(error.message);
 
-    return (data ?? []).map((row: any) => ({
-        ...row,
-        owner_name: row.users?.name ?? null,
-        users: undefined,
-    })) as AdminStoreRow[];
+    return (data ?? []).map((row: any) => {
+        const parsed = parsePostGISLocation(row.location);
+        return {
+            ...row,
+            latitude: parsed.latitude,
+            longitude: parsed.longitude,
+            owner_name: row.users?.name ?? null,
+            users: undefined,
+        };
+    }) as AdminStoreRow[];
 }
 
 export async function updateAdminStoreStatus(
@@ -35,7 +41,7 @@ export async function updateAdminStoreStatus(
         .update({ status, is_active: isActive })
         .eq("id", storeId)
         .select(`
-            id, name, type, address, latitude, longitude, radius,
+            id, name, type, address, location, radius, timezone,
             status, is_active, logo, owner_id,
             phone, registration_number, business_document_image, store_pictures, store_open, store_close, created_at, approved_at,
             users!owner_id ( name )
@@ -44,8 +50,12 @@ export async function updateAdminStoreStatus(
 
     if (error) throw new Error(error.message);
     
+    const parsed = parsePostGISLocation(data.location);
+
     return {
         ...data,
+        latitude: parsed.latitude,
+        longitude: parsed.longitude,
         owner_name: (data as any).users?.name ?? null,
         users: undefined,
     } as AdminStoreRow;

@@ -4,6 +4,7 @@ export interface Store {
   address: string;
   latitude: number;
   longitude: number;
+  location?: any;
   is_active: boolean;
   logo: string | null;
   banner: string | null;

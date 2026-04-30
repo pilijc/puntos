@@ -1,4 +1,5 @@
 import { supabase } from "@/supabase/supabase";
+import { formatPostGISLocation, parsePostGISLocation } from "@/utils/location";
 
 
 export interface CreateStorePayload {
@@ -26,6 +27,7 @@ export interface StoreRow {
     address: string | null;
     latitude: number | null;
     longitude: number | null;
+    location?: any;
     radius: number | null;
     status: string;
     is_active: boolean;
@@ -75,8 +77,9 @@ export async function createStore(payload: CreateStorePayload): Promise<StoreRow
             name: payload.name,
             type: payload.type,
             address: payload.address,
-            latitude: payload.latitude ?? null,
-            longitude: payload.longitude ?? null,
+            location: (payload.latitude != null && payload.longitude != null) 
+              ? formatPostGISLocation(payload.latitude, payload.longitude) 
+              : null,
             timezone: payload.timezone ?? null,
             phone: payload.phone ?? null,
             registration_number: payload.registrationNumber ?? null,
@@ -127,7 +130,13 @@ export async function createStore(payload: CreateStorePayload): Promise<StoreRow
         });
     }
 
-    return store as StoreRow;
+    const parsedLocation = parsePostGISLocation((store as any).location);
+
+    return {
+      ...store,
+      latitude: parsedLocation.latitude,
+      longitude: parsedLocation.longitude,
+    } as StoreRow;
 }
 
 export async function getMyStores(ownerId: string): Promise<StoreRow[]> {
@@ -167,7 +176,14 @@ export async function getMyStores(ownerId: string): Promise<StoreRow[]> {
         return true;
     });
 
-    return unique;
+    return unique.map((s) => {
+        const parsed = parsePostGISLocation((s as any).location);
+        return {
+            ...s,
+            latitude: parsed.latitude,
+            longitude: parsed.longitude,
+        };
+    });
 }
 
 export async function updateStoreLogo(storeId: number, imageUrl: string): Promise<void> {
@@ -208,7 +224,7 @@ export async function getAllStores(): Promise<AdminStoreRow[]> {
     const { data, error } = await supabase
         .from("stores")
         .select(`
-            id, name, type, address, latitude, longitude, radius,
+            id, name, type, address, location, radius,
             status, is_active, logo, owner_id,
             phone, registration_number, business_document_image, store_pictures, store_open, store_close, created_at, approved_at,
             users!owner_id ( name )
@@ -217,11 +233,16 @@ export async function getAllStores(): Promise<AdminStoreRow[]> {
 
     if (error) throw new Error(error.message);
 
-    return (data ?? []).map((row: any) => ({
-        ...row,
-        owner_name: row.users?.name ?? null,
-        users: undefined,
-    })) as AdminStoreRow[];
+    return (data ?? []).map((row: any) => {
+        const parsed = parsePostGISLocation(row.location);
+        return {
+            ...row,
+            latitude: parsed.latitude,
+            longitude: parsed.longitude,
+            owner_name: row.users?.name ?? null,
+            users: undefined,
+        };
+    }) as AdminStoreRow[];
 }
 
 export async function updateStoreStatus(
@@ -245,7 +266,14 @@ export async function getStores() {
 				.eq("status", "active")
 				.eq("is_active", true);
     if (error) throw new Error(error.message);
-    return data;
+    return data.map((row: any) => {
+        const parsed = parsePostGISLocation(row.location);
+        return {
+            ...row,
+            latitude: parsed.latitude,
+            longitude: parsed.longitude,
+        };
+    });
     } catch (error) {
         throw error;
     }
@@ -258,7 +286,15 @@ export async function getStoreById(storeId: number) {
 				.select("*")
 				.eq("id", storeId);
 			if (error) throw new Error(error.message);
-			return data?.[0] ?? null;
+			const store = data?.[0] ?? null;
+			if (!store) return null;
+			
+			const parsed = parsePostGISLocation(store.location);
+			return {
+			    ...store,
+			    latitude: parsed.latitude,
+			    longitude: parsed.longitude,
+			};
     } catch (error) {
         throw error;
     }

@@ -1,4 +1,5 @@
 import { supabase } from "@/supabase/supabase";
+import { parsePostGISLocation } from "@/utils/location";
 
 export interface RecordStreakResult {
   alreadyRecorded: boolean;
@@ -147,6 +148,7 @@ export interface UserStreak {
     is_active: boolean;
     latitude?: number | null;
     longitude?: number | null;
+    location?: any;
     radius?: number | null;
   };
 }
@@ -174,8 +176,7 @@ const USER_STREAK_SELECT = `
     address,
     status,
     is_active,
-    latitude,
-    longitude,
+    location,
     radius
   )
 `;
@@ -254,7 +255,18 @@ export async function getUserStreaks(userId: string): Promise<UserStreak[]> {
       return isActiveProgram || isUserCompleted;
     });
 
-    return validStreaks;
+    // Map location for the valid streaks
+    return validStreaks.map(streak => {
+      const parsed = parsePostGISLocation(streak.stores?.location);
+      return {
+        ...streak,
+        stores: streak.stores ? {
+          ...streak.stores,
+          latitude: parsed.latitude,
+          longitude: parsed.longitude,
+        } : undefined
+      } as UserStreak;
+    });
   } catch (error) {
     console.error("Exception fetching user streaks:", error);
     return [];
@@ -277,7 +289,7 @@ export async function getUserStreakByStore(
           .order("updated_at", { ascending: false }),
         supabase
           .from("stores")
-          .select("id, name, logo, address, status, is_active, latitude, longitude, radius")
+          .select("id, name, logo, address, status, is_active, location, radius")
           .eq("id", storeId)
           .maybeSingle(),
       ]);
@@ -305,7 +317,15 @@ export async function getUserStreakByStore(
       streaks[0];
 
     if (activeProgramStreak) {
-      return activeProgramStreak;
+      const parsed = parsePostGISLocation(activeProgramStreak.stores?.location);
+      return {
+        ...activeProgramStreak,
+        stores: activeProgramStreak.stores ? {
+          ...activeProgramStreak.stores,
+          latitude: parsed.latitude,
+          longitude: parsed.longitude,
+        } : undefined
+      } as UserStreak;
     }
 
     if (!store || store.status !== "active" || !store.is_active) {
@@ -348,6 +368,8 @@ export async function getUserStreakByStore(
       return null;
     }
 
+    const parsedStoreLocation = parsePostGISLocation(store.location);
+
     return buildVirtualUserStreak(
       {
         id: Number(store.id),
@@ -356,8 +378,8 @@ export async function getUserStreakByStore(
         address: store.address,
         status: store.status,
         is_active: store.is_active,
-        latitude: store.latitude,
-        longitude: store.longitude,
+        latitude: parsedStoreLocation.latitude,
+        longitude: parsedStoreLocation.longitude,
         radius: store.radius,
       },
       programRow as UserStreakProgram,

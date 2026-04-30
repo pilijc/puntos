@@ -1,26 +1,45 @@
 import { supabase } from "@/supabase/supabase";
 import { StoreDetail } from "@/type/store-manager/detail";
+import { formatPostGISLocation, parsePostGISLocation } from "@/utils/location";
 
 export async function getStoreDetail(storeId: string): Promise<StoreDetail> {
   const { data, error } = await supabase
     .from("stores")
     .select(
-      "id, name, type, logo, store_pictures, phone, registration_number, business_document_image, store_open, store_close, address, latitude, longitude, radius, status, is_active"
+      "id, name, type, logo, store_pictures, phone, registration_number, business_document_image, store_open, store_close, address, location, radius, status, is_active"
     )
     .eq("id", storeId)
     .single();
 
   if (error) throw new Error(error.message);
-  return data as StoreDetail;
+
+  const parsedLocation = parsePostGISLocation(data.location);
+
+  return {
+    ...data,
+    latitude: parsedLocation.latitude,
+    longitude: parsedLocation.longitude,
+  } as StoreDetail;
 }
 
 export async function updateStoreDetail(
   storeId: string,
   payload: Partial<Omit<StoreDetail, "id">>
 ): Promise<void> {
+  const updatePayload: any = { ...payload, updated_at: new Date().toISOString() };
+
+  // Convert latitude/longitude to PostGIS location format if both are provided
+  if ('latitude' in updatePayload && 'longitude' in updatePayload) {
+    if (updatePayload.latitude != null && updatePayload.longitude != null) {
+      updatePayload.location = formatPostGISLocation(updatePayload.latitude, updatePayload.longitude);
+    }
+    delete updatePayload.latitude;
+    delete updatePayload.longitude;
+  }
+
   const { error } = await supabase
     .from("stores")
-    .update({ ...payload, updated_at: new Date().toISOString() })
+    .update(updatePayload)
     .eq("id", storeId);
 
   if (error) throw new Error(error.message);

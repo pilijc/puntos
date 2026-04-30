@@ -3,9 +3,7 @@ import { LayoutAnimation, Platform, UIManager } from 'react-native';
 import { View, Text, TouchableOpacity } from "@/tw";
 import { ChevronUp, ChevronDown } from 'lucide-react-native';
 
-if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
-    UIManager.setLayoutAnimationEnabledExperimental(true);
-}
+
 
 interface BaseAccordionCardProps {
     title: string;
