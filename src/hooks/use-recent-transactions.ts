@@ -5,6 +5,12 @@ export interface RecentScan {
   points: number;
   timestamp: Date;
   amount: number;
+  type?: "earned" | "redeemed";
+  method?: "qr" | "voucher";
+  customerName?: string;
+  id?: string;
+  rewardTitle?: string;
+  pointsCost?: number;
 }
 
 interface RecentTransactionsState {
@@ -22,34 +28,69 @@ export const useRecentTransactions = create<RecentTransactionsState>((set, get) 
   hasFetchedOnce: false,
 
   fetchTransactions: async (storeId: number) => {
-    // Prevent UI flashes if already fetched locally
-    set({ isLoading: !get().hasFetchedOnce });
+     set({ isLoading: !get().hasFetchedOnce });
 
     try {
-      // Get start of today in local timezone
-      const startOfToday = new Date();
+       const startOfToday = new Date();
       startOfToday.setHours(0, 0, 0, 0);
 
-      const { data: purchases, error } = await supabase
+       const { data: purchases, error: purchaseError } = await supabase
         .from("purchases")
-        .select("amount, points_earned, created_at")
+        .select("id, amount, points_earned, created_at, metadata, fontdesk_session_id")
         .eq("store_id", storeId)
         .gte("created_at", startOfToday.toISOString())
-        .order("created_at", { ascending: false }); // Removed limit(5) so history can see all records
+        .order("created_at", { ascending: false });
 
-      if (error) {
-        console.error("Error fetching recent transactions:", error);
-        set({ recentScans: [], isLoading: false, hasFetchedOnce: true });
-        return;
+       const { data: redemptions, error: redemptionError } = await supabase
+        .from("reward_redemptions")
+        .select(`
+          id,
+          points_spent,
+          created_at,
+          users!user_id(name),
+          store_rewards!reward_id(title, points_cost)
+        `)
+        .eq("store_id", storeId)
+        .gte("created_at", startOfToday.toISOString())
+        .order("created_at", { ascending: false });
+
+      if (purchaseError) {
+        console.error("Error fetching recent transactions:", purchaseError);
+      }
+      if (redemptionError) {
+        console.error("Error fetching redemptions:", redemptionError);
       }
 
-      const formattedScans: RecentScan[] = (purchases || []).map((p) => ({
-        amount: Number(p.amount),
-        points: Number(p.points_earned),
-        timestamp: new Date(p.created_at),
+       const formattedPurchases: RecentScan[] = (purchases || []).map((p: any) => {
+        const isVoucher = p.metadata && p.metadata.transaction_type === "voucher";
+        return {
+          id: p.id,
+          amount: Number(p.amount),
+          points: Number(p.points_earned),
+          timestamp: new Date(p.created_at),
+          type: "earned",
+          method: isVoucher ? "voucher" : "qr",
+        };
+      });
+
+       const formattedRedemptions: RecentScan[] = (redemptions || []).map((r: any) => ({
+        id: r.id,
+        amount: r.store_rewards?.points_cost || 0,
+        points: Number(r.points_spent),
+        timestamp: new Date(r.created_at),
+        type: "redeemed",
+        method: "voucher",
+        customerName: r.users?.name || "Customer",
+        rewardTitle: r.store_rewards?.title || "Reward",
+        pointsCost: r.store_rewards?.points_cost || 0,
       }));
 
-      set({ recentScans: formattedScans, isLoading: false, hasFetchedOnce: true });
+ 
+      const allTransactions = [...formattedPurchases, ...formattedRedemptions].sort(
+        (a, b) => b.timestamp.getTime() - a.timestamp.getTime()
+      );
+
+       set({ recentScans: allTransactions.slice(0, 5), isLoading: false, hasFetchedOnce: true });
     } catch (e) {
       console.error("Exception fetching recent transactions:", e);
       set({ recentScans: [], isLoading: false, hasFetchedOnce: true });
@@ -59,8 +100,7 @@ export const useRecentTransactions = create<RecentTransactionsState>((set, get) 
   addScan: (scan: RecentScan) => {
     set((state) => {
       const updatedScans = [scan, ...state.recentScans];
-      // Keep up to 200 to prevent unbounded memory growth if left open indefinitely
-      return { recentScans: updatedScans.slice(0, 200) };
+       return { recentScans: updatedScans.slice(0, 200) };
     });
   },
 

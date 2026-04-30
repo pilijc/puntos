@@ -28,21 +28,19 @@ export async function getRewards(options: {
   let query = supabase
     .from("store_rewards")
     .select("*")
-    .eq("is_active", true);
+    .eq("is_active", true)
+    .gt("stock", 0);
 
   if (storeId) {
     query = query.eq("store_id", storeId);
   }
 
-  // Backend Sorting Logic 
+  // Backend Sorting Logic
   if (sortBy === "points") {
     query = query.order("points_cost", { ascending: pointsOrder === "asc" });
   } else if (sortBy === "newest") {
     query = query.order("created_at", { ascending: false });
   } else {
-    // Default to "popular" - if there's no popularity column, fallback to created_at
-    // Check database.txt: store_rewards does NOT have a popularity column.
-    // We can use created_at as a fallback or if we add a popularity column later.
     query = query.order("created_at", { ascending: false });
   }
 

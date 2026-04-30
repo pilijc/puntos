@@ -1,8 +1,18 @@
 import { RedemptionCode } from "../user/reward-redemption";
 
+export interface RedemptionCodeWithReward extends RedemptionCode {
+  reward: {
+    title: string;
+    description: string;
+    image_url: string | null;
+    points_cost: number;
+    stock: number;
+  };
+}
+
 export interface RedemptionVerificationResult {
     success: boolean;
-    code?: RedemptionCode;
+    code?: RedemptionCodeWithReward;
     message?: string;
 }
 

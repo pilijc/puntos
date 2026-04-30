@@ -233,10 +233,10 @@ export function RedemptionDrawer({
                 {/* COMBINED QR & REWARD CARD */}
                 <View className="mx-4 mb-4 bg-white rounded-3xl p-3 pb-4 border border-neutral-100">
 
-                  {/* Content Container covering QR & Timer */}
+                  {/* covering QR & Timer */}
                   <View className="bg-[#F3F4F6] dark:bg-darkBackgroundCard rounded-2xl p-4 items-center mb-4">
-                    {/* White box for just the QR code and text code */}
-                    <View className="bg-white dark:bg-neutral-800 py-3 px-4 rounded-xl mb-3 items-center shadow-sm shadow-black/5 self-center">
+                    {/* White box */}
+                    <View className="bg-white dark:bg-neutral-800 py-3 px-4 rounded-xl mb-3 items-center shadow-sm shadow-black/5 self-center relative">
                       <View className="mb-2 items-center justify-center">
                         {status === "loading" ? (
                           <View className="w-[140px] h-[140px] items-center justify-center">
@@ -244,14 +244,27 @@ export function RedemptionDrawer({
                               Generating...
                             </Text>
                           </View>
+                        ): status === "expired" || timeRemaining === 0 ? (
+                          <View className="w-[140px] h-[140px] items-center justify-center bg-gray-100 dark:bg-gray-800 rounded-lg">
+                            <Text className="text-red-500 text-sm font-poppins-bold text-center px-4"> 
+                            Code Expired
+                            </Text>
+                          </View>
                         ) : (
-                          <QRCode value={getQRCodeData(redemptionCode?.code || "")} size={140} />
+                            <QRCode value={getQRCodeData(redemptionCode?.code || "")} size={140}/>
                         )}
                       </View>
 
                       <Text className="text-2xl font-poppins-bold tracking-[0.15em] text-neutral-900 dark:text-white">
-                        {status === "loading" ? "..." : formattedCode}
+                        {status === "loading" ? "..." : status === "expired" || timeRemaining === 0 ? "EXPIRED" : formattedCode}
                       </Text>
+
+                      {/* Expired overlay */}
+                      {(status === "expired" || timeRemaining === 0) && (
+                        <View className="absolute inset-0 bg-black/50 rounded-xl items-center justify-center">
+                          <X size={32} color="#EF4444" />
+                        </View>
+                      )}
                     </View>
 
                     <Text className="text-[11px] text-neutral-500 dark:text-neutral-400 font-poppins mt-1">Time left to redeem</Text>
@@ -261,9 +274,12 @@ export function RedemptionDrawer({
                         ? "Redeemed!"
                         : status === "loading"
                           ? "--:--"
-                          : formatTime(timeRemaining)}
+                          : status === "expired" || timeRemaining === 0
+                            ? "0:00"
+                            : formatTime(timeRemaining)}
                     </Text>
                   </View>
+
 
                   {/* Reward Section (Image on right) */}
                   <View className="flex-row items-center justify-between pt-2">
@@ -340,8 +356,8 @@ export function RedemptionDrawer({
         <Modal
           visible={showSuccessModal}
           onClose={handleSuccessClose}
-          title="Success"
-          message="Redemption has been successfully cancelled."
+          title="Cancelled"
+          message="Your code is cancelled."
           buttons={[
             { label: "Got it", onPress: handleSuccessClose, variant: "primary" },
           ]}
