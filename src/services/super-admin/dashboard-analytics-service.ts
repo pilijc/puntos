@@ -1,3 +1,5 @@
+import { getEffectiveStatus, STORE_STATUS_CONFIG } from "@/type/super-admin/user";
+
 export type Timeframe = "today" | "7d" | "1m";
 
 export const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -151,14 +153,11 @@ export function getDetailItems(items: DashboardRecord[], dateKeys: string[], pre
 
   const list = allFiltered.slice(0, limit).map(({ item, date }, idx) => {
     const status =
-      prefix === "Store" && item?.status
-        ? String(item.status)
-            .split("_")
-            .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
-            .join(" ")
+      prefix === "Store"
+        ? STORE_STATUS_CONFIG[getEffectiveStatus(item as any)].label
         : item?.blocked === true ||
           item?.role === 0 ||
-          String(item?.status ?? "").toLowerCase() === "inactive"
+          ["inactive", "blocked"].includes(String(item?.status ?? "").toLowerCase())
         ? "Inactive"
         : "Active";
     const dateLabel = date
