@@ -15,8 +15,11 @@ import { useManagerStoresStore } from "@/store/manager-stores-store";
 import { useSupportChatStore } from "@/store/support-chat-store";
 
 const WEB_SIDEBAR_WIDTH = 260;
+const WEB_SIDEBAR_COLLAPSED_WIDTH = 76;
 const WEB_SIDEBAR_INSET_X = 16;
+const WEB_SIDEBAR_COLLAPSED_INSET_X = 10;
 const WEB_SIDEBAR_BRAND_PADDING_X = 24;
+const WEB_SIDEBAR_COLLAPSED_BRAND_PADDING_X = 18;
 const WEB_TAB_ICON_SIZE = 18;
 const WEB_TAB_ACTIVE_MARGIN_END = 100;
 const WEB_TAB_ACTIVE_BG_LIGHT = "#F3F4F6";
@@ -149,7 +152,12 @@ function webSidebarIconColor(
     return isWeb && activeTab === thisTab ? TAB_ACCENT : navigationTint;
 }
 
-function WebStoreManagerTabBarButton(props: BottomTabBarButtonProps) {
+type WebStoreManagerTabBarButtonProps = BottomTabBarButtonProps & {
+    expanded: boolean;
+};
+
+function WebStoreManagerTabBarButton(props: WebStoreManagerTabBarButtonProps) {
+    const { expanded, ...buttonProps } = props;
     const route = useRoute();
     const pathname = usePathname();
     const colorScheme = useColorScheme();
@@ -163,48 +171,71 @@ function WebStoreManagerTabBarButton(props: BottomTabBarButtonProps) {
         <View
             style={{
                 alignSelf: "stretch",
-                ...(isThisRow ? { marginRight: WEB_TAB_ACTIVE_MARGIN_END } : null),
+                ...(expanded && isThisRow ? { marginRight: WEB_TAB_ACTIVE_MARGIN_END } : null),
             }}
         >
             <PlatformPressable
-                {...props}
+                {...buttonProps}
                 hoverEffect={undefined}
                 aria-selected={isThisRow}
                 accessibilityState={{
-                    ...props.accessibilityState,
+                    ...buttonProps.accessibilityState,
                     selected: isThisRow,
                 }}
-                style={[props.style, isThisRow ? { backgroundColor: activeBackground } : null]}
+                style={[
+                    buttonProps.style,
+                    !expanded ? { justifyContent: "center" } : null,
+                    isThisRow ? { backgroundColor: activeBackground } : null,
+                ]}
             />
         </View>
     );
 }
 
-type WebStoreManagerSidebarTabBarProps = BottomTabBarProps & { isDark: boolean };
+type WebStoreManagerSidebarTabBarProps = BottomTabBarProps & {
+    isDark: boolean;
+    expanded: boolean;
+    onHoverIn: () => void;
+    onHoverOut: () => void;
+};
 
-function WebStoreManagerSidebarTabBar({ isDark, ...props }: WebStoreManagerSidebarTabBarProps) {
+function WebStoreManagerSidebarTabBar({
+    isDark,
+    expanded,
+    onHoverIn,
+    onHoverOut,
+    ...props
+}: WebStoreManagerSidebarTabBarProps) {
     const chromeBg = isDark ? "#262626" : "#FFFFFF";
+    const sidebarWidth = expanded ? WEB_SIDEBAR_WIDTH : WEB_SIDEBAR_COLLAPSED_WIDTH;
 
     return (
         <View
+            // React Native Web forwards these pointer handlers even though native View types omit them.
+            {...({ onMouseEnter: onHoverIn, onMouseLeave: onHoverOut } as any)}
             style={{
                 alignSelf: "stretch",
-                width: WEB_SIDEBAR_WIDTH,
-                minWidth: WEB_SIDEBAR_WIDTH,
-                maxWidth: WEB_SIDEBAR_WIDTH,
+                width: sidebarWidth,
+                minWidth: sidebarWidth,
+                maxWidth: sidebarWidth,
                 flex: 1,
                 flexDirection: "column",
                 backgroundColor: chromeBg,
                 borderRightWidth: 1,
                 borderRightColor: isDark ? WEB_SIDEBAR_BORDER_DARK : WEB_SIDEBAR_BORDER_LIGHT,
+                transitionProperty: "width, min-width, max-width",
+                transitionDuration: "180ms",
             }}
         >
             <View
                 style={{
                     flexDirection: "row",
                     alignItems: "center",
+                    justifyContent: expanded ? "flex-start" : "center",
                     gap: 10,
-                    paddingHorizontal: WEB_SIDEBAR_BRAND_PADDING_X,
+                    paddingHorizontal: expanded
+                        ? WEB_SIDEBAR_BRAND_PADDING_X
+                        : WEB_SIDEBAR_COLLAPSED_BRAND_PADDING_X,
                     paddingTop: 14,
                 }}
             >
@@ -213,15 +244,17 @@ function WebStoreManagerSidebarTabBar({ isDark, ...props }: WebStoreManagerSideb
                     style={{ width: 36, height: 36 }}
                     resizeMode="contain"
                 />
-                <Text
-                    style={{
-                        fontSize: 18,
-                        fontFamily: "Poppins-Bold",
-                        color: isDark ? "#FFFFFF" : TAB_ACCENT,
-                    }}
-                >
-                    PUNTOS
-                </Text>
+                {expanded ? (
+                    <Text
+                        style={{
+                            fontSize: 18,
+                            fontFamily: "Poppins-Bold",
+                            color: isDark ? "#FFFFFF" : TAB_ACCENT,
+                        }}
+                    >
+                        PUNTOS
+                    </Text>
+                ) : null}
             </View>
 
             <View style={{ flex: 1, minHeight: 0 }}>
@@ -240,6 +273,7 @@ export default function StoreManagerLayout() {
     const pathname = usePathname();
     const path = withTrailingSlash(pathname);
     const [currentUserId, setCurrentUserId] = useState<string | undefined>(undefined);
+    const [webSidebarExpanded, setWebSidebarExpanded] = useState(false);
     const { } = useDeviceSession(currentUserId);
 
     // Bootstrap support chat so unread count shows in settings
@@ -304,9 +338,15 @@ export default function StoreManagerLayout() {
 
     const renderWebTabBar = useCallback(
         (barProps: BottomTabBarProps) => (
-            <WebStoreManagerSidebarTabBar {...barProps} isDark={isDark} />
+            <WebStoreManagerSidebarTabBar
+                {...barProps}
+                isDark={isDark}
+                expanded={webSidebarExpanded}
+                onHoverIn={() => setWebSidebarExpanded(true)}
+                onHoverOut={() => setWebSidebarExpanded(false)}
+            />
         ),
-        [isDark],
+        [isDark, webSidebarExpanded],
     );
 
     return (
@@ -316,6 +356,7 @@ export default function StoreManagerLayout() {
                 headerShown: false,
                 tabBarPosition: isWeb ? "left" : "bottom",
                 tabBarLabelPosition: isWeb ? "beside-icon" : undefined,
+                tabBarShowLabel: isWeb ? webSidebarExpanded : true,
                 ...(isWeb ? { animation: "none" as const } : {}),
                 tabBarActiveBackgroundColor: isWeb
                     ? isDark
@@ -331,8 +372,12 @@ export default function StoreManagerLayout() {
                           flex: 1,
                           width: "100%",
                           elevation: 0,
-                          paddingLeft: WEB_SIDEBAR_INSET_X,
-                          paddingRight: WEB_SIDEBAR_INSET_X,
+                          paddingLeft: webSidebarExpanded
+                              ? WEB_SIDEBAR_INSET_X
+                              : WEB_SIDEBAR_COLLAPSED_INSET_X,
+                          paddingRight: webSidebarExpanded
+                              ? WEB_SIDEBAR_INSET_X
+                              : WEB_SIDEBAR_COLLAPSED_INSET_X,
                       }
                     : {
                           backgroundColor: isDark ? "#262626" : "#FFFFFF",
@@ -344,7 +389,12 @@ export default function StoreManagerLayout() {
                 tabBarActiveTintColor: TAB_ACCENT,
                 tabBarInactiveTintColor: isDark ? "#737373" : "#8B8D98",
                 tabBarButton: isWeb
-                    ? (btnProps) => <WebStoreManagerTabBarButton {...btnProps} />
+                    ? (btnProps) => (
+                          <WebStoreManagerTabBarButton
+                              {...btnProps}
+                              expanded={webSidebarExpanded}
+                          />
+                      )
                     : undefined,
                 tabBarItemStyle: isWeb
                     ? { alignSelf: "stretch", width: "100%" }
@@ -375,14 +425,14 @@ export default function StoreManagerLayout() {
                   
                     ),
                     tabBarLabel: isWeb
-                        ? ({ color, position }) => (
+                        ? ({ color, position }) => webSidebarExpanded ? (
                               <WebSidebarTabLabel
                                   text={translate("label.dashboard")}
                                   navColor={color}
                                   position={position}
                                   isRowActive={activeTab === "index"}
                               />
-                          )
+                          ) : null
                         : undefined,
                 }}
             />
@@ -403,14 +453,16 @@ export default function StoreManagerLayout() {
                         />
                     ),
                     tabBarLabel: ({ color, position }) => (
-                        <StoresTabLabel
-                            text={translate("store_manager.tabs.stores")}
-                            navColor={color}
-                            position={position}
-                            isRowActive={storesRowActive}
-                            isWeb={isWeb}
-                            insetBottom={insets.bottom}
-                        />
+                        isWeb && !webSidebarExpanded ? null : (
+                            <StoresTabLabel
+                                text={translate("store_manager.tabs.stores")}
+                                navColor={color}
+                                position={position}
+                                isRowActive={storesRowActive}
+                                isWeb={isWeb}
+                                insetBottom={insets.bottom}
+                            />
+                        )
                     ),
                 }}
             />
@@ -436,14 +488,14 @@ export default function StoreManagerLayout() {
                         />
                     ),
                     tabBarLabel: isWeb
-                        ? ({ color, position }) => (
+                        ? ({ color, position }) => webSidebarExpanded ? (
                               <WebSidebarTabLabel
                                   text={translate("label.transactions")}
                                   navColor={color}
                                   position={position}
                                   isRowActive={activeTab === "transactions"}
                               />
-                          )
+                          ) : null
                         : undefined,
                 }}
             />
@@ -470,14 +522,14 @@ export default function StoreManagerLayout() {
                     ),
           
                     tabBarLabel: isWeb
-                        ? ({ color, position }) => (
+                        ? ({ color, position }) => webSidebarExpanded ? (
                               <WebSidebarTabLabel
                                   text={translate("store_manager.tabs.subscription")}
                                   navColor={color}
                                   position={position}
                                   isRowActive={activeTab === "subscription"}
                               />
-                          )
+                          ) : null
                         : undefined,
                 }}
             />
@@ -506,14 +558,14 @@ export default function StoreManagerLayout() {
                     ),
               
                     tabBarLabel: isWeb
-                        ? ({ color, position }) => (
+                        ? ({ color, position }) => webSidebarExpanded ? (
                               <WebSidebarTabLabel
                                   text={translate("label.settings")}
                                   navColor={color}
                                   position={position}
                                   isRowActive={activeTab === "settings"}
                               />
-                          )
+                          ) : null
                         : undefined,
                 }}
             />
