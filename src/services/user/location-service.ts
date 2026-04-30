@@ -13,18 +13,43 @@ export interface LocationPermissionStatus {
   granted: boolean;
   canAskAgain: boolean;
   status: Location.PermissionStatus;
+  accuracy?: 'fine' | 'coarse' | 'none';
+  scope?: 'whenInUse' | 'always' | 'none';
 }
+
+const FRESH_LOCATION_TIMEOUT_MS = 10000;
+const WATCH_LOCATION_TIMEOUT_MS = 8000;
+const LAST_KNOWN_MAX_AGE_MS = 2 * 60 * 1000;
+
+const toLocationPermissionStatus = (
+  response: Location.LocationPermissionResponse
+): LocationPermissionStatus => ({
+  granted: response.status === Location.PermissionStatus.GRANTED,
+  canAskAgain: response.canAskAgain,
+  status: response.status,
+  accuracy: response.android?.accuracy,
+  scope: response.ios?.scope,
+});
 
 /**
  * Calculate distance between two coordinates using Haversine formula
  * Returns distance in METRES
  */
 export function calculateDistance(
-  lat1: number,
-  lon1: number,
-  lat2: number,
-  lon2: number
+  lat1: number | null | undefined,
+  lon1: number | null | undefined,
+  lat2: number | null | undefined,
+  lon2: number | null | undefined
 ): number {
+  if (
+    !isValidLatitude(lat1) ||
+    !isValidLongitude(lon1) ||
+    !isValidLatitude(lat2) ||
+    !isValidLongitude(lon2)
+  ) {
+    return Number.POSITIVE_INFINITY;
+  }
+
   const R = 6371000; // Earth's radius in metres
   const dLat = toRadians(lat2 - lat1);
   const dLon = toRadians(lon2 - lon1);
@@ -34,7 +59,8 @@ export function calculateDistance(
     Math.cos(toRadians(lat2)) *
     Math.sin(dLon / 2) *
     Math.sin(dLon / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  const clampedA = Math.min(1, Math.max(0, a));
+  const c = 2 * Math.atan2(Math.sqrt(clampedA), Math.sqrt(1 - clampedA));
   return R * c;
 }
 
@@ -42,17 +68,21 @@ function toRadians(degrees: number): number {
   return degrees * (Math.PI / 180);
 }
 
+function isValidLatitude(value: number | null | undefined): boolean {
+  return typeof value === 'number' && Number.isFinite(value) && value >= -90 && value <= 90;
+}
+
+function isValidLongitude(value: number | null | undefined): boolean {
+  return typeof value === 'number' && Number.isFinite(value) && value >= -180 && value <= 180;
+}
+
 /**
  * Request location permissions
  */
 export async function requestLocationPermission(): Promise<LocationPermissionStatus> {
   try {
-    const { status } = await Location.requestForegroundPermissionsAsync();
-    return {
-      granted: status === 'granted',
-      canAskAgain: status !== 'denied',
-      status,
-    };
+    const response = await Location.requestForegroundPermissionsAsync();
+    return toLocationPermissionStatus(response);
   } catch (error) {
     console.error('[LocationService] Error requesting permission:', error);
     return {
@@ -68,12 +98,8 @@ export async function requestLocationPermission(): Promise<LocationPermissionSta
  */
 export async function checkLocationPermission(): Promise<LocationPermissionStatus> {
   try {
-    const { status } = await Location.getForegroundPermissionsAsync();
-    return {
-      granted: status === 'granted',
-      canAskAgain: status !== 'denied',
-      status,
-    };
+    const response = await Location.getForegroundPermissionsAsync();
+    return toLocationPermissionStatus(response);
   } catch (error) {
     console.error('[LocationService] Error checking permission:', error);
     return {
@@ -84,17 +110,83 @@ export async function checkLocationPermission(): Promise<LocationPermissionStatu
   }
 }
 
-const toUserLocation = (loc: { coords: { latitude: number; longitude: number; accuracy?: number } }): UserLocation => ({
+const toUserLocation = (loc: { coords: { latitude: number; longitude: number; accuracy?: number | null } }): UserLocation => ({
   latitude: loc.coords.latitude,
   longitude: loc.coords.longitude,
-  accuracy: loc.coords.accuracy || undefined,
+  accuracy: loc.coords.accuracy ?? undefined,
 });
+
+async function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T | null> {
+  let timeout: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      promise,
+      new Promise<null>((resolve) => {
+        timeout = setTimeout(() => resolve(null), timeoutMs);
+      }),
+    ]);
+  } finally {
+    if (timeout) clearTimeout(timeout);
+  }
+}
+
+async function getRecentLastKnownLocation(): Promise<UserLocation | null> {
+  const lastKnown = await Location.getLastKnownPositionAsync({
+    maxAge: LAST_KNOWN_MAX_AGE_MS,
+  });
+
+  return lastKnown ? toUserLocation(lastKnown) : null;
+}
+
+async function watchForSingleLocation(): Promise<UserLocation | null> {
+  let subscription: Location.LocationSubscription | null = null;
+
+  return new Promise<UserLocation | null>((resolve) => {
+    let settled = false;
+    const finish = (location: UserLocation | null) => {
+      if (settled) return;
+      settled = true;
+      if (subscription) subscription.remove();
+      resolve(location);
+    };
+
+    const timeout = setTimeout(() => finish(null), WATCH_LOCATION_TIMEOUT_MS);
+
+    Location.watchPositionAsync(
+      {
+        accuracy: Location.Accuracy.High,
+        timeInterval: 1000,
+        distanceInterval: 0,
+        mayShowUserSettingsDialog: true,
+      },
+      (position) => {
+        clearTimeout(timeout);
+        finish(toUserLocation(position));
+      },
+      () => {
+        clearTimeout(timeout);
+        finish(null);
+      }
+    )
+      .then((sub) => {
+        if (settled) {
+          sub.remove();
+          return;
+        }
+        subscription = sub;
+      })
+      .catch(() => {
+        clearTimeout(timeout);
+        finish(null);
+      });
+  });
+}
 
 /**
  * Get current user location.
- * On Android (including emulator): use last-known first with no accuracy filter (emulator mock
- * can have large accuracy value and was being rejected). Then try "current" with a long
- * max age so the Fused API can return the same cached mock. Never throws; returns null if unavailable.
+ * Foreground permission is enough for this path. We prefer a fresh high-accuracy fix so Android
+ * "Allow only while using the app" and "Ask every time" sessions do not keep using stale cached
+ * coordinates. A recent last-known point is used only as a fallback.
  */
 export async function getCurrentLocation(): Promise<UserLocation | null> {
   try {
@@ -104,63 +196,28 @@ export async function getCurrentLocation(): Promise<UserLocation | null> {
       if (!reqStatus.granted) return null;
     }
 
+    const current = await withTimeout(
+      Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.High,
+        mayShowUserSettingsDialog: Platform.OS === 'android',
+      }).catch(() => null),
+      FRESH_LOCATION_TIMEOUT_MS
+    );
+
+    if (current) return toUserLocation(current);
+
+    const recentLastKnown = await getRecentLastKnownLocation();
+    if (recentLastKnown) return recentLastKnown;
+
     if (Platform.OS === 'android') {
-      // 1) No options: accept any age/accuracy so emulator mock isn't filtered out
-      const lastKnown = await Location.getLastKnownPositionAsync({});
-      if (lastKnown) return toUserLocation(lastKnown);
-
-      // 2) getCurrentPositionAsync often returns null on emulator; try with long max age for cached
-      try {
-        const location = await Location.getCurrentPositionAsync({
-          accuracy: Location.Accuracy.Lowest,
-          timeInterval: 300000,
-          mayShowUserSettingsDialog: false,
-        });
-        return toUserLocation(location);
-      } catch {
-        /* continue to 3 */
-      }
-
-      // 3) Emulator may only deliver via watch (like Maps); request one update then unsubscribe
-      try {
-        let subscription: Location.LocationSubscription | null = null;
-        const loc = await new Promise<UserLocation | null>((resolve) => {
-          const timeout = setTimeout(() => {
-            if (subscription) subscription.remove();
-            resolve(null);
-          }, 6000);
-          Location.watchPositionAsync(
-            { accuracy: Location.Accuracy.Lowest, timeInterval: 1000, distanceInterval: 0 },
-            (position) => {
-              clearTimeout(timeout);
-              if (subscription) subscription.remove();
-              resolve(toUserLocation(position));
-            },
-            () => {
-              clearTimeout(timeout);
-              if (subscription) subscription.remove();
-              resolve(null);
-            }
-          ).then((sub) => {
-            subscription = sub;
-          }).catch(() => resolve(null));
-        });
-        if (loc) return loc;
-      } catch {
-        /* ignore */
-      }
-
-      return null;
+      const watchedLocation = await watchForSingleLocation();
+      if (watchedLocation) return watchedLocation;
     }
 
-    const location = await Location.getCurrentPositionAsync({
-      accuracy: Location.Accuracy.Balanced,
-    });
-    return toUserLocation(location);
+    return null;
   } catch {
     try {
-      const lastKnown = await Location.getLastKnownPositionAsync({});
-      if (lastKnown) return toUserLocation(lastKnown);
+      return await getRecentLastKnownLocation();
     } catch {
       /* ignore */
     }
@@ -189,15 +246,15 @@ export async function watchLocation(
 
     const subscription = await Location.watchPositionAsync(
       {
-        accuracy: options?.accuracy || Location.Accuracy.Highest,
-        timeInterval: options?.timeInterval || 2000,
-        distanceInterval: options?.distanceInterval || 1,
+        accuracy: options?.accuracy ?? Location.Accuracy.Highest,
+        timeInterval: options?.timeInterval ?? 2000,
+        distanceInterval: options?.distanceInterval ?? 1,
       },
       (location) => {
         callback({
           latitude: location.coords.latitude,
           longitude: location.coords.longitude,
-          accuracy: location.coords.accuracy || undefined,
+          accuracy: location.coords.accuracy ?? undefined,
         });
       }
     );
@@ -213,10 +270,10 @@ export async function watchLocation(
  * Determine if a store is "nearby" based on distance threshold (default: 30 metres)
  */
 export function isStoreNearby(
-  userLat: number,
-  userLon: number,
-  storeLat: number,
-  storeLon: number,
+  userLat: number | null | undefined,
+  userLon: number | null | undefined,
+  storeLat: number | null | undefined,
+  storeLon: number | null | undefined,
   thresholdMeters: number = 30
 ): boolean {
   const distance = calculateDistance(userLat, userLon, storeLat, storeLon);

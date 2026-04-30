@@ -1,5 +1,6 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import * as Location from 'expo-location';
+import { AppState, AppStateStatus } from 'react-native';
 import { getCurrentLocation, checkLocationPermission, requestLocationPermission, UserLocation, LocationPermissionStatus } from '@/services/user/location-service';
 import { useLocationStore } from '@/store/user/location-store';
 
@@ -8,7 +9,7 @@ export interface UseLocationReturn {
     permissionStatus: LocationPermissionStatus;
     loading: boolean;
     error: string | null;
-    requestPermission: () => Promise<void>;
+    requestPermission: () => Promise<LocationPermissionStatus>;
     refreshLocation: () => Promise<void>;
 }
 
@@ -46,10 +47,21 @@ export function useLocation(userId?: string, syncEnabled: boolean = false) {
         const status = await requestLocationPermission();
         setPermissionStatus(status);
         if (status.granted) await refresh();
+        return status;
     };
 
     useEffect(() => {
         checkStatus();
+
+        const subscription = AppState.addEventListener('change', (nextAppState: AppStateStatus) => {
+            if (nextAppState === 'active') {
+                checkStatus();
+            }
+        });
+
+        return () => {
+            subscription.remove();
+        };
     }, []);
 
     return {
