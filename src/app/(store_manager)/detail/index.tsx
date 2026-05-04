@@ -1,6 +1,6 @@
-import React, { useMemo } from "react";
-import { RefreshControl, Platform } from "react-native";
-import { View, Text, ScrollView, SafeAreaView } from "@/tw";
+import React, { useMemo, useRef, useState } from "react";
+import { RefreshControl, Platform, ScrollView as RNScrollView } from "react-native";
+import { View, Text, ScrollView, SafeAreaView, TouchableOpacity } from "@/tw";
 import { useRouter } from "expo-router";
 import { Image } from "expo-image";
 import Mapbox, { Camera, MapView, MarkerView } from "@rnmapbox/maps";
@@ -9,8 +9,9 @@ import { useStoreDetail } from "@/hooks/store-manager/use-detail";
 import { DetailsSkeleton } from "@/components/skeleton/store_manager/details-skeleton";
 import { OptionsMenu } from "@/components/options";
 import { AppHeader } from "@/components/header";
+import { Modal } from "@/components/modal";
 import { shouldUseInteractiveMapbox } from "@/utils/mapbox-platform";
-import { Building2, Clock, File, MapPin, MapPinOff, Pencil, Phone } from "lucide-react-native";
+import { Building2, ChevronLeft, ChevronRight, File, MapPin, MapPinOff, Pencil } from "lucide-react-native";
 import { useTranslation } from "react-i18next";
 import { store_types_options } from "@/type/store-manager/store";
 import { STATUS_CONFIG } from "@/type/store-manager/detail";
@@ -36,11 +37,9 @@ export default function DetailIndex() {
     pictures,
     hasCoords,
     isDark,
-    mapWidth,
   } = useStoreDetail();
 
-  const statusKey =
-    detail?.status && detail.status in STATUS_CONFIG ? detail.status : "pending_review";
+  const statusKey = detail?.status && detail.status in STATUS_CONFIG ? detail.status : "pending_review";
   const statusCfg = STATUS_CONFIG[statusKey] ?? STATUS_CONFIG.pending_review;
   const statusLabel = t(`store_manager.detail.status.${statusKey}`);
 
@@ -57,6 +56,20 @@ export default function DetailIndex() {
     t("store_manager.detail.open", { time: time ? formatTime(time) : notSet });
   const closeLine = (time: string | null | undefined) =>
     t("store_manager.detail.close", { time: time ? formatTime(time) : notSet });
+
+  const [docPreviewVisible, setDocPreviewVisible] = useState(false);
+
+  const bannerScrollRef = useRef<RNScrollView>(null);
+  const [bannerIndex, setBannerIndex] = useState(0);
+  const [bannerWidth, setBannerWidth] = useState(0);
+  const validPictures = pictures.filter(Boolean) as string[];
+
+  const scrollToIndex = (idx: number) => {
+    if (!bannerScrollRef.current || bannerWidth === 0) return;
+    const clamped = Math.max(0, Math.min(idx, validPictures.length - 1));
+    setBannerIndex(clamped);
+    bannerScrollRef.current.scrollTo({ x: clamped * bannerWidth, animated: true });
+  };
 
   return (
     <SafeAreaView edges={["top"]} className="flex-1 bg-backgroundMuted dark:bg-neutral-900">
@@ -96,162 +109,261 @@ export default function DetailIndex() {
             />
           }
         >
-          {Platform.OS === "web" ? (
-            <View className="items-center px-4">
-              <View className="w-full max-w-4xl bg-white dark:bg-neutral-800 rounded-xl border border-slate-100 dark:border-neutral-700 overflow-hidden">
-                <View className="flex-row items-center p-4 gap-x-3">
-                  {detail?.logo ? (
-                    <Image
-                      source={{ uri: detail.logo }}
-                      style={{ width: 60, height: 60, borderRadius: 14 }}
-                      contentFit="cover"
-                      transition={200}
-                    />
-                  ) : (
-                    <View
-                      style={{ width: 60, height: 60, borderRadius: 14 }}
-                      className="bg-orange-50 dark:bg-orange-950 border-2 border-dashed border-orange-200 dark:border-orange-800 items-center justify-center"
+          <View style={Platform.OS === "web" ? { alignItems: "center", paddingHorizontal: 16 } : undefined}>
+            <View
+              className="gap-y-3"
+              style={Platform.OS === "web" ? { width: "100%", maxWidth: 860 } : undefined}
+            >
+
+              <View className="bg-white dark:bg-neutral-800 rounded-xl border border-slate-100 dark:border-neutral-700">
+                <View
+                  className="rounded-t-xl overflow-hidden"
+                  style={{ height: 160 }}
+                  onLayout={(e) => setBannerWidth(e.nativeEvent.layout.width)}
+                >
+                  <RNScrollView
+                    ref={bannerScrollRef}
+                    horizontal
+                    pagingEnabled
+                    scrollEnabled={false}
+                    showsHorizontalScrollIndicator={false}
+                    style={{ height: 160 }}
+                    onMomentumScrollEnd={(e) => {
+                      if (bannerWidth > 0) {
+                        setBannerIndex(Math.round(e.nativeEvent.contentOffset.x / bannerWidth));
+                      }
+                    }}
+                  >
+                    {validPictures.length > 0 ? (
+                      validPictures.map((pic, idx) => (
+                        <Image
+                          key={idx}
+                          source={{ uri: pic }}
+                          style={{ width: bannerWidth || "100%", height: 160 }}
+                          contentFit="cover"
+                          transition={200}
+                        />
+                      ))
+                    ) : (
+                      <View style={{ width: bannerWidth || 320, height: 160 }} className="bg-slate-100 dark:bg-neutral-700" />
+                    )}
+                  </RNScrollView>
+
+                  {validPictures.length > 1 && bannerIndex > 0 && (
+                    <TouchableOpacity
+                      onPress={() => scrollToIndex(bannerIndex - 1)}
+                      activeOpacity={0.8}
+                      className="absolute left-2 top-0 bottom-0 justify-center"
                     >
-                      <Building2 size={24} color="text-primary" />
-                    </View>
+                      <View className="w-8 h-8 rounded-full bg-black/40 items-center justify-center">
+                        <ChevronLeft size={18} color="#fff" />
+                      </View>
+                    </TouchableOpacity>
                   )}
 
-                  <View className="flex-1 items-start justify-start">
-                    <View className="flex-row items-center w-full">
-                      <Text className="text-base font-poppins-bold text-slate-800 dark:text-slate-100 text-left mr-2">
-                        {detail?.name || t("store_manager.detail.unnamedStore")}
-                      </Text>
-                      <View className={`flex-row items-center gap-x-1 px-2.5 py-1 rounded-full ${statusCfg.bg}`}>
-                        <View className={`w-1.5 h-1.5 rounded-full ${statusCfg.dot}`} />
-                        <Text className={`text-xs font-poppins-semibold ${statusCfg.text}`}>{statusLabel}</Text>
+                  {validPictures.length > 1 && bannerIndex < validPictures.length - 1 && (
+                    <TouchableOpacity
+                      onPress={() => scrollToIndex(bannerIndex + 1)}
+                      activeOpacity={0.8}
+                      className="absolute right-2 top-0 bottom-0 justify-center"
+                    >
+                      <View className="w-8 h-8 rounded-full bg-black/40 items-center justify-center">
+                        <ChevronRight size={18} color="#fff" />
                       </View>
-                    </View>
-                    <Text className="text-xs font-poppins-semibold text-textMuted dark:text-slate-500 mt-0.5">
-                      {storeTypeLabel}
-                    </Text>
-                  </View>
+                    </TouchableOpacity>
+                  )}
                 </View>
+    
 
-                <View className="px-4 pb-4">
-                  <View className="flex-row gap-x-6">
-                    <View className="flex-1 gap-y-2">
-                      <View className="flex-row items-center gap-x-2">
-                        <Phone size={12} color={isDark ? "#A3A3A3" : "#475569"} />
-                        <Text className="text-xs font-poppins-semibold text-textSecondary dark:text-slate-500">
-                          {detail?.phone ?? notSet}
-                        </Text>
-                      </View>
-                      <View className="flex-row items-center gap-x-2">
-                        <File size={12} color={isDark ? "#A3A3A3" : "#475569"} />
-                        <Text className="text-xs font-poppins-semibold text-textSecondary dark:text-slate-500">
-                          {detail?.registration_number ?? notSet}
-                        </Text>
-                      </View>
-                    </View>
-
-                    <View className="flex-1 gap-y-2">
-                      <View className="flex-row items-center gap-x-2">
-                        <Clock size={12} color={isDark ? "#A3A3A3" : "#475569"} />
-                        <Text className="text-xs font-poppins-semibold text-textSecondary dark:text-slate-500">
-                          {openLine(detail?.store_open)}
-                        </Text>
-                      </View>
-                      <View className="flex-row items-center gap-x-2">
-                        <Clock size={12} color={isDark ? "#A3A3A3" : "#475569"} />
-                        <Text className="text-xs font-poppins-semibold text-textSecondary dark:text-slate-500">
-                          {closeLine(detail?.store_close)}
-                        </Text>
-                      </View>
-                    </View>
-                  </View>
-                </View>
-
-                <View className="flex-row gap-x-2 p-4">
-                  {[0, 1, 2].map((i) => {
-                    const uri = pictures[i];
-                    return uri ? (
+                <View
+                  className={`flex-row items-center ${
+                    Platform.OS === "web" ? "px-4" : Platform.OS === "android" ? "px-2" : ""
+                  } pb-2`}
+                  style={{ marginTop: -28 }}
+                >
+                  <View
+                    className="rounded-full overflow-hidden bg-white dark:bg-neutral-800"
+                    style={{
+                      width: 100,
+                      height: 100,
+                      borderWidth: 6,
+                      borderColor: isDark ? "#262626" : "#ffffff",
+                    }}
+                  >
+                    {detail?.logo ? (
                       <Image
-                        key={i}
-                        source={{ uri }}
-                        style={{ flex: 1, height: 80, borderRadius: 10 }}
+                        source={{ uri: detail.logo }}
+                        style={{ width: 100, height: 100 }}
                         contentFit="cover"
                         transition={200}
                       />
                     ) : (
-                      <View key={i} style={{ flex: 1, height: 80 }} />
-                    );
-                  })}
+                      <View className="flex-1 bg-orange-50 dark:bg-orange-950 items-center justify-center">
+                        <Building2 size={24} color="#FF6600" />
+                      </View>
+                    )}
+                  </View>
+
+                  <View className="flex-1 ml-3 pb-1 pt-6">
+                    <View className="flex-row items-center flex-wrap gap-x-2">
+                      <Text className="text-base font-poppins-bold text-slate-800 dark:text-slate-100">
+                        {detail?.name || t("store_manager.detail.unnamedStore")}
+                      </Text>
+                      <View className={`flex-row items-center gap-x-1 px-2 py-0.5 rounded-full ${statusCfg.bg}`}>
+                        <View className={`w-1.5 h-1.5 rounded-full ${statusCfg.dot}`} />
+                        <Text className={`text-xs font-poppins-semibold ${statusCfg.text}`}>{statusLabel}</Text>
+                      </View>
+                    </View>
+
+                    <View className="flex-row items-center flex-wrap mt-0.5 gap-x-1">
+                      <Text className="text-xs font-poppins text-textMuted dark:text-slate-500">{storeTypeLabel}</Text>
+                      {detail?.phone && (
+                        <>
+                          <View className="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-600" />
+                          <Text className="text-xs font-poppins text-textMuted dark:text-slate-500">{detail.phone}</Text>
+                        </>
+                      )}
+                      {detail?.registration_number && (
+                        <>
+                          <View className="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-600" />
+                          <Text className="text-xs font-poppins text-textMuted dark:text-slate-500">{detail.registration_number}</Text>
+                        </>
+                      )}
+                    </View>
+
+                    {(detail?.store_open || detail?.store_close) && (
+                      <View className="flex-row items-center flex-wrap mt-0.5 gap-x-1">
+                        {detail?.store_open && (
+                          <Text className="text-xs font-poppins text-textMuted dark:text-slate-500">{openLine(detail.store_open)}</Text>
+                        )}
+                        {detail?.store_open && detail?.store_close && (
+                          <View className="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-600" />
+                        )}
+                        {detail?.store_close && (
+                          <Text className="text-xs font-poppins text-textMuted dark:text-slate-500">{closeLine(detail.store_close)}</Text>
+                        )}
+                      </View>
+                    )}
+                  </View>
                 </View>
 
                 {detail?.business_document_image && (
                   <>
-                    <View className="h-px bg-slate-100 dark:bg-neutral-700 mx-4" />
-                    <View className="px-4 py-3.5">
-                      <Text className="text-xs font-poppins text-textMuted dark:text-slate-500 mb-2">
+                    <View
+                      className="py-3 gap-y-2"
+                      style={{
+                        paddingLeft: Platform.OS === "web" ? 24 : 16,
+                        paddingRight: Platform.OS === "web" ? 24 : 16
+                      }}
+                    >
+                      <Text className="text-xs font-poppins-semibold text-textSecondary dark:text-textSecondary mb-1">
                         {t("label.businessDocument")}
                       </Text>
+                      <TouchableOpacity
+                        activeOpacity={0.75}
+                        onPress={() => setDocPreviewVisible(true)}
+                        className="flex-row items-center gap-x-3 border border-slate-100 dark:border-neutral-700 rounded-xl px-3 py-2.5"
+                      >
+                        <View className="w-10 h-10 rounded-xl bg-primary/10 dark:bg-primary/10 items-center justify-center">
+                          <File size={18} color="#FF6600" />
+                        </View>
+                        <View className="flex-1">
+                          <Text className="text-xs font-poppins-semibold text-textPrimary dark:text-slate-100" numberOfLines={1}>
+                            {detail.business_document_image.split("/").pop() ?? t("label.businessDocument")}
+                          </Text>
+                          <Text className="text-[10px] font-poppins text-textMuted dark:text-slate-500 mt-0.5">
+                            {t("label.tapToView", "Tap to view")}
+                          </Text>
+                        </View>
+                      </TouchableOpacity>
+                    </View>
+
+                    <Modal
+                      visible={docPreviewVisible}
+                      onClose={() => setDocPreviewVisible(false)}
+                      title={t("label.businessDocument")}
+                      showCloseButton
+                      dismissOnBackdrop
+                    >
                       <Image
                         source={{ uri: detail.business_document_image }}
-                        style={{ width: 64, height: 64, borderRadius: 10 }}
+                        style={{ width: "100%", aspectRatio: 3 / 4, borderRadius: 8 }}
                         contentFit="contain"
                         transition={200}
                       />
-                    </View>
+                    </Modal>
                   </>
                 )}
 
-                <View className="h-px bg-slate-100 dark:bg-neutral-700 mx-4" />
-                <View className="px-4 pb-4 py-4 gap-y-4">
-                  <Text className="text-xs font-poppins text-textMuted dark:text-slate-500">{t("label.location")}</Text>
+                <View className="px-6 py-3 gap-y-2">
+                  <Text className="text-xs font-poppins-semibold text-textSecondary dark:text-textSecondary mb-1">
+                    {t("label.location")}
+                  </Text>
                   {detail?.address && (
-                    <Text className="text-xs font-poppins-semibold text-textPrimary dark:text-textPrimary -mt-4">
-                      {detail.address}
-                    </Text>
+                    <View className="flex-row items-start gap-x-1">
+                      <MapPin size={12} color={isDark ? "#A3A3A3" : "#475569"} style={{ marginTop: 1 }} />
+                      <Text className="text-xs font-poppins-semibold text-textSecondary dark:text-slate-400 flex-1">
+                        {detail.address}
+                      </Text>
+                    </View>
                   )}
+                </View>
 
+                <View
+                  className={`mb-4 rounded-xl overflow-hidden ${Platform.OS === "web" ? "mx-6" : "mx-4"}`}
+                  style={{ height: 180 }}
+                >
                   {hasCoords ? (
                     shouldUseInteractiveMapbox() ? (
-                      <View>
-                        <View
-                          style={{
-                            height: 180,
-                            borderRadius: 10,
-                            overflow: "hidden",
-                            width: "100%",
-                          }}
-                        >
-                          <MapView
-                            style={{ width: "100%", height: 180 }}
-                            styleURL={isDark ? "mapbox://styles/mapbox/navigation-night-v1" : "mapbox://styles/mapbox/streets-v12"}
-                            scrollEnabled={false}
-                            zoomEnabled={false}
-                            rotateEnabled={false}
-                            pitchEnabled={false}
-                            attributionEnabled={false}
-                            logoEnabled={false}
+                      <MapView
+                        style={{ width: "100%", height: 180 }}
+                        styleURL={isDark ? "mapbox://styles/mapbox/navigation-night-v1" : "mapbox://styles/mapbox/streets-v12"}
+                        scrollEnabled={false}
+                        zoomEnabled={false}
+                        rotateEnabled={false}
+                        pitchEnabled={false}
+                        attributionEnabled={false}
+                        logoEnabled={false}
+                      >
+                        <Camera
+                          centerCoordinate={[Number(detail!.longitude), Number(detail!.latitude)]}
+                          zoomLevel={15}
+                          animationMode="none"
+                        />
+                        {Platform.OS === "web" ? (
+                          <MarkerView
+                            coordinate={[Number(detail!.longitude), Number(detail!.latitude)]}
+                            anchor={{ x: 0.5, y: 1 }}
                           >
-                            <Camera
-                              centerCoordinate={[Number(detail.longitude), Number(detail.latitude)]}
-                              zoomLevel={15}
-                              animationMode="none"
-                            />
-                            <MarkerView
-                              coordinate={[Number(detail.longitude), Number(detail.latitude)]}
-                              anchor={{ x: 0.5, y: 1 }}
+                            <View className="items-center justify-end">
+                              <Image
+                                source={require("../../../assets/images/markers/default.png")}
+                                style={{ width: 36, height: 36 }}
+                                contentFit="contain"
+                              />
+                            </View>
+                          </MarkerView>
+                        ) : (
+                          <>
+                            <Mapbox.Images images={{ default: require("../../../assets/images/markers/default.png") }} />
+                            <Mapbox.ShapeSource
+                              id="storePin"
+                              shape={{
+                                type: "Feature",
+                                geometry: { type: "Point", coordinates: [Number(detail!.longitude), Number(detail!.latitude)] },
+                                properties: { icon: "default" },
+                              }}
                             >
-                              <View className="items-center justify-end">
-                                <Image
-                                  source={require("../../../assets/images/markers/default.png")}
-                                  style={{ width: 36, height: 36 }}
-                                  contentFit="contain"
-                                />
-                              </View>
-                            </MarkerView>
-                          </MapView>
-                        </View>
-                      </View>
+                              <Mapbox.SymbolLayer
+                                id="storePinLayer"
+                                style={{ iconImage: ["get", "icon"], iconAllowOverlap: true, iconSize: 0.015 }}
+                              />
+                            </Mapbox.ShapeSource>
+                          </>
+                        )}
+                      </MapView>
                     ) : (
-                      <View style={{ borderRadius: 12 }} className="h-32 bg-slate-50 dark:bg-neutral-700 items-center justify-center gap-y-1">
+                      <View className="flex-1 bg-slate-50 dark:bg-neutral-700 items-center justify-center gap-y-1">
                         <MapPin size={24} color={isDark ? "#525252" : "#CBD5E1"} />
                         <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">
                           {t("store_manager.detail.mapOnlyAndroidWeb")}
@@ -259,212 +371,19 @@ export default function DetailIndex() {
                       </View>
                     )
                   ) : (
-                    <View style={{ borderRadius: 12 }} className="h-32 bg-slate-50 dark:bg-neutral-700 items-center justify-center gap-y-1">
+                    <View className="flex-1 bg-slate-50 dark:bg-neutral-700 items-center justify-center gap-y-1">
                       <MapPinOff size={24} color={isDark ? "#525252" : "#CBD5E1"} />
-                      <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">{t("store_manager.detail.noLocationSet")}</Text>
+                      <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">
+                        {t("store_manager.detail.noLocationSet")}
+                      </Text>
                     </View>
                   )}
                 </View>
+
               </View>
-            </View>
-          ) : (
-            <View className="bg-white dark:bg-neutral-800 rounded-xl border border-slate-100 dark:border-neutral-700 overflow-hidden">
-            <View className="flex-row items-center p-4 gap-x-3">
-              {detail?.logo ? (
-                <Image
-                  source={{ uri: detail.logo }}
-                  style={{ width: 60, height: 60, borderRadius: 14 }}
-                  contentFit="cover"
-                  transition={200}
-                />
-              ) : (
-                <View
-                  style={{ width: 60, height: 60, borderRadius: 14 }}
-                  className="bg-orange-50 dark:bg-orange-950 border-2 border-dashed border-orange-200 dark:border-orange-800 items-center justify-center"
-                >
-                  <Building2 size={24} color="text-primary" />
-                </View>
-              )}
 
-              <View className="flex-1 items-start justify-start">
-                <View className="flex-row items-center w-full">
-                  <Text className="text-base font-poppins-bold text-slate-800 dark:text-slate-100 text-left mr-2">
-                    {detail?.name || t("store_manager.detail.unnamedStore")}
-                  </Text>
-                  <View className={`flex-row items-center gap-x-1 px-2.5 py-1 rounded-full ${statusCfg.bg}`}>
-                    <View className={`w-1.5 h-1.5 rounded-full ${statusCfg.dot}`} />
-                    <Text className={`text-xs font-poppins-semibold ${statusCfg.text}`}>
-                      {statusLabel}
-                    </Text>
-                  </View>
-                </View>
-                <Text className="text-xs font-poppins-semibold text-textMuted dark:text-slate-500 mt-0.5">
-                  {storeTypeLabel}
-                </Text>
-              </View>
-            </View>
-         
-
-            <View className="px-4 pb-4">
-              <View className="flex-row gap-x-6">
-                <View className="flex-1 gap-y-2">
-                  <View className="flex-row items-center gap-x-2">
-                    <Phone size={12} color={isDark ? "#A3A3A3" : "#475569"} />
-                    <Text className="text-xs font-poppins-semibold text-textSecondary dark:text-slate-500">
-                      {detail?.phone ?? notSet}
-                    </Text>
-                  </View>
-                  <View className="flex-row items-center gap-x-2">
-                    <File size={12} color={isDark ? "#A3A3A3" : "#475569"} />
-                    <Text className="text-xs font-poppins-semibold text-textSecondary dark:text-slate-500">
-                      {detail?.registration_number ?? notSet}
-                    </Text>
-                  </View>
-                </View>
-
-                <View className="flex-1 gap-y-2">
-                  <View className="flex-row items-center gap-x-2">
-                    <Clock size={12} color={isDark ? "#A3A3A3" : "#475569"} />
-                    <Text className="text-xs font-poppins-semibold text-textSecondary dark:text-slate-500">
-                      {openLine(detail?.store_open)}
-                    </Text>
-                  </View>
-                  <View className="flex-row items-center gap-x-2">
-                    <Clock size={12} color={isDark ? "#A3A3A3" : "#475569"} />
-                    <Text className="text-xs font-poppins-semibold text-textSecondary dark:text-slate-500">
-                      {closeLine(detail?.store_close)}
-                    </Text>
-                  </View>
-                </View>
-              </View>
-            </View>
-            <View className="flex-row gap-x-2 p-4">
-              {[0, 1, 2].map((i) => {
-                const uri = pictures[i];
-                return uri ? (
-                  <Image
-                    key={i}
-                    source={{ uri }}
-                    style={{ flex: 1, height: 80, borderRadius: 10 }}
-                    contentFit="cover"
-                    transition={200}
-                  />
-                ) : (
-                  <View key={i} style={{ flex: 1, height: 80 }} />
-                );
-              })}
-            </View>
-
-            {detail?.business_document_image && (
-              <>
-                <View className="h-px bg-slate-100 dark:bg-neutral-700 mx-4" />
-                <View className="px-4 py-3.5">
-                  <Text className="text-xs font-poppins text-textMuted dark:text-slate-500 mb-2">
-                    {t("label.businessDocument")}
-                  </Text>
-                  <Image
-                    source={{ uri: detail.business_document_image }}
-                    style={{ width: 64, height: 64, borderRadius: 10 }}
-                    contentFit="contain"
-                    transition={200}
-                  />
-                </View>
-              </>
-            )}
-            <View className="h-px bg-slate-100 dark:bg-neutral-700 mx-4" />
-              <View className="px-4 pb-4 py-4 gap-y-4">
-                <Text className="text-xs font-poppins text-textMuted dark:text-slate-500">{t("label.location")}</Text>
-                {detail?.address && (
-                  <>
-                    <Text className="text-xs font-poppins-semibold text-textPrimary dark:text-textPrimary -mt-4">
-                      {detail.address}
-                    </Text>
-                  </>
-                )}
-                {hasCoords ? (
-                  shouldUseInteractiveMapbox() ? (
-                    <View>
-                      <View
-                        style={{
-                          height: 180,
-                          borderRadius: 10,
-                          overflow: "hidden",
-                          width: mapWidth - 32,
-                        }}
-                      >
-                        <MapView
-                          style={{ width: "100%", height: 180 }}
-                          styleURL={
-                            isDark
-                              ? "mapbox://styles/mapbox/navigation-night-v1"
-                              : "mapbox://styles/mapbox/streets-v12"
-                          }
-                          scrollEnabled={false}
-                          zoomEnabled={false}
-                          rotateEnabled={false}
-                          pitchEnabled={false}
-                          attributionEnabled={false}
-                          logoEnabled={false}
-                        >
-                          <Camera
-                            centerCoordinate={[Number(detail.longitude), Number(detail.latitude)]}
-                            zoomLevel={15}
-                            animationMode="none"
-                          />
-                          <Mapbox.Images
-                            images={{
-                              default: require("../../../assets/images/markers/default.png"),
-                            }}
-                          />
-                          <Mapbox.ShapeSource
-                            id="storePin"
-                            shape={{
-                              type: "Feature",
-                              geometry: {
-                                type: "Point",
-                                coordinates: [Number(detail.longitude), Number(detail.latitude)],
-                              },
-                              properties: { icon: "default" },
-                            }}
-                          >
-                            <Mapbox.SymbolLayer
-                              id="storePinLayer"
-                              style={{
-                                iconImage: ["get", "icon"],
-                                iconAllowOverlap: true,
-                                iconSize: 0.015,
-                              }}
-                            />
-                          </Mapbox.ShapeSource>
-                        </MapView>
-                      </View>
-                    </View>
-                  ) : (
-                    <View
-                      style={{ borderRadius: 12 }}
-                      className="h-32 bg-slate-50 dark:bg-neutral-700 items-center justify-center gap-y-1"
-                    >
-                      <MapPin size={24} color={isDark ? "#525252" : "#CBD5E1"} />
-                      <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">
-                        {t("store_manager.detail.mapOnlyAndroidWeb")}
-                      </Text>
-                    </View>
-                  )
-                ) : (
-                  <View
-                    style={{ borderRadius: 12 }}
-                    className="h-32 bg-slate-50 dark:bg-neutral-700 items-center justify-center gap-y-1"
-                  >
-                    <MapPinOff size={24} color={isDark ? "#525252" : "#CBD5E1"} />
-                    <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">
-                      {t("store_manager.detail.noLocationSet")}
-                    </Text>
-                  </View>
-                )}
             </View>
           </View>
-          )}
-
         </ScrollView>
       )}
     </SafeAreaView>

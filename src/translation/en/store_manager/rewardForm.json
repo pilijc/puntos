@@ -26,5 +26,9 @@
   "notFoundMessage": "Reward not found.",
   "loadErrorTitle": "Error",
   "loadErrorMessage": "Could not load this reward.",
-  "uploadImageError": "Could not upload image."
+  "uploadImageError": "Could not upload image.",
+  "titleRequiredInline": "Please enter a reward title.",
+  "imageRequiredInline": "Please upload a reward image.",
+  "pointsCostRequiredInline": "Please enter points cost greater than 0.",
+  "stockRequiredInline": "Please enter stock greater than 0."
 }

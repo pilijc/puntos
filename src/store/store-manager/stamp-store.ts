@@ -3,14 +3,29 @@ import type { StampConfigureViewState, StampStore, StampViewState } from "@/type
 
 export const useStampStore = create<StampStore>((set) => ({
   total_stamps: 0,
+  totalStampsError: false,
   reward_id: "",
+  rewardError: false,
   expiration_mode: "none",
+  expirationDaysError: false,
   expiration_days: 30,
   setTotalStamps: (total_stamps) => set({ total_stamps }),
   setRewardId: (reward_id) => set({ reward_id }),
   setExpirationMode: (expiration_mode) => set({ expiration_mode }),
   setExpirationDays: (expiration_days) => set({ expiration_days }),
-  reset: () => set({ total_stamps: 0, reward_id: "", expiration_mode: "none", expiration_days: 30 }),
+  setTotalStampsError: (value) => set({ totalStampsError: value }),
+  setRewardError: (value) => set({ rewardError: value }),
+  setExpirationDaysError: (value) => set({ expirationDaysError: value }),
+  reset: () =>
+    set({
+      total_stamps: 0,
+      reward_id: "",
+      expiration_mode: "none",
+      expiration_days: 30,
+      totalStampsError: false,
+      rewardError: false,
+      expirationDaysError: false,
+    }),
 }));
 
 export const useStampViewStore = create<StampViewState>((set) => ({
