@@ -504,7 +504,8 @@ export default function StoreManagerLayout() {
                             color={storesRowActive ? TAB_ACCENT : color}
                         />
                     ),
-                    tabBarLabel: ({ color, position }) => (
+                    tabBarLabel: isWeb
+                        ? ({ color, position }) => webSidebarExpanded ? (
                         isWeb && !webSidebarExpanded ? null : (
                             <StoresTabLabel
                                 text={translate("store_manager.tabs.stores")}
@@ -515,7 +516,8 @@ export default function StoreManagerLayout() {
                                 insetBottom={insets.bottom}
                             />
                         )
-                    ),
+                    ) : null
+                    : undefined,
                 }}
             />
 
@@ -536,29 +538,6 @@ export default function StoreManagerLayout() {
                                   navColor={color}
                                   position={position}
                                   isRowActive={activeTab === "subscription"}
-                              />
-                          )
-                        : undefined,
-                }}
-            />
-
-            <Tabs.Screen
-                name="index"
-                options={{
-                    title: translate("label.dashboard"),
-                    tabBarIcon: ({ color, size }) => (
-                        <LayoutDashboard
-                            size={isWeb ? WEB_TAB_ICON_SIZE : Platform.OS === "android" ? 20 : size}
-                            color={webSidebarIconColor(isWeb, activeTab, "index", color)}
-                        />
-                    ),
-                    tabBarLabel: isWeb
-                        ? ({ color, position }) => (
-                              <WebSidebarTabLabel
-                                  text={translate("label.dashboard")}
-                                  navColor={color}
-                                  position={position}
-                                  isRowActive={activeTab === "index"}
                               />
                           ) : null
                         : undefined,
