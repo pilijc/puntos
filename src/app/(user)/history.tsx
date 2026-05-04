@@ -84,12 +84,21 @@ export default function History() {
   const sections = [...new Set(filteredData.map((item) => item.section))] as string[];
 
   const renderFooter = () => {
-    if (!loadingMore) return null;
     return (
-      <View className="py-4 items-center">
-        <Text className="text-sm font-poppins text-neutral-400 dark:text-darkTextSecondary">
-          Loading more...
-        </Text>
+      <View>
+        {loadingMore && (
+          <View className="py-4 items-center">
+            <Text className="text-sm font-poppins text-neutral-400 dark:text-darkTextSecondary">
+              Loading more...
+            </Text>
+          </View>
+        )}
+        {/* Footer */}
+        <View className="items-center pt-2 pb-4">
+          <Text className="text-[10px] tracking-[2px] text-neutral-300 font-poppins-medium">
+            {translate("label.poweredBy")}
+          </Text>
+        </View>
       </View>
     );
   };
@@ -126,7 +135,7 @@ export default function History() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-backgroundMuted dark:bg-darkBackground">
+    <SafeAreaView className="flex-1 bg-backgroundMuted dark:bg-darkBackground" edges={["top", "left", "right"]}>
       <View className="flex-1 px-4">
         <FlatList
           data={filteredData}
@@ -155,13 +164,6 @@ export default function History() {
           contentContainerStyle={{ paddingBottom: 20 }}
           renderItem={renderItem}
         />
-        
-        {/* Footer */}
-        <View className="items-center pt-2 pb-4">
-          <Text className="text-[10px] tracking-[2px] text-neutral-300 font-poppins-medium">
-            {translate("label.poweredBy")}
-          </Text>
-        </View>
       </View>
     </SafeAreaView>
   );
