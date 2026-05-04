@@ -7,10 +7,9 @@ import {
   LayoutAnimation,
   Platform,
   ScrollView,
-  TextInput,
   TouchableOpacity,
 } from "react-native";
-import { View, Text } from "@/tw";
+import { View, Text, TextInput } from "@/tw";
 import { Check, FileText, Image as ImageIcon, Plus, Send, X } from "lucide-react-native";
 import * as DocumentPicker from "expo-document-picker";
 import * as ImagePicker from "expo-image-picker";
@@ -740,13 +739,21 @@ export function SharedChatArea({
             onChangeText={setMessageText}
             placeholder={pendingAttachments.length > 0 ? "Add a caption..." : placeholder}
             placeholderTextColor="#94a3b8"
-            className="text-textPrimary dark:text-darkTextPrimary outline-none"
+            className="text-textPrimary dark:text-darkTextPrimary"
             style={{
               flex: 1,
               paddingVertical: 12,
               fontFamily: "Poppins-Regular",
               fontSize: 14,
               maxHeight: 120,
+              // @ts-ignore - web only
+              outlineStyle: "none",
+            }}
+            onKeyPress={(e: any) => {
+              if (Platform.OS === "web" && e.nativeEvent.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                handleSend();
+              }
             }}
             multiline
             textAlignVertical="center"

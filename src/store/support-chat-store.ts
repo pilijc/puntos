@@ -1,4 +1,5 @@
 import type { RealtimeChannel } from "@supabase/supabase-js";
+import { supabase } from "@/supabase/supabase";
 import { create } from "zustand";
 import {
   getOrCreateSupportConversation,
@@ -230,7 +231,17 @@ export const useSupportChatStore = create<SupportChatState>((set, get) => ({
   subscribeInbox: () => {
     removeSupportChannel(get().inboxChannel);
     const channel = subscribeToSupportConversations(async () => {
-      await get().loadAdminConversations();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      
+      const { getRoleTypeForUser } = await import("@/services/access-service");
+      const role = await getRoleTypeForUser(user.id);
+      
+      if (role === "super_admin") {
+        await get().loadAdminConversations();
+      } else {
+        await get().loadAllManagerConversations(user.id);
+      }
     });
     set({ inboxChannel: channel });
   },

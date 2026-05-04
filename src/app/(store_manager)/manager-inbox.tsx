@@ -10,7 +10,7 @@ import { useRouter } from "expo-router";
 import { ArrowLeft, Headset, MessageSquare, Store } from "lucide-react-native";
 import { supabase } from "@/supabase/supabase";
 import { useManagerStoresStore } from "@/store/manager-stores-store";
-import { listManagerConversations } from "@/services/support-chat-service";
+import { useSupportChatStore } from "@/store/support-chat-store";
 import { SupportConversation } from "@/type/support-chat";
 
 function formatTime(value: string | null) {
@@ -28,20 +28,10 @@ function formatTime(value: string | null) {
 export default function ManagerInbox() {
   const router = useRouter();
   const { stores, loading: storesLoading, fetchStores } = useManagerStoresStore();
-  const [conversations, setConversations] = useState<SupportConversation[]>([]);
+  
+  // Use global support chat store for real-time consistency
+  const { conversations, loadAllManagerConversations } = useSupportChatStore();
   const [loading, setLoading] = useState(true);
-
-  const loadConversations = useCallback(async (uid: string) => {
-    setLoading(true);
-    try {
-      const convs = await listManagerConversations(uid);
-      setConversations(convs);
-    } catch {
-      setConversations([]);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
 
   useEffect(() => {
     let mounted = true;
@@ -50,14 +40,22 @@ export default function ManagerInbox() {
         data: { user },
       } = await supabase.auth.getUser();
       if (!mounted || !user) return;
-      await fetchStores();
-      await loadConversations(user.id);
+      
+      setLoading(true);
+      try {
+        await Promise.all([
+          fetchStores(),
+          loadAllManagerConversations(user.id)
+        ]);
+      } finally {
+        if (mounted) setLoading(false);
+      }
     }
     bootstrap();
     return () => {
       mounted = false;
     };
-  }, [fetchStores, loadConversations]);
+  }, [fetchStores, loadAllManagerConversations]);
 
   const totalUnread = conversations.reduce(
     (sum, c) => sum + (c.unread_store_count ?? 0),
