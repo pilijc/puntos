@@ -97,7 +97,7 @@ export const DashboardActivityChart: React.FC<ExtendedDashboardActivityChartProp
 
     return (
         <View
-            className={`bg-white dark:bg-darkBackgroundCard rounded-xl p-4 elevation-1 border border-transparent dark:border-darkBorder${isWeb ? ' flex-1' : ' mb-[14px]'}`}
+            className={`bg-white dark:bg-darkBackgroundCard rounded-xl p-4 elevation-1 border border-transparent dark:border-darkBorder${isWeb ? ' flex-1' : ''}`}
             onLayout={(e) => setContainerWidth(e.nativeEvent.layout.width - 32)}
         >
             <View 
@@ -240,12 +240,12 @@ export const DashboardActivityChart: React.FC<ExtendedDashboardActivityChartProp
             </View>
 
             {/* Web-only: summary stat pills with static equal-width positions */}
-            {isWeb && (
+            {isWeb && containerWidth > 200 && (
                 <View className="flex-row items-center mt-5 pt-5 border-t border-slate-100 dark:border-darkBorder">
                     {/* Always remains: Total Stat (Fixed 1/3 width) */}
                     <View className="flex-1 items-center">
-                        <Text className="text-[11px] font-poppins text-textSecondary dark:text-darkTextSecondary uppercase tracking-[0.5px] text-center">
-                            {translate("store_manager.dashboard.activity.totalStat", `Total ${activeOption?.label || 'Stat'}`)}
+                        <Text className="text-[11px] font-poppins text-textSecondary dark:text-darkTextSecondary uppercase tracking-[0.5px] text-center" numberOfLines={1}>
+                            {translate(`store_manager.dashboard.activity.metric.${selectedMetric}`, activeOption?.label || 'Scans')}
                         </Text>
                         <Text className="text-2xl font-poppins-bold text-textPrimary dark:text-darkTextPrimary mt-1">
                             {totalStat}

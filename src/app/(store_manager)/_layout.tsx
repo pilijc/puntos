@@ -196,7 +196,7 @@ function WebStoreManagerSidebarTabBar({
     const activeTab = activeSidebarTabFromPath(withTrailingSlash(pathname));
     const activeBackground = isDark ? WEB_TAB_ACTIVE_BG_DARK : WEB_TAB_ACTIVE_BG_LIGHT;
     const inactiveColor = isDark ? "#737373" : "#8B8D98";
-    const px = expanded ? WEB_SIDEBAR_INSET_X : WEB_SIDEBAR_COLLAPSED_INSET_X;
+    const px = WEB_SIDEBAR_INSET_X; // Constant inset for stability
 
     const visibleRoutes = state.routes.filter((r) => !HIDDEN_SCREENS.has(r.name));
 
@@ -223,37 +223,29 @@ function WebStoreManagerSidebarTabBar({
                 style={{
                     flexDirection: "row",
                     alignItems: "center",
-                    justifyContent: expanded ? "space-between" : "center",
-                    gap: 8,
-                    paddingHorizontal: expanded ? WEB_SIDEBAR_BRAND_PADDING_X : WEB_SIDEBAR_COLLAPSED_BRAND_PADDING_X,
-                    paddingTop: 14,
-                    paddingBottom: 4,
+                    paddingLeft: 19, // Centers logo at 37px (19 + 18)
+                    paddingTop: 20,
+                    paddingBottom: 20,
                 }}
             >
-                <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-                    <Image
-                        source={require("@/assets/images/puntos-icon.png")}
-                        style={{ width: 36, height: 36 }}
-                        resizeMode="contain"
-                    />
-                    {expanded ? (
-                        <Text style={{ fontSize: 18, fontFamily: "Poppins-Bold", color: isDark ? "#FFFFFF" : TAB_ACCENT }}>
-                            PUNTOS
-                        </Text>
-                    ) : null}
-                </View>
-                <PlatformPressable
-                    onPress={onToggle}
-                    hoverEffect={undefined}
-                    style={{ padding: 6, borderRadius: 8 }}
-                    accessibilityLabel={expanded ? "Collapse sidebar" : "Expand sidebar"}
-                    accessibilityRole="button"
-                >
-                    {expanded
-                        ? <PanelLeftClose size={18} color={isDark ? "#A3A3A3" : "#6B7280"} />
-                        : <PanelLeft      size={18} color={isDark ? "#A3A3A3" : "#6B7280"} />}
-                </PlatformPressable>
+                <Image
+                    source={require("@/assets/images/puntos-icon.png")}
+                    style={{ width: 36, height: 36 }}
+                    resizeMode="contain"
+                />
+                {expanded && (
+                    <Text style={{ 
+                        fontSize: 18, 
+                        fontFamily: "Poppins-Bold", 
+                        color: isDark ? "#FFFFFF" : TAB_ACCENT,
+                        marginStart: 12 
+                    }}>
+                        PUNTOS
+                    </Text>
+                )}
             </View>
+
+
 
             {/* ── Nav items ── */}
             <View style={{ flex: 1, paddingHorizontal: px, paddingTop: 8 }}>
@@ -269,7 +261,7 @@ function WebStoreManagerSidebarTabBar({
                             target: route.key,
                             canPreventDefault: true,
                         });
-                        if (!event.defaultPrevented) {
+                        if (!isActive && !(event as any).defaultPrevented) {
                             navigation.navigate(route.name as never);
                         }
                     };
@@ -281,7 +273,7 @@ function WebStoreManagerSidebarTabBar({
                             hoverEffect={undefined}
                             accessibilityRole="tab"
                             accessibilityState={{ selected: isActive }}
-                            style={expanded ? {
+                            style={{
                                 flexDirection: "row",
                                 alignItems: "center",
                                 borderRadius: 10,
@@ -289,19 +281,10 @@ function WebStoreManagerSidebarTabBar({
                                 paddingVertical: 10,
                                 marginBottom: 2,
                                 backgroundColor: isActive ? activeBackground : "transparent",
-                                ...(isActive ? { marginRight: WEB_TAB_ACTIVE_MARGIN_END } : {}),
-                            } : {
-                                alignSelf: "stretch",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                borderRadius: 10,
-                                paddingVertical: 10,
-                                marginBottom: 2,
-                                backgroundColor: isActive ? activeBackground : "transparent",
                             }}
                         >
                             {/* Icon + optional badge */}
-                            <View style={{ position: "relative" }}>
+                            <View style={{ width: 18, alignItems: 'center', justifyContent: 'center', position: "relative" }}>
                                 {getTabIcon(route.name, iconColor, WEB_TAB_ICON_SIZE)}
                                 {badge != null && (
                                     <View style={{
@@ -332,6 +315,43 @@ function WebStoreManagerSidebarTabBar({
                         </PlatformPressable>
                     );
                 })}
+            </View>
+
+            {/* ── Footer / Toggle ── */}
+            <View
+                style={{
+                    paddingBottom: 24,
+                    borderTopWidth: 1,
+                    borderTopColor: isDark ? "#333" : "#f0f0f0",
+                    paddingTop: 16,
+                }}
+            >
+                <PlatformPressable
+                    onPress={onToggle}
+                    hoverEffect={undefined}
+                    style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        paddingLeft: 28, // Centers icon at 37px (28 + 9) matching the logo
+                        height: 44,
+                    }}
+                >
+                    <View style={{ width: 18, alignItems: 'center' }}>
+                        {expanded
+                            ? <PanelLeftClose size={18} color={isDark ? "#A3A3A3" : "#6B7280"} />
+                            : <PanelLeft      size={18} color={isDark ? "#A3A3A3" : "#6B7280"} />}
+                    </View>
+                    {expanded && (
+                        <Text style={{ 
+                            marginStart: 12, 
+                            fontSize: 12, 
+                            fontFamily: "Poppins-Medium", 
+                            color: isDark ? "#A3A3A3" : "#6B7280" 
+                        }}>
+                            {expanded ? "Collapse" : "Expand"}
+                        </Text>
+                    )}
+                </PlatformPressable>
             </View>
         </View>
     );

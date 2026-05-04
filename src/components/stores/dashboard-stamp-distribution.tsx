@@ -1,25 +1,32 @@
-import React, { useState } from "react";
+import React from "react";
 import { useColorScheme } from "react-native";
 import { View, Text } from "@/tw";
-import { BarChart } from "react-native-chart-kit";
+import { Ticket } from "lucide-react-native";
 import { useTranslation } from "react-i18next";
 import { StampDistributionProps } from "@/type/store-manager/metric";
 import { DashboardStampDistributionSkeleton } from "@/components/skeleton/store_manager/dashboard-stamp-distribution-skeleton";
 
-export function DashboardStampDistribution({ buckets, maxStamps, loading }: StampDistributionProps) {
+export function DashboardStampDistribution({ buckets, maxStamps, storeId, loading }: StampDistributionProps) {
     const { t: translate } = useTranslation();
+
+    const isDark = useColorScheme() === "dark";
 
     if (loading) return <DashboardStampDistributionSkeleton />;
 
     if (buckets.length === 0) {
         return (
-            <View className="bg-white dark:bg-darkBackgroundCard rounded-xl p-4 elevation-1 border border-transparent dark:border-darkBorder" style={{ flex: 1 }}>
-                <Text className="text-lg font-poppins-bold text-textPrimary dark:text-darkTextPrimary leading-6">
-                    {translate("store_manager.dashboard.stampProgress.title", "Stamp Progress")}
+            <View className="flex-1 bg-white dark:bg-darkBackgroundCard rounded-xl p-6 elevation-1 border border-transparent dark:border-darkBorder items-center justify-center">
+                <View className="bg-slate-50 dark:bg-darkBackgroundMuted p-4 rounded-full mb-4">
+                    <Ticket size={32} color={isDark ? "#525252" : "#cbd5e1"} />
+                </View>
+                <Text className="text-base font-poppins-bold text-textPrimary dark:text-darkTextPrimary text-center">
+                    {translate("store_manager.dashboard.stampProgress.noProgram", "No active stamp program")}
                 </Text>
-                <Text className="text-xs font-poppins text-textSecondary dark:text-darkTextSecondary mt-0.5">
-                    {translate("store_manager.dashboard.stampProgress.noProgram", "No active stamp program found")}
+                <Text className="text-xs font-poppins text-textSecondary dark:text-darkTextSecondary mt-1.5 text-center px-4 leading-5">
+                    {translate("store_manager.dashboard.stampProgress.noProgramDesc", "Create a stamp program to reward loyal customers and track their progress here.")}
                 </Text>
+
+
             </View>
         );
     }
@@ -28,7 +35,7 @@ export function DashboardStampDistribution({ buckets, maxStamps, loading }: Stam
     const maxCount = Math.max(...buckets.map(b => b.count));
 
     return (
-        <View className="bg-white dark:bg-darkBackgroundCard rounded-xl p-4 elevation-1 border border-transparent dark:border-darkBorder" style={{ flex: 1 }}>
+        <View className="flex-1 bg-white dark:bg-darkBackgroundCard rounded-xl p-4 elevation-1 border border-transparent dark:border-darkBorder">
             <Text className="text-lg font-poppins-bold text-textPrimary dark:text-darkTextPrimary leading-6">
                 {translate("store_manager.dashboard.stampProgress.title", "Stamp Progress")}
             </Text>

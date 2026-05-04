@@ -14,6 +14,7 @@ import { supabase } from "@/supabase/supabase";
 type TabKey = "all" | "active" | "pending" | "inactive";
 
 const WEB_MAX_WIDTH = 896;
+const WEB_TAB_PILL_STYLE = { flexGrow: 1, flexBasis: 120, minWidth: 0 };
 
 const STATUS_BADGE_STYLE: Record<
   "active" | "pending_review" | "inactive",
@@ -252,7 +253,7 @@ export default function StoreManagerStores() {
 
       {Platform.OS === "web" ? (
         <View className="bg-backgroundMuted dark:bg-slate-950 px-4 pt-4 items-center">
-          <View className="w-full max-w-4xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-xl overflow-hidden flex-row">
+          <View className="w-full max-w-4xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-xl overflow-hidden flex-row flex-wrap p-1 gap-1">
             {tabs.map((tab) => {
               const active = activeTab === tab.key;
               const count =
@@ -267,8 +268,9 @@ export default function StoreManagerStores() {
               return (
                 <TouchableOpacity
                   key={tab.key}
+                  style={WEB_TAB_PILL_STYLE}
                   className={[
-                    "flex-1 py-3 items-center flex-row justify-center gap-1.5 rounded-xl mx-1 my-1",
+                    "py-3 px-2 items-center flex-row justify-center gap-1.5 rounded-xl",
                     active && "bg-primary",
                   ]
                     .filter(Boolean)
@@ -279,17 +281,18 @@ export default function StoreManagerStores() {
                   <Text
                     className={
                       active
-                        ? "text-xs font-poppins-bold text-white"
-                        : "text-xs font-poppins-medium text-slate-400 dark:text-slate-500"
+                        ? "min-w-0 text-xs font-poppins-bold text-white"
+                        : "min-w-0 text-xs font-poppins-medium text-slate-400 dark:text-slate-500"
                     }
+                    numberOfLines={1}
                   >
                     {tab.label}
                   </Text>
                   {count > 0 && (
                     <View
-                      className="rounded-full min-w-[18px] items-center bg-white/20"
+                      className={`rounded-full min-w-[18px] items-center px-1.5 ${active ? "bg-white/20" : "bg-slate-100 dark:bg-slate-800"}`}
                     >
-                      <Text className="text-[10px] font-poppins-semibold text-white">{count}</Text>
+                      <Text className={`text-[10px] font-poppins-semibold ${active ? "text-white" : "text-slate-500 dark:text-slate-400"}`}>{count}</Text>
                     </View>
                   )}
                 </TouchableOpacity>
@@ -454,7 +457,7 @@ export default function StoreManagerStores() {
                     </View>
                   );
                 })}
-          
+
               </View>
             </View>
           ) : !loading && filtered.length > 0 && !error && Platform.OS === "android" ? (
@@ -544,7 +547,7 @@ export default function StoreManagerStores() {
                     }}
                     contentFit="contain"
                   />
-            
+
                 </View>
                 <View className="items-center">
                   <Text className="text-base font-poppins-bold text-slate-600 dark:text-slate-300 text-center">

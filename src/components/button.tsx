@@ -119,7 +119,7 @@ export function Button({
         elevation ? { elevation: 10, shadowColor: "#000", shadowOpacity: 0.05, shadowRadius: 1, shadowOffset: { width: 0, height: 2 } } : { elevation: 0 }
    
       }
-      className={`${sizeClass} ${roundedFull ? "rounded-full" : "rounded-xl"} ${container} items-center flex-row justify-center gap-x-2`}
+      className={`${sizeClass} max-w-full ${roundedFull ? "rounded-full" : "rounded-xl"} ${container} items-center flex-row justify-center gap-x-2`}
     >
       {loading ? (
         <ActivityIndicator size="small" color={spinnerColor} />
@@ -133,7 +133,7 @@ export function Button({
             />
           )}
           {LucideIcon && <LucideIcon size={16} color={iconColor} />}
-          <Text className={`text-sm font-poppins-semibold ${text}`}>{label}</Text>
+          <Text className={`text-sm font-poppins-semibold ${text}`} numberOfLines={1}>{label}</Text>
         </>
       )}
     </TouchableOpacity>
