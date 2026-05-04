@@ -72,6 +72,8 @@ export default function SubscriptionScreen() {
 	} = useStoreManagerSubscriptionStore();
 	usePaymentReturnHandler();
 
+	console.log('manager row', managerRow);
+
 	useEffect(() => {
 		let cancelled = false;
 		const { reset, setLoading, setLoadingInvoices, hydrate } =
@@ -421,15 +423,7 @@ export default function SubscriptionScreen() {
 									) : null}
 								</View>
 
-								{accessEndMessage && cancelScheduled ? (
-									<View className="mt-3 rounded-xl bg-white/15 px-3 py-2.5">
-										<Text className="text-xs font-poppins leading-5 text-white">
-											{accessEndMessage}
-										</Text>
-									</View>
-								) : null}
-
-							<View className="flex-row items-end gap-1 mt-4">
+						<View className="flex-row items-end gap-1 mt-4">
 								<Text className="text-4xl font-poppins-bold text-white">
 									{isBasicFree || lastPaidAmount === 0 || lastPaidAmount === null
 										? translate("storeManager.subscription.billing.free")
@@ -498,9 +492,17 @@ export default function SubscriptionScreen() {
 									) : null}
 								</View>
 							</View>
-						</View>
+					</View>
 
-						<View className="bg-white dark:bg-darkBackgroundCard rounded-xl border border-slate-100 dark:border-neutral-800 p-4">
+					{accessEndMessage && cancelScheduled ? (
+						<View className="rounded-xl bg-amber-50 dark:bg-amber-950 px-4 py-3">
+							<Text className="text-xs font-poppins leading-5 text-amber-700 dark:text-amber-300">
+								{accessEndMessage}
+							</Text>
+						</View>
+					) : null}
+
+					<View className="bg-white dark:bg-darkBackgroundCard rounded-xl border border-slate-100 dark:border-neutral-800 p-4">
 							<View className="flex-row items-center gap-2 mb-2">
 								<Text className="text-sm font-poppins-semibold text-slate-800 dark:text-slate-100">
 									{translate("storeManager.subscription.billing.recentBilling.title")}

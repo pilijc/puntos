@@ -32,10 +32,10 @@ export function StorePickerDropdown({
             {/* contents of drowpdown */}
             <Modal visible={isVisible} transparent={true} animationType="fade">
                 <Pressable
-                    className="flex-1 bg-black/30 justify-start items-end pt-[80px] pr-[20px]"
+                    className="flex-1 bg-black/30 justify-start items-end pt-[85px] pr-[20px]"
                     onPress={onClose}
                 >
-                    <View className="bg-white dark:bg-darkBackgroundCard rounded-[24px] p-2 min-w-[220px] max-w-[280px] shadow-2xl elevation-10 border border-slate-100 dark:border-darkBorder">
+                    <View className="bg-white dark:bg-darkBackgroundCard rounded-xl min-w-[180px] max-w-[220px] shadow-2xl elevation-10 border border-slate-100 dark:border-darkBorder">
                         {stores.map((s, index) => {
                             const isActive = s.id === selectedStore?.id;
                             const isLast = index === stores.length - 1;
@@ -47,14 +47,14 @@ export function StorePickerDropdown({
                                                 { backgroundColor: pressed ? (isDark ? '#262626' : '#f8fafc') : 'transparent' },
                                                 isActive ? { backgroundColor: '#fff7ed' } : {}
                                             ]}
-                                            className="px-4 py-3.5 flex-row items-center justify-between rounded-2xl"
+                                            className="px-2.5 py-2.5 flex-row items-center justify-between rounded-2xl"
                                             onPress={() => {
                                                 onSelect(s.id);
                                                 onClose();
                                             }}
                                         >
                                             <Text
-                                                className={`text-[15px] font-poppins flex-1 ${isActive ? "text-[#FF6600] font-poppins-bold" : "text-slate-600 dark:text-darkTextSecondary"}`}
+                                                className={`text-sm font-poppins flex-1 ${isActive ? "text-[#FF6600] font-poppins-semibold" : "text-slate-600 dark:text-darkTextSecondary"}`}
                                                 numberOfLines={1}
                                             >
                                                 {s.name}

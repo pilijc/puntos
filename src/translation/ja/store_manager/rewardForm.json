@@ -29,5 +29,9 @@
   "notFoundMessage": "リワードが見つかりません。",
   "loadErrorTitle": "エラー",
   "loadErrorMessage": "リワードを読み込めませんでした。",
-  "uploadImageError": "画像をアップロードできませんでした。"
+  "uploadImageError": "画像をアップロードできませんでした。",
+  "titleRequiredInline": "リワードのタイトルを入力してください。",
+  "imageRequiredInline": "リワード画像をアップロードしてください。",
+  "pointsCostRequiredInline": "必要ポイント数を1以上で入力してください。",
+  "stockRequiredInline": "在庫数を1以上で入力してください。"
 }

@@ -442,7 +442,7 @@ export default function Discover() {
         <Mapbox.Camera
           ref={cameraRef}
           followUserMode={Mapbox.UserTrackingMode.FollowWithHeading}
-          followZoomLevel={16}
+          followZoomLevel={12}
           animationMode="easeTo"
           animationDuration={300}
         />

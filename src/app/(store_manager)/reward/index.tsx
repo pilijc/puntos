@@ -1,4 +1,5 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useState } from "react";
+import { useFocusEffect } from "expo-router";
 import { RefreshControl, ActivityIndicator, Platform } from "react-native";
 import { View, Text, TouchableOpacity, ScrollView, SafeAreaView } from "@/tw";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -35,10 +36,12 @@ export default function RewardIndex() {
     }
   }, [storeId]);
 
-  useEffect(() => {
-    setLoading(true);
-    fetchRewards().finally(() => setLoading(false));
-  }, [fetchRewards]);
+  useFocusEffect(
+    useCallback(() => {
+      setLoading(true);
+      fetchRewards().finally(() => setLoading(false));
+    }, [fetchRewards])
+  );
 
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);

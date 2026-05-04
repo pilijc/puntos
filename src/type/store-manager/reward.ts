@@ -19,6 +19,14 @@ export interface RewardState {
   stock:number
   setStock:(value: number) => void;
   image_url: string;
-  setImageUrl:    (value: string) => void;
+  setImageUrl:(value: string) => void;
+  titleError: boolean;
+  setTitleError:(value: boolean) => void;
+  imageError: boolean;
+  setImageError:(value: boolean) => void;
+  pointsCostError: boolean;
+  setPointsCostError:(value: boolean) => void;
+  stockError: boolean;
+  setStockError:(value: boolean) => void;
   reset: () => void;
 }

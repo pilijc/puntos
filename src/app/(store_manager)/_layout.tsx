@@ -439,6 +439,7 @@ export default function StoreManagerLayout() {
 
     return (
         <Tabs
+            initialRouteName="index"
             tabBar={isWeb ? renderWebTabBar : undefined}
             screenOptions={{
                 headerShown: false,
@@ -499,17 +500,12 @@ export default function StoreManagerLayout() {
                     title: translate("store_manager.tabs.stores"),
                     tabBarIcon: ({ color, size }) => (
                         <Store
-                            size={
-                                isWeb
-                                    ? WEB_TAB_ICON_SIZE
-                                    : Platform.OS === "android"
-                                      ? 20
-                                      : size
-                            }
+                            size={isWeb ? WEB_TAB_ICON_SIZE : Platform.OS === "android" ? 20 : size}
                             color={storesRowActive ? TAB_ACCENT : color}
                         />
                     ),
-                    tabBarLabel: ({ color, position }) => (
+                    tabBarLabel: isWeb
+                        ? ({ color, position }) => webSidebarExpanded ? (
                         isWeb && !webSidebarExpanded ? null : (
                             <StoresTabLabel
                                 text={translate("store_manager.tabs.stores")}
@@ -520,28 +516,42 @@ export default function StoreManagerLayout() {
                                 insetBottom={insets.bottom}
                             />
                         )
-                    ),
+                    ) : null
+                    : undefined,
                 }}
             />
+
+            <Tabs.Screen
+                name="subscription"
+                options={{
+                    title: translate("store_manager.tabs.subscription"),
+                    tabBarIcon: ({ color, size }) => (
+                        <CreditCard
+                            size={isWeb ? WEB_TAB_ICON_SIZE : Platform.OS === "android" ? 20 : size}
+                            color={webSidebarIconColor(isWeb, activeTab, "subscription", color)}
+                        />
+                    ),
+                    tabBarLabel: isWeb
+                        ? ({ color, position }) => webSidebarExpanded ? (
+                              <WebSidebarTabLabel
+                                  text={translate("store_manager.tabs.subscription")}
+                                  navColor={color}
+                                  position={position}
+                                  isRowActive={activeTab === "subscription"}
+                              />
+                          ) : null
+                        : undefined,
+                }}
+            />
+
             <Tabs.Screen
                 name="transactions"
                 options={{
                     title: translate("label.transactions"),
                     tabBarIcon: ({ color, size }) => (
                         <ArrowLeftRight
-                            size={
-                                isWeb
-                                    ? WEB_TAB_ICON_SIZE
-                                    : Platform.OS === "android"
-                                      ? 20
-                                      : size
-                            }
-                            color={webSidebarIconColor(
-                                isWeb,
-                                activeTab,
-                                "transactions",
-                                color,
-                            )}
+                            size={isWeb ? WEB_TAB_ICON_SIZE : Platform.OS === "android" ? 20 : size}
+                            color={webSidebarIconColor(isWeb, activeTab, "transactions", color)}
                         />
                     ),
                     tabBarLabel: isWeb
@@ -556,40 +566,7 @@ export default function StoreManagerLayout() {
                         : undefined,
                 }}
             />
-            <Tabs.Screen
-                name="subscription"
-                options={{
-                    title: translate("store_manager.tabs.subscription"),
-                    tabBarIcon: ({ color, size }) => (
-                        <CreditCard
-                            size={
-                                isWeb
-                                    ? WEB_TAB_ICON_SIZE
-                                    : Platform.OS === "android"
-                                      ? 20
-                                      : size
-                            }
-                            color={webSidebarIconColor(
-                                isWeb,
-                                activeTab,
-                                "subscription",
-                                color,
-                            )}
-                        />
-                    ),
-          
-                    tabBarLabel: isWeb
-                        ? ({ color, position }) => webSidebarExpanded ? (
-                              <WebSidebarTabLabel
-                                  text={translate("store_manager.tabs.subscription")}
-                                  navColor={color}
-                                  position={position}
-                                  isRowActive={activeTab === "subscription"}
-                              />
-                          ) : null
-                        : undefined,
-                }}
-            />
+
             <Tabs.Screen
                 name="settings"
                 options={{
@@ -598,22 +575,10 @@ export default function StoreManagerLayout() {
                     tabBarBadgeStyle: { backgroundColor: "#FF6600", fontSize: 10 },
                     tabBarIcon: ({ color, size }) => (
                         <Settings
-                            size={
-                                isWeb
-                                    ? WEB_TAB_ICON_SIZE
-                                    : Platform.OS === "android"
-                                      ? 20
-                                      : size
-                            }
-                            color={webSidebarIconColor(
-                                isWeb,
-                                activeTab,
-                                "settings",
-                                color,
-                            )}
+                            size={isWeb ? WEB_TAB_ICON_SIZE : Platform.OS === "android" ? 20 : size}
+                            color={webSidebarIconColor(isWeb, activeTab, "settings", color)}
                         />
                     ),
-              
                     tabBarLabel: isWeb
                         ? ({ color, position }) => webSidebarExpanded ? (
                               <WebSidebarTabLabel

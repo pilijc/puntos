@@ -8,15 +8,15 @@ import { LocationCard } from "@/components/settings/card/location-card";
 
 export default function UserSettings() {
   const extraCards = (
-    <View className="overflow-hidden bg-background dark:bg-darkBackgroundCard rounded-xl border border-border dark:border-darkBorder">
+    <View className="overflow-hidden bg-background dark:bg-darkBackgroundCard rounded-xl">
       <NotificationCard />
-      <View className="h-[1px] bg-border dark:bg-darkBorder" />
+      <View className="h-[1px]" />
       <LocationCard />
     </View>
   );
 
   const QrButton = (
-    <TouchableOpacity onPress={() => router.push("/(user)/qr")} className="p-2">
+    <TouchableOpacity onPress={() => router.push({ pathname: "/(user)/qr", params: { from: "/(user)/settings" } })} className="p-2">
       <ScanQrCode size={20} color="#FF6600" />
     </TouchableOpacity>
   );
