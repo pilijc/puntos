@@ -234,136 +234,136 @@ export default function SuperAdminLayout() {
       <Tabs.Screen
         name="index"
         options={{
-            title: translate("layout.overview"),
-            tabBarIcon: ({ color, size }) => (
-                <LayoutDashboard
-                    size={useSidebar ? WEB_TAB_ICON_SIZE : size}
-                    color={useSidebar && activeTab === "index" ? TAB_ACCENT : color}
-                />
-            ),
-            tabBarLabel: useSidebar
-                ? ({ color, position }) => (
-                        <WebSidebarTabLabel
-                            text={translate("layout.overview")}
-                            navColor={color}
-                            position={position}
-                            isRowActive={activeTab === "index"}
-                        />
-                    )
-                : undefined,
+          title: translate("layout.overview"),
+          tabBarIcon: ({ color, size }) => (
+            <LayoutDashboard
+              size={useSidebar ? WEB_TAB_ICON_SIZE : size}
+              color={useSidebar && activeTab === "index" ? TAB_ACCENT : color}
+            />
+          ),
+          tabBarLabel: useSidebar
+            ? ({ color, position }) => (
+              <WebSidebarTabLabel
+                text={translate("layout.overview")}
+                navColor={color}
+                position={position}
+                isRowActive={activeTab === "index"}
+              />
+            )
+            : undefined,
         }}
       />
       <Tabs.Screen
         name="users"
         options={{
-            title: translate("layout.users"),
-            tabBarIcon: ({ color, size }) => (
-                <Users
-                    size={useSidebar ? WEB_TAB_ICON_SIZE : size}
-                    color={useSidebar && activeTab === "users" ? TAB_ACCENT : color}
-                />
-            ),
-            tabBarLabel: useSidebar
-                ? ({ color, position }) => (
-                        <WebSidebarTabLabel
-                            text={translate("layout.users")}
-                            navColor={color}
-                            position={position}
-                            isRowActive={activeTab === "users"}
-                        />
-                    )
-                : undefined,
-        }}
-      />
-			<Tabs.Screen
-			name="subscriptions"
-			options={{
-				title: translate("layout.subscriptions"),
-				tabBarIcon: ({ color, size }) => (
-					<CreditCard
-							size={useSidebar ? WEB_TAB_ICON_SIZE : size}
-							color={useSidebar && activeTab === "subscriptions" ? TAB_ACCENT : color}
-					/>
-				),
-				tabBarLabel: useSidebar
-					? ({ color, position }) => (
-									<WebSidebarTabLabel
-											text={translate("layout.subscriptions")}
-											navColor={color}
-											position={position}
-											isRowActive={activeTab === "subscriptions"}
-									/>
-							)
-					: undefined,
+          title: translate("layout.users"),
+          tabBarIcon: ({ color, size }) => (
+            <Users
+              size={useSidebar ? WEB_TAB_ICON_SIZE : size}
+              color={useSidebar && activeTab === "users" ? TAB_ACCENT : color}
+            />
+          ),
+          tabBarLabel: useSidebar
+            ? ({ color, position }) => (
+              <WebSidebarTabLabel
+                text={translate("layout.users")}
+                navColor={color}
+                position={position}
+                isRowActive={activeTab === "users"}
+              />
+            )
+            : undefined,
         }}
       />
       <Tabs.Screen
         name="stores"
         options={{
-            title: translate("layout.stores"),
-            tabBarIcon: ({ color, size }) => (
-                <Store
-                    size={useSidebar ? WEB_TAB_ICON_SIZE : size}
-                    color={useSidebar && activeTab === "stores" ? TAB_ACCENT : color}
-                />
-            ),
-            tabBarLabel: useSidebar
-                ? ({ color, position }) => (
-                        <WebSidebarTabLabel
-                            text={translate("layout.stores")}
-                            navColor={color}
-                            position={position}
-                            isRowActive={activeTab === "stores"}
-                        />
-                    )
-                : undefined,
+          title: translate("layout.stores"),
+          tabBarIcon: ({ color, size }) => (
+            <Store
+              size={useSidebar ? WEB_TAB_ICON_SIZE : size}
+              color={useSidebar && activeTab === "stores" ? TAB_ACCENT : color}
+            />
+          ),
+          tabBarLabel: useSidebar
+            ? ({ color, position }) => (
+              <WebSidebarTabLabel
+                text={translate("layout.stores")}
+                navColor={color}
+                position={position}
+                isRowActive={activeTab === "stores"}
+              />
+            )
+            : undefined,
+        }}
+      />
+      <Tabs.Screen
+        name="inbox"
+        options={{
+          title: "Chat",
+          href: useSidebar ? "/(super_admin)/inbox" : null,
+          tabBarIcon: ({ color, size }) => (
+            <MessageSquare
+              size={useSidebar ? WEB_TAB_ICON_SIZE : size}
+              color={useSidebar && activeTab === "inbox" ? TAB_ACCENT : color}
+            />
+          ),
+          tabBarLabel: useSidebar
+            ? ({ color, position }) => (
+              <WebSidebarTabLabel
+                text="Chat"
+                navColor={color}
+                position={position}
+                isRowActive={activeTab === "inbox"}
+              />
+            )
+            : undefined,
+          tabBarStyle: useSidebar ? undefined : { display: "none" }
+        }}
+      />
+      <Tabs.Screen
+        name="subscriptions"
+        options={{
+          title: translate("layout.subscriptions"),
+          tabBarIcon: ({ color, size }) => (
+            <CreditCard
+              size={useSidebar ? WEB_TAB_ICON_SIZE : size}
+              color={useSidebar && activeTab === "subscriptions" ? TAB_ACCENT : color}
+            />
+          ),
+          tabBarLabel: useSidebar
+            ? ({ color, position }) => (
+              <WebSidebarTabLabel
+                text={translate("layout.subscriptions")}
+                navColor={color}
+                position={position}
+                isRowActive={activeTab === "subscriptions"}
+              />
+            )
+            : undefined,
         }}
       />
       <Tabs.Screen
         name="settings"
         options={{
-            title: translate("layout.settings"),
-            tabBarIcon: ({ color, size }) => (
-                <Settings
-                    size={useSidebar ? WEB_TAB_ICON_SIZE : size}
-                    color={useSidebar && activeTab === "settings" ? TAB_ACCENT : color}
-                />
-            ),
-            tabBarLabel: useSidebar
-                ? ({ color, position }) => (
-                        <WebSidebarTabLabel
-                            text={translate("layout.settings")}
-                            navColor={color}
-                            position={position}
-                            isRowActive={activeTab === "settings"}
-                        />
-                    )
-                : undefined,
-        }}
-      />
-      <Tabs.Screen 
-        name="inbox" 
-        options={{ 
-          title: "Chat",
-          href: useSidebar ? "/(super_admin)/inbox" : null, 
+          title: translate("layout.settings"),
           tabBarIcon: ({ color, size }) => (
-              <MessageSquare
-                  size={useSidebar ? WEB_TAB_ICON_SIZE : size}
-                  color={useSidebar && activeTab === "inbox" ? TAB_ACCENT : color}
-              />
+            <Settings
+              size={useSidebar ? WEB_TAB_ICON_SIZE : size}
+              color={useSidebar && activeTab === "settings" ? TAB_ACCENT : color}
+            />
           ),
           tabBarLabel: useSidebar
-              ? ({ color, position }) => (
-                      <WebSidebarTabLabel
-                          text="Chat"
-                          navColor={color}
-                          position={position}
-                          isRowActive={activeTab === "inbox"}
-                      />
-                  )
-              : undefined,
-          tabBarStyle: useSidebar ? undefined : { display: "none" } 
-        }} 
+            ? ({ color, position }) => (
+              <WebSidebarTabLabel
+                text={translate("layout.settings")}
+                navColor={color}
+                position={position}
+                isRowActive={activeTab === "settings"}
+              />
+            )
+            : undefined,
+        }}
       />
     </Tabs>
   );
