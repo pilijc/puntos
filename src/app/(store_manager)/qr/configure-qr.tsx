@@ -83,7 +83,8 @@ export default function ConfigureStreaks() {
       const pts = parseFloat(fixedPointsInput);
       const minSpend = parseFloat(minimumSpendInput);
 
-      if (!fixedPointsInput || isNaN(pts) || pts < 0) {
+      if (!fixedPointsInput || isNaN(pts) || pts <= 0) {
+ 
         nextErrors.fixedPoints = true;
         nextErrors.fixedPointsErrorMessage = t("store_manager.qrConfigure.validFixedPoints");
         hasErrors = true;
