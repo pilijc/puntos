@@ -1,4 +1,5 @@
 import type { RealtimeChannel } from "@supabase/supabase-js";
+import { Platform } from "react-native";
 import { supabase } from "@/supabase/supabase";
 import {
   SupportAttachmentInput,
@@ -68,11 +69,32 @@ export async function listSupportConversations(): Promise<SupportConversation[]>
   const { data, error } = await supabase
     .from("support_conversations")
     .select(CONVERSATION_SELECT)
+    // ============================================================================
+    // DO NOT REMOVE THIS FILTER
+    // When a store is activated or a manager opens the chat screen for the first time,
+    // a "blank" conversation is created. We MUST filter out conversations where
+    // `last_message` is null, otherwise the Super Admin's inbox will be flooded
+    // with empty ghost conversations.
+    // ============================================================================
+    .not("last_message", "is", null)
     .order("last_message_at", { ascending: false, nullsFirst: false })
     .order("updated_at", { ascending: false });
 
   if (error) throw new Error(error.message);
 
+  const conversations = ((data ?? []) as any[]).map(mapConversation);
+  return hydrateUnreadCounts(conversations);
+}
+
+export async function listManagerConversations(ownerId: string): Promise<SupportConversation[]> {
+  const { data, error } = await supabase
+    .from("support_conversations")
+    .select(CONVERSATION_SELECT)
+    .eq("owner_id", ownerId)
+    .order("last_message_at", { ascending: false, nullsFirst: false })
+    .order("updated_at", { ascending: false });
+
+  if (error) throw new Error(error.message);
   const conversations = ((data ?? []) as any[]).map(mapConversation);
   return hydrateUnreadCounts(conversations);
 }
@@ -159,6 +181,14 @@ export async function sendSupportMessage(
     .single();
 
   if (error) throw new Error(error.message);
+
+  // Automatically unarchive the conversation if a new message is sent
+  await supabase
+    .from("support_conversations")
+    .update({ status: "active" })
+    .eq("id", conversationId)
+    .eq("status", "archived");
+
   return data as SupportMessage;
 }
 
@@ -172,11 +202,6 @@ function fileExtensionFromMime(mimeType: string) {
   return "bin";
 }
 
-async function uriToBlob(uri: string): Promise<Blob> {
-  const response = await fetch(uri);
-  if (!response.ok) throw new Error("Failed to read attachment");
-  return response.blob();
-}
 
 async function signedUrlForPath(path: string): Promise<string | null> {
   const { data, error } = await supabase.storage
@@ -209,11 +234,26 @@ export async function uploadSupportAttachment(
     ? safeName
     : `${safeName}.${fileExtensionFromMime(attachment.mimeType)}`;
   const path = `support/${conversationId}/${Date.now()}-${nameWithExtension}`;
-  const blob = await uriToBlob(attachment.uri);
+
+  // React Native: FormData with file URI — recommended by Supabase for RN.
+  // Web: fetch the URI as a Blob (file:// URIs don't exist on web anyway).
+  let uploadData: FormData | Blob;
+  if (Platform.OS === "web") {
+    const res = await fetch(attachment.uri);
+    uploadData = await res.blob();
+  } else {
+    const fd = new FormData();
+    fd.append("file", {
+      uri: attachment.uri,
+      name: nameWithExtension,
+      type: attachment.mimeType,
+    } as any);
+    uploadData = fd;
+  }
 
   const { error } = await supabase.storage
     .from(SUPPORT_ATTACHMENTS_BUCKET)
-    .upload(path, blob, {
+    .upload(path, uploadData, {
       contentType: attachment.mimeType,
       upsert: false,
     });
@@ -261,6 +301,14 @@ export async function sendSupportAttachmentMessage(
     .single();
 
   if (error) throw new Error(error.message);
+
+  // Automatically unarchive the conversation if a new message is sent
+  await supabase
+    .from("support_conversations")
+    .update({ status: "active" })
+    .eq("id", conversationId)
+    .eq("status", "archived");
+
   return { ...(data as SupportMessage), attachment_url: uploaded.signedUrl };
 }
 

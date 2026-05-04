@@ -288,6 +288,7 @@ export async function getUserTransactionHistory(userId: string): Promise<any[]> 
       positive: true,
       icon: '🛒', // Add icon for QR transactions
       transactionType: 'qr', // Add identifier for QR transactions
+      storeId: transaction.store_id, // Add storeId for navigation
     }));
   } catch (error) {
      return [];

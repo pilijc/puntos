@@ -1274,6 +1274,60 @@
             "unnamedStore": "Unnamed Store",
             "noStoresAssigned": "No stores assigned to this manager yet.",
             "branchAssignment": "Branch Assignment"
+        },
+        "subscription": {
+            "title": "Subscriptions",
+            "formError": {
+                "loadPlansFailed": "Failed to load subscription plans.",
+                "loadSubsFailed": "Failed to load subscriptions.",
+                "invalidPrice": "Please enter a valid price greater than 0.",
+                "saveFailed": "Failed to save changes.",
+                "loadLedgerFailed": "Failed to load payment history."
+            },
+            "stats": {
+                "totalCollected": "Total collected",
+                "activeSubscribers": "Active subscribers",
+                "newSubscribers": "New subscribers",
+                "cancellations": "Cancellations"
+            },
+            "basic": {
+                "price": "Free",
+                "feature1": "1 store with full loyalty tools",
+                "feature2": "Stamps, streaks, rewards, QR, and staff tools"
+            },
+            "pro": {
+                "builtFor": "Built for multiple locations",
+                "feature1": "Add and run more than one store",
+                "feature2": "Avoid billing holds on extra locations",
+                "feature3": "Priority support when you need help",
+                "priceLabel": "Monthly price (PHP)",
+                "saveChanges": "Save changes"
+            },
+            "ledger": {
+                "paymentRef": "Ref",
+                "amount": "Amount",
+                "billingStart": "Period start",
+                "billingEnd": "Period end",
+                "status": "Status",
+                "empty": "No payments yet."
+            },
+            "table": {
+                "managerCol": "Manager",
+                "planCol": "Plan",
+                "paymentsCol": "Payments",
+                "planPro": "Pro",
+                "planBasic": "Basic"
+            },
+            "managerSubs": {
+                "title": "Subscribed managers",
+                "detail": "Tap a row to view the payment ledger for each manager.",
+                "empty": "No subscribed managers yet."
+            },
+            "modal": {
+                "successTitle": "Changes saved",
+                "okay": "Okay",
+                "successDetail": "Pro plan price has been updated successfully."
+            }
         }
     }
 }

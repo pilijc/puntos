@@ -1,9 +1,9 @@
 import React, { useState } from "react";
-import { View, Text, TouchableOpacity, Image } from "@/tw";
-import { Gem, User, Clock, AlertCircle } from "lucide-react-native";
-import { Button } from "@/components/button";
+import { View, Text, TouchableOpacity } from "@/tw";
+import { Gem } from "lucide-react-native";
 import { processRedemption } from "@/services/frontdesk/reward-redemption-service";
 import { RedemptionVerificationResult } from "@/type/frontdesk/reward-redemption";
+import { Check } from "lucide-react-native";
 
 interface Props {
   visible: boolean;
@@ -48,56 +48,31 @@ export default function RewardRedemptionModal({
 
   return (
     <View className="absolute inset-0 bg-black/50 items-center justify-center z-50">
-      <View className="bg-white dark:bg-darkBackgroundCard rounded-2xl mx-4 max-w-sm w-full p-6">
-        {/* Header */}
-        <View className="items-center mb-6">
-          <View className="w-16 h-16 bg-orange-100 dark:bg-orange-900/20 rounded-full items-center justify-center mb-3">
-            <Gem size={32} color="#FF6600" />
+      <View className="bg-white dark:bg-darkBackgroundCard rounded-2xl mx-4 max-w-sm w-full p-5">
+        {/* header */}
+        <View className="items-center mb-4">
+          <View className="w-14 h-14 bg-green-100 dark:bg-green-900/20 rounded-full items-center justify-center mb-2">
+            <Check size={28} color="#22C55E"/>
           </View>
-          <Text className="text-xl font-poppins-bold text-neutral-900 dark:text-white">
-            Reward Redemption
-          </Text>
-          <Text className="text-sm text-neutral-500 dark:text-neutral-400 text-center mt-1">
-            Confirm reward redemption for customer
+          <Text className="text-lg font-poppins-bold text-neutral-900 dark:text-white">
+            Confirm Redemption
           </Text>
         </View>
 
-        {/* Reward Info */}
-        <View className="bg-neutral-50 dark:bg-neutral-800 rounded-xl p-4 mb-4">
-          <Text className="font-poppins-semibold text-neutral-900 dark:text-white mb-2">
+        {/* essential info */}
+        <View className="bg-orange-50 dark:bg-orange-500/10 rounded-xl p-4 mb-4">
+          <Text className="font-poppins-semibold text-neutral-900 dark:text-white mb-1">
             {verification.code.reward_title || "Unknown Reward"}
           </Text>
-          {verification.code.reward_description && (
-            <Text className="text-sm text-neutral-500 dark:text-neutral-400 mb-3">
-              {verification.code.reward_description}
+          <View className="flex-row items-center">
+            <Gem size={16} color="#FF6600" />
+            <Text className="ml-2 font-poppins-semibold text-orange-600 dark:text-orange-400">
+              {verification.code.points_cost.toLocaleString()} points
             </Text>
-          )}
-          
-          {verification.code.reward_image_url && (
-            <Image
-              source={{ uri: verification.code.reward_image_url }}
-              className="w-full h-32 rounded-lg mb-3"
-              contentFit="cover"
-            />
-          )}
-
-          <View className="flex-row items-center justify-between">
-            <View className="flex-row items-center">
-              <Gem size={16} color="#FF6600" />
-              <Text className="ml-2 font-poppins-semibold text-orange-600 dark:text-orange-400">
-                {verification.code.points_cost.toLocaleString()} points
-              </Text>
-            </View>
-            <View className="flex-row items-center">
-              <Clock size={14} color="#6B7280" />
-              <Text className="ml-1 text-xs text-neutral-500 dark:text-neutral-400">
-                Expires soon
-              </Text>
-            </View>
           </View>
         </View>
 
-        {/* Action Buttons */}
+        {/* action buttons */}
         <View className="flex-row gap-3">
           <TouchableOpacity
             onPress={onClose}
@@ -108,14 +83,14 @@ export default function RewardRedemptionModal({
               Cancel
             </Text>
           </TouchableOpacity>
-          
+
           <TouchableOpacity
             onPress={handleConfirmRedemption}
             className="flex-1 bg-orange-500 rounded-xl py-3 items-center"
             disabled={isProcessing}
           >
             <Text className="font-poppins-semibold text-white">
-              {isProcessing ? "Processing..." : "Confirm Redemption"}
+              {isProcessing ? "Processing..." : "Confirm"}
             </Text>
           </TouchableOpacity>
         </View>

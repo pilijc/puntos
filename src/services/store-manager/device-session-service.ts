@@ -59,6 +59,8 @@ async function getServerTimeMs(): Promise<number> {
             headers: {
                 apikey: anonKey,
                 Authorization: `Bearer ${anonKey}`,
+                "Cache-Control": "no-cache, no-store",
+                Pragma: "no-cache",
             },
         });
         const dateStr = res.headers.get("Date");

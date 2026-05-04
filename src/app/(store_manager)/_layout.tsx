@@ -2,21 +2,24 @@ import { Tabs } from "expo-router";
 import { useColorScheme, Platform, Text, View, Image,} from "react-native";
 import React, { useCallback, useEffect, useState } from "react";
 import { usePathname, useRouter } from "expo-router";
-import { BottomTabBar, type BottomTabBarButtonProps, type BottomTabBarProps,} from "@react-navigation/bottom-tabs";
+import { BottomTabBar, type BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import { PlatformPressable } from "@react-navigation/elements";
-import { useRoute } from "@react-navigation/native";
+
 import { supabase } from "@/supabase/supabase";
 import { getRoleTypeForUser, getWebAdjustedHomeRoute } from "@/services/access-service";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
-import { LayoutDashboard, Store, ArrowLeftRight, Settings, CreditCard } from "lucide-react-native";
+import { LayoutDashboard, Store, ArrowLeftRight, Settings, CreditCard, PanelLeft, PanelLeftClose } from "lucide-react-native";
 import { useDeviceSession } from "@/hooks/store-manager/use-device-session";
 import { useManagerStoresStore } from "@/store/manager-stores-store";
 import { useSupportChatStore } from "@/store/support-chat-store";
 
 const WEB_SIDEBAR_WIDTH = 260;
+const WEB_SIDEBAR_COLLAPSED_WIDTH = 76;
 const WEB_SIDEBAR_INSET_X = 16;
+const WEB_SIDEBAR_COLLAPSED_INSET_X = 10;
 const WEB_SIDEBAR_BRAND_PADDING_X = 24;
+const WEB_SIDEBAR_COLLAPSED_BRAND_PADDING_X = 18;
 const WEB_TAB_ICON_SIZE = 18;
 const WEB_TAB_ACTIVE_MARGIN_END = 100;
 const WEB_TAB_ACTIVE_BG_LIGHT = "#F3F4F6";
@@ -149,63 +152,80 @@ function webSidebarIconColor(
     return isWeb && activeTab === thisTab ? TAB_ACCENT : navigationTint;
 }
 
-function WebStoreManagerTabBarButton(props: BottomTabBarButtonProps) {
-    const route = useRoute();
-    const pathname = usePathname();
-    const colorScheme = useColorScheme();
-    const isDark = colorScheme === "dark";
-
-    const activeTab = activeSidebarTabFromPath(withTrailingSlash(pathname));
-    const isThisRow = activeTab === route.name;
-    const activeBackground = isDark ? WEB_TAB_ACTIVE_BG_DARK : WEB_TAB_ACTIVE_BG_LIGHT;
-
-    return (
-        <View
-            style={{
-                alignSelf: "stretch",
-                ...(isThisRow ? { marginRight: WEB_TAB_ACTIVE_MARGIN_END } : null),
-            }}
-        >
-            <PlatformPressable
-                {...props}
-                hoverEffect={undefined}
-                aria-selected={isThisRow}
-                accessibilityState={{
-                    ...props.accessibilityState,
-                    selected: isThisRow,
-                }}
-                style={[props.style, isThisRow ? { backgroundColor: activeBackground } : null]}
-            />
-        </View>
-    );
+function getTabIcon(routeName: string, color: string, size: number): React.ReactNode {
+    switch (routeName) {
+        case "index":        return <LayoutDashboard size={size} color={color} />;
+        case "stores":       return <Store            size={size} color={color} />;
+        case "transactions": return <ArrowLeftRight   size={size} color={color} />;
+        case "subscription": return <CreditCard       size={size} color={color} />;
+        case "settings":     return <Settings         size={size} color={color} />;
+        default:             return null;
+    }
 }
 
-type WebStoreManagerSidebarTabBarProps = BottomTabBarProps & { isDark: boolean };
+type WebStoreManagerSidebarTabBarProps = BottomTabBarProps & {
+    isDark: boolean;
+    expanded: boolean;
+    onHoverIn: () => void;
+    onHoverOut: () => void;
+    onToggle: () => void;
+};
 
-function WebStoreManagerSidebarTabBar({ isDark, ...props }: WebStoreManagerSidebarTabBarProps) {
+// Hidden screens — not rendered as sidebar items.
+const HIDDEN_SCREENS = new Set([
+    "profile", "store/create-store", "view-store/[id]",
+    "streak/index", "streak/configure-streaks", "stamp/configure-stamp",
+    "stamp/index", "reward/index", "reward/add-rewards", "reward/view-reward",
+    "qr/index", "qr/configure-qr", "staff/index", "staff/add-staff",
+    "detail/index", "detail/edit-details", "chat-support",
+]);
+
+function WebStoreManagerSidebarTabBar({
+    isDark,
+    expanded,
+    onHoverIn,
+    onHoverOut,
+    onToggle,
+    state,
+    descriptors,
+    navigation,
+}: WebStoreManagerSidebarTabBarProps) {
+    const pathname = usePathname();
     const chromeBg = isDark ? "#262626" : "#FFFFFF";
+    const sidebarWidth = expanded ? WEB_SIDEBAR_WIDTH : WEB_SIDEBAR_COLLAPSED_WIDTH;
+    const activeTab = activeSidebarTabFromPath(withTrailingSlash(pathname));
+    const activeBackground = isDark ? WEB_TAB_ACTIVE_BG_DARK : WEB_TAB_ACTIVE_BG_LIGHT;
+    const inactiveColor = isDark ? "#737373" : "#8B8D98";
+    const px = WEB_SIDEBAR_INSET_X; // Constant inset for stability
+
+    const visibleRoutes = state.routes.filter((r) => !HIDDEN_SCREENS.has(r.name));
 
     return (
         <View
+            {...({ onMouseEnter: onHoverIn, onMouseLeave: onHoverOut } as any)}
             style={{
                 alignSelf: "stretch",
-                width: WEB_SIDEBAR_WIDTH,
-                minWidth: WEB_SIDEBAR_WIDTH,
-                maxWidth: WEB_SIDEBAR_WIDTH,
+                width: sidebarWidth,
+                minWidth: sidebarWidth,
+                maxWidth: sidebarWidth,
                 flex: 1,
                 flexDirection: "column",
                 backgroundColor: chromeBg,
                 borderRightWidth: 1,
                 borderRightColor: isDark ? WEB_SIDEBAR_BORDER_DARK : WEB_SIDEBAR_BORDER_LIGHT,
+                transitionProperty: "width, min-width, max-width",
+                transitionDuration: "180ms",
+                overflow: "hidden",
             }}
         >
+            {/* ── Brand header ── */}
             <View
                 style={{
                     flexDirection: "row",
                     alignItems: "center",
-                    gap: 10,
-                    paddingHorizontal: WEB_SIDEBAR_BRAND_PADDING_X,
-                    paddingTop: 14,
+                    paddingLeft: 19, // Centers logo at 37px (19 + 18)
+                    paddingTop: 20,
+                    paddingBottom: 20,
                 }}
             >
                 <Image
@@ -213,19 +233,125 @@ function WebStoreManagerSidebarTabBar({ isDark, ...props }: WebStoreManagerSideb
                     style={{ width: 36, height: 36 }}
                     resizeMode="contain"
                 />
-                <Text
-                    style={{
-                        fontSize: 18,
-                        fontFamily: "Poppins-Bold",
+                {expanded && (
+                    <Text style={{ 
+                        fontSize: 18, 
+                        fontFamily: "Poppins-Bold", 
                         color: isDark ? "#FFFFFF" : TAB_ACCENT,
-                    }}
-                >
-                    PUNTOS
-                </Text>
+                        marginStart: 12 
+                    }}>
+                        PUNTOS
+                    </Text>
+                )}
             </View>
 
-            <View style={{ flex: 1, minHeight: 0 }}>
-                <BottomTabBar {...props} />
+
+
+            {/* ── Nav items ── */}
+            <View style={{ flex: 1, paddingHorizontal: px, paddingTop: 8 }}>
+                {visibleRoutes.map((route) => {
+                    const options = descriptors[route.key]?.options ?? {};
+                    const isActive = activeTab === route.name;
+                    const iconColor = isActive ? TAB_ACCENT : inactiveColor;
+                    const badge = (options as any).tabBarBadge;
+
+                    const onPress = () => {
+                        const event = navigation.emit({
+                            type: "tabPress" as any,
+                            target: route.key,
+                            canPreventDefault: true,
+                        });
+                        if (!isActive && !(event as any).defaultPrevented) {
+                            navigation.navigate(route.name as never);
+                        }
+                    };
+
+                    return (
+                        <PlatformPressable
+                            key={route.key}
+                            onPress={onPress}
+                            hoverEffect={undefined}
+                            accessibilityRole="tab"
+                            accessibilityState={{ selected: isActive }}
+                            style={{
+                                flexDirection: "row",
+                                alignItems: "center",
+                                borderRadius: 10,
+                                paddingHorizontal: 12,
+                                paddingVertical: 10,
+                                marginBottom: 2,
+                                backgroundColor: isActive ? activeBackground : "transparent",
+                            }}
+                        >
+                            {/* Icon + optional badge */}
+                            <View style={{ width: 18, alignItems: 'center', justifyContent: 'center', position: "relative" }}>
+                                {getTabIcon(route.name, iconColor, WEB_TAB_ICON_SIZE)}
+                                {badge != null && (
+                                    <View style={{
+                                        position: "absolute", top: -4, right: -8,
+                                        backgroundColor: TAB_ACCENT, borderRadius: 8,
+                                        minWidth: 16, height: 16,
+                                        alignItems: "center", justifyContent: "center",
+                                        paddingHorizontal: 3,
+                                    }}>
+                                        <Text style={{ color: "#fff", fontSize: 9, fontFamily: "Poppins-Medium" }}>
+                                            {badge}
+                                        </Text>
+                                    </View>
+                                )}
+                            </View>
+
+                            {/* Label (expanded only) */}
+                            {expanded && (
+                                <Text style={{
+                                    fontSize: 12,
+                                    fontFamily: "Poppins-Medium",
+                                    marginStart: 10,
+                                    color: isActive ? TAB_ACCENT : inactiveColor,
+                                }}>
+                                    {String(options.title ?? route.name)}
+                                </Text>
+                            )}
+                        </PlatformPressable>
+                    );
+                })}
+            </View>
+
+            {/* ── Footer / Toggle ── */}
+            <View
+                style={{
+                    paddingBottom: 24,
+                    borderTopWidth: 1,
+                    borderTopColor: isDark ? "#333" : "#f0f0f0",
+                    paddingTop: 16,
+                }}
+            >
+                <PlatformPressable
+                    onPress={onToggle}
+                    hoverEffect={undefined}
+                    style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        paddingLeft: 28, // Centers icon at 37px (28 + 9) matching the logo
+                        height: 44,
+                    }}
+                >
+                    <View style={{ width: 18, alignItems: 'center' }}>
+                        {expanded
+                            ? <PanelLeftClose size={18} color={isDark ? "#A3A3A3" : "#6B7280"} />
+                            : <PanelLeft      size={18} color={isDark ? "#A3A3A3" : "#6B7280"} />}
+                    </View>
+                    {expanded && (
+                        <Text style={{ 
+                            marginStart: 12, 
+                            fontSize: 12, 
+                            fontFamily: "Poppins-Medium", 
+                            color: isDark ? "#A3A3A3" : "#6B7280" 
+                        }}>
+                            {expanded ? "Collapse" : "Expand"}
+                        </Text>
+                    )}
+                </PlatformPressable>
             </View>
         </View>
     );
@@ -240,27 +366,22 @@ export default function StoreManagerLayout() {
     const pathname = usePathname();
     const path = withTrailingSlash(pathname);
     const [currentUserId, setCurrentUserId] = useState<string | undefined>(undefined);
+    const [webSidebarExpanded, setWebSidebarExpanded] = useState(false);
     const { } = useDeviceSession(currentUserId);
 
     // Bootstrap support chat so unread count shows in settings
     const stores = useManagerStoresStore((state) => state.stores);
     const fetchStores = useManagerStoresStore((state) => state.fetchStores);
-    const { loadManagerConversation, conversations, activeConversationId, subscribeInbox, subscribeMessages, cleanupRealtime } = useSupportChatStore();
+    const { loadAllManagerConversations, conversations, subscribeInbox, cleanupRealtime } = useSupportChatStore();
 
     useEffect(() => {
         fetchStores();
     }, [fetchStores]);
 
     useEffect(() => {
-        const activeStore = stores[0];
-        if (!activeStore || !currentUserId) return;
-        loadManagerConversation(activeStore.id, currentUserId);
-    }, [stores, currentUserId, loadManagerConversation]);
-
-    useEffect(() => {
-        if (!activeConversationId) return;
-        subscribeMessages(activeConversationId);
-    }, [activeConversationId, subscribeMessages]);
+        if (!currentUserId) return;
+        loadAllManagerConversations(currentUserId);
+    }, [currentUserId, loadAllManagerConversations]);
 
     useEffect(() => {
         subscribeInbox();
@@ -304,9 +425,16 @@ export default function StoreManagerLayout() {
 
     const renderWebTabBar = useCallback(
         (barProps: BottomTabBarProps) => (
-            <WebStoreManagerSidebarTabBar {...barProps} isDark={isDark} />
+            <WebStoreManagerSidebarTabBar
+                {...barProps}
+                isDark={isDark}
+                expanded={webSidebarExpanded}
+                onHoverIn={() => setWebSidebarExpanded(true)}
+                onHoverOut={() => setWebSidebarExpanded(false)}
+                onToggle={() => setWebSidebarExpanded((v) => !v)}
+            />
         ),
-        [isDark],
+        [isDark, webSidebarExpanded],
     );
 
     return (
@@ -318,23 +446,8 @@ export default function StoreManagerLayout() {
                 tabBarPosition: isWeb ? "left" : "bottom",
                 tabBarLabelPosition: isWeb ? "beside-icon" : undefined,
                 ...(isWeb ? { animation: "none" as const } : {}),
-                tabBarActiveBackgroundColor: isWeb
-                    ? isDark
-                        ? WEB_TAB_ACTIVE_BG_DARK
-                        : WEB_TAB_ACTIVE_BG_LIGHT
-                    : undefined,
-                tabBarInactiveBackgroundColor: isWeb ? "transparent" : undefined,
                 tabBarStyle: isWeb
-                    ? {
-                          backgroundColor: "transparent",
-                          borderTopWidth: 0,
-                          borderRightWidth: 0,
-                          flex: 1,
-                          width: "100%",
-                          elevation: 0,
-                          paddingLeft: WEB_SIDEBAR_INSET_X,
-                          paddingRight: WEB_SIDEBAR_INSET_X,
-                      }
+                    ? { display: "none" }
                     : {
                           backgroundColor: isDark ? "#262626" : "#FFFFFF",
                           borderTopColor: isDark ? "#404040" : "#e5e5e5",
@@ -344,12 +457,6 @@ export default function StoreManagerLayout() {
                       },
                 tabBarActiveTintColor: TAB_ACCENT,
                 tabBarInactiveTintColor: isDark ? "#737373" : "#8B8D98",
-                tabBarButton: isWeb
-                    ? (btnProps) => <WebStoreManagerTabBarButton {...btnProps} />
-                    : undefined,
-                tabBarItemStyle: isWeb
-                    ? { alignSelf: "stretch", width: "100%" }
-                    : undefined,
                 tabBarLabelStyle: {
                     fontSize: isWeb ? 12 : 10,
                     fontFamily: "Poppins-Medium",
@@ -358,6 +465,35 @@ export default function StoreManagerLayout() {
                 },
             }}
         >
+            <Tabs.Screen
+                name="index"
+                options={{
+                    title: translate("label.dashboard"),
+                    tabBarIcon: ({ color, size }) => (
+                        <LayoutDashboard
+                            size={
+                                isWeb
+                                    ? WEB_TAB_ICON_SIZE
+                                    : Platform.OS === "android"
+                                      ? 20
+                                      : size
+                            }
+                            color={webSidebarIconColor(isWeb, activeTab, "index", color)}
+                        />
+                  
+                    ),
+                    tabBarLabel: isWeb
+                        ? ({ color, position }) => webSidebarExpanded ? (
+                              <WebSidebarTabLabel
+                                  text={translate("label.dashboard")}
+                                  navColor={color}
+                                  position={position}
+                                  isRowActive={activeTab === "index"}
+                              />
+                          ) : null
+                        : undefined,
+                }}
+            />
             <Tabs.Screen
                 name="stores"
                 options={{
@@ -369,14 +505,16 @@ export default function StoreManagerLayout() {
                         />
                     ),
                     tabBarLabel: ({ color, position }) => (
-                        <StoresTabLabel
-                            text={translate("store_manager.tabs.stores")}
-                            navColor={color}
-                            position={position}
-                            isRowActive={storesRowActive}
-                            isWeb={isWeb}
-                            insetBottom={insets.bottom}
-                        />
+                        isWeb && !webSidebarExpanded ? null : (
+                            <StoresTabLabel
+                                text={translate("store_manager.tabs.stores")}
+                                navColor={color}
+                                position={position}
+                                isRowActive={storesRowActive}
+                                isWeb={isWeb}
+                                insetBottom={insets.bottom}
+                            />
+                        )
                     ),
                 }}
             />
@@ -392,7 +530,7 @@ export default function StoreManagerLayout() {
                         />
                     ),
                     tabBarLabel: isWeb
-                        ? ({ color, position }) => (
+                        ? ({ color, position }) => webSidebarExpanded ? (
                               <WebSidebarTabLabel
                                   text={translate("store_manager.tabs.subscription")}
                                   navColor={color}
@@ -422,7 +560,7 @@ export default function StoreManagerLayout() {
                                   position={position}
                                   isRowActive={activeTab === "index"}
                               />
-                          )
+                          ) : null
                         : undefined,
                 }}
             />
@@ -438,14 +576,14 @@ export default function StoreManagerLayout() {
                         />
                     ),
                     tabBarLabel: isWeb
-                        ? ({ color, position }) => (
+                        ? ({ color, position }) => webSidebarExpanded ? (
                               <WebSidebarTabLabel
                                   text={translate("label.transactions")}
                                   navColor={color}
                                   position={position}
                                   isRowActive={activeTab === "transactions"}
                               />
-                          )
+                          ) : null
                         : undefined,
                 }}
             />
@@ -463,14 +601,14 @@ export default function StoreManagerLayout() {
                         />
                     ),
                     tabBarLabel: isWeb
-                        ? ({ color, position }) => (
+                        ? ({ color, position }) => webSidebarExpanded ? (
                               <WebSidebarTabLabel
                                   text={translate("label.settings")}
                                   navColor={color}
                                   position={position}
                                   isRowActive={activeTab === "settings"}
                               />
-                          )
+                          ) : null
                         : undefined,
                 }}
             />
@@ -491,6 +629,7 @@ export default function StoreManagerLayout() {
             <Tabs.Screen name="detail/index" options={{ href: null }} />
             <Tabs.Screen name="detail/edit-details" options={{ href: null }} />
             <Tabs.Screen name="chat-support" options={{ href: null, tabBarStyle: { display: "none" } }} />
+            <Tabs.Screen name="manager-inbox" options={{ href: null, tabBarStyle: { display: "none" } }} />
         </Tabs>
     );
 }

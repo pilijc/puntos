@@ -1,4 +1,4 @@
-import { supabase } from "@/supabase/supabase";
+ import { supabase } from "@/supabase/supabase";
 import {
   RedemptionCode,
   GenerateCodeResult,
@@ -17,7 +17,7 @@ function generateRandomCode(): string {
   for (let i = 0; i < CODE_LENGTH; i++) {
     result += chars.charAt(Math.floor(Math.random() * chars.length));
   }
-  return `${REDEMPTION_CODE_PREFIX}-${result}`;
+  return `${REDEMPTION_CODE_PREFIX}${result}`;
 }
 
 function getExpiryTimestamp(): string {
@@ -34,7 +34,6 @@ export async function generateRedemptionCode(
   try {
     const { data: user, error: userError } = await supabase.auth.getUser();
     if (userError || !user.user) {
-      console.error("User authentication failed:", userError);
       return { success: false, message: "User not authenticated" };
     }
 
@@ -46,23 +45,19 @@ export async function generateRedemptionCode(
       .single();
 
     if (rewardError || !reward) {
-      console.error("Reward not found:", rewardError, "rewardId:", rewardId, "storeId:", storeId);
       return { success: false, message: "Reward not found" };
     }
 
     if (!reward.is_active) {
-      console.error("Reward is not active:", reward.id);
       return { success: false, message: "Reward is not active" };
     }
 
     if (reward.stock !== null && reward.stock <= 0) {
-      console.error("Reward is out of stock:", reward.id, "stock:", reward.stock);
       return { success: false, message: "Reward is out of stock" };
     }
 
      const availablePoints = await getUserAvailablePoints(userId, storeId);
-    console.log("Available points:", availablePoints, "Required:", reward.points_cost);
-    
+       
     if (availablePoints < reward.points_cost) {
       return { success: false, message: "Insufficient points" };
     }
@@ -88,13 +83,11 @@ export async function generateRedemptionCode(
       .single();
 
     if (codeError || !redemptionCode) {
-      console.error("Database error inserting redemption code:", codeError);
       return { success: false, message: "Failed to generate redemption code" };
     }
 
     return { success: true, code: redemptionCode };
   } catch (error) {
-    console.error("Error generating redemption code:", error);
     return { success: false, message: "An error occurred" };
   }
 }
@@ -119,13 +112,11 @@ export async function getActiveRedemptionCodes(
       .order("created_at", { ascending: false });
 
     if (error) {
-      console.error("Error fetching active redemption codes:", error);
       return [];
     }
 
     return (data || []) as ActiveRedemptionWithReward[];
   } catch (error) {
-    console.error("Error fetching active redemption codes:", error);
     return [];
   }
 }
@@ -134,25 +125,58 @@ export function listenToRedemptionStatus(
   codeId: string,
   onStatusChange: (update: RedemptionUpdate) => void
 ) {
-  return supabase
-    .channel(`redemption-status-${codeId}`)
-    .on(
-      "postgres_changes",
-      {
-        event: "UPDATE",
-        schema: "public",
-        table: "reward_redemption_codes",
-        filter: `id=eq.${codeId}`,
-      },
-      (payload) => {
-        const updated = payload.new as RedemptionCode;
-        onStatusChange({
-          status: updated.status,
-          redeemed_at: updated.redeemed_at,
-        });
-      }
-    )
-    .subscribe();
+  let retryCount = 0;
+  const maxRetries = 10;
+  const baseDelay = 2000;
+
+  const subscribeWithRetry = () => {
+    if (retryCount >= maxRetries) {
+      return null;
+    }
+
+    const delay = Math.min(baseDelay * Math.pow(2, retryCount), 30000);
+
+    const channel = supabase
+      .channel(`redemption-status-${codeId}`, {
+        config: {
+          broadcast: { self: true },
+          presence: { key: codeId },
+        },
+      })
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "reward_redemption_codes",
+          filter: `id=eq.${codeId}`,
+        },
+        (payload) => {
+          const updated = payload.new as RedemptionCode;
+          onStatusChange({
+            status: updated.status,
+            redeemed_at: updated.redeemed_at,
+          });
+        }
+      )
+      .subscribe((status) => {
+         
+        if (status === "SUBSCRIBED") {
+          retryCount = 0;
+        } else if (status === "TIMED_OUT" || status === "CLOSED" || status === "CHANNEL_ERROR") {
+          retryCount++;
+          if (retryCount < maxRetries) {
+            setTimeout(() => {
+              subscribeWithRetry();
+            }, delay);
+          } 
+        }
+      });
+
+    return channel;
+  };
+
+  return subscribeWithRetry();
 }
 
 export async function cancelRedemptionCode(
@@ -175,7 +199,6 @@ export async function cancelRedemptionCode(
 
     return { success: true, message: "Redemption code cancelled" };
   } catch (error) {
-    console.error("Error cancelling redemption code:", error);
     return { success: false, message: "An error occurred" };
   }
 }
@@ -185,14 +208,14 @@ export function getQRCodeData(code: string): string {
 }
 
 export async function deductPoints(
-    userId: string, 
-    storeId: string, 
+    userId: string,
+    storeId: string,
     pointsToDeduct: number
 ): Promise<{ success: boolean; message: string; remainingPoints?: number }> {
     try {
-        
+
         const currentPoints = await getUserAvailablePoints(userId, storeId);
-        
+
         if (currentPoints < pointsToDeduct) {
             return {
                 success: false,
@@ -209,10 +232,31 @@ export async function deductPoints(
         };
 
     } catch (error) {
-        console.error("Error deducting points:", error);
         return {
             success: false,
             message: "An error occurred while deducting points"
         };
     }
+}
+
+export function listenToUserRedemptions(
+  userId: string,
+  onNewRedemption: (redemption: any) => void
+) {
+  return supabase
+    .channel(`user-redemptions-${userId}`)
+    .on(
+      "postgres_changes",
+      {
+        event: "INSERT",
+        schema: "public",
+        table: "reward_redemptions",
+        filter: `user_id=eq.${userId}`,
+      },
+      (payload) => {
+        const newRedemption = payload.new;
+        onNewRedemption(newRedemption);
+      }
+    )
+   
 }

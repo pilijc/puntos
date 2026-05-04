@@ -1172,7 +1172,6 @@ export default function CreateStore() {
                   )}
                 </View>
                 <TextField
-                  label={t("store_manager.createStore.timezone")}
                   placeholder={t("store_manager.createStore.timezonePlaceholder")}
                   value={timezone}
                   onChangeText={setTimezone}

@@ -23,6 +23,7 @@ import {
 
 // ── Screen ──────────────────────────────────────────────────────────────────
 const isWeb = Platform.OS === "web";
+const WEB_TAB_PILL_STYLE = { flexGrow: 1, flexBasis: 120, minWidth: 0 };
 
 export default function SuperAdminStores() {
 	const { t: translate } = useTranslation();
@@ -174,13 +175,13 @@ export default function SuperAdminStores() {
 					<View style={{ maxWidth: 896 }} className="w-full">
 
 						{/* ── Filter tabs ── */}
-						<View className="bg-white dark:bg-darkBackgroundCard rounded-2xl flex-row shadow-sm border border-slate-100 dark:border-darkBorder mb-4" style={{ width: '100%', height: 50, padding: 6, alignItems: 'center' }}>
+						<View className="bg-white dark:bg-darkBackgroundCard rounded-2xl flex-row flex-wrap shadow-sm border border-slate-100 dark:border-darkBorder mb-4" style={{ width: '100%', padding: 6, alignItems: 'center', gap: 6 }}>
 							{FILTERS.map((f) => {
 								const active = activeFilter === f;
 								const count = statusCounts[f] ?? 0;
 								return (
-									<TouchableOpacity key={f} onPress={() => setActiveFilter(f)} activeOpacity={0.8} style={{ flex: 1, height: 38, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 6, borderRadius: 12, backgroundColor: active ? '#FF6600' : 'transparent' }}>
-										<Text className={`text-sm font-poppins-bold ${active ? 'text-white' : 'text-slate-500 dark:text-darkTextMuted'}`}>{FILTER_LABELS[f]}</Text>
+									<TouchableOpacity key={f} onPress={() => setActiveFilter(f)} activeOpacity={0.8} style={{ ...WEB_TAB_PILL_STYLE, height: 38, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 6, borderRadius: 12, backgroundColor: active ? '#FF6600' : 'transparent', paddingHorizontal: 8 }}>
+										<Text className={`min-w-0 text-sm font-poppins-bold ${active ? 'text-white' : 'text-slate-500 dark:text-darkTextMuted'}`} numberOfLines={1}>{FILTER_LABELS[f]}</Text>
 										{count >= 0 && (
 											<View className={`rounded-full px-2 py-0.5 items-center justify-center ${active ? 'bg-white/20' : 'bg-slate-100 dark:bg-neutral-800'}`}>
 												<Text className={`text-[10px] font-poppins-bold ${active ? 'text-white' : 'text-slate-500 dark:text-darkTextMuted'}`}>{count}</Text>

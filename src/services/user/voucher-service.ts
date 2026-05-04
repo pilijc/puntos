@@ -66,7 +66,6 @@ export async function generateVoucherCode(
 export async function getUserVoucherTransactionHistory(userId: string): Promise<any[]> {
   try {
     // First, test basic access to the table
-    console.log('Testing basic access to voucher_transactions...');
     const { data: testData, error: testError } = await supabase
       .from('voucher_transactions')
       .select('id, user_id')
@@ -84,9 +83,7 @@ export async function getUserVoucherTransactionHistory(userId: string): Promise<
       return [];
     }
 
-    console.log('Basic access test passed, found records:', testData?.length || 0);
-
-    // Fetch voucher transactions with store information (manual join)
+    // Fetch voucher transactions with store info 
     const { data: transactions, error } = await supabase
       .from('voucher_transactions')
       .select(`
@@ -110,7 +107,7 @@ export async function getUserVoucherTransactionHistory(userId: string): Promise<
       return [];
     }
 
-    // Get store names separately (manual join)
+    // Get store names separately  
     const storeIds = [...new Set(transactions.map(t => t.store_id))];
     const { data: stores, error: storesError } = await supabase
       .from('stores')
@@ -133,12 +130,13 @@ export async function getUserVoucherTransactionHistory(userId: string): Promise<
       section: formatDateSection(transaction.created_at),
       type: 'earned',
       title: storeMap[transaction.store_id] || 'user.activity.unknownStore',
-      subtitle: 'user.activity.subtitle.voucherPoints',
+      subtitle: 'user.activity.voucherPoints',
       time: transaction.created_at,
       points: `+${transaction.points_earned}`,
       positive: true,
-      icon: '🎫', // Add icon for voucher transactions
-      transactionType: 'voucher', // Add identifier for voucher transactions
+      icon: '🎫', 
+      transactionType: 'voucher',
+      storeId: transaction.store_id, // Add storeId for navigation
     }));
   } catch (error) {
     console.error('Exception fetching voucher transaction history:', error);
@@ -146,7 +144,7 @@ export async function getUserVoucherTransactionHistory(userId: string): Promise<
   }
 }
 
-// Helper function to format date section (matching QR service)
+// Helper function to format date section  
 function formatDateSection(dateString: string): string {
   const date = new Date(dateString);
   const today = new Date();
@@ -170,26 +168,21 @@ export function listenToVoucherTransaction(userId: string, onProcessed: (transac
             table: 'voucher_transactions',
             filter: `user_id=eq.${userId}`
         }, (payload) => {
-            console.log("Voucher transaction realtime triggered:", payload);
+            
             const newRow = payload.new as VoucherTransaction;
             onProcessed(newRow);
         })
         .subscribe((status) => {
-            console.log(`Customer voucher listener status for user ${userId}:`, status);
+          
             if (status === 'SUBSCRIBED') {
-                //console.log(`Successfully subscribed to voucher transactions for user ${userId}`);
+               
             } else if (status === 'TIMED_OUT') {
-                //console.error(`Voucher listener subscription timed out for user ${userId}:`, status);
-                // Retry connection after timeout
+             
                 setTimeout(() => {
-                  //  console.log(`Retrying voucher listener connection for user ${userId}`);
+                
                     channel.subscribe();
                 }, 3000);
-            } else if (status === 'CLOSED') {
-                //console.log(`Voucher listener closed for user ${userId} - this is normal during cleanup`);
-            } else {
-                //console.warn(`Voucher listener unexpected status for user ${userId}:`, status);
-            }
+            } 
         });
 
     return channel;

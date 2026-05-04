@@ -1,9 +1,9 @@
-import React from "react";
+﻿import React from "react";
 import { KeyboardTypeOptions } from "react-native";
 import { View, Text, TextInput } from "@/tw";
 
 interface TextFieldProps {
-  label: string;
+  label?: string;
   value: string;
   onChangeText: (value: string) => void;
   placeholder?: string;
@@ -39,9 +39,11 @@ export function TextField({
 
   return (
     <View className="gap-y-1.5">
-      <Text className="text-sm font-poppins text-slate-700 dark:text-slate-300">
-        {label} {required && <Text className="text-sm font-poppins text-red-500 dark:text-red-400 -mt-1">*</Text>}
-      </Text>
+      {!!label && (
+        <Text className="text-sm font-poppins text-slate-700 dark:text-slate-300">
+          {label} {required && <Text className="text-sm font-poppins text-red-500 dark:text-red-400 -mt-1">*</Text>}
+        </Text>
+      )}
       {hint && (
         <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500 -mt-1">
           {hint}
