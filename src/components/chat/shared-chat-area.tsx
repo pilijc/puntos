@@ -36,25 +36,25 @@ function formatMessageTime(value: string) {
 function formatMessageDate(value: string) {
   const date = new Date(value);
   const now = new Date();
-  
-  const isToday = 
-    date.getDate() === now.getDate() && 
-    date.getMonth() === now.getMonth() && 
+
+  const isToday =
+    date.getDate() === now.getDate() &&
+    date.getMonth() === now.getMonth() &&
     date.getFullYear() === now.getFullYear();
   if (isToday) return "Today";
-  
+
   const yesterday = new Date(now);
   yesterday.setDate(now.getDate() - 1);
-  const isYesterday = 
-    date.getDate() === yesterday.getDate() && 
-    date.getMonth() === yesterday.getMonth() && 
+  const isYesterday =
+    date.getDate() === yesterday.getDate() &&
+    date.getMonth() === yesterday.getMonth() &&
     date.getFullYear() === yesterday.getFullYear();
   if (isYesterday) return "Yesterday";
-  
-  return date.toLocaleDateString("en-US", { 
-    month: "short", 
-    day: "numeric", 
-    year: date.getFullYear() !== now.getFullYear() ? "numeric" : undefined 
+
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: date.getFullYear() !== now.getFullYear() ? "numeric" : undefined
   });
 }
 
@@ -63,7 +63,7 @@ export interface SharedChatAreaProps {
   loadingMessages: boolean;
   emptyMessage: string | React.ReactNode;
   onSendMessage: (text: string) => Promise<void>;
-  onSendAttachment?: (attachment: SupportAttachmentInput, body?: string) => Promise<void>;
+  onSendAttachment?: (attachments: SupportAttachmentInput[], body?: string) => Promise<void>;
   sending: boolean;
   uploadingAttachment?: boolean;
   disabled: boolean;
@@ -91,13 +91,11 @@ export function SharedChatArea({
 }: SharedChatAreaProps) {
   const [messageText, setMessageText] = useState("");
   const [popoverOpen, setPopoverOpen] = useState(false);
-  const [pendingAttachment, setPendingAttachment] = useState<SupportAttachmentInput | null>(null);
+  const [pendingAttachments, setPendingAttachments] = useState<SupportAttachmentInput[]>([]);
   const [outgoingBubble, setOutgoingBubble] = useState<{
     text?: string;
     isAttachment: boolean;
-    attachmentName?: string;
-    attachmentKind?: "image" | "file";
-    previewUri?: string;
+    attachments?: SupportAttachmentInput[];
   } | null>(null);
   const scrollViewRef = useRef<ScrollView>(null);
   const prevMessagesLength = useRef(0);
@@ -122,23 +120,21 @@ export function SharedChatArea({
 
   const handleSend = async () => {
     const hasText = messageText.trim();
-    const hasAttachment = !!pendingAttachment && !!onSendAttachment;
-    if ((!hasText && !hasAttachment) || sending || uploadingAttachment || disabled) return;
-    if (hasAttachment) {
-      const attachment = pendingAttachment!;
+    const hasAttachments = pendingAttachments.length > 0 && !!onSendAttachment;
+    if ((!hasText && !hasAttachments) || sending || uploadingAttachment || disabled) return;
+    if (hasAttachments) {
+      const attachments = [...pendingAttachments];
       const body = hasText ? messageText.trim() : undefined;
       setOutgoingBubble({
         text: body,
         isAttachment: true,
-        attachmentName: attachment.name,
-        attachmentKind: attachment.kind,
-        previewUri: attachment.kind === "image" ? attachment.uri : undefined,
+        attachments,
       });
-      setPendingAttachment(null);
+      setPendingAttachments([]);
       setMessageText("");
       if (conversationId) draftsRef.current[conversationId] = "";
       try {
-        await onSendAttachment!(attachment, body);
+        await onSendAttachment!(attachments, body);
       } catch (e) {
         console.error(e);
       }
@@ -166,35 +162,40 @@ export function SharedChatArea({
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       quality: 0.85,
+      allowsMultipleSelection: true,
     });
-    if (result.canceled || !result.assets[0]) return;
-    const asset = result.assets[0];
+    if (result.canceled || !result.assets || result.assets.length === 0) return;
     setPopoverOpen(false);
-    setPendingAttachment({
+
+    const newAttachments: SupportAttachmentInput[] = result.assets.map((asset) => ({
       uri: asset.uri,
       name: asset.fileName || `image-${Date.now()}.jpg`,
       mimeType: asset.mimeType || "image/jpeg",
       size: asset.fileSize ?? null,
       kind: "image",
-    });
+    }));
+
+    setPendingAttachments(prev => [...prev, ...newAttachments]);
   };
 
   const handlePickFile = async () => {
     if (!onSendAttachment || disabled) return;
     const result = await DocumentPicker.getDocumentAsync({
       copyToCacheDirectory: true,
-      multiple: false,
+      multiple: true,
     });
-    if (result.canceled || !result.assets[0]) return;
-    const asset = result.assets[0];
+    if (result.canceled || !result.assets || result.assets.length === 0) return;
     setPopoverOpen(false);
-    setPendingAttachment({
+
+    const newAttachments: SupportAttachmentInput[] = result.assets.map((asset) => ({
       uri: asset.uri,
       name: asset.name || `file-${Date.now()}`,
       mimeType: asset.mimeType || "application/octet-stream",
       size: asset.size ?? null,
       kind: "file",
-    });
+    }));
+
+    setPendingAttachments(prev => [...prev, ...newAttachments]);
   };
 
   const formatFileSize = (value?: number | null) => {
@@ -204,90 +205,190 @@ export function SharedChatArea({
   };
 
   /** True when the message has a non-image file attachment */
-  const isFileAttachment = (msg: SupportMessage) =>
-    (!!msg.attachment_url || !!msg.attachment_name) && msg.message_kind !== "image";
+  const isFileAttachment = (msg: SupportMessage) => {
+    if (msg.attachments && msg.attachments.length > 0) {
+      return msg.attachments.some(a => a.kind === "file");
+    }
+    return (!!msg.attachment_url || !!msg.attachment_name) && msg.message_kind !== "image";
+  };
 
   /** Image attachment — rendered inside the colored bubble */
   const renderImageAttachment = (msg: SupportMessage, isMe: boolean) => {
-    if (msg.message_kind !== "image" || !msg.attachment_url) return null;
+    const images = msg.attachments ? msg.attachments.filter(a => a.kind === "image" && a.url) : [];
+    if (images.length === 0) {
+      if (msg.message_kind !== "image" || !msg.attachment_url) return null;
+      return (
+        <TouchableOpacity
+          activeOpacity={0.85}
+          onPress={() => msg.attachment_url && Linking.openURL(msg.attachment_url)}
+        >
+          <Image
+            source={{ uri: msg.attachment_url }}
+            style={{
+              width: 220,
+              height: 220,
+              borderRadius: 16,
+              backgroundColor: isMe ? "rgba(255,255,255,0.18)" : "#E2E8F0",
+            }}
+            resizeMode="cover"
+          />
+        </TouchableOpacity>
+      );
+    }
+
     return (
-      <TouchableOpacity
-        activeOpacity={0.85}
-        onPress={() => msg.attachment_url && Linking.openURL(msg.attachment_url)}
-      >
-        <Image
-          source={{ uri: msg.attachment_url }}
-          style={{
-            width: 220,
-            height: 220,
-            borderRadius: 16,
-            backgroundColor: isMe ? "rgba(255,255,255,0.18)" : "#E2E8F0",
-          }}
-          resizeMode="cover"
-        />
-      </TouchableOpacity>
+      <View style={{ flexDirection: "row", flexWrap: "wrap", width: 224, gap: 4 }}>
+        {images.map((img, idx) => {
+          const isFullWidth = images.length % 2 !== 0 && idx === 0;
+          const width = isFullWidth ? 220 : 108;
+          return (
+            <TouchableOpacity
+              key={idx}
+              activeOpacity={0.85}
+              onPress={() => img.url && Linking.openURL(img.url)}
+            >
+              <Image
+                source={{ uri: img.url }}
+                style={{
+                  width: width,
+                  height: width,
+                  borderRadius: 12,
+                  backgroundColor: isMe ? "rgba(255,255,255,0.18)" : "#E2E8F0",
+                }}
+                resizeMode="cover"
+              />
+            </TouchableOpacity>
+          );
+        })}
+      </View>
     );
   };
 
   /** File attachment — standalone card with isMe-aware colors, matching message bubble spacing */
   const renderFileCard = (msg: SupportMessage, isMe: boolean, hasBodyBelow: boolean) => {
-    if (!isFileAttachment(msg)) return null;
-    return (
-      <TouchableOpacity
-        activeOpacity={0.85}
-        onPress={() => msg.attachment_url && Linking.openURL(msg.attachment_url)}
-        style={{
-          flexDirection: "row",
-          alignItems: "center",
-          backgroundColor: isMe ? "#FF6600" : "#FFFFFF",
-          borderRadius: 16,
-          borderWidth: isMe ? 0 : 1,
-          borderColor: "#E2E8F0",
-          paddingHorizontal: 16,
-          paddingVertical: 12,
-          marginBottom: hasBodyBelow ? 6 : 0,
-          minWidth: 210,
-        }}
-      >
-        <View
+    const files = msg.attachments ? msg.attachments.filter(a => a.kind === "file") : [];
+
+    if (files.length === 0) {
+      if (!isFileAttachment(msg)) return null;
+      return (
+        <TouchableOpacity
+          activeOpacity={0.85}
+          onPress={() => msg.attachment_url && Linking.openURL(msg.attachment_url)}
           style={{
-            width: 40,
-            height: 40,
-            borderRadius: 20,
-            backgroundColor: isMe ? "rgba(255,255,255,0.20)" : "#F1F5F9",
+            flexDirection: "row",
             alignItems: "center",
-            justifyContent: "center",
-            marginRight: 12,
-            flexShrink: 0,
+            backgroundColor: isMe ? "#FF6600" : "#FFFFFF",
+            borderRadius: 16,
+            borderWidth: isMe ? 0 : 1,
+            borderColor: "#E2E8F0",
+            paddingHorizontal: 16,
+            paddingVertical: 12,
+            marginBottom: hasBodyBelow ? 6 : 0,
+            minWidth: 210,
           }}
         >
-          <FileText size={20} color={isMe ? "#FFFFFF" : "#64748B"} />
-        </View>
-        <View style={{ flex: 1 }}>
-          <Text
-            numberOfLines={1}
+          <View
             style={{
-              fontSize: 13,
-              fontFamily: "Poppins-SemiBold",
-              color: isMe ? "#FFFFFF" : "#0F172A",
+              width: 40,
+              height: 40,
+              borderRadius: 20,
+              backgroundColor: isMe ? "rgba(255,255,255,0.20)" : "#F1F5F9",
+              alignItems: "center",
+              justifyContent: "center",
+              marginRight: 12,
+              flexShrink: 0,
             }}
           >
-            {msg.attachment_name || "Attachment"}
-          </Text>
-          {!!msg.attachment_size && (
+            <FileText size={20} color={isMe ? "#FFFFFF" : "#64748B"} />
+          </View>
+          <View style={{ flex: 1 }}>
             <Text
+              numberOfLines={1}
               style={{
-                fontSize: 11,
-                fontFamily: "Poppins-Regular",
-                color: isMe ? "rgba(255,255,255,0.75)" : "#94A3B8",
-                marginTop: 2,
+                fontSize: 13,
+                fontFamily: "Poppins-SemiBold",
+                color: isMe ? "#FFFFFF" : "#0F172A",
               }}
             >
-              {formatFileSize(msg.attachment_size)}
+              {msg.attachment_name || "Attachment"}
             </Text>
-          )}
-        </View>
-      </TouchableOpacity>
+            {!!msg.attachment_size && (
+              <Text
+                style={{
+                  fontSize: 11,
+                  fontFamily: "Poppins-Regular",
+                  color: isMe ? "rgba(255,255,255,0.75)" : "#94A3B8",
+                  marginTop: 2,
+                }}
+              >
+                {formatFileSize(msg.attachment_size)}
+              </Text>
+            )}
+          </View>
+        </TouchableOpacity>
+      );
+    }
+
+    return (
+      <View style={{ gap: 6, marginBottom: hasBodyBelow ? 6 : 0 }}>
+        {files.map((f, idx) => (
+          <TouchableOpacity
+            key={idx}
+            activeOpacity={0.85}
+            onPress={() => f.url && Linking.openURL(f.url)}
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              backgroundColor: isMe ? "#FF6600" : "#FFFFFF",
+              borderRadius: 16,
+              borderWidth: isMe ? 0 : 1,
+              borderColor: "#E2E8F0",
+              paddingHorizontal: 16,
+              paddingVertical: 12,
+              minWidth: 210,
+            }}
+          >
+            <View
+              style={{
+                width: 40,
+                height: 40,
+                borderRadius: 20,
+                backgroundColor: isMe ? "rgba(255,255,255,0.20)" : "#F1F5F9",
+                alignItems: "center",
+                justifyContent: "center",
+                marginRight: 12,
+                flexShrink: 0,
+              }}
+            >
+              <FileText size={20} color={isMe ? "#FFFFFF" : "#64748B"} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text
+                numberOfLines={1}
+                style={{
+                  fontSize: 13,
+                  fontFamily: "Poppins-SemiBold",
+                  color: isMe ? "#FFFFFF" : "#0F172A",
+                }}
+              >
+                {f.name || "Attachment"}
+              </Text>
+              {!!f.size && (
+                <Text
+                  style={{
+                    fontSize: 11,
+                    fontFamily: "Poppins-Regular",
+                    color: isMe ? "rgba(255,255,255,0.75)" : "#94A3B8",
+                    marginTop: 2,
+                  }}
+                >
+                  {formatFileSize(f.size)}
+                </Text>
+              )}
+            </View>
+          </TouchableOpacity>
+        ))}
+      </View>
     );
   };
 
@@ -302,12 +403,12 @@ export function SharedChatArea({
           const isNewMessage = messages.length > 0 && messages.length - prevMessagesLength.current === 1;
           const isSending = !!outgoingBubble;
           const shouldAnimate = isNewMessage || isSending;
-          
+
           // setTimeout ensures native layout is fully calculated before scrolling
           setTimeout(() => {
             scrollViewRef.current?.scrollToEnd({ animated: shouldAnimate });
           }, 100);
-          
+
           prevMessagesLength.current = messages.length;
         }}
         onLayout={() => {
@@ -352,7 +453,7 @@ export function SharedChatArea({
               const isGhostAlreadyInList = !!outgoingBubble && messages.slice(-3).some((m) =>
                 m.sender_role === currentUserRole &&
                 (!outgoingBubble.text || m.body === outgoingBubble.text) &&
-                (!outgoingBubble.attachmentName || m.attachment_name === outgoingBubble.attachmentName)
+                (!outgoingBubble.attachments || (m.attachments && m.attachments.length === outgoingBubble.attachments.length) || (!m.attachments && m.attachment_name === outgoingBubble.attachments[0]?.name))
               );
               const showGhost = !!outgoingBubble && !isGhostAlreadyInList;
 
@@ -368,230 +469,249 @@ export function SharedChatArea({
                     // Also break groups if the date header interrupts them
                     const nextDateLabel = nextMsg ? formatMessageDate(nextMsg.created_at) : null;
                     const isLastInGroup = !nextMsg || nextMsg.sender_role !== msg.sender_role || nextDateLabel !== currentDateLabel;
-                    
+
                     const isLastMyMessage =
                       isMe && !messages.slice(index + 1).some((m) => m.sender_role === currentUserRole);
                     const hasFile = isFileAttachment(msg);
                     const hasImage = msg.message_kind === "image" && !!msg.attachment_url;
                     const hasBody = !!msg.body;
 
-              const bubbleRadius = isMe
-                ? isLastInGroup
-                  ? "rounded-t-2xl rounded-bl-2xl rounded-br-[4px]"
-                  : "rounded-2xl rounded-br-[4px]"
-                : isLastInGroup
-                  ? "rounded-t-2xl rounded-br-2xl rounded-bl-[4px]"
-                  : "rounded-2xl rounded-bl-[4px]";
+                    const bubbleRadius = isMe
+                      ? isLastInGroup
+                        ? "rounded-t-2xl rounded-bl-2xl rounded-br-[4px]"
+                        : "rounded-2xl rounded-br-[4px]"
+                      : isLastInGroup
+                        ? "rounded-t-2xl rounded-br-2xl rounded-bl-[4px]"
+                        : "rounded-2xl rounded-bl-[4px]";
 
-              const bubbleColor = isMe
-                ? "bg-primary"
-                : "bg-white dark:bg-darkBackgroundCard border border-slate-100 dark:border-neutral-800";
+                    const bubbleColor = isMe
+                      ? "bg-primary"
+                      : "bg-white dark:bg-darkBackgroundCard border border-slate-100 dark:border-neutral-800";
 
-              return (
-                <React.Fragment key={msg.id}>
-                  {showDateHeader && (
-                    <View className={`w-full flex-row justify-center ${index === 0 ? "mb-6" : "mt-6 mb-6"}`}>
-                      <Text className="text-[11px] font-poppins-medium text-slate-400 dark:text-slate-500 uppercase tracking-widest">
-                        {currentDateLabel}
-                      </Text>
-                    </View>
-                  )}
-
-                  {/* Bubble — max-w-[80%] only applies here, not to the status row */}
-                  <View
-                    className={`mb-0.5 max-w-[80%] ${isMe ? "self-end" : "self-start"}`}
-                  >
-                    {hasFile && renderFileCard(msg, isMe, hasBody)}
-
-                    {(hasImage || hasBody) && (
-                      hasImage && !hasBody ? (
-                        renderImageAttachment(msg, isMe)
-                      ) : (
-                        <View className={`px-4 py-3 ${bubbleColor} ${bubbleRadius}`}>
-                          {hasImage && renderImageAttachment(msg, isMe)}
-                          {hasBody && (
-                            <Text
-                              className={`text-[15px] font-poppins leading-6 ${
-                                isMe ? "text-white" : "text-slate-800 dark:text-slate-100"
-                              } ${hasImage ? "mt-2" : ""}`}
-                            >
-                              {msg.body}
+                    return (
+                      <React.Fragment key={msg.id}>
+                        {showDateHeader && (
+                          <View className={`w-full flex-row justify-center ${index === 0 ? "mb-6" : "mt-6 mb-6"}`}>
+                            <Text className="text-[11px] font-poppins-medium text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+                              {currentDateLabel}
                             </Text>
+                          </View>
+                        )}
+
+                        {/* Bubble — max-w-[80%] only applies here, not to the status row */}
+                        <View
+                          className={`mb-0.5 max-w-[80%] ${isMe ? "self-end" : "self-start"}`}
+                        >
+                          {hasFile && renderFileCard(msg, isMe, hasBody)}
+
+                          {(hasImage || hasBody) && (
+                            hasImage && !hasBody ? (
+                              renderImageAttachment(msg, isMe)
+                            ) : (
+                              <View className={`px-4 py-3 ${bubbleColor} ${bubbleRadius}`}>
+                                {hasImage && renderImageAttachment(msg, isMe)}
+                                {hasBody && (
+                                  <Text
+                                    className={`text-[15px] font-poppins leading-6 ${isMe ? "text-white" : "text-slate-800 dark:text-slate-100"
+                                      } ${hasImage ? "mt-2" : ""}`}
+                                  >
+                                    {msg.body}
+                                  </Text>
+                                )}
+                              </View>
+                            )
                           )}
                         </View>
-                      )
-                    )}
-                  </View>
 
-                  {/* 
+                        {/* 
                    * Status row (Sent / Sending...) 
                    * CRITICAL: Hidden for the previous last-my-message while the ghost bubble is active.
                    * If we didn't hide this, the previous message would show "Sent", pushing the ghost down,
                    * and causing a layout jump when the ghost resolves.
                    */}
-                  {isLastInGroup && !(isMe && isLastMyMessage && showGhost) && (
-                    <View
-                      style={{
-                        alignSelf: isMe ? "flex-end" : "flex-start",
-                        flexDirection: "row",
-                        alignItems: "center",
-                        marginTop: 3,
-                        marginBottom: 6,
-                        gap: 4,
-                        marginLeft: isMe ? 0 : 4,
-                      }}
-                    >
-                      {isMe && isLastMyMessage ? (
-                        // Only show Sending... on existing messages if no ghost bubble is active
-                        (!showGhost && (sending || uploadingAttachment)) ? (
-                          <>
-                            <ActivityIndicator size={12} color="#94A3B8" />
-                            <Text style={{ fontSize: 11, fontFamily: "Poppins-Regular", color: "#94A3B8" }}>
-                              Sending...
-                            </Text>
-                          </>
-                        ) : (
-                          <>
-                            <Check size={10} color="#94A3B8" />
-                            <Text style={{ fontSize: 11, fontFamily: "Poppins-Regular", color: "#94A3B8" }}>
-                              {"Sent · " + formatMessageTime(msg.created_at)}
-                            </Text>
-                          </>
-                        )
-                      ) : (
-                        <Text style={{ fontSize: 11, fontFamily: "Poppins-Regular", color: "#94A3B8" }}>
-                          {formatMessageTime(msg.created_at)}
-                        </Text>
-                      )}
-                    </View>
-                  )}
-                </React.Fragment>
-              );
-            })}
+                        {isLastInGroup && !(isMe && isLastMyMessage && showGhost) && (
+                          <View
+                            style={{
+                              alignSelf: isMe ? "flex-end" : "flex-start",
+                              flexDirection: "row",
+                              alignItems: "center",
+                              marginTop: 3,
+                              marginBottom: 6,
+                              gap: 4,
+                              marginLeft: isMe ? 0 : 4,
+                            }}
+                          >
+                            {isMe && isLastMyMessage ? (
+                              // Only show Sending... on existing messages if no ghost bubble is active
+                              (!showGhost && (sending || uploadingAttachment)) ? (
+                                <>
+                                  <ActivityIndicator size={12} color="#94A3B8" />
+                                  <Text style={{ fontSize: 11, fontFamily: "Poppins-Regular", color: "#94A3B8" }}>
+                                    Sending...
+                                  </Text>
+                                </>
+                              ) : (
+                                <>
+                                  <Check size={10} color="#94A3B8" />
+                                  <Text style={{ fontSize: 11, fontFamily: "Poppins-Regular", color: "#94A3B8" }}>
+                                    {"Sent · " + formatMessageTime(msg.created_at)}
+                                  </Text>
+                                </>
+                              )
+                            ) : (
+                              <Text style={{ fontSize: 11, fontFamily: "Poppins-Regular", color: "#94A3B8" }}>
+                                {formatMessageTime(msg.created_at)}
+                              </Text>
+                            )}
+                          </View>
+                        )}
+                      </React.Fragment>
+                    );
+                  })}
 
-          {/* 
+                  {/* 
            * GHOST BUBBLE (OPTIMISTIC UI)
            * Appears instantly when send is pressed. 
            * Automatically hides as soon as the real message arrives from the server.
            */}
-          {showGhost && (
-            <React.Fragment>
-              {(() => {
-                const lastRealMsg = messages[messages.length - 1];
-                const lastRealDateLabel = lastRealMsg ? formatMessageDate(lastRealMsg.created_at) : null;
-                const ghostDateLabel = "Today"; // A ghost bubble being sent right now is always "Today"
-                const needsDateHeader = lastRealDateLabel !== ghostDateLabel;
+                  {showGhost && (
+                    <React.Fragment>
+                      {(() => {
+                        const lastRealMsg = messages[messages.length - 1];
+                        const lastRealDateLabel = lastRealMsg ? formatMessageDate(lastRealMsg.created_at) : null;
+                        const ghostDateLabel = "Today"; // A ghost bubble being sent right now is always "Today"
+                        const needsDateHeader = lastRealDateLabel !== ghostDateLabel;
 
-                return needsDateHeader && (
-                  <View className={`w-full flex-row justify-center ${messages.length === 0 ? "mb-6" : "mt-6 mb-6"}`}>
-                    <Text className="text-[11px] font-poppins-medium text-slate-400 dark:text-slate-500 uppercase tracking-widest">
-                      {ghostDateLabel}
-                    </Text>
-                  </View>
-                );
-              })()}
-              <View className="mb-0.5 max-w-[80%] self-end" style={{ opacity: 0.7 }}>
-                {outgoingBubble!.isAttachment && outgoingBubble!.attachmentKind === "image" && outgoingBubble!.previewUri ? (
-                  <Image
-                    source={{ uri: outgoingBubble.previewUri }}
-                    style={{ width: 220, height: 220, borderRadius: 16, backgroundColor: "#E2E8F0" }}
-                    resizeMode="cover"
-                  />
-                ) : outgoingBubble!.isAttachment ? (
-                  <View style={{ flexDirection: "row", alignItems: "center", backgroundColor: "#FF6600", borderRadius: 16, paddingHorizontal: 16, paddingVertical: 12, minWidth: 160 }}>
-                    <FileText size={20} color="rgba(255,255,255,0.9)" style={{ marginRight: 10 }} />
-                    <Text numberOfLines={1} style={{ color: "#fff", fontSize: 13, fontFamily: "Poppins-SemiBold", flex: 1 }}>
-                      {outgoingBubble!.attachmentName}
-                    </Text>
-                  </View>
-                ) : (
-                  <View className="px-4 py-3 bg-primary rounded-t-2xl rounded-bl-2xl rounded-br-[4px]">
-                    <Text className="text-[15px] font-poppins leading-6 text-white">
-                      {outgoingBubble!.text}
-                    </Text>
-                  </View>
-                )}
-              </View>
-              <View style={{ alignSelf: "flex-end", flexDirection: "row", alignItems: "center", marginTop: 3, marginBottom: 6, gap: 4 }}>
-                <ActivityIndicator size={12} color="#94A3B8" />
-                <Text style={{ fontSize: 11, fontFamily: "Poppins-Regular", color: "#94A3B8" }}>Sending...</Text>
-              </View>
-            </React.Fragment>
-          )}
-          </React.Fragment>
+                        return needsDateHeader && (
+                          <View className={`w-full flex-row justify-center ${messages.length === 0 ? "mb-6" : "mt-6 mb-6"}`}>
+                            <Text className="text-[11px] font-poppins-medium text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+                              {ghostDateLabel}
+                            </Text>
+                          </View>
+                        );
+                      })()}
+                      <View className="mb-0.5 max-w-[80%] self-end" style={{ opacity: 0.7 }}>
+                        {outgoingBubble!.isAttachment ? (
+                          <React.Fragment>
+                            {outgoingBubble!.attachments?.some(a => a.kind === "image") && (
+                              <View style={{ flexDirection: "row", flexWrap: "wrap", width: 224, gap: 4, alignSelf: "flex-end", justifyContent: "flex-end" }}>
+                                {outgoingBubble!.attachments.filter(a => a.kind === "image").map((img, idx, arr) => {
+                                  const isFullWidth = arr.length % 2 !== 0 && idx === 0;
+                                  const width = isFullWidth ? 220 : 108;
+                                  return (
+                                    <Image
+                                      key={idx}
+                                      source={{ uri: img.uri }}
+                                      style={{ width: width, height: width, borderRadius: 12, backgroundColor: "#E2E8F0" }}
+                                      resizeMode="cover"
+                                    />
+                                  );
+                                })}
+                              </View>
+                            )}
+                            {outgoingBubble!.attachments?.some(a => a.kind === "file") && (
+                              <View style={{ gap: 6, alignSelf: "flex-end", marginTop: outgoingBubble!.attachments.some(a => a.kind === "image") ? 6 : 0 }}>
+                                {outgoingBubble!.attachments.filter(a => a.kind === "file").map((f, idx) => (
+                                  <View key={idx} style={{ flexDirection: "row", alignItems: "center", backgroundColor: "#FF6600", borderRadius: 16, paddingHorizontal: 16, paddingVertical: 12, minWidth: 160 }}>
+                                    <FileText size={20} color="rgba(255,255,255,0.9)" style={{ marginRight: 10 }} />
+                                    <Text numberOfLines={1} style={{ color: "#fff", fontSize: 13, fontFamily: "Poppins-SemiBold", flex: 1 }}>
+                                      {f.name}
+                                    </Text>
+                                  </View>
+                                ))}
+                              </View>
+                            )}
+                            {!!outgoingBubble!.text && (
+                              <View className="px-4 py-3 bg-primary rounded-t-2xl rounded-bl-2xl rounded-br-[4px] mt-1 self-end">
+                                <Text className="text-[15px] font-poppins leading-6 text-white">
+                                  {outgoingBubble!.text}
+                                </Text>
+                              </View>
+                            )}
+                          </React.Fragment>
+                        ) : (
+                          <View className="px-4 py-3 bg-primary rounded-t-2xl rounded-bl-2xl rounded-br-[4px]">
+                            <Text className="text-[15px] font-poppins leading-6 text-white">
+                              {outgoingBubble!.text}
+                            </Text>
+                          </View>
+                        )}
+                      </View>
+                      <View style={{ alignSelf: "flex-end", flexDirection: "row", alignItems: "center", marginTop: 3, marginBottom: 6, gap: 4 }}>
+                        <ActivityIndicator size={12} color="#94A3B8" />
+                        <Text style={{ fontSize: 11, fontFamily: "Poppins-Regular", color: "#94A3B8" }}>Sending...</Text>
+                      </View>
+                    </React.Fragment>
+                  )}
+                </React.Fragment>
               );
             })()
           )}
         </View>
       </ScrollView>
 
-      {/* Pending attachment preview strip */}
-      {pendingAttachment && (
-        <View
-          style={{
+      {/* Pending attachments preview strip */}
+      {pendingAttachments.length > 0 && (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          className="bg-white dark:bg-darkBackground border-t border-slate-100 dark:border-neutral-800"
+          style={{ flexGrow: 0, flexShrink: 0, minHeight: 76 }}
+          contentContainerStyle={{
             paddingHorizontal: 16,
-            paddingTop: 10,
-            paddingBottom: 4,
-            backgroundColor: "#F8FAFC",
-            borderTopWidth: 1,
-            borderTopColor: "#F1F5F9",
+            paddingTop: 5,
+            paddingBottom: 5,
+            gap: 12,
+            alignItems: "center"
           }}
         >
-          {pendingAttachment.kind === "image" ? (
-            <View style={{ position: "relative", alignSelf: "flex-start" }}>
-              <Image
-                source={{ uri: pendingAttachment.uri }}
-                style={{ width: 80, height: 80, borderRadius: 12, backgroundColor: "#E2E8F0" }}
-                resizeMode="cover"
-              />
-              <TouchableOpacity
-                onPress={() => setPendingAttachment(null)}
-                style={{
-                  position: "absolute",
-                  top: -6,
-                  right: -6,
-                  width: 22,
-                  height: 22,
-                  borderRadius: 11,
-                  backgroundColor: "#0F172A",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <X size={12} color="#FFFFFF" />
-              </TouchableOpacity>
+          {pendingAttachments.map((att, idx) => (
+            <View key={idx}>
+              {att.kind === "image" ? (
+                <View style={{ position: "relative" }}>
+                  <Image
+                    source={{ uri: att.uri }}
+                    style={{ width: 64, height: 64, borderRadius: 10, backgroundColor: "#E2E8F0" }}
+                    resizeMode="cover"
+                  />
+                  <TouchableOpacity
+                    onPress={() => setPendingAttachments(prev => prev.filter((_, i) => i !== idx))}
+                    style={{
+                      position: "absolute", top: -6, right: -6, width: 22, height: 22, borderRadius: 11,
+                      backgroundColor: "#0F172A", alignItems: "center", justifyContent: "center", zIndex: 10
+                    }}
+                  >
+                    <X size={12} color="#FFFFFF" />
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                <View style={{ position: "relative" }}>
+                  <View
+                    style={{
+                      width: 64, height: 64, backgroundColor: "#F8FAFC",
+                      borderRadius: 10, borderWidth: 1, borderColor: "#E2E8F0",
+                      alignItems: "center", justifyContent: "center", padding: 6
+                    }}
+                  >
+                    <FileText size={20} color="#94A3B8" style={{ marginBottom: 2 }} />
+                    <Text numberOfLines={1} style={{ fontSize: 9, fontFamily: "Poppins-Medium", color: "#64748B", textAlign: "center", width: "100%" }}>
+                      {att.name}
+                    </Text>
+                  </View>
+                  <TouchableOpacity
+                    onPress={() => setPendingAttachments(prev => prev.filter((_, i) => i !== idx))}
+                    style={{
+                      position: "absolute", top: -6, right: -6, width: 22, height: 22, borderRadius: 11,
+                      backgroundColor: "#0F172A", alignItems: "center", justifyContent: "center", zIndex: 10
+                    }}
+                  >
+                    <X size={12} color="#FFFFFF" />
+                  </TouchableOpacity>
+                </View>
+              )}
             </View>
-          ) : (
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                backgroundColor: "#FFFFFF",
-                borderRadius: 12,
-                borderWidth: 1,
-                borderColor: "#E2E8F0",
-                paddingHorizontal: 12,
-                paddingVertical: 8,
-                alignSelf: "flex-start",
-                maxWidth: 260,
-              }}
-            >
-              <FileText size={16} color="#64748B" style={{ marginRight: 8, flexShrink: 0 }} />
-              <Text
-                numberOfLines={1}
-                style={{ fontSize: 13, fontFamily: "Poppins-Medium", color: "#0F172A", flex: 1 }}
-              >
-                {pendingAttachment.name}
-              </Text>
-              <TouchableOpacity
-                onPress={() => setPendingAttachment(null)}
-                style={{ marginLeft: 8, flexShrink: 0 }}
-              >
-                <X size={14} color="#94A3B8" />
-              </TouchableOpacity>
-            </View>
-          )}
-        </View>
+          ))}
+        </ScrollView>
       )}
 
       <View
@@ -618,7 +738,7 @@ export function SharedChatArea({
           <TextInput
             value={messageText}
             onChangeText={setMessageText}
-            placeholder={pendingAttachment ? "Add a caption..." : placeholder}
+            placeholder={pendingAttachments.length > 0 ? "Add a caption..." : placeholder}
             placeholderTextColor="#94a3b8"
             className="text-textPrimary dark:text-darkTextPrimary outline-none"
             style={{
@@ -636,7 +756,7 @@ export function SharedChatArea({
 
         <TouchableOpacity
           onPress={handleSend}
-          disabled={(!messageText.trim() && !pendingAttachment) || sending || uploadingAttachment || disabled}
+          disabled={(!messageText.trim() && pendingAttachments.length === 0) || sending || uploadingAttachment || disabled}
           style={{
             width: 44,
             height: 44,
@@ -645,16 +765,16 @@ export function SharedChatArea({
             justifyContent: "center",
             marginBottom: 4,
             backgroundColor:
-              (messageText.trim() || pendingAttachment) && !sending && !uploadingAttachment && !disabled
+              (messageText.trim() || pendingAttachments.length > 0) && !sending && !uploadingAttachment && !disabled
                 ? "#FF6600"
                 : "transparent",
           }}
         >
           <Send
-              size={20}
-              color={(messageText.trim() || pendingAttachment) && !disabled ? "#ffffff" : "#cbd5e1"}
-              style={(messageText.trim() || pendingAttachment) ? { marginLeft: -2 } : {}}
-            />
+            size={20}
+            color={(messageText.trim() || pendingAttachments.length > 0) && !disabled ? "#ffffff" : "#cbd5e1"}
+            style={(messageText.trim() || pendingAttachments.length > 0) ? { marginLeft: -2 } : {}}
+          />
         </TouchableOpacity>
       </View>
 

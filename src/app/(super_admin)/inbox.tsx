@@ -640,7 +640,7 @@ export default function SuperAdminInbox() {
             </Text>
           }
           onSendMessage={async (text) => await sendMessage(text, "super_admin")}
-          onSendAttachment={async (attachment, body) => await sendAttachment(attachment, "super_admin", body)}
+          onSendAttachment={async (attachments, body) => await sendAttachment(attachments, "super_admin", body)}
           sending={sending}
           uploadingAttachment={uploadingAttachment}
           disabled={false}
@@ -802,7 +802,7 @@ export default function SuperAdminInbox() {
                     );
                   })()}
                 </ScrollView>
-              )}
+              )}  
             </View>
           </View>
         </View>

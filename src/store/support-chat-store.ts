@@ -39,7 +39,7 @@ interface SupportChatState {
   loadAdminConversations: () => Promise<void>;
   openConversation: (conversationId: string, reader?: "store" | "admin") => Promise<void>;
   sendMessage: (body: string, senderRole: SupportSenderRole) => Promise<void>;
-  sendAttachment: (attachment: SupportAttachmentInput, senderRole: SupportSenderRole, body?: string) => Promise<void>;
+  sendAttachment: (attachments: SupportAttachmentInput[], senderRole: SupportSenderRole, body?: string) => Promise<void>;
   markRead: (conversationId: string, reader: "store" | "admin") => Promise<void>;
   setStatus: (conversationId: string, status: SupportConversationStatus) => Promise<void>;
   subscribeInbox: () => void;
@@ -164,7 +164,7 @@ export const useSupportChatStore = create<SupportChatState>((set, get) => ({
     }
   },
 
-  sendAttachment: async (attachment, senderRole, body) => {
+  sendAttachment: async (attachments, senderRole, body) => {
     const conversationId = get().activeConversationId;
     if (!conversationId) return;
 
@@ -172,7 +172,7 @@ export const useSupportChatStore = create<SupportChatState>((set, get) => ({
     try {
       const message = await sendSupportAttachmentMessage(
         conversationId,
-        attachment,
+        attachments,
         senderRole,
         body,
       );

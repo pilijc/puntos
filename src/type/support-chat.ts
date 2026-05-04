@@ -32,6 +32,14 @@ export interface SupportMessage {
   attachment_name?: string | null;
   attachment_type?: string | null;
   attachment_size?: number | null;
+  attachments?: {
+    path: string;
+    url?: string;
+    name: string;
+    type: string;
+    size: number | null;
+    kind: Exclude<SupportMessageKind, "text">;
+  }[] | null;
   read_by_store_at: string | null;
   read_by_admin_at: string | null;
   created_at: string;
