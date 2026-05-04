@@ -9,6 +9,7 @@ export interface StaffTransaction {
   method?: "qr" | "manual" | "voucher";
   customerName?: string;
   customer_id?: string;
+  rewardTitle?: string;
 }
 
 export interface PaginationOptions {
@@ -97,6 +98,7 @@ export async function getStaffTransactions(
         id,
         points_spent,
         created_at,
+        reward_id,
         user_id,
         users!user_id(
           name
@@ -108,6 +110,19 @@ export async function getStaffTransactions(
     if (redemptionsError) {
       return { transactions: [], hasMore: false };
     }
+
+    // Fetch reward data separately
+    const rewardIds = [...new Set((redemptions || []).map(r => r.reward_id).filter(id => id != null))];
+    const { data: rewards, error: rewardsError } = await supabase
+      .from("store_rewards")
+      .select("id, title")
+      .in("id", rewardIds);
+
+    // Create reward lookup map
+    const rewardMap = (rewards || []).reduce((acc, reward) => {
+      acc[reward.id] = reward;
+      return acc;
+    }, {});
     
     // Format traditional purchases as earned transactions
     const formattedPurchases: StaffTransaction[] = (filteredPurchases || []).map((p: any) => ({
@@ -138,7 +153,7 @@ export async function getStaffTransactions(
       id: qr.qr_code_id ? `qr-${qr.qr_code_id}` : `qr-${qr.user_id}-${qr.created_at}-${index}`,
       points: Number(qr.points_earned),
       timestamp: new Date(qr.created_at),
-      amount: Number(qr.points_earned) * 10, // Assuming 1 point = 10 pesos, adjust as needed
+      amount: Number(qr.points_earned) * 10, 
       type: "earned" as const,
       method: "qr" as const,
       customerName: qr.users ? qr.users.name || "Customer" : "Customer",
@@ -146,16 +161,20 @@ export async function getStaffTransactions(
     }));
 
     // Format redemptions as redeemed transactions
-    const formattedRedemptions: StaffTransaction[] = (redemptions || []).map((r: any) => ({
-      id: `redemption-${r.id}`,
-      points: Number(r.points_spent),
-      timestamp: new Date(r.created_at),
-      amount: 0, // Redemptions don't have purchase amounts
-      type: "redeemed" as const,
-      method: "voucher" as const,
-      customerName: r.users ? r.users.name || "Customer" : "Customer",
-      customer_id: r.user_id,
-    }));
+    const formattedRedemptions: StaffTransaction[] = (redemptions || []).map((r: any) => {
+      const reward = rewardMap[r.reward_id];
+      return {
+        id: `redemption-${r.id}`,
+        points: Number(r.points_spent),
+        timestamp: new Date(r.created_at),
+        amount: 0,  
+        type: "redeemed" as const,
+        method: "voucher" as const,
+        customerName: r.users ? r.users.name || "Customer" : "Customer",
+        customer_id: r.user_id,
+        rewardTitle: reward?.title || "Reward",
+      };
+    });
 
     // Combine and sort by timestamp
     const allTransactions = [...formattedPurchases, ...formattedVoucherPurchases, ...formattedQRTransactions, ...formattedRedemptions].sort(
