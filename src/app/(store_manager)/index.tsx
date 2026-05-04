@@ -56,8 +56,7 @@ export default function StoreManagerDashboard() {
     loading: metricsLoading,
     refresh: refreshMetrics,
   } = useStoreDashboardMetrics(
-    selectedStore?.id ?? 0,
-    selectedStore?.radius ?? 100
+    selectedStore?.id ?? 0
   );
 
   const handleRefresh = useCallback(async () => {
@@ -155,7 +154,7 @@ export default function StoreManagerDashboard() {
                   >
                     <View style={containerWidth < 1100 ? { width: 260 } : { flex: 1 }}>
                       <DashboardMetricTile
-                        label={translate("store_manager.dashboard.metrics.inStore", "Active Users")}
+                        label={`${translate("store_manager.dashboard.metrics.inStore", "Active Users")} (${selectedStore?.radius ?? 100}m)`}
                         value={activeUsers}
                         icon={Users}
                         loading={metricsLoading}
@@ -263,7 +262,7 @@ export default function StoreManagerDashboard() {
                   <View className="flex-1 flex-col gap-[10px]">
                     <View className="flex-1">
                       <DashboardMetricTile
-                        label={translate("store_manager.dashboard.metrics.inStore", "Active Users")}
+                        label={`${translate("store_manager.dashboard.metrics.inStore", "Active Users")} (${selectedStore?.radius ?? 100}m)`}
                         value={activeUsers}
                         icon={Users}
                         loading={metricsLoading}

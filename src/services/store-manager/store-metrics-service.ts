@@ -15,8 +15,7 @@ function getLocalDateRange(): { today: string; pastDate: string } {
 }
 
 export async function getStoreMetrics(
-    storeId: number,
-    radiusMeters: number = 100
+    storeId: number
 ) {
     let activeUserCount = 0;
     let todayTxCount = 0;
@@ -31,7 +30,6 @@ export async function getStoreMetrics(
     try {
         const { data, error } = await supabase.rpc('get_users_near_store', {
             store_id_input: storeId,
-            radius_metres: radiusMeters,
         });
 
         if (!error && data) {

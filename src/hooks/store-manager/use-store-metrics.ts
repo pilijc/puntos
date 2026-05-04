@@ -3,8 +3,7 @@ import { getStoreMetrics, getRetentionData, getStampDistribution, getRecentTrans
 import { RecentTransaction, RetentionData, StampBucket, ActivityChartData } from "@/type/store-manager/metric";
 
 export function useStoreDashboardMetrics(
-    storeId: number,
-    radius: number = 100
+    storeId: number
 ) {
     const [activeUsers, setActiveUsers] = useState(0);
     const [todayTransactions, setTodayTransactions] = useState(0);
@@ -33,7 +32,7 @@ export function useStoreDashboardMetrics(
 
         try {
             const [metricsData, retentionData, stampDistData, recentTxs] = await Promise.all([
-                getStoreMetrics(storeId, radius),
+                getStoreMetrics(storeId),
                 getRetentionData(storeId),
                 getStampDistribution(storeId),
                 getRecentTransactions(storeId, 10)
@@ -51,7 +50,7 @@ export function useStoreDashboardMetrics(
         } finally {
             setLoading(false);
         }
-    }, [storeId, radius]);
+    }, [storeId]);
 
     useEffect(() => {
         fetchMetrics(true);
