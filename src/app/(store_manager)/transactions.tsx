@@ -183,8 +183,8 @@ export default function TransactionsScreen() {
       <Image
         source={require("@/assets/images/found.png")}
         style={{
-          width: Platform.OS === "web" ? 180 : 120,
-          height: Platform.OS === "web" ? 180 : 120,
+          width: Platform.OS === "web" ? 160 : 120,
+          height: Platform.OS === "web" ? 160 : 120,
         }}
         resizeMode="contain"
       />

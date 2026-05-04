@@ -12,6 +12,7 @@ import { useTranslation, Trans } from "react-i18next";
 import TranslateButton from "@/components/ui/translate-button";
 import { Button } from "@/components/button";
 import { Modal, type ModalButton } from "@/components/modal";
+import { AppHeader } from "@/components/header";
 
 export default function OnboardingWelcome() {
   const [loadingGoogle, setLoadingGoogle] = useState(false);
@@ -64,9 +65,11 @@ export default function OnboardingWelcome() {
         message={modal?.message}
         buttons={modal?.buttons}
       />
-      <View className="absolute top-14 right-6 z-10">
-        <TranslateButton />
-      </View>
+      <AppHeader
+        title={""}
+        rightIcon={<TranslateButton />}
+        className="bg-transparent"
+      />
       {isWeb ? (
         <View className="flex-1 items-center justify-center p-4">
           <View className="w-full max-w-4xl border border-slate-100 dark:border-neutral-700 rounded-xl bg-white dark:bg-darkBackground overflow-hidden">
@@ -96,7 +99,7 @@ export default function OnboardingWelcome() {
                         }}
                       />
                     </Text>
-                    <Text className="text-sm font-poppins text-textMuted dark:text-darkTextSecondary text-left">
+                    <Text className="text-sm font-poppins text-textSecondary dark:text-darkTextSecondary text-left">
                       {translate("onboarding.subhead")}
                     </Text>
                   </View>
@@ -118,7 +121,7 @@ export default function OnboardingWelcome() {
                     />
                     <View className="flex-row items-center gap-x-4 my-1 w-full justify-center">
                       <View className="flex-1 h-px bg-neutral-300 dark:bg-darkBorder" />
-                      <Text className="text-neutral-500 dark:text-darkTextMuted font-poppins text-sm">
+                      <Text className="text-textSecondary dark:text-darkTextSecondary font-poppins text-sm">
                         {translate("onboarding.signup.divider")}
                       </Text>
                       <View className="flex-1 h-px bg-neutral-300 dark:bg-darkBorder" />
@@ -178,7 +181,7 @@ export default function OnboardingWelcome() {
               />
 
               <View className="w-full items-center mt-4">
-                <Text className="text-3xl font-poppins-bold text-neutral-900 dark:text-darkTextPrimary text-center">
+                <Text className="text-3xl font-poppins-bold text-textPrimary dark:text-darkTextPrimary text-center">
                   <Trans
                     i18nKey="onboarding.welcome"
                     values={{ appName }}
@@ -187,7 +190,7 @@ export default function OnboardingWelcome() {
                     }}
                   />
                 </Text>
-                <Text className="mt-2 text-base font-poppins text-neutral-600 dark:text-darkTextSecondary text-center">
+                <Text className="mt-2 text-base font-poppins text-textSecondary dark:text-darkTextSecondary text-center">
                   {translate("onboarding.subhead")}
                 </Text>
               </View>

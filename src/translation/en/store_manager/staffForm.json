@@ -37,5 +37,7 @@
   "confirmEditBody": "Please review the details below before saving.",
   "confirmAddBody": "Please review the login details below. Take a screenshot and share them with your frontdesk staff.",
   "tempPassword": "Temporary Password",
-  "createStaff": "Create Frontdesk Staff"
+  "createStaff": "Create Frontdesk Staff",
+  "fullNameRequiredInline": "Please enter your full name.",
+  "emailRequiredInline": "Please enter your email address."
 }

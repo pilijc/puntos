@@ -312,7 +312,7 @@ export default function StoreOverviewDetail() {
                   <View className="flex-row items-center gap-x-2">
                     <TouchableOpacity
                       className="px-3 py-1 rounded-full bg-primary"
-                      onPress={() => router.push("/(user)/qr")}
+                      onPress={() => router.push({ pathname: "/(user)/qr", params: { from: "/(user)/store" } })}
                       disabled={isStamping}
                     >
                       {isStamping ? (

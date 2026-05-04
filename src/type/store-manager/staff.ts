@@ -16,6 +16,8 @@ export interface StaffFormState {
     buttons: ModalButton[];
     timer?: boolean;
   } | null;
+  nameError: boolean;
+  emailError: boolean;
 
   setName: (name: string) => void;
   setEmail: (email: string) => void;
@@ -24,6 +26,8 @@ export interface StaffFormState {
   setIsSubmitting: (isSubmitting: boolean) => void;
   setShowConfirm: (showConfirm: boolean) => void;
   setModal: (modal: StaffFormState["modal"]) => void;
+  setNameError: (value: boolean) => void;
+  setEmailError: (value: boolean) => void;
   resetStaff: () => void;
 }
 export interface StaffViewState {

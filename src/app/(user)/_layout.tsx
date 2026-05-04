@@ -89,7 +89,14 @@ function UserTabs() {
       />
       <Tabs.Screen
         name="qr"
-        options={{ href: null }}
+        options={{
+          href: null,
+          tabBarStyle: {
+            height: 0,
+            paddingBottom: 0,
+            marginBottom: 0,
+          },
+        }}
       />
     </Tabs>
   );

@@ -7,7 +7,7 @@ import { Platform } from "react-native";
 type AppHeaderProps = {
   title: string;
   description?: string;
-  onBackPress: () => void;
+  onBackPress?: () => void;
   rightIcon?: React.ReactNode;
   onRightIconPress?: () => void;
   paddingTop?: number;
@@ -29,13 +29,17 @@ export function AppHeader({
   return (
     <View className={`px-2 py-2 ${className}`}>
       <View className="flex-row items-center mb-1">
-        <TouchableOpacity
-          className="w-10 h-10 rounded-full items-center justify-center -mt-0.5"
-          activeOpacity={0.7}
-          onPress={onBackPress}
-        >
-          <ChevronLeft size={20} color={isDark ? "#F1F5F9" : "#0F172A"} />
-        </TouchableOpacity>
+        {onBackPress ? (
+          <TouchableOpacity
+            className="w-10 h-10 rounded-full items-center justify-center -mt-0.5"
+            activeOpacity={0.7}
+            onPress={onBackPress}
+          >
+            <ChevronLeft size={20} color={isDark ? "#F1F5F9" : "#0F172A"} />
+          </TouchableOpacity>
+        ) : (
+          <View className="w-10 h-10" />
+        )}
 
         <View className="flex-1 px-2 py-1">
           <Text className="text-base font-poppins-bold text-textPrimary dark:text-darkTextPrimary text-center">

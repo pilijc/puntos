@@ -32,12 +32,13 @@
   "saveChanges": "変更を保存",
   "cancel": "キャンセル",
   "almostThere": "あと少しです！",
-  "streakLengthInvalid": "ストリーク日数は1日以上にしてください。",
-  "fixedPointsInvalid": "1日あたりのポイントに有効な値を入力してください。",
-  "startingPointsInvalid": "開始ポイントに有効な値を入力してください。",
-  "incrementInvalid": "1日あたりの増分に有効な値を入力してください。",
+  "streakLengthInvalid": "ストリーク日数の有効な数値を入力してください。",
+  "fixedPointsInvalid": "1日あたりのポイントの有効な数値を入力してください。",
+  "startingPointsInvalid": "開始ポイントの有効な数値を入力してください。",
+  "incrementInvalid": "1日あたりの増分の有効な数値を入力してください。",
   "startTimeAfter": "開始時刻は {{time}} より後にしてください。",
   "successUpdate": "ストリークプログラムを更新しました",
   "successCreate": "ストリーク設定を保存しました",
-  "saveFailed": "ストリーク設定の保存に失敗しました"
+  "saveFailed": "ストリーク設定の保存に失敗しました",
+  "maxDaysCapInvalid": "最大日数の上限はストリーク日数以下にしてください。"
 }

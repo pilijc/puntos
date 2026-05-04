@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from "@/tw";
-import { ChevronRight, User } from "lucide-react-native";
+import { ChevronRight, UserRound } from "lucide-react-native";
 import { Image } from "expo-image";
 
 interface UserProfileCardProps {
@@ -19,11 +19,11 @@ export const UserProfileCard = ({ profile, user, onPress, loading = false }: Use
         <TouchableOpacity
             onPress={loading ? undefined : onPress}
             disabled={loading}
-            className="bg-white dark:bg-darkBackground rounded-xl px-2.5 py-3 border border-slate-100 dark:border-slate-800 active:bg-slate-50 dark:active:bg-darkBackgroundCard"
+            className="bg-white dark:bg-darkBackground rounded-xl px-3 py-3 active:bg-slate-50 dark:active:bg-darkBackgroundCard"
         >
             <View className="flex-row items-center">
                 {/* Avatar */}
-                <View className="h-14 w-14 rounded-full bg-primary/10 items-center justify-center mr-4 overflow-hidden border border-slate-100 dark:border-slate-800">
+                <View className="h-14 w-14 rounded-full bg-primary/5 items-center justify-center mr-4 overflow-hidden">
                     {avatarUrl ? (
                         <Image
                             source={{ uri: avatarUrl }}
@@ -32,7 +32,7 @@ export const UserProfileCard = ({ profile, user, onPress, loading = false }: Use
                             cachePolicy="none"
                         />
                     ) : (
-                        <User size={24} color="#FF6600" />
+                        <UserRound size={24} color="#FF6600" />
                     )}
                 </View>
 
@@ -48,7 +48,7 @@ export const UserProfileCard = ({ profile, user, onPress, loading = false }: Use
                             <Text className="text-lg font-poppins-bold text-textPrimary dark:text-darkTextPrimary" numberOfLines={1}>
                                 {displayName}
                             </Text>
-                            <Text className="text-sm font-poppins-regular text-textSecondary dark:text-darkTextSecondary" numberOfLines={1}>
+                            <Text className="text-sm font-poppins-regular text-textSecondary dark:text-darkTextSecondary -mt-1" numberOfLines={1}>
                                 {email}
                             </Text>
                         </>
@@ -57,7 +57,7 @@ export const UserProfileCard = ({ profile, user, onPress, loading = false }: Use
 
                 {/* Edit Icon */}
                 <View className="ml-2">
-                    <ChevronRight size={20} color="#94a3b8" />
+                    <ChevronRight size={16} color="#94a3b8" />
                 </View>
             </View>
         </TouchableOpacity>

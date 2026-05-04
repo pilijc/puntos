@@ -91,6 +91,11 @@ export interface StreakState {
     buttons: { label: string; onPress: () => void; variant?: "primary" | "success" | "danger" | "secondary" | "ghost"; loading?: boolean; disabled?: boolean; timer?: number }[];
     timer?: boolean;
   } | null;
+  streakLengthError: boolean;
+  fixedPointsError: boolean;
+  startingPointsError: boolean;
+  incrementError: boolean;
+  maxDaysCapError: boolean;
 
   setPointsMode: (value: PointsMode) => void;
   setFixedPointsPerDay: (value: number | null) => void;
@@ -105,6 +110,11 @@ export interface StreakState {
   setShowStartTimePicker: (value: boolean) => void;
   setIsSubmitting: (value: boolean) => void;
   setModal: (value: StreakState["modal"]) => void;
+  setStreakLengthError: (value: boolean) => void;
+  setFixedPointsError: (value: boolean) => void;
+  setStartingPointsError: (value: boolean) => void;
+  setIncrementError: (value: boolean) => void;
+  setMaxDaysCapError: (value: boolean) => void;
   reset: () => void;
 }
 

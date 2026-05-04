@@ -38,5 +38,7 @@
   "confirmAddBody": "ログイン情報を確認してください。スクリーンショットを取り、フロントスタッフと共有してください。",
   "emailLabel": "メール",
   "tempPassword": "仮パスワード",
-  "createStaff": "フロントスタッフを作成"
+  "createStaff": "フロントスタッフを作成",
+  "fullNameRequiredInline": "氏名を入力してください。",
+  "emailRequiredInline": "メールアドレスを入力してください。"
 }
