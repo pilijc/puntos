@@ -1,3 +1,5 @@
+import { getEffectiveStatus, STORE_STATUS_CONFIG } from "@/type/super-admin/user";
+
 export type Timeframe = "today" | "7d" | "1m";
 
 export const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -65,7 +67,8 @@ export function buildTimeframeSeries(items: DashboardRecord[], dateKeys: string[
   const now = new Date();
   const today = startOfDay(now);
 
-  const series = Array.from({ length: 7 }, () => 0);
+  const seriesLen = timeframe === "today" ? 6 : 7;
+  const series = Array.from({ length: seriesLen }, () => 0);
 
   const windowDays = timeframe === "today" ? 1 : timeframe === "7d" ? 7 : 30;
   const bucketSize = timeframe === "1m" ? Math.ceil(windowDays / 7) : 1;
@@ -77,7 +80,9 @@ export function buildTimeframeSeries(items: DashboardRecord[], dateKeys: string[
     if (diffDays < 0 || diffDays >= windowDays) return;
 
     if (timeframe === "today") {
-      series[6] += 1;
+      const hour = found.getHours();
+      const idx = Math.floor(hour / 4);
+      series[idx] += 1;
       return;
     }
 
@@ -93,10 +98,9 @@ export function buildTimeframeSeries(items: DashboardRecord[], dateKeys: string[
   });
 
   if (timeframe === "today") {
-    const day = `${MONTH_NAMES[now.getMonth()]} ${now.getDate()}`;
     return {
       series,
-      labels: ["", "", "", "", "", "", day],
+      labels: ["12 AM", "4 AM", "8 AM", "12 PM", "4 PM", "8 PM"],
       rangeLabel: "Today",
     };
   }
@@ -149,9 +153,11 @@ export function getDetailItems(items: DashboardRecord[], dateKeys: string[], pre
 
   const list = allFiltered.slice(0, limit).map(({ item, date }, idx) => {
     const status =
-      item?.blocked === true ||
-        item?.role === 0 ||
-        String(item?.status ?? "").toLowerCase() === "inactive"
+      prefix === "Store"
+        ? STORE_STATUS_CONFIG[getEffectiveStatus(item as any)].label
+        : item?.blocked === true ||
+          item?.role === 0 ||
+          ["inactive", "blocked"].includes(String(item?.status ?? "").toLowerCase())
         ? "Inactive"
         : "Active";
     const dateLabel = date

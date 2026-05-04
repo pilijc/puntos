@@ -18,7 +18,7 @@ export function ChatSupportCard() {
   return (
     <View className="bg-white dark:bg-darkBackground px-2.5 py-3 overflow-hidden">
       <TouchableOpacity
-        onPress={() => router.push("/(store_manager)/chat-support")}
+        onPress={() => router.push("/(store_manager)/manager-inbox")}
         className="flex-row items-center"
         activeOpacity={0.7}
       >
