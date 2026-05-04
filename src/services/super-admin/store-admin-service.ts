@@ -1,6 +1,6 @@
 import { supabase } from "@/supabase/supabase";
 import { AdminStoreRow } from "../store-service";
-import { parsePostGISLocation } from "@/utils/location";
+import { withPostGISCoordinates } from "@/utils/location";
 
 export async function getAllStoresForAdmin(page = 1, pageSize = 50): Promise<AdminStoreRow[]> {
     const from = (page - 1) * pageSize;
@@ -20,11 +20,9 @@ export async function getAllStoresForAdmin(page = 1, pageSize = 50): Promise<Adm
     if (error) throw new Error(error.message);
 
     return (data ?? []).map((row: any) => {
-        const parsed = parsePostGISLocation(row.location);
+        const store = withPostGISCoordinates(row);
         return {
-            ...row,
-            latitude: parsed.latitude,
-            longitude: parsed.longitude,
+            ...store,
             owner_name: row.users?.name ?? null,
             users: undefined,
         };
@@ -50,12 +48,10 @@ export async function updateAdminStoreStatus(
 
     if (error) throw new Error(error.message);
     
-    const parsed = parsePostGISLocation(data.location);
+    const store = withPostGISCoordinates(data);
 
     return {
-        ...data,
-        latitude: parsed.latitude,
-        longitude: parsed.longitude,
+        ...store,
         owner_name: (data as any).users?.name ?? null,
         users: undefined,
     } as AdminStoreRow;

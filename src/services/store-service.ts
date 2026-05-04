@@ -1,5 +1,5 @@
 import { supabase } from "@/supabase/supabase";
-import { formatPostGISLocation, parsePostGISLocation } from "@/utils/location";
+import { formatPostGISLocation, withPostGISCoordinates } from "@/utils/location";
 
 
 export interface CreateStorePayload {
@@ -43,6 +43,8 @@ export interface StoreRow {
     created_at: string;
     approved_at: string | null;
 }
+
+
 
 /**
  * Calls the DB RPC to resolve a timezone string from a lon/lat point.
@@ -92,7 +94,7 @@ export async function createStore(payload: CreateStorePayload): Promise<StoreRow
             status: "pending_review",
             is_active: false,
         })
-        .select()
+        .select("*")
         .single();
 
     if (storeError || !store) {
@@ -130,13 +132,7 @@ export async function createStore(payload: CreateStorePayload): Promise<StoreRow
         });
     }
 
-    const parsedLocation = parsePostGISLocation((store as any).location);
-
-    return {
-      ...store,
-      latitude: parsedLocation.latitude,
-      longitude: parsedLocation.longitude,
-    } as StoreRow;
+    return withPostGISCoordinates(store) as StoreRow;
 }
 
 export async function getMyStores(ownerId: string): Promise<StoreRow[]> {
@@ -176,14 +172,7 @@ export async function getMyStores(ownerId: string): Promise<StoreRow[]> {
         return true;
     });
 
-    return unique.map((s) => {
-        const parsed = parsePostGISLocation((s as any).location);
-        return {
-            ...s,
-            latitude: parsed.latitude,
-            longitude: parsed.longitude,
-        };
-    });
+    return unique.map((s) => withPostGISCoordinates(s));
 }
 
 export async function updateStoreLogo(storeId: number, imageUrl: string): Promise<void> {
@@ -234,11 +223,9 @@ export async function getAllStores(): Promise<AdminStoreRow[]> {
     if (error) throw new Error(error.message);
 
     return (data ?? []).map((row: any) => {
-        const parsed = parsePostGISLocation(row.location);
+        const store = withPostGISCoordinates(row);
         return {
-            ...row,
-            latitude: parsed.latitude,
-            longitude: parsed.longitude,
+            ...store,
             owner_name: row.users?.name ?? null,
             users: undefined,
         };
@@ -266,14 +253,7 @@ export async function getStores() {
 				.eq("status", "active")
 				.eq("is_active", true);
     if (error) throw new Error(error.message);
-    return data.map((row: any) => {
-        const parsed = parsePostGISLocation(row.location);
-        return {
-            ...row,
-            latitude: parsed.latitude,
-            longitude: parsed.longitude,
-        };
-    });
+    return data.map((row: any) => withPostGISCoordinates(row));
     } catch (error) {
         throw error;
     }
@@ -289,12 +269,7 @@ export async function getStoreById(storeId: number) {
 			const store = data?.[0] ?? null;
 			if (!store) return null;
 			
-			const parsed = parsePostGISLocation(store.location);
-			return {
-			    ...store,
-			    latitude: parsed.latitude,
-			    longitude: parsed.longitude,
-			};
+			return withPostGISCoordinates(store);
     } catch (error) {
         throw error;
     }

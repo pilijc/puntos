@@ -1,5 +1,8 @@
 import { supabase } from "@/supabase/supabase";
+import { withPostGISCoordinates } from "@/utils/location";
 import type * as GeoJSON from "geojson";
+
+
 
 export async function getStoresService() {
     try {
@@ -9,7 +12,7 @@ export async function getStoresService() {
             .eq("is_active", true)
             .eq("status", "approved");
         if (error) throw error;
-        return data;
+        return (data ?? []).map((store) => withPostGISCoordinates(store));
     } catch (error) {
         throw error;
     }

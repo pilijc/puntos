@@ -1,5 +1,5 @@
 import { supabase } from "@/supabase/supabase";
-import { parsePostGISLocation } from "@/utils/location";
+import { withPostGISCoordinates } from "@/utils/location";
 
 export interface StampProgress {
   id: number;
@@ -113,17 +113,10 @@ export async function getUserStamps(userId: string): Promise<StampProgress[]> {
     // Filter out stamps for stores that are not active and map location
     const validStamps = (data as unknown as any[]).filter(
       (stamp) => stamp.stores?.status === "active" && stamp.stores?.is_active
-    ).map((stamp) => {
-      const parsed = parsePostGISLocation(stamp.stores?.location);
-      return {
-        ...stamp,
-        stores: stamp.stores ? {
-          ...stamp.stores,
-          latitude: parsed.latitude,
-          longitude: parsed.longitude,
-        } : undefined
-      } as StampProgress;
-    });
+    ).map((stamp) => ({
+      ...stamp,
+      stores: stamp.stores ? withPostGISCoordinates(stamp.stores) : undefined
+    } as StampProgress));
 
     return validStamps;
   } catch (error) {

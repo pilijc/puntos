@@ -1,6 +1,6 @@
 import { supabase } from "@/supabase/supabase";
 import { StoreDetail } from "@/type/store-manager/detail";
-import { formatPostGISLocation, parsePostGISLocation } from "@/utils/location";
+import { formatPostGISLocation, withPostGISCoordinates } from "@/utils/location";
 
 export async function getStoreDetail(storeId: string): Promise<StoreDetail> {
   const { data, error } = await supabase
@@ -13,13 +13,7 @@ export async function getStoreDetail(storeId: string): Promise<StoreDetail> {
 
   if (error) throw new Error(error.message);
 
-  const parsedLocation = parsePostGISLocation(data.location);
-
-  return {
-    ...data,
-    latitude: parsedLocation.latitude,
-    longitude: parsedLocation.longitude,
-  } as StoreDetail;
+  return withPostGISCoordinates(data) as StoreDetail;
 }
 
 export async function updateStoreDetail(
@@ -28,14 +22,18 @@ export async function updateStoreDetail(
 ): Promise<void> {
   const updatePayload: any = { ...payload, updated_at: new Date().toISOString() };
 
-  // Convert latitude/longitude to PostGIS location format if both are provided
-  if ('latitude' in updatePayload && 'longitude' in updatePayload) {
+  // Convert legacy coordinate payloads into the canonical PostGIS location field.
+  const hasLatitude = 'latitude' in updatePayload;
+  const hasLongitude = 'longitude' in updatePayload;
+  if (hasLatitude && hasLongitude) {
     if (updatePayload.latitude != null && updatePayload.longitude != null) {
       updatePayload.location = formatPostGISLocation(updatePayload.latitude, updatePayload.longitude);
+    } else {
+      updatePayload.location = null;
     }
-    delete updatePayload.latitude;
-    delete updatePayload.longitude;
   }
+  delete updatePayload.latitude;
+  delete updatePayload.longitude;
 
   const { error } = await supabase
     .from("stores")

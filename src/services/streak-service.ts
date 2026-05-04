@@ -1,5 +1,5 @@
 import { supabase } from "@/supabase/supabase";
-import { parsePostGISLocation } from "@/utils/location";
+import { withPostGISCoordinates } from "@/utils/location";
 
 export interface RecordStreakResult {
   alreadyRecorded: boolean;
@@ -255,18 +255,11 @@ export async function getUserStreaks(userId: string): Promise<UserStreak[]> {
       return isActiveProgram || isUserCompleted;
     });
 
-    // Map location for the valid streaks
-    return validStreaks.map(streak => {
-      const parsed = parsePostGISLocation(streak.stores?.location);
-      return {
-        ...streak,
-        stores: streak.stores ? {
-          ...streak.stores,
-          latitude: parsed.latitude,
-          longitude: parsed.longitude,
-        } : undefined
-      } as UserStreak;
-    });
+    // Map PostGIS location into legacy coordinate props expected by the UI.
+    return validStreaks.map(streak => ({
+      ...streak,
+      stores: streak.stores ? withPostGISCoordinates(streak.stores) : undefined
+    } as UserStreak));
   } catch (error) {
     console.error("Exception fetching user streaks:", error);
     return [];
@@ -317,14 +310,9 @@ export async function getUserStreakByStore(
       streaks[0];
 
     if (activeProgramStreak) {
-      const parsed = parsePostGISLocation(activeProgramStreak.stores?.location);
       return {
         ...activeProgramStreak,
-        stores: activeProgramStreak.stores ? {
-          ...activeProgramStreak.stores,
-          latitude: parsed.latitude,
-          longitude: parsed.longitude,
-        } : undefined
+        stores: activeProgramStreak.stores ? withPostGISCoordinates(activeProgramStreak.stores) : undefined
       } as UserStreak;
     }
 
@@ -368,7 +356,7 @@ export async function getUserStreakByStore(
       return null;
     }
 
-    const parsedStoreLocation = parsePostGISLocation(store.location);
+    const normalizedStore = withPostGISCoordinates(store);
 
     return buildVirtualUserStreak(
       {
@@ -378,8 +366,8 @@ export async function getUserStreakByStore(
         address: store.address,
         status: store.status,
         is_active: store.is_active,
-        latitude: parsedStoreLocation.latitude,
-        longitude: parsedStoreLocation.longitude,
+        latitude: normalizedStore.latitude,
+        longitude: normalizedStore.longitude,
         radius: store.radius,
       },
       programRow as UserStreakProgram,
