@@ -5,7 +5,7 @@ export type Timeframe = "today" | "7d" | "1m";
 export const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 export const USER_DATE_KEYS = [
-  "created_at", "createdAt", "inserted_at", "updated_at",
+  "last_sign_in_at", "last_login_at", "updated_at", "created_at", "createdAt", "inserted_at",
 ];
 
 export const STORE_DATE_KEYS = ["updated_at", "created_at", "createdAt", "inserted_at"];

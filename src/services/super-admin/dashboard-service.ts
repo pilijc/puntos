@@ -33,14 +33,11 @@ export async function getAdminSession(): Promise<AdminInfo | null> {
 }
 
 export async function getDashboardData(): Promise<DashboardData> {
-  const [{ data: userData }, { data: emailData }, { data: storeData }, { data: subData }] = await Promise.all([
-    supabase
-      .from("users")
-      .select("*, user_roles(role_id)")
-      .order("id", { ascending: true }),
+  const [{ data: userData }, { data: storeData }, { data: subData }] = await Promise.all([
     supabase
       .from("users_with_email")
-      .select("id, last_sign_in_at"),
+      .select("*, user_roles(role_id)")
+      .order("id", { ascending: true }),
     supabase
       .from("stores")
       .select("id, name, owner_id, status, is_active, created_at, updated_at, users!owner_id ( name )")
@@ -50,14 +47,7 @@ export async function getDashboardData(): Promise<DashboardData> {
       .select("id, owner_id, payment_status, updated_at, current_period_start, created_at"),
   ]);
 
-  const lastSignInMap = new Map();
-  if (emailData) {
-    emailData.forEach((row: any) => {
-      if (row.id && row.last_sign_in_at) {
-        lastSignInMap.set(row.id, row.last_sign_in_at);
-      }
-    });
-  }
+
 
   const ROLE_ID_TO_TYPE: Record<number, string> = {
     1: "super_admin",
@@ -76,7 +66,7 @@ export async function getDashboardData(): Promise<DashboardData> {
       ...u,
       role_type,
       user_roles: undefined, // remove nested object
-      last_sign_in_at: lastSignInMap.get(u.id) || u.updated_at || u.created_at,
+      last_sign_in_at: u.last_sign_in_at || u.updated_at || u.created_at,
       avatar: u.avatar_url
         ? u.avatar_url.startsWith("http")
           ? u.avatar_url
