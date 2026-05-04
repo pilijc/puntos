@@ -1,5 +1,5 @@
 import React, { useRef, useState } from "react";
-import { Modal, useColorScheme, useWindowDimensions } from "react-native";
+import { Modal, useColorScheme, useWindowDimensions, Platform, StatusBar } from "react-native";
 import { View, Text, TouchableOpacity, Pressable } from "@/tw";
 import { useTranslation } from "react-i18next";
 import { useLanguageStore } from "@/store/language-store";
@@ -27,10 +27,18 @@ export default function TranslateButton() {
         setOpen(false);
     };
 
+    const isWeb = Platform.OS === "web";
+
     const openDropdown = () => {
-        if (buttonRef.current?.measureInWindow) {
-            buttonRef.current.measureInWindow((x: number, y: number, w: number, h: number) => {
-                setDropdownPos({ top: y + h + 6, right: windowWidth - (x + w) });
+        if (isWeb) {
+            setOpen(true);
+            return;
+        }
+
+        if (buttonRef.current?.measure) {
+            buttonRef.current.measure((x: number, y: number, w: number, h: number, pageX: number, pageY: number) => {
+                // Uniform 12px gap for mobile
+                setDropdownPos({ top: pageY + h + 12, right: windowWidth - (pageX + w) });
                 setOpen(true);
             });
         } else {
@@ -38,8 +46,56 @@ export default function TranslateButton() {
         }
     };
 
+    const dropdownContent = (
+        <View
+            className="absolute"
+            style={isWeb ? {
+                top: "100%",
+                right: 0,
+                marginTop: 12, // Increased gap for web to match mobile
+                minWidth: 160,
+                zIndex: 50,
+            } : {
+                top: dropdownPos.top,
+                right: dropdownPos.right,
+                minWidth: 160,
+            }}
+        >
+            <View className="bg-white dark:bg-darkBackgroundMuted border border-slate-200 dark:border-slate-700 rounded-xl py-2 w-full">
+                {LANGUAGES.map((lang, index) => (
+                    <React.Fragment key={lang.code}>
+                        {index > 0 && (
+                            <View className="h-px bg-slate-200 dark:bg-slate-700 mx-3" />
+                        )}
+                        <TouchableOpacity
+                            activeOpacity={0.7}
+                            onPress={() => selectLanguage(lang.code)}
+                            className="flex-row items-center px-4 py-3"
+                            style={{ gap: 10 }}
+                        >
+                            <View className="w-6 h-4 rounded-sm overflow-hidden items-center justify-center">
+                                <CountryFlag isoCode={lang.isoCode} size={18} />
+                            </View>
+                            <Text className="text-sm font-poppins-semibold text-slate-500 dark:text-slate-400 flex-1">
+                                {lang.label}
+                            </Text>
+                            {current.code === lang.code && (
+                                <View className="w-1.5 h-1.5 rounded-full bg-primary" />
+                            )}
+                        </TouchableOpacity>
+                    </React.Fragment>
+                ))}
+            </View>
+            {/* Little top popover arrow pointing to the button, rendered after so it covers the container border */}
+            <View 
+                className="absolute -top-1.5 right-4 w-3 h-3 bg-white dark:bg-darkBackgroundMuted border-t border-l border-slate-200 dark:border-slate-700" 
+                style={{ transform: [{ rotate: "45deg" }] }} 
+            />
+        </View>
+    );
+
     return (
-        <>
+        <View style={isWeb ? { zIndex: 50, position: "relative" } : undefined}>
             {/* ── Trigger pill ──────────────────────────────────── */}
             <TouchableOpacity
                 ref={buttonRef}
@@ -53,53 +109,23 @@ export default function TranslateButton() {
             </TouchableOpacity>
 
             {/* ── Dropdown ──────────────────────────────────────── */}
-            <Modal transparent animationType="fade" visible={open} onRequestClose={() => setOpen(false)}>
-                <Pressable className="flex-1" onPress={() => setOpen(false)}>
-                    <View
-                        className="absolute bg-white dark:bg-darkBackgroundMuted border border-slate-200 dark:border-slate-700 rounded-xl py-2 mt-16"
-                        style={{
-                            top: dropdownPos.top,
-                            right: dropdownPos.right,
-                            minWidth: 160,
-                        }}
-                    >
-                        {/* Little top popover arrow pointing to the button */}
-                        <View 
-                            className="absolute -top-1.5 right-4 w-3 h-3 bg-white dark:bg-darkBackgroundMuted border-t border-l border-slate-200 dark:border-slate-700" 
-                            style={{ transform: [{ rotate: "45deg" }] }} 
-                        />
-                        
-                        {LANGUAGES.map((lang, index) => (
-                            <React.Fragment key={lang.code}>
-                                {index > 0 && (
-                                    <View className="h-px bg-slate-200 dark:bg-slate-700 mx-3" />
-                                )}
-                                <TouchableOpacity
-                                    activeOpacity={0.7}
-                                    onPress={() => selectLanguage(lang.code)}
-                                    className="flex-row items-center px-4 py-3"
-                                    style={{ gap: 10 }}
-                                >
-                                    {/* rectangular flag in the dropdown list */}
-                                    <View className="w-6 h-4 rounded-sm overflow-hidden items-center justify-center">
-                                        <CountryFlag isoCode={lang.isoCode} size={18} />
-                                    </View>
+            {open && isWeb && (
+                <>
+                    <Pressable 
+                        style={{ position: 'fixed' as any, top: 0, left: 0, right: 0, bottom: 0, zIndex: 40 }} 
+                        onPress={() => setOpen(false)} 
+                    />
+                    {dropdownContent}
+                </>
+            )}
 
-                                    {/* language name */}
-                                    <Text className="text-sm font-poppins-semibold text-slate-500 dark:text-slate-400 flex-1">
-                                        {lang.label}
-                                    </Text>
-
-                                    {/* active dot */}
-                                    {current.code === lang.code && (
-                                        <View className="w-1.5 h-1.5 rounded-full bg-primary" />
-                                    )}
-                                </TouchableOpacity>
-                            </React.Fragment>
-                        ))}
-                    </View>
-                </Pressable>
-            </Modal>
-        </>
+            {open && !isWeb && (
+                <Modal transparent animationType="fade" visible={open} onRequestClose={() => setOpen(false)}>
+                    <Pressable className="flex-1" onPress={() => setOpen(false)}>
+                        {dropdownContent}
+                    </Pressable>
+                </Modal>
+            )}
+        </View>
     );
 }
