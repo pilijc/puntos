@@ -146,8 +146,8 @@ export default function ViewStore() {
         <View className="items-center">
           <View className="w-full px-4 items-center">
             <View
-              className={isWeb ? "bg-white dark:bg-neutral-800 border border-slate-100 dark:border-neutral-700 rounded-xl p-2" : ""}
-              style={isWeb ? { width: "100%", maxWidth: 860 } : undefined}
+              className="bg-white dark:bg-neutral-800 border border-slate-100 dark:border-neutral-700 rounded-xl"
+              style={isWeb ? { width: "100%", maxWidth: 860 } : { width: "100%" }}
             >
               <View className="w-full h-40 rounded-xl overflow-hidden">
                 <RNScrollView

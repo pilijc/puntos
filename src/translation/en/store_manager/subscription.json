@@ -29,8 +29,8 @@
     "cancel": {
       "confirmTitle": "Cancel subscription?",
       "confirmMessage": "You will keep your current benefits until the end of this billing period. After that date you will not be charged again.",
-      "goBack": "Go back",
-      "confirmCta": "Confirm cancel",
+      "goBack": "Later",
+      "confirmCta": "Cancel now",
       "failedTitle": "Could not cancel",
       "successTitle": "Subscription"
     },

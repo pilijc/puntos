@@ -60,13 +60,13 @@ const config: Record<
   },
   secondary: {
     container: "bg-slate-100 dark:bg-slate-800",
-    text: "text-slate-500 dark:text-slate-400",
+    text: "text-textPrimary dark:text-slate-400",
     iconColor: "#94A3B8",
     spinnerColor: "#94A3B8"
   },
   ghost: {
     container: "border border-dashed border-slate-200 dark:border-slate-700",
-    text: "text-slate-400 dark:text-slate-500",
+    text: "text-textSecondary dark:text-slate-500",
     iconColor: "#94A3B8",
     spinnerColor: "#94A3B8"
   }

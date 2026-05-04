@@ -1,11 +1,10 @@
 import React, { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
-  KeyboardAvoidingView,
   Platform,
   ScrollView,
 } from "react-native";
-import { View, Text, TouchableOpacity } from "@/tw";
+import { View, Text, TouchableOpacity, SafeAreaView } from "@/tw";
 import { useRouter, useLocalSearchParams, useFocusEffect } from "expo-router";
 import { Image } from "expo-image";
 import { useStampConfigureViewStore, useStampStore } from "@/store/store-manager/stamp-store";
@@ -220,11 +219,7 @@ export default function ConfigureStamp() {
   }
 
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1 }}
-      className="bg-background dark:bg-[#111921]"
-      behavior={Platform.OS === "android" ? "height" : "padding"}
-    >
+    <SafeAreaView edges={["top", "left", "right"]} className="flex-1 bg-backgroundMuted dark:bg-[#111921]">
       <Modal
         visible={!!modal}
         onClose={() => setModal(null)}
@@ -526,6 +521,6 @@ export default function ConfigureStamp() {
           if (r.id != null) setRewardError(false);
         }}
       />
-    </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }

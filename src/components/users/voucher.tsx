@@ -4,7 +4,7 @@ import { View, Text, TouchableOpacity } from "@/tw";
 import { VoucherGeneratorProps, Voucher } from "@/type/user/voucher";
 import { generateVoucherCode } from "@/services/user/voucher-service";
 import { useTranslation } from "react-i18next";
-
+import { Button } from "@/components/button";
 
 export const VoucherGenerator: React.FC<VoucherGeneratorProps> = ({
   userId,
@@ -61,41 +61,46 @@ export const VoucherGenerator: React.FC<VoucherGeneratorProps> = ({
   }, [voucher]);
 
   return (
-    <View className="items-center justify-center mt-8 p-4">
+    <View className="items-center justify-center px-4">
       {!voucher ? (
-        <TouchableOpacity
+        <Button
+          label={translate("user.qr.voucher.generate")}
           onPress={generateVoucher}
+          authButton
           disabled={loading}
-          className="bg-orange-500 px-8 py-4 rounded-xl"
-        >
-          {loading ? (
-            <ActivityIndicator size="small" color="#FFFFFF" />
-          ) : (
-            <Text className="text-white font-bold text-lg">{translate("user.qr.voucher.generate")}</Text>
-          )}
-        </TouchableOpacity>
+          loading={loading}
+          variant="primary"
+        />
+        // <TouchableOpacity
+        //   onPress={generateVoucher}
+        //   disabled={loading}
+        //   className="bg-orange-500 px-8 py-4 rounded-xl"
+        // >
+        //   {loading ? (
+        //     <ActivityIndicator size="small" color="#FFFFFF" />
+        //   ) : (
+        //     <Text className="text-white font-bold text-lg">{translate("user.qr.voucher.generate")}</Text>
+        //   )}
+        // </TouchableOpacity>
       ) : (
         <>
-          <Text className="text-sm font-semibold mb-2 text-gray-800 dark:text-darkTextPrimary">{translate("user.qr.voucher.title")}</Text>
-          <View className="bg-white p-4 rounded-2xl mb-2  border border-gray-200">
-            <Text className="text-2xl font-bold text-gray-900">{voucher.code}</Text>
-          </View>
-          <Text className="text-xs text-gray-500 dark:text-darkTextSecondary mb-4">
+          <Text className="text-sm font-poppins-semibold text-textPrimary dark:text-darkTextPrimary">{translate("user.qr.voucher.title")}</Text>
+          <Text className="text-xs font-poppins text-textMuted dark:text-darkTextMuted mb-4">
             {translate("user.qr.voucher.expires", {
               time: `${Math.floor(timeLeft / 60)}:${(timeLeft % 60).toString().padStart(2, "0")}`
             })}
           </Text>
-          <TouchableOpacity
-            onPress={generateVoucher}
-            disabled={loading}
-            className="bg-orange-500 px-6 py-3 rounded-xl"
-          >
-            {loading ? (
-              <ActivityIndicator size="small" color="#FFFFFF" />
-            ) : (
-              <Text className="text-white font-bold">{translate("user.qr.voucher.generateNew")}</Text>
-            )}
-          </TouchableOpacity>
+          <View className="bg-white p-4 rounded-xl mb-4 elevation-100">
+            <Text className="text-2xl font-poppins-semibold text-textPrimary dark:text-darkTextPrimary">{voucher.code}</Text>
+          </View>
+          <Button 
+            label={translate("user.qr.voucher.generateNew")} 
+            onPress={generateVoucher} 
+            authButton
+            disabled={loading} 
+            variant="primary" 
+            loading={loading}
+          />
         </>
       )}
     </View>

@@ -1,6 +1,6 @@
 import React from "react";
 import { KeyboardAvoidingView, Platform, ScrollView, useColorScheme } from "react-native";
-import { View, Text, TouchableOpacity, TextInput } from "@/tw";
+import { View, Text, TouchableOpacity, TextInput, SafeAreaView } from "@/tw";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useRouter, useLocalSearchParams, useFocusEffect } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -19,7 +19,6 @@ import { useTranslation } from "react-i18next";
 export default function ConfigureStreaks() {
   const { t } = useTranslation();
   const router = useRouter();
-  const insets = useSafeAreaInsets();
   const { storeId, streakId } = useLocalSearchParams<{ storeId: string; streakId?: string }>();
   const isEditMode = !!streakId;
   const isWeb = Platform.OS === "web";
@@ -267,11 +266,7 @@ export default function ConfigureStreaks() {
   };
 
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1 }}
-      className="bg-background dark:bg-[#111921]"
-      behavior={Platform.OS === "android" ? "height" : "padding"}
-    >
+    <SafeAreaView edges={["top", "left", "right"]} className="flex-1 bg-backgroundMuted dark:bg-[#111921]">
       <Modal
         visible={!!modal}
         onClose={() => setModal(null)}
@@ -606,6 +601,6 @@ export default function ConfigureStreaks() {
           </View>
         </View>
       </ScrollView>
-    </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }

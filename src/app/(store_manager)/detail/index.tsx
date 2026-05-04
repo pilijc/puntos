@@ -175,7 +175,12 @@ export default function DetailIndex() {
                 </View>
     
 
-                <View className="flex-row items-center px-4 pb-2" style={{ marginTop: -28 }}>
+                <View
+                  className={`flex-row items-center ${
+                    Platform.OS === "web" ? "px-4" : Platform.OS === "android" ? "px-2" : ""
+                  } pb-2`}
+                  style={{ marginTop: -28 }}
+                >
                   <View
                     className="rounded-full overflow-hidden bg-white dark:bg-neutral-800"
                     style={{
@@ -244,7 +249,13 @@ export default function DetailIndex() {
 
                 {detail?.business_document_image && (
                   <>
-                    <View className="px-6 py-3 gap-y-2">
+                    <View
+                      className="py-3 gap-y-2"
+                      style={{
+                        paddingLeft: Platform.OS === "web" ? 24 : 16,
+                        paddingRight: Platform.OS === "web" ? 24 : 16
+                      }}
+                    >
                       <Text className="text-xs font-poppins-semibold text-textSecondary dark:text-textSecondary mb-1">
                         {t("label.businessDocument")}
                       </Text>
@@ -253,8 +264,8 @@ export default function DetailIndex() {
                         onPress={() => setDocPreviewVisible(true)}
                         className="flex-row items-center gap-x-3 border border-slate-100 dark:border-neutral-700 rounded-xl px-3 py-2.5"
                       >
-                        <View className="w-10 h-10 rounded-xl bg-red-50 dark:bg-red-950 items-center justify-center">
-                          <File size={18} color="#EF4444" />
+                        <View className="w-10 h-10 rounded-xl bg-primary/10 dark:bg-primary/10 items-center justify-center">
+                          <File size={18} color="#FF6600" />
                         </View>
                         <View className="flex-1">
                           <Text className="text-xs font-poppins-semibold text-textPrimary dark:text-slate-100" numberOfLines={1}>
@@ -298,7 +309,10 @@ export default function DetailIndex() {
                   )}
                 </View>
 
-                <View className="mx-6 mb-4 rounded-xl overflow-hidden" style={{ height: 180 }}>
+                <View
+                  className={`mb-4 rounded-xl overflow-hidden ${Platform.OS === "web" ? "mx-6" : "mx-4"}`}
+                  style={{ height: 180 }}
+                >
                   {hasCoords ? (
                     shouldUseInteractiveMapbox() ? (
                       <MapView

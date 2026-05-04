@@ -5,7 +5,7 @@ import {
   Platform,
   ScrollView,
 } from "react-native";
-import { View, Text, TouchableOpacity, TextInput } from "@/tw";
+import { View, Text, TouchableOpacity, TextInput, SafeAreaView } from "@/tw";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -194,11 +194,7 @@ export default function Rewards() {
   };
 
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1 }}
-      className="bg-background dark:bg-[#111921]"
-      behavior={Platform.OS === "android" ? "height" : "padding"}
-    >
+    <SafeAreaView edges={["top", "left", "right"]} className="flex-1 bg-backgroundMuted dark:bg-[#111921]">
 			<Modal
 				visible={!!modal}
 				onClose={() => setModal(null)}
@@ -357,7 +353,6 @@ export default function Rewards() {
           </View>
         </View>
       </ScrollView>
-
-    </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }

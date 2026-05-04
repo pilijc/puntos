@@ -30,7 +30,7 @@
       "confirmTitle": "サブスクリプションを解約しますか？",
       "confirmMessage": "この請求期間の終了までは現在の特典をご利用いただけます。その日以降は請求されません。",
       "goBack": "戻る",
-      "confirmCta": "解約する",
+      "confirmCta": "はい、解約します",
       "failedTitle": "解約できませんでした",
       "successTitle": "サブスクリプション"
     },

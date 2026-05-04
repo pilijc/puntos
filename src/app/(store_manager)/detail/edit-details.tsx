@@ -6,7 +6,7 @@ import {
   Platform,
   useWindowDimensions,
 } from "react-native";
-import { View, Text, TouchableOpacity, ScrollView } from "@/tw";
+import { View, Text, TouchableOpacity, ScrollView, SafeAreaView } from "@/tw";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -339,7 +339,7 @@ export default function EditDetails() {
   }
 
   return (
-    <View className="flex-1 bg-backgroundMuted dark:bg-backgroundMuted">
+    <SafeAreaView edges={["top", "left", "right"]} className="flex-1 bg-backgroundMuted dark:bg-backgroundMuted">
       <Modal
         visible={!!modal}
         onClose={() => setModal(null)}
@@ -813,6 +813,6 @@ export default function EditDetails() {
         )}
 
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 }
