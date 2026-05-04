@@ -177,7 +177,7 @@ const HIDDEN_SCREENS = new Set([
     "streak/index", "streak/configure-streaks", "stamp/configure-stamp",
     "stamp/index", "reward/index", "reward/add-rewards", "reward/view-reward",
     "qr/index", "qr/configure-qr", "staff/index", "staff/add-staff",
-    "detail/index", "detail/edit-details", "chat-support",
+    "detail/index", "detail/edit-details", "chat-support", "manager-inbox",
 ]);
 
 function WebStoreManagerSidebarTabBar({
