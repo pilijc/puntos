@@ -5,8 +5,7 @@ export type Timeframe = "today" | "7d" | "1m";
 export const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 export const USER_DATE_KEYS = [
-  "last_sign_in_at", "last_login", "last_login_at", "last_sign_in",
-  "updated_at", "created_at", "createdAt", "inserted_at",
+  "created_at", "createdAt", "inserted_at", "updated_at",
 ];
 
 export const STORE_DATE_KEYS = ["updated_at", "created_at", "createdAt", "inserted_at"];
@@ -124,6 +123,25 @@ export function buildTimeframeSeries(items: DashboardRecord[], dateKeys: string[
   return { series, labels: monthLabels, rangeLabel };
 }
 
+export function getRelativeTime(date: Date | null, prefixText: string = "Active"): string {
+  if (!date) return prefixText;
+  const now = new Date().getTime();
+  const diffInMs = Math.max(0, now - date.getTime());
+  const diffInMins = Math.floor(diffInMs / (1000 * 60));
+  
+  if (diffInMins < 1) return `${prefixText} now`;
+  if (diffInMins < 60) return `${prefixText} ${diffInMins} min${diffInMins === 1 ? '' : 's'} ago`;
+  
+  const diffInHours = Math.floor(diffInMins / 60);
+  if (diffInHours < 24) return `${prefixText} ${diffInHours} hr${diffInHours === 1 ? '' : 's'} ago`;
+  
+  const diffInDays = Math.floor(diffInHours / 24);
+  if (diffInDays < 30) return `${prefixText} ${diffInDays} day${diffInDays === 1 ? '' : 's'} ago`;
+  
+  const diffInMonths = Math.floor(diffInDays / 30);
+  return `${prefixText} ${diffInMonths} mo${diffInMonths === 1 ? '' : 's'} ago`;
+}
+
 export function getActiveUsersCount(users: DashboardRecord[]) {
   return users.filter((u) => !(u?.status === "Blocked" || u?.blocked === true || u?.role === 0)).length;
 }
@@ -152,6 +170,10 @@ export function getDetailItems(items: DashboardRecord[], dateKeys: string[], pre
     .sort((a, b) => (b.date?.getTime() ?? 0) - (a.date?.getTime() ?? 0));
 
   const list = allFiltered.slice(0, limit).map(({ item, date }, idx) => {
+    // Extract real-time activity for the status label
+    const activeDateStr = item?.last_sign_in_at || item?.last_login_at || item?.updated_at || item?.created_at;
+    const activeDate = parsePossibleDate(activeDateStr);
+
     const status =
       prefix === "Store"
         ? STORE_STATUS_CONFIG[getEffectiveStatus(item as any)].label
@@ -159,7 +181,7 @@ export function getDetailItems(items: DashboardRecord[], dateKeys: string[], pre
           item?.role === 0 ||
           ["inactive", "blocked"].includes(String(item?.status ?? "").toLowerCase())
         ? "Inactive"
-        : "Active";
+        : getRelativeTime(activeDate, "Active");
     const dateLabel = date
       ? `${MONTH_NAMES[date.getMonth()]} ${date.getDate()}`
       : "N/A";
