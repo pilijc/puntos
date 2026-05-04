@@ -109,11 +109,6 @@ export default function History() {
     } else {
       router.push(`store/${storeId}`);
     }
-    if(transactionType === 'earned'){
-       router.push('store/redemption-code');
-    } else {
-      router.push(`store/${storeId}`);
-    }
   };
 
   const renderItem = ({ item, index }: { item: any; index: number }) => {

@@ -2,13 +2,12 @@ import { supabase } from "@/supabase/supabase";
 import { getUserTransactionHistory } from "./qr-service";
 import { getUserVoucherTransactionHistory } from "./voucher-service";
 import { getRewardRedemptionHistory } from "./rewards-history-service";
-import { TransactionItem } from "@/type/user/history";
 
 export async function getCompleteUserHistory(
   userId: string, 
   limit: number = 10, 
   offset: number = 0
-): Promise<{ transactions: TransactionItem[], hasMore: boolean }> {
+): Promise<{ transactions: any[], hasMore: boolean }> {
   try {
     const [qrHistory, voucherHistory, redemptionHistory] = await Promise.all([
       getUserTransactionHistory(userId),
