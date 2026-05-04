@@ -12,6 +12,7 @@ import { useTranslation, Trans } from "react-i18next";
 import TranslateButton from "@/components/ui/translate-button";
 import { Button } from "@/components/button";
 import { Modal, type ModalButton } from "@/components/modal";
+import { AppHeader } from "@/components/header";
 
 export default function OnboardingWelcome() {
   const [loadingGoogle, setLoadingGoogle] = useState(false);
@@ -64,9 +65,11 @@ export default function OnboardingWelcome() {
         message={modal?.message}
         buttons={modal?.buttons}
       />
-      <View className="absolute top-14 right-6 z-10">
-        <TranslateButton />
-      </View>
+      <AppHeader
+        title={""}
+        rightIcon={<TranslateButton />}
+        className="bg-transparent"
+      />
       {isWeb ? (
         <View className="flex-1 items-center justify-center p-4">
           <View className="w-full max-w-4xl border border-slate-100 dark:border-neutral-700 rounded-xl bg-white dark:bg-darkBackground overflow-hidden">
