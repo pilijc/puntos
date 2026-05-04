@@ -59,7 +59,6 @@ async function getServerTimeMs(): Promise<number> {
             headers: {
                 apikey: anonKey,
                 Authorization: `Bearer ${anonKey}`,
-                // Instruct proxies to always forward a fresh response
                 "Cache-Control": "no-cache, no-store",
                 Pragma: "no-cache",
             },
