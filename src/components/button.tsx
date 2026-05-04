@@ -4,7 +4,7 @@ import { Text, TouchableOpacity } from "@/tw";
 import * as LucideIcons from "lucide-react-native";
 import { Image as ExpoImage, type ImageSource } from "expo-image";
 
-type ButtonVariant = "primary" | "accent" | "success" | "danger" | "secondary" | "ghost";
+type ButtonVariant = "primary" | "accent" | "success" | "danger" | "secondary" | "ghost" | "clear";
 type IconName = keyof typeof LucideIcons;
 
 interface ButtonProps {
@@ -23,6 +23,7 @@ interface ButtonProps {
   keyboardDismiss?: boolean;
   authButton?: boolean;
   elevation?: boolean;
+  rightIcon?: IconName;
 }
 
 const config: Record<
@@ -69,6 +70,12 @@ const config: Record<
     text: "text-slate-400 dark:text-slate-500",
     iconColor: "#94A3B8",
     spinnerColor: "#94A3B8"
+  },
+  clear: {
+    container: "bg-transparent border border-slate-200 dark:border-darkBorder",
+    text: "text-textPrimary dark:text-darkTextPrimary",
+    iconColor: "#FF6600",
+    spinnerColor: "#FF6600"
   }
 };
 
@@ -88,6 +95,7 @@ export function Button({
   keyboardDismiss = false,
   authButton = false,
   elevation = false,
+  rightIcon,
 }: ButtonProps) {
   let { container, text, iconColor, spinnerColor } = config[variant];
 
@@ -100,6 +108,7 @@ export function Button({
   }
 
   const LucideIcon = icon ? (LucideIcons[icon] as React.ComponentType<{ size: number; color: string }>) : null;
+  const RightLucideIcon = rightIcon ? (LucideIcons[rightIcon] as React.ComponentType<{ size: number; color: string }>) : null;
   const fullWidthPad = fitContent ? "px-5" : dense ? "px-4" : "px-10";
   const sizeClass = authButton
     ? fullWidth
@@ -133,7 +142,8 @@ export function Button({
             />
           )}
           {LucideIcon && <LucideIcon size={16} color={iconColor} />}
-          <Text className={`text-sm font-poppins-semibold ${text}`} numberOfLines={1}>{label}</Text>
+          <Text className={`min-w-0 shrink text-sm font-poppins-semibold ${text}`} numberOfLines={1}>{label}</Text>
+          {RightLucideIcon && <RightLucideIcon size={16} color={iconColor} />}
         </>
       )}
     </TouchableOpacity>

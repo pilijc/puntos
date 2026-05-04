@@ -186,7 +186,6 @@ export default function StoreManagerDashboard() {
                       <DashboardStampDistribution
                         buckets={stampBuckets}
                         maxStamps={stampMaxStamps}
-                        storeId={selectedStore?.id}
                         loading={metricsLoading}
                       />
                     </View>
@@ -244,7 +243,6 @@ export default function StoreManagerDashboard() {
                 <DashboardStampDistribution
                   buckets={stampBuckets}
                   maxStamps={stampMaxStamps}
-                  storeId={selectedStore?.id}
                   loading={metricsLoading}
                 />
 

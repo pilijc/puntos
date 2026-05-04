@@ -55,9 +55,13 @@ async function getServerTimeMs(): Promise<number> {
         const url = process.env.EXPO_PUBLIC_API_URL || "";
         const anonKey = process.env.EXPO_PUBLIC_ANON_KEY || "";
         const res = await fetch(`${url}/rest/v1/`, {
-            method: "OPTIONS",
+            method: "HEAD",
             headers: {
                 apikey: anonKey,
+                Authorization: `Bearer ${anonKey}`,
+                // Instruct proxies to always forward a fresh response
+                "Cache-Control": "no-cache, no-store",
+                Pragma: "no-cache",
             },
         });
         const dateStr = res.headers.get("Date");

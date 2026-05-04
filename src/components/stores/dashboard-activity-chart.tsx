@@ -4,7 +4,7 @@ import { getTodayIndex } from "@/utils/date-helpers";
 import { ActivityMetricType, DashboardActivityChartProps } from "@/type/store-manager/metric";
 import { DashboardActivityChartSkeleton } from "@/components/skeleton/store_manager/dashboard-activity-chart-skeleton";
 import { useTranslation } from "react-i18next";
-import { Platform } from "react-native";
+import { Platform, useWindowDimensions } from "react-native";
 
 interface ExtendedDashboardActivityChartProps extends DashboardActivityChartProps {
     title?: string;
@@ -14,8 +14,9 @@ interface ExtendedDashboardActivityChartProps extends DashboardActivityChartProp
     children?: React.ReactNode;
 }
 
-import { Text, View, TouchableOpacity, Pressable } from "@/tw";
-import { ChevronDown, ChevronUp, Check } from "lucide-react-native";
+import { Text, View, Pressable } from "@/tw";
+import { Check } from "lucide-react-native";
+import { Button } from "@/components/button";
 
 const isWeb = Platform.OS === "web";
 
@@ -42,8 +43,11 @@ export const DashboardActivityChart: React.FC<ExtendedDashboardActivityChartProp
     const [containerWidth, setContainerWidth] = useState(0);
     const [selectedMetric, setSelectedMetric] = useState<ActivityMetricType>('scans');
     const [dropdownOpen, setDropdownOpen] = useState(false);
+    const { width: windowWidth } = useWindowDimensions();
 
-    const viewBoxWidth = Math.max(containerWidth, 300);
+    const measuredWidth = containerWidth || windowWidth;
+    const isCompactWeb = isWeb && measuredWidth < 560;
+    const viewBoxWidth = Math.max(containerWidth, isCompactWeb ? 260 : 300);
 
     // Dynamic label count based on width: 14 for desktop (>700), 10 for tablet (>450), 7 for mobile, 5 for tiny screens
     const visibleDays = isWeb 
@@ -58,7 +62,7 @@ export const DashboardActivityChart: React.FC<ExtendedDashboardActivityChartProp
     const maxVal = Math.max(...displayData, 1);
 
     // Compute chart height: proportional on web (FIXED at 285 as requested), fixed on mobile
-    const chartContainerHeight = isWeb ? 285 : MOBILE_HEIGHT;
+    const chartContainerHeight = isWeb ? (isCompactWeb ? 190 : 285) : MOBILE_HEIGHT;
 
     // LINE_HEIGHT drives how high data points can go; leave less space at bottom on web
     const LINE_HEIGHT = Math.round(chartContainerHeight * (isWeb ? 0.88 : 0.75));
@@ -97,14 +101,14 @@ export const DashboardActivityChart: React.FC<ExtendedDashboardActivityChartProp
 
     return (
         <View
-            className={`bg-white dark:bg-darkBackgroundCard rounded-xl p-4 elevation-1 border border-transparent dark:border-darkBorder${isWeb ? ' flex-1' : ''}`}
-            onLayout={(e) => setContainerWidth(e.nativeEvent.layout.width - 32)}
+            className={`bg-white dark:bg-darkBackgroundCard rounded-xl p-4 elevation-1 border border-transparent dark:border-darkBorder${isWeb && !isCompactWeb ? ' flex-1' : ''}`}
+            onLayout={(e) => setContainerWidth(Math.max(e.nativeEvent.layout.width - 32, 0))}
         >
-            <View 
-                className="flex-row justify-between items-start mb-4 relative z-50"
+            <View
+                className={`${isCompactWeb ? "flex-col" : "flex-row justify-between items-start"} mb-4 relative z-50`}
                 style={{ zIndex: 100 }}
             >
-                <View>
+                <View className="min-w-0">
                     {title && (
                         <Text className="text-lg font-poppins-bold text-textPrimary dark:text-darkTextPrimary leading-6">
                             {title}
@@ -115,69 +119,68 @@ export const DashboardActivityChart: React.FC<ExtendedDashboardActivityChartProp
                     </Text>
                 </View>
                 
-                <View className="relative z-50" style={{ zIndex: 110 }}>
-                    <TouchableOpacity 
-                        onPress={() => setDropdownOpen(!dropdownOpen)} 
-                        activeOpacity={0.7}
-                        className="flex-row items-center px-4 py-2.5 rounded-full bg-slate-50 dark:bg-darkBackgroundMuted border border-slate-200 dark:border-darkBorder"
-                    >
-                        <Text className="text-[12px] font-poppins-bold text-slate-700 dark:text-darkTextPrimary mr-2">
-                            {translate(`store_manager.dashboard.activity.metric.${selectedMetric}`, activeOption?.label)}
-                        </Text>
-                        <View className="mt-0.5">
-                            {dropdownOpen ? <ChevronUp size={14} color="#64748b" /> : <ChevronDown size={14} color="#64748b" />}
-                        </View>
-                    </TouchableOpacity>
+                {!isCompactWeb && (
+                    <View className="relative z-50 min-w-0" style={{ zIndex: 110, maxWidth: "100%" }}>
+                        <Button
+                            label={translate(`store_manager.dashboard.activity.metric.${selectedMetric}`, activeOption?.label)}
+                            onPress={() => setDropdownOpen(!dropdownOpen)}
+                            variant="secondary"
+                            rightIcon={dropdownOpen ? "ChevronUp" : "ChevronDown"}
+                            roundedFull
+                            fitContent
+                        />
 
-                    {dropdownOpen && (
-                        <View 
-                            className="absolute top-full right-0 mt-2 w-64 bg-white dark:bg-darkBackgroundCard rounded-[28px] shadow-2xl border border-slate-100 dark:border-darkBorder p-2 z-50 elevation-10"
-                            style={{ 
-                                zIndex: 1000, 
-                                shadowColor: '#000', 
-                                shadowOffset: { width: 0, height: 12 }, 
-                                shadowOpacity: 0.15, 
-                                shadowRadius: 24 
-                            }}
-                        >
-                            {metricOptions.map((opt, index) => {
-                                const isActive = selectedMetric === opt.value;
-                                return (
-                                    <View key={opt.value}>
-                                        <Pressable
-                                            style={({ pressed }) => [
-                                                { backgroundColor: pressed ? (isWeb ? '#f8fafc' : '#f1f5f9') : 'transparent' },
-                                                isActive ? { backgroundColor: '#fff7ed' } : {}
-                                            ]}
-                                            className="px-4 py-3 rounded-[20px]"
-                                            onPress={() => {
-                                                setSelectedMetric(opt.value);
-                                                setDropdownOpen(false);
-                                            }}
-                                        >
-                                            <View className="flex-row items-center justify-between w-full">
-                                                <Text 
-                                                    className={`text-[14px] font-poppins flex-1 mr-2 ${isActive ? 'text-[#FF6600] font-poppins-bold' : 'text-slate-600 dark:text-darkTextSecondary'}`}
-                                                    numberOfLines={1}
-                                                >
-                                                    {translate(`store_manager.dashboard.activity.metric.${opt.value}`, opt.label)}
-                                                </Text>
-                                                {isActive && (
-                                                    <View>
-                                                        <Check size={18} color="#FF6600" strokeWidth={2.5} />
-                                                    </View>
-                                                )}
-                                            </View>
-                                        </Pressable>
-                                        {(index < metricOptions.length - 1 && !isActive && selectedMetric !== metricOptions[index+1].value) && (
-                                            <View className="mx-6 border-b border-slate-50 dark:border-darkBorder/30" />
-                                        )}
-                                    </View>
-                                );
-                            })}
-                        </View>
-                    )}
-                </View>
+                        {dropdownOpen && (
+                            <View
+                                className="absolute top-full right-0 mt-2 bg-white dark:bg-darkBackgroundCard rounded-[28px] shadow-2xl border border-slate-100 dark:border-darkBorder p-2 z-50 elevation-10"
+                                style={{
+                                    width: 256,
+                                    zIndex: 1000,
+                                    shadowColor: '#000',
+                                    shadowOffset: { width: 0, height: 12 },
+                                    shadowOpacity: 0.15,
+                                    shadowRadius: 24
+                                }}
+                            >
+                                {metricOptions.map((opt, index) => {
+                                    const isActive = selectedMetric === opt.value;
+                                    return (
+                                        <View key={opt.value}>
+                                            <Pressable
+                                                style={({ pressed }) => [
+                                                    { backgroundColor: pressed ? (isWeb ? '#f8fafc' : '#f1f5f9') : 'transparent' },
+                                                    isActive ? { backgroundColor: '#fff7ed' } : {}
+                                                ]}
+                                                className="px-4 py-3 rounded-[20px]"
+                                                onPress={() => {
+                                                    setSelectedMetric(opt.value);
+                                                    setDropdownOpen(false);
+                                                }}
+                                            >
+                                                <View className="flex-row items-center justify-between w-full">
+                                                    <Text
+                                                        className={`text-[14px] font-poppins flex-1 mr-2 ${isActive ? 'text-[#FF6600] font-poppins-bold' : 'text-slate-600 dark:text-darkTextSecondary'}`}
+                                                        numberOfLines={1}
+                                                    >
+                                                        {translate(`store_manager.dashboard.activity.metric.${opt.value}`, opt.label)}
+                                                    </Text>
+                                                    {isActive && (
+                                                        <View>
+                                                            <Check size={18} color="#FF6600" strokeWidth={2.5} />
+                                                        </View>
+                                                    )}
+                                                </View>
+                                            </Pressable>
+                                            {(index < metricOptions.length - 1 && !isActive && selectedMetric !== metricOptions[index + 1].value) && (
+                                                <View className="mx-6 border-b border-slate-50 dark:border-darkBorder/30" />
+                                            )}
+                                        </View>
+                                    );
+                                })}
+                            </View>
+                        )}
+                    </View>
+                )}
             </View>
             <View style={{ height: TOTAL_HEIGHT }}>
                 <Svg
@@ -240,7 +243,7 @@ export const DashboardActivityChart: React.FC<ExtendedDashboardActivityChartProp
             </View>
 
             {/* Web-only: summary stat pills with static equal-width positions */}
-            {isWeb && containerWidth > 200 && (
+            {isWeb && !isCompactWeb && containerWidth > 200 && (
                 <View className="flex-row items-center mt-5 pt-5 border-t border-slate-100 dark:border-darkBorder">
                     {/* Always remains: Total Stat (Fixed 1/3 width) */}
                     <View className="flex-1 items-center">
@@ -253,7 +256,7 @@ export const DashboardActivityChart: React.FC<ExtendedDashboardActivityChartProp
                     </View>
                     
                     {/* Peak Day (Fixed 1/3 width) */}
-                    {containerWidth > 350 && (
+                    {containerWidth > 350 && !isCompactWeb && (
                         <>
                             <View className="w-px h-10 bg-slate-100 dark:bg-darkBorder" />
                             <View className="flex-1 items-center">
@@ -268,7 +271,7 @@ export const DashboardActivityChart: React.FC<ExtendedDashboardActivityChartProp
                     )}
 
                     {/* Daily Avg (Fixed 1/3 width) */}
-                    {containerWidth > 600 && (
+                    {containerWidth > 600 && !isCompactWeb && (
                         <>
                             <View className="w-px h-10 bg-slate-100 dark:bg-darkBorder" />
                             <View className="flex-1 items-center">
@@ -285,7 +288,7 @@ export const DashboardActivityChart: React.FC<ExtendedDashboardActivityChartProp
             )}
 
             {/* Dropdown Overlay for closing */}
-            {dropdownOpen && (
+            {dropdownOpen && !isCompactWeb && (
                 <Pressable 
                     className="absolute inset-0 z-40" 
                     onPress={() => setDropdownOpen(false)}

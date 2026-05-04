@@ -61,7 +61,6 @@ export interface StampBucket {
 export interface StampDistributionProps {
     buckets: StampBucket[];
     maxStamps: number;
-    storeId?: number;
     loading?: boolean;
 }
 

@@ -1,7 +1,8 @@
 import React from "react";
 import { Modal, useColorScheme } from "react-native";
-import { View, Text, TouchableOpacity, Pressable } from "@/tw";
-import { ChevronDown, Check } from "lucide-react-native";
+import { View, Pressable, Text } from "@/tw";
+import { Button } from "@/components/button";
+import { Check } from "lucide-react-native";
 import { StorePickerDropdownProps } from "@/type/store-manager/metric";
 
 export function StorePickerDropdown({
@@ -18,21 +19,14 @@ export function StorePickerDropdown({
         <>
             {/* button for dropdown */}
             {selectedStore && (
-                <TouchableOpacity
-                    className="bg-slate-50 dark:bg-darkBackgroundMuted border border-slate-200 dark:border-darkBorder px-[14px] py-[8px] rounded-full flex-row items-center gap-[6px]"
+                <Button
+                    label={selectedStore.name}
                     onPress={onOpen}
-                >
-                    <Text
-                        className="text-[14p] font-poppins-medium text-textPrimary dark:text-darkTextPrimary"
-                        numberOfLines={1}
-                    >
-                        {selectedStore.name}
-                    </Text>
-                    <ChevronDown
-                        size={18}
-                        color={isDark ? "#D4D4D4" : "#1e293b"}
-                    />
-                </TouchableOpacity>
+                    variant="clear"
+                    rightIcon="ChevronDown"
+                    roundedFull
+                    fitContent
+                />
             )}
 
             {/* contents of drowpdown */}

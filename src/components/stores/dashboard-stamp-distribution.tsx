@@ -6,7 +6,7 @@ import { useTranslation } from "react-i18next";
 import { StampDistributionProps } from "@/type/store-manager/metric";
 import { DashboardStampDistributionSkeleton } from "@/components/skeleton/store_manager/dashboard-stamp-distribution-skeleton";
 
-export function DashboardStampDistribution({ buckets, maxStamps, storeId, loading }: StampDistributionProps) {
+export function DashboardStampDistribution({ buckets, maxStamps, loading }: StampDistributionProps) {
     const { t: translate } = useTranslation();
 
     const isDark = useColorScheme() === "dark";
@@ -25,8 +25,6 @@ export function DashboardStampDistribution({ buckets, maxStamps, storeId, loadin
                 <Text className="text-xs font-poppins text-textSecondary dark:text-darkTextSecondary mt-1.5 text-center px-4 leading-5">
                     {translate("store_manager.dashboard.stampProgress.noProgramDesc", "Create a stamp program to reward loyal customers and track their progress here.")}
                 </Text>
-
-
             </View>
         );
     }
