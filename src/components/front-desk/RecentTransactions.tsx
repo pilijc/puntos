@@ -48,7 +48,7 @@ export default function RecentTransactions({ recentScans }: RecentTransactionsPr
 
   const getTransactionDescription = (scan: any) => {
     if (scan.type === "redeemed") {
-      return "Reward Redemption";
+      return scan.rewardTitle || "Reward Redemption";
     }
     if (scan.method === "qr") {
       return "QR Scan";
