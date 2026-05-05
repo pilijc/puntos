@@ -262,7 +262,7 @@ export default function Discover() {
     const { longitude, latitude } = location.coords;
     cameraRef.current?.setCamera({
       centerCoordinate: [longitude, latitude],
-      zoomLevel: 10,
+      zoomLevel: 15,
       animationDuration: 1000,
     });
     hasCenteredOnUserRef.current = true;
@@ -442,7 +442,7 @@ export default function Discover() {
         <Mapbox.Camera
           ref={cameraRef}
           followUserMode={Mapbox.UserTrackingMode.FollowWithHeading}
-          followZoomLevel={12}
+          zoomLevel={20}
           animationMode="easeTo"
           animationDuration={300}
         />
@@ -474,9 +474,12 @@ export default function Discover() {
                 "interpolate",
                 ["linear"],
                 ["zoom"],
-                5, 0.025,
+                5, 0.01,
                 10, 0.02,
-              ],
+                15, 0.035,
+                18, 0.05,
+                20, 0.07  
+              ]
             }}
           />
         </Mapbox.ShapeSource>
