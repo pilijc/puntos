@@ -6,7 +6,7 @@ import {
   ScrollView,
   Image
 } from "@/tw";
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useMemo } from "react";
 import { KeyboardAvoidingView, Alert, ActivityIndicator, Platform, useWindowDimensions } from "react-native";
 import { router } from "expo-router";
 import { useAuthStore } from "../../store/auth-store";
@@ -18,6 +18,7 @@ import TranslateButton from "@/components/ui/translate-button";
 import { AppHeader } from "@/components/header";
 import { Button } from "@/components/button";
 import { Modal, type ModalButton } from "@/components/modal";
+import { usePasswordValidation } from "@/hooks/use-password-validation";
 
 export default function SignUp() {
   const { t: translate } = useTranslation();
@@ -120,6 +121,20 @@ export default function SignUp() {
         setErrors(newErrors);
         return false;
       }
+
+      const isPasswordStrong =
+        password.length >= 8 &&
+        /[A-Z]/.test(password) &&
+        /[a-z]/.test(password) &&
+        /[0-9]/.test(password) &&
+        /[@#$%^&+=!]/.test(password);
+
+      if (!isPasswordStrong) {
+        newErrors.password = translate("onboarding.signup.error.passwordLimit");
+        setErrors(newErrors);
+        return false;
+      }
+
       if (!confirmPassword) {
         newErrors.confirmPassword = translate("onboarding.signup.error.passwordConfirm");
         setErrors(newErrors);
@@ -127,11 +142,6 @@ export default function SignUp() {
       }
       if (password !== confirmPassword) {
         newErrors.confirmPassword = translate("onboarding.signup.error.passwordMatch");
-        setErrors(newErrors);
-        return false;
-      }
-      if (password.length < 8) {
-        newErrors.password = translate("onboarding.signup.error.passwordLimit");
         setErrors(newErrors);
         return false;
       }
@@ -152,6 +162,8 @@ export default function SignUp() {
     setErrors(newErrors);
     return true;
   };
+
+  const { allMet: isPasswordStrong } = usePasswordValidation(password);
 
   const handleNext = async () => {
     if (currentStep === 0) {
@@ -425,7 +437,7 @@ export default function SignUp() {
                         <Button
                           label={loading ? translate("onboarding.signup.creating") : (currentStep === totalSteps ? translate("onboarding.signup.button") : translate("onboarding.signup.continue"))}
                           onPress={handleNext}
-                          disabled={loading}
+                          disabled={loading || (currentStep === 3 && (!isPasswordStrong || !confirmPassword)) || (currentStep === 4 && !acceptedTerms)}
                           loading={loading}
                           fullWidth={true}
                           authButton={true}
@@ -536,7 +548,7 @@ export default function SignUp() {
                   <Button
                     label={loading ? translate("onboarding.signup.creating") : (currentStep === totalSteps ? translate("onboarding.signup.button") : translate("onboarding.signup.continue"))}
                     onPress={handleNext}
-                    disabled={loading || (currentStep === 4 && !acceptedTerms)}
+                    disabled={loading || (currentStep === 3 && (!isPasswordStrong || !confirmPassword)) || (currentStep === 4 && !acceptedTerms)}
                     loading={loading}
                     fullWidth={true}
                     authButton={true}

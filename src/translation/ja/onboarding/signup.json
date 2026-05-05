@@ -29,7 +29,15 @@
     "passwordRequired": "パスワードは必須です",
     "passwordConfirm": "パスワードを確認してください",
     "passwordMatch": "パスワードが一致しません",
-    "passwordLimit": "パスワードは8文字以上である必要があります",
+    "passwordLimit": "パスワードはすべてのセキュリティ要件を満たす必要があります",
+    "requirements": {
+      "title": "パスワードの要件:",
+      "minLength": "8文字以上",
+      "uppercase": "大文字を1文字以上",
+      "lowercase": "小文字を1文字以上",
+      "number": "数字を1文字以上",
+      "special": "特殊文字を1文字以上 (@#$%^&+=!)"
+    },
     "termsRequired": "規約に同意する必要があります",
     "failed": "登録に失敗しました",
     "failedManager": "ストアマネージャーの登録に失敗しました",
