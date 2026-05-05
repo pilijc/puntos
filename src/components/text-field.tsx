@@ -1,4 +1,4 @@
-﻿import React from "react";
+import React from "react";
 import { KeyboardTypeOptions } from "react-native";
 import { View, Text, TextInput } from "@/tw";
 
@@ -17,6 +17,7 @@ interface TextFieldProps {
   secureTextEntry?: boolean;
   editable?: boolean;
   error?: boolean;
+  onSubmitEditing?: () => void;
 }
 
 export function TextField({
@@ -34,6 +35,7 @@ export function TextField({
   secureTextEntry = false,
   editable = true,
   error = false,
+  onSubmitEditing,
 }: TextFieldProps) {
   const hasRight = !!rightAccessory;
 
@@ -72,6 +74,7 @@ export function TextField({
           onChangeText={(v) => onChangeText(sanitize(v))}
           secureTextEntry={secureTextEntry}
           editable={editable}
+          onSubmitEditing={onSubmitEditing}
         />
         {hasRight ? (
           <View
