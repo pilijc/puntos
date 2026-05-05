@@ -11,6 +11,7 @@ import { useColorScheme } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Text } from "@/tw";
 import { Button } from "@/components/button";
+import { useTranslation } from "react-i18next";
 
 export type SortField = "date" | "amount";
 export type SortDirection = "asc" | "desc";
@@ -78,6 +79,7 @@ export default function FilterSheet({
 }: FilterSheetProps) {
     const isDark = useColorScheme() === "dark";
     const insets = useSafeAreaInsets();
+    const { t: translate } = useTranslation();
 
     return (
         <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose} statusBarTranslucent>
@@ -88,11 +90,11 @@ export default function FilterSheet({
 
                     {/* Header */}
                     <NativeView style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-                        <Text style={{ fontSize: 16, fontFamily: "Poppins-Bold", color: isDark ? "#F5F5F5" : "#1E293B" }}>Filter & Sort</Text>
+                        <Text style={{ fontSize: 16, fontFamily: "Poppins-Bold", color: isDark ? "#F5F5F5" : "#1E293B" }}>{translate("frontdesk.transaction.history.filters.title")}</Text>
                         <NativeView style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
                             {activeFilterCount > 0 && (
                                 <Button 
-                                    label={`Clear all (${activeFilterCount})`} 
+                                    label={translate("frontdesk.transaction.history.filters.clearAll", { count: activeFilterCount })} 
                                     onPress={resetFilters}
                                     variant="ghost"
                                 />
@@ -107,23 +109,23 @@ export default function FilterSheet({
                         {/* Sort By */}
                         <NativeView style={{ flexDirection: "row", alignItems: "center", gap: 5, marginBottom: 6 }}>
                             <ArrowUpDown size={12} color={isDark ? "#737373" : "#94A3B8"} />
-                            <Text style={{ fontSize: 10, fontFamily: "Poppins-SemiBold", color: isDark ? "#737373" : "#94A3B8", textTransform: "uppercase", letterSpacing: 1 }}>Sort By</Text>
+                            <Text style={{ fontSize: 10, fontFamily: "Poppins-SemiBold", color: isDark ? "#737373" : "#94A3B8", textTransform: "uppercase", letterSpacing: 1 }}>{translate("frontdesk.transaction.history.filters.sortBy")}</Text>
                         </NativeView>
                         <ChipRow 
                             options={[
-                                { label: "Date", value: "date" }, 
-                                { label: "Amount", value: "amount" }
+                                { label: translate("frontdesk.transaction.history.filters.date"), value: "date" }, 
+                                { label: translate("frontdesk.transaction.history.filters.amount"), value: "amount" }
                             ] as { label: string; value: SortField }[]} 
                             value={sortField} 
                             onChange={setSortField} 
                             isDark={isDark} 
                         />
 
-                        <Text style={{ fontSize: 10, fontFamily: "Poppins-SemiBold", color: isDark ? "#737373" : "#94A3B8", textTransform: "uppercase", letterSpacing: 1, marginBottom: 6 }}>Direction</Text>
+                        <Text style={{ fontSize: 10, fontFamily: "Poppins-SemiBold", color: isDark ? "#737373" : "#94A3B8", textTransform: "uppercase", letterSpacing: 1, marginBottom: 6 }}>{translate("frontdesk.transaction.history.filters.direction")}</Text>
                         <ChipRow 
                             options={[
-                                { label: "Newest / High", value: "desc" }, 
-                                { label: "Oldest / Low", value: "asc" }
+                                { label: translate("frontdesk.transaction.history.filters.newestHigh"), value: "desc" }, 
+                                { label: translate("frontdesk.transaction.history.filters.oldestLow"), value: "asc" }
                             ] as { label: string; value: SortDirection }[]} 
                             value={sortDirection} 
                             onChange={setSortDirection} 
@@ -133,14 +135,14 @@ export default function FilterSheet({
                         {/* Transaction Type */}
                         <NativeView style={{ flexDirection: "row", alignItems: "center", gap: 5, marginBottom: 6, marginTop: 4 }}>
                             <Tag size={12} color={isDark ? "#737373" : "#94A3B8"} />
-                            <Text style={{ fontSize: 10, fontFamily: "Poppins-SemiBold", color: isDark ? "#737373" : "#94A3B8", textTransform: "uppercase", letterSpacing: 1 }}>Transaction Type</Text>
+                            <Text style={{ fontSize: 10, fontFamily: "Poppins-SemiBold", color: isDark ? "#737373" : "#94A3B8", textTransform: "uppercase", letterSpacing: 1 }}>{translate("frontdesk.transaction.history.filters.type")}</Text>
                         </NativeView>
                         <ChipRow 
                             options={[
-                                { label: "All", value: "all" }, 
-                                { label: "Earned", value: "earned" }, 
-                                { label: "Redeemed", value: "redeemed" }, 
-                                { label: "Pending", value: "pending" }
+                                { label: translate("frontdesk.transaction.history.filters.all"), value: "all" }, 
+                                { label: translate("frontdesk.transaction.history.filters.earned"), value: "earned" }, 
+                                { label: translate("frontdesk.transaction.history.filters.redeemed"), value: "redeemed" }, 
+                                { label: translate("frontdesk.transaction.history.filters.pending"), value: "pending" }
                             ] as { label: string; value: TransactionType }[]} 
                             value={transactionType} 
                             onChange={setTransactionType} 
@@ -149,7 +151,7 @@ export default function FilterSheet({
                     </ScrollView>
 
                     <Button 
-                        label="Apply Filters" 
+                        label={translate("frontdesk.transaction.history.filters.apply")} 
                         onPress={onClose}
                         variant="primary"
                         fullWidth

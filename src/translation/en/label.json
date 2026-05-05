@@ -1,6 +1,7 @@
 {
   "confirm": "Confirm",
   "cancel": "Cancel",
+  "back": "Back",
   "save": "Save",
   "delete": "Delete",
   "enabled": "Enabled",
@@ -41,12 +42,15 @@
   "oops": "Oops!",
   "all": "All",
   "pending": "Pending",
+  "activate": "Activate",
+  "deactivate": "Deactivate",
   "qrPurchase": "QR Purchase",
   "stamp": "Stamp",
   "streak": "Streak",
   "free": "Free",
   "unpaid": "Unpaid",
   "paid": "Paid",
-  "sessionExpired": "Session ended",
-  "sessionExpiredMessage": "Your session has expired for security reasons. Please sign in again to continue."
+  "customer": "Customer",
+  "sessionExpired": "Session Expired",
+  "sessionExpiredMessage": "For security reasons, your session has expired. Please sign in again to continue."
 }

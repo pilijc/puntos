@@ -208,10 +208,10 @@ export function AdminStoreDetails({
             {/* Name + owner */}
             <View className="mb-3">
               <Text className="text-xl font-poppins-bold text-slate-900 dark:text-slate-50 leading-7" numberOfLines={2}>
-                {store.name || "Unnamed Store"}
+                {store.name || translate("super_admin.stores.details.unnamedStore")}
               </Text>
               <Text className="text-xs font-poppins-medium text-slate-400 dark:text-slate-500 mt-0.5">
-                {store.owner_name ? `Owner: ${store.owner_name}` : "Owner not specified"}
+                {store.owner_name ? translate("super_admin.stores.details.owner", { name: store.owner_name }) : translate("super_admin.stores.details.ownerNotSpecified")}
               </Text>
             </View>
 
@@ -220,7 +220,7 @@ export function AdminStoreDetails({
               {/* Category */}
               <View className={`px-2.5 py-1 rounded-full ${getStoreCategoryBadge(store.type).bg} flex-row items-center gap-1`}>
                 <Text className={`text-[10px] font-poppins-bold uppercase tracking-wide ${getStoreCategoryBadge(store.type).text}`}>
-                  {store.type || "General"}
+                  {store.type || translate("super_admin.stores.category.other")}
                 </Text>
               </View>
 
@@ -243,14 +243,14 @@ export function AdminStoreDetails({
                       ? "text-emerald-700 dark:text-emerald-400"
                       : "text-red-700 dark:text-red-400"
                   }`}>
-                    Subscription {subscription.payment_status}
+                    {translate("super_admin.stores.details.subscriptionStatus", { status: subscription.payment_status })}
                   </Text>
                 </View>
               ) : !canCreateAnotherStore && (
                 <View className="flex-row items-center gap-1 px-2.5 py-1 rounded-full bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800">
                   <MaterialIcons name="star-outline" size={11} color="#D97706" />
                   <Text className="text-[10px] font-poppins-bold uppercase tracking-wide text-amber-700 dark:text-amber-400">
-                    Subscription Required
+                    {translate("super_admin.stores.details.subscriptionRequired")}
                   </Text>
                 </View>
               )}
@@ -271,7 +271,7 @@ export function AdminStoreDetails({
             {store.registration_number && (
               <InfoRow
                 icon="badge"
-                label={translate("super_admin.stores.details.registrationNumber", { defaultValue: "Registration No." })}
+                label={translate("super_admin.stores.details.registrationNumber")}
                 value={store.registration_number}
               />
             )}
@@ -283,7 +283,7 @@ export function AdminStoreDetails({
               </View>
               <View className="flex-1">
                 <Text className="text-[10px] font-poppins-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">
-                  {translate("super_admin.stores.details.operatingHours", { defaultValue: "Operating Hours" })}
+                  {translate("super_admin.stores.details.operatingHours")}
                 </Text>
                 <View className="flex-row items-center gap-2">
                   <View className="flex-row items-center gap-1.5 bg-amber-50 dark:bg-amber-900/20 px-3 py-1.5 rounded-xl border border-amber-100 dark:border-amber-800/40">
@@ -332,8 +332,8 @@ export function AdminStoreDetails({
                   style={{ lineHeight: 14, includeFontPadding: false } as any}
                 >
                   {statusKey === "inactive"
-                    ? "Requires Resubmission"
-                    : `Approved ${approvedDate ?? "N/A"}`}
+                    ? translate("super_admin.stores.details.requiresResubmission")
+                    : translate("super_admin.stores.details.approvedOn", { date: approvedDate ?? "N/A" })}
                 </Text>
               </View>
             )}
@@ -342,10 +342,10 @@ export function AdminStoreDetails({
             {store.store_pictures && store.store_pictures.length > 0 && (
               <View className="mt-5 pt-5 border-t border-slate-100 dark:border-neutral-800">
                 <View className="flex-row items-center justify-between mb-3">
-                  <Text className="text-sm font-poppins-bold text-slate-800 dark:text-slate-100">Store Photos</Text>
+                  <Text className="text-sm font-poppins-bold text-slate-800 dark:text-slate-100">{translate("super_admin.stores.details.storePhotos")}</Text>
                   <View className="bg-slate-100 dark:bg-neutral-800 px-2.5 py-1 rounded-full">
                     <Text className="text-[10px] font-poppins-semibold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
-                      {store.store_pictures.length} {store.store_pictures.length === 1 ? "Photo" : "Photos"}
+                      {store.store_pictures.length} {translate(store.store_pictures.length === 1 ? "super_admin.stores.details.photo" : "super_admin.stores.details.photos")}
                     </Text>
                   </View>
                 </View>
@@ -423,7 +423,7 @@ export function AdminStoreDetails({
               <View className="w-8 h-8 rounded-xl bg-red-50 dark:bg-red-900/20 items-center justify-center">
                 <MaterialIcons name="location-on" size={16} color="#EF4444" />
               </View>
-              <Text className="text-sm font-poppins-bold text-slate-800 dark:text-slate-100">Location & Contact</Text>
+              <Text className="text-sm font-poppins-bold text-slate-800 dark:text-slate-100">{translate("super_admin.stores.details.locationAndContact")}</Text>
             </View>
 
             {/* Map */}
@@ -461,7 +461,7 @@ export function AdminStoreDetails({
                   <View className="flex-1 items-center justify-center gap-y-1 bg-slate-50 dark:bg-neutral-800">
                     <MaterialIcons name="map" size={28} color={isDark ? "#525252" : "#CBD5E1"} />
                     <Text className="text-[10px] font-poppins text-slate-400 dark:text-slate-500 text-center px-4">
-                      Map preview available on Android & Web
+                      {translate("super_admin.stores.details.mapPreviewInfo")}
                     </Text>
                   </View>
                 )}
@@ -469,13 +469,13 @@ export function AdminStoreDetails({
             ) : (
               <View className="mx-5 mb-1 h-[100px] bg-slate-50 dark:bg-neutral-800/50 rounded-2xl items-center justify-center border border-slate-100 dark:border-neutral-800">
                 <MaterialIcons name="map" size={26} color="#CBD5E1" />
-                <Text className="text-[11px] font-poppins text-slate-400 mt-1.5">No coordinates provided</Text>
+                <Text className="text-[11px] font-poppins text-slate-400 mt-1.5">{translate("super_admin.stores.details.noCoordinates")}</Text>
               </View>
             )}
 
             <View className="px-5 pt-4 pb-5 gap-y-0.5">
-              <InfoRow icon="place" label="Store Address" value={store.address} />
-              {store.phone && <InfoRow icon="phone" label="Phone Number" value={store.phone} />}
+              <InfoRow icon="place" label={translate("super_admin.stores.details.storeAddress")} value={store.address} />
+              {store.phone && <InfoRow icon="phone" label={translate("super_admin.stores.details.phone")} value={store.phone} />}
             </View>
           </View>
 
@@ -485,7 +485,7 @@ export function AdminStoreDetails({
               <View className="w-8 h-8 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 items-center justify-center">
                 <MaterialIcons name="verified" size={16} color="#10B981" />
               </View>
-              <Text className="text-sm font-poppins-bold text-slate-800 dark:text-slate-100">Verification</Text>
+              <Text className="text-sm font-poppins-bold text-slate-800 dark:text-slate-100">{translate("super_admin.stores.details.verification")}</Text>
             </View>
 
             {store.business_document_image ? (
@@ -498,8 +498,8 @@ export function AdminStoreDetails({
                   <Image source={{ uri: store.business_document_image }} style={{ width: 48, height: 48 }} contentFit="cover" />
                 </View>
                 <View className="ml-3 flex-1">
-                  <Text className="text-sm font-poppins-semibold text-slate-800 dark:text-slate-100">Business License</Text>
-                  <Text className="text-[10px] font-poppins-medium text-slate-400 mt-0.5 uppercase tracking-wider">Tap to view full document</Text>
+                  <Text className="text-sm font-poppins-semibold text-slate-800 dark:text-slate-100">{translate("super_admin.stores.details.businessLicense")}</Text>
+                  <Text className="text-[10px] font-poppins-medium text-slate-400 mt-0.5 uppercase tracking-wider">{translate("super_admin.stores.details.tapToViewFull")}</Text>
                 </View>
                 <View className="w-8 h-8 rounded-full bg-emerald-50 dark:bg-emerald-900/20 items-center justify-center">
                   <MaterialIcons name="check-circle" size={18} color="#10B981" />
@@ -508,7 +508,7 @@ export function AdminStoreDetails({
             ) : (
               <View className="bg-slate-50 dark:bg-neutral-800/40 rounded-2xl p-5 items-center justify-center border border-dashed border-slate-200 dark:border-neutral-700">
                 <MaterialIcons name="folder-off" size={24} color="#CBD5E1" />
-                <Text className="text-[11px] font-poppins-semibold text-slate-400 mt-2 uppercase tracking-widest">No Documents Provided</Text>
+                <Text className="text-[11px] font-poppins-semibold text-slate-400 mt-2 uppercase tracking-widest">{translate("super_admin.stores.details.noDocuments")}</Text>
               </View>
             )}
           </View>
