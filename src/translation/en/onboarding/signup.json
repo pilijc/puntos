@@ -29,7 +29,15 @@
     "passwordRequired": "Password is required",
     "passwordConfirm": "Please confirm your password",
     "passwordMatch": "Passwords do not match",
-    "passwordLimit": "Password must be at least 8 characters",
+    "passwordLimit": "Password must meet all security requirements.",
+    "requirements": {
+      "title": "Password must contain:",
+      "minLength": "At least 8 characters",
+      "uppercase": "One uppercase letter",
+      "lowercase": "One lowercase letter",
+      "number": "One number",
+      "special": "One special character (@#$%^&+=!)"
+    },
     "termsRequired": "You must accept the terms",
     "failed": "Signup failed",
     "failedManager": "Store manager signup failed",
