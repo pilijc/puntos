@@ -25,7 +25,7 @@ const LAST_KNOWN_MAX_AGE_MS = 2 * 60 * 1000;
 const toLocationPermissionStatus = (
   response: Location.LocationPermissionResponse
 ): LocationPermissionStatus => ({
-  granted: response.status === Location.PermissionStatus.GRANTED,
+  granted: response.granted,
   canAskAgain: response.canAskAgain,
   status: response.status,
   accuracy: response.android?.accuracy,
@@ -111,6 +111,15 @@ export async function checkLocationPermission(): Promise<LocationPermissionStatu
   }
 }
 
+async function ensureLocationPermission(): Promise<LocationPermissionStatus> {
+  const permissionStatus = await checkLocationPermission();
+  if (permissionStatus.granted || !permissionStatus.canAskAgain) {
+    return permissionStatus;
+  }
+
+  return requestLocationPermission();
+}
+
 const toUserLocation = (loc: { coords: { latitude: number; longitude: number; accuracy?: number | null; heading?: number | null } }): UserLocation => ({
   latitude: loc.coords.latitude,
   longitude: loc.coords.longitude,
@@ -192,11 +201,8 @@ async function watchForSingleLocation(): Promise<UserLocation | null> {
  */
 export async function getCurrentLocation(): Promise<UserLocation | null> {
   try {
-    const permissionStatus = await checkLocationPermission();
-    if (!permissionStatus.granted) {
-      const reqStatus = await requestLocationPermission();
-      if (!reqStatus.granted) return null;
-    }
+    const permissionStatus = await ensureLocationPermission();
+    if (!permissionStatus.granted) return null;
 
     const current = await withTimeout(
       Location.getCurrentPositionAsync({
@@ -241,10 +247,9 @@ export async function watchLocation(
   }
 ): Promise<Location.LocationSubscription | null> {
   try {
-    let permissionStatus = await checkLocationPermission();
-    if (!permissionStatus.granted && options?.requestPermission !== false) {
-      permissionStatus = await requestLocationPermission();
-    }
+    const permissionStatus = options?.requestPermission === false
+      ? await checkLocationPermission()
+      : await ensureLocationPermission();
 
     if (!permissionStatus.granted) {
       console.log('[LocationService] Location permission not granted for watching');

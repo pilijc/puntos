@@ -1,5 +1,5 @@
 import { Text, SafeAreaView, View, Image } from "@/tw";
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Mapbox, { MapView, PointAnnotation } from "@rnmapbox/maps";
 import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
 import { AppState, AppStateStatus, TextInput, TouchableOpacity, useColorScheme, Platform } from "react-native";
@@ -12,7 +12,8 @@ import { useStoreStore } from "@/store/user/store-store";
 import { Store } from "@/type/user/store";
 import type * as GeoJSON from "geojson";
 import { getOneSignalId, sendPushNotification, isOneSignalNativeAvailable } from "@/services/push-service";
-import { isStoreNearby } from "@/services/user/location-service";
+import { getCurrentLocation, isStoreNearby, watchLocation } from "@/services/user/location-service";
+import type { UserLocation } from "@/services/user/location-service";
 import * as turf from "@turf/turf";
 import { getStores } from "@/services/store-service";
 import { storeIconKey } from "@/type/user/discover";
@@ -20,6 +21,8 @@ import { useTranslation } from "react-i18next";
 import { useLanguageStore } from "@/store/language-store";
 import { useProfile } from "@/hooks/user/use-profile";
 import { isLocationManuallyDisabled } from "@/services/user/location-preference-service";
+import { X } from "lucide-react-native";
+import { MapControlButtons } from "@/components/map/map-control-buttons";
 
 let OneSignal: typeof import("react-native-onesignal").OneSignal | null = null;
 
@@ -29,13 +32,66 @@ if (Platform.OS !== "web") {
 
 Mapbox.setAccessToken(process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN);
 
+function mapboxStyleUrlToApiUrl(styleUrl: string): string | null {
+  const accessToken = process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN;
+  const match = styleUrl.match(/^mapbox:\/\/styles\/([^/]+)\/(.+)$/);
+  if (!accessToken || !match) return null;
+
+  const [, owner, styleId] = match;
+  return `https://api.mapbox.com/styles/v1/${owner}/${styleId}?access_token=${encodeURIComponent(accessToken)}`;
+}
+
+function expressionReadsNameField(value: unknown): boolean {
+  if (!Array.isArray(value)) return false;
+  if (value[0] === "get" && typeof value[1] === "string" && value[1].startsWith("name")) {
+    return true;
+  }
+
+  return value.some(expressionReadsNameField);
+}
+
+function localizedTextField(locale: "en" | "ja") {
+  const primaryField = locale === "ja" ? "name_ja" : "name_en";
+  return ["coalesce", ["get", primaryField], ["get", "name_en"], ["get", "name"]];
+}
+
+async function loadLocalizedMapStyle(styleUrl: string, locale: "en" | "ja"): Promise<string | null> {
+  const apiUrl = mapboxStyleUrlToApiUrl(styleUrl);
+  if (!apiUrl) return null;
+
+  const response = await fetch(apiUrl);
+  if (!response.ok) {
+    throw new Error(`Mapbox style request failed with ${response.status}`);
+  }
+
+  const style = await response.json();
+  if (!Array.isArray(style.layers)) return JSON.stringify(style);
+
+  style.layers = style.layers.map((layer: any) => {
+    const textField = layer?.layout?.["text-field"];
+    if (layer?.type !== "symbol" || !expressionReadsNameField(textField)) {
+      return layer;
+    }
+
+    return {
+      ...layer,
+      layout: {
+        ...layer.layout,
+        "text-field": localizedTextField(locale),
+      },
+    };
+  });
+
+  return JSON.stringify(style);
+}
+
 export default function Discover() {
   const bottomSheetRef = useRef<BottomSheet>(null);
   const cameraRef = useRef(null);
   const [mapReady, setMapReady] = useState(false);
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
-  const [location, setLocation] = useState<Location.LocationObject | null>(null);
+  const [location, setLocation] = useState<UserLocation | null>(null);
   const { stores, setStores } = useStoreStore();
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<any[]>([]);
@@ -49,14 +105,17 @@ export default function Discover() {
   const notifiedStoreIds = useRef<Set<number>>(new Set());
   const locationWatchRef = useRef<Location.LocationSubscription | null>(null);
   const hasCenteredOnUserRef = useRef(false);
+  const isFollowingRef = useRef(false);
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [mapHeading, setMapHeading] = useState(0);
+  const [localizedMapStyleJSON, setLocalizedMapStyleJSON] = useState<string | null>(null);
   const { t: translate } = useTranslation();
   const language = useLanguageStore((s) => s.language);
   const { user, preferences, updatePreferences } = useProfile();
-  const shouldFollowUser = !selectedSearchResult;
 
   const discoverMoreStores = useMemo(() => {
     if (!location) return [];
-    const user = turf.point([location.coords.longitude, location.coords.latitude]);
+    const user = turf.point([location.longitude, location.latitude]);
     const nearbyIds = new Set(sheetStores.map((s) => String(s.id)));
 
     const candidates = stores
@@ -77,7 +136,7 @@ export default function Discover() {
   const userLocationFeature = useMemo<GeoJSON.Feature<GeoJSON.Point> | null>(() => {
     if (!location) return null;
 
-    const { latitude, longitude } = location.coords;
+    const { latitude, longitude } = location;
     if (
       typeof latitude !== "number" ||
       typeof longitude !== "number" ||
@@ -93,7 +152,11 @@ export default function Discover() {
         type: "Point",
         coordinates: [longitude, latitude],
       },
-      properties: {},
+      properties: {
+        bearing: typeof location.heading === "number" && Number.isFinite(location.heading)
+          ? location.heading
+          : 0,
+      },
     };
   }, [location]);
 
@@ -189,38 +252,40 @@ export default function Discover() {
     const startLocationWatch = async () => {
       stopLocationWatch();
 
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') return;
-
       if (user?.id && !preferences.location_enabled) {
         const manuallyDisabled = await isLocationManuallyDisabled(user.id);
         if (manuallyDisabled) return;
+      }
+
+      const initial = await getCurrentLocation();
+      if (!initial) return;
+
+      if (user?.id && !preferences.location_enabled) {
         await updatePreferences({ location_enabled: true });
       }
 
-      const initial = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.High,
-      }).catch(() => null)
-        ?? await Location.getLastKnownPositionAsync({}).catch(() => null);
-
-      if (initial && !cancelled) {
+      if (!cancelled) {
         setLocation(initial);
       }
 
-      const sub = await Location.watchPositionAsync(
-        {
-          accuracy: Location.Accuracy.Highest,
-          timeInterval: 1000,
-          distanceInterval: 0,
-          mayShowUserSettingsDialog: Platform.OS === "android",
-        },
+      const sub = await watchLocation(
         async (position) => {
           if (cancelled) return;
 
           try {
             setLocation(position);
 
-            const { latitude: uLat, longitude: uLon } = position.coords;
+            // Follow mode — re-center the camera every time location updates
+            if (isFollowingRef.current) {
+              cameraRef.current?.setCamera({
+                centerCoordinate: [position.longitude, position.latitude],
+                zoomLevel: 16,
+                animationDuration: 400,
+                animationMode: "easeTo",
+              });
+            }
+
+            const { latitude: uLat, longitude: uLon } = position;
             const { mutedStoreIds, isMutedStoresHydrated } = useStoreStore.getState();
             
             if (!isMutedStoresHydrated) return;
@@ -278,14 +343,20 @@ export default function Discover() {
           } catch (err) {
             console.error("[Geofence] Error in location callback:", err);
           }
-        }
+        },
+        {
+          accuracy: Location.Accuracy.Highest,
+          timeInterval: 1000,
+          distanceInterval: 0,
+          requestPermission: true,
+        },
 
       );
 
       if (!cancelled) {
         locationWatchRef.current = sub;
       } else {
-        sub.remove();
+        sub?.remove();
       }
     };
 
@@ -306,42 +377,51 @@ export default function Discover() {
     };
   }, [preferences.location_enabled, translate, updatePreferences, user?.id]);
 
-  useEffect(() => {
-    if (!mapReady || !location) return;
-    if (!shouldFollowUser) return;
-    const { longitude, latitude, heading } = location.coords;
+  const centerOnUser = useCallback(async () => {
+    let targetLocation = location;
+
+    if (!targetLocation) {
+      targetLocation = await getCurrentLocation();
+      if (targetLocation) setLocation(targetLocation);
+    }
+
+    if (!targetLocation) return;
+
+    setSelectedSearchResult(null);
+    isFollowingRef.current = true;
+    setIsFollowing(true);
     cameraRef.current?.setCamera({
-      centerCoordinate: [longitude, latitude],
+      centerCoordinate: [targetLocation.longitude, targetLocation.latitude],
       zoomLevel: 16,
-      heading: typeof heading === "number" && Number.isFinite(heading) ? heading : undefined,
-      animationDuration: hasCenteredOnUserRef.current ? 300 : 1000,
+      animationDuration: 650,
+      animationMode: "easeTo",
     });
     hasCenteredOnUserRef.current = true;
-  }, [mapReady, location, shouldFollowUser]);
+  }, [location]);
+
+  const orientNorth = useCallback(() => {
+    cameraRef.current?.setCamera({
+      heading: 0,
+      animationDuration: 350,
+      animationMode: "easeTo",
+    });
+    setMapHeading(0);
+  }, []);
 
   useEffect(() => {
-    if (!mapReady) return;
+    if (!mapReady || !location || hasCenteredOnUserRef.current || selectedSearchResult) return;
 
-    const localizeMap = async () => {
-      try {
-        const mapboxLanguage = language === 'ja' ? 'ja' : 'en';
-
-        const labelLayerPatterns = [
-          'label',
-          'place',
-          'town',
-          'city',
-          'country',
-          'road',
-          'boundary'
-        ];
-      } catch (e) {
-        console.warn("Failed to localize Mapbox labels", e);
-      }
-    };
-
-    localizeMap();
-  }, [mapReady, language]);
+    cameraRef.current?.setCamera({
+      centerCoordinate: [location.longitude, location.latitude],
+      zoomLevel: 16,
+      heading: 0,
+      animationDuration: 1000,
+      animationMode: "easeTo",
+    });
+    hasCenteredOnUserRef.current = true;
+    isFollowingRef.current = true;
+    setIsFollowing(true);
+  }, [mapReady, location, selectedSearchResult]);
 
   const searchPlaces = async () => {
     if (!searchQuery.trim()) return;
@@ -357,10 +437,12 @@ export default function Discover() {
     setSelectedStore(store);
     setSheetStores([store]);
     setSheetView("detail");
+    isFollowingRef.current = false;
+    setIsFollowing(false);
     bottomSheetRef.current?.snapToIndex(1);
 
     if (!location) return;
-    const start: [number, number] = [location.coords.longitude, location.coords.latitude];
+    const start: [number, number] = [location.longitude, location.latitude];
     const end: [number, number] = [store.longitude, store.latitude];
     const route = await getRouteService(start, end);
     setRouteGeoJSON(route ?? null);
@@ -371,6 +453,8 @@ export default function Discover() {
   const handleSearchResultPress = (result: any) => {
     setSelectedSearchResult(result);
     setSearchResults([]);
+    isFollowingRef.current = false;
+    setIsFollowing(false);
     cameraRef.current?.setCamera({
       centerCoordinate: result.center,
       zoomLevel: 14,
@@ -411,6 +495,28 @@ export default function Discover() {
 
     return turf.featureCollection(features);
   }, [stores]);
+  const normalizedHeading = ((mapHeading % 360) + 360) % 360;
+  const isNorthUp = normalizedHeading < 1 || normalizedHeading > 359;
+  const mapboxLocale = language === "ja" ? "ja" : "en";
+  const mapStyleURL = isDark ? "mapbox://styles/mapbox/navigation-night-v1" : "mapbox://styles/mapbox/streets-v12";
+
+  useEffect(() => {
+    let cancelled = false;
+    setLocalizedMapStyleJSON(null);
+
+    loadLocalizedMapStyle(mapStyleURL, mapboxLocale)
+      .then((styleJSON) => {
+        if (!cancelled) setLocalizedMapStyleJSON(styleJSON);
+      })
+      .catch((error) => {
+        console.warn("[Mapbox] Failed to localize style JSON:", error);
+        if (!cancelled) setLocalizedMapStyleJSON(null);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [mapStyleURL, mapboxLocale]);
 
   return (
     <View className="flex-1">
@@ -469,9 +575,18 @@ export default function Discover() {
       </SafeAreaView>
 
       <MapView
+        key={`${mapStyleURL}:${mapboxLocale}:${localizedMapStyleJSON ? "localized" : "remote"}`}
         style={{ flex: 1 }}
         onDidFinishLoadingMap={() => setMapReady(true)}
-        styleURL={isDark ? "mapbox://styles/mapbox/navigation-night-v1" : "mapbox://styles/mapbox/streets-v12"}
+        onCameraChanged={(state) => {
+          setMapHeading(state.properties.heading);
+          if (state.gestures.isGestureActive && isFollowingRef.current) {
+            isFollowingRef.current = false;
+            setIsFollowing(false);
+          }
+        }}
+        styleURL={localizedMapStyleJSON ? undefined : mapStyleURL}
+        styleJSON={localizedMapStyleJSON ?? undefined}
       >
         <Mapbox.Images
           images={{
@@ -482,7 +597,35 @@ export default function Discover() {
             shop: require("../../assets/images/markers/shop.png"),
             default: require("../../assets/images/markers/default.png"),
           }}
-        />
+          nativeAssetImages={[]}
+        >
+          {/* Heading cone: a soft blue teardrop wedge rendered as a RN view */}
+          <Mapbox.Image name="heading-cone">
+            <View
+              style={{
+                width: 24,
+                height: 32,
+                alignItems: "center",
+                justifyContent: "flex-start",
+                overflow: "hidden",
+              }}
+            >
+              {/* Triangle shape via borders */}
+              <View
+                style={{
+                  width: 0,
+                  height: 0,
+                  borderLeftWidth: 12,
+                  borderRightWidth: 12,
+                  borderBottomWidth: 28,
+                  borderLeftColor: "transparent",
+                  borderRightColor: "transparent",
+                  borderBottomColor: "rgba(37, 99, 235, 0.45)",
+                }}
+              />
+            </View>
+          </Mapbox.Image>
+        </Mapbox.Images>
         <Mapbox.Camera
           ref={cameraRef}
           animationMode="easeTo"
@@ -491,6 +634,21 @@ export default function Discover() {
 
         {userLocationFeature && (
           <Mapbox.ShapeSource id="currentUserLocationSource" shape={userLocationFeature}>
+            {/* Heading cone — sits below the dot, rotates with device bearing */}
+            <Mapbox.SymbolLayer
+              id="currentUserHeadingCone"
+              style={{
+                iconImage: "heading-cone",
+                iconSize: 1,
+                iconRotate: ["get", "bearing"],
+                iconRotationAlignment: "map",
+                iconPitchAlignment: "map",
+                iconAllowOverlap: true,
+                iconIgnorePlacement: true,
+                iconOffset: [0, -18],
+              }}
+            />
+            {/* Accuracy halo */}
             <Mapbox.CircleLayer
               id="currentUserAccuracyHalo"
               style={{
@@ -500,6 +658,7 @@ export default function Discover() {
                 circlePitchAlignment: "map",
               }}
             />
+            {/* Blue dot */}
             <Mapbox.CircleLayer
               id="currentUserLocationDot"
               style={{
@@ -590,16 +749,18 @@ export default function Discover() {
         })()}
       </MapView>
 
+      <MapControlButtons
+        isFollowing={isFollowing}
+        isNorthUp={isNorthUp}
+        normalizedHeading={normalizedHeading}
+        hasRoute={!!routeGeoJSON}
+        onCenterPress={centerOnUser}
+        onNorthPress={orientNorth}
+      />
+
       {routeGeoJSON && (
         <TouchableOpacity
-          style={{
-            position: "absolute",
-            top: 120,
-            right: 16,
-            zIndex: 101,
-            elevation: 4,
-          }}
-          className="bg-white dark:bg-darkBackgroundMuted rounded-full p-2"
+          className="absolute right-4 top-[148px] z-50 rounded-full border border-slate-200 bg-white p-2 shadow-lg dark:border-neutral-600 dark:bg-darkBackgroundMuted"
           onPress={() => {
             setRouteGeoJSON(null);
             setSelectedStore(null);
@@ -607,7 +768,7 @@ export default function Discover() {
             setSheetView("detail");
           }}
         >
-          <MaterialIcons name="clear" size={35} color="#FB8500" />
+          <X size={24} strokeWidth={2.35} color="#FB8500" />
         </TouchableOpacity>
       )}
 
