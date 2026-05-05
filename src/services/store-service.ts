@@ -29,6 +29,9 @@ export interface StoreRow {
     radius: number | null;
     status: string;
     is_active: boolean;
+    billing_suspended?: boolean | null;
+    billing_suspended_at?: string | null;
+    billing_suspension_reason?: string | null;
     timezone: string | null;
     logo: string | null;
     owner_id: string | null;
@@ -168,6 +171,43 @@ export async function getMyStores(ownerId: string): Promise<StoreRow[]> {
     });
 
     return unique;
+}
+
+/**
+ * Enforces the Free plan "1 unlocked store" behavior by marking other stores as locked.
+ * Locked stores are not deleted; they remain viewable and can be unlocked again if the user upgrades.
+ */
+export async function lockExtraOwnerStores(params: {
+    ownerId: string;
+    unlockedStoreId: number;
+}): Promise<void> {
+    const { ownerId, unlockedStoreId } = params;
+
+    // Unlock the chosen store.
+    const { error: unlockErr } = await supabase
+        .from("stores")
+        .update({
+            billing_suspended: false,
+            billing_suspended_at: null,
+            billing_suspension_reason: null,
+        })
+        .eq("owner_id", ownerId)
+        .eq("id", unlockedStoreId);
+
+    if (unlockErr) throw new Error(unlockErr.message);
+
+    // Lock all other stores owned by this manager.
+    const { error: lockErr } = await supabase
+        .from("stores")
+        .update({
+            billing_suspended: true,
+            billing_suspended_at: new Date().toISOString(),
+            billing_suspension_reason: "subscription_inactive",
+        })
+        .eq("owner_id", ownerId)
+        .neq("id", unlockedStoreId);
+
+    if (lockErr) throw new Error(lockErr.message);
 }
 
 export async function updateStoreLogo(storeId: number, imageUrl: string): Promise<void> {

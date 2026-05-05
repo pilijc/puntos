@@ -5,6 +5,7 @@ import {listenToVoucherTransaction } from "@/services/user/voucher-service";
 import { issueStampForPurchase } from "@/services/stamp-service";
 import { VoucherTransaction } from "@/type/user/voucher";
 import {FinalCalculations} from "@/services/frontdesk/percentage-service";
+import { canUserEarnPurchasePoints } from "@/services/points/earning-gate";
 
 export async function getCurrentUser() {
   try {
@@ -96,7 +97,8 @@ export async function createQRTransaction(
 
     const storeId = staffData.store_id;
     const pointResult = await FinalCalculations(storeId, purchaseAmount);
-    const pointsEarned = pointResult.points;
+    const eligible = await canUserEarnPurchasePoints({ userId, storeId });
+    const pointsEarned = eligible ? pointResult.points : 0;
 
   //Create purchase record first
   const { data: purchaseData, error: purchaseError } = await supabase

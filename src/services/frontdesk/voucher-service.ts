@@ -2,6 +2,7 @@ import { supabase } from "@/supabase/supabase";
 import { ProcessVoucherCode } from "../../type/frontdesk/voucher";
 import { Voucher } from "../../type/user/voucher";
 import { FinalCalculations } from "../frontdesk/percentage-service";
+import { canUserEarnPurchasePoints } from "@/services/points/earning-gate";
 
 export async function getCurrentStaffId(): Promise<string | null> {
     try {
@@ -106,7 +107,8 @@ export async function processVoucherCode(
 
            const storeId = staffData.store_id;
            const pointResult = await FinalCalculations(storeId, amount);
-           const pointsEarned = pointResult.points;
+           const eligible = await canUserEarnPurchasePoints({ userId: voucher.user_id, storeId });
+           const pointsEarned = eligible ? pointResult.points : 0;
         
         const currentTime = new Date().toISOString();
         const { data: purchaseData, error: purchaseError } = await supabase

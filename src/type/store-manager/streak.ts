@@ -144,6 +144,7 @@ export interface StreakViewState {
 export interface StreakCardProps {
   streak: Streak;
   isDark: boolean;
+  readonlyCampaigns?: boolean;
   onEdit?: () => void;
   onPublish?: () => void;
   onActivate?: () => void;

@@ -1,4 +1,10 @@
 import { supabase } from "@/supabase/supabase";
+import {
+  getStoreOwnerId,
+  ownerCanManagePremiumCampaigns,
+} from "@/services/store-manager/premium-campaign-gate";
+
+export const STREAK_NEW_ENROLLMENT_BLOCKED = "STREAK_NEW_ENROLLMENT_BLOCKED";
 
 export interface RecordStreakResult {
   alreadyRecorded: boolean;
@@ -41,6 +47,23 @@ export async function recordUserStreak(
   streakLength: number = 0,   // kept for call-site compatibility, unused
 ): Promise<RecordStreakResult> {
   try {
+    const ownerId = await getStoreOwnerId(storeId);
+    const premium = await ownerCanManagePremiumCampaigns(ownerId);
+    if (!premium) {
+      const { data: existingEnrollment, error: enrolErr } = await supabase
+        .from("user_streaks")
+        .select("id")
+        .eq("user_id", userId)
+        .eq("store_streak_id", storeStreakId)
+        .maybeSingle();
+
+      if (enrolErr) {
+        console.warn("[recordUserStreak] Enrollment lookup failed:", enrolErr.message);
+      } else if (!existingEnrollment) {
+        throw new Error(STREAK_NEW_ENROLLMENT_BLOCKED);
+      }
+    }
+
     const { data, error } = await supabase.rpc('record_user_streak', {
       p_user_id: userId,
       p_store_id: storeId,

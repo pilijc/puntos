@@ -20,6 +20,8 @@ import { useStampViewStore } from "@/store/store-manager/stamp-store";
 import { getRewardsByStoreId } from "@/services/store-manager/reward-service";
 import { StampCard } from "@/components/store_manager/stamp/stamp-card";
 import { useTranslation } from "react-i18next";
+import { useStorePremiumCampaignEdit } from "@/hooks/store-manager/use-store-premium-campaign-edit";
+import { formatDate } from "@/utils/store_manager/stamp-utils";
 
 const WEB_MAX_WIDTH = 896;
 const WEB_TAB_PILL_STYLE = { flexGrow: 1, flexBasis: 120, minWidth: 0 };
@@ -46,6 +48,8 @@ export default function ViewStamp() {
     setModal,
   } = useStampViewStore();
   const [collectorByProgram, setCollectorByProgram] = useState<Record<number, CollectorSlice>>({});
+  const { canEdit, loading: permLoading, expiresAtIso } = useStorePremiumCampaignEdit(storeId);
+  const campaignsLocked = !permLoading && !canEdit;
 
   const load = useCallback(() => {
     if (!storeId) return;
@@ -175,6 +179,18 @@ export default function ViewStamp() {
         }}
       />
 
+      {campaignsLocked ? (
+        <View className={isWeb ? "px-4 pt-3 items-center" : "px-4 pt-3"}>
+          <View className={`w-full rounded-xl border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/40 px-3 py-2.5 ${isWeb ? "max-w-4xl" : ""}`}>
+            <Text className="text-xs font-poppins text-amber-900 dark:text-amber-200 leading-5">
+              {expiresAtIso
+                ? t("store_manager.premiumCampaigns.bannerWithExpiry", { date: formatDate(expiresAtIso) })
+                : t("store_manager.premiumCampaigns.banner")}
+            </Text>
+          </View>
+        </View>
+      ) : null}
+
       {Platform.OS === "web" ? (
         <View className="bg-backgroundMuted dark:bg-slate-950 pt-4 items-center">
           <View style={{ width: "100%", maxWidth: WEB_MAX_WIDTH, paddingHorizontal: 16 }}>
@@ -266,10 +282,15 @@ export default function ViewStamp() {
           <ActivityIndicator size="large" color="#FF6600" />
         </View>
       ) : tabStamps.length === 0 ? (
-        <View className={isWeb ? "flex-1 px-4 pb-4 items-center mt-4" : "flex-1 px-4 pb-4 mt-4"}>
+        <View 
+          style={[{ flex: 1 }, 
+          { padding: 16, gap: 12,
+            ...(Platform.OS === "web" ? { width: "100%" as const, maxWidth: WEB_MAX_WIDTH, alignSelf: "center" as const } : null),
+          }]}
+        >
           <View
             className={`w-full bg-white dark:bg-darkBackground rounded-xl overflow-hidden items-center justify-center ${
-              isWeb ? "max-w-4xl px-6 py-12 gap-y-3" : "px-5 py-10 gap-y-3"
+              isWeb ? "px-6 py-12 gap-y-3" : "px-5 py-10 gap-y-3"
             }`}
           >
             <Image
@@ -296,13 +317,12 @@ export default function ViewStamp() {
           </View>
         </View>
       ) : (
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={{
-            padding: 16,
+        <ScrollView 
+          showsVerticalScrollIndicator={false} 
+          contentContainerStyle={[{ padding: 16,
             gap: 12,
-            ...(Platform.OS === "web" ? { width: "100%", maxWidth: WEB_MAX_WIDTH, alignSelf: "center" } : null),
-          }}
+            ...(Platform.OS === "web" ? { width: "100%" as const, maxWidth: WEB_MAX_WIDTH, alignSelf: "center" as const } : null),
+          }]}
         >
           {tabStamps.map((stamp) => {
             const reward = rewards.find((r) => r.id === stamp.reward_id) ?? null;
@@ -315,6 +335,7 @@ export default function ViewStamp() {
                 reward={reward}
                 activeTab={activeTab}
                 isDark={isDark}
+                readonlyCampaigns={campaignsLocked}
                 collector={c}
                 programId={pid}
                 setCollectorByProgram={setCollectorByProgram}
@@ -335,7 +356,7 @@ export default function ViewStamp() {
             );
           })}
 
-          {activeTab === "active" && activeStamps.length === 0 && (
+          {activeTab === "active" && activeStamps.length === 0 && !campaignsLocked && (
             <Button
               label={t("store_manager.stamp.createProgram")}
               onPress={() => router.push({ pathname: "/(store_manager)/stamp/configure-stamp", params: { storeId } })}
@@ -346,7 +367,7 @@ export default function ViewStamp() {
         </ScrollView>
       )}
 
-      {activeTab === "draft" && (
+      {activeTab === "draft" && !campaignsLocked && (
         Platform.OS === "web" ? (
           <View
             pointerEvents="box-none"

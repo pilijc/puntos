@@ -10,6 +10,7 @@ import { AlertCircle, ChartBarStacked, ChevronRight, MapPin, Plus, Store } from 
 import { Modal, type ModalButton } from "@/components/modal";
 import { canOwnerCreateAnotherStore } from "@/services/store-manager/subscription-limits";
 import { supabase } from "@/supabase/supabase";
+import { useStorePremiumCampaignEdit } from "@/hooks/store-manager/use-store-premium-campaign-edit";
 
 type TabKey = "all" | "active" | "pending" | "inactive";
 
@@ -49,6 +50,7 @@ function StoreCard({ store, router }: { store: StoreRow; router: any }) {
     status === "active" || status === "pending_review" || status === "inactive"
       ? status
       : "inactive";
+  const isLocked = Boolean(store.billing_suspended);
 
   return (
     <TouchableOpacity
@@ -78,12 +80,21 @@ function StoreCard({ store, router }: { store: StoreRow; router: any }) {
             >
               {store.name}
             </Text>
-            <View className={`self-center h-5 px-2 rounded-full ${badgeStyle.bg} items-center justify-center`}>
-              <Text
-                className={`text-[9px] leading-4 font-poppins-bold uppercase tracking-wider ${badgeStyle.text}`}
-              >
-                {translate(`storeManager.stores.badge.${badgeLabelKey}`)}
-              </Text>
+            <View className="flex-row items-center gap-1.5">
+              {isLocked ? (
+                <View className="self-center h-5 px-2 rounded-full bg-slate-200 dark:bg-slate-800 items-center justify-center">
+                  <Text className="text-[9px] leading-4 font-poppins-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">
+                    Locked
+                  </Text>
+                </View>
+              ) : null}
+              <View className={`self-center h-5 px-2 rounded-full ${badgeStyle.bg} items-center justify-center`}>
+                <Text
+                  className={`text-[9px] leading-4 font-poppins-bold uppercase tracking-wider ${badgeStyle.text}`}
+                >
+                  {translate(`storeManager.stores.badge.${badgeLabelKey}`)}
+                </Text>
+              </View>
             </View>
           </View>
           <View className="flex-row items-center gap-1">
@@ -105,6 +116,11 @@ function StoreCard({ store, router }: { store: StoreRow; router: any }) {
                 {store.type}
               </Text>
             </View>
+          ) : null}
+          {isLocked ? (
+            <Text className="text-[11px] font-poppins text-slate-500 dark:text-slate-400">
+              Subscription ended — this store is view-only until you upgrade.
+            </Text>
           ) : null}
         </View>
       </View>
@@ -146,6 +162,12 @@ export default function StoreManagerStores() {
   const router = useRouter();
   const { stores, loading, error, hasFetchedOnce, fetchStores } = useManagerStoresStore();
   const [refreshing, setRefreshing] = useState(false);
+  const anyLocked = stores.some((s) => Boolean(s.billing_suspended));
+  const ownerStoreIdForCampaigns = stores.find((s) => s.owner_id != null)?.id;
+  const { canEdit, loading: permLoading } = useStorePremiumCampaignEdit(
+    ownerStoreIdForCampaigns != null ? String(ownerStoreIdForCampaigns) : undefined,
+  );
+  const campaignsLocked = !permLoading && !canEdit;
   const [createGuard, setCreateGuard] = useState<{ checked: boolean; allowed: boolean }>({
     checked: false,
     allowed: true,
@@ -250,6 +272,23 @@ export default function StoreManagerStores() {
           </Text>
         </View>
       </View>
+
+      {(anyLocked || campaignsLocked) && (
+        <View className="px-4 pt-3">
+          <View className="rounded-xl border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/40 px-3 py-2.5">
+            <Text className="text-xs font-poppins text-amber-900 dark:text-amber-200 leading-5">
+              {translate("store_manager.premiumCampaigns.banner")}
+            </Text>
+            <TouchableOpacity
+              onPress={() => router.push("/(store_manager)/subscription")}
+              activeOpacity={0.85}
+              className="self-start mt-2 bg-primary px-4 py-2 rounded-xl"
+            >
+              <Text className="text-xs font-poppins-semibold text-white">Upgrade</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
 
       {Platform.OS === "web" ? (
         <View className="bg-backgroundMuted dark:bg-slate-950 px-4 pt-4 items-center">
@@ -401,6 +440,7 @@ export default function StoreManagerStores() {
                     status === "active" || status === "pending_review" || status === "inactive"
                       ? status
                       : "inactive";
+                  const isLocked = Boolean(store.billing_suspended);
 
                   return (
                     <View key={store.id}>
@@ -443,10 +483,19 @@ export default function StoreManagerStores() {
                             </Text>
                           </View>
                         </View>
-                        <View className={`h-5 px-2 rounded-full ${badgeStyle.bg} items-center justify-center`}>
-                          <Text className={`text-[10px] leading-4 font-poppins-semibold ${badgeStyle.text}`}>
-                            {translate(`storeManager.stores.badge.${badgeLabelKey}`)}
-                          </Text>
+                        <View className="flex-row items-center gap-1.5">
+                          {isLocked ? (
+                            <View className="h-5 px-2 rounded-full bg-slate-200 dark:bg-slate-800 items-center justify-center">
+                              <Text className="text-[10px] leading-4 font-poppins-semibold text-slate-600 dark:text-slate-300">
+                                Locked
+                              </Text>
+                            </View>
+                          ) : null}
+                          <View className={`h-5 px-2 rounded-full ${badgeStyle.bg} items-center justify-center`}>
+                            <Text className={`text-[10px] leading-4 font-poppins-semibold ${badgeStyle.text}`}>
+                              {translate(`storeManager.stores.badge.${badgeLabelKey}`)}
+                            </Text>
+                          </View>
                         </View>
                         <ChevronRight size={20} color="#94A3B8" />
                       </TouchableOpacity>
@@ -470,6 +519,7 @@ export default function StoreManagerStores() {
                     status === "active" || status === "pending_review" || status === "inactive"
                       ? status
                       : "inactive";
+                  const isLocked = Boolean(store.billing_suspended);
 
                   return (
                     <View key={store.id}>
@@ -513,10 +563,19 @@ export default function StoreManagerStores() {
                           </View>
                         </View>
 
-                        <View className={`h-5 px-2 rounded-full ${badgeStyle.bg} items-center justify-center`}>
-                          <Text className={`text-[10px] leading-4 font-poppins-semibold ${badgeStyle.text}`}>
-                            {translate(`storeManager.stores.badge.${badgeLabelKey}`)}
-                          </Text>
+                        <View className="flex-row items-center gap-1.5">
+                          {isLocked ? (
+                            <View className="h-5 px-2 rounded-full bg-slate-200 dark:bg-slate-800 items-center justify-center">
+                              <Text className="text-[10px] leading-4 font-poppins-semibold text-slate-600 dark:text-slate-300">
+                                Locked
+                              </Text>
+                            </View>
+                          ) : null}
+                          <View className={`h-5 px-2 rounded-full ${badgeStyle.bg} items-center justify-center`}>
+                            <Text className={`text-[10px] leading-4 font-poppins-semibold ${badgeStyle.text}`}>
+                              {translate(`storeManager.stores.badge.${badgeLabelKey}`)}
+                            </Text>
+                          </View>
                         </View>
 
                       </TouchableOpacity>

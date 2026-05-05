@@ -13,6 +13,9 @@ import { LayoutDashboard, Store, ArrowLeftRight, Settings, CreditCard, PanelLeft
 import { useDeviceSession } from "@/hooks/store-manager/use-device-session";
 import { useManagerStoresStore } from "@/store/manager-stores-store";
 import { useSupportChatStore } from "@/store/support-chat-store";
+import { getManagerSubscription, getSubscriptionPlans } from "@/services/store-manager/subscription-service";
+import { isPaidUnlimitedPlan } from "@/services/store-manager/subscription-limits";
+import { lockExtraOwnerStores } from "@/services/store-service";
 
 const WEB_SIDEBAR_WIDTH = 260;
 const WEB_SIDEBAR_COLLAPSED_WIDTH = 76;
@@ -373,10 +376,63 @@ export default function StoreManagerLayout() {
     const stores = useManagerStoresStore((state) => state.stores);
     const fetchStores = useManagerStoresStore((state) => state.fetchStores);
     const { loadAllManagerConversations, conversations, subscribeInbox, cleanupRealtime } = useSupportChatStore();
+    const [didEnforceStoreLocks, setDidEnforceStoreLocks] = useState(false);
 
     useEffect(() => {
         fetchStores();
     }, [fetchStores]);
+
+    useEffect(() => {
+        const enforceStoreLocksIfNeeded = async () => {
+            if (!currentUserId) return;
+            if (didEnforceStoreLocks) return;
+            if (!stores?.length) return;
+
+            try {
+                const ownedStores = stores.filter((s) => String(s.owner_id ?? "") === String(currentUserId));
+                if (ownedStores.length <= 1) {
+                    setDidEnforceStoreLocks(true);
+                    return;
+                }
+
+                const [plans, managerRow] = await Promise.all([
+                    getSubscriptionPlans(),
+                    getManagerSubscription(currentUserId),
+                ]);
+
+                const planListForGate = (plans ?? []) as Array<{ id: number; slug?: string | null }>;
+                const isEntitled = isPaidUnlimitedPlan(managerRow, planListForGate);
+                if (isEntitled) {
+                    setDidEnforceStoreLocks(true);
+                    return;
+                }
+
+                // Free plan: keep one owned store unlocked, lock the rest (DB-backed).
+                // Preference: a store already unlocked; otherwise most recently created.
+                const unlockedCandidate =
+                    ownedStores.find((s) => s.billing_suspended === false) ??
+                    ownedStores
+                        .slice()
+                        .sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)))[0];
+
+                const keepId = unlockedCandidate?.id;
+                if (keepId == null) {
+                    setDidEnforceStoreLocks(true);
+                    return;
+                }
+
+                await lockExtraOwnerStores({ ownerId: currentUserId, unlockedStoreId: keepId });
+                await fetchStores(true);
+            } catch (e) {
+                // If this fails, we don't want to block navigation; server-side/RLS should still protect critical writes.
+                console.warn("[subscription] store lock enforcement failed:", (e as any)?.message ?? e);
+            } finally {
+                setDidEnforceStoreLocks(true);
+            }
+        };
+
+        void enforceStoreLocksIfNeeded();
+    }, [currentUserId, didEnforceStoreLocks, fetchStores, stores]);
 
     useEffect(() => {
         if (!currentUserId) return;
