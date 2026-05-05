@@ -7,6 +7,7 @@ export interface UserLocation {
   latitude: number;
   longitude: number;
   accuracy?: number;
+  heading?: number;
 }
 
 export interface LocationPermissionStatus {
@@ -110,10 +111,11 @@ export async function checkLocationPermission(): Promise<LocationPermissionStatu
   }
 }
 
-const toUserLocation = (loc: { coords: { latitude: number; longitude: number; accuracy?: number | null } }): UserLocation => ({
+const toUserLocation = (loc: { coords: { latitude: number; longitude: number; accuracy?: number | null; heading?: number | null } }): UserLocation => ({
   latitude: loc.coords.latitude,
   longitude: loc.coords.longitude,
   accuracy: loc.coords.accuracy ?? undefined,
+  heading: loc.coords.heading ?? undefined,
 });
 
 async function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T | null> {
@@ -235,10 +237,15 @@ export async function watchLocation(
     accuracy?: Location.Accuracy;
     timeInterval?: number;
     distanceInterval?: number;
+    requestPermission?: boolean;
   }
 ): Promise<Location.LocationSubscription | null> {
   try {
-    const permissionStatus = await checkLocationPermission();
+    let permissionStatus = await checkLocationPermission();
+    if (!permissionStatus.granted && options?.requestPermission !== false) {
+      permissionStatus = await requestLocationPermission();
+    }
+
     if (!permissionStatus.granted) {
       console.log('[LocationService] Location permission not granted for watching');
       return null;
@@ -247,15 +254,15 @@ export async function watchLocation(
     const subscription = await Location.watchPositionAsync(
       {
         accuracy: options?.accuracy ?? Location.Accuracy.Highest,
-        timeInterval: options?.timeInterval ?? 2000,
-        distanceInterval: options?.distanceInterval ?? 1,
+        timeInterval: options?.timeInterval ?? 1000,
+        distanceInterval: options?.distanceInterval ?? 0,
+        mayShowUserSettingsDialog: Platform.OS === 'android',
       },
       (location) => {
-        callback({
-          latitude: location.coords.latitude,
-          longitude: location.coords.longitude,
-          accuracy: location.coords.accuracy ?? undefined,
-        });
+        callback(toUserLocation(location));
+      },
+      (error) => {
+        console.error('[LocationService] Location watch update error:', error);
       }
     );
 

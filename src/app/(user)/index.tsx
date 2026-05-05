@@ -2,7 +2,7 @@ import { Text, SafeAreaView, View, Image } from "@/tw";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import Mapbox, { MapView, PointAnnotation } from "@rnmapbox/maps";
 import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
-import { TextInput, TouchableOpacity, useColorScheme, Platform } from "react-native";
+import { AppState, AppStateStatus, TextInput, TouchableOpacity, useColorScheme, Platform } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 import * as Location from "expo-location";
 import { Ionicons, MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
@@ -18,6 +18,8 @@ import { getStores } from "@/services/store-service";
 import { storeIconKey } from "@/type/user/discover";
 import { useTranslation } from "react-i18next";
 import { useLanguageStore } from "@/store/language-store";
+import { useProfile } from "@/hooks/user/use-profile";
+import { isLocationManuallyDisabled } from "@/services/user/location-preference-service";
 
 let OneSignal: typeof import("react-native-onesignal").OneSignal | null = null;
 
@@ -47,9 +49,10 @@ export default function Discover() {
   const notifiedStoreIds = useRef<Set<number>>(new Set());
   const locationWatchRef = useRef<Location.LocationSubscription | null>(null);
   const hasCenteredOnUserRef = useRef(false);
-  const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number; heading?: number } | null>(null);
   const { t: translate } = useTranslation();
   const language = useLanguageStore((s) => s.language);
+  const { user, preferences, updatePreferences } = useProfile();
+  const shouldFollowUser = !selectedSearchResult;
 
   const discoverMoreStores = useMemo(() => {
     if (!location) return [];
@@ -70,6 +73,29 @@ export default function Discover() {
 
     return candidates;
   }, [location, sheetStores, stores]);
+
+  const userLocationFeature = useMemo<GeoJSON.Feature<GeoJSON.Point> | null>(() => {
+    if (!location) return null;
+
+    const { latitude, longitude } = location.coords;
+    if (
+      typeof latitude !== "number" ||
+      typeof longitude !== "number" ||
+      !Number.isFinite(latitude) ||
+      !Number.isFinite(longitude)
+    ) {
+      return null;
+    }
+
+    return {
+      type: "Feature",
+      geometry: {
+        type: "Point",
+        coordinates: [longitude, latitude],
+      },
+      properties: {},
+    };
+  }, [location]);
 
   useEffect(() => {
     (async () => {
@@ -155,9 +181,22 @@ export default function Discover() {
   useEffect(() => {
     let cancelled = false;
 
-    (async () => {
+    const stopLocationWatch = () => {
+      locationWatchRef.current?.remove();
+      locationWatchRef.current = null;
+    };
+
+    const startLocationWatch = async () => {
+      stopLocationWatch();
+
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') return;
+
+      if (user?.id && !preferences.location_enabled) {
+        const manuallyDisabled = await isLocationManuallyDisabled(user.id);
+        if (manuallyDisabled) return;
+        await updatePreferences({ location_enabled: true });
+      }
 
       const initial = await Location.getCurrentPositionAsync({
         accuracy: Location.Accuracy.High,
@@ -170,9 +209,10 @@ export default function Discover() {
 
       const sub = await Location.watchPositionAsync(
         {
-          accuracy: Location.Accuracy.Balanced,
-          timeInterval: 5000,
+          accuracy: Location.Accuracy.Highest,
+          timeInterval: 1000,
           distanceInterval: 0,
+          mayShowUserSettingsDialog: Platform.OS === "android",
         },
         async (position) => {
           if (cancelled) return;
@@ -247,26 +287,37 @@ export default function Discover() {
       } else {
         sub.remove();
       }
-    })();
+    };
+
+    startLocationWatch();
+
+    const appStateSubscription = AppState.addEventListener('change', (nextAppState: AppStateStatus) => {
+      if (nextAppState === 'active') {
+        startLocationWatch();
+      } else if (nextAppState === 'background' || nextAppState === 'inactive') {
+        stopLocationWatch();
+      }
+    });
 
     return () => {
       cancelled = true;
-      locationWatchRef.current?.remove();
-      locationWatchRef.current = null;
+      appStateSubscription.remove();
+      stopLocationWatch();
     };
-  }, []);
+  }, [preferences.location_enabled, translate, updatePreferences, user?.id]);
 
   useEffect(() => {
     if (!mapReady || !location) return;
-    if (hasCenteredOnUserRef.current) return;
-    const { longitude, latitude } = location.coords;
+    if (!shouldFollowUser) return;
+    const { longitude, latitude, heading } = location.coords;
     cameraRef.current?.setCamera({
       centerCoordinate: [longitude, latitude],
-      zoomLevel: 10,
-      animationDuration: 1000,
+      zoomLevel: 16,
+      heading: typeof heading === "number" && Number.isFinite(heading) ? heading : undefined,
+      animationDuration: hasCenteredOnUserRef.current ? 300 : 1000,
     });
     hasCenteredOnUserRef.current = true;
-  }, [mapReady, location]);
+  }, [mapReady, location, shouldFollowUser]);
 
   useEffect(() => {
     if (!mapReady) return;
@@ -422,13 +473,6 @@ export default function Discover() {
         onDidFinishLoadingMap={() => setMapReady(true)}
         styleURL={isDark ? "mapbox://styles/mapbox/navigation-night-v1" : "mapbox://styles/mapbox/streets-v12"}
       >
-
-        <Mapbox.UserLocation
-          visible
-          showsUserHeadingIndicator={true}
-          androidRenderMode="compass"
-        />
-
         <Mapbox.Images
           images={{
             bar: require("../../assets/images/markers/bar.png"),
@@ -441,11 +485,33 @@ export default function Discover() {
         />
         <Mapbox.Camera
           ref={cameraRef}
-          followUserMode={Mapbox.UserTrackingMode.FollowWithHeading}
-          followZoomLevel={16}
           animationMode="easeTo"
           animationDuration={300}
         />
+
+        {userLocationFeature && (
+          <Mapbox.ShapeSource id="currentUserLocationSource" shape={userLocationFeature}>
+            <Mapbox.CircleLayer
+              id="currentUserAccuracyHalo"
+              style={{
+                circleRadius: 13,
+                circleColor: "#3B82F6",
+                circleOpacity: 0.16,
+                circlePitchAlignment: "map",
+              }}
+            />
+            <Mapbox.CircleLayer
+              id="currentUserLocationDot"
+              style={{
+                circleRadius: 7,
+                circleColor: "#2563EB",
+                circleStrokeColor: "#FFFFFF",
+                circleStrokeWidth: 3,
+                circlePitchAlignment: "map",
+              }}
+            />
+          </Mapbox.ShapeSource>
+        )}
 
         {selectedSearchResult && (
           <PointAnnotation

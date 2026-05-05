@@ -1,7 +1,15 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import * as Location from 'expo-location';
 import { AppState, AppStateStatus } from 'react-native';
-import { getCurrentLocation, checkLocationPermission, requestLocationPermission, UserLocation, LocationPermissionStatus } from '@/services/user/location-service';
+import {
+    getCurrentLocation,
+    checkLocationPermission,
+    requestLocationPermission,
+    watchLocation,
+    UserLocation,
+    LocationPermissionStatus,
+    LocationSubscription,
+} from '@/services/user/location-service';
 import { useLocationStore } from '@/store/user/location-store';
 
 export interface UseLocationReturn {
@@ -15,6 +23,8 @@ export interface UseLocationReturn {
 
 export function useLocation(userId?: string, syncEnabled: boolean = false) {
     const { globalLocation: location, setGlobalLocation: setLocation } = useLocationStore();
+    const watchRef = useRef<LocationSubscription | null>(null);
+    const mountedRef = useRef(false);
     const [permissionStatus, setPermissionStatus] = useState<LocationPermissionStatus>({
         granted: false,
         canAskAgain: true,
@@ -22,6 +32,32 @@ export function useLocation(userId?: string, syncEnabled: boolean = false) {
     });
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+
+    const stopWatching = () => {
+        watchRef.current?.remove();
+        watchRef.current = null;
+    };
+
+    const startWatching = async () => {
+        stopWatching();
+        const subscription = await watchLocation(
+            (loc) => {
+                setLocation(loc);
+                setError(null);
+                setLoading(false);
+            },
+            {
+                accuracy: Location.Accuracy.Highest,
+                timeInterval: 1000,
+                distanceInterval: 0,
+            }
+        );
+        if (!mountedRef.current) {
+            subscription?.remove();
+            return;
+        }
+        watchRef.current = subscription;
+    };
 
     const refresh = async () => {
         setLoading(true);
@@ -35,8 +71,13 @@ export function useLocation(userId?: string, syncEnabled: boolean = false) {
         try {
             const status = await checkLocationPermission();
             setPermissionStatus(status);
-            if (status.granted) await refresh();
-            else setLoading(false);
+            if (status.granted) {
+                await refresh();
+                await startWatching();
+            } else {
+                stopWatching();
+                setLoading(false);
+            }
         } catch (err: any) {
             setError(err.message || "Permission check failed");
             setLoading(false);
@@ -46,11 +87,15 @@ export function useLocation(userId?: string, syncEnabled: boolean = false) {
     const request = async () => {
         const status = await requestLocationPermission();
         setPermissionStatus(status);
-        if (status.granted) await refresh();
+        if (status.granted) {
+            await refresh();
+            await startWatching();
+        }
         return status;
     };
 
     useEffect(() => {
+        mountedRef.current = true;
         checkStatus();
 
         const subscription = AppState.addEventListener('change', (nextAppState: AppStateStatus) => {
@@ -60,7 +105,9 @@ export function useLocation(userId?: string, syncEnabled: boolean = false) {
         });
 
         return () => {
+            mountedRef.current = false;
             subscription.remove();
+            stopWatching();
         };
     }, []);
 

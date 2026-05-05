@@ -8,15 +8,43 @@ import { useProfile } from '@/hooks/user/use-profile';
 import { useLocationSync } from '@/hooks/user/use-location-sync';
 import { getMutedStores } from '@/services/user/mute-service';
 import { useStoreStore } from '@/store/user/store-store';
+import { checkLocationPermission } from '@/services/user/location-service';
+import { isLocationManuallyDisabled } from '@/services/user/location-preference-service';
 
 function UserTabs() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
   const { t: translate } = useTranslation();
   const insets = useSafeAreaInsets();
-  const { user, preferences } = useProfile();
+  const { user, preferences, updatePreferences } = useProfile();
   useLocationSync(user?.id, preferences?.location_enabled ?? false);
   const { setMutedStoreIds, setMutedStoresHydrated } = useStoreStore();
+
+  useEffect(() => {
+    let isActive = true;
+
+    const enableLocationIfAlreadyGranted = async () => {
+      if (!user?.id || preferences?.location_enabled) return;
+
+      try {
+        const manuallyDisabled = await isLocationManuallyDisabled(user.id);
+        if (manuallyDisabled || !isActive) return;
+
+        const status = await checkLocationPermission();
+        if (status.granted && isActive) {
+          await updatePreferences({ location_enabled: true });
+        }
+      } catch (error) {
+        console.error("[LocationPreference] Failed to reconcile permission:", error);
+      }
+    };
+
+    enableLocationIfAlreadyGranted();
+
+    return () => {
+      isActive = false;
+    };
+  }, [preferences?.location_enabled, updatePreferences, user?.id]);
 
   useEffect(() => {
     let isActive = true;
