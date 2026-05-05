@@ -1,6 +1,6 @@
 import React from "react";
 import { KeyboardAvoidingView, Platform, ScrollView, useColorScheme } from "react-native";
-import { View, Text, TouchableOpacity, TextInput } from "@/tw";
+import { View, Text, TouchableOpacity, TextInput, SafeAreaView } from "@/tw";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useRouter, useLocalSearchParams, useFocusEffect } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -19,7 +19,6 @@ import { useTranslation } from "react-i18next";
 export default function ConfigureStreaks() {
   const { t } = useTranslation();
   const router = useRouter();
-  const insets = useSafeAreaInsets();
   const { storeId, streakId } = useLocalSearchParams<{ storeId: string; streakId?: string }>();
   const isEditMode = !!streakId;
   const isWeb = Platform.OS === "web";
@@ -37,10 +36,16 @@ export default function ConfigureStreaks() {
     showStartTimePicker, setShowStartTimePicker,
     isSubmitting, setIsSubmitting,
     modal, setModal,
+    streakLengthError, setStreakLengthError,
+    fixedPointsError, setFixedPointsError,
+    startingPointsError, setStartingPointsError,
+    incrementError, setIncrementError,
+    maxDaysCapError, setMaxDaysCapError,
     reset,
   } = useStreakStore();
 
-  const [scheduleEnabled, setScheduleEnabled] = React.useState(true);
+  const [scheduleEnabled, setScheduleEnabled] = React.useState(false);
+  const [startTimeError, setStartTimeError] = React.useState(false);
   const [hasActiveProgramBarrier, setHasActiveProgramBarrier] = React.useState(false);
   const isFixed = points_mode === "fixed";
   const activationAt = start_at ? new Date(start_at) : new Date();
@@ -143,9 +148,11 @@ export default function ConfigureStreaks() {
     base.setFullYear(date.getFullYear(), date.getMonth(), date.getDate());
     if (base < minActivationAt) {
       setStartAt(minActivationAt.toISOString());
+      setStartTimeError(false);
       return;
     }
     setStartAt(base.toISOString());
+    setStartTimeError(false);
   };
 
   const updateStartAtTime = (time: Date) => {
@@ -153,67 +160,38 @@ export default function ConfigureStreaks() {
     base.setHours(time.getHours(), time.getMinutes(), 0, 0);
     if (base < minActivationAt) {
       setStartAt(minActivationAt.toISOString());
+      setStartTimeError(false);
       return;
     }
     setStartAt(base.toISOString());
+    setStartTimeError(false);
   };
 
   const handleSave = async () => {
-    if (!streak_length || streak_length < 1) {
-      setModal({
-        title: t("label.almostThere"),
-        message: t("store_manager.streakConfigure.streakLengthInvalid"),
-        buttons: [{ label: t("label.ok"), onPress: () => setModal(null) }],
-      });
+    const hasStreakLengthError = !streak_length || streak_length < 1;
+    const hasFixedPointsError = isFixed && (!fixed_points_per_day || fixed_points_per_day < 1);
+    const hasStartingPointsError = !isFixed && (!starting_points || starting_points < 1);
+    const hasIncrementError = !isFixed && (!increment_value || increment_value < 1);
+    const hasMaxDaysCapError = !!max_days_cap && !!streak_length && max_days_cap > streak_length;
+    setStreakLengthError(hasStreakLengthError);
+    setFixedPointsError(hasFixedPointsError);
+    setStartingPointsError(hasStartingPointsError);
+    setIncrementError(hasIncrementError);
+    setMaxDaysCapError(hasMaxDaysCapError);
+    if (hasStreakLengthError || hasFixedPointsError || hasStartingPointsError || hasIncrementError || hasMaxDaysCapError) return;
+
+    if (scheduleEnabled && start_at && new Date(start_at) < minActivationAt) {
+      setStartTimeError(true);
       return;
-    }
-    if (isFixed && (!fixed_points_per_day || fixed_points_per_day < 1)) {
-      setModal({
-        title: t("label.almostThere"),
-        message: t("store_manager.streakConfigure.fixedPointsInvalid"),
-        buttons: [{ label: t("label.ok"), onPress: () => setModal(null) }],
-      });
-      return;
-    }
-    if (!isFixed && (!starting_points || starting_points < 1)) {
-      setModal({
-        title: t("label.almostThere"),
-        message: t("store_manager.streakConfigure.startingPointsInvalid"),
-        buttons: [{ label: t("label.ok"), onPress: () => setModal(null) }],
-      });
-      return;
-    }
-    if (!isFixed && (!increment_value || increment_value < 1)) {
-      setModal({
-        title: t("label.almostThere"),
-        message: t("store_manager.streakConfigure.incrementInvalid"),
-        buttons: [{ label: t("label.ok"), onPress: () => setModal(null) }],
-      });
-      return;
-    }
-    if (scheduleEnabled) {
-      if (start_at && new Date(start_at) < minActivationAt) {
-        setModal({
-          title: t("label.almostThere"),
-          message: t("store_manager.streakConfigure.startTimeAfter", { time: minActivationAt.toLocaleString() }),
-          buttons: [{ label: t("label.ok"), onPress: () => setModal(null) }],
-        });
-        return;
-      }
     }
 
     setIsSubmitting(true);
     try {
       const startAtPayload = scheduleEnabled ? start_at : null;
-
-      // Derive end_date = start_at date + max_days_cap calendar days.
-      // This gives the user-facing calendar boundary used by the streak log card
-      // to distinguish "pre-program" days from "missed" days.
       const computeEndDate = (startIso: string | null, cap: number | null): string | null => {
         if (!startIso || !cap || cap < 1) return null;
         const d = new Date(startIso);
         d.setDate(d.getDate() + cap);
-        // Return as YYYY-MM-DD local date string
         const y = d.getFullYear();
         const m = String(d.getMonth() + 1).padStart(2, "0");
         const day = String(d.getDate()).padStart(2, "0");
@@ -274,11 +252,13 @@ export default function ConfigureStreaks() {
   const handleScheduleToggle = (enabled: boolean) => {
     if (enabled) {
       setScheduleEnabled(true);
+      setStartTimeError(false);
       if (!start_at) {
         setStartAt(minActivationAt.toISOString());
       }
     } else {
       setScheduleEnabled(false);
+      setStartTimeError(false);
       setStartAt(null);
       setShowStartDatePicker(false);
       setShowStartTimePicker(false);
@@ -286,11 +266,7 @@ export default function ConfigureStreaks() {
   };
 
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1 }}
-      className="bg-background dark:bg-[#111921]"
-      behavior={Platform.OS === "android" ? "height" : "padding"}
-    >
+    <SafeAreaView edges={["top", "left", "right"]} className="flex-1 bg-backgroundMuted dark:bg-[#111921]">
       <Modal
         visible={!!modal}
         onClose={() => setModal(null)}
@@ -379,9 +355,16 @@ export default function ConfigureStreaks() {
                 onChangeText={(v) => {
                   const parsed = parseFloat(v);
                   setFixedPointsPerDay(!isNaN(parsed) ? parsed : null);
+                  if (!isNaN(parsed) && parsed >= 1) setFixedPointsError(false);
                 }}
                 required
+                error={fixedPointsError}
               />
+              {fixedPointsError && (
+                <Text className="text-xs font-poppins text-red-500 dark:text-red-400 -mt-1">
+                  {t("store_manager.streakConfigure.fixedPointsInvalid")}
+                </Text>
+              )}
             </View>
           )}
 
@@ -396,9 +379,16 @@ export default function ConfigureStreaks() {
                   onChangeText={(v) => {
                     const parsed = parseFloat(v);
                     setStartingPoints(!isNaN(parsed) ? parsed : null);
+                    if (!isNaN(parsed) && parsed >= 1) setStartingPointsError(false);
                   }}
                   required
+                  error={startingPointsError}
                 />
+                {startingPointsError && (
+                  <Text className="text-xs font-poppins text-red-500 dark:text-red-400 -mt-1">
+                    {t("store_manager.streakConfigure.startingPointsInvalid")}
+                  </Text>
+                )}
               </View>
               <View className="flex-1 gap-y-2">
                 <TextField
@@ -409,9 +399,16 @@ export default function ConfigureStreaks() {
                   onChangeText={(v) => {
                     const parsed = parseFloat(v);
                     setIncrementValue(!isNaN(parsed) ? parsed : null);
+                    if (!isNaN(parsed) && parsed >= 1) setIncrementError(false);
                   }}
                   required
+                  error={incrementError}
                 />
+                {incrementError && (
+                  <Text className="text-xs font-poppins text-red-500 dark:text-red-400 -mt-1">
+                    {t("store_manager.streakConfigure.incrementInvalid")}
+                  </Text>
+                )}
               </View>
             </View>
           )}
@@ -422,9 +419,15 @@ export default function ConfigureStreaks() {
               placeholder={t("store_manager.streakConfigure.streakDaysPlaceholder")}
               keyboardType="numeric"
               value={streak_length ? String(streak_length) : ""}
-              onChangeText={(v) => setStreakLength(parseInt(v) || 0)}
+              onChangeText={(v) => { const n = parseInt(v) || 0; setStreakLength(n); if (n >= 1) setStreakLengthError(false); }}
               required
+              error={streakLengthError}
             />
+            {streakLengthError && (
+              <Text className="text-xs font-poppins text-red-500 dark:text-red-400 -mt-1">
+                {t("store_manager.streakConfigure.streakLengthInvalid")}
+              </Text>
+            )}
           </View>
 
           {/* Max days cap */}
@@ -434,8 +437,19 @@ export default function ConfigureStreaks() {
               placeholder={t("store_manager.streakConfigure.maxDaysPlaceholder")}
               keyboardType="numeric"
               value={max_days_cap ? String(max_days_cap) : ""}
-              onChangeText={(v) => setMaxDaysCap(v ? parseInt(v) : null)}
+              onChangeText={(v) => {
+                const n = v ? parseInt(v) : null;
+                setMaxDaysCap(n);
+                if (!n || !streak_length || n <= streak_length) setMaxDaysCapError(false);
+              }}
+              hint={streak_length && streak_length > 0 ? t("store_manager.streakConfigure.maxDaysCapHint", { max: streak_length }) : undefined}
+              error={maxDaysCapError}
             />
+            {maxDaysCapError && (
+              <Text className="text-xs font-poppins text-red-500 dark:text-red-400 -mt-1">
+                {t("store_manager.streakConfigure.maxDaysCapInvalid")}
+              </Text>
+            )}
           </View>
 
           {/* Reward description */}
@@ -509,6 +523,12 @@ export default function ConfigureStreaks() {
                   </TouchableOpacity>
                 </View>
 
+                {startTimeError && (
+                  <Text className="text-xs font-poppins text-red-500 dark:text-red-400 -mt-1">
+                    {t("store_manager.streakConfigure.startTimeAfter", { time: minActivationAt.toLocaleString() })}
+                  </Text>
+                )}
+
                 {showStartDatePicker && (
                   <DateTimePicker
                     value={activationAt}
@@ -581,6 +601,6 @@ export default function ConfigureStreaks() {
           </View>
         </View>
       </ScrollView>
-    </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }

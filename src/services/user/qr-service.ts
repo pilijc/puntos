@@ -196,6 +196,24 @@ export function setupQRListeners(userId: string, onQRTransaction: (transaction: 
   return { qrChannel, voucherChannel };
 }
 
+export async function initQrScreen(): Promise<{ userId: string; qrValue: string }> {
+  try {
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    if (sessionError || !session) throw new Error('Auth session missing!');
+
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) throw new Error('Auth session missing!');
+
+    try { 
+      await addAutoUser(); 
+    } catch (_) {}
+
+    return { userId: user.id, qrValue: getStaticQRCode(user.id) };
+  } catch (error) {
+    throw error;
+  }
+}
+
 export function cleanupQRChannels(channels: { qrChannel: any; voucherChannel: any } | null) {
   if (channels?.qrChannel) {
     supabase.removeChannel(channels.qrChannel);
@@ -270,6 +288,7 @@ export async function getUserTransactionHistory(userId: string): Promise<any[]> 
       positive: true,
       icon: '🛒', // Add icon for QR transactions
       transactionType: 'qr', // Add identifier for QR transactions
+      storeId: transaction.store_id, // Add storeId for navigation
     }));
   } catch (error) {
      return [];

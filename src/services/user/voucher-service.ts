@@ -130,12 +130,13 @@ export async function getUserVoucherTransactionHistory(userId: string): Promise<
       section: formatDateSection(transaction.created_at),
       type: 'earned',
       title: storeMap[transaction.store_id] || 'user.activity.unknownStore',
-      subtitle: 'user.activity.subtitle.voucherPoints',
+      subtitle: 'user.activity.voucherPoints',
       time: transaction.created_at,
       points: `+${transaction.points_earned}`,
       positive: true,
       icon: '🎫', 
-      transactionType: 'voucher',  
+      transactionType: 'voucher',
+      storeId: transaction.store_id, // Add storeId for navigation
     }));
   } catch (error) {
     console.error('Exception fetching voucher transaction history:', error);

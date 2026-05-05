@@ -1,12 +1,13 @@
 import React, { useCallback } from "react";
 import { FlatList, useColorScheme, Platform } from "react-native";
+import { Image } from "expo-image";
 import { View, Text, TouchableOpacity, SafeAreaView } from "@/tw";
 import { Modal } from "@/components/modal";
 import { useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { getAllStreaksByStoreId, endStreakProgram, publishStreakProgram, activateStreakProgram, deleteStreakProgram } from "@/services/store-manager/streak-service";
 import { Streak, StreakTabs } from "@/type/store-manager/streak";
-import { Flame, Plus } from "lucide-react-native";
+import { Plus } from "lucide-react-native";
 import { StreakCard } from "@/components/store_manager/streak/streak-card";
 import { StreakCardSkeleton } from "@/components/skeleton/store_manager/streak-skeleton";
 import { useStreakViewStore } from "@/store/store-manager/streak-store";
@@ -14,14 +15,15 @@ import { AppHeader } from "@/components/header";
 import { useTranslation } from "react-i18next";
 
 const WEB_MAX_WIDTH = 896;
+const WEB_TAB_PILL_STYLE = { flexGrow: 1, flexBasis: 120, minWidth: 0 };
 
 export default function ViewStreak() {
   const { t } = useTranslation();
   const PAGE_SIZE = 6;
   const router = useRouter();
-  const insets = useSafeAreaInsets();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
+  const isWeb = Platform.OS === "web";
   const { storeId } = useLocalSearchParams<{ storeId: string }>();
   const {
     activeTab,
@@ -212,7 +214,7 @@ export default function ViewStreak() {
 
       {Platform.OS === "web" ? (
         <View className="bg-backgroundMuted dark:bg-slate-950 px-4 pt-4 items-center">
-          <View className="w-full max-w-4xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-xl overflow-hidden flex-row">
+          <View className="w-full max-w-4xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-xl overflow-hidden flex-row flex-wrap p-1 gap-1">
             {StreakTabs.map((tab) => {
               const active = activeTab === tab.key;
               const count =
@@ -221,8 +223,9 @@ export default function ViewStreak() {
               return (
                 <TouchableOpacity
                   key={tab.key}
+                  style={WEB_TAB_PILL_STYLE}
                   className={[
-                    "flex-1 py-3 items-center flex-row justify-center gap-1.5 rounded-xl mx-1 my-1",
+                    "py-3 px-2 items-center flex-row justify-center gap-1.5 rounded-xl",
                     active && "bg-primary",
                   ]
                     .filter(Boolean)
@@ -233,15 +236,16 @@ export default function ViewStreak() {
                   <Text
                     className={
                       active
-                        ? "text-xs font-poppins-bold text-white"
-                        : "text-xs font-poppins-medium text-slate-400 dark:text-slate-500"
+                        ? "min-w-0 text-xs font-poppins-bold text-white"
+                        : "min-w-0 text-xs font-poppins-medium text-slate-400 dark:text-slate-500"
                     }
+                    numberOfLines={1}
                   >
                     {t(`store_manager.streak.tabs.${tab.key}`)}
                   </Text>
                   {count > 0 && (
-                    <View className="rounded-full min-w-[18px] items-center bg-white/20">
-                      <Text className="text-[10px] font-poppins-semibold text-white">{count}</Text>
+                    <View className={`rounded-full min-w-[18px] items-center px-1.5 ${active ? "bg-white/20" : "bg-slate-100 dark:bg-slate-800"}`}>
+                      <Text className={`text-[10px] font-poppins-semibold ${active ? "text-white" : "text-slate-500 dark:text-slate-400"}`}>{count}</Text>
                     </View>
                   )}
                 </TouchableOpacity>
@@ -300,25 +304,33 @@ export default function ViewStreak() {
           <StreakCardSkeleton />
         </View>
       ) : tabStreaks.length === 0 ? (
-        <View className="flex-1 items-center justify-center px-8 gap-y-2">
-          <View className="w-20 h-20 rounded-xl items-center justify-center">
-            <Flame size={36} color="gray" />
-          </View>
-          <View className="items-center gap-y-1 -mt-4">
-            <Text className="text-sm font-poppins-semibold text-textMuted">
-              {activeTab === "active"
-                ? t("store_manager.streak.emptyActiveTitle")
-                : activeTab === "upcoming"
-                ? t("store_manager.streak.emptyUpcomingTitle")
-                : t("store_manager.streak.emptyEndedTitle")}
-            </Text>
-            <Text className="text-sm font-poppins text-textMuted text-center">
-              {activeTab === "active"
-                ? t("store_manager.streak.emptyActiveBody")
-                : activeTab === "upcoming"
-                ? t("store_manager.streak.emptyUpcomingBody")
-                : t("store_manager.streak.emptyEndedBody")}
-            </Text>
+        <View className={isWeb ? "flex-1 px-4 pb-4 items-center mt-4" : "flex-1 px-4 pb-4 mt-4"}>
+          <View
+            className={`w-full bg-white dark:bg-darkBackground rounded-xl overflow-hidden items-center justify-center ${
+              isWeb ? "max-w-4xl px-6 py-12 gap-y-3" : "px-5 py-10 gap-y-3"
+            }`}
+          >
+            <Image
+              source={require("@/assets/images/found.png")}
+              style={{ width: Platform.OS === "web" ? 160 : 120, height: Platform.OS === "web" ? 160 : 120 }}
+              contentFit="contain"
+            />
+           <View className="items-center justify-center gap-y-1">
+            <Text className="text-sm font-poppins-semibold text-slate-600 dark:text-slate-300 text-center">
+                {activeTab === "active"
+                  ? t("store_manager.streak.emptyActiveTitle")
+                  : activeTab === "upcoming"
+                  ? t("store_manager.streak.emptyUpcomingTitle")
+                  : t("store_manager.streak.emptyEndedTitle")}
+              </Text>
+              <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500 text-center">
+                {activeTab === "active"
+                  ? t("store_manager.streak.emptyActiveBody")
+                  : activeTab === "upcoming"
+                  ? t("store_manager.streak.emptyUpcomingBody")
+                  : t("store_manager.streak.emptyEndedBody")}
+              </Text>
+           </View>
           </View>
         </View>
       ) : (

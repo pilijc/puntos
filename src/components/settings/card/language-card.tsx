@@ -4,6 +4,7 @@ import { View, Text, TouchableOpacity } from "@/tw";
 import { Languages, Check, ChevronUp, ChevronDown } from "lucide-react-native";
 import { useTranslation } from "react-i18next";
 import { useLanguageStore } from "@/store/language-store";
+import CountryFlag from 'react-native-country-flag';
 
 export const LanguageCard = () => {
     const [isOpen, setIsOpen] = useState(false);
@@ -52,9 +53,14 @@ export const LanguageCard = () => {
                         className="flex-row items-center justify-between py-3 ml-12"
                         activeOpacity={0.6}
                     >
-                        <Text className={`text-sm font-poppins-medium ${language === 'en' ? 'text-primary' : 'text-textSecondary dark:text-darkTextSecondary'}`}>
-                            English
-                        </Text>
+                        <View className="flex-row items-center gap-x-2">
+                            <View className="w-6 h-6 rounded-full overflow-hidden items-center justify-center border border-slate-100 dark:border-neutral-700">
+                                <CountryFlag isoCode="gb" size={20} />
+                            </View>
+                            <Text className={`text-sm font-poppins-medium ${language === 'en' ? 'text-primary' : 'text-textSecondary dark:text-darkTextSecondary'}`}>
+                                English
+                            </Text>
+                        </View>
                         {language === 'en' && (
                             <Check size={12} color="#FF6600" />
                         )}
@@ -66,9 +72,14 @@ export const LanguageCard = () => {
                         className="flex-row items-center justify-between py-3 ml-12"
                         activeOpacity={0.6}
                     >
-                        <Text className={`text-sm font-poppins-medium ${language === 'ja' ? 'text-primary' : 'text-textSecondary dark:text-darkTextSecondary'}`}>
-                            日本語
-                        </Text>
+                        <View className="flex-row items-center gap-x-2">
+                            <View className="w-6 h-6 rounded-full overflow-hidden items-center justify-center border border-slate-100 dark:border-neutral-700">
+                                <CountryFlag isoCode="jp" size={20} />
+                            </View>
+                            <Text className={`text-sm font-poppins-medium ${language === 'ja' ? 'text-primary' : 'text-textSecondary dark:text-darkTextSecondary'}`}>
+                                日本語
+                            </Text>
+                        </View>
                         {language === 'ja' && (
                             <Check size={12} color="#FF6600" />
                         )}

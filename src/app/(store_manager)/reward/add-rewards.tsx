@@ -5,14 +5,14 @@ import {
   Platform,
   ScrollView,
 } from "react-native";
-import { View, Text, TouchableOpacity, TextInput } from "@/tw";
+import { View, Text, TouchableOpacity, TextInput, SafeAreaView } from "@/tw";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as ImagePicker from "expo-image-picker";
 import { Image } from "expo-image";
 import { useRewardStore } from "@/store/store-manager/reward-store";
-import { createReward, getRewardById, updateReward, uploadRewardImage } from "@/services/store-manager/reward-service";
+import { getRewardById, upsertReward, uploadRewardImage } from "@/services/store-manager/reward-service";
 import { Button } from "@/components/button";
 import { Modal, type ModalButton } from "@/components/modal";
 import { AppHeader } from "@/components/header";
@@ -40,6 +40,14 @@ export default function Rewards() {
     setStock,
     image_url,
     setImageUrl,
+    titleError,
+    setTitleError,
+    imageError,
+    setImageError,
+    pointsCostError,
+    setPointsCostError,
+    stockError,
+    setStockError,
     reset,
   } = useRewardStore();
 	const [modal, setModal] = useState<{
@@ -133,6 +141,7 @@ export default function Rewards() {
       const mimeType = asset.mimeType ?? "image/jpeg";
       const publicUrl = await uploadRewardImage(storeId, asset.base64, mimeType);
       setImageUrl(publicUrl);
+      setImageError(false);
     } catch (err: any) {
       setModal({
         title: t("label.oops"),
@@ -145,38 +154,31 @@ export default function Rewards() {
   };
 
   const handleSave = async () => {
-    if (!title.trim() || !description?.trim() || !image_url) {
-      setModal({
-        title: t("label.almostThere"),
-        message: t("store_manager.rewardForm.fillRequired"),
-        buttons: [{ label: t("label.ok"), onPress: () => setModal(null), variant: "secondary" }],
-      });
-      return;
-    }
+    const hasTitleError = !title.trim();
+    const hasImageError = !image_url;
+    const hasPointsCostError = !points_cost || points_cost <= 0;
+    const hasStockError = !stock || stock <= 0;
+    setTitleError(hasTitleError);
+    setImageError(hasImageError);
+    setPointsCostError(hasPointsCostError);
+    setStockError(hasStockError);
+    if (hasTitleError || hasImageError || hasPointsCostError || hasStockError) return;
     setIsSubmitting(true);
     try {
-      if (isEditMode && rewardId) {
-        await updateReward(storeId, rewardId, {
-          title: title.trim(),
-          description: description.trim(),
-          points_cost,
-          stock,
-          image_url,
-        });
-      } else {
-        await createReward({
-          store_id: storeId,
-          title: title.trim(),
-          description: description.trim(),
-          points_cost,
-          image_url,
-          stock,
-        });
-      }
+      await upsertReward({
+        ...(isEditMode && rewardId ? { id: rewardId } : {}),
+        store_id: storeId,
+        title: title.trim(),
+        description: description.trim(),
+        points_cost,
+        stock,
+        image_url,
+        is_active: true,
+      });
       setModal({
         title: t("label.success"),
         message: isEditMode ? t("store_manager.rewardForm.successUpdate") : t("store_manager.rewardForm.successCreate"),
-        buttons: [{ label: t("label.ok"), onPress: () => setModal(null), variant: "secondary" }],
+        buttons: [{ label: t("label.ok"), onPress: () => setModal(null), variant: "primary" }],
       });
       reset();
       router.push({ pathname: "/(store_manager)/reward", params: { storeId } });
@@ -192,11 +194,7 @@ export default function Rewards() {
   };
 
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1 }}
-      className="bg-background dark:bg-[#111921]"
-      behavior={Platform.OS === "android" ? "height" : "padding"}
-    >
+    <SafeAreaView edges={["top", "left", "right"]} className="flex-1 bg-backgroundMuted dark:bg-[#111921]">
 			<Modal
 				visible={!!modal}
 				onClose={() => setModal(null)}
@@ -238,9 +236,15 @@ export default function Rewards() {
             label={t("store_manager.rewardForm.title")}
             placeholder={t("store_manager.rewardForm.titlePlaceholder")}
             value={title}
-            onChangeText={setTitle}
+            onChangeText={(v) => { setTitle(v); if (v.trim()) setTitleError(false); }}
             required
+            error={titleError}
           />
+          {titleError && (
+            <Text className="text-xs font-poppins text-red-500 dark:text-red-400 -mt-3">
+              {t("store_manager.rewardForm.titleRequiredInline")}
+            </Text>
+          )}
 
           <View className="flex-row gap-x-3">
             <View className="flex-1">
@@ -249,9 +253,15 @@ export default function Rewards() {
                 placeholder="0"
                 keyboardType="numeric"
                 value={points_cost ? String(points_cost) : ""}
-                onChangeText={(v) => setPointsCost(parseInt(v, 10) || 0)}
+                onChangeText={(v) => { const n = parseInt(v, 10) || 0; setPointsCost(n); if (n > 0) setPointsCostError(false); }}
                 required
+                error={pointsCostError}
               />
+              {pointsCostError && (
+                <Text className="text-xs font-poppins text-red-500 dark:text-red-400 mt-1">
+                  {t("store_manager.rewardForm.pointsCostRequiredInline")}
+                </Text>
+              )}
             </View>
             <View className="flex-1">
               <TextField
@@ -259,9 +269,15 @@ export default function Rewards() {
                 placeholder="0"
                 keyboardType="numeric"
                 value={stock ? String(stock) : ""}
-                onChangeText={(v) => setStock(parseInt(v, 10) || 0)}
+                onChangeText={(v) => { const n = parseInt(v, 10) || 0; setStock(n); if (n > 0) setStockError(false); }}
                 required
+                error={stockError}
               />
+              {stockError && (
+                <Text className="text-xs font-poppins text-red-500 dark:text-red-400 mt-1">
+                  {t("store_manager.rewardForm.stockRequiredInline")}
+                </Text>
+              )}
             </View>
           </View>
 
@@ -272,14 +288,14 @@ export default function Rewards() {
               </Text>
             </View>
             <TextInput
-							className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 text-base font-poppins text-slate-900 dark:text-slate-100 pr-12"
-							placeholder={t("store_manager.rewardForm.descriptionPlaceholder")}
+              className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 text-base font-poppins text-slate-900 dark:text-slate-100 pr-12"
+              placeholder={t("store_manager.rewardForm.descriptionPlaceholder")}
               placeholderTextColor="#94A3B8"
               multiline
               numberOfLines={4}
               value={description}
               onChangeText={setDescription}
-							style={{ textAlignVertical: "top", minHeight: 88, paddingLeft: 12, fontSize: 13, paddingTop: 12 }}
+              style={{ textAlignVertical: "top", minHeight: 88, paddingLeft: 12, fontSize: 13, paddingTop: 12 }}
             />
           </View>
 
@@ -294,7 +310,7 @@ export default function Rewards() {
               onPress={pickImage}
               activeOpacity={0.7}
               disabled={isUploadingImage}
-              className="w-full h-55 rounded-xl border border-dashed border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 items-center justify-center gap-y-1"
+              className={`w-full h-55 rounded-xl border border-dashed bg-white dark:bg-slate-900 items-center justify-center gap-y-1 ${imageError ? "border-red-500 dark:border-red-500" : "border-slate-300 dark:border-slate-700"}`}
             >
               {isUploadingImage ? (
                 <>
@@ -318,6 +334,11 @@ export default function Rewards() {
                 </>
               )}
             </TouchableOpacity>
+            {imageError && (
+              <Text className="text-xs font-poppins text-red-500 dark:text-red-400">
+                {t("store_manager.rewardForm.imageRequiredInline")}
+              </Text>
+            )}
           </View>
 
           <View style={{ paddingBottom: insets.bottom }}>
@@ -332,7 +353,6 @@ export default function Rewards() {
           </View>
         </View>
       </ScrollView>
-
-    </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }

@@ -1,9 +1,9 @@
-import React from "react";
+﻿import React from "react";
 import { KeyboardTypeOptions } from "react-native";
 import { View, Text, TextInput } from "@/tw";
 
 interface TextFieldProps {
-  label: string;
+  label?: string;
   value: string;
   onChangeText: (value: string) => void;
   placeholder?: string;
@@ -16,6 +16,7 @@ interface TextFieldProps {
   rightAccessory?: React.ReactNode;
   secureTextEntry?: boolean;
   editable?: boolean;
+  error?: boolean;
 }
 
 export function TextField({
@@ -32,14 +33,17 @@ export function TextField({
   rightAccessory,
   secureTextEntry = false,
   editable = true,
+  error = false,
 }: TextFieldProps) {
   const hasRight = !!rightAccessory;
 
   return (
     <View className="gap-y-1.5">
-      <Text className="text-sm font-poppins text-slate-700 dark:text-slate-300">
-        {label} {required && <Text className="text-sm font-poppins text-red-500 dark:text-red-400 -mt-1">*</Text>}
-      </Text>
+      {!!label && (
+        <Text className="text-sm font-poppins text-slate-700 dark:text-slate-300">
+          {label} {required && <Text className="text-sm font-poppins text-red-500 dark:text-red-400 -mt-1">*</Text>}
+        </Text>
+      )}
       {hint && (
         <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500 -mt-1">
           {hint}
@@ -47,7 +51,7 @@ export function TextField({
       )}
       <View className="relative justify-center">
         <TextInput
-          className={`w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 text-base font-poppins text-slate-900 dark:text-slate-100 ${hasRight ? "pr-11" : "pr-4"
+          className={`w-full rounded-xl border bg-white dark:bg-slate-900 px-4 text-base font-poppins text-slate-900 dark:text-slate-100 ${error ? "border-red-500 dark:border-red-500" : "border-slate-200 dark:border-slate-700"} ${hasRight ? "pr-11" : "pr-4"
             }`}
           placeholder={placeholder}
           placeholderTextColor="#94A3B8"

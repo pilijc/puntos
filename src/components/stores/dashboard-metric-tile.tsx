@@ -16,7 +16,7 @@ export const DashboardMetricTile: React.FC<Props> = ({
     compact,
 }) => {
     const isDark = useColorScheme() === "dark";
-    const IconComponent = icon as React.ElementType;
+    const IconComponent = icon as React.ElementType | undefined;
 
     return (
         <View className={`bg-white dark:bg-darkBackgroundCard rounded-xl px-4 py-3 flex-1 elevation-1 border border-transparent dark:border-darkBorder justify-center${compact ? ' py-2' : ''}`}>
@@ -28,12 +28,14 @@ export const DashboardMetricTile: React.FC<Props> = ({
             </Text>
 
             <View className="flex-row items-center gap-[8px] mt-1">
-                <View style={{ marginTop: -2 }}>
-                    <IconComponent
-                        size={compact ? 18 : 22}
-                        color={isDark ? "#A3A3A3" : "#94A3B8"}
-                    />
-                </View>
+                {IconComponent && (
+                    <View style={{ marginTop: -2 }}>
+                        <IconComponent
+                            size={compact ? 18 : 22}
+                            color={isDark ? "#A3A3A3" : "#94A3B8"}
+                        />
+                    </View>
+                )}
 
                 {loading ? (
                     <DashboardMetricTileSkeleton />

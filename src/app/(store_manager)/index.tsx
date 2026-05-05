@@ -1,13 +1,10 @@
-import React, { useState, useCallback, useMemo, useRef } from "react";
-import { RefreshControl, Platform, ScrollView as RNScrollView } from "react-native";
+import React from "react";
+import { RefreshControl, ScrollView as RNScrollView } from "react-native";
 import { ScrollView, View, Text, SafeAreaView, TouchableOpacity } from "@/tw";
-import { MapPin, Users, ScanLine, ChevronLeft, ChevronRight } from "lucide-react-native";
-import { useFocusEffect } from "expo-router";
+import { Users, ScanLine, ChevronLeft, ChevronRight } from "lucide-react-native";
 import { useTranslation } from "react-i18next";
 
-import { useManagerStoresStore } from "@/store/manager-stores-store";
-import { useStoreDashboardMetrics } from "@/hooks/store-manager/use-store-metrics";
-import { getLast7Labels, getWeekDateRange, getLast14Labels, get14DayDateRange } from "@/utils/date-helpers";
+import { useStoreDashboard } from "@/hooks/store-manager/use-store-metrics";
 
 import { StorePickerDropdown } from "@/components/stores/store-picker-dropdown";
 import { DashboardMetricTile } from "@/components/stores/dashboard-metric-tile";
@@ -18,77 +15,31 @@ import { DashboardDetailedMetrics } from "@/components/stores/dashboard-detailed
 
 export default function StoreManagerDashboard() {
   const { t: translate } = useTranslation();
-  const metricScrollRef = useRef<RNScrollView>(null);
   const {
+    isWeb,
     stores,
-    isFetching: refreshing,
-    fetchStores: refresh,
-  } = useManagerStoresStore();
-
-  const [selectedStoreId, setSelectedStoreId] = useState<number | null>(null);
-  const [isDropdownVisible, setDropdownVisible] = useState(false);
-  const isWeb = Platform.OS === "web";
-
-  useFocusEffect(
-    useCallback(() => {
-      const task = setTimeout(() => refresh(true), 0);
-      return () => clearTimeout(task);
-    }, [refresh]),
-  );
-
-  React.useEffect(() => {
-    if (!selectedStoreId && stores.length > 0) {
-      setSelectedStoreId(stores[0].id);
-    }
-  }, [stores, selectedStoreId]);
-
-  const selectedStore =
-    stores.find((s) => s.id === selectedStoreId) || stores[0];
-
-  const {
+    selectedStore,
+    setSelectedStoreId,
+    isDropdownVisible,
+    setDropdownVisible,
+    refreshing,
+    handleRefresh,
     activeUsers,
     todayTransactions,
-    weeklyActivity,
     retention,
     stampBuckets,
     stampMaxStamps,
     recentTransactions,
-    loading: metricsLoading,
-    refresh: refreshMetrics,
-  } = useStoreDashboardMetrics(
-    selectedStore?.id ?? 0
-  );
-
-  const handleRefresh = useCallback(async () => {
-    await Promise.all([refresh(true), refreshMetrics(false)]);
-  }, [refresh, refreshMetrics]);
-
-  const dayLabels = useMemo(() => isWeb ? getLast14Labels() : getLast7Labels(), [isWeb]);
-  const weekRange = useMemo(() => isWeb ? get14DayDateRange() : getWeekDateRange(), [isWeb]);
-
-  const displayActivity = useMemo(() => {
-    if (isWeb) return weeklyActivity;
-    // On mobile, just show the last 7 days for all metrics
-    return {
-      scans: weeklyActivity.scans.slice(-7),
-      unique_visitors: weeklyActivity.unique_visitors.slice(-7),
-      redemptions: weeklyActivity.redemptions.slice(-7),
-      new_members: weeklyActivity.new_members.slice(-7),
-      points_earned: weeklyActivity.points_earned.slice(-7),
-    };
-  }, [weeklyActivity, isWeb]);
-
-  const [containerWidth, setContainerWidth] = useState(0);
-  const [scrollIndex, setScrollIndex] = useState(0);
-  const ITEM_GAP = 16;
-  const TILE_WIDTH = 260 + ITEM_GAP; 
-
-  const handleMetricScroll = (direction: 'left' | 'right') => {
-    let newIndex = direction === 'left' ? scrollIndex - 1 : scrollIndex + 1;
-    newIndex = Math.max(0, Math.min(newIndex, 3)); // Max 4 tiles, so max index 3
-    setScrollIndex(newIndex);
-    metricScrollRef.current?.scrollTo({ x: newIndex * TILE_WIDTH, animated: true });
-  };
+    metricsLoading,
+    dayLabels,
+    weekRange,
+    displayActivity,
+    containerWidth,
+    setContainerWidth,
+    scrollIndex,
+    handleMetricScroll,
+    metricScrollRef,
+  } = useStoreDashboard();
 
   return (
     <SafeAreaView
@@ -126,7 +77,7 @@ export default function StoreManagerDashboard() {
       >
 
         {selectedStore ? (
-          <View className={`w-full max-w-7xl mx-auto ${isWeb ? 'px-8 pt-6' : 'px-5 pt-2'}`}>
+          <View className={`w-full max-w-7xl mx-auto ${isWeb ? (containerWidth > 600 ? 'px-8 pt-6' : 'px-4 pt-4') : 'px-5 pt-2'}`}>
 
             {isWeb ? (
               /* ─────────── WEB LAYOUT ─────────── */
@@ -152,7 +103,7 @@ export default function StoreManagerDashboard() {
                     style={{ width: '100%' }}
                     contentContainerStyle={containerWidth >= 1100 ? { flex: 1, gap: 16 } : { gap: 16, paddingRight: 40 }}
                   >
-                    <View style={containerWidth < 1100 ? { width: 260 } : { flex: 1 }}>
+                    <View style={containerWidth < 1100 ? { width: Math.min(240, Math.max(containerWidth - 32, 160)) } : { flex: 1 }}>
                       <DashboardMetricTile
                         label={`${translate("store_manager.dashboard.metrics.inStore", "Active Users")} (${selectedStore?.radius ?? 100}m)`}
                         value={activeUsers}
@@ -161,7 +112,7 @@ export default function StoreManagerDashboard() {
                         compact={containerWidth < 1200}
                       />
                     </View>
-                    <View style={containerWidth < 1100 ? { width: 260 } : { flex: 1 }}>
+                    <View style={containerWidth < 1100 ? { width: Math.min(240, Math.max(containerWidth - 32, 160)) } : { flex: 1 }}>
                       <DashboardMetricTile
                         label={translate("store_manager.dashboard.metrics.totalScanned", "Today's Scans")}
                         value={todayTransactions}
@@ -170,7 +121,7 @@ export default function StoreManagerDashboard() {
                         compact={containerWidth < 1200}
                       />
                     </View>
-                    <View style={containerWidth < 1100 ? { width: 260 } : { flex: 1 }}>
+                    <View style={containerWidth < 1100 ? { width: Math.min(240, Math.max(containerWidth - 32, 160)) } : { flex: 1 }}>
                       <DashboardMetricTile
                         label={translate("store_manager.dashboard.metrics.returning", "Returning Users")}
                         value={`${retention.returningPercent}%`}
@@ -179,7 +130,7 @@ export default function StoreManagerDashboard() {
                         compact={containerWidth < 1200}
                       />
                     </View>
-                    <View style={containerWidth < 1100 ? { width: 260 } : { flex: 1 }}>
+                    <View style={containerWidth < 1100 ? { width: Math.min(240, Math.max(containerWidth - 32, 160)) } : { flex: 1 }}>
                       <DashboardMetricTile
                         label={translate("store_manager.dashboard.metrics.newUsers", "New Users")}
                         value={`${retention.newPercent}%`}
@@ -225,13 +176,13 @@ export default function StoreManagerDashboard() {
                     style={containerWidth > 950 ? { flex: 1 } : { width: '100%' }}
                     className="flex-col gap-6"
                   >
-                    <View style={{ height: 240 }}>
+                    <View style={containerWidth > 950 ? { height: 240 } : { minHeight: 180 }}>
                       <DashboardRetentionChart
                         data={retention}
                         loading={metricsLoading}
                       />
                     </View>
-                    <View style={{ height: 240 }}>
+                    <View style={containerWidth > 950 ? { height: 240 } : { minHeight: 180 }}>
                       <DashboardStampDistribution
                         buckets={stampBuckets}
                         maxStamps={stampMaxStamps}
@@ -250,9 +201,9 @@ export default function StoreManagerDashboard() {
               </>
             ) : (
               /* ─────────── MOBILE LAYOUT ─────────── */
-              <>
+              <View className="flex-col gap-[14px]">
                 {/* Top row: Retention (50%) | Metrics stacked (50%) */}
-                <View className="flex-row gap-[10px] mb-[14px]">
+                <View className="flex-row gap-[10px]">
                   <View className="flex-1">
                     <DashboardRetentionChart
                       data={retention}
@@ -301,7 +252,7 @@ export default function StoreManagerDashboard() {
                   transactions={recentTransactions}
                   loading={metricsLoading}
                 />
-              </>
+              </View>
             )}
           </View>
         ) : (

@@ -35,17 +35,19 @@ export async function getAdminSession(): Promise<AdminInfo | null> {
 export async function getDashboardData(): Promise<DashboardData> {
   const [{ data: userData }, { data: storeData }, { data: subData }] = await Promise.all([
     supabase
-      .from("users")
+      .from("users_with_email")
       .select("*, user_roles(role_id)")
       .order("id", { ascending: true }),
     supabase
       .from("stores")
-      .select("id, owner_id, status, is_active, created_at, updated_at, users!owner_id ( name )")
+      .select("id, name, owner_id, status, is_active, created_at, updated_at, users!owner_id ( name )")
       .order("created_at", { ascending: false }),
     supabase
       .from("manager_subscriptions")
       .select("id, owner_id, payment_status, updated_at, current_period_start, created_at"),
   ]);
+
+
 
   const ROLE_ID_TO_TYPE: Record<number, string> = {
     1: "super_admin",
@@ -64,6 +66,7 @@ export async function getDashboardData(): Promise<DashboardData> {
       ...u,
       role_type,
       user_roles: undefined, // remove nested object
+      last_sign_in_at: u.last_sign_in_at || u.updated_at || u.created_at,
       avatar: u.avatar_url
         ? u.avatar_url.startsWith("http")
           ? u.avatar_url

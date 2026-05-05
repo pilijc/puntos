@@ -23,6 +23,7 @@
     "@react-native-google-signin/google-signin": "^16.1.1",
     "@rn-primitives/dialog": "^1.2.0",
     "@rnmapbox/maps": "^10.2.10",
+    "@supabase/phoenix": "^0.4.1",
     "@supabase/supabase-js": "^2.96.0",
     "@tailwindcss/postcss": "^4.1.18",
     "@turf/circle": "^7.3.4",

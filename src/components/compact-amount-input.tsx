@@ -58,7 +58,7 @@ export default function CompactAmountInput({
           <Text className="text-[10px] font-poppins-semibold text-neutral-400 dark:text-darkTextSoft uppercase tracking-widest mb-1.5">
             {translate("frontdesk.transaction.transactionModal.title")}
           </Text>
-          <View className="relative -mt-6">
+          <View className="relative pt-1.5">
             <TextField
               label=""
               value={value}
@@ -101,7 +101,7 @@ export default function CompactAmountInput({
             <Text className="text-xs font-poppins-semibold text-neutral-400 dark:text-darkTextSoft uppercase tracking-widest mb-2">
               {translate("frontdesk.transaction.transactionModal.title")}
             </Text>
-            <View className="relative -mt-4">
+            <View className="relative pt-1.5">
               <TextField
                 label=""
                 value={value}

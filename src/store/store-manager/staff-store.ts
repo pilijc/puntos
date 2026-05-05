@@ -9,6 +9,8 @@ export const useStaffStore = create<StaffFormState>((set) => ({
   isSubmitting: false,
   showConfirm: false,
   modal: null,
+  nameError: false,
+  emailError: false,
 
   setName: (name) => set({ name }),
   setEmail: (email) => set({ email }),
@@ -17,6 +19,8 @@ export const useStaffStore = create<StaffFormState>((set) => ({
   setIsSubmitting: (isSubmitting) => set({ isSubmitting }),
   setShowConfirm: (showConfirm) => set({ showConfirm }),
   setModal: (modal) => set({ modal }),
+  setNameError: (nameError) => set({ nameError }),
+  setEmailError: (emailError) => set({ emailError }),
   resetStaff: () =>
     set({
       name: "",
@@ -26,6 +30,8 @@ export const useStaffStore = create<StaffFormState>((set) => ({
       isSubmitting: false,
       showConfirm: false,
       modal: null,
+      nameError: false,
+      emailError: false,
     }),
 }));
 

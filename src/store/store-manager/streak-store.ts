@@ -15,6 +15,11 @@ export const useStreakStore = create<StreakState>((set) => ({
   showStartTimePicker: false,
   isSubmitting: false,
   modal: null,
+  streakLengthError: false,
+  fixedPointsError: false,
+  startingPointsError: false,
+  incrementError: false,
+  maxDaysCapError: false,
 
   setPointsMode: (value: PointsMode) => set({ points_mode: value }),
   setFixedPointsPerDay: (value) => set({ fixed_points_per_day: value }),
@@ -29,6 +34,11 @@ export const useStreakStore = create<StreakState>((set) => ({
   setShowStartTimePicker: (value) => set({ showStartTimePicker: value }),
   setIsSubmitting: (value) => set({ isSubmitting: value }),
   setModal: (value) => set({ modal: value }),
+  setStreakLengthError: (value) => set({ streakLengthError: value }),
+  setFixedPointsError: (value) => set({ fixedPointsError: value }),
+  setStartingPointsError: (value) => set({ startingPointsError: value }),
+  setIncrementError: (value) => set({ incrementError: value }),
+  setMaxDaysCapError: (value) => set({ maxDaysCapError: value }),
 
   reset: () => set({
     points_mode: "fixed",
@@ -44,6 +54,11 @@ export const useStreakStore = create<StreakState>((set) => ({
     showStartTimePicker: false,
     isSubmitting: false,
     modal: null,
+    streakLengthError: false,
+    fixedPointsError: false,
+    startingPointsError: false,
+    incrementError: false,
+    maxDaysCapError: false,
   }),
 }));
 
