@@ -17,6 +17,7 @@ import {
 	getSubscriptionPlans,
 	normalizeSubscriptionId,
 	cancelManagerSubscription,
+	subscribeToManagerSubscriptionRealtime,
 	type ManagerSubscriptionPaymentRow,
 } from "@/services/store-manager/subscription-service";
 
@@ -118,6 +119,47 @@ export default function SubscriptionScreen() {
 			cancelled = true;
 		};
 	}, []);
+
+	// Realtime refresh when subscription/payment rows change.
+	useEffect(() => {
+		if (!ownerId) return;
+
+		let cancelled = false;
+		let refreshTimer: any = null;
+
+		const scheduleRefresh = () => {
+			if (cancelled) return;
+			if (refreshTimer) clearTimeout(refreshTimer);
+			// small debounce to collapse bursty events
+			refreshTimer = setTimeout(async () => {
+				try {
+					const [mgr, paymentRows] = await Promise.all([
+						getManagerSubscription(ownerId),
+						getManagerSubscriptionPayments(ownerId),
+					]);
+					if (cancelled) return;
+					useStoreManagerSubscriptionStore.setState({
+						managerRow: mgr,
+						invoices: paymentRows,
+						loadingInvoices: false,
+					});
+				} catch (e) {
+					if (!cancelled) console.warn("[subscription] realtime refresh failed:", e);
+				}
+			}, 250);
+		};
+
+		const unsubscribe = subscribeToManagerSubscriptionRealtime({
+			ownerId,
+			onChange: scheduleRefresh,
+		});
+
+		return () => {
+			cancelled = true;
+			if (refreshTimer) clearTimeout(refreshTimer);
+			unsubscribe();
+		};
+	}, [ownerId]);
 
 	const { basicPlan, proPlan } = useMemo(() => pickBasicAndProPlans(plans), [plans]);
 
