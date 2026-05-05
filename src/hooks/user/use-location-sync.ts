@@ -10,10 +10,10 @@ import { useLocationStore } from '@/store/user/location-store';
 const LOCATION_EXPIRY_MS = 3 * 60 * 1000;
 
 //how often we push latest gps coords to the db while the app is active
-const LIVE_SYNC_INTERVAL_MS = 1000;
+const LIVE_SYNC_INTERVAL_MS = 30000;
 
 // Avoid rewriting the same coordinate if the provider emits a duplicate fix.
-const MIN_SYNC_DISTANCE_METERS = 1;
+const MIN_SYNC_DISTANCE_METERS = 30;
 
 const LAST_SYNC_KEY = 'location_last_sync_time';
 

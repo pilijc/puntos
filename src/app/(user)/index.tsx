@@ -20,7 +20,6 @@ import { storeIconKey } from "@/type/user/discover";
 import { useTranslation } from "react-i18next";
 import { useLanguageStore } from "@/store/language-store";
 import { useProfile } from "@/hooks/user/use-profile";
-import { isLocationManuallyDisabled } from "@/services/user/location-preference-service";
 import { X } from "lucide-react-native";
 import { MapControlButtons } from "@/components/map/map-control-buttons";
 
@@ -111,7 +110,7 @@ export default function Discover() {
   const [localizedMapStyleJSON, setLocalizedMapStyleJSON] = useState<string | null>(null);
   const { t: translate } = useTranslation();
   const language = useLanguageStore((s) => s.language);
-  const { user, preferences, updatePreferences } = useProfile();
+  const { preferences } = useProfile();
 
   const discoverMoreStores = useMemo(() => {
     if (!location) return [];
@@ -194,7 +193,7 @@ export default function Discover() {
           );
           if (storeIds.length === 0) return;
   
-          const allStores = (await getStores()) ?? [];
+          const allStores = useStoreStore.getState().stores;
           const matchedStores = allStores.filter((s) =>
             storeIds.includes(Number(s.id)),
           ) as Store[];
@@ -252,19 +251,13 @@ export default function Discover() {
     const startLocationWatch = async () => {
       stopLocationWatch();
 
-      if (user?.id && !preferences.location_enabled) {
-        const manuallyDisabled = await isLocationManuallyDisabled(user.id);
-        if (manuallyDisabled) return;
+      if (!preferences.location_enabled) {
+        setLocation(null);
+        return;
       }
 
       const initial = await getCurrentLocation();
-      if (!initial) return;
-
-      if (user?.id && !preferences.location_enabled) {
-        await updatePreferences({ location_enabled: true });
-      }
-
-      if (!cancelled) {
+      if (initial && !cancelled) {
         setLocation(initial);
       }
 
@@ -284,6 +277,9 @@ export default function Discover() {
                 animationMode: "easeTo",
               });
             }
+
+            // Skip push notification geofencing if user has disabled location settings
+            if (!preferences?.location_enabled) return;
 
             const { latitude: uLat, longitude: uLon } = position;
             const { mutedStoreIds, isMutedStoresHydrated } = useStoreStore.getState();
@@ -375,7 +371,7 @@ export default function Discover() {
       appStateSubscription.remove();
       stopLocationWatch();
     };
-  }, [preferences.location_enabled, translate, updatePreferences, user?.id]);
+  }, [preferences.location_enabled, translate]);
 
   const centerOnUser = useCallback(async () => {
     let targetLocation = location;
@@ -464,21 +460,23 @@ export default function Discover() {
   };
 
 
-  const storeFeatures: GeoJSON.FeatureCollection = {
+  const storeFeatures = useMemo<GeoJSON.FeatureCollection>(() => ({
     type: "FeatureCollection",
-    features: stores.map((s) => ({
-      type: "Feature",
-      id: s.id,
-      geometry: {
-        type: "Point",
-        coordinates: [s.longitude, s.latitude],
-      },
-      properties: {
-        storeId: String(s.id),
-        icon: storeIconKey(s.type),
-      },
-    })),
-  };
+    features: stores
+      .filter((s) => Number.isFinite(s.longitude) && Number.isFinite(s.latitude))
+      .map((s) => ({
+        type: "Feature",
+        id: s.id,
+        geometry: {
+          type: "Point",
+          coordinates: [s.longitude!, s.latitude!],
+        },
+        properties: {
+          storeId: String(s.id),
+          icon: storeIconKey(s.type),
+        },
+      })),
+  }), [stores]);
 
   const circlesFC = useMemo(() => {
     const features = stores

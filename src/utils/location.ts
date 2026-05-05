@@ -3,6 +3,7 @@ export type PostGISLocation = string | { type: 'Point', coordinates: [number, nu
 export interface Coordinates {
   latitude: number | null;
   longitude: number | null;
+  isPostGIS?: boolean;
 }
 
 function toFiniteNumber(value: unknown): number | null {
@@ -46,7 +47,7 @@ export function parsePostGISLocation(location: unknown): Coordinates {
   
   // WKT/EWKT format
   if (typeof location === 'string') {
-    const match = location.match(/POINT\s*\(\s*([-+]?\d*\.?\d+(?:e[-+]?\d+)?)\s+([-+]?\d*\.?\d+(?:e[-+]?\d+)?)\s*\)/i);
+    const match = location.match(/POINT\s*\(\s*([-+]?\d*\.?\d+(?:e[-+]?\d+)?)\s+([-+]?\d*\.?\d+(?:e[-+]?\d+)?)(?:\s+[-+]?\d*\.?\d+(?:e[-+]?\d+)?)?\s*\)/i);
     if (match) {
       return validCoordinates(match[2], match[1]) ?? { latitude: null, longitude: null };
     }
@@ -80,5 +81,6 @@ export function withPostGISCoordinates<T extends { location?: unknown; latitude?
     ...row,
     latitude: coords.latitude,
     longitude: coords.longitude,
+    isPostGIS: !!locationCoords,
   };
 }
