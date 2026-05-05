@@ -129,6 +129,7 @@ export default function FrontDeskHistory() {
             type: (s.type as Transaction["type"]) ?? "earned",
             method: s.method ?? "qr",
             customerName: s.customerName ?? "Customer",
+            rewardTitle: s.rewardTitle,
         }));
 
         if (transactionType !== "all") {
