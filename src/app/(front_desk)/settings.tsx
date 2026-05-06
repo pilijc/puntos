@@ -3,6 +3,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { View, Text, TouchableOpacity } from "@/tw";
 import { useFocusEffect, useRouter } from "expo-router";
 import { supabase } from "@/supabase/supabase";
+import { useTranslation } from "react-i18next";
 
 import { useProfile } from "@/hooks/user/use-profile";
 import { checkPasswordSetupRequired } from "@/services/frontdesk/password-service";
@@ -10,6 +11,7 @@ import { Modal, type ModalButton } from "@/components/modal";
 import { SharedSettingsLayout } from "@/components/settings/shared-settings-layout";
 
 export default function SuperAdminSettings() {
+    const { t: translate } = useTranslation();
     const [passwordSetupModal, setPasswordSetupModal] = useState<{
         title: string;
         message: string;
@@ -53,10 +55,10 @@ export default function SuperAdminSettings() {
 
                         if (requiresPasswordSetup) {
                             setPasswordSetupModal({
-                                title: "Password Setup Required",
-                                message: "You must set up your password before accessing security features.",
+                                title: translate("frontdesk.transaction.passwordSetup.title"),
+                                message: translate("frontdesk.transaction.passwordSetup.message"),
                                 buttons: [{
-                                    label: "Set Password",
+                                    label: translate("frontdesk.transaction.passwordSetup.button"),
                                     variant: "primary",
                                     onPress: () => {
                                         setPasswordSetupModal(null);
@@ -64,7 +66,7 @@ export default function SuperAdminSettings() {
                                         setIsPasswordSetupComplete(null);
                                     }
                                 }, {
-                                    label: "Continue",
+                                    label: translate("label.continue"),
                                     variant: "secondary",
                                     onPress: () => setPasswordSetupModal(null)
                                 }]
@@ -77,7 +79,7 @@ export default function SuperAdminSettings() {
             };
 
             checkPasswordSetup();
-        }, [refreshProfile, router])
+        }, [refreshProfile, router, translate])
     );
 
     const banner = isPasswordSetupComplete === false ? (
@@ -86,17 +88,17 @@ export default function SuperAdminSettings() {
                 <Text className="text-yellow-800 dark:text-yellow-200 text-lg mr-2">⚠️</Text>
                 <View className="flex-1">
                     <Text className="text-yellow-800 dark:text-yellow-200 font-poppins-semibold mb-1">
-                        Password Setup Required
+                        {translate("frontdesk.transaction.passwordSetup.title")}
                     </Text>
                     <Text className="text-yellow-700 dark:text-yellow-300 text-sm font-poppins-regular">
-                        Complete password setup to access all security features and ensure proper account protection.
+                        {translate("frontdesk.transaction.passwordSetup.detail")}
                     </Text>
                     <TouchableOpacity
                         className="mt-3 bg-yellow-600 dark:bg-yellow-700 px-4 py-2 rounded-lg self-start"
                         onPress={() => router.replace("/(front_desk)/setup-password")}
                     >
                         <Text className="text-white font-poppins-medium text-sm">
-                            Complete Setup
+                            {translate("frontdesk.transaction.passwordSetup.complete")}
                         </Text>
                     </TouchableOpacity>
                 </View>

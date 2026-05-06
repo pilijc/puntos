@@ -4,6 +4,7 @@ import { Button } from "@/components/button";
 import type { PasswordSetupState } from "@/type/frontdesk/password";
 import PasswordInputField from "./password-input-field";
 import PasswordRequirements from "./password-requirements";
+import { useTranslation } from "react-i18next";
 
 interface PasswordSetupFormProps {
   state: PasswordSetupState;
@@ -18,6 +19,7 @@ export default function PasswordSetupForm({
   onStateUpdate,
   onSubmit
 }: PasswordSetupFormProps) {
+  const { t: translate } = useTranslation();
   const updateState = (updates: Partial<PasswordSetupState>) => {
     onStateUpdate(updates);
   };
@@ -27,13 +29,13 @@ export default function PasswordSetupForm({
       {/* Current Password (for updates only) */}
       {!isInitialSetup && (
         <PasswordInputField
-          label="Current Password"
+          label={translate("frontdesk.password.currentPassword")}
           value={state.currentPassword}
           onChangeText={(value) => updateState({ 
             currentPassword: value, 
             errors: { ...state.errors, currentPassword: undefined } 
           })}
-          placeholder="Enter current password"
+          placeholder={translate("frontdesk.password.currentPasswordPlaceholder")}
           showPassword={state.showCurrentPassword}
           onTogglePassword={() => updateState({ showCurrentPassword: !state.showCurrentPassword })}
           error={state.errors.currentPassword}
@@ -42,13 +44,13 @@ export default function PasswordSetupForm({
 
       {/* New Password */}
       <PasswordInputField
-        label="New Password"
+        label={translate("frontdesk.password.newPassword")}
         value={state.newPassword}
         onChangeText={(value) => updateState({ 
           newPassword: value, 
           errors: { ...state.errors, newPassword: undefined } 
         })}
-        placeholder="Enter new password"
+        placeholder={translate("frontdesk.password.newPasswordPlaceholder")}
         showPassword={state.showNewPassword}
         onTogglePassword={() => updateState({ showNewPassword: !state.showNewPassword })}
         error={state.errors.newPassword}
@@ -56,13 +58,13 @@ export default function PasswordSetupForm({
 
       {/* Confirm Password */}
       <PasswordInputField
-        label="Confirm New Password"
+        label={translate("frontdesk.password.confirmPassword")}
         value={state.confirmPassword}
         onChangeText={(value) => updateState({ 
           confirmPassword: value, 
           errors: { ...state.errors, confirmPassword: undefined } 
         })}
-        placeholder="Confirm new password"
+        placeholder={translate("frontdesk.password.confirmPasswordPlaceholder")}
         showPassword={state.showConfirmPassword}
         onTogglePassword={() => updateState({ showConfirmPassword: !state.showConfirmPassword })}
         error={state.errors.confirmPassword}
@@ -74,7 +76,7 @@ export default function PasswordSetupForm({
       {/* Submit Button */}
       <View className="mt-8 mb-8">
         <Button
-          label={isInitialSetup ? "Set Password" : "Update Password"}
+          label={isInitialSetup ? translate("frontdesk.password.setButton") : translate("frontdesk.password.updateButton")}
           onPress={onSubmit}
           loading={state.isSubmitting}
           disabled={state.isSubmitting}

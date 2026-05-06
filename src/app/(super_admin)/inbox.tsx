@@ -6,14 +6,13 @@ import {
   LayoutAnimation,
   Platform,
   ScrollView,
-  TextInput,
   TouchableOpacity,
   useWindowDimensions,
   Modal,
   Clipboard,
   Alert,
 } from "react-native";
-import { View, Text, SafeAreaView, TouchableOpacity as TwTouchableOpacity } from "@/tw";
+import { View, Text, SafeAreaView, TouchableOpacity as TwTouchableOpacity, TextInput } from "@/tw";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import {
@@ -284,6 +283,8 @@ export default function SuperAdminInbox() {
               fontSize: 13,
               color: "#111827",
               height: 44,
+              // @ts-ignore - web only
+              outlineStyle: "none",
             }}
           />
           {searchQuery.length > 0 && (
@@ -640,7 +641,7 @@ export default function SuperAdminInbox() {
             </Text>
           }
           onSendMessage={async (text) => await sendMessage(text, "super_admin")}
-          onSendAttachment={async (attachment, body) => await sendAttachment(attachment, "super_admin", body)}
+          onSendAttachment={async (attachments, body) => await sendAttachment(attachments, "super_admin", body)}
           sending={sending}
           uploadingAttachment={uploadingAttachment}
           disabled={false}
@@ -802,7 +803,7 @@ export default function SuperAdminInbox() {
                     );
                   })()}
                 </ScrollView>
-              )}
+              )}  
             </View>
           </View>
         </View>

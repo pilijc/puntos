@@ -29,8 +29,16 @@ export default function UserStreakCard({
   const [showStreakModal, setShowStreakModal] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [hasEarnedToday, setHasEarnedToday] = useState(false);
-  // Per-day earned dates from DB — avoids the streak_days window bug where
-  // non-consecutive earns (e.g. Wed ✓, Thu missed, Fri ✓) appear as "missed".
+  // ⚠️  WARNING — AI / DEVELOPER: DO NOT REMOVE OR SIMPLIFY THIS STATE ⚠️
+  // earnedWeekDates holds real per-day earned dates fetched from the DB.
+  // It is the ONLY correct source of truth for the weekly circle states.
+  // The streak_days integer fallback below is intentionally kept only as a
+  // loading-skeleton fallback and is WRONG for non-consecutive visit patterns:
+  //   e.g.  Wed ✓ → Thu missed → Fri ✓
+  //   streak_days = 1  (only Fri counts as consecutive)
+  //   diffDays(Fri, Wed) = 2 ≥ streak_days=1  → Wed incorrectly shows as "missed"
+  // Without this Set, previously-earned circles flash to "missed" on re-render.
+  // If you remove this state you WILL break the circle history display. — PUNTOS team
   const [earnedWeekDates, setEarnedWeekDates] = useState<Set<string>>(new Set());
   const [modalConfig, setModalConfig] = useState<{
     visible: boolean;
@@ -59,11 +67,15 @@ export default function UserStreakCard({
     return `${year}-${month}-${day}`;
   };
 
-  // Derive if already earned today from last_activity_date
-  // NOTE: This is DISPLAY-ONLY optimistic state. The authoritative "already earned"
-  // check lives in the record_user_streak RPC (DB time, store timezone). Device
-  // date is not trusted for eligibility. If the RPC returns alreadyRecorded: true,
-  // we set hasEarnedToday=true so the UI reflects it immediately.
+  // ⚠️  WARNING — AI / DEVELOPER: DO NOT REPLACE THIS WITH SERVER-SIDE DATE ⚠️
+  // `today` is derived from the DEVICE clock and is used ONLY for calendar display
+  // (deciding which circle is the "current" day visually).
+  // The authoritative "already earned today" gate is inside the record_user_streak
+  // RPC which runs on DB time in the store's own timezone — device date is NOT
+  // trusted for reward eligibility. If the RPC returns alreadyRecorded:true we
+  // set hasEarnedToday=true for immediate optimistic UI feedback.
+  // Do NOT merge hasEarnedToday into a single server-driven state; they serve
+  // different purposes (optimistic UI vs authoritative eligibility). — PUNTOS team
   const today = formatLocalDate(new Date()); // used only for calendar display
   const alreadyEarnedToday = streak.last_activity_date === today || hasEarnedToday;
   const shouldPulseCurrentDay = nearby && !alreadyEarnedToday;
@@ -141,9 +153,20 @@ export default function UserStreakCard({
   }
 
   // ─── Program start & end boundaries ────────────────────────────────────────
-  // IMPORTANT: Do NOT remove this. programStartStr is used below to distinguish
-  // days that fall BEFORE the streak program began ("pre-program") from days
-  // that are past-but-missed ("missed"). Without this, both states look the same.
+  // ⚠️  WARNING — AI / DEVELOPER: DO NOT REMOVE programStartStr OR programEndStr ⚠️
+  //
+  // These two strings are the ONLY thing that separates the "pre-program" circle
+  // state from the "missed" circle state. They look identical at first glance but
+  // have completely different meanings and visuals:
+  //
+  //   pre-program  → day predates or postdates the active program window
+  //                  → transparent bg + grey solid border  (excluded from program)
+  //   missed       → day is inside the program window but the user didn't visit
+  //                  → grey fill + strikethrough label     (a skipped visit)
+  //
+  // If you delete programStartStr / programEndStr ALL days before the program
+  // started will incorrectly show as "missed" visits, confusing users.
+  // This was previously broken and deliberately fixed — do not revert. — PUNTOS team
   const programStartRaw = streakProgram?.start_at ?? null;
   let programStartStr: string | null = null;
   if (programStartRaw) {
@@ -174,30 +197,46 @@ export default function UserStreakCard({
     translate("user.rewards.days.sun"),
   ];
 
-  // ─── 5-State day classification — DO NOT simplify or collapse these states ──
+  // ════════════════════════════════════════════════════════════════════════════
+  // ⚠️  AI / DEVELOPER WARNING — DO NOT SIMPLIFY, MERGE, OR DELETE THESE STATES
+  // ════════════════════════════════════════════════════════════════════════════
   //
-  //  STATE          WHEN                                 VISUAL
-  //  "pre-program"  Day < program start_at               White bg + grey solid border
-  //                 (e.g. Mon/Tue when program starts Wed) — signals "not part of program"
+  // The 7 weekly circles each hold ONE of 5 distinct states. All 5 are required.
+  // They were carefully designed after multiple bug reports — do not collapse them.
   //
-  //  "completed"    Day is inside earned streak window   Orange fill + check icon + label
-  //                 (last_activity_date window)          — signals a successfully earned day
+  //  STATE          WHEN                                      VISUAL
+  //  ─────────────────────────────────────────────────────────────────────────
+  //  "pre-program"  Day is OUTSIDE the active program window  Transparent bg + grey solid border
+  //                 (before start_at OR after end_date)       Signals: not part of program at all
   //
-  //  "current"      Next unclaimed target day            Orange tint + dashed orange border + pulse
-  //                 (today if not yet earned, or          — tappable to record a streak visit
-  //                  tomorrow if today is already earned)
+  //  "completed"    Day has a real earned record in the DB    🟠 Orange fill + ✓ check + label
+  //                 (earnedWeekDates Set, sourced from        Signals: successfully visited
+  //                  streak_events table)
   //
-  //  "missed"       Past in-program day, not earned      Grey fill + strikethrough label
-  //                 (circleDateStr < today, not matched   — signals a skipped visit
-  //                  by any of the above)
+  //  "current"      Next unclaimed target day                 Orange tint + dashed border + pulse
+  //                 (today if not earned; tomorrow if         Tappable — triggers streak recording
+  //                  today is already earned)
   //
-  //  "upcoming"     Future in-program days beyond        Grey fill, no border
-  //                 the next target                      — signals days still to come
+  //  "missed"       Past IN-PROGRAM day, not earned           Grey fill + strikethrough label
+  //                 (circleDateStr < today, not matched       Signals: a skipped visit
+  //                  by any earlier state check)
   //
-  // NOTE: "pre-program" and "upcoming" look different ON PURPOSE.
-  //   pre-program = transparent + border  (excluded from program entirely)
-  //   upcoming    = grey fill, no border  (part of program, just in the future)
-  // ─────────────────────────────────────────────────────────────────────────────
+  //  "upcoming"     Future in-program days beyond current     Grey fill, no border
+  //                                                           Signals: days still ahead
+  //
+  // ─── WHY "pre-program" ≠ "upcoming" (DO NOT merge their styles) ────────────
+  //   pre-program = transparent bg + grey SOLID border  → user is excluded from this day
+  //   upcoming    = grey fill, NO border               → user is included, just hasn't arrived
+  // Merging them would make Mon/Tue look like normal future days when the program
+  // started on Wednesday — misleading the user about when their streak window opens.
+  //
+  // ─── WHY earnedWeekDates beats the streak_days integer ──────────────────────
+  // streak_days is a consecutive-day counter; it is WRONG for gap visits:
+  //   Wed ✓ → Thu missed → Fri ✓ → streak_days = 1 → Wed shows as "missed" (wrong!)
+  // earnedWeekDates is a real per-day Set from the DB and handles gaps correctly.
+  //
+  // This classification block is the heart of the streak card UI. — PUNTOS team
+  // ════════════════════════════════════════════════════════════════════════════
   const days = Array.from({ length: 7 }, (_, index) => {
     const circleDateStr = addDays(weekStartStr, index);
 
@@ -211,12 +250,24 @@ export default function UserStreakCard({
       return { label: streakDaysLabels[index], state: "pre-program" as const };
     }
 
-    // ── 2. Earned days ──
-    // IMPORTANT: earnedWeekDates (real DB records) is the source of truth.
-    // The streak_days window fallback is WRONG when there are gaps:
-    //   e.g. Wed earned, Thu missed, Fri earned → streak_days=1 (only Fri),
-    //   so diffDays(Fri, Wed)=2 ≥ streak_days=1 fails → Wed shows as "missed".
-    // The hasEarnedToday flag covers the optimistic instant right after tapping.
+    // ── 2. Earned days ─────────────────────────────────────────────────────────
+    // ⚠️  WARNING — AI / DEVELOPER: DO NOT REPLACE THIS WITH A SIMPLE streak_days CHECK ⚠️
+    //
+    // earnedWeekDates (real per-day DB records from streak_events) is the ONLY
+    // correct source of truth. The streak_days consecutive-window fallback below
+    // is INTENTIONALLY kept as a loading skeleton only and is mathematically wrong
+    // for non-consecutive visit patterns:
+    //
+    //   Example: Wed ✓ → Thu missed → Fri ✓
+    //     streak_days = 1  (only Fri is consecutive)
+    //     diffDays(Fri, Wed) = 2  →  2 ≥ 1  fails  →  Wed incorrectly shows "missed"
+    //
+    // Three-tier priority (do not reorder):
+    //   1. hasEarnedToday  — optimistic UI immediately after tapping (no network wait)
+    //   2. earnedWeekDates — real per-day records once fetched from DB (accurate)
+    //   3. streak_days window — skeleton-only fallback while earnedWeekDates is loading
+    //
+    // This ordering was deliberately chosen to prevent circle flicker. — PUNTOS team
     const isThisDayEarned =
       // Optimistic: user just earned today in this session (immediate UI)
       (hasEarnedToday && circleDateStr === today) ||
@@ -494,15 +545,26 @@ export default function UserStreakCard({
                     </Animated.View>
                   </TouchableOpacity>
                 ) : (
-                  // ─── Circle style per state ────────────────────────────────
-                  // completed  → orange fill (bg-primary)
-                  // pre-program → transparent + grey border  ← DIFFERENT from upcoming on purpose
-                  //               signals days that predate the program (e.g. Mon/Tue when
-                  //               program starts Wed). Must NOT share style with "upcoming".
-                  // missed/upcoming → grey fill, no border
-                  //               missed = past in-program day not visited (has strikethrough)
-                  //               upcoming = future in-program day (plain grey)
-                  // ──────────────────────────────────────────────────────────
+                  // ─── Circle style per state ────────────────────────────────────────────────
+                  // ⚠️  WARNING — AI / DEVELOPER: DO NOT UNIFY THESE STYLES ⚠️
+                  //
+                  // Each state has a DISTINCT visual for a reason:
+                  //
+                  //   completed   → bg-primary (orange fill)     check icon + label
+                  //   pre-program → transparent bg + grey SOLID border
+                  //                 ← MUST differ from "upcoming"!
+                  //                 Signals: this day is outside the program window entirely
+                  //                 (e.g. Mon/Tue when program starts Wed). If you merge this
+                  //                 with "upcoming" (grey fill) users cannot tell which days
+                  //                 are excluded vs future. This confusion was a confirmed
+                  //                 UX bug before these two states were separated.
+                  //   missed      → grey fill, no border + strikethrough label
+                  //                 Signals: inside program, user skipped this visit
+                  //   upcoming    → grey fill, no border (plain label)
+                  //                 Signals: inside program, future day — not yet due
+                  //
+                  // Do NOT merge missed + upcoming + pre-program into one style. — PUNTOS team
+                  // ───────────────────────────────────────────────────────────────────────────
                   <View
                     className={
                       isCompleted
@@ -521,9 +583,12 @@ export default function UserStreakCard({
                         </Text>
                       </View>
                     ) : isMissed ? (
-                      // missed: grey fill → label with an absolutely-positioned 2px
-                      // strikethrough bar. textDecorationLine is intentionally NOT used
-                      // because it renders too thin at small font sizes in React Native.
+                      // ⚠️  WARNING — AI / DEVELOPER: DO NOT REPLACE WITH textDecorationLine ⚠️
+                      // The strikethrough is rendered as an absolutely-positioned 2px RNView bar.
+                      // React Native's textDecorationLine renders too thin to be visible at the
+                      // 10px font size used here — it effectively disappears on most devices.
+                      // The absolute-position bar was a deliberate fix for that rendering issue.
+                      // Keep the RNView strikethrough. Do not "simplify" to CSS. — PUNTOS team
                       <RNView style={{ alignItems: "center", justifyContent: "center" }}>
                         <Text className="text-neutral-400 font-poppins-semibold text-[10px]">
                           {day.label}

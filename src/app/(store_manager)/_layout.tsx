@@ -180,7 +180,7 @@ const HIDDEN_SCREENS = new Set([
     "streak/index", "streak/configure-streaks", "stamp/configure-stamp",
     "stamp/index", "reward/index", "reward/add-rewards", "reward/view-reward",
     "qr/index", "qr/configure-qr", "staff/index", "staff/add-staff",
-    "detail/index", "detail/edit-details", "chat-support",
+    "detail/index", "detail/edit-details", "chat-support", "manager-inbox",
 ]);
 
 function WebStoreManagerSidebarTabBar({
@@ -663,8 +663,8 @@ export default function StoreManagerLayout() {
             <Tabs.Screen name="staff/add-staff" options={{ href: null }} />
             <Tabs.Screen name="detail/index" options={{ href: null }} />
             <Tabs.Screen name="detail/edit-details" options={{ href: null }} />
-            <Tabs.Screen name="chat-support" options={{ href: null, tabBarStyle: { display: "none" } }} />
-            <Tabs.Screen name="manager-inbox" options={{ href: null, tabBarStyle: { display: "none" } }} />
+            <Tabs.Screen name="chat-support" options={{ href: null, tabBarStyle: isWeb ? undefined : { display: "none" } }} />
+            <Tabs.Screen name="manager-inbox" options={{ href: null, tabBarStyle: isWeb ? undefined : { display: "none" } }} />
         </Tabs>
     );
 }

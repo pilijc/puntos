@@ -1,6 +1,7 @@
 {
   "confirm": "確認",
   "cancel": "キャンセル",
+  "back": "戻る",
   "save": "保存",
   "delete": "削除",
   "enabled": "有効",
@@ -41,12 +42,15 @@
   "oops": "おっと！",
   "all": "すべて",
   "pending": "保留中",
+  "activate": "有効化",
+  "deactivate": "無効化",
   "qrPurchase": "QR購入",
   "stamp": "スタンプ",
   "streak": "連続利用",
   "free": "無料",
   "unpaid": "未払い",
   "paid": "支払い済み",
+  "customer": "お客様",
   "sessionExpired": "セッションが終了しました",
   "sessionExpiredMessage": "セキュリティのため、セッションの有効期限が切れました。続行するには再度サインインしてください。"
 }
