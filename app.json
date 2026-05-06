@@ -19,8 +19,6 @@
       [
         "expo-location",
         {
-          "isAndroidBackgroundLocationEnabled": true,
-          "isAndroidForegroundServiceEnabled": true,
           "locationWhenInUsePermission": "Allow location to show nearby stores"
         }
       ],

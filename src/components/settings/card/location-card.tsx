@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { Linking } from 'react-native';
 import { View, Text, TouchableOpacity } from "@/tw";
-import { ChevronRight, MapPin, User } from "lucide-react-native";
+import { ChevronRight, MapPin } from "lucide-react-native";
 import { useTranslation } from "react-i18next";
 import { useProfile } from "@/hooks/user/use-profile";
 import { useLocation } from "@/hooks/user/use-location";
 import { Modal, type ModalButton } from "@/components/modal";
 import { clearLocationService } from "@/services/user/settings-service";
+import { clearLocationManuallyDisabled, markLocationManuallyDisabled } from "@/services/user/location-preference-service";
 
 export const LocationCard = () => {
     const { t: translate } = useTranslation();
@@ -25,15 +26,32 @@ export const LocationCard = () => {
 
     if (!preferences) return null;
 
+    const statusText = locationLoading
+        ? translate('settings.checking')
+        : !permissionStatus.granted
+            ? translate('settings.notificationsPrivacy.location.denied')
+            : preferences.location_enabled
+                ? translate('settings.notificationsPrivacy.location.allow')
+                : translate('settings.notificationsPrivacy.location.disabled');
+
     const togglePreference = async (key: string) => {
         const newValue = !(preferences as any)[key];
         await updatePreferences({ [key]: newValue });
 
         if (key === 'location_enabled' && !newValue && user?.id) {
             try {
+                await markLocationManuallyDisabled(user.id);
                 await clearLocationService(user.id);
             } catch (e) {
                 console.error("Failed to clear location on disable:", e);
+            }
+        }
+
+        if (key === 'location_enabled' && newValue && user?.id) {
+            try {
+                await clearLocationManuallyDisabled(user.id);
+            } catch (e) {
+                console.error("Failed to clear location manual-disable marker:", e);
             }
         }
     };
@@ -63,7 +81,8 @@ export const LocationCard = () => {
             });
         } else {
             if (!permissionStatus.granted) {
-                await requestLocationPermission();
+                const nextStatus = await requestLocationPermission();
+                if (!nextStatus.granted) return;
             }
             togglePreference('location_enabled');
         }
@@ -83,11 +102,7 @@ export const LocationCard = () => {
                         {translate('settings.notificationsPrivacy.location.title')}
                     </Text>
                     <Text className="text-xs font-poppins-regular text-textMuted dark:text-darkTextMuted">
-                        {locationLoading
-                            ? translate('settings.checking')
-                            : permissionStatus.granted
-                                ? translate('settings.notificationsPrivacy.location.allow')
-                                : translate('settings.notificationsPrivacy.location.denied')}
+                        {statusText}
                     </Text>
                 </View>
                 <View className="flex-row items-center">

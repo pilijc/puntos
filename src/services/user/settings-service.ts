@@ -112,12 +112,10 @@ export async function deleteUserAccountService(): Promise<void> {
 }
 
 export async function getUsersNearStoreService(
-    storeId: number,
-    radiusMetres: number = 30
+    storeId: number
 ): Promise<number> {
     const { data, error } = await supabase.rpc('get_users_near_store', {
         store_id_input: storeId,
-        radius_metres: radiusMetres,
     });
 
     if (error) {

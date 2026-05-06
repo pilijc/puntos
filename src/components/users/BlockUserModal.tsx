@@ -24,10 +24,7 @@ import { UserRecord } from "@/store/super-admin/user-store";
 import { useSuperAdminStoresStore } from "@/store/super-admin/super-admin-stores-store";
 import { useTranslation } from "react-i18next";
 
-// Enable LayoutAnimation on Android
-if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
-  UIManager.setLayoutAnimationEnabledExperimental(true);
-}
+
 
 const isWeb = Platform.OS === "web";
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
@@ -324,7 +321,7 @@ export function BlockUserModal({
       ? selectedUser.storeInfo.filter((s: any) => s.status && s.status !== "inactive")
       : [];
 
-    const merged = [...fromAdmin];
+    const merged: any[] = [...fromAdmin];
     fromUserStore.forEach(us => {
       const exists = merged.some(m => m.name === us.name || (m.address && m.address === us.address));
       if (!exists) merged.push(us);

@@ -66,5 +66,8 @@ export function enrichStoresWithLocation(
     };
   });
 
-  return enriched.sort((a, b) => a.distanceMeters - b.distanceMeters);
+  return enriched.sort((a, b) => {
+    if (a.distanceMeters === b.distanceMeters) return 0;
+    return a.distanceMeters - b.distanceMeters;
+  });
 }
