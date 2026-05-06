@@ -1,10 +1,12 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { KeyboardAvoidingView, useColorScheme } from "react-native";
-import { View } from "@/tw";
+import { View, Text } from "@/tw";
 import { supabase } from "@/supabase/supabase";
 import { Modal, type ModalButton } from "@/components/modal";
 import { TextField } from "@/components/text-field";
 import { useTranslation } from "react-i18next";
+import { CheckCircle2, Circle } from "lucide-react-native";
+import { usePasswordValidation } from "@/hooks/use-password-validation";
 
 interface Props {
     visible: boolean;
@@ -24,6 +26,8 @@ export default function ChangePasswordModal({ visible, onClose }: Props) {
         message: string;
         buttons: ModalButton[];
     } | null>(null);
+
+    const { requirements, allMet } = usePasswordValidation(newPassword);
 
     const resetForm = () => {
         setCurrentPassword("");
@@ -51,12 +55,14 @@ export default function ChangePasswordModal({ visible, onClose }: Props) {
             errorAlert(translate("settings.account.security.changePassword.error.missingFields"))
             return;
         }
-        if (newPassword !== repeatNewPassword) {
-            errorAlert(translate("settings.account.security.changePassword.error.passwordMatch"))
+
+        if (!allMet) {
+            errorAlert(translate("settings.account.security.changePassword.error.passwordLimit"))
             return;
         }
-        if (newPassword.length < 8) {
-            errorAlert(translate("settings.account.security.changePassword.error.passwordLimit"))
+
+        if (newPassword !== repeatNewPassword) {
+            errorAlert(translate("settings.account.security.changePassword.error.passwordMatch"))
             return;
         }
 
@@ -93,6 +99,24 @@ export default function ChangePasswordModal({ visible, onClose }: Props) {
         }
     };
 
+    const RequirementItem = ({ label, met }: { label: string; met: boolean }) => (
+        <View className="flex-row items-center gap-x-2 mb-0.5">
+            {met ? (
+                <CheckCircle2 size={14} color="#10B981" />
+            ) : (
+                <Circle size={14} color="#9CA3AF" />
+            )}
+            <Text
+                className={`text-[10px] font-poppins ${met
+                        ? "text-emerald-600 dark:text-emerald-500"
+                        : "text-neutral-500 dark:text-darkTextSecondary"
+                    }`}
+            >
+                {label}
+            </Text>
+        </View>
+    );
+
     return (
         <>
             <Modal
@@ -111,7 +135,8 @@ export default function ChangePasswordModal({ visible, onClose }: Props) {
                         label: translate("label.confirm"),
                         variant: "primary",
                         onPress: handleConfirm,
-                        loading: loading
+                        loading: loading,
+                        disabled: !allMet
                     }
                 ]}
             >
@@ -130,14 +155,42 @@ export default function ChangePasswordModal({ visible, onClose }: Props) {
                             sanitize={(v) => v}
                         />
                         {/* New Password */}
-                        <TextField
-                            label={translate("settings.account.security.changePassword.label.new")}
-                            placeholder={translate("settings.account.security.changePassword.input.new")}
-                            value={newPassword}
-                            onChangeText={setNewPassword}
-                            secureTextEntry={true}
-                            sanitize={(v) => v}
-                        />
+                        <View>
+                            <TextField
+                                label={translate("settings.account.security.changePassword.label.new")}
+                                placeholder={translate("settings.account.security.changePassword.input.new")}
+                                value={newPassword}
+                                onChangeText={setNewPassword}
+                                secureTextEntry={true}
+                                sanitize={(v) => v}
+                            />
+                            {/* Password Requirements */}
+                            <View className="mt-2 bg-neutral-50 dark:bg-darkBackgroundMuted/50 p-3 rounded-xl border border-neutral-100 dark:border-darkBorder/50">
+                                <Text className="text-[11px] font-poppins-semibold text-neutral-700 dark:text-darkTextPrimary mb-1">
+                                    {translate("settings.account.security.changePassword.requirements.title")}
+                                </Text>
+                                <RequirementItem
+                                    label={translate("settings.account.security.changePassword.requirements.minLength")}
+                                    met={requirements.hasMinLength}
+                                />
+                                <RequirementItem
+                                    label={translate("settings.account.security.changePassword.requirements.uppercase")}
+                                    met={requirements.hasUppercase}
+                                />
+                                <RequirementItem
+                                    label={translate("settings.account.security.changePassword.requirements.lowercase")}
+                                    met={requirements.hasLowercase}
+                                />
+                                <RequirementItem
+                                    label={translate("settings.account.security.changePassword.requirements.number")}
+                                    met={requirements.hasNumber}
+                                />
+                                <RequirementItem
+                                    label={translate("settings.account.security.changePassword.requirements.special")}
+                                    met={requirements.hasSpecial}
+                                />
+                            </View>
+                        </View>
 
                         {/* Repeat New Password */}
                         <TextField
