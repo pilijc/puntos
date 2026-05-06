@@ -2,18 +2,15 @@ import "react-native-url-polyfill/auto";
 import "react-native-gesture-handler";
 import "../global.css";
 import "@/translation";
-import { Slot, useRouter, Stack, usePathname } from "expo-router";
+import { Slot, useRouter, usePathname } from "expo-router";
 import { useFonts } from "expo-font";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as SplashScreen from "expo-splash-screen";
-import { useEffect, useState } from "react";
-import { Animated, Easing, StatusBar, StyleSheet, View, Alert, Platform } from "react-native";
+import { useEffect } from "react";
+import { StatusBar, Alert, Platform, AppState } from "react-native";
 import { supabase } from "@/supabase/supabase";
 import React from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useAuthListener } from "@/hooks/auth-listener";
-import { useAnimatedStyle, useSharedValue, withRepeat, withSequence, withTiming } from "react-native-reanimated";
-import { Image } from "@/tw";
 import { getHomeRouteForUserId, getWebAdjustedHomeRoute } from "@/services/access-service";
 import { checkIfAccountDeletedService, checkIfAccountBlockedService, AccountDeletedError, AccountBlockedError } from "@/services/auth-service";
 import { Modal } from "@/components/modal";
@@ -67,11 +64,35 @@ export default function Layout() {
   const fetchStamps = useStamps((s) => s.fetchStamps);
 
   useEffect(() => {
-    const checkSession = async () => {
-      await initOneSignal();
-      const { data: { session } } = await supabase.auth.getSession();
+    supabase.auth.startAutoRefresh();
 
-      if (!session && !sessionToken) {
+    const sub = AppState.addEventListener("change", (state) => {
+      if (state === "active") {
+        supabase.auth.startAutoRefresh();
+      } else {
+        supabase.auth.stopAutoRefresh();
+      }
+    });
+
+    return () => {
+      sub.remove();
+      supabase.auth.stopAutoRefresh();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!fontsLoaded) return;
+
+    const restoreSessionAndRoute = async () => {
+      SplashScreen.hideAsync();
+
+      await initOneSignal();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      const storedSessionToken = useAuthStore.getState().sessionToken;
+
+      if (!session && !storedSessionToken) {
         if (Platform.OS === "web") {
           router.replace("/(onboarding)/welcome");
         } else {
@@ -95,15 +116,12 @@ export default function Layout() {
           await checkIfAccountBlockedService(userId);
           const nextRoute = getWebAdjustedHomeRoute(await getHomeRouteForUserId(userId));
 
-          // If this is a store manager, enforce device session limit before auto-navigating
           if (nextRoute === "/(store_manager)" || (typeof nextRoute === "string" && nextRoute.startsWith("/(store_manager)"))) {
             try {
               const sessionCheck = await checkDeviceSessionLimitService(userId);
               if (sessionCheck.allowed) {
-                // Register this device's session
                 await upsertDeviceSessionService(userId);
               } else {
-                // Device limit reached — sign out and send to login so the modal can handle it
                 markIntentionalSignOut();
                 await supabase.auth.signOut();
                 router.replace("/(auth)/login");
@@ -111,7 +129,6 @@ export default function Layout() {
               }
             } catch (deviceErr) {
               console.warn("[DeviceSession] check failed during session restore:", deviceErr);
-              // Don't block login if the device session check itself fails
             }
           }
 
@@ -129,10 +146,8 @@ export default function Layout() {
       }
     };
 
-    if (fontsLoaded) {
-      checkSession();
-    }
-  }, [fontsLoaded, sessionToken]);
+    restoreSessionAndRoute();
+  }, [fontsLoaded, router, fetchStamps]);
 
   useEffect(() => {
     const checkUserStatusOnNav = async () => {
@@ -160,12 +175,6 @@ export default function Layout() {
     duration: 1000,
     fade: true,
   });
-
-  useEffect(() => {
-    if (fontsLoaded) {
-      SplashScreen.hideAsync();
-    }
-  }, [fontsLoaded]);
 
   if (!fontsLoaded) {
     return null;
