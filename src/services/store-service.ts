@@ -1,6 +1,12 @@
 import { supabase } from "@/supabase/supabase";
 import { formatPostGISLocation, withPostGISCoordinates } from "@/utils/location";
 
+export const STORE_SELECT = `
+    id, name, type, address, location, radius,
+    status, is_active, timezone, logo, owner_id,
+    phone, registration_number, business_document_image,
+    store_pictures, store_open, store_close, created_at, approved_at
+`;
 
 export interface CreateStorePayload {
     name: string;
@@ -25,6 +31,7 @@ export interface StoreRow {
     name: string;
     type: string | null;
     address: string | null;
+    // Derived from location for UI/map consumers; not backed by scalar DB columns.
     latitude: number | null;
     longitude: number | null;
     location?: any;
@@ -94,7 +101,7 @@ export async function createStore(payload: CreateStorePayload): Promise<StoreRow
             status: "pending_review",
             is_active: false,
         })
-        .select("*")
+        .select(STORE_SELECT)
         .single();
 
     if (storeError || !store) {
@@ -142,7 +149,7 @@ export async function getMyStores(ownerId: string): Promise<StoreRow[]> {
     ] = await Promise.all([
         supabase
             .from("stores")
-            .select("*")
+            .select(STORE_SELECT)
             .eq("owner_id", ownerId)
             .eq("is_active", true)
             .order("created_at", { ascending: false }),
@@ -150,7 +157,7 @@ export async function getMyStores(ownerId: string): Promise<StoreRow[]> {
             .from("user_roles")
             .select(`
                 store_id,
-                stores:store_id!inner (*)
+                stores:store_id!inner (${STORE_SELECT})
             `)
             .eq("user_id", ownerId)
             .eq("stores.is_active", true)
@@ -247,11 +254,11 @@ export async function updateStoreStatus(
 
 export async function getStores() {
     try {
-			const { data, error } = await supabase
-				.from("stores")
-				.select("*")
-				.eq("status", "active")
-				.eq("is_active", true);
+				const { data, error } = await supabase
+					.from("stores")
+					.select(STORE_SELECT)
+					.eq("status", "active")
+					.eq("is_active", true);
     if (error) throw new Error(error.message);
     return data.map((row: any) => withPostGISCoordinates(row));
     } catch (error) {
@@ -261,10 +268,10 @@ export async function getStores() {
 
 export async function getStoreById(storeId: number) {
     try {
-			const { data, error } = await supabase
-				.from("stores")
-				.select("*")
-				.eq("id", storeId);
+				const { data, error } = await supabase
+					.from("stores")
+					.select(STORE_SELECT)
+					.eq("id", storeId);
 			if (error) throw new Error(error.message);
 			const store = data?.[0] ?? null;
 			if (!store) return null;

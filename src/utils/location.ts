@@ -29,10 +29,45 @@ function validCoordinates(latitude: unknown, longitude: unknown): Coordinates | 
   return { latitude: lat, longitude: lon };
 }
 
+function parseHexPoint(hex: string): Coordinates | null {
+  const normalized = hex.startsWith("\\x") ? hex.slice(2) : hex;
+  if (!/^[0-9a-f]+$/i.test(normalized) || normalized.length < 42 || normalized.length % 2 !== 0) {
+    return null;
+  }
+
+  const bytes = new Uint8Array(normalized.length / 2);
+  for (let i = 0; i < normalized.length; i += 2) {
+    bytes[i / 2] = Number.parseInt(normalized.slice(i, i + 2), 16);
+  }
+
+  const view = new DataView(bytes.buffer);
+  const byteOrder = view.getUint8(0);
+  if (byteOrder !== 0 && byteOrder !== 1) return null;
+
+  const littleEndian = byteOrder === 1;
+  const type = view.getUint32(1, littleEndian);
+  const hasZ = (type & 0x80000000) !== 0;
+  const hasM = (type & 0x40000000) !== 0;
+  const hasSrid = (type & 0x20000000) !== 0;
+  const geometryType = (type & 0x0fffffff) % 1000;
+  if (geometryType !== 1) return null;
+
+  let offset = 5;
+  if (hasSrid) offset += 4;
+
+  const coordinateByteLength = 16 + (hasZ ? 8 : 0) + (hasM ? 8 : 0);
+  if (bytes.length < offset + coordinateByteLength) return null;
+
+  const longitude = view.getFloat64(offset, littleEndian);
+  const latitude = view.getFloat64(offset + 8, littleEndian);
+  return validCoordinates(latitude, longitude);
+}
+
 /**
  * Parses PostGIS geography/geometry data into frontend-friendly coordinates.
  * PostgREST typically returns either GeoJSON or a WKT/EWKT string like
- * 'POINT(lon lat)' or 'SRID=4326;POINT(lon lat)'.
+ * 'POINT(lon lat)' or 'SRID=4326;POINT(lon lat)'. Some Supabase/PostgREST
+ * setups return EWKB hex strings for geography columns.
  */
 export function parsePostGISLocation(location: unknown): Coordinates {
   if (!location) {
@@ -51,6 +86,9 @@ export function parsePostGISLocation(location: unknown): Coordinates {
     if (match) {
       return validCoordinates(match[2], match[1]) ?? { latitude: null, longitude: null };
     }
+
+    const parsedHex = parseHexPoint(location);
+    if (parsedHex) return parsedHex;
   }
 
   return { latitude: null, longitude: null };
@@ -69,13 +107,12 @@ export function toMapboxCoordinates(coords: Coordinates): [number, number] | nul
   return valid ? [valid.longitude!, valid.latitude!] : null;
 }
 
-export function withPostGISCoordinates<T extends { location?: unknown; latitude?: unknown; longitude?: unknown }>(
+export function withPostGISCoordinates<T extends { location?: unknown }>(
   row: T
 ): T & Coordinates {
   const parsed = parsePostGISLocation(row.location);
   const locationCoords = validCoordinates(parsed.latitude, parsed.longitude);
-  const fallbackCoords = validCoordinates(row.latitude, row.longitude);
-  const coords = locationCoords ?? fallbackCoords ?? { latitude: null, longitude: null };
+  const coords = locationCoords ?? { latitude: null, longitude: null };
 
   return {
     ...row,
