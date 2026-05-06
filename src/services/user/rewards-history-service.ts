@@ -10,16 +10,12 @@ export async function getRewardRedemptionHistory(userId: string): Promise<any[]>
         points_spent,
         created_at,
         store_id,
-        store_rewards (
-          title,
-          image_url
-        )
+        reward_id
       `)
       .eq('user_id', userId)
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('Error fetching reward redemption history:', error);
       return [];
     }
 
@@ -30,9 +26,12 @@ export async function getRewardRedemptionHistory(userId: string): Promise<any[]>
       .select('id, name')
       .in('id', storeIds);
 
-    if (storesError) {
-      console.error('Error fetching store names:', storesError);
-    }
+    // Get reward data
+    const rewardIds = [...new Set(redemptions.map(r => r.reward_id).filter(id => id != null))];
+    const { data: rewards, error: rewardsError } = await supabase
+      .from('store_rewards')
+      .select('id, title, image_url')
+      .in('id', rewardIds);
 
     // Create store lookup map
     const storeMap = (stores || []).reduce((acc, store) => {
@@ -40,24 +39,32 @@ export async function getRewardRedemptionHistory(userId: string): Promise<any[]>
       return acc;
     }, {});
 
+    // Create reward lookup map
+    const rewardMap = (rewards || []).reduce((acc, reward) => {
+      acc[reward.id] = reward;
+      return acc;
+    }, {});
+
     // Format the data for the UI
-    return redemptions.map((redemption: any) => ({
-      id: redemption.id,
-      section: formatDateSection(redemption.created_at),
-      type: 'claimed',
-      title: redemption.store_rewards?.title || 'user.activity.unknownReward',
-      subtitle: 'user.activity.subtitle.rewardRedemption',
-      time: redemption.created_at,
-      points: `-${redemption.points_spent}`,
-      positive: false,
-      image: redemption.store_rewards?.image_url,
-      transactionType: 'redemption',
-      storeName: storeMap[redemption.store_id] || 'user.activity.unknownStore',
-      storeId: redemption.store_id, // Add storeId for navigation
-    }));
+    return redemptions.map((redemption: any) => {
+      const reward = rewardMap[redemption.reward_id];
+      return {
+        id: redemption.id,
+        section: formatDateSection(redemption.created_at),
+        type: 'claimed',
+        title: reward?.title || 'user.activity.unknownReward',
+        subtitle: reward?.title || 'user.activity.unknownReward',
+        time: redemption.created_at,
+        points: `-${redemption.points_spent}`,
+        positive: false,
+        image: reward?.image_url,
+        transactionType: 'redemption',
+        storeName: storeMap[redemption.store_id] || 'user.activity.unknownStore',
+        storeId: redemption.store_id, // Add storeId for navigation
+      };
+    });
 
   } catch (error) {
-    console.error('Exception fetching reward redemption history:', error);
     return [];
   }
 }

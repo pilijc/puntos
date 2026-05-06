@@ -28,7 +28,7 @@ export const useRecentTransactions = create<RecentTransactionsState>((set, get) 
   hasFetchedOnce: false,
 
   fetchTransactions: async (storeId: number) => {
-     set({ isLoading: !get().hasFetchedOnce });
+     set({ isLoading: !get().hasFetchedOnce, recentScans: [] }); // Clear existing data
 
     try {
        const startOfToday = new Date();
@@ -47,19 +47,25 @@ export const useRecentTransactions = create<RecentTransactionsState>((set, get) 
           id,
           points_spent,
           created_at,
-          users!user_id(name),
-          store_rewards!reward_id(title, points_cost)
+          reward_id,
+          users!user_id(name)
         `)
         .eq("store_id", storeId)
         .gte("created_at", startOfToday.toISOString())
         .order("created_at", { ascending: false });
 
-      if (purchaseError) {
-        console.error("Error fetching recent transactions:", purchaseError);
-      }
-      if (redemptionError) {
-        console.error("Error fetching redemptions:", redemptionError);
-      }
+      // Fetch reward data separately
+      const rewardIds = [...new Set((redemptions || []).map(r => r.reward_id).filter(id => id != null))];
+      const { data: rewards, error: rewardsError } = await supabase
+        .from("store_rewards")
+        .select("id, title, points_cost")
+        .in("id", rewardIds);
+
+      // Create reward lookup map
+      const rewardMap = (rewards || []).reduce((acc, reward) => {
+        acc[reward.id] = reward;
+        return acc;
+      }, {});
 
        const formattedPurchases: RecentScan[] = (purchases || []).map((p: any) => {
         const isVoucher = p.metadata && p.metadata.transaction_type === "voucher";
@@ -73,17 +79,20 @@ export const useRecentTransactions = create<RecentTransactionsState>((set, get) 
         };
       });
 
-       const formattedRedemptions: RecentScan[] = (redemptions || []).map((r: any) => ({
-        id: r.id,
-        amount: r.store_rewards?.points_cost || 0,
-        points: Number(r.points_spent),
-        timestamp: new Date(r.created_at),
-        type: "redeemed",
-        method: "voucher",
-        customerName: r.users?.name || "Customer",
-        rewardTitle: r.store_rewards?.title || "Reward",
-        pointsCost: r.store_rewards?.points_cost || 0,
-      }));
+       const formattedRedemptions: RecentScan[] = (redemptions || []).map((r: any) => {
+        const reward = rewardMap[r.reward_id];
+        return {
+          id: r.id,
+          amount: reward?.points_cost || 0,
+          points: Number(r.points_spent),
+          timestamp: new Date(r.created_at),
+          type: "redeemed",
+          method: "voucher",
+          customerName: r.users?.name || "Customer",
+          rewardTitle: reward?.title || "Reward",
+          pointsCost: reward?.points_cost || 0,
+        };
+      });
 
  
       const allTransactions = [...formattedPurchases, ...formattedRedemptions].sort(
@@ -92,7 +101,6 @@ export const useRecentTransactions = create<RecentTransactionsState>((set, get) 
 
        set({ recentScans: allTransactions.slice(0, 5), isLoading: false, hasFetchedOnce: true });
     } catch (e) {
-      console.error("Exception fetching recent transactions:", e);
       set({ recentScans: [], isLoading: false, hasFetchedOnce: true });
     }
   },

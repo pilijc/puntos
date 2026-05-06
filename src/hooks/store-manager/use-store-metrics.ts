@@ -66,7 +66,7 @@ export function useStoreDashboard() {
 
         try {
             const [metricsData, retentionData, stampDistData, recentTxs] = await Promise.all([
-                getStoreMetrics(storeId, radius),
+                getStoreMetrics(storeId),
                 getRetentionData(storeId),
                 getStampDistribution(storeId),
                 getRecentTransactions(storeId, 10)

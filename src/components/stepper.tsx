@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { TextField } from "./text-field";
 import { CheckIcon, LucideEye, LucideEyeOff } from "lucide-react-native";
 import { Platform } from "react-native";
+import { usePasswordValidation } from "@/hooks/use-password-validation";
 
 const ROLE_LOTTIE_SOURCES = {
   user: require("../assets/images/role-user.png"),
@@ -134,6 +135,28 @@ export function PasswordStep({
   errors,
 }: PasswordStepProps) {
   const { t: translate } = useTranslation();
+
+  const { requirements } = usePasswordValidation(password);
+
+  const RequirementItem = ({ label, met }: { label: string; met: boolean }) => (
+    <View className="flex-row items-center gap-x-2 mb-0.5">
+      <View
+        className={`w-4 h-4 rounded-full items-center justify-center ${met ? "bg-emerald-500" : "bg-neutral-200 dark:bg-neutral-800"
+          }`}
+      >
+        {met && <CheckIcon size={10} color="white" />}
+      </View>
+      <Text
+        className={`text-[11px] font-poppins ${met
+          ? "text-emerald-600 dark:text-emerald-500"
+          : "text-neutral-500 dark:text-darkTextSecondary"
+          }`}
+      >
+        {label}
+      </Text>
+    </View>
+  );
+
   return (
     <View className=" pr-0.5">
       <View className="gap-y-2">
@@ -160,6 +183,33 @@ export function PasswordStep({
           />
         </View>
 
+        {/* Password Requirements */}
+        <View className="bg-neutral-50 dark:bg-darkBackgroundMuted/50 p-3 rounded-xl border border-neutral-100 dark:border-darkBorder/50 my-1">
+          <Text className="text-[12px] font-poppins-semibold text-neutral-700 dark:text-darkTextPrimary mb-1.5">
+            {translate("onboarding.signup.error.requirements.title")}
+          </Text>
+          <RequirementItem
+            label={translate("onboarding.signup.error.requirements.minLength")}
+            met={requirements.hasMinLength}
+          />
+          <RequirementItem
+            label={translate("onboarding.signup.error.requirements.uppercase")}
+            met={requirements.hasUppercase}
+          />
+          <RequirementItem
+            label={translate("onboarding.signup.error.requirements.lowercase")}
+            met={requirements.hasLowercase}
+          />
+          <RequirementItem
+            label={translate("onboarding.signup.error.requirements.number")}
+            met={requirements.hasNumber}
+          />
+          <RequirementItem
+            label={translate("onboarding.signup.error.requirements.special")}
+            met={requirements.hasSpecial}
+          />
+        </View>
+
         <View className="mt-1 mb-2 gap-y-2">
           <TextField
             label={translate("onboarding.signup.stepper.label.confirmPassword")}
@@ -167,7 +217,7 @@ export function PasswordStep({
             onChangeText={onConfirmPasswordChange}
             placeholder={translate("onboarding.signup.stepper.placeholder.confirmPassword")}
             secureTextEntry={!showConfirmPassword}
-  
+
             rightAccessory={
               <TouchableOpacity
                 onPress={() => setShowConfirmPassword(!showConfirmPassword)}

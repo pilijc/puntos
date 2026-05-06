@@ -21,9 +21,17 @@
       "error": {
         "missingFields": "入力されていない項目があります",
         "passwordMatch": "新しいパスワードが一致しません",
-        "passwordLimit": "パスワードは8文字以上で入力してください",
+        "passwordLimit": "パスワードはすべてのセキュリティ要件を満たす必要があります",
         "incorrect": "現在のパスワードが正しくありません",
         "failed": "パスワードの更新に失敗しました"
+      },
+      "requirements": {
+        "title": "パスワードの要件:",
+        "minLength": "8文字以上",
+        "uppercase": "大文字を1文字以上",
+        "lowercase": "小文字を1文字以上",
+        "number": "数字を1文字以上",
+        "special": "特殊文字を1文字以上 (@#$%^&+=!)"
       }
     },
     "deleteAccount": {

@@ -3,6 +3,7 @@ import {
   getStoreOwnerId,
   ownerCanManagePremiumCampaigns,
 } from "@/services/store-manager/premium-campaign-gate";
+import { withPostGISCoordinates } from "@/utils/location";
 
 export interface StampProgress {
   id: number;
@@ -19,6 +20,7 @@ export interface StampProgress {
     is_active: boolean;
     latitude?: number;
     longitude?: number;
+    location?: any;
     address?: string;
   };
 }
@@ -138,8 +140,7 @@ export async function getUserStamps(userId: string): Promise<StampProgress[]> {
           logo,
           status,
           is_active,
-          latitude,
-          longitude,
+          location,
           address
         )
       `)
@@ -150,10 +151,13 @@ export async function getUserStamps(userId: string): Promise<StampProgress[]> {
       return [];
     }
 
-    // Filter out stamps for stores that are not active
-    const validStamps = (data as unknown as StampProgress[]).filter(
+    // Filter out stamps for stores that are not active and map location
+    const validStamps = (data as unknown as any[]).filter(
       (stamp) => stamp.stores?.status === "active" && stamp.stores?.is_active
-    );
+    ).map((stamp) => ({
+      ...stamp,
+      stores: stamp.stores ? withPostGISCoordinates(stamp.stores) : undefined
+    } as StampProgress));
 
     return validStamps;
   } catch (error) {

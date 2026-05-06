@@ -15,6 +15,7 @@ export interface Transaction {
     type: TxType;
     method?: "qr" | "manual";
     customerName?: string;
+    rewardTitle?: string;
 }
 
 interface TransactionRowProps {
@@ -67,9 +68,17 @@ const TransactionRow = memo(function TransactionRow({ tx, isFirst, isLast }: Tra
                 </View>
                 <View className="flex-row items-center justify-between">
                     <View className="flex-row items-center gap-x-1.5">
-                        <Text className="text-xs font-poppins text-textMuted dark:text-darkTextMuted">
-                            ₱{tx.amount.toFixed(2)}
-                        </Text>
+                        {tx.type !== "redeemed" ? (
+                            <Text className="text-xs font-poppins text-textMuted dark:text-darkTextMuted">
+                                ₱{tx.amount.toFixed(2)}
+                            </Text>
+                        ) : (
+                            tx.rewardTitle && (
+                                <Text className="text-xs font-poppins text-textMuted dark:text-darkTextMuted">
+                                    {tx.rewardTitle}
+                                </Text>
+                            )
+                        )}
                         {tx.type !== "earned" && (
                             <NativeView style={{ paddingHorizontal: 6, paddingVertical: 1, borderRadius: 4, backgroundColor: isDark ? cfg.bgDark : cfg.bg }}>
                                 <Text style={{ fontSize: 9, fontFamily: "Poppins-SemiBold", color: cfg.color }}>
