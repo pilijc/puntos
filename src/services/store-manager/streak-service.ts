@@ -143,6 +143,9 @@ export async function publishStreakProgram(programId: number): Promise<void> {
       .eq("status", "draft");
     if (error) throw new Error(error.message);
   } catch (error) {
+    if (error instanceof Error && error.message) {
+      throw error;
+    }
     throw new Error("Failed to publish the streak program. Please try again later.");
   }
 }
