@@ -20,11 +20,7 @@ import { lockExtraOwnerStores } from "@/services/store-service";
 const WEB_SIDEBAR_WIDTH = 260;
 const WEB_SIDEBAR_COLLAPSED_WIDTH = 76;
 const WEB_SIDEBAR_INSET_X = 16;
-const WEB_SIDEBAR_COLLAPSED_INSET_X = 10;
-const WEB_SIDEBAR_BRAND_PADDING_X = 24;
-const WEB_SIDEBAR_COLLAPSED_BRAND_PADDING_X = 18;
 const WEB_TAB_ICON_SIZE = 18;
-const WEB_TAB_ACTIVE_MARGIN_END = 100;
 const WEB_TAB_ACTIVE_BG_LIGHT = "#F3F4F6";
 const WEB_TAB_ACTIVE_BG_DARK = "#431407";
 const WEB_SIDEBAR_BORDER_LIGHT = "#F1F5F9";
@@ -199,7 +195,7 @@ function WebStoreManagerSidebarTabBar({
     const activeTab = activeSidebarTabFromPath(withTrailingSlash(pathname));
     const activeBackground = isDark ? WEB_TAB_ACTIVE_BG_DARK : WEB_TAB_ACTIVE_BG_LIGHT;
     const inactiveColor = isDark ? "#737373" : "#8B8D98";
-    const px = WEB_SIDEBAR_INSET_X; // Constant inset for stability
+    const px = WEB_SIDEBAR_INSET_X;
 
     const visibleRoutes = state.routes.filter((r) => !HIDDEN_SCREENS.has(r.name));
 
@@ -423,11 +419,10 @@ export default function StoreManagerLayout() {
 
                 await lockExtraOwnerStores({ ownerId: currentUserId, unlockedStoreId: keepId });
                 await fetchStores(true);
+                setDidEnforceStoreLocks(true);
             } catch (e) {
                 // If this fails, we don't want to block navigation; server-side/RLS should still protect critical writes.
                 console.warn("[subscription] store lock enforcement failed:", (e as any)?.message ?? e);
-            } finally {
-                setDidEnforceStoreLocks(true);
             }
         };
 
