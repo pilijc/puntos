@@ -213,33 +213,60 @@ async function signedUrlForPath(path: string): Promise<string | null> {
 }
 
 export async function attachSignedUrls(messages: SupportMessage[]): Promise<SupportMessage[]> {
-  return Promise.all(
-    messages.map(async (message) => {
-      let messageWithUrls = { ...message };
-      
-      if (messageWithUrls.attachment_path) {
-        const signedUrl = await signedUrlForPath(messageWithUrls.attachment_path);
-        messageWithUrls.attachment_url = signedUrl;
+  const pathsToSign = new Set<string>();
+
+  for (const msg of messages) {
+    if (msg.attachment_path) pathsToSign.add(msg.attachment_path);
+    if (msg.attachments && msg.attachments.length > 0) {
+      for (const att of msg.attachments) {
+        if (att.path) pathsToSign.add(att.path);
       }
-      
-      if (messageWithUrls.attachments && messageWithUrls.attachments.length > 0) {
-        const hydratedAttachments = await Promise.all(
-          messageWithUrls.attachments.map(async (att) => {
-            const url = await signedUrlForPath(att.path);
-            return { ...att, url: url || undefined };
-          })
-        );
-        messageWithUrls.attachments = hydratedAttachments;
+    }
+  }
+
+  const pathsArray = Array.from(pathsToSign);
+  const signedUrlsMap = new Map<string, string>();
+
+  if (pathsArray.length > 0) {
+    const CHUNK_SIZE = 100;
+    for (let i = 0; i < pathsArray.length; i += CHUNK_SIZE) {
+      const chunk = pathsArray.slice(i, i + CHUNK_SIZE);
+      const { data, error } = await supabase.storage
+        .from(SUPPORT_ATTACHMENTS_BUCKET)
+        .createSignedUrls(chunk, 60 * 60);
+
+      if (!error && data) {
+        for (const item of data) {
+          if (item.signedUrl && item.path) {
+            signedUrlsMap.set(item.path, item.signedUrl);
+          }
+        }
       }
-      
-      return messageWithUrls;
-    }),
-  );
+    }
+  }
+
+  return messages.map((message) => {
+    let messageWithUrls = { ...message };
+
+    if (messageWithUrls.attachment_path) {
+      messageWithUrls.attachment_url = signedUrlsMap.get(messageWithUrls.attachment_path) || null;
+    }
+
+    if (messageWithUrls.attachments && messageWithUrls.attachments.length > 0) {
+      messageWithUrls.attachments = messageWithUrls.attachments.map((att) => ({
+        ...att,
+        url: signedUrlsMap.get(att.path) || undefined,
+      }));
+    }
+
+    return messageWithUrls;
+  });
 }
 
 export async function uploadSupportAttachment(
   conversationId: string,
   attachment: SupportAttachmentInput,
+  index: number = 0,
 ): Promise<{
   path: string;
   signedUrl: string | null;
@@ -248,7 +275,7 @@ export async function uploadSupportAttachment(
   const nameWithExtension = safeName.includes(".")
     ? safeName
     : `${safeName}.${fileExtensionFromMime(attachment.mimeType)}`;
-  const path = `support/${conversationId}/${Date.now()}-${nameWithExtension}`;
+  const path = `support/${conversationId}/${Date.now()}-${index}-${nameWithExtension}`;
 
   // React Native: FormData with file URI — recommended by Supabase for RN.
   // Web: fetch the URI as a Blob (file:// URIs don't exist on web anyway).
@@ -297,8 +324,8 @@ export async function sendSupportAttachmentMessage(
   if (!attachments || attachments.length === 0) throw new Error("No attachments provided");
 
   const uploadedAttachmentsData = await Promise.all(
-    attachments.map(async (att) => {
-      const uploaded = await uploadSupportAttachment(conversationId, att);
+    attachments.map(async (att, index) => {
+      const uploaded = await uploadSupportAttachment(conversationId, att, index);
       return {
         path: uploaded.path,
         url: uploaded.signedUrl || undefined,

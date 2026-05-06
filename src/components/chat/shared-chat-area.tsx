@@ -136,6 +136,9 @@ export function SharedChatArea({
         await onSendAttachment!(attachments, body);
       } catch (e) {
         console.error(e);
+        setPendingAttachments(attachments);
+        setMessageText(body || "");
+        if (conversationId) draftsRef.current[conversationId] = body || "";
       }
       LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
       setOutgoingBubble(null);
@@ -148,6 +151,8 @@ export function SharedChatArea({
         await onSendMessage(outgoing);
       } catch (e) {
         console.error(e);
+        setMessageText(outgoing);
+        if (conversationId) draftsRef.current[conversationId] = outgoing;
       }
       LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
       setOutgoingBubble(null);
@@ -472,7 +477,9 @@ export function SharedChatArea({
                     const isLastMyMessage =
                       isMe && !messages.slice(index + 1).some((m) => m.sender_role === currentUserRole);
                     const hasFile = isFileAttachment(msg);
-                    const hasImage = msg.message_kind === "image" && !!msg.attachment_url;
+                    const hasImage =
+                      (msg.attachments && msg.attachments.some((a) => a.kind === "image")) ||
+                      (msg.message_kind === "image" && !!msg.attachment_url);
                     const hasBody = !!msg.body;
 
                     const bubbleRadius = isMe
