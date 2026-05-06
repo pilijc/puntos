@@ -1,5 +1,6 @@
 import { supabase } from "@/supabase/supabase";
 import { ProgramStatus, Stamp, StampCollector } from "@/type/store-manager/stamp";
+import { assertStoreOwnerCanManagePremiumCampaigns } from "@/services/store-manager/premium-campaign-gate";
 
 
 export function getProgramStatus(stamp: Stamp): ProgramStatus {
@@ -72,6 +73,8 @@ export async function isStoreRewardLinkedToStampProgram(
 
 export async function createStamp(payload: Omit<Stamp, "id" | "status" | "ended_at" | "redemption_deadline" | "created_at">): Promise<void> {
   try {
+    await assertStoreOwnerCanManagePremiumCampaigns(payload.store_id);
+
     const { error } = await supabase
       .from("store_stamps")
       .insert({
@@ -108,6 +111,10 @@ export async function updateStampProgram(
   payload: Pick<Stamp, "total_stamps" | "reward_id" | "expiration_mode" | "expiration_days">,
 ): Promise<void> {
   try {
+    const program = await getStampProgramById(programId);
+    if (!program?.store_id) throw new Error("Stamp program not found.");
+    await assertStoreOwnerCanManagePremiumCampaigns(program.store_id);
+
     const { error } = await supabase
       .from("store_stamps")
       .update({
@@ -125,6 +132,10 @@ export async function updateStampProgram(
 
 export async function endStampProgram(programId: number, graceDays: number): Promise<void> {
   try {
+    const program = await getStampProgramById(programId);
+    if (!program?.store_id) throw new Error("Stamp program not found.");
+    await assertStoreOwnerCanManagePremiumCampaigns(program.store_id);
+
     const now = new Date();
     const redemptionDeadline = new Date(now);
     redemptionDeadline.setDate(redemptionDeadline.getDate() + graceDays);
@@ -147,6 +158,10 @@ export async function endStampProgram(programId: number, graceDays: number): Pro
 
 export async function activateStampProgram(programId: number): Promise<void> {
   try {
+    const program = await getStampProgramById(programId);
+    if (!program?.store_id) throw new Error("Stamp program not found.");
+    await assertStoreOwnerCanManagePremiumCampaigns(program.store_id);
+
     const { error } = await supabase
       .from("store_stamps")
       .update({
@@ -224,6 +239,10 @@ export async function getCollectorsByProgramId(
 
 export async function deleteStampProgram(programId: number): Promise<void> {
   try {
+    const program = await getStampProgramById(programId);
+    if (!program?.store_id) throw new Error("Stamp program not found.");
+    await assertStoreOwnerCanManagePremiumCampaigns(program.store_id);
+
     const { error } = await supabase
       .from("store_stamps")
       .delete()

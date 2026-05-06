@@ -4,7 +4,6 @@ import { Image } from "expo-image";
 import { View, Text, TouchableOpacity, SafeAreaView } from "@/tw";
 import { Modal } from "@/components/modal";
 import { useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { getAllStreaksByStoreId, endStreakProgram, publishStreakProgram, activateStreakProgram, deleteStreakProgram } from "@/services/store-manager/streak-service";
 import { Streak, StreakTabs } from "@/type/store-manager/streak";
 import { Plus } from "lucide-react-native";
@@ -13,8 +12,12 @@ import { StreakCardSkeleton } from "@/components/skeleton/store_manager/streak-s
 import { useStreakViewStore } from "@/store/store-manager/streak-store";
 import { AppHeader } from "@/components/header";
 import { useTranslation } from "react-i18next";
+import { useStorePremiumCampaignEdit } from "@/hooks/store-manager/use-store-premium-campaign-edit";
+import { formatDate } from "@/utils/store_manager/streak-utils";
+import { resolveStreakErrorI18nKey } from "@/services/store-manager/streak-user-messages";
 
 const WEB_MAX_WIDTH = 896;
+const CONTENT_INSET = 16;
 const WEB_TAB_PILL_STYLE = { flexGrow: 1, flexBasis: 120, minWidth: 0 };
 
 export default function ViewStreak() {
@@ -41,6 +44,9 @@ export default function ViewStreak() {
     setActing,
     setModal,
   } = useStreakViewStore();
+
+  const { canEdit, loading: permLoading, expiresAtIso } = useStorePremiumCampaignEdit(storeId);
+  const campaignsLocked = !permLoading && !canEdit;
 
   const load = useCallback(() => {
     if (!storeId) return;
@@ -73,11 +79,35 @@ export default function ViewStreak() {
   const showError = (message: string) =>
     setModal({ title: t("store_manager.streak.error"), message, buttons: [{ label: t("label.ok"), onPress: () => setModal(null) }] });
 
+  const showStreakError = (e: unknown) => {
+    const key = resolveStreakErrorI18nKey(e);
+    const raw = e instanceof Error ? e.message : String(e);
+    const message = key
+      ? t(key)
+      : raw.length > 0 && raw.length < 200
+        ? raw
+        : t("store_manager.streak.errors.generic");
+    showError(message);
+  };
+
   const handlePublish = (streak: Streak) => {
+    const hasSchedule = Boolean(streak.start_at);
+    const hasActiveProgram = streaks.some((s) => s.status === "active");
     const hasOtherUpcoming = streaks.some(
       (s) => s.status === "upcoming" && s.id !== streak.id,
     );
-    if (hasOtherUpcoming) {
+
+    if (!hasSchedule && hasActiveProgram) {
+      setModal({
+        title: t("store_manager.streak.activeExistsTitle"),
+        message: t("store_manager.streak.activeExistsMessage"),
+        buttons: [{ label: t("label.ok"), onPress: () => setModal(null) }],
+      });
+      return;
+    }
+
+    const publishWouldCreateUpcoming = hasSchedule || hasActiveProgram;
+    if (publishWouldCreateUpcoming && hasOtherUpcoming) {
       setModal({
         title: t("store_manager.streak.upcomingExistsTitle"),
         message: t("store_manager.streak.upcomingExistsMessage"),
@@ -86,12 +116,26 @@ export default function ViewStreak() {
       return;
     }
 
+    const publishMessage = hasSchedule
+      ? t("store_manager.streak.publishMessage")
+      : t("store_manager.streak.publishMessageNoScheduleLive");
+    const primaryLabel = hasSchedule
+      ? t("store_manager.streak.publish")
+      : t("store_manager.streak.activate");
+
     setModal({
       title: t("store_manager.streak.publishTitle"),
-      message: t("store_manager.streak.publishMessage"),
+      message: publishMessage,
       buttons: [
         { label: t("label.cancel"),  variant: "secondary", onPress: () => setModal(null) },
-        { label: t("store_manager.streak.publish"), variant: "primary", onPress: () => { setModal(null); doPublish(streak.id!); } },
+        {
+          label: primaryLabel,
+          variant: "primary",
+          onPress: () => {
+            setModal(null);
+            void doPublish(streak.id!);
+          },
+        },
       ],
     });
   };
@@ -109,7 +153,7 @@ export default function ViewStreak() {
       await publishStreakProgram(programId);
       load();
     } catch (e) {
-      showError((e as Error).message ?? t("store_manager.streak.publishFailed"));
+      showStreakError(e);
     } finally {
       setActing(null);
     }
@@ -132,7 +176,7 @@ export default function ViewStreak() {
       await activateStreakProgram(programId);
       load();
     } catch (e) {
-      showError((e as Error).message ?? t("store_manager.streak.activateFailed"));
+      showStreakError(e);
     } finally {
       setActing(null);
     }
@@ -166,7 +210,7 @@ export default function ViewStreak() {
       await endStreakProgram(programId);
       load();
     } catch (e) {
-      showError((e as Error).message ?? t("store_manager.streak.endFailed"));
+      showStreakError(e);
     } finally {
       setActing(null);
     }
@@ -178,7 +222,7 @@ export default function ViewStreak() {
       await deleteStreakProgram(programId);
       load();
     } catch (e) {
-      showError((e as Error).message ?? t("store_manager.streak.deleteFailed"));
+      showStreakError(e);
     } finally {
       setActing(null);
     }
@@ -212,9 +256,22 @@ export default function ViewStreak() {
         }}
       />
 
+      {campaignsLocked ? (
+        <View className={isWeb ? "px-4 pt-3 items-center" : "px-4 pt-3"}>
+          <View className={`w-full rounded-xl border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/40 px-3 py-2.5 ${isWeb ? "max-w-4xl" : ""}`}>
+            <Text className="text-xs font-poppins text-amber-900 dark:text-amber-200 leading-5">
+              {expiresAtIso
+                ? t("store_manager.premiumCampaigns.bannerWithExpiry", { date: formatDate(expiresAtIso) })
+                : t("store_manager.premiumCampaigns.banner")}
+            </Text>
+          </View>
+        </View>
+      ) : null}
+
       {Platform.OS === "web" ? (
-        <View className="bg-backgroundMuted dark:bg-slate-950 px-4 pt-4 items-center">
-          <View className="w-full max-w-4xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-xl overflow-hidden flex-row flex-wrap p-1 gap-1">
+        <View className="bg-backgroundMuted dark:bg-slate-950 pt-4 items-center">
+          <View style={{ width: "100%", maxWidth: WEB_MAX_WIDTH, paddingHorizontal: CONTENT_INSET }}>
+            <View className="w-full bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-xl overflow-hidden flex-row flex-wrap p-1 gap-1">
             {StreakTabs.map((tab) => {
               const active = activeTab === tab.key;
               const count =
@@ -251,11 +308,12 @@ export default function ViewStreak() {
                 </TouchableOpacity>
               );
             })}
+            </View>
           </View>
         </View>
       ) : (
         <View className="border-b border-slate-100 dark:border-slate-800 px-4 py-3">
-          <View className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-xl overflow-hidden flex-row p-1">
+          <View className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-xl overflow-hidden flex-row p-1 px-4">
             {StreakTabs.map((tab) => {
               const active = activeTab === tab.key;
               const count =
@@ -298,16 +356,27 @@ export default function ViewStreak() {
 
       {loading ? (
         <View
-          className="flex-1 pt-2"
-          style={Platform.OS === "web" ? { width: "100%", maxWidth: WEB_MAX_WIDTH, alignSelf: "center" } : undefined}
+          style={[
+            { flex: 1, padding: CONTENT_INSET, gap: 12 },
+            Platform.OS === "web"
+              ? { width: "100%", maxWidth: WEB_MAX_WIDTH, alignSelf: "center" }
+              : null,
+          ]}
         >
           <StreakCardSkeleton />
         </View>
       ) : tabStreaks.length === 0 ? (
-        <View className={isWeb ? "flex-1 px-4 pb-4 items-center mt-4" : "flex-1 px-4 pb-4 mt-4"}>
+        <View
+          style={[
+            { flex: 1, padding: CONTENT_INSET, gap: 12 },
+            Platform.OS === "web"
+              ? { width: "100%", maxWidth: WEB_MAX_WIDTH, alignSelf: "center" }
+              : null,
+          ]}
+        >
           <View
             className={`w-full bg-white dark:bg-darkBackground rounded-xl overflow-hidden items-center justify-center ${
-              isWeb ? "max-w-4xl px-6 py-12 gap-y-3" : "px-5 py-10 gap-y-3"
+              isWeb ? "px-6 py-12 gap-y-3" : "px-5 py-10 gap-y-3"
             }`}
           >
             <Image
@@ -334,42 +403,52 @@ export default function ViewStreak() {
           </View>
         </View>
       ) : (
-        <FlatList
-          data={tabStreaks}
-          keyExtractor={(item, index) => `${item.id ?? index}`}
-          contentContainerStyle={{
-            padding: 16,
-            gap: 12,
-            ...(Platform.OS === "web" ? { width: "100%", maxWidth: WEB_MAX_WIDTH, alignSelf: "center" } : null),
-          }}
-          showsVerticalScrollIndicator={false}
-          onEndReached={handleLoadMore}
-          onEndReachedThreshold={0.35}
-          renderItem={({ item: streak }) => (
-            <StreakCard
-              streak={streak}
-              isDark={isDark}
-              onEdit={streak.status === "draft" ? () => handleEdit(streak) : undefined}
-              onPublish={streak.status === "draft" ? () => handlePublish(streak) : undefined}
-              onActivate={streak.status === "upcoming" ? () => handleActivate(streak) : undefined}
-              onEnd={streak.status === "active" ? () => handleEnd(streak) : undefined}
-              onDelete={(streak.status === "draft" || streak.status === "upcoming") ? () => handleDelete(streak) : undefined}
-              isPublishing={acting?.id === streak.id && acting?.action === "publish"}
-              isActivating={acting?.id === streak.id && acting?.action === "activate"}
-              isEnding={acting?.id === streak.id && acting?.action === "end"}
-              isDeleting={acting?.id === streak.id && acting?.action === "delete"}
-            />
-          )}
-        />
+        <View
+          style={[
+            { flex: 1, paddingHorizontal: CONTENT_INSET },
+            Platform.OS === "web"
+              ? { width: "100%", maxWidth: WEB_MAX_WIDTH, alignSelf: "center" }
+              : null,
+          ]}
+        >
+          <FlatList
+            data={tabStreaks}
+            keyExtractor={(item, index) => `${item.id ?? index}`}
+            style={{ flex: 1 }}
+            contentContainerStyle={{
+              paddingVertical: CONTENT_INSET,
+              gap: 12,
+            }}
+            showsVerticalScrollIndicator={false}
+            onEndReached={handleLoadMore}
+            onEndReachedThreshold={0.35}
+            renderItem={({ item: streak }) => (
+              <StreakCard
+                streak={streak}
+                isDark={isDark}
+                readonlyCampaigns={campaignsLocked}
+                onEdit={streak.status === "draft" ? () => handleEdit(streak) : undefined}
+                onPublish={streak.status === "draft" ? () => handlePublish(streak) : undefined}
+                onActivate={streak.status === "upcoming" ? () => handleActivate(streak) : undefined}
+                onEnd={streak.status === "active" ? () => handleEnd(streak) : undefined}
+                onDelete={(streak.status === "draft" || streak.status === "upcoming") ? () => handleDelete(streak) : undefined}
+                isPublishing={acting?.id === streak.id && acting?.action === "publish"}
+                isActivating={acting?.id === streak.id && acting?.action === "activate"}
+                isEnding={acting?.id === streak.id && acting?.action === "end"}
+                isDeleting={acting?.id === streak.id && acting?.action === "delete"}
+              />
+            )}
+          />
+        </View>
       )}
 
-      {activeTab !== "ended" && (
+      {activeTab !== "ended" && !campaignsLocked && (
         Platform.OS === "web" ? (
           <View
             pointerEvents="box-none"
             style={{ position: "absolute", left: 0, right: 0, bottom: 60, alignItems: "center" }}
           >
-            <View style={{ width: "100%", maxWidth: WEB_MAX_WIDTH, paddingHorizontal: 16, alignItems: "flex-end" }}>
+            <View style={{ width: "100%", maxWidth: WEB_MAX_WIDTH, paddingHorizontal: CONTENT_INSET, alignItems: "flex-end" }}>
               <TouchableOpacity
                 className="w-14 h-14 rounded-full bg-primary items-center justify-center"
                 activeOpacity={0.85}

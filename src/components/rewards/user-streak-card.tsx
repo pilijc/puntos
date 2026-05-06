@@ -7,7 +7,7 @@ import { storeLogos } from "@/data/rewards";
 import { useTranslation } from "react-i18next";
 import { ActivityIndicator, Modal as RNModal, Pressable, StyleSheet, View as RNView } from "react-native";
 import { useRouter } from "expo-router";
-import { recordUserStreak, getStreakEarnedDates } from "@/services/streak-service";
+import { recordUserStreak, getStreakEarnedDates, STREAK_NEW_ENROLLMENT_BLOCKED } from "@/services/streak-service";
 import { supabase } from "@/supabase/supabase";
 import { Modal, type ModalButton } from "@/components/modal";
 
@@ -517,11 +517,19 @@ export default function UserStreakCard({
                         }
                       } catch (e) {
                         console.error("Failed to record streak:", e);
-                        showModal(
-                          "Error",
-                          "Something went wrong. Please try again.",
-                          [{ label: "OK", onPress: closeModal, variant: "secondary" }],
-                        );
+                        if (e instanceof Error && e.message === STREAK_NEW_ENROLLMENT_BLOCKED) {
+                          showModal(
+                            translate("user.rewards.messages.streakEnrollmentClosedTitle"),
+                            translate("user.rewards.messages.streakEnrollmentClosedBody"),
+                            [{ label: "OK", onPress: closeModal, variant: "secondary" }],
+                          );
+                        } else {
+                          showModal(
+                            "Error",
+                            "Something went wrong. Please try again.",
+                            [{ label: "OK", onPress: closeModal, variant: "secondary" }],
+                          );
+                        }
                       } finally {
                         setIsRecording(false);
                       }

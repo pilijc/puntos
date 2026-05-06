@@ -1,5 +1,6 @@
 import { supabase } from "@/supabase/supabase";
 import { Reward } from "@/type/store-manager/reward";
+import { assertStoreOwnerCanManagePremiumCampaigns } from "@/services/store-manager/premium-campaign-gate";
 
 export async function getRewardsByStoreId(storeId: string): Promise<Reward[]> {
   try {
@@ -58,6 +59,8 @@ export async function upsertReward(
   reward: Partial<Reward> & Pick<Reward, "store_id" | "title" | "description" | "points_cost" | "stock" | "image_url">,
 ): Promise<void> {
   try {
+    await assertStoreOwnerCanManagePremiumCampaigns(reward.store_id);
+
     const isUpdate = Boolean(reward.id?.trim());
     const isActive = reward.is_active ?? true;
 
@@ -101,6 +104,8 @@ export async function upsertReward(
 
 export async function deleteReward(storeId: string, rewardId: string): Promise<void> {
   try {
+    await assertStoreOwnerCanManagePremiumCampaigns(storeId);
+
     const { error } = await supabase
       .from("store_rewards")
       .delete()

@@ -19,6 +19,7 @@ import { RewardPickerModal } from "@/components/store_manager/stamp/reward-picke
 import { Gift, Check, ChevronRight } from "lucide-react-native";
 import { TextField } from "@/components/text-field";
 import { useTranslation } from "react-i18next";
+import { useStorePremiumCampaignEdit } from "@/hooks/store-manager/use-store-premium-campaign-edit";
 
 export default function ConfigureStamp() {
   const { t } = useTranslation();
@@ -57,9 +58,16 @@ export default function ConfigureStamp() {
   const [selectedReward, setSelectedReward] = useState<Reward | null>(null);
   const [storeHasRewards, setStoreHasRewards] = useState(true);
 
+  const { canEdit, loading: permLoading } = useStorePremiumCampaignEdit(storeId);
+
   useEffect(() => {
     setCheckingActive(false);
   }, [setCheckingActive]);
+
+  useEffect(() => {
+    if (!storeId || permLoading || canEdit) return;
+    router.replace({ pathname: "/(store_manager)/stamp", params: { storeId } });
+  }, [storeId, permLoading, canEdit, router]);
 
   useFocusEffect(
     useCallback(() => {

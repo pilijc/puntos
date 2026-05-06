@@ -1,4 +1,8 @@
 import { supabase } from "@/supabase/supabase";
+import {
+  getStoreOwnerId,
+  ownerCanManagePremiumCampaigns,
+} from "@/services/store-manager/premium-campaign-gate";
 import { withPostGISCoordinates } from "@/utils/location";
 
 export interface StampProgress {
@@ -54,6 +58,43 @@ export type StampResult = {
  */
 export async function issueStampForPurchase(purchaseId: number | string): Promise<StampResult> {
   try {
+    const { data: purchase, error: purchaseError } = await supabase
+      .from("purchases")
+      .select("id, user_id, store_id")
+      .eq("id", Number(purchaseId))
+      .maybeSingle();
+
+    if (purchaseError || !purchase) {
+      console.error("[issueStampForPurchase] Missing purchase row:", purchaseError?.message);
+      return { success: false, reason: "error" };
+    }
+
+    const { data: activeProgram } = await supabase
+      .from("store_stamps")
+      .select("id")
+      .eq("store_id", purchase.store_id)
+      .eq("status", "active")
+      .maybeSingle();
+
+    if (activeProgram?.id != null) {
+      const ownerId = await getStoreOwnerId(purchase.store_id);
+      const premium = await ownerCanManagePremiumCampaigns(ownerId);
+      if (!premium) {
+        const { count, error: enrolErr } = await supabase
+          .from("stamp_progress")
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", purchase.user_id)
+          .eq("stamp_program_id", activeProgram.id);
+
+        if (enrolErr) {
+          console.warn("[issueStampForPurchase] Enrollment check failed:", enrolErr.message);
+        } else if ((count ?? 0) === 0) {
+          // Free plan after downgrade: existing programs continue, no first-time enrollments.
+          return { success: true };
+        }
+      }
+    }
+
     const { data, error } = await supabase.rpc('issue_stamp_for_purchase', {
       p_purchase_id: Number(purchaseId),
     });

@@ -697,9 +697,12 @@ export default function Discover() {
                 "interpolate",
                 ["linear"],
                 ["zoom"],
-                5, 0.025,
+                5, 0.01,
                 10, 0.02,
-              ],
+                15, 0.035,
+                18, 0.05,
+                20, 0.07  
+              ]
             }}
           />
         </Mapbox.ShapeSource>
