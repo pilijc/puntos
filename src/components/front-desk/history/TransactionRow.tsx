@@ -4,6 +4,7 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { View, Text } from "@/tw";
 import { useColorScheme } from "react-native";
 import { formatTxTime } from "@/utils/store_manager/transaction";
+import { useTranslation } from "react-i18next";
 
 export type TxType = "earned" | "redeemed" | "pending";
 
@@ -24,15 +25,17 @@ interface TransactionRowProps {
     isLast: boolean;
 }
 
-const TYPE_CONFIG: Record<TxType, { icon: any; bg: string; bgDark: string; color: string; label: string }> = {
-    earned: { icon: null, bg: "#FFF3E0", bgDark: "#431407", color: "#FF6600", label: "Earned" },
-    redeemed: { icon: null, bg: "#F0FDF4", bgDark: "#052E16", color: "#22C55E", label: "Redeemed" },
-    pending: { icon: null, bg: "#FFF7ED", bgDark: "#431407", color: "#F59E0B", label: "Pending" },
-};
-
 const TransactionRow = memo(function TransactionRow({ tx, isFirst, isLast }: TransactionRowProps) {
+    const { t: translate } = useTranslation();
     const isDark = useColorScheme() === "dark";
     const borderColor = isDark ? "#262626" : "#F1F5F9";
+
+    const TYPE_CONFIG: Record<TxType, { icon: any; bg: string; bgDark: string; color: string; label: string }> = {
+        earned: { icon: null, bg: "#FFF3E0", bgDark: "#431407", color: "#FF6600", label: translate("frontdesk.transaction.history.filters.earned") },
+        redeemed: { icon: null, bg: "#F0FDF4", bgDark: "#052E16", color: "#22C55E", label: translate("frontdesk.transaction.history.filters.redeemed") },
+        pending: { icon: null, bg: "#FFF7ED", bgDark: "#431407", color: "#F59E0B", label: translate("frontdesk.transaction.history.filters.pending") },
+    };
+
     const cfg = TYPE_CONFIG[tx.type] ?? TYPE_CONFIG.earned;
     const amountColor = tx.type === "redeemed" ? "#EF4444" : tx.type === "pending" ? "#F59E0B" : "#FF6600";
     const amountPrefix = tx.type === "redeemed" ? "−" : "+";
@@ -60,7 +63,7 @@ const TransactionRow = memo(function TransactionRow({ tx, isFirst, isLast }: Tra
             <View className="flex-1">
                 <View className="flex-row items-start justify-between">
                     <Text className="text-sm font-poppins-bold text-textPrimary dark:text-darkTextPrimary" numberOfLines={1} style={{ flex: 1 }}>
-                        {tx.customerName ?? "Customer"}
+                        {tx.customerName ?? translate("label.customer")}
                     </Text>
                     <Text style={{ fontSize: 13, fontFamily: "Poppins-Bold", color: amountColor }} numberOfLines={1}>
                         {amountPrefix}{tx.points} pts

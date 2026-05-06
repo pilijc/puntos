@@ -21,9 +21,9 @@ export default function RecentTransactions({ recentScans }: RecentTransactionsPr
     const hours = Math.floor(diff / (1000 * 60 * 60));
     const days = Math.floor(hours / 24);
     if (minutes < 1) return translate("frontdesk.transaction.recent.time.justNow");
-    if (minutes < 60) return `${minutes}${translate(minutes === 1 ? "frontdesk.transaction.recent.time.minute" : "frontdesk.transaction.recent.time.minutes")} ago`;
-    if (hours < 24) return `${hours}${translate(hours === 1 ? "frontdesk.transaction.recent.time.hour" : "frontdesk.transaction.recent.time.hours")} ago`;
-    return `${days}${translate(days === 1 ? "frontdesk.transaction.recent.time.day" : "frontdesk.transaction.recent.time.days")} ago`;
+    if (minutes < 60) return `${minutes}${translate(minutes === 1 ? "frontdesk.transaction.recent.time.minute" : "frontdesk.transaction.recent.time.minutes")}${translate("frontdesk.transaction.recent.time.ago")}`;
+    if (hours < 24) return `${hours}${translate(hours === 1 ? "frontdesk.transaction.recent.time.hour" : "frontdesk.transaction.recent.time.hours")}${translate("frontdesk.transaction.recent.time.ago")}`;
+    return `${days}${translate(days === 1 ? "frontdesk.transaction.recent.time.day" : "frontdesk.transaction.recent.time.days")}${translate("frontdesk.transaction.recent.time.ago")}`;
   };
 
   const getTransactionIcon = (type: string, method?: string) => {
@@ -48,13 +48,13 @@ export default function RecentTransactions({ recentScans }: RecentTransactionsPr
 
   const getTransactionDescription = (scan: any) => {
     if (scan.type === "redeemed") {
-      return scan.rewardTitle || "Reward Redemption";
+      return scan.rewardTitle || translate("frontdesk.transaction.recent.rewardRedemption");
     }
     if (scan.method === "qr") {
-      return "QR Scan";
+      return translate("frontdesk.transaction.recent.qrScan");
     }
     if (scan.method === "voucher") {
-      return "Voucher";
+      return translate("frontdesk.transaction.recent.voucher");
     }
     return translate("frontdesk.transaction.recent.purchase");
   };
@@ -99,7 +99,7 @@ export default function RecentTransactions({ recentScans }: RecentTransactionsPr
                 <Text className={`text-base font-poppins-bold ${getPointsColor(scan.type)}`}>
                   {scan.type === "redeemed" ? `-${scan.points}` : `+${scan.points}`}
                 </Text>
-                <Text className="text-xs font-poppins text-neutral-400">pts</Text>
+                <Text className="text-xs font-poppins text-neutral-400">{translate("frontdesk.transaction.recent.pts")}</Text>
               </View>
             </View>
           </View>

@@ -347,7 +347,7 @@ export default function SignUp() {
       }
       setLoadingGoogle(false);
       reset();
-      const message = error?.msg ?? error?.message ?? "Something went wrong";
+      const message = error?.msg ?? error?.message ?? translate("label.somethingWentWrong");
       setModal({
         title: translate("onboarding.signup.error.googleFailed"),
         message,

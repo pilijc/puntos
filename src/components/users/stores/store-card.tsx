@@ -2,14 +2,9 @@ import React from "react";
 import { Image } from "react-native";
 import { View, Text } from "@/tw";
 import { Button } from "@/components/button";
+import { useTranslation } from "react-i18next";
 
 const SOFT_CARD_SHADOW = {};
-
-const STATUS_CONFIG: Record<string, { label: string; color: string; dot: string; bg: string }> = {
-  ACTIVE: { label: "Active", color: "#16A34A", dot: "#22C55E", bg: "#F0FDF4" },
-  PENDING: { label: "Pending", color: "#2563EB", dot: "#3B82F6", bg: "#EFF6FF" }, 
-  INACTIVE: { label: "Inactive", color: "#DC2626", dot: "#EF4444", bg: "#FEF2F2" },
-};
 
 type StoreCardProps = {
   store: any;
@@ -19,6 +14,14 @@ type StoreCardProps = {
 };
 
 export const StoreCard = ({ store, onEdit, onActivate, onDeactivate }: StoreCardProps) => {
+  const { t: translate } = useTranslation();
+  
+  const STATUS_CONFIG: Record<string, { label: string; color: string; dot: string; bg: string }> = {
+    ACTIVE: { label: translate("label.active"), color: "#16A34A", dot: "#22C55E", bg: "#F0FDF4" },
+    PENDING: { label: translate("label.pending"), color: "#2563EB", dot: "#3B82F6", bg: "#EFF6FF" }, 
+    INACTIVE: { label: translate("label.inactive"), color: "#DC2626", dot: "#EF4444", bg: "#FEF2F2" },
+  };
+
   const status = store.status?.toUpperCase() ?? "INACTIVE";
   const cfg = STATUS_CONFIG[status] || STATUS_CONFIG["INACTIVE"];
   const isActive = status === "ACTIVE";
@@ -57,7 +60,7 @@ export const StoreCard = ({ store, onEdit, onActivate, onDeactivate }: StoreCard
       <View className="flex-row gap-2">
         <View className="flex-1">
           <Button
-            label="Edit"
+            label={translate("label.edit")}
             variant="secondary"
             onPress={() => onEdit?.(store)}
             fullWidth
@@ -66,14 +69,14 @@ export const StoreCard = ({ store, onEdit, onActivate, onDeactivate }: StoreCard
         <View className="flex-1">
           {isActive ? (
             <Button
-              label="Deactivate"
+              label={translate("label.deactivate")}
               variant="danger"
               onPress={() => onDeactivate?.(store)}
               fullWidth
             />
           ) : (
             <Button
-              label="Activate"
+              label={translate("label.activate")}
               variant="success"
               onPress={() => onActivate?.(store)}
               fullWidth
