@@ -180,6 +180,7 @@ export type StampCardProps = {
   reward: Reward | null;
   activeTab: TabKey;
   isDark: boolean;
+  readonlyCampaigns?: boolean;
   collector: CollectorSlice;
   programId: number;
   setCollectorByProgram: Dispatch<SetStateAction<Record<number, CollectorSlice>>>;

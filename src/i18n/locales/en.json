@@ -286,6 +286,8 @@
                 "stampSuccess": "You have successfully collected a stamp!",
                 "alreadyStamped": "You have already stamped at this store today.",
                 "stampDisabled": "This store currently has stamps disabled.",
+                "streakEnrollmentClosedTitle": "Streak unavailable",
+                "streakEnrollmentClosedBody": "This store isn't enrolling new streak participants right now. If you were already collecting here, please try again.",
                 "claimSuccess": "Reward claimed! Please check your history."
             },
             "days": {
@@ -507,12 +509,16 @@
             "title": "Notifications & Privacy",
             "alerts": {
                 "title": "Nearby Alerts",
-                "description": "Get notified when rewards are close"
+                "description": "Get notified when rewards are close",
+                "allow": "Notifications Enabled",
+                "disabled": "Notifications Disabled",
+                "denied": "Notifications Denied"
             },
             "location": {
                 "title": "Location Access",
-                "allow": "Access Allowed",
-                "denied": "Access Denied"
+                "allow": "Location Enabled",
+                "disabled": "Location Disabled",
+                "denied": "Location Denied"
             },
             "permissions": "To change {{services}} permissions, please update them in your device’s Settings. Would you like to open it now?",
             "services": {
@@ -540,6 +546,11 @@
         }
     },
     "storeManager": {
+        "premiumCampaigns": {
+            "banner": "Your current plan doesn't include editing stamp programs, streak programs, or the rewards catalog. Existing programs stay active — current participants can keep earning, but new customers can't join these campaigns until you upgrade.",
+            "bannerWithExpiry": "Your current plan doesn't include editing stamp programs, streak programs, or the rewards catalog. Existing programs stay active — current participants can keep earning, but new customers can't join these campaigns until you upgrade. Program changes will be fully disabled until {{date}}.",
+            "serviceLockedMessage": "Upgrade your plan to create or edit stamp, streak, and reward campaigns."
+        },
         "dashboard": {
             "title": "Dashboard",
             "noStores": "No stores available.",
@@ -902,7 +913,47 @@
             "emptyActiveBody": "Launch a stamp program to start rewarding your customers.",
             "emptyDraftBody": "Draft stamp programs will appear here.",
             "emptyEndedBody": "Ended stamp programs will appear here.",
-            "createProgram": "Create New Program"
+            "createProgram": "Create New Program",
+            "labelStarted": "Started",
+            "labelEndedOn": "Ended on",
+            "stampsRequired": "Stamps required",
+            "expiration": "Expiration",
+            "expirationNone": "No Expiration",
+            "expirationCardLimit": "{{count}} day card limit",
+            "expirationCardLimit_plural": "{{count}} days card limit",
+            "reward": "Reward",
+            "noRewardLinked": "No reward linked",
+            "graceBanner": "Grace period ends {{date}} — users can redeem but not earn stamps.",
+            "collectors": "Collectors",
+            "noCollectors": "No collectors for this program",
+            "loadMoreRemaining": "Load more ({{remaining}} remaining)",
+            "allCollectorsShown": "All {{count}} collectors shown",
+            "unknownUser": "Unknown User",
+            "badgeExpired": "EXPIRED",
+            "badgeRedeemable": "REDEEMABLE",
+            "lastStamp": "Last stamp: {{date}}",
+            "deleteTitle": "Delete Stamp Program",
+            "deleteMessage": "Are you sure you want to delete this stamp program?",
+            "editPlaceholderTitle": "Edit Program",
+            "editPlaceholderMessage": "Edit draft program will be implemented next.",
+            "activeExistsTitle": "Active Program Exists",
+            "activeExistsMessage": "There is already an active stamp program for this store. End it first before activating another one.",
+            "activateDraftTitle": "Activate Program",
+            "activateDraftMessage": "This draft will be activated and users can start collecting stamps immediately.",
+            "activateButton": "Activate",
+            "endStampTitle": "End Stamp Program",
+            "endStampMessage": "Choose a grace period during which users can still redeem existing stamps. After the grace period, no earning or redeeming is possible.",
+            "gracePeriod14": "14-Day Grace Period",
+            "gracePeriod7": "7-Day Grace Period",
+            "gracePeriodNone": "No Grace Period",
+            "endProgram": "End Program",
+            "status": {
+                "active": "Active",
+                "draft": "Draft",
+                "ended": "Ended",
+                "ended_grace": "Grace Period",
+                "ended_expired": "Expired"
+            }
         },
         "stampConfigure": {
             "editTitle": "Edit Stamp Program",
@@ -961,12 +1012,18 @@
             "emptyEndedBody": "Ended streak programs will appear here.",
             "upcomingExistsTitle": "Upcoming Program Exists",
             "upcomingExistsMessage": "There is already an upcoming streak program for this store. End or activate it first before publishing another one.",
+            "activeExistsTitle": "Active Streak Exists",
+            "activeExistsMessage": "There is already an active streak program for this store. End it before activating this one, or set an activation schedule to queue this program as upcoming.",
             "publishTitle": "Publish Streak Program",
             "publishMessage": "Users will be able to see this program is coming. You can activate it when you're ready.",
+            "publishMessageNoScheduleLive": "No start date is set. This program will go live for earning immediately (you won’t need a separate activate step), as long as no other program is active.",
+            "publishMessageNoScheduleQueued": "No activation schedule is set. If another streak is still active, this program will become upcoming and start after that one ends; otherwise it goes live for earning immediately.",
             "publish": "Publish",
             "publishFailed": "Failed to publish program.",
             "activateTitle": "Activate Streak Program",
-            "activateMessage": "Users will be able to start earning streak points immediately.",
+            "activateMessage": "Earning will start now for customers (scheduled start time will be ignored). Continue?",
+            "upcomingBannerScheduled": "Visible to customers. Auto-starts on {{date}}. Tap Activate to start earning immediately instead.",
+            "upcomingBannerFlexible": "Visible to customers. Tap Activate when you're ready for earning to begin.",
             "activate": "Activate",
             "activateFailed": "Failed to activate program.",
             "endTitle": "End Streak Program",
@@ -977,7 +1034,18 @@
             "deleteMessage": "This will permanently delete this program. This action cannot be undone.",
             "deleteProgram": "Delete Program",
             "deleteFailed": "Failed to delete program.",
-            "error": "Error"
+            "error": "Error",
+            "errors": {
+                "generic": "Something went wrong. Please try again.",
+                "upcomingNeedsStart": "A start date is required for an upcoming program. Try publishing again.",
+                "startInPast": "Choose a start time that is not in the past.",
+                "duplicateUpcoming": "Only one upcoming streak is allowed per store. Change or remove the other upcoming program first.",
+                "duplicateActive": "Another streak is already active for this store. End it before activating this one.",
+                "notFound": "This streak program could not be found.",
+                "premiumRequired": "Upgrade your plan to manage streak programs.",
+                "onlyDraftPublish": "Only draft programs can be published.",
+                "onlyUpcomingActivate": "Only upcoming programs can be activated this way."
+            }
         },
         "streakConfigure": {
             "editTitle": "Edit Streak Program",
@@ -999,6 +1067,7 @@
             "streakDaysLength": "Streak Days Length",
             "streakDaysPlaceholder": "e.g. 7",
             "maxDaysCap": "Max Days Cap",
+            "maxDaysCapHint": "Leave blank for no cap.",
             "maxDaysPlaceholder": "e.g. 30",
             "rewardDescription": "Reward Description",
             "rewardDescriptionPlaceholder": "Describe the benefit to the user...",

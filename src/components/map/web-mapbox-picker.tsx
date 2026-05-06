@@ -148,16 +148,13 @@ export function WebMapboxPicker({
       updateRadiusCircle();
     };
 
-    apply();
-    if (!map.isStyleLoaded()) {
+    if (map.isStyleLoaded()) {
+      apply();
+    } else {
       map.once("load", apply);
     }
-    const raf = requestAnimationFrame(() => {
-      apply();
-    });
 
     return () => {
-      cancelAnimationFrame(raf);
       map.off("load", apply);
     };
   }, [hasCoords, latitude, longitude, radiusMeters, markerColor]);

@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { ActivityIndicator } from "react-native";
 import { View, Text, TouchableOpacity } from "@/tw";
 import { Check, ChevronDown, Flame, Gift, Info, Pencil, Play, SendHorizonal, StopCircle, Trash2, Users } from "lucide-react-native";
@@ -12,6 +13,7 @@ import { ParticipantRow } from "./participant-row";
 export function StreakCard({
   streak,
   isDark,
+  readonlyCampaigns = false,
   onEdit,
   onPublish,
   onActivate,
@@ -23,6 +25,7 @@ export function StreakCard({
   isEnding,
   isDeleting,
 }: StreakCardProps) {
+  const { t } = useTranslation();
   const PAGE_SIZE = 5;
   const status = streak.status ?? "draft";
   const isFixed = !streak.points_mode || streak.points_mode === "fixed";
@@ -184,8 +187,10 @@ export function StreakCard({
           <Info size={14} color="#3B82F6" />
           <Text className="text-xs font-poppins text-textSecondary flex-1">
             {streak.start_at
-              ? `Visible to users. Auto-activates on ${formatDateTime(streak.start_at)}.`
-              : "Visible to users. Activate when you're ready for earning to begin."}
+              ? t("store_manager.streak.upcomingBannerScheduled", {
+                  date: formatDateTime(streak.start_at),
+                })
+              : t("store_manager.streak.upcomingBannerFlexible")}
           </Text>
         </View>
       )}
@@ -199,7 +204,8 @@ export function StreakCard({
         </View>
       )}
 
-      <TouchableOpacity
+      { (status === "active" || status === "ended")  && !readonlyCampaigns && (
+        <TouchableOpacity
         activeOpacity={0.7}
         onPress={() => setParticipantsOpen((p) => !p)}
         className="flex-row items-center justify-between px-4 py-3"
@@ -221,6 +227,7 @@ export function StreakCard({
         </View>
         <ChevronDown size={20} color={COLORS.textMuted} />
       </TouchableOpacity>
+      )}
 
       {participantsOpen && (
         <View className="border-t border-slate-100 dark:border-slate-800">
@@ -281,7 +288,7 @@ export function StreakCard({
         </View>
       )}
 
-      {hasActions && (
+      {hasActions && !readonlyCampaigns && (
         <View className="px-4 pb-4 pt-2 border-t border-slate-100 dark:border-slate-800 gap-y-2">
           <View className="flex-row gap-x-2 flex-wrap">
             {onEnd && (

@@ -16,6 +16,7 @@
   "streakDaysLength": "Streak Days Length",
   "streakDaysPlaceholder": "e.g. 7",
   "maxDaysCap": "Max Days Cap",
+  "maxDaysCapHint": "Leave blank for no cap.",
   "maxDaysPlaceholder": "e.g. 30",
   "rewardDescription": "Reward Description",
   "rewardDescriptionPlaceholder": "Describe the benefit to the user...",

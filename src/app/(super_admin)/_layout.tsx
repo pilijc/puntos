@@ -49,6 +49,15 @@ function getTabIcon(routeName: string, color: string, size: number): React.React
 
 const HIDDEN_SCREENS = new Set(["manager-inbox"]);
 
+const WEB_SIDEBAR_ORDER: SidebarTabId[] = [
+    "index",
+    "users",
+    "stores",
+    "inbox",
+    "subscriptions",
+    "settings",
+];
+
 type WebSuperAdminSidebarTabBarProps = BottomTabBarProps & {
     isDark: boolean;
     expanded: boolean;
@@ -74,7 +83,13 @@ function WebSuperAdminSidebarTabBar({
     const activeBackground = isDark ? WEB_TAB_ACTIVE_BG_DARK : WEB_TAB_ACTIVE_BG_LIGHT;
     const inactiveColor = isDark ? "#737373" : "#8B8D98";
 
-    const visibleRoutes = state.routes.filter((r) => !HIDDEN_SCREENS.has(r.name));
+    const visibleRoutes = state.routes
+        .filter((r) => !HIDDEN_SCREENS.has(r.name))
+        .sort((a, b) => {
+            const ai = WEB_SIDEBAR_ORDER.indexOf(a.name as SidebarTabId);
+            const bi = WEB_SIDEBAR_ORDER.indexOf(b.name as SidebarTabId);
+            return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi);
+        });
 
     return (
         <View

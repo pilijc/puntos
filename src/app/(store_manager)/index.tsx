@@ -105,7 +105,7 @@ export default function StoreManagerDashboard() {
                   >
                     <View style={containerWidth < 1100 ? { width: Math.min(240, Math.max(containerWidth - 32, 160)) } : { flex: 1 }}>
                       <DashboardMetricTile
-                        label={translate("store_manager.dashboard.metrics.inStore", "Active Users")}
+                        label={`${translate("store_manager.dashboard.metrics.inStore", "Active Users")} (${selectedStore?.radius ?? 100}m)`}
                         value={activeUsers}
                         icon={Users}
                         loading={metricsLoading}
@@ -213,7 +213,7 @@ export default function StoreManagerDashboard() {
                   <View className="flex-1 flex-col gap-[10px]">
                     <View className="flex-1">
                       <DashboardMetricTile
-                        label={translate("store_manager.dashboard.metrics.inStore", "Active Users")}
+                        label={`${translate("store_manager.dashboard.metrics.inStore", "Active Users")} (${selectedStore?.radius ?? 100}m)`}
                         value={activeUsers}
                         icon={Users}
                         loading={metricsLoading}

@@ -13,15 +13,14 @@ import { LayoutDashboard, Store, ArrowLeftRight, Settings, CreditCard, PanelLeft
 import { useDeviceSession } from "@/hooks/store-manager/use-device-session";
 import { useManagerStoresStore } from "@/store/manager-stores-store";
 import { useSupportChatStore } from "@/store/support-chat-store";
+import { getManagerSubscription, getSubscriptionPlans } from "@/services/store-manager/subscription-service";
+import { isPaidUnlimitedPlan } from "@/services/store-manager/subscription-limits";
+import { lockExtraOwnerStores } from "@/services/store-service";
 
 const WEB_SIDEBAR_WIDTH = 260;
 const WEB_SIDEBAR_COLLAPSED_WIDTH = 76;
 const WEB_SIDEBAR_INSET_X = 16;
-const WEB_SIDEBAR_COLLAPSED_INSET_X = 10;
-const WEB_SIDEBAR_BRAND_PADDING_X = 24;
-const WEB_SIDEBAR_COLLAPSED_BRAND_PADDING_X = 18;
 const WEB_TAB_ICON_SIZE = 18;
-const WEB_TAB_ACTIVE_MARGIN_END = 100;
 const WEB_TAB_ACTIVE_BG_LIGHT = "#F3F4F6";
 const WEB_TAB_ACTIVE_BG_DARK = "#431407";
 const WEB_SIDEBAR_BORDER_LIGHT = "#F1F5F9";
@@ -177,7 +176,7 @@ const HIDDEN_SCREENS = new Set([
     "streak/index", "streak/configure-streaks", "stamp/configure-stamp",
     "stamp/index", "reward/index", "reward/add-rewards", "reward/view-reward",
     "qr/index", "qr/configure-qr", "staff/index", "staff/add-staff",
-    "detail/index", "detail/edit-details", "chat-support",
+    "detail/index", "detail/edit-details", "chat-support", "manager-inbox",
 ]);
 
 function WebStoreManagerSidebarTabBar({
@@ -196,7 +195,7 @@ function WebStoreManagerSidebarTabBar({
     const activeTab = activeSidebarTabFromPath(withTrailingSlash(pathname));
     const activeBackground = isDark ? WEB_TAB_ACTIVE_BG_DARK : WEB_TAB_ACTIVE_BG_LIGHT;
     const inactiveColor = isDark ? "#737373" : "#8B8D98";
-    const px = WEB_SIDEBAR_INSET_X; // Constant inset for stability
+    const px = WEB_SIDEBAR_INSET_X;
 
     const visibleRoutes = state.routes.filter((r) => !HIDDEN_SCREENS.has(r.name));
 
@@ -373,10 +372,62 @@ export default function StoreManagerLayout() {
     const stores = useManagerStoresStore((state) => state.stores);
     const fetchStores = useManagerStoresStore((state) => state.fetchStores);
     const { loadAllManagerConversations, conversations, subscribeInbox, cleanupRealtime } = useSupportChatStore();
+    const [didEnforceStoreLocks, setDidEnforceStoreLocks] = useState(false);
 
     useEffect(() => {
         fetchStores();
     }, [fetchStores]);
+
+    useEffect(() => {
+        const enforceStoreLocksIfNeeded = async () => {
+            if (!currentUserId) return;
+            if (didEnforceStoreLocks) return;
+            if (!stores?.length) return;
+
+            try {
+                const ownedStores = stores.filter((s) => String(s.owner_id ?? "") === String(currentUserId));
+                if (ownedStores.length <= 1) {
+                    setDidEnforceStoreLocks(true);
+                    return;
+                }
+
+                const [plans, managerRow] = await Promise.all([
+                    getSubscriptionPlans(),
+                    getManagerSubscription(currentUserId),
+                ]);
+
+                const planListForGate = (plans ?? []) as Array<{ id: number; slug?: string | null }>;
+                const isEntitled = isPaidUnlimitedPlan(managerRow, planListForGate);
+                if (isEntitled) {
+                    setDidEnforceStoreLocks(true);
+                    return;
+                }
+
+                // Free plan: keep one owned store unlocked, lock the rest (DB-backed).
+                // Preference: a store already unlocked; otherwise most recently created.
+                const unlockedCandidate =
+                    ownedStores.find((s) => s.billing_suspended === false) ??
+                    ownedStores
+                        .slice()
+                        .sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)))[0];
+
+                const keepId = unlockedCandidate?.id;
+                if (keepId == null) {
+                    setDidEnforceStoreLocks(true);
+                    return;
+                }
+
+                await lockExtraOwnerStores({ ownerId: currentUserId, unlockedStoreId: keepId });
+                await fetchStores(true);
+                setDidEnforceStoreLocks(true);
+            } catch (e) {
+                // If this fails, we don't want to block navigation; server-side/RLS should still protect critical writes.
+                console.warn("[subscription] store lock enforcement failed:", (e as any)?.message ?? e);
+            }
+        };
+
+        void enforceStoreLocksIfNeeded();
+    }, [currentUserId, didEnforceStoreLocks, fetchStores, stores]);
 
     useEffect(() => {
         if (!currentUserId) return;
@@ -607,8 +658,8 @@ export default function StoreManagerLayout() {
             <Tabs.Screen name="staff/add-staff" options={{ href: null }} />
             <Tabs.Screen name="detail/index" options={{ href: null }} />
             <Tabs.Screen name="detail/edit-details" options={{ href: null }} />
-            <Tabs.Screen name="chat-support" options={{ href: null, tabBarStyle: { display: "none" } }} />
-            <Tabs.Screen name="manager-inbox" options={{ href: null, tabBarStyle: { display: "none" } }} />
+            <Tabs.Screen name="chat-support" options={{ href: null, tabBarStyle: isWeb ? undefined : { display: "none" } }} />
+            <Tabs.Screen name="manager-inbox" options={{ href: null, tabBarStyle: isWeb ? undefined : { display: "none" } }} />
         </Tabs>
     );
 }

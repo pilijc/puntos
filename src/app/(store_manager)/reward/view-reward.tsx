@@ -12,6 +12,7 @@ import { AppHeader } from "@/components/header";
 import { Button } from "@/components/button";
 import { Gift } from "lucide-react-native";
 import { useTranslation } from "react-i18next";
+import { useStorePremiumCampaignEdit } from "@/hooks/store-manager/use-store-premium-campaign-edit";
 
 const WEB_MAX_WIDTH = 896;
 
@@ -29,6 +30,9 @@ export default function ViewReward() {
     message: string;
     buttons: ModalButton[];
   } | null>(null);
+
+  const { canEdit, loading: permLoading } = useStorePremiumCampaignEdit(storeId);
+  const campaignsLocked = !permLoading && !canEdit;
 
   const load = useCallback(async () => {
     if (!storeId || !rewardId) return;
@@ -193,7 +197,7 @@ export default function ViewReward() {
                       onPress={handleDelete}
                       variant="danger"
                       fullWidth
-                      disabled={deleting}
+                      disabled={campaignsLocked || deleting}
                       loading={deleting}
                     />
                   </View>
@@ -208,6 +212,7 @@ export default function ViewReward() {
                       }
                       variant="primary"
                       fullWidth
+                      disabled={campaignsLocked}
                     />
                   </View>
                 </View>

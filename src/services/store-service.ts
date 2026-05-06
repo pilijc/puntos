@@ -1,5 +1,12 @@
 import { supabase } from "@/supabase/supabase";
+import { formatPostGISLocation, withPostGISCoordinates } from "@/utils/location";
 
+export const STORE_SELECT = `
+    id, name, type, address, location, radius,
+    status, is_active, timezone, logo, owner_id,
+    phone, registration_number, business_document_image,
+    store_pictures, store_open, store_close, created_at, approved_at
+`;
 
 export interface CreateStorePayload {
     name: string;
@@ -24,11 +31,16 @@ export interface StoreRow {
     name: string;
     type: string | null;
     address: string | null;
+    // Derived from location for UI/map consumers; not backed by scalar DB columns.
     latitude: number | null;
     longitude: number | null;
+    location?: any;
     radius: number | null;
     status: string;
     is_active: boolean;
+    billing_suspended?: boolean | null;
+    billing_suspended_at?: string | null;
+    billing_suspension_reason?: string | null;
     timezone: string | null;
     logo: string | null;
     owner_id: string | null;
@@ -41,6 +53,8 @@ export interface StoreRow {
     created_at: string;
     approved_at: string | null;
 }
+
+
 
 /**
  * Calls the DB RPC to resolve a timezone string from a lon/lat point.
@@ -75,8 +89,9 @@ export async function createStore(payload: CreateStorePayload): Promise<StoreRow
             name: payload.name,
             type: payload.type,
             address: payload.address,
-            latitude: payload.latitude ?? null,
-            longitude: payload.longitude ?? null,
+            location: (payload.latitude != null && payload.longitude != null) 
+              ? formatPostGISLocation(payload.latitude, payload.longitude) 
+              : null,
             timezone: payload.timezone ?? null,
             phone: payload.phone ?? null,
             registration_number: payload.registrationNumber ?? null,
@@ -89,7 +104,7 @@ export async function createStore(payload: CreateStorePayload): Promise<StoreRow
             status: "pending_review",
             is_active: false,
         })
-        .select()
+        .select(STORE_SELECT)
         .single();
 
     if (storeError || !store) {
@@ -127,7 +142,7 @@ export async function createStore(payload: CreateStorePayload): Promise<StoreRow
         });
     }
 
-    return store as StoreRow;
+    return withPostGISCoordinates(store) as StoreRow;
 }
 
 export async function getMyStores(ownerId: string): Promise<StoreRow[]> {
@@ -137,7 +152,7 @@ export async function getMyStores(ownerId: string): Promise<StoreRow[]> {
     ] = await Promise.all([
         supabase
             .from("stores")
-            .select("*")
+            .select(STORE_SELECT)
             .eq("owner_id", ownerId)
             .eq("is_active", true)
             .order("created_at", { ascending: false }),
@@ -145,7 +160,7 @@ export async function getMyStores(ownerId: string): Promise<StoreRow[]> {
             .from("user_roles")
             .select(`
                 store_id,
-                stores:store_id!inner (*)
+                stores:store_id!inner (${STORE_SELECT})
             `)
             .eq("user_id", ownerId)
             .eq("stores.is_active", true)
@@ -167,7 +182,44 @@ export async function getMyStores(ownerId: string): Promise<StoreRow[]> {
         return true;
     });
 
-    return unique;
+    return unique.map((s) => withPostGISCoordinates(s));
+}
+
+/**
+ * Enforces the Free plan "1 unlocked store" behavior by marking other stores as locked.
+ * Locked stores are not deleted; they remain viewable and can be unlocked again if the user upgrades.
+ */
+export async function lockExtraOwnerStores(params: {
+    ownerId: string;
+    unlockedStoreId: number;
+}): Promise<void> {
+    const { ownerId, unlockedStoreId } = params;
+
+    // Unlock the chosen store.
+    const { error: unlockErr } = await supabase
+        .from("stores")
+        .update({
+            billing_suspended: false,
+            billing_suspended_at: null,
+            billing_suspension_reason: null,
+        })
+        .eq("owner_id", ownerId)
+        .eq("id", unlockedStoreId);
+
+    if (unlockErr) throw new Error(unlockErr.message);
+
+    // Lock all other stores owned by this manager.
+    const { error: lockErr } = await supabase
+        .from("stores")
+        .update({
+            billing_suspended: true,
+            billing_suspended_at: new Date().toISOString(),
+            billing_suspension_reason: "subscription_inactive",
+        })
+        .eq("owner_id", ownerId)
+        .neq("id", unlockedStoreId);
+
+    if (lockErr) throw new Error(lockErr.message);
 }
 
 export async function updateStoreLogo(storeId: number, imageUrl: string): Promise<void> {
@@ -208,7 +260,7 @@ export async function getAllStores(): Promise<AdminStoreRow[]> {
     const { data, error } = await supabase
         .from("stores")
         .select(`
-            id, name, type, address, latitude, longitude, radius,
+            id, name, type, address, location, radius,
             status, is_active, logo, owner_id,
             phone, registration_number, business_document_image, store_pictures, store_open, store_close, created_at, approved_at,
             users!owner_id ( name )
@@ -217,11 +269,14 @@ export async function getAllStores(): Promise<AdminStoreRow[]> {
 
     if (error) throw new Error(error.message);
 
-    return (data ?? []).map((row: any) => ({
-        ...row,
-        owner_name: row.users?.name ?? null,
-        users: undefined,
-    })) as AdminStoreRow[];
+    return (data ?? []).map((row: any) => {
+        const store = withPostGISCoordinates(row);
+        return {
+            ...store,
+            owner_name: row.users?.name ?? null,
+            users: undefined,
+        };
+    }) as AdminStoreRow[];
 }
 
 export async function updateStoreStatus(
@@ -239,13 +294,13 @@ export async function updateStoreStatus(
 
 export async function getStores() {
     try {
-			const { data, error } = await supabase
-				.from("stores")
-				.select("*")
-				.eq("status", "active")
-				.eq("is_active", true);
+				const { data, error } = await supabase
+					.from("stores")
+					.select(STORE_SELECT)
+					.eq("status", "active")
+					.eq("is_active", true);
     if (error) throw new Error(error.message);
-    return data;
+    return data.map((row: any) => withPostGISCoordinates(row));
     } catch (error) {
         throw error;
     }
@@ -253,12 +308,15 @@ export async function getStores() {
 
 export async function getStoreById(storeId: number) {
     try {
-			const { data, error } = await supabase
-				.from("stores")
-				.select("*")
-				.eq("id", storeId);
+				const { data, error } = await supabase
+					.from("stores")
+					.select(STORE_SELECT)
+					.eq("id", storeId);
 			if (error) throw new Error(error.message);
-			return data?.[0] ?? null;
+			const store = data?.[0] ?? null;
+			if (!store) return null;
+			
+			return withPostGISCoordinates(store);
     } catch (error) {
         throw error;
     }

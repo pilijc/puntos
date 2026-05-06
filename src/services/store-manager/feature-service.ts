@@ -1,5 +1,6 @@
 import { supabase } from "@/supabase/supabase";
 import { StoreFeature } from "@/type/store-manager/features";
+import { assertStoreOwnerCanManagePremiumCampaigns } from "@/services/store-manager/premium-campaign-gate";
 
 export async function getStoreFeaturesById(storeId: string): Promise<StoreFeature | null> {
 	try {
@@ -19,6 +20,24 @@ export async function getStoreFeaturesById(storeId: string): Promise<StoreFeatur
 
 export async function updateStoreFeatures(payload: StoreFeature): Promise<void> {
 	try {
+		const storeId = String(payload.store_id);
+		const { data: existing } = await supabase
+			.from("store_feature")
+			.select("stamp_enabled,streak_enabled,reward_enabled")
+			.eq("store_id", storeId)
+			.maybeSingle();
+
+		const prev = existing as { stamp_enabled?: boolean; streak_enabled?: boolean; reward_enabled?: boolean } | null;
+		const campaignsChanged =
+			prev == null ||
+			Boolean(prev.stamp_enabled) !== Boolean(payload.stamp_enabled) ||
+			Boolean(prev.streak_enabled) !== Boolean(payload.streak_enabled) ||
+			Boolean(prev.reward_enabled) !== Boolean(payload.reward_enabled);
+
+		if (campaignsChanged) {
+			await assertStoreOwnerCanManagePremiumCampaigns(storeId);
+		}
+
 		const { error } = await supabase
 			.from("store_feature")
 			.upsert({

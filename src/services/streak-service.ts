@@ -1,4 +1,10 @@
 import { supabase } from "@/supabase/supabase";
+import {
+  getStoreOwnerId,
+  ownerCanManagePremiumCampaigns,
+} from "@/services/store-manager/premium-campaign-gate";
+export const STREAK_NEW_ENROLLMENT_BLOCKED = "STREAK_NEW_ENROLLMENT_BLOCKED";
+import { withPostGISCoordinates } from "@/utils/location";
 
 export interface RecordStreakResult {
   alreadyRecorded: boolean;
@@ -41,6 +47,23 @@ export async function recordUserStreak(
   streakLength: number = 0,   // kept for call-site compatibility, unused
 ): Promise<RecordStreakResult> {
   try {
+    const ownerId = await getStoreOwnerId(storeId);
+    const premium = await ownerCanManagePremiumCampaigns(ownerId);
+    if (!premium) {
+      const { data: existingEnrollment, error: enrolErr } = await supabase
+        .from("user_streaks")
+        .select("id")
+        .eq("user_id", userId)
+        .eq("store_streak_id", storeStreakId)
+        .maybeSingle();
+
+      if (enrolErr) {
+        console.warn("[recordUserStreak] Enrollment lookup failed:", enrolErr.message);
+      } else if (!existingEnrollment) {
+        throw new Error(STREAK_NEW_ENROLLMENT_BLOCKED);
+      }
+    }
+
     const { data, error } = await supabase.rpc('record_user_streak', {
       p_user_id: userId,
       p_store_id: storeId,
@@ -147,6 +170,7 @@ export interface UserStreak {
     is_active: boolean;
     latitude?: number | null;
     longitude?: number | null;
+    location?: any;
     radius?: number | null;
   };
 }
@@ -174,8 +198,7 @@ const USER_STREAK_SELECT = `
     address,
     status,
     is_active,
-    latitude,
-    longitude,
+    location,
     radius
   )
 `;
@@ -254,7 +277,11 @@ export async function getUserStreaks(userId: string): Promise<UserStreak[]> {
       return isActiveProgram || isUserCompleted;
     });
 
-    return validStreaks;
+    // Map PostGIS location into legacy coordinate props expected by the UI.
+    return validStreaks.map(streak => ({
+      ...streak,
+      stores: streak.stores ? withPostGISCoordinates(streak.stores) : undefined
+    } as UserStreak));
   } catch (error) {
     console.error("Exception fetching user streaks:", error);
     return [];
@@ -277,7 +304,7 @@ export async function getUserStreakByStore(
           .order("updated_at", { ascending: false }),
         supabase
           .from("stores")
-          .select("id, name, logo, address, status, is_active, latitude, longitude, radius")
+          .select("id, name, logo, address, status, is_active, location, radius")
           .eq("id", storeId)
           .maybeSingle(),
       ]);
@@ -305,7 +332,10 @@ export async function getUserStreakByStore(
       streaks[0];
 
     if (activeProgramStreak) {
-      return activeProgramStreak;
+      return {
+        ...activeProgramStreak,
+        stores: activeProgramStreak.stores ? withPostGISCoordinates(activeProgramStreak.stores) : undefined
+      } as UserStreak;
     }
 
     if (!store || store.status !== "active" || !store.is_active) {
@@ -348,6 +378,8 @@ export async function getUserStreakByStore(
       return null;
     }
 
+    const normalizedStore = withPostGISCoordinates(store);
+
     return buildVirtualUserStreak(
       {
         id: Number(store.id),
@@ -356,8 +388,8 @@ export async function getUserStreakByStore(
         address: store.address,
         status: store.status,
         is_active: store.is_active,
-        latitude: store.latitude,
-        longitude: store.longitude,
+        latitude: normalizedStore.latitude,
+        longitude: normalizedStore.longitude,
         radius: store.radius,
       },
       programRow as UserStreakProgram,

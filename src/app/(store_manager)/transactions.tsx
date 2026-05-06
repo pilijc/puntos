@@ -307,10 +307,10 @@ export default function TransactionsScreen() {
               {emptyIllustration}
               <View className="items-center justify-center">
                 <Text className="text-base font-poppins-bold text-textPrimary dark:text-darkTextPrimary text-center">
-                  {translate("storeManager.transactions.empty.noTransactionsTitle")}
+                  {translate("storeManager.transactions.empty.noStoresTitle")}
                 </Text>
                 <Text className="text-xs font-poppins text-textSecondary dark:text-darkTextSecondary text-center px-8">
-                  {translate("storeManager.transactions.empty.noTransactionsBody")}
+                  {translate("storeManager.transactions.empty.noStoresBody")}
                 </Text>
               </View>
             </View>

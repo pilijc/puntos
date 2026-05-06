@@ -162,6 +162,7 @@ export default function Login() {
             onChangeText={setEmail}
             placeholder={translate("label.emailPlaceholder")}
             keyboardType="email-address"
+            onSubmitEditing={isWeb ? handleLogin : undefined}
           />
         </View>
 
@@ -173,6 +174,7 @@ export default function Login() {
             placeholder={translate("onboarding.login.input.password")}
             keyboardType="default"
             secureTextEntry={!showPassword}
+            onSubmitEditing={isWeb ? handleLogin : undefined}
             rightAccessory={
               <TouchableOpacity
                 onPress={() => setShowPassword(!showPassword)}

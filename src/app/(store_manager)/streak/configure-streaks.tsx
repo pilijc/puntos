@@ -1,9 +1,8 @@
-import React from "react";
-import { KeyboardAvoidingView, Platform, ScrollView, useColorScheme } from "react-native";
+import React, { createElement as domEl, useEffect, useMemo, useRef } from "react";
+import { Platform, ScrollView, useColorScheme } from "react-native";
 import { View, Text, TouchableOpacity, TextInput, SafeAreaView } from "@/tw";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useRouter, useLocalSearchParams, useFocusEffect } from "expo-router";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useStreakStore } from "@/store/store-manager/streak-store";
 import { createStreak, getAllStreaksByStoreId, getStreakProgramById, updateStreakProgram } from "@/services/store-manager/streak-service";
 import { PointsMode, Streak } from "@/type/store-manager/streak";
@@ -13,8 +12,32 @@ import { Coins, TrendingUp, Check, Info } from "lucide-react-native";
 import { AppHeader } from "@/components/header";
 import { TextField } from "@/components/text-field";
 import { Toggle } from "@/components/toggle";
-import { formatDateTime } from "@/utils/store_manager/streak-utils";
+import { formatDateTime, computeMinStartAtFromActiveProgram } from "@/utils/store_manager/streak-utils";
+import { resolveStreakErrorI18nKey } from "@/services/store-manager/streak-user-messages";
 import { useTranslation } from "react-i18next";
+import { useStorePremiumCampaignEdit } from "@/hooks/store-manager/use-store-premium-campaign-edit";
+import { WebStreakActivationCalendar } from "@/components/store_manager/streak/web-streak-activation-calendar";
+
+const MS_24H = 24 * 60 * 60 * 1000;
+
+function defaultScheduleStart(minBound: Date): Date {
+  const in24h = new Date(Date.now() + MS_24H);
+  return in24h > minBound ? in24h : new Date(minBound);
+}
+
+function formatLocalDateKey(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+const WEB_MINUTE_STEP = 5;
+
+function snapMinuteToStep(m: number): number {
+  const rounded = Math.round(m / WEB_MINUTE_STEP) * WEB_MINUTE_STEP;
+  return Math.min(55, Math.max(0, rounded));
+}
 
 export default function ConfigureStreaks() {
   const { t } = useTranslation();
@@ -44,9 +67,13 @@ export default function ConfigureStreaks() {
     reset,
   } = useStreakStore();
 
-  const [scheduleEnabled, setScheduleEnabled] = React.useState(false);
+  const [scheduleEnabled, setScheduleEnabled] = React.useState(!isEditMode);
   const [startTimeError, setStartTimeError] = React.useState(false);
   const [hasActiveProgramBarrier, setHasActiveProgramBarrier] = React.useState(false);
+  const createDefaultsAppliedRef = useRef(false);
+  const colorScheme = useColorScheme();
+  const isDarkScheme = colorScheme === "dark";
+  const { canEdit, loading: permLoading } = useStorePremiumCampaignEdit(storeId);
   const isFixed = points_mode === "fixed";
   const activationAt = start_at ? new Date(start_at) : new Date();
   const isActivationValid = start_at ? !Number.isNaN(activationAt.getTime()) : false;
@@ -58,23 +85,63 @@ export default function ConfigureStreaks() {
     : t("store_manager.streakConfigure.selectTime");
   const minActivationAt = min_start_at ? new Date(min_start_at) : new Date();
 
-  const computeMinStartAtFromActive = (active: Streak | undefined) => {
-    const now = new Date();
-    if (!active) return now;
+  useEffect(() => {
+    createDefaultsAppliedRef.current = false;
+  }, [storeId, streakId, isEditMode]);
 
-    if (active.end_date) {
-      const endOfDay = new Date(`${active.end_date}T23:59:59.999Z`);
-      return endOfDay > now ? endOfDay : now;
+  const webSelectStyle = useMemo(
+    () =>
+      ({
+        width: "100%",
+        padding: 12,
+        borderRadius: 12,
+        borderWidth: 1,
+        borderStyle: "solid",
+        borderColor: isDarkScheme ? "#334155" : "#e2e8f0",
+        fontSize: 14,
+        fontFamily: "Poppins-Medium",
+        backgroundColor: isDarkScheme ? "#0f172a" : "#ffffff",
+        color: isDarkScheme ? "#f1f5f9" : "#0f172a",
+      }) as const,
+    [isDarkScheme],
+  );
+
+  const webMinuteOptions = useMemo(() => {
+    const opts: number[] = [];
+    for (let m = 0; m < 60; m += WEB_MINUTE_STEP) opts.push(m);
+    return opts;
+  }, []);
+
+  const webDateSelectValue = useMemo(() => {
+    if (isActivationValid) return formatLocalDateKey(activationAt);
+    const min = minActivationAt;
+    const start = new Date(min.getFullYear(), min.getMonth(), min.getDate());
+    return formatLocalDateKey(start);
+  }, [isActivationValid, activationAt, minActivationAt]);
+
+  const webHourSelectValue = useMemo(() => {
+    if (isActivationValid) return activationAt.getHours();
+    return defaultScheduleStart(minActivationAt).getHours();
+  }, [isActivationValid, activationAt, minActivationAt]);
+
+  const webMinuteSelectValue = useMemo(() => {
+    if (isActivationValid) return snapMinuteToStep(activationAt.getMinutes());
+    return snapMinuteToStep(defaultScheduleStart(minActivationAt).getMinutes());
+  }, [isActivationValid, activationAt, minActivationAt]);
+
+  const combineScheduleLocal = (dayKey: string, hour: number, minute: number): Date => {
+    const [y, mo, d] = dayKey.split("-").map(Number);
+    const candidate = new Date(y, mo - 1, d, hour, minute, 0, 0);
+    if (candidate.getTime() < minActivationAt.getTime()) {
+      return new Date(minActivationAt);
     }
-
-    if (active.start_at && active.streak_length && active.streak_length > 0) {
-      const derivedEnd = new Date(active.start_at);
-      derivedEnd.setDate(derivedEnd.getDate() + active.streak_length);
-      return derivedEnd > now ? derivedEnd : now;
-    }
-
-    return now;
+    return candidate;
   };
+
+  useEffect(() => {
+    if (!storeId || permLoading || canEdit) return;
+    router.replace({ pathname: "/(store_manager)/streak", params: { storeId } });
+  }, [storeId, permLoading, canEdit, router]);
 
   useFocusEffect(
     React.useCallback(() => {
@@ -83,8 +150,17 @@ export default function ConfigureStreaks() {
         .then((rows) => {
           const active = rows.find((s) => s.status === "active");
           setHasActiveProgramBarrier(!!active);
-          const minAllowed = computeMinStartAtFromActive(active);
+          const minAllowed = computeMinStartAtFromActiveProgram(active);
           setMinStartAt(minAllowed.toISOString());
+
+          if (!isEditMode && !createDefaultsAppliedRef.current) {
+            createDefaultsAppliedRef.current = true;
+            setScheduleEnabled(true);
+            const def = defaultScheduleStart(minAllowed);
+            setStartAt(def.toISOString());
+            return;
+          }
+
           const currentStart = useStreakStore.getState().start_at;
           if (currentStart && new Date(currentStart) < minAllowed) {
             setStartAt(minAllowed.toISOString());
@@ -94,6 +170,11 @@ export default function ConfigureStreaks() {
           const now = new Date();
           setHasActiveProgramBarrier(false);
           setMinStartAt(now.toISOString());
+          if (!isEditMode && !createDefaultsAppliedRef.current) {
+            createDefaultsAppliedRef.current = true;
+            setScheduleEnabled(true);
+            setStartAt(defaultScheduleStart(now).toISOString());
+          }
         });
 
       if (!isEditMode || !streakId) return;
@@ -113,9 +194,12 @@ export default function ConfigureStreaks() {
           setScheduleEnabled(!!row.start_at);
         })
         .catch((error) => {
+          const key = resolveStreakErrorI18nKey(error);
+          const message =
+            key != null ? t(key) : ((error as Error).message ?? t("store_manager.streakConfigure.loadError"));
           setModal({
             title: t("label.error"),
-            message: (error as Error).message ?? t("store_manager.streakConfigure.loadError"),
+            message,
             buttons: [{
               label: t("label.ok"),
               onPress: () => {
@@ -239,9 +323,12 @@ export default function ConfigureStreaks() {
         }],
       });
     } catch (error) {
+      const key = resolveStreakErrorI18nKey(error);
+      const message =
+        key != null ? t(key) : ((error as Error).message ?? t("store_manager.streakConfigure.saveFailed"));
       setModal({
         title: t("label.error"),
-        message: (error as Error).message ?? t("store_manager.streakConfigure.saveFailed"),
+        message,
         buttons: [{ label: t("label.ok"), onPress: () => setModal(null) }],
       });
     } finally {
@@ -254,7 +341,7 @@ export default function ConfigureStreaks() {
       setScheduleEnabled(true);
       setStartTimeError(false);
       if (!start_at) {
-        setStartAt(minActivationAt.toISOString());
+        setStartAt(defaultScheduleStart(minActivationAt).toISOString());
       }
     } else {
       setScheduleEnabled(false);
@@ -328,7 +415,7 @@ export default function ConfigureStreaks() {
                     }`}
                   >
                     <View className="flex-row items-center justify-between">
-                      <View className={`w-4 h-4 rounded-full border-2 items-center justify-center ${selected ? "border-primary bg-primary" : "border-slate-300 dark:border-slate-600"}`}>
+                      <View className={`w-4 h-4 rounded-full border items-center justify-center ${selected ? "border-primary bg-primary" : "border-slate-300 dark:border-slate-600"}`}>
                         {selected && <Check size={9} color="#fff" />}
                       </View>
                     </View>
@@ -494,63 +581,152 @@ export default function ConfigureStreaks() {
 
             {scheduleEnabled && (
               <>
-                <View className="flex-row gap-x-2">
-                  <TouchableOpacity
-                    activeOpacity={0.8}
-                    onPress={() => {
-                      setShowStartTimePicker(false);
-                      setShowStartDatePicker(true);
-                    }}
-                    className="flex-1 rounded-xl border border-slate-200 dark:border-slate-700 px-3 py-3"
-                  >
-                    <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">{t("store_manager.streakConfigure.date")}</Text>
-                    <Text className="text-sm font-poppins-semibold text-slate-900 dark:text-slate-100 mt-0.5">
-                      {activationDateText}
-                    </Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    activeOpacity={0.8}
-                    onPress={() => {
-                      setShowStartDatePicker(false);
-                      setShowStartTimePicker(true);
-                    }}
-                    className="flex-1 rounded-xl border border-slate-200 dark:border-slate-700 px-3 py-3"
-                  >
-                    <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">{t("store_manager.streakConfigure.time")}</Text>
-                    <Text className="text-sm font-poppins-semibold text-slate-900 dark:text-slate-100 mt-0.5">
-                      {activationTimeText}
-                    </Text>
-                  </TouchableOpacity>
-                </View>
+                {isWeb ? (
+                  <View className="gap-y-3">
+                    <View className="gap-y-1">
+                      <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">
+                        {t("store_manager.streakConfigure.date")}
+                      </Text>
+                      <WebStreakActivationCalendar
+                        minActivationAt={minActivationAt}
+                        selectedDateKey={webDateSelectValue}
+                        isDark={isDarkScheme}
+                        onSelectDateKey={(dayKey) => {
+                          const merged = combineScheduleLocal(
+                            dayKey,
+                            webHourSelectValue,
+                            webMinuteSelectValue,
+                          );
+                          setStartAt(merged.toISOString());
+                          setStartTimeError(false);
+                        }}
+                      />
+                    </View>
+                    <View className="gap-y-1">
+                      <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">
+                        {t("store_manager.streakConfigure.time")}
+                      </Text>
+                      <View className="flex-row gap-x-2">
+                        <View className="flex-1">
+                          {domEl(
+                            "select",
+                            {
+                              value: String(webHourSelectValue),
+                              onChange: (e: { target: { value: string } }) => {
+                                const h = Number(e.target.value);
+                                const merged = combineScheduleLocal(
+                                  webDateSelectValue,
+                                  h,
+                                  webMinuteSelectValue,
+                                );
+                                setStartAt(merged.toISOString());
+                                setStartTimeError(false);
+                              },
+                              style: webSelectStyle,
+                            },
+                            Array.from({ length: 24 }, (_, h) =>
+                              domEl(
+                                "option",
+                                { key: `h-${h}`, value: String(h) },
+                                String(h).padStart(2, "0"),
+                              ),
+                            ),
+                          )}
+                        </View>
+                        <View className="flex-1">
+                          {domEl(
+                            "select",
+                            {
+                              value: String(webMinuteSelectValue),
+                              onChange: (e: { target: { value: string } }) => {
+                                const mi = Number(e.target.value);
+                                const merged = combineScheduleLocal(
+                                  webDateSelectValue,
+                                  webHourSelectValue,
+                                  mi,
+                                );
+                                setStartAt(merged.toISOString());
+                                setStartTimeError(false);
+                              },
+                              style: webSelectStyle,
+                            },
+                            webMinuteOptions.map((m) =>
+                              domEl(
+                                "option",
+                                { key: `m-${m}`, value: String(m) },
+                                String(m).padStart(2, "0"),
+                              ),
+                            ),
+                          )}
+                        </View>
+                      </View>
+                    </View>
+                  </View>
+                ) : (
+                  <>
+                    <View className="flex-row gap-x-2">
+                      <TouchableOpacity
+                        activeOpacity={0.8}
+                        onPress={() => {
+                          setShowStartTimePicker(false);
+                          setShowStartDatePicker(true);
+                        }}
+                        className="flex-1 rounded-xl border border-slate-200 dark:border-slate-700 px-3 py-3"
+                      >
+                        <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">
+                          {t("store_manager.streakConfigure.date")}
+                        </Text>
+                        <Text className="text-sm font-poppins-semibold text-slate-900 dark:text-slate-100 mt-0.5">
+                          {activationDateText}
+                        </Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        activeOpacity={0.8}
+                        onPress={() => {
+                          setShowStartDatePicker(false);
+                          setShowStartTimePicker(true);
+                        }}
+                        className="flex-1 rounded-xl border border-slate-200 dark:border-slate-700 px-3 py-3"
+                      >
+                        <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">
+                          {t("store_manager.streakConfigure.time")}
+                        </Text>
+                        <Text className="text-sm font-poppins-semibold text-slate-900 dark:text-slate-100 mt-0.5">
+                          {activationTimeText}
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+
+                    {showStartDatePicker && (
+                      <DateTimePicker
+                        value={activationAt}
+                        minimumDate={minActivationAt}
+                        mode="date"
+                        display={Platform.OS === "ios" ? "inline" : "default"}
+                        onChange={(_, selectedDate) => {
+                          if (selectedDate) updateStartAtDate(selectedDate);
+                          if (Platform.OS !== "ios") setShowStartDatePicker(false);
+                        }}
+                      />
+                    )}
+                    {showStartTimePicker && (
+                      <DateTimePicker
+                        value={activationAt}
+                        mode="time"
+                        display={Platform.OS === "ios" ? "spinner" : "default"}
+                        onChange={(_, selectedTime) => {
+                          if (selectedTime) updateStartAtTime(selectedTime);
+                          if (Platform.OS !== "ios") setShowStartTimePicker(false);
+                        }}
+                      />
+                    )}
+                  </>
+                )}
 
                 {startTimeError && (
                   <Text className="text-xs font-poppins text-red-500 dark:text-red-400 -mt-1">
                     {t("store_manager.streakConfigure.startTimeAfter", { time: minActivationAt.toLocaleString() })}
                   </Text>
-                )}
-
-                {showStartDatePicker && (
-                  <DateTimePicker
-                    value={activationAt}
-                    minimumDate={minActivationAt}
-                    mode="date"
-                    display={Platform.OS === "ios" ? "inline" : "default"}
-                    onChange={(_, selectedDate) => {
-                      if (selectedDate) updateStartAtDate(selectedDate);
-                      if (Platform.OS !== "ios") setShowStartDatePicker(false);
-                    }}
-                  />
-                )}
-                {showStartTimePicker && (
-                  <DateTimePicker
-                    value={activationAt}
-                    mode="time"
-                    display={Platform.OS === "ios" ? "spinner" : "default"}
-                    onChange={(_, selectedTime) => {
-                      if (selectedTime) updateStartAtTime(selectedTime);
-                      if (Platform.OS !== "ios") setShowStartTimePicker(false);
-                    }}
-                  />
                 )}
               </>
             )}

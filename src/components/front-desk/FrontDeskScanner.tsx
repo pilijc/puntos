@@ -4,7 +4,8 @@ import { Alert, useColorScheme } from "react-native";
 import { View, Text, TouchableOpacity, TextInput } from "@/tw";
 import { Animated, Dimensions } from "react-native";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { CameraView, useCameraPermissions } from "expo-camera";
+import { CameraView, useCameraPermissions, scanFromURLAsync } from "expo-camera";
+import * as ImagePicker from "expo-image-picker";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/button";
 import { TextField } from "@/components/text-field";
@@ -51,6 +52,45 @@ export default function FrontDeskScanner({
       await requestPermission();
     }
     setShowCamera(true);
+  };
+
+  const handleImagePicker = async () => {
+    if (!purchaseAmount || parseFloat(purchaseAmount) <= 0) {
+      setModal({
+        title: translate("frontdesk.transaction.error.amount.invalid"),
+        message: translate("frontdesk.transaction.error.amount.lessThanZero"),
+        buttons: [{ label: translate("label.ok"), variant: "secondary", onPress: () => setModal(null) }],
+      });
+      return;
+    }
+
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ["images"],
+        allowsEditing: false,
+        quality: 1,
+      });
+
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        const uri = result.assets[0].uri;
+        const scanResult = await scanFromURLAsync(uri, ["qr"]);
+        if (scanResult && scanResult.length > 0) {
+          onBarcodeScanned(scanResult[0].data);
+        } else {
+          setModal({
+            title: "QR Not Found",
+            message: "No QR code detected in the selected image.",
+            buttons: [{ label: translate("label.ok"), variant: "secondary", onPress: () => setModal(null) }],
+          });
+        }
+      }
+    } catch (error) {
+      setModal({
+        title: "Error",
+        message: "Failed to process the image.",
+        buttons: [{ label: translate("label.ok"), variant: "secondary", onPress: () => setModal(null) }],
+      });
+    }
   };
 
   const switchToQR = () => {
@@ -230,12 +270,20 @@ export default function FrontDeskScanner({
                     <Text className="text-sm font-poppins text-neutral-400 dark:text-darkTextSoft text-center mb-6">
                      Point the camera at the customer's QR
                     </Text>
-                    <View className="-mt-1">
-                    <Button
-                      label="Open Camera"
-                      onPress={handleStartScanning}
-                      icon="Camera"
-                    />
+                    <View className="-mt-1 flex-row gap-x-2 items-center justify-center">
+                      <Button
+                        label="Camera"
+                        onPress={handleStartScanning}
+                        icon="Camera"
+                        fitContent
+                      />
+                      <TouchableOpacity
+                        onPress={handleImagePicker}
+                        className="bg-white dark:bg-darkBackgroundCard border border-orange-500 rounded-xl px-3 py-[9px] flex-row items-center justify-center"
+                      >
+                        <MaterialIcons name="image" size={16} color="#FF6600" />
+                        <Text className="text-orange-500 font-poppins-semibold text-sm ml-1.5">Upload</Text>
+                      </TouchableOpacity>
                     </View>
                   </View>
                 </View>

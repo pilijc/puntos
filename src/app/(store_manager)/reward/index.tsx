@@ -10,6 +10,8 @@ import { Modal, type ModalButton } from "@/components/modal";
 import { AppHeader } from "@/components/header";
 import { ChevronRight, CircleStar, Gift } from "lucide-react-native";
 import { useTranslation } from "react-i18next";
+import { useStorePremiumCampaignEdit } from "@/hooks/store-manager/use-store-premium-campaign-edit";
+import { formatDate } from "@/utils/store_manager/stamp-utils";
 
 const WEB_MAX_WIDTH = 896;
 
@@ -26,6 +28,9 @@ export default function RewardIndex() {
     message: string;
     buttons: ModalButton[];
   } | null>(null);
+
+  const { canEdit, loading: permLoading, expiresAtIso } = useStorePremiumCampaignEdit(storeId);
+  const campaignsLocked = !permLoading && !canEdit;
 
   const fetchRewards = useCallback(async () => {
     try {
@@ -70,6 +75,18 @@ export default function RewardIndex() {
         }}
       />
 
+      {campaignsLocked ? (
+        <View className={Platform.OS === "web" ? "mx-4 mt-3 items-center" : "mx-4 mt-3"} style={Platform.OS === "web" ? { width: "100%" } : undefined}>
+          <View style={Platform.OS === "web" ? { width: "100%", maxWidth: WEB_MAX_WIDTH } : undefined} className="rounded-xl border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/40 px-3 py-2.5">
+            <Text className="text-xs font-poppins text-amber-900 dark:text-amber-200 leading-5">
+              {expiresAtIso
+                ? t("store_manager.premiumCampaigns.bannerWithExpiry", { date: formatDate(expiresAtIso) })
+                : t("store_manager.premiumCampaigns.banner")}
+            </Text>
+          </View>
+        </View>
+      ) : null}
+
       <ScrollView
         className="flex-1"
         showsVerticalScrollIndicator={false}
@@ -102,6 +119,7 @@ export default function RewardIndex() {
                 </Text>
               </View>
               <TouchableOpacity
+                disabled={campaignsLocked}
                 onPress={() =>
                   router.push({
                     pathname: "/(store_manager)/reward/add-rewards",
@@ -109,10 +127,10 @@ export default function RewardIndex() {
                   })
                 }
                 className="flex-row items-center gap-x-0.5"
-                activeOpacity={0.7}
+                activeOpacity={campaignsLocked ? 1 : 0.7}
               >
-                <Text className="text-xs font-poppins-semibold text-primary">{t("label.add")}</Text>
-                <ChevronRight size={14} color="#FF6600" />
+                <Text className={`text-xs font-poppins-semibold ${campaignsLocked ? "text-slate-400 dark:text-slate-500" : "text-primary"}`}>{t("label.add")}</Text>
+                <ChevronRight size={14} color={campaignsLocked ? "#CBD5E1" : "#FF6600"} />
               </TouchableOpacity>
             </View>
 
@@ -129,16 +147,17 @@ export default function RewardIndex() {
                   {t("store_manager.reward.emptyBody")}
                 </Text>
                 <TouchableOpacity
+                  disabled={campaignsLocked}
                   onPress={() =>
                     router.push({
                       pathname: "/(store_manager)/reward/add-rewards",
                       params: { storeId },
                     })
                   }
-                  className="mt-3 bg-primary px-6 py-2.5 rounded-xl"
-                  activeOpacity={0.85}
+                  className={`mt-3 px-6 py-2.5 rounded-xl ${campaignsLocked ? "bg-slate-200 dark:bg-slate-700" : "bg-primary"}`}
+                  activeOpacity={campaignsLocked ? 1 : 0.85}
                 >
-                  <Text className="text-xs font-poppins-semibold text-white">{t("store_manager.reward.addFirst")}</Text>
+                  <Text className={`text-xs font-poppins-semibold ${campaignsLocked ? "text-slate-500 dark:text-slate-400" : "text-white"}`}>{t("store_manager.reward.addFirst")}</Text>
                 </TouchableOpacity>
               </View>
             ) : (

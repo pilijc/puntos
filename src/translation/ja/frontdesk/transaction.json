@@ -3,6 +3,10 @@
     "title": "購入金額を入力",
     "description": "お客様の購入金額を入力すると、付与ポイントが計算されます。"
   },
+  "mode": {
+    "earn": "ポイント付与",
+    "redeem": "特典引き換え"
+  },
   "title": "QRコードをスキャン",
   "store": "現在の店舗",
   "scan": {
@@ -14,14 +18,19 @@
     "view": "すべて表示",
     "empty": "取引はまだありません",
     "purchase": "の購入",
+    "rewardRedemption": "特典引き換え",
+    "qrScan": "QRスキャン",
+    "voucher": "バウチャー",
+    "pts": "pts",
     "time": {
       "justNow": "たった今",
-      "minute": "分前",
-      "minutes": "分前",
-      "hour": "時間前",
-      "hours": "時間前",
-      "day": "日前",
-      "days": "日前"
+      "minute": "分",
+      "minutes": "分",
+      "hour": "時間",
+      "hours": "時間",
+      "day": "日",
+      "days": "日",
+      "ago": "前"
     }
   },
   "success": {
@@ -46,6 +55,8 @@
       "invalid": "金額が正しくありません",
       "lessThanZero": "購入金額は0より大きい金額を入力してください。"
     },
+    "invalid": "無効",
+    "redemption": "引き換えエラー",
     "unknown": "問題が発生しました。もう一度お試しください。"
   },
   "access": {
@@ -56,7 +67,63 @@
   },
   "passwordSetup": {
     "title": "パスワード設定が必要です",
-    "message": "ダッシュボードの全機能を利用し、アカウントのセキュリティを確保するため、パスワード設定を完了してください。",
-    "button": "パスワードを設定"
+    "message": "セキュリティ機能にアクセスする前に、パスワードを設定する必要があります。",
+    "button": "パスワードを設定",
+    "detail": "すべてのセキュリティ機能にアクセスし、適切なアカウント保護を確保するために、パスワード設定を完了してください。",
+    "complete": "設定を完了する"
+  },
+  "redemption": {
+    "error": {
+      "invalidCode": "無効な引き換えコードです",
+      "enterCode": "バウチャーコードを入力してください"
+    },
+    "camera": {
+      "permissionTitle": "カメラの許可が必要です",
+      "permissionDescription": "特典引き換えコードをスキャンするためにカメラへのアクセスを許可してください",
+      "allowButton": "カメラを許可",
+      "scanning": "引き換えコードをスキャン中",
+      "instruction": "お客様のQRコードにカメラを向けてください"
+    },
+    "mode": {
+      "qr": "QRスキャン",
+      "manual": "コード入力"
+    },
+    "qr": {
+      "title": "特典コードをスキャン",
+      "description": "お客様の特典QRコードにカメラを向けてください",
+      "button": "カメラを開く"
+    },
+    "manual": {
+      "title": "引き換えコードを入力",
+      "description": "お客様のバウチャーに記載されているコードを入力してください",
+      "placeholder": "例: RWDABC123",
+      "verifying": "確認中...",
+      "verifyButton": "コードを確認"
+    }
+  },
+  "history": {
+    "emptyFound": "取引が見つかりません",
+    "emptyYet": "取引はまだありません",
+    "emptyFoundDetail": "フィルターや日付範囲を調整して、もう一度お試しください。",
+    "emptyYetDetail": "お客様がポイントを獲得し始めると、ここに取引が表示されます。",
+    "clearFilters": "フィルターをクリア",
+    "filters": {
+      "title": "フィルターと並べ替え",
+      "clearAll": "すべてクリア ({{count}})",
+      "sortBy": "並べ替え",
+      "date": "日付",
+      "amount": "金額",
+      "direction": "順序",
+      "newestHigh": "新しい順 / 高い順",
+      "oldestLow": "古い順 / 低い順",
+      "type": "取引タイプ",
+      "all": "すべて",
+      "earned": "獲得済み",
+      "redeemed": "引き換え済み",
+      "pending": "保留中",
+      "apply": "フィルターを適用",
+      "oldestFirst": "古い順",
+      "amountPill": "金額 {{direction}}"
+    }
   }
 }

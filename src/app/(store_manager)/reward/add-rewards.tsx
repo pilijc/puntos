@@ -18,6 +18,7 @@ import { Modal, type ModalButton } from "@/components/modal";
 import { AppHeader } from "@/components/header";
 import { TextField } from "@/components/text-field";
 import { useTranslation } from "react-i18next";
+import { useStorePremiumCampaignEdit } from "@/hooks/store-manager/use-store-premium-campaign-edit";
 
 const WEB_MAX_WIDTH = 896;
 
@@ -55,6 +56,13 @@ export default function Rewards() {
 		message: string;
 		buttons: ModalButton[];
 	} | null>(null);
+
+  const { canEdit, loading: permLoading } = useStorePremiumCampaignEdit(storeId);
+
+  useEffect(() => {
+    if (!storeId || permLoading || canEdit) return;
+    router.replace({ pathname: "/(store_manager)/reward", params: { storeId } });
+  }, [storeId, permLoading, canEdit, router]);
 
   useEffect(() => {
     if (!storeId) return;

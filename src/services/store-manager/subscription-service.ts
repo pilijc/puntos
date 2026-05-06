@@ -234,3 +234,40 @@ export async function useSubscriptionCheckout(
 }
 
 export { normalizeSubscriptionId };
+
+export type SubscriptionRealtimeUnsubscribe = () => void;
+
+export function subscribeToManagerSubscriptionRealtime(params: {
+  ownerId: string;
+  onChange: () => void;
+}): SubscriptionRealtimeUnsubscribe {
+  const { ownerId, onChange } = params;
+
+  const channel = supabase
+    .channel(`manager-subscription-${ownerId}`)
+    .on(
+      "postgres_changes",
+      {
+        event: "*",
+        schema: "public",
+        table: "manager_subscriptions",
+        filter: `owner_id=eq.${ownerId}`,
+      },
+      onChange,
+    )
+    .on(
+      "postgres_changes",
+      {
+        event: "*",
+        schema: "public",
+        table: "manager_subscription_payments",
+        filter: `owner_id=eq.${ownerId}`,
+      },
+      onChange,
+    )
+    .subscribe();
+
+  return () => {
+    supabase.removeChannel(channel);
+  };
+}
