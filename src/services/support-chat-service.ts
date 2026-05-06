@@ -215,9 +215,24 @@ async function signedUrlForPath(path: string): Promise<string | null> {
 export async function attachSignedUrls(messages: SupportMessage[]): Promise<SupportMessage[]> {
   return Promise.all(
     messages.map(async (message) => {
-      if (!message.attachment_path) return message;
-      const signedUrl = await signedUrlForPath(message.attachment_path);
-      return { ...message, attachment_url: signedUrl };
+      let messageWithUrls = { ...message };
+      
+      if (messageWithUrls.attachment_path) {
+        const signedUrl = await signedUrlForPath(messageWithUrls.attachment_path);
+        messageWithUrls.attachment_url = signedUrl;
+      }
+      
+      if (messageWithUrls.attachments && messageWithUrls.attachments.length > 0) {
+        const hydratedAttachments = await Promise.all(
+          messageWithUrls.attachments.map(async (att) => {
+            const url = await signedUrlForPath(att.path);
+            return { ...att, url: url || undefined };
+          })
+        );
+        messageWithUrls.attachments = hydratedAttachments;
+      }
+      
+      return messageWithUrls;
     }),
   );
 }
@@ -268,7 +283,7 @@ export async function uploadSupportAttachment(
 
 export async function sendSupportAttachmentMessage(
   conversationId: string,
-  attachment: SupportAttachmentInput,
+  attachments: SupportAttachmentInput[],
   senderRole: SupportSenderRole,
   body?: string,
 ): Promise<SupportMessage> {
@@ -279,8 +294,23 @@ export async function sendSupportAttachmentMessage(
 
   if (userError) throw new Error(userError.message);
   if (!user) throw new Error("User not authenticated");
+  if (!attachments || attachments.length === 0) throw new Error("No attachments provided");
 
-  const uploaded = await uploadSupportAttachment(conversationId, attachment);
+  const uploadedAttachmentsData = await Promise.all(
+    attachments.map(async (att) => {
+      const uploaded = await uploadSupportAttachment(conversationId, att);
+      return {
+        path: uploaded.path,
+        url: uploaded.signedUrl || undefined,
+        name: att.name,
+        type: att.mimeType,
+        size: att.size ?? null,
+        kind: att.kind,
+      };
+    })
+  );
+
+  const firstAtt = uploadedAttachmentsData[0];
 
   const { data, error } = await supabase
     .from("support_messages")
@@ -289,11 +319,12 @@ export async function sendSupportAttachmentMessage(
       sender_id: user.id,
       sender_role: senderRole,
       body: body?.trim() || null,
-      message_kind: attachment.kind,
-      attachment_path: uploaded.path,
-      attachment_name: attachment.name,
-      attachment_type: attachment.mimeType,
-      attachment_size: attachment.size ?? null,
+      message_kind: firstAtt.kind,
+      attachment_path: firstAtt.path,
+      attachment_name: firstAtt.name,
+      attachment_type: firstAtt.type,
+      attachment_size: firstAtt.size,
+      attachments: uploadedAttachmentsData.map(({ url, ...rest }) => rest),
       read_by_store_at: senderRole === "store_manager" ? new Date().toISOString() : null,
       read_by_admin_at: senderRole === "super_admin" ? new Date().toISOString() : null,
     })
@@ -309,7 +340,11 @@ export async function sendSupportAttachmentMessage(
     .eq("id", conversationId)
     .eq("status", "archived");
 
-  return { ...(data as SupportMessage), attachment_url: uploaded.signedUrl };
+  return { 
+    ...(data as SupportMessage), 
+    attachments: uploadedAttachmentsData, 
+    attachment_url: firstAtt.url || null 
+  };
 }
 
 export async function markSupportMessagesRead(

@@ -155,8 +155,8 @@ export default function ChatSupportScreen() {
         loadingMessages={storesLoading || loading || loadingMessages}
         emptyMessage={emptyMessage}
         onSendMessage={async (text) => await sendMessage(text, "store_manager")}
-        onSendAttachment={async (attachment, body) =>
-          await sendAttachment(attachment, "store_manager", body)
+        onSendAttachment={async (attachments, body) =>
+          await sendAttachment(attachments, "store_manager", body)
         }
         sending={sending}
         uploadingAttachment={uploadingAttachment}
