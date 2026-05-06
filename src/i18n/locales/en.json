@@ -507,12 +507,16 @@
             "title": "Notifications & Privacy",
             "alerts": {
                 "title": "Nearby Alerts",
-                "description": "Get notified when rewards are close"
+                "description": "Get notified when rewards are close",
+                "allow": "Notifications Enabled",
+                "disabled": "Notifications Disabled",
+                "denied": "Notifications Denied"
             },
             "location": {
                 "title": "Location Access",
-                "allow": "Access Allowed",
-                "denied": "Access Denied"
+                "allow": "Location Enabled",
+                "disabled": "Location Disabled",
+                "denied": "Location Denied"
             },
             "permissions": "To change {{services}} permissions, please update them in your device’s Settings. Would you like to open it now?",
             "services": {

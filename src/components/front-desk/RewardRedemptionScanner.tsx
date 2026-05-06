@@ -77,7 +77,7 @@ export default function RewardRedemptionScanner({
       const codeToVerify = parsedCode || voucherCode.trim();
       
       if (!codeToVerify) {
-        onError("Invalid redemption code");
+        onError(translate("frontdesk.transaction.redemption.error.invalidCode"));
         return;
       }
 
@@ -88,10 +88,10 @@ export default function RewardRedemptionScanner({
         setShowCamera(false);
         setVoucherCode("");
       } else {
-        onError(result.message || "Invalid redemption code");
+        onError(result.message || translate("frontdesk.transaction.redemption.error.invalidCode"));
       }
     } catch (error) {
-      onError("Something went wrong");
+      onError(translate("label.somethingWentWrong"));
     } finally {
       setScanned(false);
       setIsProcessing(false);
@@ -100,7 +100,7 @@ export default function RewardRedemptionScanner({
 
   const handleManualSubmit = async () => {
     if (!voucherCode.trim()) {
-      onError("Please enter a voucher code");
+      onError(translate("frontdesk.transaction.redemption.error.enterCode"));
       return;
     }
 
@@ -149,7 +149,7 @@ export default function RewardRedemptionScanner({
                   >
                     <MaterialIcons name="arrow-back-ios" size={16} color="#FF6600" />
                     <Text className="text-sm font-poppins-medium text-orange-500 ml-1">
-                      Back
+                      {translate("label.back")}
                     </Text>
                   </TouchableOpacity>
                 </View>
@@ -167,12 +167,12 @@ export default function RewardRedemptionScanner({
                   <MaterialIcons name="camera-alt" size={32} color="#fff" />
                 </View>
                 <Text className="text-base font-poppins-bold text-white mb-2">
-                  Camera Permission Required
+                  {translate("frontdesk.transaction.redemption.camera.permissionTitle")}
                 </Text>
                 <Text className="text-sm font-poppins text-neutral-400 text-center mb-5">
-                  Allow camera access to scan reward redemption codes
+                  {translate("frontdesk.transaction.redemption.camera.permissionDescription")}
                 </Text>
-                <Button label="Allow Camera" onPress={() => requestPermission()} fullWidth />
+                <Button label={translate("frontdesk.transaction.redemption.camera.allowButton")} onPress={() => requestPermission()} fullWidth />
               </View>
             )}
           </View>
@@ -181,11 +181,11 @@ export default function RewardRedemptionScanner({
             <View className="flex-row items-center justify-center">
               <View className="w-2 h-2 bg-emerald-400 rounded-full mr-2" />
               <Text className="text-sm font-poppins-medium text-neutral-500 dark:text-darkTextSecondary">
-                Scanning for redemption codes
+                {translate("frontdesk.transaction.redemption.camera.scanning")}
               </Text>
             </View>
             <Text className="text-xs font-poppins text-neutral-400 text-center mt-1">
-              Point camera at customer's QR code
+              {translate("frontdesk.transaction.redemption.camera.instruction")}
             </Text>
           </View>
         </>
@@ -213,7 +213,7 @@ export default function RewardRedemptionScanner({
                 className="will-change-variable ml-2 text-sm font-poppins-semibold"
                 style={{ color: inputMode === "qr" ? "#FF6600" : (isDark ? "#6B7280" : "#9CA3AF") }}
               >
-                QR Scan
+                {translate("frontdesk.transaction.redemption.mode.qr")}
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
@@ -236,7 +236,7 @@ export default function RewardRedemptionScanner({
                 className="will-change-variable ml-2 text-sm font-poppins-semibold"
                 style={{ color: inputMode === "manual" ? "#FF6600" : (isDark ? "#6B7280" : "#9CA3AF") }}
               >
-                Input Code
+                {translate("frontdesk.transaction.redemption.mode.manual")}
               </Text>
             </TouchableOpacity>
           </View>
@@ -266,14 +266,14 @@ export default function RewardRedemptionScanner({
                       <MaterialIcons name="qr-code-scanner" size={48} color="#FF6600" />
                     </View>
                     <Text className="text-lg font-poppins-bold text-neutral-900 dark:text-darkTextPrimary mb-2 -mt-2">
-                      Scan Reward Code
+                      {translate("frontdesk.transaction.redemption.qr.title")}
                     </Text>
                     <Text className="text-sm font-poppins text-neutral-400 dark:text-darkTextSoft text-center mb-6">
-                      Point camera at the customer's reward QR code
+                      {translate("frontdesk.transaction.redemption.qr.description")}
                     </Text>
                     <View className="-mt-1 flex-row gap-x-2 items-center justify-center">
                       <Button
-                        label="Camera"
+                        label={translate("frontdesk.transaction.redemption.qr.button")}
                         onPress={handleStartScanning}
                         icon="Camera"
                         fitContent
@@ -302,10 +302,10 @@ export default function RewardRedemptionScanner({
                     <View className="flex-row items-center mb-4 pt-15 -mt-12 pr-3">
                       <View>
                         <Text className="text-base font-poppins-bold text-neutral-900 dark:text-darkTextPrimary pl-15">
-                          Enter Redemption Code
+                          {translate("frontdesk.transaction.redemption.manual.title")}
                         </Text>
                         <Text className="text-xs font-poppins text-neutral-400 text-center pl-2">
-                          Type the code from the customer's voucher
+                          {translate("frontdesk.transaction.redemption.manual.description")}
                         </Text>
                       </View>
                     </View>
@@ -315,13 +315,13 @@ export default function RewardRedemptionScanner({
                         label=""
                         value={voucherCode}
                         onChangeText={setVoucherCode}
-                        placeholder="e.g. RWDABC123"
+                        placeholder={translate("frontdesk.transaction.redemption.manual.placeholder")}
                         sanitize={(v) => v.toUpperCase().slice(0, 10)}
                       />
                     </View>
                     <View className="pt-4 pl-2">
                       <Button
-                        label={isProcessing ? "Verifying..." : "Verify Code"}
+                        label={isProcessing ? translate("frontdesk.transaction.redemption.manual.verifying") : translate("frontdesk.transaction.redemption.manual.verifyButton")}
                         onPress={handleManualSubmit}
                         loading={isProcessing}
                       />

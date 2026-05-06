@@ -7,6 +7,7 @@ import { emptyCollectorSlice, STATUS_BADGE, StampCardProps,
 } from "@/type/store-manager/stamp";
 import { formatDate } from "@/utils/store_manager/stamp-utils";
 import { ChevronUp, ChevronDown, OctagonMinus, Trash2, Pencil, SendHorizonal, Stamp as StampIcon } from "lucide-react-native";
+import { useTranslation } from "react-i18next";
 
 export function StampCard({
   stamp,
@@ -25,6 +26,7 @@ export function StampCard({
   onEditDraft,
   endingId,
 }: StampCardProps) {
+  const { t: translate } = useTranslation();
   const status = getProgramStatus(stamp);
   const badge = STATUS_BADGE[status];
   const hasMore = c.collectors.length < c.collectorsCount;
@@ -35,7 +37,7 @@ export function StampCard({
       <View className="flex-row items-center justify-between px-4 pt-4 pb-3 border-b border-slate-100 dark:border-slate-800">
         <View className="flex-row items-center gap-x-2">
           <StampIcon size={16} color="#94A3B8" />
-          <Text className="text-sm font-poppins-bold text-slate-900 dark:text-slate-100">Stamp Program</Text>
+          <Text className="text-sm font-poppins-bold text-slate-900 dark:text-slate-100">{translate("store_manager.stamp.title")}</Text>
         </View>
         <View className={`flex-row items-center gap-x-1 ${badge.color} px-2.5 py-1 rounded-full`}>
           <View className={`w-1.5 h-1.5 rounded-full ${badge.dot}`} />
@@ -45,7 +47,7 @@ export function StampCard({
 
       {stamp.created_at && (
         <View className="flex-row items-center justify-between px-4 py-2.5 border-b border-slate-100 dark:border-slate-800">
-          <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">Started</Text>
+          <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">{translate("store_manager.stamp.started")}</Text>
           <Text className="text-xs font-poppins-semibold text-textSecondary dark:text-slate-300">
             {formatDate(stamp.created_at)}
           </Text>
@@ -54,7 +56,7 @@ export function StampCard({
 
       {status !== "active" && stamp.ended_at && (
         <View className="flex-row items-center justify-between px-4 py-2.5 border-b border-slate-100 dark:border-slate-800">
-          <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">Ended on</Text>
+          <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">{translate("store_manager.stamp.endedOn")}</Text>
           <Text className="text-xs font-poppins-semibold text-textSecondary dark:text-slate-300">
             {formatDate(stamp.ended_at)}
           </Text>
@@ -62,16 +64,16 @@ export function StampCard({
       )}
 
       <View className="flex-row items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-slate-800">
-        <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">Stamps required</Text>
+        <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">{translate("store_manager.stamp.stampsRequired")}</Text>
         <Text className="text-xs font-poppins-bold text-textSecondary">{stamp.total_stamps}</Text>
       </View>
 
       <View className="flex-row items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-slate-800">
-        <Text className="text-xs font-poppins text-slate-500 dark:text-slate-400">Expiration</Text>
+        <Text className="text-xs font-poppins text-slate-500 dark:text-slate-400">{translate("store_manager.stamp.expiration")}</Text>
         <Text className="text-xs font-poppins-semibold text-textSecondary dark:text-slate-300">
           {stamp.expiration_mode === "none"
-            ? "No Expiration"
-            : `${stamp.expiration_days} day${stamp.expiration_days !== 1 ? "s" : ""} card limit`}
+            ? translate("store_manager.stamp.noExpiration")
+            : `${stamp.expiration_days} ${translate(stamp.expiration_days !== 1 ? "store_manager.stamp.daysLimit" : "store_manager.stamp.dayLimit")}`}
         </Text>
       </View>
 
@@ -80,9 +82,9 @@ export function StampCard({
           <Image source={{ uri: reward.image_url }} style={{ width: 40, height: 40, borderRadius: 10 }} contentFit="cover" />
         ) : null}
         <View className="flex-1">
-          <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">Reward</Text>
+          <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">{translate("store_manager.stamp.reward")}</Text>
           <Text className="text-sm font-poppins-semibold text-slate-900 dark:text-slate-100" numberOfLines={1}>
-            {reward?.title ?? "No reward linked"}
+            {reward?.title ?? translate("store_manager.stamp.noRewardLinked")}
           </Text>
         </View>
       </View>
@@ -90,7 +92,7 @@ export function StampCard({
       {status === "ended_grace" && stamp.redemption_deadline && (
         <View className="mx-4 my-3 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-700 px-3 py-2.5 flex-row items-center gap-x-2">
           <Text className="text-xs font-poppins text-amber-700 dark:text-amber-400 flex-1">
-            Grace period ends {formatDate(stamp.redemption_deadline)} — users can redeem but not earn stamps.
+            {translate("store_manager.stamp.gracePeriodInfo", { date: formatDate(stamp.redemption_deadline) })}
           </Text>
         </View>
       )}
@@ -115,7 +117,7 @@ export function StampCard({
             className="flex-row items-center justify-between px-4 py-3"
           >
             <View className="flex-row items-center gap-x-2">
-              <Text className="text-sm font-poppins-semibold text-textSecondary dark:text-slate-300">Collectors</Text>
+              <Text className="text-sm font-poppins-semibold text-textSecondary dark:text-slate-300">{translate("store_manager.stamp.collectors")}</Text>
               <View className="bg-slate-100 dark:bg-slate-700 rounded-full px-2 py-0.5 min-w-[22px] items-center">
                 <Text className="text-xs font-poppins-bold text-slate-500 dark:text-slate-400">{c.collectorsCount}</Text>
               </View>
@@ -135,13 +137,13 @@ export function StampCard({
                 </View>
               ) : c.collectors.length === 0 ? (
                 <View className="py-8 items-center gap-y-2">
-                  <Text className="text-sm font-poppins text-slate-400 dark:text-slate-500">No collectors for this program</Text>
+                  <Text className="text-sm font-poppins text-slate-400 dark:text-slate-500">{translate("store_manager.stamp.noCollectors")}</Text>
                 </View>
               ) : (
                 <>
                   {c.collectors.map((item) => {
                     const progress = Math.min(item.stamps_count / Math.max(stamp.total_stamps, 1), 1);
-                    const name = item.users?.name ?? "Unknown User";
+                    const name = item.users?.name ?? translate("store_manager.stamp.unknownUser");
                     const initials = name
                       .split(" ")
                       .map((w) => w[0])
@@ -168,18 +170,18 @@ export function StampCard({
                           </Text>
                           {cardExpired && (
                             <View className="bg-red-50 dark:bg-red-900/20 px-1.5 py-0.5 rounded">
-                              <Text className="text-xs font-poppins-semibold text-red-500">EXPIRED</Text>
+                              <Text className="text-xs font-poppins-semibold text-red-500">{translate("store_manager.stamp.expired")}</Text>
                             </View>
                           )}
                           {item.card_status === "completed" && !cardExpired && (
                             <View className="bg-emerald-50 dark:bg-emerald-900/20 px-1.5 py-0.5 rounded">
-                              <Text className="text-xs font-poppins-semibold text-emerald-500">REDEEMABLE</Text>
+                              <Text className="text-xs font-poppins-semibold text-emerald-500">{translate("store_manager.stamp.redeemable")}</Text>
                             </View>
                           )}
                         </View>
                         <View className="flex-row items-center justify-between">
                           <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">
-                            Last stamp: {formatDate(item.last_stamp_at)}
+                            {translate("store_manager.stamp.lastStamp", { date: formatDate(item.last_stamp_at) })}
                           </Text>
                           <Text className="text-xs font-poppins-bold text-primary">
                             {item.stamps_count}/{stamp.total_stamps}
@@ -232,7 +234,7 @@ export function StampCard({
                         <>
                           <ChevronDown size={16} color="#FF6600" />
                           <Text className="text-xs font-poppins-semibold text-primary">
-                            Load more ({c.collectorsCount - c.collectors.length} remaining)
+                            {translate("store_manager.stamp.loadMore", { count: c.collectorsCount - c.collectors.length })}
                           </Text>
                         </>
                       )}
@@ -242,7 +244,7 @@ export function StampCard({
                   {!hasMore && c.collectors.length > 0 && (
                     <View className="py-2.5 items-center border-t border-slate-100 dark:border-slate-800">
                       <Text className="text-xs font-poppins text-slate-300 dark:text-slate-600">
-                        All {c.collectorsCount} collectors shown
+                        {translate("store_manager.stamp.allCollectorsShown", { count: c.collectorsCount })}
                       </Text>
                     </View>
                   )}
@@ -260,11 +262,11 @@ export function StampCard({
               activeOpacity={0.8}
               onPress={() =>
                 setModal({
-                  title: "Delete Stamp Program",
-                  message: "Are you sure you want to delete this stamp program?",
+                  title: translate("store_manager.stamp.deleteConfirmTitle"),
+                  message: translate("store_manager.stamp.deleteConfirmMessage"),
                   buttons: [
-                    { label: "Cancel", variant: "secondary", onPress: () => setModal(null) },
-                    { label: "Delete", variant: "danger", onPress: () => { setModal(null); doDelete(stamp.id!) } },
+                    { label: translate("label.cancel"), variant: "secondary", onPress: () => setModal(null) },
+                    { label: translate("label.delete"), variant: "danger", onPress: () => { setModal(null); doDelete(stamp.id!) } },
                   ],
                 })
               }
@@ -278,9 +280,9 @@ export function StampCard({
                 onEditDraft ??
                 (() =>
                   setModal({
-                    title: "Edit Program",
-                    message: "Edit draft program will be implemented next.",
-                    buttons: [{ label: "OK", onPress: () => setModal(null) }],
+                    title: translate("store_manager.stamp.editProgramTitle"),
+                    message: translate("store_manager.stamp.editProgramMessage"),
+                    buttons: [{ label: translate("label.ok"), onPress: () => setModal(null) }],
                   }))
               }
               className="flex-1 h-8 rounded-lg items-center justify-center bg-gray-200"
@@ -292,17 +294,17 @@ export function StampCard({
               onPress={() =>
                 activeProgramCount > 0
                   ? setModal({
-                      title: "Active Program Exists",
-                      message: "There is already an active stamp program for this store. End it first before activating another one.",
-                      buttons: [{ label: "OK", variant: "secondary", onPress: () => setModal(null) }],
+                      title: translate("store_manager.stamp.activeProgramExistsTitle"),
+                      message: translate("store_manager.stamp.activeProgramExistsMessage"),
+                      buttons: [{ label: translate("label.ok"), variant: "secondary", onPress: () => setModal(null) }],
                     })
                   : setModal({
-                      title: "Activate Program",
-                      message: "This draft will be activated and users can start collecting stamps immediately.",
+                      title: translate("store_manager.stamp.activateConfirmTitle"),
+                      message: translate("store_manager.stamp.activateConfirmMessage"),
                       buttons: [
-                        { label: "Cancel", variant: "secondary", onPress: () => setModal(null) },
+                        { label: translate("label.cancel"), variant: "secondary", onPress: () => setModal(null) },
                         {
-                          label: "Activate",
+                          label: translate("label.active"),
                           variant: "primary",
                           onPress: () => {
                             setModal(null);
@@ -327,12 +329,11 @@ export function StampCard({
             disabled={endingId === stamp.id}
             onPress={() =>
               setModal({
-                title: "End Stamp Program",
-                message:
-                  "Choose a grace period during which users can still redeem existing stamps. After the grace period, no earning or redeeming is possible.",
+                title: translate("store_manager.stamp.endConfirmTitle"),
+                message: translate("store_manager.stamp.endConfirmMessage"),
                 buttons: [
                   {
-                    label: "14-Day Grace Period",
+                    label: translate("store_manager.stamp.grace14"),
                     variant: "primary",
                     onPress: () => {
                       setModal(null);
@@ -340,7 +341,7 @@ export function StampCard({
                     },
                   },
                   {
-                    label: "7-Day Grace Period",
+                    label: translate("store_manager.stamp.grace7"),
                     variant: "secondary",
                     onPress: () => {
                       setModal(null);
@@ -348,7 +349,7 @@ export function StampCard({
                     },
                   },
                   {
-                    label: "No Grace Period",
+                    label: translate("store_manager.stamp.grace0"),
                     variant: "secondary",
                     onPress: () => {
                       setModal(null);
@@ -365,7 +366,7 @@ export function StampCard({
             ) : (
               <>
                 <OctagonMinus size={16} color="#EF4444" />
-                <Text className="text-sm font-poppins-semibold text-red-500">End Program</Text>
+                <Text className="text-sm font-poppins-semibold text-red-500">{translate("store_manager.stamp.endProgram")}</Text>
               </>
             )}
           </TouchableOpacity>

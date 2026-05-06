@@ -278,27 +278,27 @@ export default function FrontDeskScan() {
             <View className="mx-4 mt-4">
               <View className="flex-row bg-neutral-100 dark:bg-neutral-800 rounded-xl p-1">
                 <TouchableOpacity
-                  onPress={() => setMode("earn")}
-                  className={`flex-1 py-2 rounded-lg items-center ${
-                    mode === "earn" ? "bg-white dark:bg-neutral-700" : ""
-                  }`}
+                   onPress={() => setMode("earn")}
+                   className={`flex-1 py-2 rounded-lg items-center ${
+                     mode === "earn" ? "bg-white dark:bg-neutral-700" : ""
+                   }`}
                 >
                   <Text className={`text-sm font-poppins-semibold ${
                     mode === "earn" ? "text-orange-600 dark:text-orange-400" : "text-neutral-500"
                   }`}>
-                    Earn Points
+                    {translate("frontdesk.transaction.mode.earn")}
                   </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  onPress={() => setMode("redeem")}
-                  className={`flex-1 py-2 rounded-lg items-center ${
-                    mode === "redeem" ? "bg-white dark:bg-neutral-700" : ""
-                  }`}
+                   onPress={() => setMode("redeem")}
+                   className={`flex-1 py-2 rounded-lg items-center ${
+                     mode === "redeem" ? "bg-white dark:bg-neutral-700" : ""
+                   }`}
                 >
                   <Text className={`text-sm font-poppins-semibold ${
                     mode === "redeem" ? "text-orange-600 dark:text-orange-400" : "text-neutral-500"
                   }`}>
-                    Redeem Reward
+                    {translate("frontdesk.transaction.mode.redeem")}
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -329,7 +329,7 @@ export default function FrontDeskScan() {
               }}
               onError={(message) => {
                 setModal({
-                  title: "Invalid",
+                  title: translate("frontdesk.transaction.error.invalid"),
                   message,
                   buttons: [{ label: translate("label.ok"), variant: "secondary", onPress: () => setModal(null) }],
                 });
@@ -345,7 +345,7 @@ export default function FrontDeskScan() {
                 }}
                 onError={(message) => {
                   setModal({
-                    title: "Invalid",
+                    title: translate("frontdesk.transaction.error.invalid"),
                     message,
                     buttons: [{ label: translate("label.ok"), variant: "secondary", onPress: () => setModal(null) }],
                   });
@@ -410,8 +410,8 @@ export default function FrontDeskScan() {
               amount: redemptionVerification.code.points_cost,
               type: "redeemed",
               method: "voucher",
-              customerName: "Customer",
-              rewardTitle: redemptionVerification.code.reward?.title || "Reward",
+              customerName: translate("label.customer"),
+              rewardTitle: redemptionVerification.code.reward?.title || translate("frontdesk.transaction.recent.rewardRedemption"),
               pointsCost: redemptionVerification.code.points_cost,
             });
             // Show success modal
@@ -424,7 +424,7 @@ export default function FrontDeskScan() {
         }}
         onError={(message) => {
           setModal({
-            title: "Redemption Error",
+            title: translate("frontdesk.transaction.error.redemption"),
             message,
             buttons: [{ label: translate("label.ok"), variant: "secondary", onPress: () => setModal(null) }],
           });

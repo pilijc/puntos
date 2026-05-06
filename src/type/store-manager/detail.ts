@@ -12,6 +12,7 @@ export interface StoreDetail {
   address: string | null;
   latitude: number | null;
   longitude: number | null;
+  location?: any;
   radius: number | null;
   status: string | null;
   is_active: boolean | null;

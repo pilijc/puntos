@@ -2,8 +2,9 @@ export interface Store {
   id: number;
   name: string;
   address: string;
-  latitude: number;
-  longitude: number;
+  latitude: number | null;
+  longitude: number | null;
+  location?: any;
   is_active: boolean;
   logo: string | null;
   banner: string | null;

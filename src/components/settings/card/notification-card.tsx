@@ -24,6 +24,14 @@ export const NotificationCard = () => {
 
     if (!preferences) return null;
 
+    const statusText = notificationLoading
+        ? translate('settings.checking')
+        : !hasPermission
+            ? translate('settings.notificationsPrivacy.alerts.denied')
+            : preferences.near_store_notifications
+                ? translate('settings.notificationsPrivacy.alerts.allow')
+                : translate('settings.notificationsPrivacy.alerts.disabled');
+
     const togglePreference = async (key: string) => {
         const newValue = !(preferences as any)[key];
         await updatePreferences({ [key]: newValue });
@@ -54,7 +62,8 @@ export const NotificationCard = () => {
             });
         } else {
             if (!hasPermission) {
-                await requestNotificationPermission();
+                const nextStatus = await requestNotificationPermission();
+                if (!nextStatus.granted) return;
             }
             togglePreference('near_store_notifications');
         }
@@ -74,11 +83,7 @@ export const NotificationCard = () => {
                         {translate('settings.notificationsPrivacy.alerts.title')}
                     </Text>
                     <Text className="text-xs font-poppins-regular text-textMuted dark:text-darkTextMuted">
-                        {notificationLoading
-                            ? translate('settings.checking')
-                            : hasPermission
-                                ? translate('settings.notificationsPrivacy.location.allow')
-                                : translate('settings.notificationsPrivacy.location.denied')}
+                        {statusText}
                     </Text>
                 </View>
                 <View className="flex-row items-center">

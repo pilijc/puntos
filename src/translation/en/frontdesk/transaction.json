@@ -1,7 +1,11 @@
 {
   "transactionModal": {
     "title": "Enter Purchase Amount",
-    "description": "Enter the customer's purchase amount to calculate points."
+    "description": "Enter the customer purchase amount to calculate points awarded."
+  },
+  "mode": {
+    "earn": "Earn Points",
+    "redeem": "Redeem Reward"
   },
   "title": "Scan QR Code",
   "store": "Current Store",
@@ -13,15 +17,20 @@
     "title": "Recent Transactions",
     "view": "View All",
     "empty": "No transactions yet",
-    "purchase": "Purchase",
+    "purchase": "purchase",
+    "rewardRedemption": "Reward Redemption",
+    "qrScan": "QR Scan",
+    "voucher": "Voucher",
+    "pts": "pts",
     "time": {
       "justNow": "Just now",
-      "minute": "minute ago",
-      "minutes": "minutes ago",
-      "hour": "hour ago",
-      "hours": "hours ago",
-      "day": "day ago",
-      "days": "days ago"
+      "minute": " minute",
+      "minutes": " minutes",
+      "hour": " hour",
+      "hours": " hours",
+      "day": " day",
+      "days": " days",
+      "ago": " ago"
     }
   },
   "success": {
@@ -44,8 +53,10 @@
     },
     "amount": {
       "invalid": "Invalid Amount",
-      "lessThanZero": "Please enter a valid purchase amount greater than 0."
+      "lessThanZero": "Purchase amount must be greater than zero."
     },
+    "invalid": "Invalid",
+    "redemption": "Redemption Error",
     "unknown": "Something went wrong. Please try again."
   },
   "access": {
@@ -56,7 +67,63 @@
   },
   "passwordSetup": {
     "title": "Password Setup Required",
-    "message": "Complete your password setup to access all dashboard features and ensure proper account security.",
-    "button": "Set Password"
+    "message": "You must set up your password before accessing security features.",
+    "button": "Set Password",
+    "detail": "Complete password setup to access all security features and ensure proper account protection.",
+    "complete": "Complete Setup"
+  },
+  "redemption": {
+    "error": {
+      "invalidCode": "Invalid redemption code",
+      "enterCode": "Please enter a voucher code"
+    },
+    "camera": {
+      "permissionTitle": "Camera Permission Required",
+      "permissionDescription": "Allow camera access to scan reward redemption codes",
+      "allowButton": "Allow Camera",
+      "scanning": "Scanning for redemption codes",
+      "instruction": "Point camera at customer's QR code"
+    },
+    "mode": {
+      "qr": "QR Scan",
+      "manual": "Input Code"
+    },
+    "qr": {
+      "title": "Scan Reward Code",
+      "description": "Point camera at the customer's reward QR code",
+      "button": "Open Camera"
+    },
+    "manual": {
+      "title": "Enter Redemption Code",
+      "description": "Type the code from the customer's voucher",
+      "placeholder": "e.g. RWDABC123",
+      "verifying": "Verifying...",
+      "verifyButton": "Verify Code"
+    }
+  },
+  "history": {
+    "emptyFound": "No transactions found",
+    "emptyYet": "No transactions yet",
+    "emptyFoundDetail": "Try adjusting your filters or date range to see more results.",
+    "emptyYetDetail": "Your transactions will appear here once customers start earning points.",
+    "clearFilters": "Clear Filters",
+    "filters": {
+      "title": "Filter & Sort",
+      "clearAll": "Clear all ({{count}})",
+      "sortBy": "Sort By",
+      "date": "Date",
+      "amount": "Amount",
+      "direction": "Direction",
+      "newestHigh": "Newest / High",
+      "oldestLow": "Oldest / Low",
+      "type": "Transaction Type",
+      "all": "All",
+      "earned": "Earned",
+      "redeemed": "Redeemed",
+      "pending": "Pending",
+      "apply": "Apply Filters",
+      "oldestFirst": "Oldest first",
+      "amountPill": "Amount {{direction}}"
+    }
   }
 }
