@@ -9,6 +9,7 @@
   },
   "loading": "Loading transaction history...",
   "empty": "No transactions found",
+  "emptyDescription": "Start earning points by making purchases at participating stores",
   "sections": {
     "today": "Today",
     "yesterday": "Yesterday"

@@ -1,6 +1,6 @@
 import React from "react";
 import { Text, View, TouchableOpacity, Image } from "@/tw";
-import { CirclePlus, Gift } from "lucide-react-native";
+import { CirclePlus, Gift, Coins } from "lucide-react-native";
 import { useTranslation } from "react-i18next";
 
 interface HistoryRowProps {
@@ -69,7 +69,7 @@ export default function HistoryRow({
               <Image source={{ uri: image }} className="w-12 h-12 rounded-2xl" />
             ) : (
               isPositive ? (
-                <CirclePlus size={20} color="#10b981" />
+                <Coins size={20} color="#10b981" />
               ) : (
                 <Gift size={20} color="#FF6600" />
               )

@@ -363,6 +363,7 @@
             },
             "loading": "取引履歴を読み込み中...",
             "empty": "取引が見つかりません",
+            "emptyDescription": "提携店舗で購入を開始してポイントを貯めましょう",
             "sections": {
                 "today": "今日",
                 "yesterday": "昨日"

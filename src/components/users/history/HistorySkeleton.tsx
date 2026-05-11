@@ -66,7 +66,7 @@ export function HistoryEmptyState() {
         {translate("user.activity.empty")}
       </Text>
       <Text className="text-sm font-poppins text-neutral-400 text-center mt-2 px-10">
-        {translate("user.activity.loading")}
+        {translate("user.activity.emptyDescription")}
       </Text>
     </View>
   );

@@ -12,6 +12,9 @@ type AppHeaderProps = {
   onRightIconPress?: () => void;
   paddingTop?: number;
   className?: string;
+  textAlign?: "left" | "center" | "right";
+  titleSize?: "xs" | "sm" | "base" | "lg" | "xl" | "2xl" | "3xl";
+  fullLeft?: boolean;
 };
 
 export function AppHeader({
@@ -22,14 +25,17 @@ export function AppHeader({
   onRightIconPress,
   paddingTop = 0,
   className = "bg-white dark:bg-darkBackground ",
+  textAlign = "center",
+  titleSize = "base",
+  fullLeft = false,
 }: AppHeaderProps) {
   const isDark = useColorScheme() === "dark";
   const isWeb = Platform.OS === "web";
 
   return (
-    <View className={`px-2 py-2 ${className}`}>
+    <View className={`${fullLeft ? "pl-1 pr-2" : "px-2"} py-2 ${className}`}>
       <View className="flex-row items-center mb-1">
-        {onBackPress ? (
+        {!fullLeft && (onBackPress ? (
           <TouchableOpacity
             className="w-10 h-10 rounded-full items-center justify-center -mt-0.5"
             activeOpacity={0.7}
@@ -39,14 +45,14 @@ export function AppHeader({
           </TouchableOpacity>
         ) : (
           <View className="w-10 h-10" />
-        )}
+        ))}
 
-        <View className="flex-1 px-2 py-1">
-          <Text className="text-base font-poppins-bold text-textPrimary dark:text-darkTextPrimary text-center">
+        <View className={`${fullLeft ? "flex-1" : "flex-1 px-2 py-1"}`}>
+          <Text className={`text-${titleSize} font-poppins-bold text-textPrimary dark:text-darkTextPrimary text-${textAlign}`}>
             {title}
           </Text>
           {description ? (
-            <Text className="text-xs font-poppins text-textMuted dark:text-darkTextMuted text-center -mt-0.5">
+            <Text className={`text-xs font-poppins text-textMuted dark:text-darkTextMuted text-${textAlign} -mt-0.5`}>
               {description}
             </Text>
           ) : null}
