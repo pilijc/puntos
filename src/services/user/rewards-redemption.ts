@@ -183,6 +183,7 @@ export function listenToRedemptionStatus(
         if (isDisposed) return;
          
         if (status === "SUBSCRIBED") {
+          clearRetryTimer();
           retryCount = 0;
         } else if (status === "TIMED_OUT" || status === "CLOSED" || status === "CHANNEL_ERROR") {
           retryCount++;
