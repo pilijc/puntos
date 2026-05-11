@@ -225,7 +225,6 @@ export async function useSubscriptionCheckout(
       console.error("Checkout failed:", result);
       return null;
     }
-    console.log('Checkout result:', result);
     return result?.checkout_url ?? null;
   } catch (err) {
     console.error("useSubscriptionCheckout error:", err);

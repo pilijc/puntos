@@ -50,7 +50,6 @@ export async function canUserEarnPurchasePoints(params: {
 
     return false;
   } catch (error) {
-    console.log("Unable to determine if user can earn purchase points at this time. Please try again later.", error);
     throw new Error("Unable to determine if user can earn purchase points at this time. Please try again later.");
   }
 }

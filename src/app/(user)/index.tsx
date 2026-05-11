@@ -330,10 +330,6 @@ export default function Discover() {
               store_ids: nearbyStoreIds,
             });
 
-            if (res instanceof Response) {
-              console.log(`[Geofence] Push sent (${nearbyCount} nearby stores):`, res.status);
-            }
-
             nearbyStoreIds.forEach((id) => notifiedStoreIds.current.add(id));
 
           } catch (err) {
@@ -697,9 +693,9 @@ export default function Discover() {
                 "interpolate",
                 ["linear"],
                 ["zoom"],
-                5, 0.01,
-                10, 0.02,
-                15, 0.035,
+                5, 0.005,
+                10, 0.03,
+                15, 0.02,
                 18, 0.05,
                 20, 0.07  
               ]

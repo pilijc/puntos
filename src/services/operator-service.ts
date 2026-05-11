@@ -109,7 +109,6 @@ export const getCurrentUserIsActive = async (): Promise<boolean> => {
     .single();
 
   if (error || !data) {
-    console.log("Error fetching is_active:", error);
     return false;
   }
 

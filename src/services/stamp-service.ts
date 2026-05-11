@@ -205,15 +205,12 @@ export async function addStamp(
     // ──────────────────────────────────────────────
     // 1. Check store_feature.stamp_enabled
     // ──────────────────────────────────────────────
-    console.log("[addStamp] Starting for userId:", userId, "storeId:", storeId);
 
     const { data: featureRow, error: featureError } = await supabase
       .from("store_feature")
       .select("stamp_enabled")
       .eq("store_id", storeId)
       .maybeSingle();
-
-    console.log("[addStamp] store_feature result:", { featureRow, featureError: featureError?.message, code: featureError?.code });
 
     if (featureError) {
       // RLS or network issue — log but don't block the stamp
@@ -222,7 +219,6 @@ export async function addStamp(
 
     // Only block if we got a row AND stamp_enabled is explicitly false
     if (featureRow && featureRow.stamp_enabled === false) {
-      console.log("[addStamp] Blocked: stamp_not_enabled. featureRow:", featureRow);
       return { success: false, reason: "stamp_not_enabled" };
     }
 
