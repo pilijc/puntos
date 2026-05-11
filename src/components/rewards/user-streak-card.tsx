@@ -86,12 +86,18 @@ export default function UserStreakCard({
   // Called on mount and after any successful streak recording so that the
   // weekly circles always reflect actual visit history, not just a consecutive window.
   const fetchEarnedDates = useCallback(async () => {
+    // ⚠️ Guard: skip if store_streak_id is null.
+    // On initial load, the streak entry may be a virtual (0-progress) record built before
+    // activeStreakProgramMap has finished loading. At that point store_streak_id = null.
+    // Querying without a streak ID would return dates from ALL past programs for this store,
+    // causing incorrect circles to flash briefly. We wait for the real program ID to arrive
+    // (deps change → useCallback recreates → useEffect re-fires with the correct ID).
+    if (!streak.store_streak_id) return;
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user?.id) return;
       // Scope to the current program so old program events don't contaminate circles.
-      const currentStreakId = streak.store_streak_id ?? undefined;
-      const dates = await getStreakEarnedDates(user.id, Number(streak.store_id), currentStreakId);
+      const dates = await getStreakEarnedDates(user.id, Number(streak.store_id), streak.store_streak_id);
       setEarnedWeekDates(dates);
     } catch {
       // silent: the fallback streak_days window (below) covers this case

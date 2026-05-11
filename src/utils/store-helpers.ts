@@ -6,6 +6,48 @@ import type { Store } from "@/type/user/store";
 import type { UserStreak } from "@/services/streak-service";
 import { enrichStoresWithLocation } from "@/utils/store-location";
 
+/**
+ * ============================================================================
+ * store-helpers.ts — Store List Data Builder
+ * ============================================================================
+ *
+ * This file owns the logic that converts raw Supabase data into display-ready
+ * `StampedStoreListItem` objects used by the store list FlatList and its items.
+ *
+ * ⚠️  AI / DEV WARNING — READ BEFORE EDITING
+ *
+ * 1. DATA SOURCES: Stamp & streak data come from MULTIPLE sources depending on
+ *    what the user has done and how far they are from the store.
+ *    DO NOT simplify the fallback chains — each source covers a different case:
+ *
+ *    stampEnabled sources (in priority order):
+ *      a. activeStampProgramRewards  — fetched for NEARBY stores via use-rewards-data
+ *      b. stampRewards               — fetched for NEARBY stores (legacy fallback)
+ *      c. stampData (stamp_progress) — covers JOINED non-nearby stores.
+ *                                       getUserStamps() already filters stamp_enabled=false
+ *                                       rows, so presence of stampData IS proof of enablement.
+ *      d. storeFeatureFlags          — covers DISCOVER stores with no user history.
+ *                                       Fetched as a batch query for ALL stores on focus.
+ *    ⚠️  DO NOT remove any of these four sources — removing one will break chevron
+ *         visibility for at least one section (nearby / joined / discover).
+ *
+ *    streakProgramActive sources (in priority order):
+ *      a. userStreaks (user has started the streak)
+ *      b. activeStreakStoreIds (eligibleStreakStoreIds from use-rewards-data for nearby)
+ *      c. storeFeatureFlags.streak_enabled (covers ALL stores via the batch fetch)
+ *    ⚠️  DO NOT remove source (c) — it is the only way discover stores show chevron.
+ *
+ * 2. COUNT SOURCE: stampsCount uses ONLY stamp_progress.stamps_count.
+ *    stamp_rewards.current_stamp_count is intentionally EXCLUDED because it is
+ *    only updated by the legacy addStamp() path and is STALE for stamps issued
+ *    via the issueStampForPurchase RPC.
+ *
+ * 3. streakTarget FALLBACK: When a user hasn’t started the streak yet (no
+ *    user_streaks row), streakTarget falls back to activeStreakProgramMap.streak_length.
+ *    This prevents the ’0/?’ display. DO NOT remove this fallback.
+ * ============================================================================
+ */
+
 export type StampedStoreListItem = {
   id: string;
   name: string;
@@ -110,7 +152,7 @@ export function buildStampedStoreList(
   activeStreakStoreIds: Set<number> = new Set(),
   /** storeId → full active streak program — used to get streak_length when user hasn't started */
   activeStreakProgramMap: Map<number, { streak_length?: number | null }> = new Map(),
-  /** storeId → store_feature flags — fallback for discover stores with no user data */
+  /** storeId → store_feature flags (stamp_enabled / streak_enabled) — covers ALL stores for chevron visibility */
   storeFeatureFlags: Map<number, { stamp_enabled: boolean; streak_enabled: boolean }> = new Map(),
 ): StampedStoreListItem[] {
   const stampedIds = new Set(stamps.map((stamp) => stamp.store_id.toString()));
@@ -142,7 +184,11 @@ export function buildStampedStoreList(
         s.store_id?.toString() === storeIdStr &&
         (s.store_streaks?.status === "active" || s.status === "in_progress"),
     );
-    // streakTarget: user row first, then fall back to the program map (covers un-enrolled users)
+    // streakTarget fallback chain (in priority order):
+    //   1. user's own streak row       — most accurate, user has started
+    //   2. activeStreakProgramMap       — ALL stores (populated by useFocusEffect in store/index.tsx
+    //                                     AND by fetchRewardsData from the detail screen)
+    // ⚠️  DO NOT add a 3rd raw-query fallback here. Fix the source in useFocusEffect instead.
     const streakTarget =
       streak?.store_streaks?.streak_length ??
       activeStreakProgramMap.get(Number(storeIdStr))?.streak_length ??
