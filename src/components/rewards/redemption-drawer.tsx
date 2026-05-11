@@ -170,8 +170,7 @@ export function RedemptionDrawer({
   if (!visible) return null;
 
   const formattedCode = redemptionCode?.code?.replace(/-/g, " ") || "";
-  const handleCancelPress = () => setShowConfirmModal(true);
-
+ 
   return (
     <RNModal
       visible={internalVisible}

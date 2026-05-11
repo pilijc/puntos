@@ -128,16 +128,34 @@ export function listenToRedemptionStatus(
   let retryCount = 0;
   const maxRetries = 10;
   const baseDelay = 2000;
+  let currentChannel: any = null;
+  let retryTimer: ReturnType<typeof setTimeout> | null = null;
+  let isDisposed = false;
+
+  const clearRetryTimer = () => {
+    if (retryTimer) {
+      clearTimeout(retryTimer);
+      retryTimer = null;
+    }
+  };
+
+  const removeCurrentChannel = () => {
+    if (currentChannel) {
+      supabase.removeChannel(currentChannel);
+      currentChannel = null;
+    }
+  };
 
   const subscribeWithRetry = () => {
-    if (retryCount >= maxRetries) {
+    if (isDisposed || retryCount >= maxRetries) {
       return null;
     }
 
     const delay = Math.min(baseDelay * Math.pow(2, retryCount), 30000);
+    removeCurrentChannel();
 
     const channel = supabase
-      .channel(`redemption-status-${codeId}`, {
+      .channel(`redemption-status-${codeId}-${Date.now()}-${retryCount}`, {
         config: {
           broadcast: { self: true },
           presence: { key: codeId },
@@ -152,6 +170,8 @@ export function listenToRedemptionStatus(
           filter: `id=eq.${codeId}`,
         },
         (payload) => {
+          if (isDisposed) return;
+
           const updated = payload.new as RedemptionCode;
           onStatusChange({
             status: updated.status,
@@ -160,23 +180,36 @@ export function listenToRedemptionStatus(
         }
       )
       .subscribe((status) => {
+        if (isDisposed) return;
          
         if (status === "SUBSCRIBED") {
+          clearRetryTimer();
           retryCount = 0;
         } else if (status === "TIMED_OUT" || status === "CLOSED" || status === "CHANNEL_ERROR") {
           retryCount++;
           if (retryCount < maxRetries) {
-            setTimeout(() => {
+            clearRetryTimer();
+            retryTimer = setTimeout(() => {
+              retryTimer = null;
               subscribeWithRetry();
             }, delay);
           } 
         }
       });
 
+    currentChannel = channel;
     return channel;
   };
 
-  return subscribeWithRetry();
+  subscribeWithRetry();
+
+  return {
+    unsubscribe: () => {
+      isDisposed = true;
+      clearRetryTimer();
+      removeCurrentChannel();
+    },
+  };
 }
 
 export async function cancelRedemptionCode(
