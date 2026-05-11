@@ -1,10 +1,10 @@
 import React from "react";
-import { useTranslation } from "react-i18next";
 import { ActivityIndicator } from "react-native";
 import { Image } from "expo-image";
 import { View, Text, TouchableOpacity } from "@/tw";
 import { getCollectorsByProgramId, getProgramStatus } from "@/services/store-manager/stamp-service";
-import { emptyCollectorSlice, STATUS_BADGE, StampCardProps,
+import {
+  emptyCollectorSlice, STATUS_BADGE, StampCardProps,
 } from "@/type/store-manager/stamp";
 import { formatDate } from "@/utils/store_manager/stamp-utils";
 import { ChevronUp, ChevronDown, OctagonMinus, Trash2, Pencil, SendHorizonal, Stamp as StampIcon } from "lucide-react-native";
@@ -299,25 +299,25 @@ export function StampCard({
               onPress={() =>
                 activeProgramCount > 0
                   ? setModal({
-                      title: t("store_manager.stamp.activeExistsTitle"),
-                      message: t("store_manager.stamp.activeExistsMessage"),
-                      buttons: [{ label: t("label.ok"), variant: "primary", onPress: () => setModal(null) }],
-                    })
+                    title: t("store_manager.stamp.activeExistsTitle"),
+                    message: t("store_manager.stamp.activeExistsMessage"),
+                    buttons: [{ label: t("label.ok"), variant: "primary", onPress: () => setModal(null) }],
+                  })
                   : setModal({
-                      title: t("store_manager.stamp.activateDraftTitle"),
-                      message: t("store_manager.stamp.activateDraftMessage"),
-                      buttons: [
-                        { label: t("label.cancel"), variant: "secondary", onPress: () => setModal(null) },
-                        {
-                          label: t("store_manager.stamp.activateButton"),
-                          variant: "primary",
-                          onPress: () => {
-                            setModal(null);
-                            void doActivate(stamp.id!);
-                          },
+                    title: t("store_manager.stamp.activateDraftTitle"),
+                    message: t("store_manager.stamp.activateDraftMessage"),
+                    buttons: [
+                      { label: t("label.cancel"), variant: "secondary", onPress: () => setModal(null) },
+                      {
+                        label: t("store_manager.stamp.activateButton"),
+                        variant: "primary",
+                        onPress: () => {
+                          setModal(null);
+                          void doActivate(stamp.id!);
                         },
-                      ],
-                    })
+                      },
+                    ],
+                  })
               }
               className="flex-1 h-8 rounded-lg items-center justify-center bg-orange-500"
             >

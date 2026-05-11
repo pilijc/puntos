@@ -24,6 +24,7 @@ import { storeLogos } from "@/data/rewards";
 import { useRewardsUiStore } from "@/store/user/rewards-ui-store";
 import { useRewardsDataStore } from "@/hooks/use-rewards-data";
 import { useStoreOverviewData } from "@/hooks/use-store-overview-data";
+import { useUserStoreActivity } from "@/hooks/use-user-store-activity";
 import { ProgramSkeleton } from "@/components/skeleton/user/program-skeleton";
 import StoreScreenContainer from "@/components/ui/store-screen-container";
 import { MuteStoreButton } from "@/components/users/stores/mute-store-button";
@@ -113,29 +114,15 @@ export default function StoreOverviewDetail() {
   const [isRefreshingLocal, setIsRefreshingLocal] = useState(false);
 
   // ── Store-specific transaction history ──
-  const [storeTransactions, setStoreTransactions] = useState<any[]>([]);
-  const [loadingTx, setLoadingTx] = useState(false);
+  const { transactionsMap, isLoading, fetchActivity } = useUserStoreActivity();
+  const storeTransactions = storeId ? (transactionsMap[storeId] || []) : [];
+  const loadingTx = storeId ? !!isLoading[storeId] : false;
 
   useEffect(() => {
-    if (!storeId || storesWithLocation.length === 0) return;
-    (async () => {
-      try {
-        setLoadingTx(true);
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
-        const all = await getUserTransactionHistory(user.id);
-        const currentStore = storesWithLocation.find(s => s.id.toString() === storeId);
-        const filtered = currentStore
-          ? all.filter((tx: any) => tx.title === currentStore.name)
-          : all;
-        setStoreTransactions(filtered.slice(0, 3));
-      } catch {
-        // silent
-      } finally {
-        setLoadingTx(false);
-      }
-    })();
-  }, [storeId, storesWithLocation]);
+    if (storeId) {
+      fetchActivity(storeId);
+    }
+  }, [storeId, fetchActivity]);
 
   const onRefreshLocal = useCallback(async () => {
     setIsRefreshingLocal(true);
@@ -366,6 +353,13 @@ export default function StoreOverviewDetail() {
                   autoPlayInterval={3500}
                   onScrollStart={handleCarouselInteraction}
                   onSnapToItem={(index) => setCarouselIndex(index)}
+                  // ⚠️ DO NOT REMOVE panGestureHandlerProps — this is the fix for
+                  // react-native-reanimated-carousel v4 stealing ALL touch events,
+                  // including taps on inner TouchableOpacity circles in UserStreakCard.
+                  // Without this, the streak day circles are completely untappable.
+                  // activeOffsetX tells the carousel to only activate its swipe handler
+                  // after ±10px of horizontal movement; plain taps fall through to children.
+                  panGestureHandlerProps={{ activeOffsetX: [-10, 10] }}
                   renderItem={({ item: streak }) => (
                     <UserStreakCard
                       key={streak.store_id}

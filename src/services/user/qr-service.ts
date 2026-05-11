@@ -227,10 +227,10 @@ export function cleanupQRChannels(channels: { qrChannel: any; voucherChannel: an
 
 //HISTORY SIDE
 //Get user transaction history with store names
-export async function getUserTransactionHistory(userId: string): Promise<any[]> {
+export async function getUserTransactionHistory(userId: string, storeId?: string, limit?: number): Promise<any[]> {
   try {
     // Fetch transactions with store information (manual join)
-    const { data: transactions, error } = await supabase
+    let query = supabase
       .from('qr_transactions')
       .select(`
         id,
@@ -240,6 +240,16 @@ export async function getUserTransactionHistory(userId: string): Promise<any[]> 
       `)
       .eq('user_id', userId)
       .order('created_at', { ascending: false });
+
+    if (storeId) {
+      query = query.eq('store_id', storeId);
+    }
+
+    if (limit) {
+      query = query.limit(limit);
+    }
+
+    const { data: transactions, error } = await query;
 
     if (error) {
        return [];
