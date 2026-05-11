@@ -119,23 +119,28 @@ export default function OnboardingWelcome() {
                       fullWidth={true}
                       authButton={true}
                     />
-                    <View className="flex-row items-center gap-x-4 my-1 w-full justify-center">
-                      <View className="flex-1 h-px bg-neutral-300 dark:bg-darkBorder" />
-                      <Text className="text-textSecondary dark:text-darkTextSecondary font-poppins text-sm">
-                        {translate("onboarding.signup.divider")}
-                      </Text>
-                      <View className="flex-1 h-px bg-neutral-300 dark:bg-darkBorder" />
-                    </View>
-                    <Button
-                      label={translate("onboarding.signup.google")}
-                      onPress={handleSignInWithGoogle}
-                      variant="secondary"
-                      fullWidth={true}
-                      authButton={true}
-                      leftImage={require("../../assets/images/google-icon.png")}
-                      leftImageSize={14}
-                      loading={loadingGoogle}
-                    />
+                    {!isWeb && (
+                      <>
+                        <View className="flex-row items-center gap-x-4 my-1 w-full justify-center">
+                          <View className="flex-1 h-px bg-neutral-300 dark:bg-darkBorder" />
+                          <Text className="text-textSecondary dark:text-darkTextSecondary font-poppins text-sm">
+                            {translate("onboarding.signup.divider")}
+                          </Text>
+                          <View className="flex-1 h-px bg-neutral-300 dark:bg-darkBorder" />
+                        </View>
+
+                        <Button
+                          label={translate("onboarding.signup.google")}
+                          onPress={handleSignInWithGoogle}
+                          variant="secondary"
+                          fullWidth={true}
+                          authButton={true}
+                          leftImage={require("../../assets/images/google-icon.png")}
+                          leftImageSize={14}
+                          loading={loadingGoogle}
+                        />
+                      </>
+                    )}
                   </View>
 
                   <View className="pt-2 w-full items-center">
@@ -211,23 +216,28 @@ export default function OnboardingWelcome() {
                     fullWidth={true}
                     authButton={true}
                   />
-                  <View className="flex-row items-center gap-x-4 my-1 w-full justify-center">
-                    <View className="flex-1 h-px bg-neutral-300 dark:bg-darkBorder" />
-                    <Text className="text-neutral-500 dark:text-darkTextMuted font-poppins text-sm">
-                      {translate("onboarding.signup.divider")}
-                    </Text>
-                    <View className="flex-1 h-px bg-neutral-300 dark:bg-darkBorder" />
-                  </View>
-                  <Button
-                    label={translate("onboarding.signup.google")}
-                    onPress={handleSignInWithGoogle}
-                    variant="secondary"
-                    fullWidth={true}
-                    authButton={true}
-                    leftImage={require("../../assets/images/google-icon.png")}
-                    leftImageSize={14}
-                    loading={loadingGoogle}
-                  />
+                  {!isWeb && (
+                    <>
+                      <View className="flex-row items-center gap-x-4 my-1 w-full justify-center">
+                        <View className="flex-1 h-px bg-neutral-300 dark:bg-darkBorder" />
+                        <Text className="text-neutral-500 dark:text-darkTextMuted font-poppins text-sm">
+                          {translate("onboarding.signup.divider")}
+                        </Text>
+                        <View className="flex-1 h-px bg-neutral-300 dark:bg-darkBorder" />
+                      </View>
+                      <Button
+                        label={translate("onboarding.signup.google")}
+                        onPress={handleSignInWithGoogle}
+                        variant="secondary"
+                        fullWidth={true}
+                        authButton={true}
+                        leftImage={require("../../assets/images/google-icon.png")}
+                        leftImageSize={14}
+                        loading={loadingGoogle}
+                      />
+                    </>
+                  )}
+            
                 </View>
               </View>
 
