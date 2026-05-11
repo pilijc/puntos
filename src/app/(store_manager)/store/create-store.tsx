@@ -245,6 +245,7 @@ export default function CreateStore() {
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [scrollEnabled, setScrollEnabled] = useState(true);
+  const [webMapUnavailable, setWebMapUnavailable] = useState(false);
   const {
     storeName,
     storeType,
@@ -483,6 +484,10 @@ export default function CreateStore() {
 
     await setPin(loc.coords.latitude, loc.coords.longitude);
   };
+
+  const handleWebMapUnavailable = React.useCallback(() => {
+    setWebMapUnavailable(true);
+  }, []);
 
   const goBack = () => {
     if (activeStep === "business") setActiveStep("store");
@@ -916,6 +921,7 @@ export default function CreateStore() {
                         markerColor="#FF6600"
                         radiusMeters={hasPin ? radius || 50 : null}
                         onChange={({ latitude: lat, longitude: lng }) => setPin(lat, lng)}
+                        onUnavailable={handleWebMapUnavailable}
                       />
                       {shouldUseInteractiveMapbox() ? null : (
                         <View className="h-[400px] items-center justify-center gap-y-2 px-6 bg-slate-50 dark:bg-slate-900">
@@ -927,6 +933,24 @@ export default function CreateStore() {
                       )}
                     </View>
                   </View>
+
+                  {webMapUnavailable && (
+                    <View className="rounded-xl border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/40 px-3 py-2.5 gap-2">
+                      <Text className="text-xs font-poppins text-amber-900 dark:text-amber-200">
+                        {t("store_manager.createStore.mapUnavailableWeb")}
+                      </Text>
+                      <TouchableOpacity
+                        className="self-start flex-row items-center gap-1 rounded-xl bg-primary px-3 py-2"
+                        activeOpacity={0.8}
+                        onPress={handleGetCurrent}
+                      >
+                        <MapPin size={14} color="#fff" />
+                        <Text className="text-xs font-poppins-bold text-white">
+                          {t("store_manager.createStore.getCurrent")}
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                  )}
     
                   <TextField
                     label={t("store_manager.createStore.landmarkAddress")}

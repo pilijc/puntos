@@ -51,6 +51,7 @@
   },
   "tapMapPin": "Tap the map to drop a pin.",
   "getCurrent": "Get Current",
+  "mapUnavailableWeb": "The map is unavailable in this browser session. Use your current location to set the store pin.",
   "mapFallbackWeb": "Map only on Android & Web — use Get Current or enter address below.",
   "landmarkAddress": "Landmark / Address",
   "addressPlaceholder": "Enter full physical address",
