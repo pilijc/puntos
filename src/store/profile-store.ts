@@ -63,6 +63,15 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
             const { data: { session } } = await supabase.auth.getSession();
             const currentUser = session?.user ?? null;
             if (!currentUser) {
+                try {
+                    const { forceDeactivateCurrentDeviceService } = require("@/services/store-manager/device-session-service");
+                    void forceDeactivateCurrentDeviceService().catch((e: any) =>
+                        console.warn("[ProfileStore] Force deactivate failed", e),
+                    );
+                } catch (err) {
+                    // Ignore errors on force deactivation and proceed with signed-out state
+                }
+        
                 set({ user: null, profile: null, loading: false });
                 return;
             }
