@@ -64,7 +64,11 @@ export default function Layout() {
   const fetchStamps = useStamps((s) => s.fetchStamps);
 
   useEffect(() => {
-    supabase.auth.startAutoRefresh();
+    if (AppState.currentState === "active") {
+      supabase.auth.startAutoRefresh();
+    } else {
+      supabase.auth.stopAutoRefresh();
+    }
 
     const sub = AppState.addEventListener("change", (state) => {
       if (state === "active") {
