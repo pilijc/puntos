@@ -8,7 +8,6 @@ import { emptyCollectorSlice, STATUS_BADGE, StampCardProps,
 } from "@/type/store-manager/stamp";
 import { formatDate } from "@/utils/store_manager/stamp-utils";
 import { ChevronUp, ChevronDown, OctagonMinus, Trash2, Pencil, SendHorizonal, Stamp as StampIcon } from "lucide-react-native";
-import { useTranslation } from "react-i18next";
 
 export function StampCard({
   stamp,
