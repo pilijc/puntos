@@ -244,6 +244,12 @@ export default function DetailIndex() {
                         )}
                       </View>
                     )}
+
+                    {detail?.store_days && (
+                      <View className="flex-row items-center flex-wrap mt-0.5 gap-x-1">
+                        <Text className="text-xs font-poppins text-textMuted dark:text-slate-500">{detail.store_days.join(", ")}</Text>
+                      </View>
+                    )}
                   </View>
                 </View>
 

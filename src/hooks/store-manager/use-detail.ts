@@ -20,11 +20,10 @@ export function useStoreDetail() {
       const data = await getStoreDetail(storeId);
       setDetail(data);
     } catch {
-      // keep existing data on error
+      setDetail(null);
     }
   }, [storeId, setDetail]);
 
-  // Reset and re-fetch whenever storeId changes
   useEffect(() => {
     reset();
     setLoading(true);

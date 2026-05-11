@@ -1,6 +1,6 @@
 {
   "title": "店舗を作成",
-  "errorTitle": "エラー",
+  "errorTitle": "問題が発生しました",
   "permissionPhotosTitle": "許可が必要です",
   "permissionPhotos": "写真へのアクセスが必要です。",
   "permissionLocationTitle": "許可が必要です",
@@ -17,6 +17,9 @@
   "storeCreatedMessage": "店舗は審査に提出されました。",
   "viewStore": "店舗を表示",
   "createFailed": "店舗の作成に失敗しました。もう一度お試しください。",
+  "createFailedTitle": "店舗を作成できませんでした",
+  "createFailedMessage": "店舗情報を確認して、もう一度お試しください。",
+  "storeHoursRequired": "店舗を作成する前に、開店時間と閉店時間を選択してください。",
   "storeName": "店舗名",
   "storeType": "店舗タイプ",
   "storeLogo": "店舗ロゴ",
@@ -30,6 +33,27 @@
   "uploadDocumentImage": "書類画像をアップロード",
   "openingTime": "開店時間",
   "closingTime": "閉店時間",
+  "storeDays": "営業日",
+  "storeDaysHint": "店舗の営業日を選択してください。タップで切り替えます。",
+  "storeDaysAllSelected": "週7日営業",
+  "selectHour": "時",
+  "selectMinute": "分",
+  "days": {
+    "monday": "月曜日",
+    "tuesday": "火曜日",
+    "wednesday": "水曜日",
+    "thursday": "木曜日",
+    "friday": "金曜日",
+    "saturday": "土曜日",
+    "sunday": "日曜日",
+    "mon": "月",
+    "tue": "火",
+    "wed": "水",
+    "thu": "木",
+    "fri": "金",
+    "sat": "土",
+    "sun": "日"
+  },
   "tapMapPin": "地図をタップしてピンを置きます。",
   "getCurrent": "現在地を取得",
   "mapFallbackWeb": "地図はAndroidとWebのみ — 現在地取得または下の住所入力をご利用ください。",
@@ -53,6 +77,7 @@
     "businessDocumentImage": "事業書類画像",
     "address": "住所",
     "pinLocation": "地図上のピン位置",
-    "radius": "半径（50〜500m）"
+    "radius": "半径（50〜500m）",
+    "storeDays": "1日以上の営業日"
   }
 }

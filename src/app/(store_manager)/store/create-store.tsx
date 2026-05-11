@@ -9,23 +9,233 @@ import { createStore, updateStore, uploadStoreImage, StoreImageKind, resolveStor
 import { canOwnerCreateAnotherStore } from "@/services/store-manager/subscription-limits";
 import { supabase } from "@/supabase/supabase";
 import Mapbox, { MapView, Camera, PointAnnotation } from "@rnmapbox/maps";
-import { useColorScheme, Platform, Modal as RNModal } from "react-native";
-import DateTimePicker from "@react-native-community/datetimepicker";
+import { useColorScheme, Platform } from "react-native";
 import { Image } from "expo-image";
 import { useCreateStoreStore } from "@/store/store-manager/create-store-store";
-import { aspect_ratios, type PickImageType, STEPS, store_types_options } from "@/type/store-manager/store";
+import {
+  aspect_ratios,
+  DEFAULT_STORE_CLOSE,
+  DEFAULT_STORE_OPEN,
+  type PickImageType,
+  STEPS,
+  store_types_options,
+  STORE_DAYS,
+} from "@/type/store-manager/store";
 import * as Location from "expo-location";
 import Slider from "@react-native-community/slider";
 import * as turf from "@turf/turf";
 import { AppHeader } from "@/components/header";
-import { dateToTimeString, timeStringToDate } from "@/utils/date-helpers";
 import { shouldUseInteractiveMapbox } from "@/utils/mapbox-platform";
 import { WebMapboxPicker } from "@/components/map/web-mapbox-picker";
 import { useTranslation } from "react-i18next";
-import { CircleX, FileText, ImagePlus, MapPin } from "lucide-react-native";
+import { CalendarDays, ChevronDown, ChevronUp, CircleX, Clock, FileText, ImagePlus, MapPin } from "lucide-react-native";
 
 const WEB_MAX_WIDTH = 896;
 Mapbox.setAccessToken(process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN);
+
+const HOURS_24 = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, "0"));
+const MINUTES_5 = Array.from({ length: 12 }, (_, i) => String(i * 5).padStart(2, "0"));
+
+import { Pressable } from "react-native";
+
+function TimeDropdown({
+  value,
+  onChange,
+  isDark,
+  defaultValue = "09:00",
+}: {
+  value: string | null | undefined;
+  onChange: (v: string) => void;
+  isDark: boolean;
+  defaultValue?: string;
+}) {
+  const [showH, setShowH] = useState(false);
+  const [showM, setShowM] = useState(false);
+
+  const parts = (value || defaultValue).split(":");
+  const currentH = (parts[0] ?? "09").padStart(2, "0");
+  const rawM = parseInt(parts[1] ?? "0", 10);
+  const currentM = String(Math.min(55, Math.round(rawM / 5) * 5)).padStart(2, "0");
+
+  const dropBg = isDark ? "#262626" : "#fff";
+  const dropBorder = isDark ? "#404040" : "#e2e8f0";
+
+  const closeDropdowns = () => {
+    setShowH(false);
+    setShowM(false);
+  };
+
+  return (
+    <View className="flex-row items-center gap-x-2" style={{ position: "relative" }}>
+      {(showH || showM) && (
+        <Pressable
+          style={{
+            position: "absolute",
+            left: -1000,
+            top: -1000,
+            width: 3000,
+            height: 3000,
+            zIndex: 20,
+            backgroundColor: "transparent",
+          }}
+          onPress={closeDropdowns}
+        />
+      )}
+
+      <View style={{ flex: 1, zIndex: 30 }}>
+        <TouchableOpacity
+          onPress={() => { setShowH(!showH); setShowM(false); }}
+          activeOpacity={0.8}
+          className="flex-row items-center justify-between rounded-xl border border-slate-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 px-3 h-12"
+        >
+          <Text className="font-poppins text-slate-900 dark:text-slate-100">{currentH}</Text>
+          {showH ? (
+            <ChevronUp size={16} color="#94A3B8" />
+          ) : (
+            <ChevronDown size={16} color="#94A3B8" />
+          )}
+        </TouchableOpacity>
+        {showH && (
+          <ScrollView
+            style={{
+              position: "absolute",
+              top: 52,
+              left: 0,
+              right: 0,
+              zIndex: 40,
+              backgroundColor: dropBg,
+              borderRadius: 12,
+              maxHeight: 180,
+              borderWidth: 1,
+              borderColor: dropBorder,
+              elevation: 6,
+              shadowColor: "#000",
+              shadowOpacity: 0.15,
+              shadowRadius: 8,
+              shadowOffset: { width: 0, height: 4 },
+            }}
+            showsVerticalScrollIndicator={false}
+            nestedScrollEnabled
+          >
+            {HOURS_24.map((h) => (
+              <TouchableOpacity
+                key={h}
+                onPress={() => { onChange(`${h}:${currentM}`); setShowH(false); }}
+                style={{
+                  paddingHorizontal: 12,
+                  paddingVertical: 9,
+                  backgroundColor: h === currentH ? "rgba(255,102,0,0.10)" : "transparent",
+                }}
+              >
+                <Text
+                  className="font-poppins text-sm text-textPrimary"
+                >
+                  {h}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        )}
+      </View>
+
+      <Text className="font-poppins-semibold text-slate-400 text-base">:</Text>
+
+      <View style={{ flex: 1, zIndex: 30 }}>
+        <TouchableOpacity
+          onPress={() => { setShowM(!showM); setShowH(false); }}
+          activeOpacity={0.8}
+          className="flex-row items-center justify-between rounded-xl border border-slate-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 px-3 h-12"
+        >
+          <Text className="font-poppins text-slate-900 dark:text-slate-100">{currentM}</Text>
+          {showM ? (
+            <ChevronUp size={16} color="#94A3B8" />
+          ) : (
+            <ChevronDown size={16} color="#94A3B8" />
+          )}
+        </TouchableOpacity>
+        {showM && (
+          <ScrollView
+            style={{
+              position: "absolute",
+              top: 52,
+              left: 0,
+              right: 0,
+              zIndex: 40,
+              backgroundColor: dropBg,
+              borderRadius: 12,
+              maxHeight: 180,
+              borderWidth: 1,
+              borderColor: dropBorder,
+              elevation: 6,
+              shadowColor: "#000",
+              shadowOpacity: 0.15,
+              shadowRadius: 8,
+              shadowOffset: { width: 0, height: 4 },
+            }}
+            showsVerticalScrollIndicator={false}
+            nestedScrollEnabled
+          >
+            {MINUTES_5.map((m) => (
+              <TouchableOpacity
+                key={m}
+                onPress={() => { onChange(`${currentH}:${m}`); setShowM(false); }}
+                style={{
+                  paddingHorizontal: 12,
+                  paddingVertical: 9,
+                  backgroundColor: m === currentM ? "rgba(255,102,0,0.10)" : "transparent",
+                }}
+              >
+                <Text
+                  className="font-poppins text-sm text-textPrimary"
+                >
+                  {m}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        )}
+      </View>
+    </View>
+  );
+}
+
+function DaysBadgeSelector({
+  selectedDays,
+  onToggle,
+  t,
+}: {
+  selectedDays: string[];
+  onToggle: (day: string) => void;
+  t: (key: string) => string;
+}) {
+  return (
+    <View className="flex-row flex-wrap gap-2">
+      {STORE_DAYS.map((day) => {
+        const selected = selectedDays.includes(day.value);
+        return (
+          <TouchableOpacity
+            key={day.value}
+            activeOpacity={0.8}
+            onPress={() => onToggle(day.value)}
+            className={`px-3 py-1.5 rounded-full border ${
+              selected
+                ? "border-primary dark:border-primary "
+                : "border-slate-200 dark:border-slate-800/50 bg-white dark:bg-slate-800/50"
+            }`}
+          >
+            <Text
+              className={`text-xs font-poppins-medium ${
+                selected ? "text-primary" : "text-slate-600 dark:text-slate-300"
+              }`}
+            >
+              {t(`store_manager.createStore.days.${day.shortKey}`)}
+            </Text>
+          </TouchableOpacity>
+        );
+      })}
+    </View>
+  );
+}
 
 export default function CreateStore() {
   const { t } = useTranslation();
@@ -35,9 +245,6 @@ export default function CreateStore() {
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [scrollEnabled, setScrollEnabled] = useState(true);
-  const [showOpenTimePicker, setShowOpenTimePicker] = useState(false);
-  const [showCloseTimePicker, setShowCloseTimePicker] = useState(false);
-  const { storeId } = useLocalSearchParams<{ storeId: string }>();
   const {
     storeName,
     storeType,
@@ -53,6 +260,7 @@ export default function CreateStore() {
     businessDocumentImage,
     storeOpen,
     storeClose,
+    storeDays,
     setStoreName,
     setStoreType,
     setLogo,
@@ -66,6 +274,7 @@ export default function CreateStore() {
     setBusinessDocumentImage,
     setStoreOpen,
     setStoreClose,
+    toggleStoreDay,
     setRadius,
     resetForm,
   } = useCreateStoreStore();
@@ -80,6 +289,28 @@ export default function CreateStore() {
     setModal({
       title: t("store_manager.createStore.errorTitle"),
       message,
+      buttons: [{ label: t("label.ok"), onPress: () => setModal(null), variant: "secondary" }],
+    });
+
+  const getCreateStoreErrorMessage = (error: unknown) => {
+    const message = error instanceof Error ? error.message : String(error ?? "");
+    const lowerMessage = message.toLowerCase();
+
+    if (
+      lowerMessage.includes("store_open") ||
+      lowerMessage.includes("store_close") ||
+      lowerMessage.includes("not-null constraint")
+    ) {
+      return t("store_manager.createStore.storeHoursRequired");
+    }
+
+    return t("store_manager.createStore.createFailedMessage");
+  };
+
+  const showCreateStoreError = (error: unknown) =>
+    setModal({
+      title: t("store_manager.createStore.createFailedTitle"),
+      message: getCreateStoreErrorMessage(error),
       buttons: [{ label: t("label.ok"), onPress: () => setModal(null), variant: "secondary" }],
     });
 
@@ -186,6 +417,7 @@ export default function CreateStore() {
     const missing: string[] = [];
     if (!registrationNumber.trim()) missing.push(t("store_manager.createStore.missing.registrationNumber"));
     if (!businessDocumentImage) missing.push(t("store_manager.createStore.missing.businessDocumentImage"));
+    if (!storeDays || storeDays.length === 0) missing.push(t("store_manager.createStore.missing.storeDays"));
     return missing;
   };
 
@@ -216,19 +448,16 @@ export default function CreateStore() {
   const setPin = async (lat: number, lng: number) => {
     setLatitude(String(lat));
     setLongitude(String(lng));
-    // Auto-resolve timezone from the new pin location.
-    // resolveStoreTimezone calls the DB RPC; returns null when boundary data isn't loaded.
     setIsResolvingTimezone(true);
     try {
       const tz = await resolveStoreTimezone(lng, lat);
       if (tz) setTimezone(tz);
-      // If null, leave the current value in place so a manual override is preserved.
     } catch (e) {
       console.warn("[create-store] timezone resolve failed:", e);
     } finally {
       setIsResolvingTimezone(false);
     }
-  };
+  };  
 
   const handleGetCurrent = async () => {
     const { status } = await Location.requestForegroundPermissionsAsync();
@@ -346,8 +575,9 @@ export default function CreateStore() {
           timezone: timezone.trim() || null,
           phone: phone.trim() || undefined,
           registrationNumber: registrationNumber.trim() || undefined,
-          storeOpen: storeOpen.trim() || null,
-          storeClose: storeClose.trim() || null,
+          storeOpen: storeOpen.trim() || DEFAULT_STORE_OPEN,
+          storeClose: storeClose.trim() || DEFAULT_STORE_CLOSE,
+          storeDays: storeDays && storeDays.length > 0 ? storeDays : undefined,
           ownerId: user.id,
           radius: radius,
         });
@@ -390,8 +620,9 @@ export default function CreateStore() {
           ],
         });
         resetForm();
+        setActiveStep("store");
       } catch (e: any) {
-        showError(e?.message ?? t("store_manager.createStore.createFailed"));
+        showCreateStoreError(e);
       } finally {
         setIsSubmitting(false);
       }
@@ -612,82 +843,57 @@ export default function CreateStore() {
                     </TouchableOpacity>
                   </View>
     
-                  <View className="flex-row gap-3">
-                    <View className="flex-1 flex-col gap-1.5">
-                      <Text className="text-slate-700 dark:text-slate-300 text-sm font-poppins-medium px-1">{t("store_manager.createStore.openingTime")}</Text>
-                      <TouchableOpacity
-                        onPress={() => setShowOpenTimePicker(true)}
-                        className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/50 h-12 px-4 justify-center"
-                        activeOpacity={0.8}
-                      >
-                        <Text className="text-slate-900 dark:text-slate-100 font-poppins">{storeOpen || "09:00"}</Text>
-                      </TouchableOpacity>
-                      {showOpenTimePicker && (
-                        <RNModal visible transparent animationType="slide">
-                          <TouchableOpacity
-                            className="flex-1 bg-black/40 justify-end"
-                            activeOpacity={1}
-                            onPress={() => setShowOpenTimePicker(false)}
-                          >
-                            <TouchableOpacity
-                              activeOpacity={1}
-                              onPress={(e) => e.stopPropagation()}
-                              className="bg-white dark:bg-slate-800 rounded-t-2xl pb-8 pt-2"
-                            >
-                              <DateTimePicker
-                                value={timeStringToDate(storeOpen || "09:00", 9, 0)}
-                                mode="time"
-                                onChange={(_, d) => {
-                                  if (d) setStoreOpen(dateToTimeString(d));
-                                }}
-                              />
-                              <View className="px-4">
-                                <Button
-                                  label={t("store_manager.detailEdit.done")}
-                                  onPress={() => setShowOpenTimePicker(false)}
-                                  variant="primary"
-                                  fullWidth
-                                />
-                              </View>
-                            </TouchableOpacity>
-                          </TouchableOpacity>
-                        </RNModal>
-                      )}
+                  <View className="flex-row gap-3" style={{ zIndex: 30 }}>
+                    <View className="flex-1 flex-col gap-1.5" style={{ zIndex: 30 }}>
+                      <View className="flex-row items-center gap-1 px-1">
+                        <Text className="text-slate-700 dark:text-slate-300 text-sm font-poppins-medium">
+                          {t("store_manager.createStore.openingTime")}
+                          <Text className="text-red-500 dark:text-red-400 ml-1">*</Text>
+                        </Text>
+                      </View>
+                      <TimeDropdown
+                        value={storeOpen}
+                        onChange={setStoreOpen}
+                        isDark={isDark}
+                        defaultValue={DEFAULT_STORE_OPEN}
+                      />
                     </View>
-                    <View className="flex-1 flex-col gap-1.5">
-                      <Text className="text-slate-700 dark:text-slate-300 text-sm font-poppins-medium px-1">{t("store_manager.createStore.closingTime")}</Text>
-                      <TouchableOpacity
-                        onPress={() => setShowCloseTimePicker(true)}
-                        className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/50 h-12 px-4 justify-center"
-                        activeOpacity={0.8}
-                      >
-                        <Text className="text-slate-900 dark:text-slate-100 font-poppins">{storeClose || "21:00"}</Text>
-                      </TouchableOpacity>
-                      {showCloseTimePicker && (
-                        <RNModal visible transparent animationType="slide">
-                          <TouchableOpacity
-                            className="flex-1 bg-black/40 justify-end"
-                            activeOpacity={1}
-                            onPress={() => setShowCloseTimePicker(false)}
-                          >
-                            <TouchableOpacity
-                              activeOpacity={1}
-                              onPress={(e) => e.stopPropagation()}
-                              className="bg-white dark:bg-slate-800 rounded-t-2xl pb-8 pt-2"
-                            >
-                              <DateTimePicker
-                                value={timeStringToDate(storeClose || "21:00", 21, 0)}
-                                mode="time"
-                                onChange={(_, d) => {
-                                  if (d) setStoreClose(dateToTimeString(d));
-                                }}
-                              />
-                              <Button label={t("store_manager.detailEdit.done")} onPress={() => setShowCloseTimePicker(false)} variant="primary" fullWidth />
-                            </TouchableOpacity>
-                          </TouchableOpacity>
-                        </RNModal>
-                      )}
+                    <View className="flex-1 flex-col gap-1.5" style={{ zIndex: 30 }}>
+                      <View className="flex-row items-center gap-1 px-1">
+                        <Text className="text-slate-700 dark:text-slate-300 text-sm font-poppins-medium">
+                          {t("store_manager.createStore.closingTime")}
+                          <Text className="text-red-500 dark:text-red-400 ml-1  ">*</Text>
+                        </Text>
+                      </View>
+                      <TimeDropdown
+                        value={storeClose}
+                        onChange={setStoreClose}
+                        isDark={isDark}
+                        defaultValue={DEFAULT_STORE_CLOSE}
+                      />
                     </View>
+                  </View>
+
+                  <View className="flex-col gap-2" style={{ zIndex: 1 }}>
+                    <View className="flex-row items-center gap-1 px-1">
+                      <Text className="text-slate-700 dark:text-slate-300 text-sm font-poppins-medium">
+                        {t("store_manager.createStore.storeDays")}{" "}
+                        <Text className="text-red-500 dark:text-red-400">*</Text>
+                      </Text>
+                    </View>
+                    <Text className="text-slate-600 dark:text-slate-400 text-xs font-poppins px-1">
+                      {t("store_manager.createStore.storeDaysHint")}
+                    </Text>
+                    <DaysBadgeSelector
+                      selectedDays={storeDays}
+                      onToggle={toggleStoreDay}
+                      t={t}
+                    />
+                    {storeDays.length === 7 && (
+                      <Text className="text-xs text-slate-400 dark:text-slate-500 font-poppins px-1">
+                        {t("store_manager.createStore.storeDaysAllSelected")}
+                      </Text>
+                    )}
                   </View>
                 </View>
               </View>
@@ -698,13 +904,6 @@ export default function CreateStore() {
                 <View className="bg-white dark:bg-neutral-800 rounded-xl border border-slate-100 dark:border-neutral-700 p-4 gap-5">
                   <View className="flex-row items-center justify-between">
                     <Text className="text-xs font-poppins text-slate-500 dark:text-slate-400">{t("store_manager.createStore.tapMapPin")}</Text>
-                    
-                    { isWeb && (
-                      <TouchableOpacity className="flex-row items-center gap-1" activeOpacity={0.8} onPress={handleGetCurrent}>
-                        <MapPin color="#FF6600" />
-                        <Text className="text-primary text-xs font-poppins-bold">{t("store_manager.createStore.getCurrent")}</Text>
-                      </TouchableOpacity>
-                    )}
                   </View>
     
                   <View className="rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900">
@@ -959,117 +1158,56 @@ export default function CreateStore() {
                 </TouchableOpacity>
               </View>
 
-              <View className="flex-row gap-3">
-                <View className="flex-1 flex-col gap-1.5">
-                  <Text className="text-slate-700 dark:text-slate-300 text-sm font-poppins-medium px-1">
-                    {t("store_manager.createStore.openingTime")}
-                  </Text>
-                  <TouchableOpacity
-                    onPress={() => setShowOpenTimePicker(true)}
-                    className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/50 h-12 px-4 justify-center"
-                    activeOpacity={0.8}
-                  >
-                    <Text className="text-slate-900 dark:text-slate-100 font-poppins">
-                      {storeOpen || "09:00"}
+              <View className="flex-row gap-3" style={{ zIndex: 30 }}>
+                <View className="flex-1 flex-col gap-1.5" style={{ zIndex: 30 }}>
+                  <View className="flex-row items-center gap-1 px-1">
+                    <Text className="text-slate-700 dark:text-slate-300 text-sm font-poppins-medium">
+                      {t("store_manager.createStore.openingTime")}
                     </Text>
-                  </TouchableOpacity>
-                  {showOpenTimePicker && (
-                    Platform.OS === "android" ? (
-                      <DateTimePicker
-                        value={timeStringToDate(storeOpen || "09:00", 9, 0)}
-                        mode="time"
-                        onChange={(_, d) => {
-                          if (d) setStoreOpen(dateToTimeString(d));
-                          setShowOpenTimePicker(false);
-                        }}
-                      />
-                    ) : (
-                      <RNModal visible transparent animationType="slide">
-                        <TouchableOpacity
-                          className="flex-1 bg-black/40 justify-end"
-                          activeOpacity={1}
-                          onPress={() => setShowOpenTimePicker(false)}
-                        >
-                          <TouchableOpacity
-                            activeOpacity={1}
-                            onPress={(e) => e.stopPropagation()}
-                            className="bg-white dark:bg-slate-800 rounded-t-2xl pb-8 pt-2"
-                          >
-                            <DateTimePicker
-                              value={timeStringToDate(storeOpen || "09:00", 9, 0)}
-                              mode="time"
-                              onChange={(_, d) => {
-                                if (d) setStoreOpen(dateToTimeString(d));
-                              }}
-                            />
-                            <View className="px-4">
-                              <Button
-                                label={t("store_manager.detailEdit.done")}
-                                onPress={() => setShowOpenTimePicker(false)}
-                                variant="primary"
-                                fullWidth
-                              />
-                            </View>
-                          </TouchableOpacity>
-                        </TouchableOpacity>
-                      </RNModal>
-                    )
-                  )}
+                  </View>
+                  <TimeDropdown
+                    value={storeOpen}
+                    onChange={setStoreOpen}
+                    isDark={isDark}
+                    defaultValue={DEFAULT_STORE_OPEN}
+                  />
                 </View>
-                <View className="flex-1 flex-col gap-1.5">
-                  <Text className="text-slate-700 dark:text-slate-300 text-sm font-poppins-medium px-1">
-                    {t("store_manager.createStore.closingTime")}
-                  </Text>
-                  <TouchableOpacity
-                    onPress={() => setShowCloseTimePicker(true)}
-                    className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/50 h-12 px-4 justify-center"
-                    activeOpacity={0.8}
-                  >
-                    <Text className="text-slate-900 dark:text-slate-100 font-poppins">
-                      {storeClose || "21:00"}
+                <View className="flex-1 flex-col gap-1.5" style={{ zIndex: 30 }}>
+                  <View className="flex-row items-center gap-1 px-1">
+                    <Text className="text-slate-700 dark:text-slate-300 text-sm font-poppins-medium">
+                      {t("store_manager.createStore.closingTime")}
                     </Text>
-                  </TouchableOpacity>
-                  {showCloseTimePicker && (
-                    Platform.OS === "android" ? (
-                      <DateTimePicker
-                        value={timeStringToDate(storeClose || "21:00", 21, 0)}
-                        mode="time"
-                        onChange={(_, d) => {
-                          if (d) setStoreClose(dateToTimeString(d));
-                          setShowCloseTimePicker(false);
-                        }}
-                      />
-                    ) : (
-                      <RNModal visible transparent animationType="slide">
-                        <TouchableOpacity
-                          className="flex-1 bg-black/40 justify-end"
-                          activeOpacity={1}
-                          onPress={() => setShowCloseTimePicker(false)}
-                        >
-                          <TouchableOpacity
-                            activeOpacity={1}
-                            onPress={(e) => e.stopPropagation()}
-                            className="bg-white dark:bg-slate-800 rounded-t-2xl pb-8 pt-2"
-                          >
-                            <DateTimePicker
-                              value={timeStringToDate(storeClose || "21:00", 21, 0)}
-                              mode="time"
-                              onChange={(_, d) => {
-                                if (d) setStoreClose(dateToTimeString(d));
-                              }}
-                            />
-                            <Button
-                              label={t("store_manager.detailEdit.done")}
-                              onPress={() => setShowCloseTimePicker(false)}
-                              variant="primary"
-                              fullWidth
-                            />
-                          </TouchableOpacity>
-                        </TouchableOpacity>
-                      </RNModal>
-                    )
-                  )}
+                  </View>
+                  <TimeDropdown
+                    value={storeClose}
+                    onChange={setStoreClose}
+                    isDark={isDark}
+                    defaultValue={DEFAULT_STORE_CLOSE}
+                  />
                 </View>
+              </View>
+
+              <View className="flex-col gap-2" style={{ zIndex: 1 }}>
+                <View className="flex-row items-center gap-1 px-1">
+                  <CalendarDays size={14} color={isDark ? "#cbd5e1" : "#475569"} />
+                  <Text className="text-slate-700 dark:text-slate-300 text-sm font-poppins-medium">
+                    {t("store_manager.createStore.storeDays")}{" "}
+                    <Text className="text-red-500 dark:text-red-400">*</Text>
+                  </Text>
+                </View>
+                <Text className="text-slate-600 dark:text-slate-400 text-xs font-poppins px-1">
+                  {t("store_manager.createStore.storeDaysHint")}
+                </Text>
+                <DaysBadgeSelector
+                  selectedDays={storeDays}
+                  onToggle={toggleStoreDay}
+                  t={t}
+                />
+                {storeDays.length === 7 && (
+                  <Text className="text-xs text-slate-400 dark:text-slate-500 font-poppins px-1">
+                    {t("store_manager.createStore.storeDaysAllSelected")}
+                  </Text>
+                )}
               </View>
             </View>
           </View>
@@ -1083,13 +1221,13 @@ export default function CreateStore() {
                   {t("store_manager.createStore.tapMapPin")}
                 </Text>
                 
-                { isWeb && (
+                {Platform.OS !== "web" && (
                   <TouchableOpacity
                     className="flex-row items-center gap-1"
                     activeOpacity={0.8}
                     onPress={handleGetCurrent}
                   >
-                    <MapPin size={16} color="#FF6600" />
+                    <MapPin size={14} color="#FF6600" />
                     <Text className="text-primary text-xs font-poppins-bold">
                       {t("store_manager.createStore.getCurrent")}
                     </Text>
@@ -1119,7 +1257,7 @@ export default function CreateStore() {
                       onTouchCancel={() => setScrollEnabled(true)}
                     >
                       <Camera
-                        zoomLevel={hasPin ? 14 : 12}
+                        zoomLevel={hasPin ? 15 : 18}
                         centerCoordinate={hasPin ? [parsedLng, parsedLat] : [123.8854, 10.3157]}
                       />
                       {hasPin && (

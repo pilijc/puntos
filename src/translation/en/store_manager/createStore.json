@@ -1,6 +1,6 @@
 {
   "title": "Create Store",
-  "errorTitle": "Error",
+  "errorTitle": "Something went wrong",
   "permissionPhotosTitle": "Permission Required",
   "permissionPhotos": "We need access to your photos to upload images.",
   "permissionLocationTitle": "Permission Required",
@@ -17,6 +17,9 @@
   "storeCreatedMessage": "Your store has been submitted for review.",
   "viewStore": "View store",
   "createFailed": "Failed to create store. Please try again.",
+  "createFailedTitle": "We couldn't create your store",
+  "createFailedMessage": "Please review your store details and try again.",
+  "storeHoursRequired": "Please choose an opening and closing time before creating your store.",
   "logo": "Logo",
   "storePictures": "Store Pictures",
   "storePicturesHint": "You must add at least 3, and up to 6, store pictures. Tap any box to add or replace a photo.",
@@ -25,6 +28,27 @@
   "uploadDocumentImage": "Upload document image",
   "openingTime": "Opening time",
   "closingTime": "Closing time",
+  "storeDays": "Open days",
+  "storeDaysHint": "Select the days your store is open. Tap a day to toggle.",
+  "storeDaysAllSelected": "Open all 7 days",
+  "selectHour": "Hour",
+  "selectMinute": "Minute",
+  "days": {
+    "monday": "Monday",
+    "tuesday": "Tuesday",
+    "wednesday": "Wednesday",
+    "thursday": "Thursday",
+    "friday": "Friday",
+    "saturday": "Saturday",
+    "sunday": "Sunday",
+    "mon": "Mon",
+    "tue": "Tue",
+    "wed": "Wed",
+    "thu": "Thu",
+    "fri": "Fri",
+    "sat": "Sat",
+    "sun": "Sun"
+  },
   "tapMapPin": "Tap the map to drop a pin.",
   "getCurrent": "Get Current",
   "mapFallbackWeb": "Map only on Android & Web — use Get Current or enter address below.",
@@ -45,6 +69,7 @@
     "businessDocumentImage": "Business Document Image",
     "address": "Address",
     "pinLocation": "Pin location on the map",
-    "radius": "Radius (50–500m)"
+    "radius": "Radius (50–500m)",
+    "storeDays": "At least one open day"
   }
 }
