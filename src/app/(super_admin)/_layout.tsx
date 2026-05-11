@@ -193,8 +193,6 @@ function WebSuperAdminSidebarTabBar({
             <View
                 style={{
                     paddingBottom: 24,
-                    borderTopWidth: 1,
-                    borderTopColor: isDark ? "#333" : "#f0f0f0",
                     paddingTop: 16,
                 }}
             >
@@ -245,8 +243,8 @@ export default function SuperAdminLayout() {
                 {...barProps}
                 isDark={isDark}
                 expanded={webSidebarExpanded}
-                onHoverIn={() => setWebSidebarExpanded(true)}
-                onHoverOut={() => setWebSidebarExpanded(false)}
+                onHoverIn={() => {}}
+                onHoverOut={() => {}}
                 onToggle={() => setWebSidebarExpanded((v) => !v)}
             />
         ),
