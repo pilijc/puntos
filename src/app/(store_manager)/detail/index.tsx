@@ -52,13 +52,7 @@ export default function DetailIndex() {
   }, [detail?.type, t]);
 
   const notSet = t("store_manager.detail.notSet");
-  const openLine = (time: string | null | undefined) =>
-    t("store_manager.detail.open", { time: time ? formatTime(time) : notSet });
-  const closeLine = (time: string | null | undefined) =>
-    t("store_manager.detail.close", { time: time ? formatTime(time) : notSet });
-
   const [docPreviewVisible, setDocPreviewVisible] = useState(false);
-
   const bannerScrollRef = useRef<RNScrollView>(null);
   const [bannerIndex, setBannerIndex] = useState(0);
   const [bannerWidth, setBannerWidth] = useState(0);
@@ -204,7 +198,7 @@ export default function DetailIndex() {
                     )}
                   </View>
 
-                  <View className="flex-1 ml-3 pb-1 pt-6">
+                  <View className="flex-1 ml-3 pb-1 pt-10">
                     <View className="flex-row items-center flex-wrap gap-x-2">
                       <Text className="text-base font-poppins-bold text-slate-800 dark:text-slate-100">
                         {detail?.name || t("store_manager.detail.unnamedStore")}
@@ -216,42 +210,77 @@ export default function DetailIndex() {
                     </View>
 
                     <View className="flex-row items-center flex-wrap mt-0.5 gap-x-1">
-                      <Text className="text-xs font-poppins text-textMuted dark:text-slate-500">{storeTypeLabel}</Text>
+                      <Text className="text-xs font-poppins text-textSecondary dark:text-slate-500">{storeTypeLabel}</Text>
+                      {(detail?.phone || detail?.registration_number) && (
+                        <View className="w-1 h-4 justify-center items-center mx-2">
+                          <View className="w-px h-full bg-slate-300 dark:bg-slate-600 opacity-60" />
+                        </View>
+                      )}
                       {detail?.phone && (
                         <>
-                          <View className="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-600" />
-                          <Text className="text-xs font-poppins text-textMuted dark:text-slate-500">{detail.phone}</Text>
+                          <Text className="text-xs font-poppins text-textSecondary dark:text-slate-500">{detail.phone}</Text>
                         </>
+                      )}
+                      {detail?.phone && detail?.registration_number && (
+                        <View className="w-1 h-4 justify-center items-center mx-2">
+                          <View className="w-px h-full bg-slate-300 dark:bg-slate-600 opacity-60" />
+                        </View>
                       )}
                       {detail?.registration_number && (
                         <>
-                          <View className="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-600" />
-                          <Text className="text-xs font-poppins text-textMuted dark:text-slate-500">{detail.registration_number}</Text>
+                          <Text className="text-xs font-poppins text-textSecondary dark:text-slate-500">{detail.registration_number}</Text>
                         </>
                       )}
                     </View>
+               
 
-                    {(detail?.store_open || detail?.store_close) && (
-                      <View className="flex-row items-center flex-wrap mt-0.5 gap-x-1">
-                        {detail?.store_open && (
-                          <Text className="text-xs font-poppins text-textMuted dark:text-slate-500">{openLine(detail.store_open)}</Text>
+                    {(detail?.store_open || detail?.store_close || detail?.store_days) && (
+                      <View className="flex-row items-center flex-wrap mt-0.5 gap-x-2">
+                        <View className="flex-row items-center flex-wrap">
+                          {detail?.store_open && (
+                            <Text className="text-xs font-poppins text-textSecondary dark:text-slate-500">
+                              {detail.store_open ? formatTime(detail.store_open) : notSet}
+                            </Text>
+                          )}
+                          {detail?.store_open && detail?.store_close && (
+                            <Text className="mx-1 text-xs font-poppins text-textSecondary dark:text-slate-500">-</Text>
+                          )}
+                          {detail?.store_close && (
+                            <Text className="text-xs font-poppins text-textSecondary dark:text-slate-500">
+                              {detail.store_close ? formatTime(detail.store_close) : notSet}
+                            </Text>
+                          )}
+                        </View>
+
+                        {(detail?.store_open || detail?.store_close) && detail?.store_days && (
+                          <View className="w-1 h-4 justify-center items-center">
+                            <View className="w-px h-full bg-slate-300 dark:bg-slate-600 opacity-60" />
+                          </View>
                         )}
-                        {detail?.store_open && detail?.store_close && (
-                          <View className="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-600" />
-                        )}
-                        {detail?.store_close && (
-                          <Text className="text-xs font-poppins text-textMuted dark:text-slate-500">{closeLine(detail.store_close)}</Text>
+
+                        {detail?.store_days && (
+                          <Text className="text-xs font-poppins text-textSecondary dark:text-slate-500">
+                            {detail.store_days
+                              .map((day: string) =>
+                                ({
+                                  monday: "Mon",
+                                  tuesday: "Tue",
+                                  wednesday: "Wed",
+                                  thursday: "Thu",
+                                  friday: "Fri",
+                                  saturday: "Sat",
+                                  sunday: "Sun"
+                                }[day.toLowerCase()] ?? day)
+                              )
+                              .join(", ")}
+                          </Text>
                         )}
                       </View>
                     )}
-
-                    {detail?.store_days && (
-                      <View className="flex-row items-center flex-wrap mt-0.5 gap-x-1">
-                        <Text className="text-xs font-poppins text-textMuted dark:text-slate-500">{detail.store_days.join(", ")}</Text>
-                      </View>
-                    )}
+               
                   </View>
                 </View>
+           
 
                 {detail?.business_document_image && (
                   <>
