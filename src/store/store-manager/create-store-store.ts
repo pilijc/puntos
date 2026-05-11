@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { ALL_STORE_DAYS, DEFAULT_STORE_CLOSE, DEFAULT_STORE_OPEN } from "@/type/store-manager/store";
 
 interface CreateStoreState {
     currentStep: number;
@@ -9,13 +10,13 @@ interface CreateStoreState {
     address: string;
     latitude: string;
     longitude: string;
-    /** IANA timezone identifier, e.g. "Asia/Manila". Auto-filled from PostGIS or typed manually. */
     timezone: string;
     phone: string;
     registrationNumber: string;
     businessDocumentImage: string | null;
     storeOpen: string;
     storeClose: string;
+    storeDays: string[];
     radius: number;
 
     setCurrentStep: (step: number) => void;
@@ -32,11 +33,13 @@ interface CreateStoreState {
     setBusinessDocumentImage: (val: string | null) => void;
     setStoreOpen: (val: string) => void;
     setStoreClose: (val: string) => void;
+    setStoreDays: (val: string[]) => void;
+    toggleStoreDay: (day: string) => void;
     setRadius: (val: number) => void;
     resetForm: () => void;
 }
 
-export const useCreateStoreStore = create<CreateStoreState>((set) => ({
+export const useCreateStoreStore = create<CreateStoreState>((set, get) => ({
     currentStep: 1,
     storeName: "",
     storeType: "",
@@ -49,8 +52,9 @@ export const useCreateStoreStore = create<CreateStoreState>((set) => ({
     phone: "",
     registrationNumber: "",
     businessDocumentImage: null,
-    storeOpen: "",
-    storeClose: "",
+    storeOpen: DEFAULT_STORE_OPEN,
+    storeClose: DEFAULT_STORE_CLOSE,
+    storeDays: [...ALL_STORE_DAYS],
     radius: 50,
 
     setCurrentStep: (step) => set({ currentStep: step }),
@@ -67,6 +71,15 @@ export const useCreateStoreStore = create<CreateStoreState>((set) => ({
     setBusinessDocumentImage: (businessDocumentImage) => set({ businessDocumentImage }),
     setStoreOpen: (storeOpen) => set({ storeOpen }),
     setStoreClose: (storeClose) => set({ storeClose }),
+    setStoreDays: (storeDays) => set({ storeDays }),
+    toggleStoreDay: (day) => {
+        const current = get().storeDays;
+        const next = current.includes(day)
+            ? current.filter((d) => d !== day)
+            : [...current, day];
+        const ordered = ALL_STORE_DAYS.filter((d) => next.includes(d));
+        set({ storeDays: ordered });
+    },
     setRadius: (radius) => set({ radius: Math.max(50, Math.min(500, radius)) }),
     resetForm: () => set({
         currentStep: 1,
@@ -81,8 +94,9 @@ export const useCreateStoreStore = create<CreateStoreState>((set) => ({
         phone: "",
         registrationNumber: "",
         businessDocumentImage: null,
-        storeOpen: "",
-        storeClose: "",
+        storeOpen: DEFAULT_STORE_OPEN,
+        storeClose: DEFAULT_STORE_CLOSE,
+        storeDays: [...ALL_STORE_DAYS],
         radius: 50,
     })
 }));

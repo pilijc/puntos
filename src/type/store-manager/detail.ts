@@ -16,6 +16,7 @@ export interface StoreDetail {
   radius: number | null;
   status: string | null;
   is_active: boolean | null;
+  store_days: string[] | null;
 }
 
 export type DetailDraft = {
@@ -32,6 +33,7 @@ export type DetailDraft = {
   latitude: string;
   longitude: string;
   radius: number;
+  storeDays: string[];
 };
 
 export interface DetailDraftStore {
@@ -48,6 +50,8 @@ export interface DetailDraftStore {
   latitude: string;
   longitude: string;
   radius: number;
+  storeDays: string[];
+  setStoreDays: (storeDays: string[]) => void;
   setName: (name: string) => void;
   setType: (type: string) => void;
   setLogo: (logo: string | null) => void;

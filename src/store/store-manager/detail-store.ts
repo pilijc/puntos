@@ -15,6 +15,7 @@ export const useDetailStore = create<DetailDraftStore>((set) => ({
   latitude: "",
   longitude: "",
   radius: 50,
+  storeDays: [],
 
   setName: (name) => set({ name }),
   setType: (type) => set({ type }),
@@ -29,6 +30,7 @@ export const useDetailStore = create<DetailDraftStore>((set) => ({
   setLatitude: (latitude) => set({ latitude }),
   setLongitude: (longitude) => set({ longitude }),
   setRadius: (radius) => set({ radius }),
+  setStoreDays: (storeDays) => set({ storeDays }),
 
   initFromDetail: (detail) =>
     set({
@@ -49,6 +51,7 @@ export const useDetailStore = create<DetailDraftStore>((set) => ({
       latitude: detail?.latitude != null ? String(detail.latitude) : "",
       longitude: detail?.longitude != null ? String(detail.longitude) : "",
       radius: detail?.radius ?? 50,
+      storeDays: detail?.store_days ?? [],
     }),
   reset: () =>
     set({

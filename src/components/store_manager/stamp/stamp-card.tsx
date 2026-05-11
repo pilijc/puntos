@@ -8,7 +8,6 @@ import { emptyCollectorSlice, STATUS_BADGE, StampCardProps,
 } from "@/type/store-manager/stamp";
 import { formatDate } from "@/utils/store_manager/stamp-utils";
 import { ChevronUp, ChevronDown, OctagonMinus, Trash2, Pencil, SendHorizonal, Stamp as StampIcon } from "lucide-react-native";
-import { useTranslation } from "react-i18next";
 
 export function StampCard({
   stamp,
@@ -28,7 +27,7 @@ export function StampCard({
   onEditDraft,
   endingId,
 }: StampCardProps) {
-  const { t: translate } = useTranslation();
+  const { t } = useTranslation();
   const status = getProgramStatus(stamp);
   const badge = STATUS_BADGE[status];
   const statusLabel = t(`store_manager.stamp.status.${status}`);

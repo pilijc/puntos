@@ -6,7 +6,7 @@ export async function getStoreDetail(storeId: string): Promise<StoreDetail> {
   const { data, error } = await supabase
     .from("stores")
     .select(
-      "id, name, type, logo, store_pictures, phone, registration_number, business_document_image, store_open, store_close, address, location, radius, status, is_active"
+      "id, name, type, logo, store_pictures, phone, registration_number, business_document_image, store_open, store_close, store_days, address, location, radius, status, is_active"
     )
     .eq("id", storeId)
     .single();
