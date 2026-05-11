@@ -453,7 +453,7 @@ export default function SignUp() {
                           />
                         ) : null}
                         
-                        {currentStep <= 1 && (
+                        {currentStep <= 1 && !isWeb && (
                           <>
                             <View className="flex-row items-center gap-x-4">
                               <View className="flex-1 h-px bg-neutral-200 dark:bg-darkBorder" />
@@ -462,7 +462,6 @@ export default function SignUp() {
                               </Text>
                               <View className="flex-1 h-px bg-neutral-200 dark:bg-darkBorder" />
                             </View>
-
                             <Button
                               label={translate("onboarding.signup.google")}
                               onPress={handleSignupWithGoogle}
@@ -476,6 +475,7 @@ export default function SignUp() {
                             />
                           </>
                         )}
+                  
 
                         <View className="flex-row justify-center">
                           <Text className="font-poppins text-neutral-600 dark:text-darkTextSecondary text-sm">
@@ -554,7 +554,7 @@ export default function SignUp() {
                     authButton={true}
                   />
                   
-                  {currentStep <= 1 && (
+                  {currentStep <= 1 && !isWeb && (
                     <>
                       <View className="flex-row items-center gap-x-4">
                         <View className="flex-1 h-px bg-neutral-200 dark:bg-darkBorder" />
@@ -563,7 +563,6 @@ export default function SignUp() {
                         </Text>
                         <View className="flex-1 h-px bg-neutral-200 dark:bg-darkBorder" />
                       </View>
-
                       <Button
                         label={translate("onboarding.signup.google")}
                         onPress={handleSignupWithGoogle}
@@ -577,6 +576,7 @@ export default function SignUp() {
                       />
                     </>
                   )}
+            
 
                   <View className="flex-row justify-center">
                     <Text className="font-poppins text-neutral-600 dark:text-darkTextSecondary text-sm">

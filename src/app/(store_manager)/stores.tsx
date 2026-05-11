@@ -222,7 +222,7 @@ export default function StoreManagerStores() {
   useFocusEffect(
     useCallback(() => {
       if (hasFetchedOnce) {
-        fetchStores();
+        fetchStores(true);
       }
       void refreshCreateGuard();
     }, [hasFetchedOnce, fetchStores, refreshCreateGuard])

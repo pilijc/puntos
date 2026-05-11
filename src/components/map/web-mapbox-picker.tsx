@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Platform } from "react-native";
 import { circle as turfCircle } from "@turf/circle";
 
@@ -10,6 +10,7 @@ type Props = {
   isDark?: boolean;
   markerColor?: string;
   radiusMeters?: number | null;
+  onUnavailable?: () => void;
 };
 
 export function WebMapboxPicker({
@@ -20,10 +21,12 @@ export function WebMapboxPicker({
   isDark,
   markerColor,
   radiusMeters,
+  onUnavailable,
 }: Props) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<any>(null);
   const markerRef = useRef<any>(null);
+  const [mapUnavailable, setMapUnavailable] = useState(false);
 
   const token = process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN;
   const hasCoords = Number.isFinite(latitude ?? NaN) && Number.isFinite(longitude ?? NaN);
@@ -52,6 +55,13 @@ export function WebMapboxPicker({
 
     mapRef.current = map;
 
+    const handleMapError = () => {
+      setMapUnavailable(true);
+      onUnavailable?.();
+    };
+
+    map.on("error", handleMapError);
+
     const marker = new mapboxgl.Marker({ draggable: true, color: markerColor ?? "#FF6600" })
       .setLngLat(center)
       .addTo(map);
@@ -73,12 +83,19 @@ export function WebMapboxPicker({
         marker.remove();
       } catch {}
       try {
+        map.off("error", handleMapError);
         map.remove();
       } catch {}
       markerRef.current = null;
       mapRef.current = null;
     };
   }, []);
+
+  useEffect(() => {
+    if (Platform.OS === "web" && !token) {
+      onUnavailable?.();
+    }
+  }, [onUnavailable, token]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -161,7 +178,7 @@ export function WebMapboxPicker({
 
   if (Platform.OS !== "web") return null;
 
-  if (!token) {
+  if (!token || mapUnavailable) {
     return (
       <div
         style={{
@@ -179,7 +196,7 @@ export function WebMapboxPicker({
           textAlign: "center",
         }}
       >
-        Missing `EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN`.
+        {token ? "Mapbox could not load. Use the fallback controls below." : "Missing `EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN`."}
       </div>
     );
   }

@@ -27,7 +27,7 @@ export function StampCard({
   onEditDraft,
   endingId,
 }: StampCardProps) {
-  const { t: translate } = useTranslation();
+  const { t } = useTranslation();
   const status = getProgramStatus(stamp);
   const badge = STATUS_BADGE[status];
   const statusLabel = t(`store_manager.stamp.status.${status}`);

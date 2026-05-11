@@ -5,7 +5,7 @@ export const STORE_SELECT = `
     id, name, type, address, location, radius,
     status, is_active, timezone, logo, owner_id,
     phone, registration_number, business_document_image,
-    store_pictures, store_open, store_close, created_at, approved_at
+    store_pictures, store_open, store_close, store_days, created_at, approved_at
 `;
 
 export interface CreateStorePayload {
@@ -20,6 +20,7 @@ export interface CreateStorePayload {
     businessDocumentImage?: string | null;
     storeOpen?: string | null;
     storeClose?: string | null;
+    storeDays?: string[];
     ownerId: string;
     storeLogo?: string | null;
     storePictures?: string[] | null;
@@ -31,7 +32,6 @@ export interface StoreRow {
     name: string;
     type: string | null;
     address: string | null;
-    // Derived from location for UI/map consumers; not backed by scalar DB columns.
     latitude: number | null;
     longitude: number | null;
     location?: any;
@@ -50,6 +50,7 @@ export interface StoreRow {
     store_pictures?: string[] | null;
     store_open: string | null;
     store_close: string | null;
+    store_days: string[];
     created_at: string;
     approved_at: string | null;
 }
@@ -96,8 +97,9 @@ export async function createStore(payload: CreateStorePayload): Promise<StoreRow
             phone: payload.phone ?? null,
             registration_number: payload.registrationNumber ?? null,
             business_document_image: payload.businessDocumentImage ?? null,
-            store_open: payload.storeOpen ?? null,
-            store_close: payload.storeClose ?? null,
+            store_open: payload.storeOpen,
+            store_close: payload.storeClose,
+            store_days: payload.storeDays,
             logo: payload.storeLogo ?? null,
             radius: payload.radius ?? null,
             owner_id: payload.ownerId,
@@ -154,7 +156,6 @@ export async function getMyStores(ownerId: string): Promise<StoreRow[]> {
             .from("stores")
             .select(STORE_SELECT)
             .eq("owner_id", ownerId)
-            .eq("is_active", true)
             .order("created_at", { ascending: false }),
         supabase
             .from("user_roles")
@@ -163,7 +164,6 @@ export async function getMyStores(ownerId: string): Promise<StoreRow[]> {
                 stores:store_id!inner (${STORE_SELECT})
             `)
             .eq("user_id", ownerId)
-            .eq("stores.is_active", true)
             .not("store_id", "is", null),
     ]);
 

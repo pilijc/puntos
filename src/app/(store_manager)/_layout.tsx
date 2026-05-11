@@ -29,6 +29,7 @@ const TAB_ACCENT = "#FF6600";
 
 type SidebarTabId = "index" | "stores" | "transactions" | "subscription" | "settings";
 type TabLabelPosition = "beside-icon" | "below-icon";
+type WebSidebarMode = "collapsed" | "normal";
 
 function withTrailingSlash(pathname: string) {
     return pathname.endsWith("/") ? pathname : `${pathname}/`;
@@ -164,13 +165,12 @@ function getTabIcon(routeName: string, color: string, size: number): React.React
 
 type WebStoreManagerSidebarTabBarProps = BottomTabBarProps & {
     isDark: boolean;
-    expanded: boolean;
+    mode: WebSidebarMode;
     onHoverIn: () => void;
     onHoverOut: () => void;
-    onToggle: () => void;
+    onToggleCollapse: () => void;
 };
 
-// Hidden screens — not rendered as sidebar items.
 const HIDDEN_SCREENS = new Set([
     "profile", "store/create-store", "view-store/[id]",
     "streak/index", "streak/configure-streaks", "stamp/configure-stamp",
@@ -181,17 +181,17 @@ const HIDDEN_SCREENS = new Set([
 
 function WebStoreManagerSidebarTabBar({
     isDark,
-    expanded,
+    mode,
     onHoverIn,
     onHoverOut,
-    onToggle,
+    onToggleCollapse,
     state,
     descriptors,
     navigation,
 }: WebStoreManagerSidebarTabBarProps) {
     const pathname = usePathname();
     const chromeBg = isDark ? "#262626" : "#FFFFFF";
-    const sidebarWidth = expanded ? WEB_SIDEBAR_WIDTH : WEB_SIDEBAR_COLLAPSED_WIDTH;
+    const sidebarWidth = mode === "normal" ? WEB_SIDEBAR_WIDTH : WEB_SIDEBAR_COLLAPSED_WIDTH;
     const activeTab = activeSidebarTabFromPath(withTrailingSlash(pathname));
     const activeBackground = isDark ? WEB_TAB_ACTIVE_BG_DARK : WEB_TAB_ACTIVE_BG_LIGHT;
     const inactiveColor = isDark ? "#737373" : "#8B8D98";
@@ -232,7 +232,7 @@ function WebStoreManagerSidebarTabBar({
                     style={{ width: 36, height: 36 }}
                     resizeMode="contain"
                 />
-                {expanded && (
+                {mode !== "collapsed" && (
                     <Text style={{ 
                         fontSize: 18, 
                         fontFamily: "Poppins-Bold", 
@@ -301,7 +301,7 @@ function WebStoreManagerSidebarTabBar({
                             </View>
 
                             {/* Label (expanded only) */}
-                            {expanded && (
+                            {mode !== "collapsed" && (
                                 <Text style={{
                                     fontSize: 12,
                                     fontFamily: "Poppins-Medium",
@@ -320,37 +320,36 @@ function WebStoreManagerSidebarTabBar({
             <View
                 style={{
                     paddingBottom: 24,
-                    borderTopWidth: 1,
-                    borderTopColor: isDark ? "#333" : "#f0f0f0",
                     paddingTop: 16,
                 }}
             >
-                <PlatformPressable
-                    onPress={onToggle}
-                    hoverEffect={undefined}
-                    style={{
-                        flexDirection: "row",
-                        alignItems: "center",
-                        paddingLeft: 28, // Centers icon at 37px (28 + 9) matching the logo
-                        height: 44,
-                    }}
-                >
-                    <View style={{ width: 18, alignItems: 'center' }}>
-                        {expanded
-                            ? <PanelLeftClose size={18} color={isDark ? "#A3A3A3" : "#6B7280"} />
-                            : <PanelLeft      size={18} color={isDark ? "#A3A3A3" : "#6B7280"} />}
-                    </View>
-                    {expanded && (
-                        <Text style={{ 
-                            marginStart: 12, 
-                            fontSize: 12, 
-                            fontFamily: "Poppins-Medium", 
-                            color: isDark ? "#A3A3A3" : "#6B7280" 
-                        }}>
-                            {expanded ? "Collapse" : "Expand"}
-                        </Text>
-                    )}
-                </PlatformPressable>
+                <View style={{ flexDirection: "row", alignItems: "center", paddingLeft: 28, height: 44 }}>
+                    <PlatformPressable
+                        onPress={onToggleCollapse}
+                        hoverEffect={undefined}
+                        style={{ flexDirection: "row", alignItems: "center", height: 44 }}
+                    >
+                        <View style={{ width: 18, alignItems: "center" }}>
+                            {mode === "collapsed" ? (
+                                <PanelLeft size={18} color={isDark ? "#A3A3A3" : "#6B7280"} />
+                            ) : (
+                                <PanelLeftClose size={18} color={isDark ? "#A3A3A3" : "#6B7280"} />
+                            )}
+                        </View>
+                        {mode !== "collapsed" && (
+                            <Text
+                                style={{
+                                    marginStart: 12,
+                                    fontSize: 12,
+                                    fontFamily: "Poppins-Medium",
+                                    color: isDark ? "#A3A3A3" : "#6B7280",
+                                }}
+                            >
+                                Collapse
+                            </Text>
+                        )}
+                    </PlatformPressable>
+                </View>
             </View>
         </View>
     );
@@ -365,7 +364,7 @@ export default function StoreManagerLayout() {
     const pathname = usePathname();
     const path = withTrailingSlash(pathname);
     const [currentUserId, setCurrentUserId] = useState<string | undefined>(undefined);
-    const [webSidebarExpanded, setWebSidebarExpanded] = useState(false);
+    const [webSidebarMode, setWebSidebarMode] = useState<WebSidebarMode>("collapsed");
     const { } = useDeviceSession(currentUserId);
 
     // Bootstrap support chat so unread count shows in settings
@@ -479,13 +478,17 @@ export default function StoreManagerLayout() {
             <WebStoreManagerSidebarTabBar
                 {...barProps}
                 isDark={isDark}
-                expanded={webSidebarExpanded}
-                onHoverIn={() => setWebSidebarExpanded(true)}
-                onHoverOut={() => setWebSidebarExpanded(false)}
-                onToggle={() => setWebSidebarExpanded((v) => !v)}
+                mode={webSidebarMode}
+                onHoverIn={() => {}}
+                onHoverOut={() => {}}
+                onToggleCollapse={() => {
+                    setWebSidebarMode((m) => {
+                        return m === "collapsed" ? "normal" : "collapsed";
+                    });
+                }}
             />
         ),
-        [isDark, webSidebarExpanded],
+        [isDark, webSidebarMode],
     );
 
     return (
@@ -534,7 +537,7 @@ export default function StoreManagerLayout() {
                   
                     ),
                     tabBarLabel: isWeb
-                        ? ({ color, position }) => webSidebarExpanded ? (
+                        ? ({ color, position }) => webSidebarMode !== "collapsed" ? (
                               <WebSidebarTabLabel
                                   text={translate("label.dashboard")}
                                   navColor={color}
@@ -556,8 +559,7 @@ export default function StoreManagerLayout() {
                         />
                     ),
                     tabBarLabel: isWeb
-                        ? ({ color, position }) => webSidebarExpanded ? (
-                        isWeb && !webSidebarExpanded ? null : (
+                        ? ({ color, position }) => webSidebarMode !== "collapsed" ? (
                             <StoresTabLabel
                                 text={translate("store_manager.tabs.stores")}
                                 navColor={color}
@@ -566,8 +568,7 @@ export default function StoreManagerLayout() {
                                 isWeb={isWeb}
                                 insetBottom={insets.bottom}
                             />
-                        )
-                    ) : null
+                        ) : null
                     : undefined,
                 }}
             />
@@ -583,7 +584,7 @@ export default function StoreManagerLayout() {
                         />
                     ),
                     tabBarLabel: isWeb
-                        ? ({ color, position }) => webSidebarExpanded ? (
+                        ? ({ color, position }) => webSidebarMode !== "collapsed" ? (
                               <WebSidebarTabLabel
                                   text={translate("store_manager.tabs.subscription")}
                                   navColor={color}
@@ -606,7 +607,7 @@ export default function StoreManagerLayout() {
                         />
                     ),
                     tabBarLabel: isWeb
-                        ? ({ color, position }) => webSidebarExpanded ? (
+                        ? ({ color, position }) => webSidebarMode !== "collapsed" ? (
                               <WebSidebarTabLabel
                                   text={translate("label.transactions")}
                                   navColor={color}
@@ -631,7 +632,7 @@ export default function StoreManagerLayout() {
                         />
                     ),
                     tabBarLabel: isWeb
-                        ? ({ color, position }) => webSidebarExpanded ? (
+                        ? ({ color, position }) => webSidebarMode !== "collapsed" ? (
                               <WebSidebarTabLabel
                                   text={translate("label.settings")}
                                   navColor={color}
