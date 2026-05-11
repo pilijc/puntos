@@ -371,7 +371,8 @@
                 "yesterday": "Yesterday"
             },
             "subtitle": {
-                "purchasePoints": "Purchase Points"
+                "purchasePoints": "Purchase Points",
+                "voucherPoints": "Voucher Points"
             },
             "unknownStore": "Unknown Store"
         }

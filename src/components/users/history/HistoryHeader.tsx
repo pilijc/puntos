@@ -23,19 +23,16 @@ export default function HistoryHeader({
 
   return (
     <View className="space-y-4">
-      <AppHeader
-        title={translate("user.activity.title")}
-        description="Track your points activity"
-        textAlign="left"
-        titleSize="2xl"
-        fullLeft={true}
-        className="bg-transparent dark:bg-transparent"
-      />
+      <View className="bg-white dark:bg-darkBackground border-b border-neutral-100 dark:border-darkBorder px-6 py-3 flex-row justify-between items-center">
+          <Text className="text-xl font-poppins-bold text-textPrimary dark:text-darkTextPrimary py-1">
+              History
+          </Text>
+      </View>
 
       {/* ── Modern Summary Cards ── */}
-      <View className="flex-row gap-3">
+      <View className="flex-row gap-3 px-4 pt-4">
         {/* Earned Card */}
-        <View className="flex-1 bg-white dark:bg-darkBackgroundCard rounded-2xl p-4 border border-emerald-200 dark:border-emerald-500/30">
+        <View className="flex-1 bg-white dark:bg-darkBackgroundCard rounded-2xl p-4">
           <View className="flex-row items-center justify-between mb-3">
             <View className="w-10 h-10 rounded-full bg-emerald-500 dark:bg-emerald-400 items-center justify-center">
               <Coins size={20} color="white" />
@@ -49,13 +46,13 @@ export default function HistoryHeader({
           <Text className="text-sm font-poppins-semibold text-emerald-900 dark:text-emerald-100">
             Points Earned
           </Text>
-          <Text className="text-xs font-poppins text-emerald-600 dark:text-emerald-400 mt-1">
+          <Text className="text-xs font-poppins text-textSecondary mt-1">
             From purchases & vouchers
           </Text>
         </View>
 
         {/* Spent Card */}
-        <View className="flex-1 bg-white dark:bg-darkBackgroundCard rounded-2xl p-4 border border-orange-200 dark:border-orange-500/30">
+        <View className="flex-1 bg-white dark:bg-darkBackgroundCard rounded-2xl p-4">
           <View className="flex-row items-center justify-between mb-3">
             <View className="w-10 h-10 rounded-full bg-orange-500 dark:bg-orange-400 items-center justify-center">
               <Gift size={20} color="white" />
@@ -69,14 +66,14 @@ export default function HistoryHeader({
           <Text className="text-sm font-poppins-semibold text-orange-900 dark:text-orange-100">
             Points Spent
           </Text>
-          <Text className="text-xs font-poppins text-orange-600 dark:text-orange-400 mt-1">
+          <Text className="text-xs font-poppins text-textSecondary mt-1">
             On rewards & redemptions
           </Text>
         </View>
       </View>
 
       {/* ── Modern Filter Pills ── */}
-      <View className="flex-row gap-2 pt-3 pb-3 pl-2">
+      <View className="flex-row gap-2 pt-3 pb-3 pl-6 px-4">
         {TABS.map((tab, i) => {
           const isActive = activeTab === i;
           return (

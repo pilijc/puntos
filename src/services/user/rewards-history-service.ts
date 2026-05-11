@@ -48,19 +48,20 @@ export async function getRewardRedemptionHistory(userId: string): Promise<any[]>
     // Format the data for the UI
     return redemptions.map((redemption: any) => {
       const reward = rewardMap[redemption.reward_id];
+      const storeName = storeMap[redemption.store_id] || 'user.activity.unknownStore';
       return {
         id: redemption.id,
         section: formatDateSection(redemption.created_at),
         type: 'claimed',
-        title: reward?.title || 'user.activity.unknownReward',
+        title: storeName,
         subtitle: reward?.title || 'user.activity.unknownReward',
         time: redemption.created_at,
         points: `-${redemption.points_spent}`,
         positive: false,
         image: reward?.image_url,
         transactionType: 'redemption',
-        storeName: storeMap[redemption.store_id] || 'user.activity.unknownStore',
-        storeId: redemption.store_id, // Add storeId for navigation
+        storeName: storeName,
+        storeId: redemption.store_id,  
       };
     });
 
