@@ -17,7 +17,6 @@ export async function ownerCanManagePremiumCampaigns(ownerId: string | null | un
     const planList = (plans ?? []) as Array<{ id: number; slug?: string | null }>;
     return isPaidUnlimitedPlan(mgr, planList);
   } catch (error) {
-    console.log("Failed to check if owner can manage premium campaigns:", error);
     return false;
   }
 }
@@ -43,7 +42,6 @@ export async function getOwnerPremiumCampaignExpiryDateIso(
     const expires = new Date(anchorDate.getTime() + graceDays * 24 * 60 * 60 * 1000);
     return expires.toISOString();
   } catch (error) {
-    console.log("Failed to get owner premium campaign expiry date:", error);
     throw new Error("Could not determine premium campaign expiry date due to an unexpected error.");
   }
 }
@@ -65,7 +63,6 @@ export async function assertStoreOwnerCanManagePremiumCampaigns(storeId: number 
     const allowed = await ownerCanManagePremiumCampaigns(ownerId);
     if (!allowed) throw new Error(PREMIUM_CAMPAIGN_LOCKED_MESSAGE);
   } catch (error) {
-    console.log("Failed to assert store owner can manage premium campaigns:", error);
     throw new Error(`Failed to check permission for premium campaign management: ${(error as Error).message ?? error}`);
   }
 }

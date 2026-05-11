@@ -71,7 +71,6 @@ export function useLocationSync(userId: string | undefined, syncEnabled: boolean
             const timeSinceLastSync = Date.now() - savedTime;
 
             if (timeSinceLastSync > LOCATION_EXPIRY_MS) {
-                console.log('[useLocationSync] Stale location detected on startup. Clearing from DB.');
                 try {
                     await clearLocationService(userId);
                     await clearSyncTime();
@@ -224,7 +223,6 @@ export function useLocationSync(userId: string | undefined, syncEnabled: boolean
             const timeSinceLastSync = Date.now() - lastSyncTime;
 
             if (timeSinceLastSync > LOCATION_EXPIRY_MS) {
-                console.log('[useLocationSync] Location stale. Clearing from DB.');
                 try {
                     await clearLocationService(userId);
                     await clearSyncTime();

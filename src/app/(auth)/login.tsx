@@ -110,7 +110,6 @@ export default function Login() {
       reset();
       router.replace(data.homeRoute);
     } catch (error: any) {
-      console.log("error login component", error);
       if (error?.name === "AccountBlockedError") {
         useAuthStore.getState().setRestricted(true);
         return;

@@ -112,7 +112,7 @@ export default function FrontDeskHistory() {
                 setStoreId(storeInfo.id);
                 fetchStaffTransactions(currentStaffId, storeInfo.id);
             } catch (error) {
-                console.log("Error loading staff info:", error);
+                console.error("Failed to load staff info or transactions:", error);
             }
         };
 

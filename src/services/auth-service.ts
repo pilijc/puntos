@@ -125,7 +125,6 @@ export async function signUpWithGoogleService() {
   try {
     await GoogleSignin.hasPlayServices();
     const response = await GoogleSignin.signIn();
-    console.log("sign up with google service", response);
 
     if (response.type === 'success') {
       const idToken = response.data.idToken;
@@ -239,7 +238,6 @@ export async function loginService(email: string, password: string) {
              homeRoute,
     }; 
   } catch (error: any) {
-    console.log("error login service", error);
     throw error;
   }
 }

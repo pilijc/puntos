@@ -65,7 +65,6 @@ export async function getStorePointsConfig(storeId: string): Promise<{
         .single();
     
         if(error || !data){
-            console.log('No points config');
             return{
                 pointsType: 'percentage',
                 percentage: 10,
@@ -84,7 +83,6 @@ export async function getStorePointsConfig(storeId: string): Promise<{
             maxPoints: data.max_points_per_txn || 0
         };
     }catch (error){
-        console.log('no store set an percentage');
         return{
             pointsType: 'percentage',
             percentage: 10,
