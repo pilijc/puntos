@@ -3,6 +3,7 @@ import type { UserLocation } from "@/services/user/location-service";
 import type { PointsOrder, RewardSortOrder } from "@/services/reward-service";
 import type { StampProgress } from "@/services/stamp-service";
 import type { Store } from "@/type/user/store";
+import type { UserStreak } from "@/services/streak-service";
 import { enrichStoresWithLocation } from "@/utils/store-location";
 
 export type StampedStoreListItem = {
@@ -15,6 +16,13 @@ export type StampedStoreListItem = {
   isNearby: boolean;
   logo: string | null;
   isJoined: boolean;
+  /** false = store has no active stamp program → show placeholder */
+  stampEnabled: boolean;
+  /** true = store has an active streak program (user may not have started yet) */
+  streakProgramActive: boolean;
+  /** null only when streakProgramActive is false */
+  streakDays: number | null;
+  streakTarget: number | null;
 };
 
 export function sortRewards<T extends {
@@ -50,10 +58,8 @@ export function sortRewards<T extends {
 
 export function getHasStampedToday(lastStampAt?: string | null): boolean {
   if (!lastStampAt) return false;
-
   const lastStampDate = new Date(lastStampAt);
   const today = new Date();
-
   return (
     lastStampDate.getFullYear() === today.getFullYear() &&
     lastStampDate.getMonth() === today.getMonth() &&
@@ -85,15 +91,11 @@ export function getClaimableRewardState(
   const hasClaimableReward = Boolean(
     stampData && stampData.stamps_count >= stampData.target,
   );
-
-  const claimableRewardItem = availableRewards.find((reward) => reward.storeId === storeId)
-    ?? availableRewards[0]
-    ?? null;
-
-  return {
-    hasClaimableReward,
-    claimableRewardItem,
-  };
+  const claimableRewardItem =
+    availableRewards.find((reward) => reward.storeId === storeId) ??
+    availableRewards[0] ??
+    null;
+  return { hasClaimableReward, claimableRewardItem };
 }
 
 export function buildStampedStoreList(
@@ -102,31 +104,80 @@ export function buildStampedStoreList(
   location: UserLocation | null,
   locationFallback = "Unknown location",
   stampRewards: any[] = [],
-  activeStampProgramRewards: any[] = []
+  activeStampProgramRewards: any[] = [],
+  userStreaks: UserStreak[] = [],
+  /** Store IDs known to have an active streak program */
+  activeStreakStoreIds: Set<number> = new Set(),
+  /** storeId → full active streak program — used to get streak_length when user hasn't started */
+  activeStreakProgramMap: Map<number, { streak_length?: number | null }> = new Map(),
+  /** storeId → store_feature flags — fallback for discover stores with no user data */
+  storeFeatureFlags: Map<number, { stamp_enabled: boolean; streak_enabled: boolean }> = new Map(),
 ): StampedStoreListItem[] {
   const stampedIds = new Set(stamps.map((stamp) => stamp.store_id.toString()));
   const enrichedStores = enrichStoresWithLocation(stores, location);
 
   return enrichedStores.map((store) => {
-    const isJoined = stampedIds.has(store.id.toString());
-    const stampData = stamps.find(
-      (stamp) => stamp.store_id.toString() === store.id.toString(),
-    );
+    const storeIdStr = store.id.toString();
+    const isJoined = stampedIds.has(storeIdStr);
 
-    const stampReward = stampRewards?.find((s) => s.store_id?.toString() === store.id.toString());
+    const stampData = stamps.find((s) => s.store_id.toString() === storeIdStr);
+    const stampReward = stampRewards?.find((s) => s.store_id?.toString() === storeIdStr);
     const activeProgramReward = activeStampProgramRewards?.find(
-      (program) => program.store_id?.toString() === store.id.toString()
+      (p) => p.store_id?.toString() === storeIdStr,
     );
 
     const target = Math.max(
       activeProgramReward?.total_stamps ?? stampReward?.target_stamps ?? stampData?.target ?? 7,
-      1
+      1,
     );
+    // stamp_progress.stamps_count is the canonical source of truth.
+    // stamp_rewards.current_stamp_count is NOT used here — it is only updated
+    // by the legacy addStamp() path and will be 0/stale for stamps issued
+    // via the issueStampForPurchase RPC.
+    const count = stampData?.stamps_count ?? 0;
 
-    const count = stampData?.stamps_count ?? stampReward?.current_stamp_count ?? 0;
+    // Streak: match on store_id with an active program or in-progress user row
+    const streak = userStreaks.find(
+      (s) =>
+        s.store_id?.toString() === storeIdStr &&
+        (s.store_streaks?.status === "active" || s.status === "in_progress"),
+    );
+    // streakTarget: user row first, then fall back to the program map (covers un-enrolled users)
+    const streakTarget =
+      streak?.store_streaks?.streak_length ??
+      activeStreakProgramMap.get(Number(storeIdStr))?.streak_length ??
+      null;
+    const rawStreakDays = streak != null
+      ? (streak.total_earned_days ?? streak.streak_days ?? 0)
+      : null;
+    const streakDays = rawStreakDays !== null
+      ? Math.min(Math.max(0, rawStreakDays), streakTarget ?? Infinity)
+      : null;
+
+    // streakProgramActive: true when the store has an active streak program,
+    // regardless of whether the user has started it yet.
+    // Sources (in priority):
+    //   1. user has a streak row here (program definitely active or was active)
+    //   2. store is in activeStreakStoreIds (eligibleStreakStoreIds from nearby check)
+    //   3. store_feature.streak_enabled via storeFeatureFlags (covers discover stores)
+    const featureFlags = storeFeatureFlags.get(Number(storeIdStr));
+    const streakProgramActive =
+      streak != null ||
+      activeStreakStoreIds.has(Number(storeIdStr)) ||
+      featureFlags?.streak_enabled === true;
+
+    // stampEnabled: true when the store has an active stamp program.
+    // Sources (in priority):
+    //   1. activeProgramReward  — fetched for nearby stores
+    //   2. stampReward          — fetched for nearby stores (fallback)
+    //   3. stampData            — user has stamp_progress (joined stores)
+    //   4. store_feature.stamp_enabled via storeFeatureFlags (covers discover stores)
+    const stampEnabled =
+      !!(activeProgramReward || stampReward || stampData) ||
+      featureFlags?.stamp_enabled === true;
 
     return {
-      id: store.id.toString(),
+      id: storeIdStr,
       name: store.name,
       location: store.address || locationFallback,
       distanceMeters: store.distanceMeters,
@@ -135,6 +186,10 @@ export function buildStampedStoreList(
       isNearby: store.isNearby,
       logo: store.logo,
       isJoined,
+      stampEnabled,
+      streakProgramActive,
+      streakDays: streakProgramActive ? (streakDays ?? 0) : null,
+      streakTarget: streakProgramActive ? (streakTarget ?? null) : null,
     };
   });
 }
