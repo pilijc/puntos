@@ -60,8 +60,21 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
     fetchProfile: async () => {
         set({ loading: true });
         try {
-            const { data: { user: currentUser } } = await supabase.auth.getUser();
-            if (!currentUser) throw new Error("No User Found");
+            const { data: { session } } = await supabase.auth.getSession();
+            const currentUser = session?.user ?? null;
+            if (!currentUser) {
+                try {
+                    const { forceDeactivateCurrentDeviceService } = require("@/services/store-manager/device-session-service");
+                    void forceDeactivateCurrentDeviceService().catch((e: any) =>
+                        console.warn("[ProfileStore] Force deactivate failed", e),
+                    );
+                } catch (err) {
+                    // Ignore errors on force deactivation and proceed with signed-out state
+                }
+        
+                set({ user: null, profile: null, loading: false });
+                return;
+            }
 
             const [profileData, settingsData] = await Promise.all([
                 getUserProfileService(currentUser.id),
@@ -79,14 +92,6 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
             })
         } catch (error: any) {
             console.error("Profile store load error:", error);
-            if (error?.message === "No User Found") {
-                try {
-                   const { forceDeactivateCurrentDeviceService } = require("@/services/store-manager/device-session-service");
-                   forceDeactivateCurrentDeviceService().catch((e: any) => console.warn("[ProfileStore] Failsafe cleanup failed", e));
-                } catch (e) {
-                   // ignore import errors if we are in a non-manager context where the service doesn't apply
-                }
-            }
         } finally {
             set({ loading: false })
         }
