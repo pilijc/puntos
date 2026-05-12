@@ -92,6 +92,16 @@ export async function getSubscriptionPlans() {
   return data ?? [];
 }
 
+export function pickBasicAndProPlans(plans: Array<Record<string, unknown>>): {
+  basicPlan: Record<string, unknown> | null;
+  proPlan: Record<string, unknown> | null;
+} {
+  const basicPlan =
+    plans.find((p) => String(p?.slug ?? "").toLowerCase() === "basic") ?? plans[0] ?? null;
+  const proPlan = plans.find((p) => String(p?.slug ?? "").toLowerCase() === "pro") ?? null;
+  return { basicPlan, proPlan };
+}
+
 export async function getManagerSubscription(
   ownerId: string,
 ): Promise<ManagerSubscriptionRow | null> {

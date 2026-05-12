@@ -37,7 +37,11 @@ export function useAuthListener() {
 
           // if we're already on the login page or auth/signup flows, don't boot the user back to welcome.
           // this allows them to stay on login after cancelling a device limit modal.
-          const isAtAuthFlow = pathname?.includes('/login') || pathname?.includes('/signup') || pathname?.includes('/welcome');
+          const isAtAuthFlow =
+            pathname?.includes('/login') ||
+            pathname?.includes('/signup') ||
+            pathname?.includes('/welcome') ||
+            pathname?.includes('/landing');
 
           void (async () => {
             try {
@@ -50,7 +54,9 @@ export function useAuthListener() {
               useAuthStore.getState().setSessionExpiredNotice(true);
             }
             if (!isAtAuthFlow) {
-              router.replace("/(onboarding)/welcome");
+              router.replace(
+                Platform.OS === "web" ? "/(onboarding)/landing" : "/(onboarding)/welcome",
+              );
             }
           })();
         } else if (event === 'SIGNED_IN' && session && !isOnSignupFlow) {
@@ -78,7 +84,11 @@ export function useAuthListener() {
                 await upsertPushId();
               }
 
-              const isAtAuthFlow = pathname?.includes('/login') || pathname?.includes('/signup') || pathname?.includes('/welcome');
+              const isAtAuthFlow =
+                pathname?.includes('/login') ||
+                pathname?.includes('/signup') ||
+                pathname?.includes('/welcome') ||
+                pathname?.includes('/landing');
 
               // Enforce device session limit to prevent the global listener from hijacking routing into the dashboard!
               if (nextRoute === "/(store_manager)" || (typeof nextRoute === "string" && nextRoute.startsWith("/(store_manager)"))) {
