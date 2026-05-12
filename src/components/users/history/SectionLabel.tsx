@@ -14,14 +14,18 @@ export default function SectionLabel({ label }: SectionLabelProps) {
   else if (label === "yesterday") display = translate("user.activity.sections.yesterday");
   else {
     const d = new Date(label);
-    display = d.toLocaleDateString(
-      i18n.language === "ja" ? "ja-JP" : "en-US",
-      { month: "long", day: "numeric" }
-    );
+    if (!isNaN(d.getTime())) {
+      display = d.toLocaleDateString(
+        i18n.language === "ja" ? "ja-JP" : "en-US",
+        { month: "long", day: "numeric" }
+      );
+    } else {
+      display = label;
+    }
   }
   
   return (
-    <Text className="text-xs font-poppins-semibold text-neutral-400 dark:text-darkTextSecondary tracking-widest uppercase ml-1 mb-2">
+    <Text className="pl-2 text-sm font-poppins text-textSecondary dark:text-darkTextSecondary ml-4 mb-1">
       {display}
     </Text>
   );

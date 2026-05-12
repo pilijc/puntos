@@ -369,7 +369,8 @@
                 "yesterday": "昨日"
             },
             "subtitle": {
-                "purchasePoints": "購入ポイント"
+                "purchasePoints": "購入ポイント",
+                "voucherPoints": "バウチャーポイント"
             },
             "unknownStore": "不明な店舗"
         }

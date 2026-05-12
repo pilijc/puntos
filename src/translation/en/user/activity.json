@@ -4,6 +4,7 @@
   "searchPlaceholder": "Search history...",
   "month": "{{month}}",
   "filter": {
+    "all": "All",
     "earned": "Earned",
     "claimed": "Claimed"
   },
@@ -15,7 +16,8 @@
     "yesterday": "Yesterday"
   },
   "subtitle": {
-    "purchasePoints": "Purchase Points"
+    "purchasePoints": "Purchase Points",
+    "voucherPoints": "Voucher Points"
   },
   "unknownStore": "Unknown Store",
   "stampLog": {

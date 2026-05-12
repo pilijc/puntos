@@ -47,75 +47,64 @@ export default function HistoryRow({
 
   return (
     <TouchableOpacity 
-      className="bg-white dark:bg-darkBackgroundCard rounded-2xl p-4 mb-3 border border-neutral-100 dark:border-neutral-800 active:scale-[0.98] transition-transform duration-150"
+      className={`active:scale-[0.98] transition-transform duration-150 ${isPositive ? "px-4 py-3" : "p-4"}`}
       onPress={handlePress}
       disabled={!storeId}
     >
-      <View className="flex-row items-center">
-        {/* Modern Icon Container */}
-        <View className="relative">
-          <View
-            className={`w-12 h-12 rounded-2xl items-center justify-center ${
-              isPositive 
-                ? "bg-gradient-to-br from-emerald-100 to-emerald-200 dark:from-emerald-500/20 dark:to-emerald-600/20" 
-                : "bg-gradient-to-br from-orange-100 to-orange-200 dark:from-orange-500/20 dark:to-orange-600/20"
-            }`}
-          >
-            {icon ? (
-              <Text className={`text-lg ${isPositive ? "text-emerald-600 dark:text-emerald-400" : "text-orange-600 dark:text-orange-400"}`}>
-                {icon}
-              </Text>
-            ) : image ? (
-              <Image source={{ uri: image }} className="w-12 h-12 rounded-2xl" />
-            ) : (
-              isPositive ? (
-                <Coins size={20} color="#10b981" />
-              ) : (
-                <Gift size={20} color="#FF6600" />
-              )
-            )}
-          </View>
-          {/* Activity indicator dot */}
-          <View className={`absolute -top-1 -right-1 w-3 h-3 rounded-full ${
-            isPositive ? "bg-emerald-500" : "bg-orange-500"
-          }`} />
-        </View>
-
-        {/* Content */}
-        <View className="flex-1 ml-4">
-          <View className="flex-row items-center justify-between mb-1">
-            <Text
-              numberOfLines={1}
-              className="text-base font-poppins-semibold text-neutral-900 dark:text-white flex-1"
-            >
+      {isPositive ? (
+        <View className="flex-row items-center justify-between">
+          <View className="flex-1">
+            <Text className="text-base font-poppins-semibold">
               {translate(displayTitle)}
             </Text>
-            <View
-              className={`px-3 py-1 rounded-full ${
-                isPositive 
-                  ? "bg-emerald-100 dark:bg-emerald-500/20" 
-                  : "bg-orange-100 dark:bg-orange-500/20"
-              }`}
-            >
-              <Text
-                className={`text-sm font-poppins-bold ${
-                  isPositive ? "text-emerald-700 dark:text-emerald-300" : "text-orange-700 dark:text-orange-300"
-                }`}
-              >
-                {points}
-              </Text>
-            </View>
-          </View>
-          <Text className="text-sm font-poppins text-neutral-500 dark:text-neutral-400">
-            {translate(subtitle)}
-          </Text>
-          {timeStr && (
-            <Text className="text-xs font-poppins text-neutral-400 dark:text-neutral-500 mt-1">
-              {timeStr}
+            <Text className="text-sm font-poppins text-neutral-500 dark:text-neutral-400">
+              {translate(subtitle)}
             </Text>
-          )}
+          </View>
+          <View className="items-end">
+            <Text className="text-base font-poppins-bold text-emerald-700 dark:text-emerald-300 flex-1">
+              {points}
+            </Text>
+            {timeStr && (
+              <Text className="text-sm font-poppins text-neutral-400 dark:text-neutral-500 mt-1">
+                {timeStr}
+              </Text>
+            )}
+          </View>
         </View>
-      </View>
+      ) : (
+        // Original layout with icon for redeem rows
+        <View className="flex-row items-center">
+          {/* Modern Icon Container */}
+
+          {/* Content */}
+          <View className="flex-1">
+            <View className="flex-row items-center justify-between">
+              <Text
+                numberOfLines={1}
+                className="text-base font-poppins-semibold  flex-1 -mt-6"
+              >
+                {translate(displayTitle)}
+              </Text>
+              <View className="items-end">
+                <View className="">
+                  <Text className="text-base font-poppins-bold text-orange-700 dark:text-orange-300">
+                    {points}
+                  </Text>
+                </View>
+                {timeStr && (
+                  <Text className="text-sm font-poppins text-neutral-400 dark:text-neutral-500 mt-1">
+                    {timeStr}
+                  </Text>
+                )}
+              </View>
+            </View>
+            <Text className="text-sm font-poppins text-neutral-500 dark:text-neutral-400 -mt-6">
+              {translate(subtitle)}
+            </Text>
+          </View>
+        </View>
+      )}
     </TouchableOpacity>
   );
 }

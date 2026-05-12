@@ -83,6 +83,11 @@ export default function History() {
 
   const sections = [...new Set(filteredData.map((item) => item.section))] as string[];
 
+  const groupedData = sections.map(section => ({
+    section,
+    items: filteredData.filter(item => item.section === section)
+  }));
+
   const renderFooter = () => {
     return (
       <View>
@@ -111,30 +116,35 @@ export default function History() {
     }
   };
 
-  const renderItem = ({ item, index }: { item: any; index: number }) => {
-    const currentItem = filteredData[index];
-    const previousItem = filteredData[index - 1];
-    const showSectionLabel = !previousItem || previousItem.section !== currentItem.section;
-    
+  const renderItem = ({ item }: { item: { section: string; items: any[] } }) => {
     return (
       <View>
-        {showSectionLabel && <SectionLabel label={currentItem.section} />}
-        <HistoryRow 
-          {...item} 
-          storeId={item.storeId}
-          transactionType={item.transactionType}
-          onPress={() => handleNavigateToStore(item.storeId, item.transactionType)}
-        />
+        <SectionLabel label={item.section} />
+        <View className="bg-white dark:bg-darkBackgroundCard rounded-2xl mx-4 mb-3 overflow-hidden">
+          {item.items.map((transaction, index) => (
+            <View key={`${transaction.transactionType}-${transaction.id}-${index}`}>
+              <HistoryRow 
+                {...transaction} 
+                storeId={transaction.storeId}
+                transactionType={transaction.transactionType}
+                onPress={() => handleNavigateToStore(transaction.storeId, transaction.transactionType)}
+              />
+              {index < item.items.length - 1 && (
+                <View className="h-px bg-neutral-200 dark:bg-neutral-800 mx-4" />
+              )}
+            </View>
+          ))}
+        </View>
       </View>
     );
   };
 
   return (
     <SafeAreaView className="flex-1 bg-backgroundMuted dark:bg-darkBackground" edges={["top", "left", "right"]}>
-      <View className="flex-1 px-4">
+      <View className="flex-1 ">
         <FlatList
-          data={filteredData}
-          keyExtractor={(item, index) => `${item.transactionType}-${item.id}-${index}`}
+          data={groupedData}
+          keyExtractor={(item, index) => `${item.section}-${index}`}
           ListHeaderComponent={
             <HistoryHeader
               totalEarned={totalEarned}
