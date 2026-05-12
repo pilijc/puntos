@@ -82,10 +82,10 @@ export default function ClaimRewardsScreen() {
   }, []);
 
   useEffect(() => {
-    if (selectedReward && drawerVisible && !redemptionCode) {
+    if (selectedReward && drawerVisible && (status === "loading" || !redemptionCode)) {
       generateCode();
     }
-  }, [selectedReward, drawerVisible, redemptionCode, generateCode]);
+  }, [selectedReward, drawerVisible, redemptionCode, status, generateCode]);
 
   // Refresh points when redemption is completed
   useEffect(() => {

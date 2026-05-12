@@ -17,6 +17,7 @@ import QRCode from "react-native-qrcode-svg";
 import { Modal } from "@/components/modal";
 import { Button } from "@/components/button";
 import { getQRCodeData } from "@/services/user/rewards-redemption";
+import { RedemptionQRSkeleton } from "@/components/skeleton/user/redemption-qr-skeleton";
 
 const isWeb = Platform.OS === "web";
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
@@ -238,11 +239,12 @@ export function RedemptionDrawer({
                     <View className="bg-white dark:bg-neutral-800 py-3 px-4 rounded-xl mb-3 items-center shadow-sm shadow-black/5 self-center relative">
                       <View className="mb-2 items-center justify-center">
                         {status === "loading" ? (
-                          <View className="w-[140px] h-[140px] items-center justify-center">
-                            <Text className="text-neutral-400 text-xs font-poppins-medium">
-                              Generating...
+                          <>
+                            <RedemptionQRSkeleton />
+                            <Text className="text-neutral-400 text-xs font-poppins-medium mt-3 text-center">
+                              Generating code...
                             </Text>
-                          </View>
+                          </>
                         ): status === "expired" || timeRemaining === 0 ? (
                           <View className="w-[140px] h-[140px] items-center justify-center bg-gray-100 dark:bg-gray-800 rounded-lg">
                             <Text className="text-red-500 text-sm font-poppins-bold text-center px-4"> 
@@ -259,24 +261,26 @@ export function RedemptionDrawer({
                       </Text>
 
                       {/* Expired overlay */}
-                      {(status === "expired" || timeRemaining === 0) && (
+                      {status !== "loading" && (status === "expired" || timeRemaining === 0) && (
                         <View className="absolute inset-0 bg-black/50 rounded-xl items-center justify-center">
                           <X size={32} color="#EF4444" />
                         </View>
                       )}
                     </View>
 
-                    <Text className="text-[11px] text-neutral-500 dark:text-neutral-400 font-poppins mt-1">Time left to redeem</Text>
+                    {status !== "loading" && (
+                      <Text className="text-[11px] text-neutral-500 dark:text-neutral-400 font-poppins mt-1">Time left to redeem</Text>
+                    )}
 
-                    <Text className={`text-2xl font-poppins-bold mt-1 ${isExpiringSoon ? "text-red-500" : "text-neutral-900 dark:text-white"}`}>
-                      {status === "redeemed"
-                        ? "Redeemed!"
-                        : status === "loading"
-                          ? "--:--"
+                    {status !== "loading" && (
+                      <Text className={`text-2xl font-poppins-bold mt-1 ${isExpiringSoon ? "text-red-500" : "text-neutral-900 dark:text-white"}`}>
+                        {status === "redeemed"
+                          ? "Redeemed!"
                           : status === "expired" || timeRemaining === 0
                             ? "0:00"
                             : formatTime(timeRemaining)}
-                    </Text>
+                      </Text>
+                    )}
                   </View>
 
 
