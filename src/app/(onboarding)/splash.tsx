@@ -14,7 +14,7 @@ export default function Splash() {
 
       if (!session) {
         router.replace(
-          Platform.OS === "web" ? "/(onboarding)/welcome" : "/(onboarding)",
+          Platform.OS === "web" ? "/(onboarding)/landing" : "/(onboarding)",
         );
         return;
       }

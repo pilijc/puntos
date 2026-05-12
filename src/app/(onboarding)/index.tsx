@@ -50,7 +50,7 @@ function Slide({ title, subtitle, width, image }: SlideProps) {
 
 export default function Welcome() {
   if (Platform.OS === "web") {
-    return <Redirect href="/(onboarding)/welcome" />;
+    return <Redirect href="/(onboarding)/landing" />;
   }
 
   const router = useRouter();
