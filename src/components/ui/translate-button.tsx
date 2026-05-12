@@ -1,5 +1,5 @@
 import React, { useRef, useState } from "react";
-import { Modal, useColorScheme, useWindowDimensions, Platform, StatusBar } from "react-native";
+import { Modal, useWindowDimensions, Platform } from "react-native";
 import { View, Text, TouchableOpacity, Pressable } from "@/tw";
 import { useTranslation } from "react-i18next";
 import { useLanguageStore } from "@/store/language-store";
@@ -12,15 +12,16 @@ const LANGUAGES = [
 
 export default function TranslateButton() {
     const { i18n } = useTranslation();
-    const { setLanguage } = useLanguageStore();
+    const language = useLanguageStore((s) => s.language);
+    const setLanguage = useLanguageStore((s) => s.setLanguage);
     const [open, setOpen] = useState(false);
-    const isDark = useColorScheme() === "dark";
     const { width: windowWidth } = useWindowDimensions();
 
     const [dropdownPos, setDropdownPos] = useState({ top: 100, right: 24 });
     const buttonRef = useRef<any>(null);
 
-    const current = LANGUAGES.find(l => l.code === i18n.language) ?? LANGUAGES[0];
+    const normalizedLanguage = language ?? (i18n.language?.startsWith("ja") ? "ja" : "en");
+    const current = LANGUAGES.find(l => l.code === normalizedLanguage) ?? LANGUAGES[0];
 
     const selectLanguage = (lang: "en" | "ja") => {
         setLanguage(lang);
@@ -30,14 +31,8 @@ export default function TranslateButton() {
     const isWeb = Platform.OS === "web";
 
     const openDropdown = () => {
-        if (isWeb) {
-            setOpen(true);
-            return;
-        }
-
         if (buttonRef.current?.measure) {
             buttonRef.current.measure((x: number, y: number, w: number, h: number, pageX: number, pageY: number) => {
-                // Uniform 12px gap for mobile
                 setDropdownPos({ top: pageY + h + 12, right: windowWidth - (pageX + w) });
                 setOpen(true);
             });
@@ -50,11 +45,10 @@ export default function TranslateButton() {
         <View
             className="absolute"
             style={isWeb ? {
-                top: "100%",
-                right: 0,
-                marginTop: 12, // Increased gap for web to match mobile
+                top: dropdownPos.top,
+                right: dropdownPos.right,
                 minWidth: 160,
-                zIndex: 50,
+                zIndex: 2,
             } : {
                 top: dropdownPos.top,
                 right: dropdownPos.right,
@@ -69,7 +63,10 @@ export default function TranslateButton() {
                         )}
                         <TouchableOpacity
                             activeOpacity={0.7}
-                            onPress={() => selectLanguage(lang.code)}
+                            onPress={(event) => {
+                                event.stopPropagation?.();
+                                selectLanguage(lang.code);
+                            }}
                             className="flex-row items-center px-4 py-3"
                             style={{ gap: 10 }}
                         >
@@ -95,7 +92,7 @@ export default function TranslateButton() {
     );
 
     return (
-        <View style={isWeb ? { zIndex: 50, position: "relative" } : undefined}>
+        <View>
             {/* ── Trigger pill ──────────────────────────────────── */}
             <TouchableOpacity
                 ref={buttonRef}
@@ -109,21 +106,14 @@ export default function TranslateButton() {
             </TouchableOpacity>
 
             {/* ── Dropdown ──────────────────────────────────────── */}
-            {open && isWeb && (
-                <>
-                    <Pressable 
-                        style={{ position: 'fixed' as any, top: 0, left: 0, right: 0, bottom: 0, zIndex: 40 }} 
-                        onPress={() => setOpen(false)} 
+            {open && (
+                <Modal transparent animationType="fade" visible={open} onRequestClose={() => setOpen(false)}>
+                    <Pressable
+                        className="flex-1"
+                        onPress={() => setOpen(false)}
+                        style={isWeb ? ({ cursor: "default" } as any) : undefined}
                     />
                     {dropdownContent}
-                </>
-            )}
-
-            {open && !isWeb && (
-                <Modal transparent animationType="fade" visible={open} onRequestClose={() => setOpen(false)}>
-                    <Pressable className="flex-1" onPress={() => setOpen(false)}>
-                        {dropdownContent}
-                    </Pressable>
                 </Modal>
             )}
         </View>
