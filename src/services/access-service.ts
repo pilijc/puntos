@@ -57,14 +57,10 @@ function toRoleId(value: number | string | null | undefined): number | null {
 }
 
 export async function getRoleTypeForUser(userId: string): Promise<string | null> {
-  console.log("Querying roles for user:", userId);
-  
   const { data: userRoles, error: userRolesError } = await supabase
     .from("user_roles")
     .select("role_id")
     .eq("user_id", userId);
-
-  console.log("Found user_roles data:", userRoles);
 
   const roleIds = Array.from(
     new Set(
@@ -74,10 +70,7 @@ export async function getRoleTypeForUser(userId: string): Promise<string | null>
     )
   );
 
-  console.log("Extracted role IDs:", roleIds);
-
   if (roleIds.length === 0) {
-    console.log("No role IDs found for user:", userId);
     return null;
   }
 
@@ -130,10 +123,7 @@ export async function getHomeRouteForUserId(userId: string): Promise<AppHomeRout
   try {
     const roleType = await getRoleTypeForUser(userId);
     
-    console.log(`Determined role type for user ${userId}: ${roleType}`);
-    
     if (!roleType) {
-      console.log(`No role found for user ${userId}, assigning default user role`);
       const { error: insertError } = await supabase
         .from("user_roles")
         .insert({ user_id: userId, role_id: 4, store_id: null });

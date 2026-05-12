@@ -73,8 +73,6 @@ export default function SubscriptionScreen() {
 	} = useStoreManagerSubscriptionStore();
 	usePaymentReturnHandler();
 
-	console.log('manager row', managerRow);
-
 	useEffect(() => {
 		let cancelled = false;
 		const { reset, setLoading, setLoadingInvoices, hydrate } =
@@ -332,7 +330,6 @@ export default function SubscriptionScreen() {
 
 		try {
 			s.setStartingCheckout(true);
-			console.log('Starting checkout for:', { ownerId: s.ownerId, selectedSlug, amount, name });
 			const checkoutUrl = await useSubscriptionCheckout(s.ownerId, selectedSlug, amount, name);
 			if (checkoutUrl) {
 				await Linking.openURL(checkoutUrl);

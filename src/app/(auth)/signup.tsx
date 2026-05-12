@@ -66,7 +66,6 @@ export default function SignUp() {
     const newErrors = { ...errors };
 
     if (currentStep === 1) {
-      console.log("Validating name:", name);
       if (!name.trim()) {
         newErrors.name = translate("onboarding.signup.error.nameRequired");
         setErrors(newErrors);
@@ -77,41 +76,32 @@ export default function SignUp() {
         setErrors(newErrors);
         return false;
       }
-      console.log("Name validation passed");
       newErrors.name = '';
     }
 
     if (currentStep === 2) {
-      console.log("Validating email step, email:", email);
       const trimmedEmail = email.trim();
-      console.log("Testing email format:", trimmedEmail, "against regex");
 
       if (!trimmedEmail) {
-        console.log("Email validation failed: empty");
         newErrors.email = translate("onboarding.signup.error.emailRequired");
         setErrors(newErrors);
         return false;
       }
 
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
-        console.log("Email validation failed: invalid format");
         newErrors.email = translate("onboarding.signup.error.emailInvalid");
         setErrors(newErrors);
         return false;
       }
 
-      console.log("Checking if email is taken:", trimmedEmail);
       const emailTaken = await isEmailTaken(trimmedEmail);
-      console.log("Email taken check result:", emailTaken);
 
       if (emailTaken) {
-        console.log("Email validation failed: already exists");
         newErrors.email = translate("onboarding.signup.error.emailRegistered");
         setErrors(newErrors);
         return false;
       }
 
-      console.log("Email validation passed");
       newErrors.email = '';
     }
 
@@ -151,7 +141,6 @@ export default function SignUp() {
 
     if (currentStep === 4) {
       if (!acceptedTerms) {
-        console.log("Terms validation failed: not accepted");
         newErrors.terms = translate("onboarding.signup.error.termsRequired");
         setErrors(newErrors);
         return false;
@@ -199,7 +188,6 @@ export default function SignUp() {
 
   const handleSignup = async () => {
     if (isSigningUp.current) {
-      console.log("Signup already in progress (ref check), ignoring call");
       return;
     }
 
@@ -252,10 +240,7 @@ export default function SignUp() {
       }
       setLoading(false);
       isSigningUp.current = false;
-      console.log("Loading set to false after error");
     } finally {
-
-      console.log("Signup process completed");
     }
   };
 
@@ -319,9 +304,7 @@ export default function SignUp() {
       }
       setLoading(false);
       isSigningUp.current = false;
-      console.log("Store manager loading set to false after error");
     } finally {
-      console.log("Store manager signup process completed");
     }
   };
 

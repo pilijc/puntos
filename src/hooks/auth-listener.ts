@@ -25,10 +25,8 @@ export function useAuthListener() {
         const isOnSignupFlow = pathname?.includes('/signup');
         
         if (event === 'PASSWORD_RECOVERY' && session) {
-          console.log("Password recovery session started for:", session.user.email);
           router.replace("/reset-password");
         } else if (event === 'SIGNED_OUT') {
-          console.log("User logged out");
           const intentional = consumeIntentionalSignOut();
           try {
             const { forceDeactivateCurrentDeviceService } = require("@/services/store-manager/device-session-service");
@@ -57,7 +55,6 @@ export function useAuthListener() {
           })();
         } else if (event === 'SIGNED_IN' && session && !isOnSignupFlow) {
           useAuthStore.getState().setSessionExpiredNotice(false);
-          console.log("User logged in:", session.user.email);
           void (async () => {
             try {
               const sessionToken = await AsyncStorage.getItem('sessionToken');
@@ -67,7 +64,6 @@ export function useAuthListener() {
 
               const tokenToUse = sessionToken ?? session.access_token ?? null;
               if (!tokenToUse) {
-                console.log('No session token found in AsyncStorage or session; staying on auth screens.');
                 return;
               }
 

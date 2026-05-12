@@ -252,7 +252,6 @@ export async function watchLocation(
       : await ensureLocationPermission();
 
     if (!permissionStatus.granted) {
-      console.log('[LocationService] Location permission not granted for watching');
       return null;
     }
 
