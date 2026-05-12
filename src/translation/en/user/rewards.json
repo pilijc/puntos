@@ -165,5 +165,24 @@
     "title": "Transactions",
     "seeAll": "See All",
     "empty": "No transactions yet"
+  },
+  "redemption": {
+    "title": "Scan to redeem",
+    "titleRedeemed": "Reward Redeemed",
+    "generating": "Generating...",
+    "expired": "EXPIRED",
+    "codeExpired": "Code Expired",
+    "redeemed": "Redeemed!",
+    "timeLeft": "Time left to redeem",
+    "howToRedeem": "How to redeem",
+    "inRestaurant": "In the restaurant",
+    "instructions": "Scan or show code to staff",
+    "cancelConfirmTitle": "Cancel Redemption?",
+    "cancelConfirmMessage": "Are you sure you want to cancel this redemption? Points will be returned to your balance.",
+    "cancelKeep": "Keep it",
+    "cancelConfirm": "Cancel",
+    "cancelledTitle": "Cancelled",
+    "cancelledMessage": "Your code is cancelled.",
+    "gotIt": "Got it"
   }
 }

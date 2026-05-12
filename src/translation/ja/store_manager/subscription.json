@@ -12,7 +12,8 @@
     "upgradeToPro": "Proにアップグレード",
     "cancelSubscription": "サブスクリプションを解約",
     "fallbackPlanName": {
-      "pro": "Proプラン"
+      "basic": "ベーシックプラン",
+      "pro": "プロプラン"
     },
     "period": {
       "accessUntil": "利用期限",
@@ -84,5 +85,15 @@
     "title": "お支払いがキャンセルされました",
     "body": "ご心配なく — いつでも再度アップグレードをお試しいただけます。",
     "back": "サブスクリプションに戻る"
+  },
+  "registration": {
+    "title": "店舗登録",
+    "description": "登録料を支払って店舗を有効化してください。",
+    "amountToPay": "お支払い金額",
+    "payWithGcash": "GCASHで支払う",
+    "cancel": "キャンセル",
+    "errorTitle": "お支払いエラー",
+    "errorUnable": "お支払いを開始できませんでした。もう一度お試しください。",
+    "errorGeneric": "問題が発生しました。もう一度お試しください。"
   }
 }

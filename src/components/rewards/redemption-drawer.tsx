@@ -17,6 +17,7 @@ import QRCode from "react-native-qrcode-svg";
 import { Modal } from "@/components/modal";
 import { Button } from "@/components/button";
 import { getQRCodeData } from "@/services/user/rewards-redemption";
+import { useTranslation } from "react-i18next";
 
 const isWeb = Platform.OS === "web";
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
@@ -50,6 +51,7 @@ export function RedemptionDrawer({
   onClose,
   onCancel,
 }: RedemptionDrawerProps) {
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
@@ -214,7 +216,7 @@ export function RedemptionDrawer({
               <View className="bg-primary pb-4">
                 <View className="mb-4 items-center py-3 relative px-4 bg-[#FFFFFF] dark:bg-darkBackgroundCard border-b border-neutral-200">
                   <Text className="text-lg text-neutral-900 dark:text-white font-poppins-semibold">
-                    {status === "redeemed" ? "Reward Redeemed" : "Scan to redeem"}
+                    {status === "redeemed" ? t("user.rewards.redemption.titleRedeemed") : t("user.rewards.redemption.title")}
                   </Text>
 
                   <TouchableOpacity
@@ -240,13 +242,13 @@ export function RedemptionDrawer({
                         {status === "loading" ? (
                           <View className="w-[140px] h-[140px] items-center justify-center">
                             <Text className="text-neutral-400 text-xs font-poppins-medium">
-                              Generating...
+                              {t("user.rewards.redemption.generating")}
                             </Text>
                           </View>
                         ): status === "expired" || timeRemaining === 0 ? (
                           <View className="w-[140px] h-[140px] items-center justify-center bg-gray-100 dark:bg-gray-800 rounded-lg">
                             <Text className="text-red-500 text-sm font-poppins-bold text-center px-4"> 
-                            Code Expired
+                              {t("user.rewards.redemption.codeExpired")}
                             </Text>
                           </View>
                         ) : (
@@ -255,7 +257,7 @@ export function RedemptionDrawer({
                       </View>
 
                       <Text className="text-2xl font-poppins-bold tracking-[0.15em] text-neutral-900 dark:text-white">
-                        {status === "loading" ? "..." : status === "expired" || timeRemaining === 0 ? "EXPIRED" : formattedCode}
+                        {status === "loading" ? "..." : status === "expired" || timeRemaining === 0 ? t("user.rewards.redemption.expired") : formattedCode}
                       </Text>
 
                       {/* Expired overlay */}
@@ -266,11 +268,11 @@ export function RedemptionDrawer({
                       )}
                     </View>
 
-                    <Text className="text-[11px] text-neutral-500 dark:text-neutral-400 font-poppins mt-1">Time left to redeem</Text>
+                    <Text className="text-[11px] text-neutral-500 dark:text-neutral-400 font-poppins mt-1">{t("user.rewards.redemption.timeLeft")}</Text>
 
                     <Text className={`text-2xl font-poppins-bold mt-1 ${isExpiringSoon ? "text-red-500" : "text-neutral-900 dark:text-white"}`}>
                       {status === "redeemed"
-                        ? "Redeemed!"
+                        ? t("user.rewards.redemption.redeemed")
                         : status === "loading"
                           ? "--:--"
                           : status === "expired" || timeRemaining === 0
@@ -314,7 +316,7 @@ export function RedemptionDrawer({
               <View className="flex-1  px-4 pb-6 bg-backgroundMuted dark:bg-darkBackgroundMuted">
                 <View className="mt-4 min-h-[450px] bg-[rgba(255,102,0,0.07)] p-4 rounded-2xl justify-start">
                   <Text className="text-[10px] text-neutral-400 font-poppins-bold mb-4 uppercase tracking-[2px]">
-                    How to redeem
+                    {t("user.rewards.redemption.howToRedeem")}
                   </Text>
 
                   <View className="flex-row items-center">
@@ -323,10 +325,10 @@ export function RedemptionDrawer({
                     </View>
                     <View className="flex-1">
                       <Text className="text-sm font-poppins-bold text-neutral-900">
-                        In the restaurant
+                        {t("user.rewards.redemption.inRestaurant")}
                       </Text>
                       <Text className="text-xs text-neutral-500 font-poppins mt-0.5">
-                        Scan or show code to staff
+                        {t("user.rewards.redemption.instructions")}
                       </Text>
                     </View>
                   </View>
@@ -344,21 +346,21 @@ export function RedemptionDrawer({
         <Modal
           visible={showConfirmModal}
           onClose={handleKeepIt}
-          title="Cancel Redemption?"
-          message="Are you sure you want to cancel this redemption? Points will be returned to your balance."
+          title={t("user.rewards.redemption.cancelConfirmTitle")}
+          message={t("user.rewards.redemption.cancelConfirmMessage")}
           buttons={[
-            { label: "Keep it", onPress: handleKeepIt, variant: "secondary" },
-            { label: "Cancel", onPress: handleConfirmCancel, variant: "danger" },
+            { label: t("user.rewards.redemption.cancelKeep"), onPress: handleKeepIt, variant: "secondary" },
+            { label: t("user.rewards.redemption.cancelConfirm"), onPress: handleConfirmCancel, variant: "danger" },
           ]}
         />
 
         <Modal
           visible={showSuccessModal}
           onClose={handleSuccessClose}
-          title="Cancelled"
-          message="Your code is cancelled."
+          title={t("user.rewards.redemption.cancelledTitle")}
+          message={t("user.rewards.redemption.cancelledMessage")}
           buttons={[
-            { label: "Got it", onPress: handleSuccessClose, variant: "primary" },
+            { label: t("user.rewards.redemption.gotIt"), onPress: handleSuccessClose, variant: "primary" },
           ]}
         />
       </View>

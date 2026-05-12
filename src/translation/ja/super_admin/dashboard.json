@@ -34,5 +34,19 @@
   "hideDetails": "詳細を隠す",
   "noRecords": "この期間のデータがありません。",
   "loadMore": "もっと見る",
-  "reset": "リセット"
+  "reset": "リセット",
+  "subscription": {
+    "distribution": "サブスクリプション分布",
+    "payers": "サブスクリプション支払者",
+    "proPlan": "プロプラン",
+    "basicPlan": "ベーシック",
+    "loading": "分布を読み込み中...",
+    "noData": "サブスクリプションデータがまだありません。",
+    "noPayers": "この期間の支払者はいません",
+    "records": "件",
+    "activeStore": "アクティブ店舗",
+    "activeStores": "アクティブ店舗",
+    "showMore": "もっと見る",
+    "unknownManager": "不明なマネージャー"
+  }
 }

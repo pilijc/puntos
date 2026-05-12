@@ -2,6 +2,7 @@
   "title": "Sign Up",
   "titleManager": "Sign Up as Store Manager",
   "button": "Sign Up",
+  "managerButton": "Sign up as Store Manager",
   "divider": "or continue with",
   "google": "Continue with Google",
   "creating": "Creating Account...",

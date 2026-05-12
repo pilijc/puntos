@@ -1,0 +1,18 @@
+{
+  "inbox": {
+    "title": "サポート",
+    "subtitle": "管理者とチャットする店舗を選択してください",
+    "noStores": "店舗が見つかりません",
+    "loading": "読み込み中...",
+    "tapToStart": "タップして会話を開始",
+    "yesterday": "昨日"
+  },
+  "screen": {
+    "loading": "サポートチャットを読み込み中...",
+    "storeNotFound": "店舗が見つかりません。",
+    "startConversation": "メッセージを送信してサポートとの会話を開始してください。",
+    "contactSupport": "サポートに連絡",
+    "superAdminSupport": "管理者サポート",
+    "messagePlaceholder": "サポートにメッセージを送信..."
+  }
+}

@@ -18,6 +18,7 @@ import en_settings_notificationsPrivacy from './en/settings/notificationsPrivacy
 import en_settings_profile from './en/settings/profile.json';
 import en_settings_index from './en/settings/index.json';
 import en_store_manager_createStore from './en/store_manager/createStore.json';
+import en_store_manager_chat from './en/store_manager/chat.json';
 import en_store_manager_dashboard from './en/store_manager/dashboard.json';
 import en_store_manager_detail from './en/store_manager/detail.json';
 import en_store_manager_detailEdit from './en/store_manager/detailEdit.json';
@@ -63,6 +64,7 @@ import ja_settings_notificationsPrivacy from './ja/settings/notificationsPrivacy
 import ja_settings_profile from './ja/settings/profile.json';
 import ja_settings_index from './ja/settings/index.json';
 import ja_store_manager_createStore from './ja/store_manager/createStore.json';
+import ja_store_manager_chat from './ja/store_manager/chat.json';
 import ja_store_manager_dashboard from './ja/store_manager/dashboard.json';
 import ja_store_manager_detail from './ja/store_manager/detail.json';
 import ja_store_manager_detailEdit from './ja/store_manager/detailEdit.json';
@@ -118,6 +120,7 @@ const resources = {
       },
       store_manager: {
         createStore: en_store_manager_createStore,
+        chat: en_store_manager_chat,
         dashboard: en_store_manager_dashboard,
         detail: en_store_manager_detail,
         detailEdit: en_store_manager_detailEdit,
@@ -141,6 +144,7 @@ const resources = {
       },
       storeManager: {
         createStore: en_store_manager_createStore,
+        chat: en_store_manager_chat,
         dashboard: en_store_manager_dashboard,
         detail: en_store_manager_detail,
         detailEdit: en_store_manager_detailEdit,
@@ -208,6 +212,7 @@ const resources = {
       },
       store_manager: {
         createStore: ja_store_manager_createStore,
+        chat: ja_store_manager_chat,
         dashboard: ja_store_manager_dashboard,
         detail: ja_store_manager_detail,
         detailEdit: ja_store_manager_detailEdit,
@@ -232,6 +237,7 @@ const resources = {
       // Back-compat alias: app screens use `storeManager.*` keys.
       storeManager: {
         createStore: ja_store_manager_createStore,
+        chat: ja_store_manager_chat,
         dashboard: ja_store_manager_dashboard,
         detail: ja_store_manager_detail,
         detailEdit: ja_store_manager_detailEdit,

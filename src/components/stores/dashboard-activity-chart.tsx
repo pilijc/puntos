@@ -22,11 +22,11 @@ const isWeb = Platform.OS === "web";
 
 const MOBILE_HEIGHT = 100;
 
-const metricOptions: { value: ActivityMetricType, label: string }[] = [
-    { value: 'scans', label: 'Total Scans' },
-    { value: 'unique_visitors', label: 'Unique Visitors' },
-    { value: 'redemptions', label: 'Redemptions' },
-    { value: 'new_members', label: 'New Members' },
+const metricOptions: { value: ActivityMetricType }[] = [
+    { value: 'scans' },
+    { value: 'unique_visitors' },
+    { value: 'redemptions' },
+    { value: 'new_members' },
 ];
 
 export const DashboardActivityChart: React.FC<ExtendedDashboardActivityChartProps> = ({
@@ -97,7 +97,7 @@ export const DashboardActivityChart: React.FC<ExtendedDashboardActivityChartProp
     const peakIdx = currentDataArray.indexOf(Math.max(...currentDataArray, 0));
     const peakLabel = labels?.[peakIdx] ?? "—";
 
-    const activeOption = metricOptions.find(opt => opt.value === selectedMetric);
+    const activeOption = selectedMetric;
 
     return (
         <View
@@ -122,7 +122,7 @@ export const DashboardActivityChart: React.FC<ExtendedDashboardActivityChartProp
                 {!isCompactWeb && (
                     <View className="relative z-50 min-w-0" style={{ zIndex: 110, maxWidth: "100%" }}>
                         <Button
-                            label={translate(`store_manager.dashboard.activity.metric.${selectedMetric}`, activeOption?.label)}
+                            label={translate(`store_manager.dashboard.activity.metric.${selectedMetric}`)}
                             onPress={() => setDropdownOpen(!dropdownOpen)}
                             variant="secondary"
                             rightIcon={dropdownOpen ? "ChevronUp" : "ChevronDown"}
@@ -162,7 +162,7 @@ export const DashboardActivityChart: React.FC<ExtendedDashboardActivityChartProp
                                                         className={`text-[14px] font-poppins flex-1 mr-2 ${isActive ? 'text-[#FF6600] font-poppins-bold' : 'text-slate-600 dark:text-darkTextSecondary'}`}
                                                         numberOfLines={1}
                                                     >
-                                                        {translate(`store_manager.dashboard.activity.metric.${opt.value}`, opt.label)}
+                                                        {translate(`store_manager.dashboard.activity.metric.${opt.value}`)}
                                                     </Text>
                                                     {isActive && (
                                                         <View>
@@ -248,7 +248,7 @@ export const DashboardActivityChart: React.FC<ExtendedDashboardActivityChartProp
                     {/* Always remains: Total Stat (Fixed 1/3 width) */}
                     <View className="flex-1 items-center">
                         <Text className="text-[11px] font-poppins text-textSecondary dark:text-darkTextSecondary uppercase tracking-[0.5px] text-center" numberOfLines={1}>
-                            {translate(`store_manager.dashboard.activity.metric.${selectedMetric}`, activeOption?.label || 'Scans')}
+                            {translate(`store_manager.dashboard.activity.metric.${selectedMetric}`)}
                         </Text>
                         <Text className="text-2xl font-poppins-bold text-textPrimary dark:text-darkTextPrimary mt-1">
                             {totalStat}
