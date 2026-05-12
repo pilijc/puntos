@@ -25,7 +25,7 @@ interface RewardsDataState {
   setUpcomingStreakProgramMap: (map: Map<number, UpcomingStreakProgram>) => void;
   
   fetchRewardsData: (nearbyStoreIds: number[], displayStampStoreIds: number[]) => Promise<void>;
-  fetchBackendRewards: (options: { storeId?: string; sortBy?: RewardSortOrder; pointsOrder?: PointsOrder }) => Promise<void>;
+  fetchBackendRewards: (options: { storeId?: string; sortBy?: RewardSortOrder; pointsOrder?: PointsOrder; limit?: number }) => Promise<void>;
   
   // Selectors/Utilities
   getEnrichedStores: (allStores: any[], location: UserLocation | null) => EnrichedStore[];

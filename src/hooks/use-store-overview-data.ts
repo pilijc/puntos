@@ -12,6 +12,7 @@ import { useStreaks } from "@/hooks/use-streaks";
 import { getStores } from "@/services/store-service";
 import { StampProgress } from "@/services/stamp-service";
 import { useRewardsDataStore } from "@/hooks/use-rewards-data";
+import { useUserStoreActivity } from "@/hooks/use-user-store-activity";
 import { useRewardsUiStore } from "@/store/user/rewards-ui-store";
 import { useStoreStore } from "@/store/user/store-store";
 import { getHasStampedToday, sortRewards } from "@/utils/store-helpers";
@@ -73,10 +74,12 @@ export function useStoreOverviewData(storeId?: string) {
   const { stampRewards } = useStampRewards();
   const { streaks: userStreaks, refetch: refetchStreaks } = useStreaks();
 
-  // State for dynamic rewards
-  const [storeRewards, setStoreRewards] = useState<RewardItem[]>([]);
-  const [userPoints, setUserPoints] = useState<number>(0);
-  const [isLoadingRewards, setIsLoadingRewards] = useState(false);
+  const { pointsMap, rewardsMap, isLoadingRewards: isRewardsLoadingMap, fetchRewardsActivity } = useUserStoreActivity();
+  const userPoints = storeId ? (pointsMap[storeId] || 0) : 0;
+  
+  const cacheKey = storeId ? `${storeId}-${rewardSort}-${rewardPointsOrder}` : "";
+  const rawRewards = cacheKey ? (rewardsMap[cacheKey] || []) : [];
+  const isLoadingRewards = cacheKey ? !!isRewardsLoadingMap[cacheKey] : false;
 
   const handleCarouselInteraction = useCarouselAutoplayPause(setIsAutoPlayEnabled);
   const swipeIndicatorOpacity = useSharedValue(0);
@@ -150,44 +153,18 @@ export function useStoreOverviewData(storeId?: string) {
     });
   }, [location, stamps]);
 
-  // Fetch rewards and user points
+  // Fetch rewards cache
   useEffect(() => {
-    async function fetchStoreRewards() {
-      if (!storeId) return;
-
-      setIsLoadingRewards(true);
-      try {
-        // Fetch rewards for this store
-        const rewards = await getRewards({
-          storeId,
-          sortBy: rewardSort,
-          pointsOrder: rewardPointsOrder,
-          limit: 3,
-        });
-
-        // Fetch user points for this store
-        let points = 0;
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user?.id) {
-          points = await getUserAvailablePoints(user.id, storeId);
-          setUserPoints(points);
-        }
-
-        // Map to RewardItem with status
-        const mappedRewards = mapBackendRewardsToRewardItems(rewards, points);
-        setStoreRewards(mappedRewards);
-      } catch (error) {
-        console.error("Failed to fetch store rewards:", error);
-        setStoreRewards([]);
-      } finally {
-        setIsLoadingRewards(false);
-      }
+    if (storeId) {
+      fetchRewardsActivity(storeId, rewardSort, rewardPointsOrder);
     }
+  }, [storeId, rewardSort, rewardPointsOrder, fetchRewardsActivity]);
 
-    fetchStoreRewards();
-  }, [storeId, rewardSort, rewardPointsOrder]);
-
-  const sortedRewards = useMemo(() => storeRewards, [storeRewards]);
+  const sortedRewards = useMemo(() => {
+    // Randomize the fetched rewards and select up to 3
+    const shuffled = [...rawRewards].sort(() => 0.5 - Math.random()).slice(0, 3);
+    return mapBackendRewardsToRewardItems(shuffled, userPoints);
+  }, [rawRewards, userPoints]);
 
   const isStoreNearby = useCallback((storeLat?: number | null, storeLon?: number | null) => {
     if (!location || storeLat == null || storeLon == null) return false;
@@ -195,7 +172,7 @@ export function useStoreOverviewData(storeId?: string) {
     const from = point([location.longitude, location.latitude]);
     const to = point([storeLon, storeLat]);
     const distKm = distance(from, to, { units: "kilometers" });
-    return distKm <= 0.03;
+    return distKm <= 0.1; // 100m — generous enough for GPS drift, tight enough for on-premises
   }, [location]);
 
   const displayStamps = useMemo(() => {

@@ -4,6 +4,7 @@ import { useRewardsDataStore } from "@/hooks/use-rewards-data";
 import { useStamps } from "@/hooks/use-stamps";
 import { useStampRewards } from "@/hooks/use-stamp-rewards";
 import { useStreaks } from "@/hooks/use-streaks";
+import { useUserStoreActivity } from "@/hooks/use-user-store-activity";
 
 export function useRewardsActions() {
   const {
@@ -37,13 +38,9 @@ export function useRewardsActions() {
         promises.push(fetchRewardsData(nearbyStoreIds, stampIds));
       }
 
-      // If we are on a store details page, also refresh backend rewards
       if (storeId) {
-        promises.push(fetchBackendRewards({
-          storeId,
-          sortBy: rewardSort,
-          pointsOrder: rewardPointsOrder,
-        }));
+        promises.push(useUserStoreActivity.getState().fetchRewardsActivity(storeId, rewardSort, rewardPointsOrder));
+        promises.push(useUserStoreActivity.getState().refetchActivity(storeId));
       }
 
       await Promise.all(promises);

@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { View, Text, AnimatedView, TouchableOpacity, Image } from "@/tw";
 import { Check, ExternalLink, Flame, Store } from "lucide-react-native";
-import Animated, { Layout, useAnimatedStyle, useSharedValue, withSpring, withTiming, withRepeat, withSequence } from "react-native-reanimated";
+import Animated, { Easing, Layout, useAnimatedStyle, useSharedValue, withSpring, withTiming, withRepeat, withSequence } from "react-native-reanimated";
 import LottieView from "lottie-react-native";
 import { storeLogos } from "@/data/rewards";
 import { useTranslation } from "react-i18next";
@@ -29,6 +29,8 @@ export default function UserStreakCard({
   const [showStreakModal, setShowStreakModal] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [hasEarnedToday, setHasEarnedToday] = useState(false);
+  // Cached on mount — never await getUser() inside the press handler (adds ~300ms delay)
+  const [cachedUserId, setCachedUserId] = useState<string | null>(null);
   // ⚠️  WARNING — AI / DEVELOPER: DO NOT REMOVE OR SIMPLIFY THIS STATE ⚠️
   // earnedWeekDates holds real per-day earned dates fetched from the DB.
   // It is the ONLY correct source of truth for the weekly circle states.
@@ -84,12 +86,18 @@ export default function UserStreakCard({
   // Called on mount and after any successful streak recording so that the
   // weekly circles always reflect actual visit history, not just a consecutive window.
   const fetchEarnedDates = useCallback(async () => {
+    // ⚠️ Guard: skip if store_streak_id is null.
+    // On initial load, the streak entry may be a virtual (0-progress) record built before
+    // activeStreakProgramMap has finished loading. At that point store_streak_id = null.
+    // Querying without a streak ID would return dates from ALL past programs for this store,
+    // causing incorrect circles to flash briefly. We wait for the real program ID to arrive
+    // (deps change → useCallback recreates → useEffect re-fires with the correct ID).
+    if (!streak.store_streak_id) return;
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user?.id) return;
       // Scope to the current program so old program events don't contaminate circles.
-      const currentStreakId = streak.store_streak_id ?? undefined;
-      const dates = await getStreakEarnedDates(user.id, Number(streak.store_id), currentStreakId);
+      const dates = await getStreakEarnedDates(user.id, Number(streak.store_id), streak.store_streak_id);
       setEarnedWeekDates(dates);
     } catch {
       // silent: the fallback streak_days window (below) covers this case
@@ -99,6 +107,13 @@ export default function UserStreakCard({
   useEffect(() => {
     fetchEarnedDates();
   }, [fetchEarnedDates]);
+
+  // Cache the user ID once on mount so the press handler has it synchronously.
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user?.id) setCachedUserId(user.id);
+    });
+  }, []);
 
   // Real data from backend
   const streakProgram = streak.store_streaks as any;
@@ -308,9 +323,11 @@ export default function UserStreakCard({
   });
 
   const pressScale = useSharedValue(1);
+  const pressOpacity = useSharedValue(1);
   const modalOpacity = useSharedValue(0);
   const pressAnimatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: pressScale.value }],
+    opacity: pressOpacity.value,
   }));
   const modalAnimatedStyle = useAnimatedStyle(() => ({
     opacity: modalOpacity.value,
@@ -325,14 +342,14 @@ export default function UserStreakCard({
     if (shouldPulseCurrentDay) {
       pulseScale.value = withRepeat(
         withSequence(
-          withTiming(1.08, { duration: 800 }),
-          withTiming(1, { duration: 800 })
+          withTiming(1.06, { duration: 900, easing: Easing.inOut(Easing.sin) }),
+          withTiming(1,    { duration: 900, easing: Easing.inOut(Easing.sin) })
         ),
         -1,
-        true
+        false
       );
     } else {
-      pulseScale.value = withTiming(1);
+      pulseScale.value = withTiming(1, { duration: 200 });
     }
   }, [pulseScale, shouldPulseCurrentDay]);
 
@@ -444,17 +461,23 @@ export default function UserStreakCard({
             return (
               <View key={`${day.label}-${index}`} className="items-center w-11">
                 {isCurrent ? (
-                  <TouchableOpacity
-                    activeOpacity={1}
-                    onPressIn={() => {
-                      pressScale.value = withSpring(0.92, { damping: 14, stiffness: 220 });
-                    }}
-                    onPressOut={() => {
-                      pressScale.value = withSpring(1, { damping: 14, stiffness: 220 });
-                    }}
+                  <Pressable
+                    disabled={isRecording}
                     onPress={async () => {
-                      // Phase 1: client-side nearby gate only.
-                      // Server-side location enforcement is deferred to Phase 2.
+                      // ── Play animation on ANY tap (quick or held) ──────────────────
+                      // withSequence guarantees the full compress→release arc plays even
+                      // on a 50ms tap. onPressIn/Out alone miss quick taps entirely.
+                      pulseScale.value = withTiming(1, { duration: 60 });
+                      pressScale.value = withSequence(
+                        withTiming(0.94, { duration: 120, easing: Easing.out(Easing.quad) }),
+                        withTiming(1,    { duration: 320, easing: Easing.out(Easing.quad) }),
+                      );
+                      pressOpacity.value = withSequence(
+                        withTiming(0.82, { duration: 120, easing: Easing.out(Easing.quad) }),
+                        withTiming(1,    { duration: 320, easing: Easing.out(Easing.quad) }),
+                      );
+
+                      // ── Guards ─────────────────────────────────────────────────────
                       if (!nearby) {
                         showModal(
                           "Not Nearby",
@@ -463,8 +486,6 @@ export default function UserStreakCard({
                         );
                         return;
                       }
-                      // If already earned today (optimistic state), show feedback.
-                      // The RPC will also block it server-side if the state is stale.
                       if (alreadyEarnedToday) {
                         showModal(
                           "Already Earned!",
@@ -482,40 +503,43 @@ export default function UserStreakCard({
                         );
                         return;
                       }
+                      if (!cachedUserId) return;
+                      if (isRecording) return;
+
+                      // ── Optimistic UI: show Lottie instantly, RPC runs in background ──
+                      setHasEarnedToday(true);
+                      setShowStreakModal(true);
+                      setIsRecording(true);
                       try {
-                        setIsRecording(true);
-                        const { data: { user } } = await supabase.auth.getUser();
-                        if (!user?.id) return;
                         const result = await recordUserStreak(
-                          user.id,
+                          cachedUserId,
                           Number(streak.store_id),
                           storeStreakId,
                           streakProgram?.fixed_points_per_day ?? 0,
                           targetCount,
                         );
                         if (result.alreadyRecorded) {
+                          setHasEarnedToday(false);
+                          setShowStreakModal(false);
                           showModal(
                             "Already Earned!",
                             "You've already earned your streak for today. Come back tomorrow!",
                             [{ label: "OK", onPress: closeModal, variant: "primary" }],
                           );
-                        } else if (result.justCompleted) {
-                          setHasEarnedToday(true);
-                          setShowStreakModal(true);
-                          onStreakRecorded?.();
-                          fetchEarnedDates(); // sync per-day dots with real DB data
-                          showModal(
-                            "🎉 Streak Complete!",
-                            `You've completed the full ${targetCount}-day streak! Your reward is on its way.`,
-                            [{ label: "Awesome!", onPress: closeModal, variant: "primary" }],
-                          );
                         } else {
-                          setHasEarnedToday(true);
-                          setShowStreakModal(true);
+                          if (result.justCompleted) {
+                            showModal(
+                              "🎉 Streak Complete!",
+                              `You've completed the full ${targetCount}-day streak! Your reward is on its way.`,
+                              [{ label: "Awesome!", onPress: closeModal, variant: "primary" }],
+                            );
+                          }
                           onStreakRecorded?.();
-                          fetchEarnedDates(); // sync per-day dots with real DB data
+                          fetchEarnedDates();
                         }
                       } catch (e) {
+                        setHasEarnedToday(false);
+                        setShowStreakModal(false);
                         console.error("Failed to record streak:", e);
                         if (e instanceof Error && e.message === STREAK_NEW_ENROLLMENT_BLOCKED) {
                           showModal(
@@ -535,15 +559,18 @@ export default function UserStreakCard({
                       }
                     }}
                   >
-                    <Animated.View style={[pressAnimatedStyle, shouldPulseCurrentDay && pulseAnimatedStyle]}>
-                      <View
-                        className="w-10 h-10 rounded-full items-center justify-center bg-white dark:bg-darkBackgroundMuted"
-                        style={{ borderWidth: 1.5, borderColor: "#FF6600", borderStyle: "dashed" }}
-                      >
-                        <Text className="text-primary font-poppins-semibold text-[10px]">{day.label}</Text>
-                      </View>
+                    {/* Pulse wraps press so both transforms stay on separate layers */}
+                    <Animated.View style={shouldPulseCurrentDay ? pulseAnimatedStyle : undefined}>
+                      <Animated.View style={pressAnimatedStyle}>
+                        <View
+                          className="w-10 h-10 rounded-full items-center justify-center bg-white dark:bg-darkBackgroundMuted"
+                          style={{ borderWidth: 1.5, borderColor: "#FF6600", borderStyle: "dashed" }}
+                        >
+                          <Text className="text-primary font-poppins-semibold text-[10px]">{day.label}</Text>
+                        </View>
+                      </Animated.View>
                     </Animated.View>
-                  </TouchableOpacity>
+                  </Pressable>
                 ) : (
                   // ─── Circle style per state ────────────────────────────────────────────────
                   // ⚠️  WARNING — AI / DEVELOPER: DO NOT UNIFY THESE STYLES ⚠️

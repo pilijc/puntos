@@ -24,6 +24,7 @@ import { storeLogos } from "@/data/rewards";
 import { useRewardsUiStore } from "@/store/user/rewards-ui-store";
 import { useRewardsDataStore } from "@/hooks/use-rewards-data";
 import { useStoreOverviewData } from "@/hooks/use-store-overview-data";
+import { useUserStoreActivity } from "@/hooks/use-user-store-activity";
 import { ProgramSkeleton } from "@/components/skeleton/user/program-skeleton";
 import StoreScreenContainer from "@/components/ui/store-screen-container";
 import { MuteStoreButton } from "@/components/users/stores/mute-store-button";
@@ -61,7 +62,6 @@ export default function StoreOverviewDetail() {
     isStamping,
   } = useRewardsUiStore();
 
-  const { fetchRewardsData } = useRewardsDataStore();
 
   const router = useRouter();
 
@@ -113,46 +113,63 @@ export default function StoreOverviewDetail() {
   const [isRefreshingLocal, setIsRefreshingLocal] = useState(false);
 
   // ── Store-specific transaction history ──
-  const [storeTransactions, setStoreTransactions] = useState<any[]>([]);
-  const [loadingTx, setLoadingTx] = useState(false);
+  const { transactionsMap, isLoading, fetchActivity } = useUserStoreActivity();
+  const storeTransactions = storeId ? (transactionsMap[storeId] || []) : [];
+  const loadingTx = storeId ? !!isLoading[storeId] : false;
 
   useEffect(() => {
-    if (!storeId || storesWithLocation.length === 0) return;
-    (async () => {
-      try {
-        setLoadingTx(true);
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
-        const all = await getUserTransactionHistory(user.id);
-        const currentStore = storesWithLocation.find(s => s.id.toString() === storeId);
-        const filtered = currentStore
-          ? all.filter((tx: any) => tx.title === currentStore.name)
-          : all;
-        setStoreTransactions(filtered.slice(0, 3));
-      } catch {
-        // silent
-      } finally {
-        setLoadingTx(false);
-      }
-    })();
-  }, [storeId, storesWithLocation]);
+    if (storeId) {
+      fetchActivity(storeId);
+    }
+  }, [storeId, fetchActivity]);
 
   const onRefreshLocal = useCallback(async () => {
     setIsRefreshingLocal(true);
-
-    const promises: Promise<any>[] = [handleRefresh(storeId)];
-    if (refetchStreaks) promises.push(refetchStreaks());
-
-    if (storeId) {
-      const numericStoreId = Number(storeId);
-      if (!isNaN(numericStoreId)) {
-        promises.push(fetchRewardsData([numericStoreId], [numericStoreId]));
-      }
+    try {
+      // ⚠️ IMPORTANT: Pass numericStoreId as BOTH storeId AND nearbyStoreIds to handleRefresh.
+      //
+      // WHY: handleRefresh only calls fetchRewardsData (6 Supabase queries) when
+      // nearbyStoreIds is provided. Without it, onRefreshLocal had to call fetchRewardsData
+      // separately — creating ~8 duplicate concurrent queries on top of handleRefresh's own
+      // refetchStamps + refetchStampRewards + refetchStreaks + fetchRewardsActivity + fetchActivity.
+      // That's 15+ concurrent Supabase queries, which saturates the connection pool
+      // and causes individual queries to queue for >15s, triggering the timeout.
+      //
+      // By passing nearbyStoreIds here, handleRefresh owns all the fetching.
+      // onRefreshLocal awaits ONE promise (handleRefresh), which internally fans out
+      // 8 queries via a single Promise.all — well within the connection limit.
+      //
+      // ⚠️ DO NOT re-add a separate refetchStreaks() call here — already inside handleRefresh.
+      // ⚠️ DO NOT re-add a separate fetchRewardsData() call here — already inside handleRefresh
+      //     when nearbyStoreIds is provided.
+      const numericStoreId = storeId ? Number(storeId) : undefined;
+      const nearbyIds = numericStoreId && !isNaN(numericStoreId) ? [numericStoreId] : [];
+      await Promise.race([
+        handleRefresh(storeId, nearbyIds),
+        // ⚠️ IMPORTANT: Promise.race with timeout — DO NOT revert to bare await handleRefresh().
+        //
+        // WHY: try/finally only catches REJECTIONS, not HANGS.
+        // If handleRefresh stalls indefinitely (network pause, Supabase cold start,
+        // app backgrounded mid-refresh), the try block never completes and
+        // setIsRefreshingLocal(false) is never called — spinner stuck forever.
+        // Promise.race guarantees cleanup within 30s regardless.
+        //
+        // 30s timeout: accounts for Supabase cold start (~10-15s on free tier)
+        // and slow mobile connections. Log as warn — this is a network condition,
+        // not a code bug.
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error("[StoreDetail] Refresh timed out after 30s")), 30_000)
+        ),
+      ]);
+    } catch (error) {
+      console.warn("[StoreDetail] Refresh did not complete in time:", error);
+    } finally {
+      // ⚠️ MUST be in finally — guaranteed to run whether try completes normally,
+      // throws, or is cut short by the timeout sentinel above.
+      setIsRefreshingLocal(false);
     }
+  }, [handleRefresh, storeId]);
 
-    await Promise.all(promises);
-    setIsRefreshingLocal(false);
-  }, [handleRefresh, storeId, fetchRewardsData, refetchStreaks]);
 
   const claimScale = useSharedValue(1);
   const claimOpacity = useSharedValue(1);
@@ -366,6 +383,13 @@ export default function StoreOverviewDetail() {
                   autoPlayInterval={3500}
                   onScrollStart={handleCarouselInteraction}
                   onSnapToItem={(index) => setCarouselIndex(index)}
+                  // ⚠️ DO NOT REMOVE panGestureHandlerProps — this is the fix for
+                  // react-native-reanimated-carousel v4 stealing ALL touch events,
+                  // including taps on inner TouchableOpacity circles in UserStreakCard.
+                  // Without this, the streak day circles are completely untappable.
+                  // activeOffsetX tells the carousel to only activate its swipe handler
+                  // after ±10px of horizontal movement; plain taps fall through to children.
+                  panGestureHandlerProps={{ activeOffsetX: [-10, 10] }}
                   renderItem={({ item: streak }) => (
                     <UserStreakCard
                       key={streak.store_id}

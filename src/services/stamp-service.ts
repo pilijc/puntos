@@ -151,13 +151,35 @@ export async function getUserStamps(userId: string): Promise<StampProgress[]> {
       return [];
     }
 
-    // Filter out stamps for stores that are not active and map location
-    const validStamps = (data as unknown as any[]).filter(
-      (stamp) => stamp.stores?.status === "active" && stamp.stores?.is_active
-    ).map((stamp) => ({
-      ...stamp,
-      stores: stamp.stores ? withPostGISCoordinates(stamp.stores) : undefined
-    } as StampProgress));
+    const rows = (data as unknown as any[]);
+
+    // Step 1: filter out inactive stores
+    const activeRows = rows.filter(
+      (stamp) => stamp.stores?.status === "active" && stamp.stores?.is_active,
+    );
+
+    if (activeRows.length === 0) return [];
+
+    // Step 2: fetch store_feature for those store IDs to check stamp_enabled.
+    // There is no FK between stamp_progress and store_feature, so we query separately.
+    const storeIds = Array.from(new Set(activeRows.map((s) => Number(s.store_id))));
+    const { data: featureRows } = await supabase
+      .from("store_feature")
+      .select("store_id, stamp_enabled")
+      .in("store_id", storeIds);
+
+    // Build a map: storeId → stamp_enabled. Missing rows = allowed (same as addStamp policy).
+    const featureMap = new Map<number, boolean | null>(
+      (featureRows ?? []).map((row: any) => [Number(row.store_id), row.stamp_enabled as boolean | null]),
+    );
+
+    // Step 3: exclude stores where stamp_enabled is explicitly false
+    const validStamps = activeRows
+      .filter((stamp) => featureMap.get(Number(stamp.store_id)) !== false)
+      .map((stamp) => ({
+        ...stamp,
+        stores: stamp.stores ? withPostGISCoordinates(stamp.stores) : undefined,
+      } as StampProgress));
 
     return validStamps;
   } catch (error) {
@@ -165,6 +187,8 @@ export async function getUserStamps(userId: string): Promise<StampProgress[]> {
     return [];
   }
 }
+
+
 
 /**
  * Helper: check whether two ISO date strings fall on the same calendar day
