@@ -8,6 +8,7 @@ import QRCode from "react-native-qrcode-svg";
 import Animated, { FadeIn } from "react-native-reanimated";
 import { getQRCodeData } from "@/services/user/rewards-redemption";
 import { useRedemptionCode } from "@/hooks/useRedemptionCode";
+import { RedemptionQRSkeleton } from "@/components/skeleton/user/redemption-qr-skeleton";
 
 const REDIRECT_DELAY = {
   REDEEMED: 2000,
@@ -24,7 +25,12 @@ function formatTime(seconds: number): string {
 function LoadingState() {
   return (
     <View className="flex-1 bg-white dark:bg-darkBackground items-center justify-center">
-      <Text className="text-neutral-500 dark:text-neutral-400">Generating code...</Text>
+      <View className="items-center justify-center">
+        <RedemptionQRSkeleton />
+        <Text className="text-neutral-500 dark:text-neutral-400 text-sm font-poppins-medium mt-4">
+          Generating code...
+        </Text>
+      </View>
     </View>
   );
 }
