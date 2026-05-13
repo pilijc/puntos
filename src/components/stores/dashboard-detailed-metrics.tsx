@@ -67,11 +67,11 @@ export function DashboardDetailedMetrics({ storeId, transactions = [], loading }
                                 className={`flex-row py-3.5 items-center ${index !== displayTransactions.length - 1 ? 'border-b border-slate-50 dark:border-darkBorder/20' : ''}`}
                             >
                                 <View className="flex-1">
-                                    <Text className="text-[13px] font-poppins-bold text-textPrimary dark:text-darkTextPrimary">{dateStr}</Text>
-                                    <Text className="text-[11px] font-poppins text-textSecondary dark:text-darkTextSecondary">{timeStr}</Text>
+                                    <Text className="text-[12px] font-poppins-bold text-textPrimary dark:text-darkTextPrimary">{dateStr}</Text>
+                                    <Text className="text-[10px] font-poppins text-textSecondary dark:text-darkTextSecondary">{timeStr}</Text>
                                 </View>
                                 <View className="flex-[2] px-2">
-                                    <Text className="text-[13px] font-poppins-bold text-textPrimary dark:text-darkTextPrimary" numberOfLines={1}>
+                                    <Text className="text-[12px] font-poppins-bold text-textPrimary dark:text-darkTextPrimary" numberOfLines={1}>
                                         {tx.user?.name || translate("label.unknownUser", "Unknown User")}
                                     </Text>
                                 </View>

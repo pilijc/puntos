@@ -1,5 +1,5 @@
 import { Tabs } from "expo-router";
-import { useColorScheme, Platform, Text, View, Image,} from "react-native";
+import { useColorScheme, Platform, Text, View, Image, useWindowDimensions } from "react-native";
 import React, { useCallback, useEffect, useState } from "react";
 import { usePathname, useRouter } from "expo-router";
 import { BottomTabBar, type BottomTabBarProps } from "@react-navigation/bottom-tabs";
@@ -191,8 +191,11 @@ function WebStoreManagerSidebarTabBar({
 }: WebStoreManagerSidebarTabBarProps) {
     const { t: translate } = useTranslation();
     const pathname = usePathname();
+    const { width: windowWidth } = useWindowDimensions();
+    const isMobileWeb = windowWidth < 768;
     const chromeBg = isDark ? "#262626" : "#FFFFFF";
-    const sidebarWidth = mode === "normal" ? WEB_SIDEBAR_WIDTH : WEB_SIDEBAR_COLLAPSED_WIDTH;
+    const expandedWidth = isMobileWeb ? windowWidth : WEB_SIDEBAR_WIDTH;
+    const sidebarWidth = mode === "normal" ? expandedWidth : WEB_SIDEBAR_COLLAPSED_WIDTH;
     const activeTab = activeSidebarTabFromPath(withTrailingSlash(pathname));
     const activeBackground = isDark ? WEB_TAB_ACTIVE_BG_DARK : WEB_TAB_ACTIVE_BG_LIGHT;
     const inactiveColor = isDark ? "#737373" : "#8B8D98";
@@ -218,6 +221,7 @@ function WebStoreManagerSidebarTabBar({
                 overflow: "hidden",
             }}
         >
+            <View style={{ width: expandedWidth, flex: 1, flexDirection: "column" }}>
             {/* ── Brand header ── */}
             <View
                 style={{
@@ -233,16 +237,17 @@ function WebStoreManagerSidebarTabBar({
                     style={{ width: 36, height: 36 }}
                     resizeMode="contain"
                 />
-                {mode !== "collapsed" && (
-                    <Text style={{ 
-                        fontSize: 18, 
-                        fontFamily: "Poppins-Bold", 
-                        color: isDark ? "#FFFFFF" : TAB_ACCENT,
-                        marginStart: 12 
-                    }}>
-                        PUNTOS
-                    </Text>
-                )}
+                <Text style={{ 
+                    fontSize: 18, 
+                    fontFamily: "Poppins-Bold", 
+                    color: isDark ? "#FFFFFF" : TAB_ACCENT,
+                    marginStart: 12,
+                    opacity: mode === "collapsed" ? 0 : 1,
+                    transitionProperty: "opacity",
+                    transitionDuration: "180ms",
+                } as any}>
+                    PUNTOS
+                </Text>
             </View>
 
 
@@ -261,6 +266,11 @@ function WebStoreManagerSidebarTabBar({
                             target: route.key,
                             canPreventDefault: true,
                         });
+
+                        if (isMobileWeb && mode === "normal") {
+                            onToggleCollapse();
+                        }
+
                         if (!isActive && !(event as any).defaultPrevented) {
                             navigation.navigate(route.name as never);
                         }
@@ -302,16 +312,20 @@ function WebStoreManagerSidebarTabBar({
                             </View>
 
                             {/* Label (expanded only) */}
-                            {mode !== "collapsed" && (
-                                <Text style={{
+                            <Text
+                                numberOfLines={1}
+                                style={{
                                     fontSize: 12,
                                     fontFamily: "Poppins-Medium",
                                     marginStart: 10,
                                     color: isActive ? TAB_ACCENT : inactiveColor,
-                                }}>
-                                    {String(options.title ?? route.name)}
-                                </Text>
-                            )}
+                                    opacity: mode === "collapsed" ? 0 : 1,
+                                    transitionProperty: "opacity",
+                                    transitionDuration: "180ms",
+                                } as any}
+                            >
+                                {String(options.title ?? route.name)}
+                            </Text>
                         </PlatformPressable>
                     );
                 })}
@@ -337,20 +351,23 @@ function WebStoreManagerSidebarTabBar({
                                 <PanelLeftClose size={18} color={isDark ? "#A3A3A3" : "#6B7280"} />
                             )}
                         </View>
-                        {mode !== "collapsed" && (
-                            <Text
-                                style={{
-                                    marginStart: 12,
-                                    fontSize: 12,
-                                    fontFamily: "Poppins-Medium",
-                                    color: isDark ? "#A3A3A3" : "#6B7280",
-                                }}
-                            >
-                              {translate("layout.collapseSidebar", "Collapse")}
-                            </Text>
-                        )}
+                        <Text
+                            numberOfLines={1}
+                            style={{
+                                marginStart: 12,
+                                fontSize: 12,
+                                fontFamily: "Poppins-Medium",
+                                color: isDark ? "#A3A3A3" : "#6B7280",
+                                opacity: mode === "collapsed" ? 0 : 1,
+                                transitionProperty: "opacity",
+                                transitionDuration: "180ms",
+                            } as any}
+                        >
+                            {translate("layout.collapseSidebar", "Collapse")}
+                        </Text>
                     </PlatformPressable>
                 </View>
+            </View>
             </View>
         </View>
     );

@@ -31,7 +31,7 @@ export const DashboardMetricTile: React.FC<Props> = ({
                 {IconComponent && (
                     <View style={{ marginTop: -2 }}>
                         <IconComponent
-                            size={compact ? 18 : 22}
+                            size={compact ? 16 : 20}
                             color={isDark ? "#A3A3A3" : "#94A3B8"}
                         />
                     </View>

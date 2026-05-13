@@ -574,6 +574,7 @@
                 "title": "Stamp Progress",
                 "distribution": "Distribution of {{users}} users · Goal: {{goal}} stamps",
                 "noProgram": "No active stamp program found",
+                "noProgramDesc": "Create a stamp program to reward loyal customers and track their progress here.",
                 "stamps": "stamps",
                 "user": "user",
                 "users": "users"
