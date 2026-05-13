@@ -217,7 +217,7 @@ export default function QRIndex() {
                       <View className="flex-1 px-4 py-3">
                         <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">{t("store_manager.qr.per")}</Text>
                         <Text className="text-base font-poppins-bold text-textPrimary dark:text-darkTextPrimary mt-0.5">
-                          ₱{config.base_amount ?? 0}
+                          PHP {config.base_amount ?? 0}
                         </Text>
                       </View>
                     </View>
@@ -232,7 +232,7 @@ export default function QRIndex() {
                       <View className="flex-1 px-4 py-3">
                         <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">{t("store_manager.qr.minSpend")}</Text>
                         <Text className="text-base font-poppins-bold text-textPrimary dark:text-darkTextPrimary mt-0.5">
-                          {config.minimum_spend != null && config.minimum_spend > 0 ? `₱${config.minimum_spend}` : t("store_manager.qr.none")}
+                          {config.minimum_spend != null && config.minimum_spend > 0 ? `PHP ${config.minimum_spend}` : t("store_manager.qr.none")}
                         </Text>
                       </View>
                     </View>

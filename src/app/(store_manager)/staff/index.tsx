@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect } from "react";
 import { RefreshControl, useColorScheme, Platform } from "react-native";
 import { View, Text, TouchableOpacity, ScrollView, SafeAreaView } from "@/tw";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -6,7 +6,7 @@ import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { getStoreStaff, deleteStoreStaff } from "@/services/store-manager/staff-service";
 import { Modal } from "@/components/modal";
 import { useStaffStore, useStaffViewStore } from "@/store/store-manager/staff-store";
-import { ChevronRight, UsersRound, Pencil, Trash, UserRoundX } from "lucide-react-native";
+import { Plus, UsersRound, Pencil, Trash, UserRoundX } from "lucide-react-native";
 import StaffSkeleton from "@/components/skeleton/store_manager/staff-skeleton";
 import { getInitials } from "@/utils/store_manager/staff-utils";
 import { AppHeader } from "@/components/header";
@@ -17,7 +17,6 @@ const WEB_MAX_WIDTH = 896;
 export default function ViewStaff() {
   const { t } = useTranslation();
   const router = useRouter();
-  const insets = useSafeAreaInsets();
   const { storeId } = useLocalSearchParams<{ storeId: string }>();
   const isDark = useColorScheme() === "dark";
   const { modal, setModal } = useStaffStore();
@@ -169,11 +168,11 @@ export default function ViewStaff() {
                       params: { storeId },
                     })
                   }
-                  className="flex-row items-center gap-x-0.5"
+                  className="flex-row items-center gap-x-1"
                   activeOpacity={0.7}
                 >
                   <Text className="text-xs font-poppins-semibold text-primary">{t("label.add")}</Text>
-                  <ChevronRight size={14} color="#FF6600" />
+                  <Plus size={14} color="#FF6600" strokeWidth={3} style={{ marginTop: -1.5 }}/>
                 </TouchableOpacity>
               )}
             </View>

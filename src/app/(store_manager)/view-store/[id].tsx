@@ -12,13 +12,13 @@ import { useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
 import { getStoreById } from "@/services/store-service";
 import { getTransactionsPageForStore } from "@/services/store-manager/transactions-service";
 import { TransactionItem, type_badge } from "@/type/store-manager/transaction";
-import { formatTxTime } from "@/utils/store_manager/transaction";
+import { formatTxDateTime } from "@/utils/store_manager/transaction";
 import { Modal, ModalButton } from "@/components/modal";
 import { Building2, Gift, QrCode, UsersRound, Stamp, Flame, ChevronLeft, ChevronRight, Loader2, ReceiptText, Headset } from "lucide-react-native";
 import { AppHeader } from "@/components/header";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/supabase/supabase";
-import { listManagerConversations, subscribeToSupportConversations, removeSupportChannel } from "@/services/support-chat-service";
+import { listManagerConversations } from "@/services/support-chat-service";
 
 export default function ViewStore() {
   const { t } = useTranslation();
@@ -393,7 +393,7 @@ export default function ViewStore() {
                             {type_badge[tx.type]}
                           </Text>
                           <Text className="text-[10px] font-poppins text-slate-400 dark:text-slate-500">
-                            {formatTxTime(tx.date)}
+                            {formatTxDateTime(tx.date)}
                           </Text>
                         </View>
                       </View>
@@ -466,7 +466,7 @@ export default function ViewStore() {
                           {type_badge[tx.type]}
                         </Text>
                         <Text className="text-[10px] font-poppins text-slate-400 dark:text-slate-500">
-                          {formatTxTime(tx.date)}
+                          {formatTxDateTime(tx.date)}
                         </Text>
                       </View>
                     </View>
