@@ -84,7 +84,7 @@ function StoreCard({ store, router }: { store: StoreRow; router: any }) {
               {isLocked ? (
                 <View className="self-center h-5 px-2 rounded-full bg-slate-200 dark:bg-slate-800 items-center justify-center">
                   <Text className="text-[9px] leading-4 font-poppins-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">
-                    Locked
+                    {translate("store_manager.stores.locked")}
                   </Text>
                 </View>
               ) : null}
@@ -119,7 +119,7 @@ function StoreCard({ store, router }: { store: StoreRow; router: any }) {
           ) : null}
           {isLocked ? (
             <Text className="text-[11px] font-poppins text-slate-500 dark:text-slate-400">
-              Subscription ended — this store is view-only until you upgrade.
+              {translate("store_manager.stores.lockedSubscriptionEnded")}
             </Text>
           ) : null}
         </View>
@@ -284,7 +284,7 @@ export default function StoreManagerStores() {
               activeOpacity={0.85}
               className="self-start mt-2 bg-primary px-4 py-2 rounded-xl"
             >
-              <Text className="text-xs font-poppins-semibold text-white">Upgrade</Text>
+              <Text className="text-xs font-poppins-semibold text-white">{translate("store_manager.stores.upgrade")}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -487,7 +487,7 @@ export default function StoreManagerStores() {
                           {isLocked ? (
                             <View className="h-5 px-2 rounded-full bg-slate-200 dark:bg-slate-800 items-center justify-center">
                               <Text className="text-[10px] leading-4 font-poppins-semibold text-slate-600 dark:text-slate-300">
-                                Locked
+                                {translate("store_manager.stores.locked")}
                               </Text>
                             </View>
                           ) : null}
@@ -567,7 +567,7 @@ export default function StoreManagerStores() {
                           {isLocked ? (
                             <View className="h-5 px-2 rounded-full bg-slate-200 dark:bg-slate-800 items-center justify-center">
                               <Text className="text-[10px] leading-4 font-poppins-semibold text-slate-600 dark:text-slate-300">
-                                Locked
+                                {translate("store_manager.stores.locked")}
                               </Text>
                             </View>
                           ) : null}

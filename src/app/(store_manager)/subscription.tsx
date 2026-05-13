@@ -165,13 +165,13 @@ export default function SubscriptionScreen() {
 
 	const activePlanName = useMemo(() => {
 		if (loading) return "—";
-		if (currentSubscriptionId == null) return String(basicPlan?.name ?? "Basic plan");
+		if (currentSubscriptionId == null) return String(basicPlan?.name ?? translate("storeManager.subscription.billing.fallbackPlanName.basic", "Basic plan"));
 		if (proId != null && currentSubscriptionId === proId)
-			return String(proPlan?.name ?? "Pro plan");
+			return String(proPlan?.name ?? translate("storeManager.subscription.billing.fallbackPlanName.pro", "Pro plan"));
 		if (basicId != null && currentSubscriptionId === basicId)
-			return String(basicPlan?.name ?? "Basic plan");
-		return String(proPlan?.name ?? basicPlan?.name ?? "Plan");
-	}, [basicId, basicPlan?.name, currentSubscriptionId, proId, proPlan?.name]);
+			return String(basicPlan?.name ?? translate("storeManager.subscription.billing.fallbackPlanName.basic", "Basic plan"));
+		return String(proPlan?.name ?? basicPlan?.name ?? translate("storeManager.subscription.title", "Plan"));
+	}, [basicId, basicPlan?.name, currentSubscriptionId, proId, proPlan?.name, translate, loading]);
 
 	const activePlanAmount = useMemo(() => {
 		if (loading) return 0;

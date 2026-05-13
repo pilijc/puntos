@@ -5,16 +5,35 @@
     "inStore": "来店中",
     "realTimeUsers": "リアルタイムユーザー",
     "totalScanned": "スキャン総数",
-    "redeemedToday": "本日の利用"
+    "redeemedToday": "本日の利用",
+    "returning": "リピーター数",
+    "newUsers": "新規ユーザー数"
   },
   "retention": {
-    "title": "リテンション",
-    "subtitle": "ユーザーロイヤルティ概要",
+    "title": "ユーザーリテンション",
+    "subtitle": "リピーター vs 新規顧客",
     "returning": "リピーター",
-    "new": "新規"
+    "new": "新規",
+    "returningUsers": "リピーター数",
+    "newUsers": "新規ユーザー数",
+    "totalCustomers": "顧客総数",
+    "users": "人"
   },
   "activity": {
-    "title": "週間スキャンアクティビティ"
+    "title": "アクティビティ概要",
+    "titleShort": "アクティビティ",
+    "peakDay": "ピーク日",
+    "dailyAvg": "1日平均",
+    "metric": {
+      "scans": "スキャン総数",
+      "unique_visitors": "ユニーク訪問者",
+      "redemptions": "特典交換数",
+      "new_members": "新規会員数"
+    }
+  },
+  "detailedMetrics": {
+    "title": "最近の取引",
+    "noTransactions": "最近の取引は見つかりませんでした。"
   },
   "stampProgress": {
     "title": "スタンプの進捗",

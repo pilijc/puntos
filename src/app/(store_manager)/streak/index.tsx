@@ -21,7 +21,7 @@ const CONTENT_INSET = 16;
 const WEB_TAB_PILL_STYLE = { flexGrow: 1, flexBasis: 120, minWidth: 0 };
 
 export default function ViewStreak() {
-  const { t } = useTranslation();
+  const { t: translate } = useTranslation();
   const PAGE_SIZE = 6;
   const router = useRouter();
   const colorScheme = useColorScheme();
@@ -77,16 +77,16 @@ export default function ViewStreak() {
     : visibleEndedStreaks;
 
   const showError = (message: string) =>
-    setModal({ title: t("store_manager.streak.error"), message, buttons: [{ label: t("label.ok"), onPress: () => setModal(null) }] });
+    setModal({ title: translate("store_manager.streak.error"), message, buttons: [{ label: translate("label.ok"), onPress: () => setModal(null) }] });
 
   const showStreakError = (e: unknown) => {
     const key = resolveStreakErrorI18nKey(e);
     const raw = e instanceof Error ? e.message : String(e);
     const message = key
-      ? t(key)
+      ? translate(key)
       : raw.length > 0 && raw.length < 200
         ? raw
-        : t("store_manager.streak.errors.generic");
+        : translate("store_manager.streak.errors.generic");
     showError(message);
   };
 
@@ -99,9 +99,9 @@ export default function ViewStreak() {
 
     if (!hasSchedule && hasActiveProgram) {
       setModal({
-        title: t("store_manager.streak.activeExistsTitle"),
-        message: t("store_manager.streak.activeExistsMessage"),
-        buttons: [{ label: t("label.ok"), onPress: () => setModal(null) }],
+        title: translate("store_manager.streak.activeExistsTitle"),
+        message: translate("store_manager.streak.activeExistsMessage"),
+        buttons: [{ label: translate("label.ok"), onPress: () => setModal(null) }],
       });
       return;
     }
@@ -109,25 +109,25 @@ export default function ViewStreak() {
     const publishWouldCreateUpcoming = hasSchedule || hasActiveProgram;
     if (publishWouldCreateUpcoming && hasOtherUpcoming) {
       setModal({
-        title: t("store_manager.streak.upcomingExistsTitle"),
-        message: t("store_manager.streak.upcomingExistsMessage"),
-        buttons: [{ label: t("label.ok"), onPress: () => setModal(null) }],
+        title: translate("store_manager.streak.upcomingExistsTitle"),
+        message: translate("store_manager.streak.upcomingExistsMessage"),
+        buttons: [{ label: translate("label.ok"), onPress: () => setModal(null) }],
       });
       return;
     }
 
     const publishMessage = hasSchedule
-      ? t("store_manager.streak.publishMessage")
-      : t("store_manager.streak.publishMessageNoScheduleLive");
+      ? translate("store_manager.streak.publishMessage")
+      : translate("store_manager.streak.publishMessageNoScheduleLive");
     const primaryLabel = hasSchedule
-      ? t("store_manager.streak.publish")
-      : t("store_manager.streak.activate");
+      ? translate("store_manager.streak.publish")
+      : translate("store_manager.streak.activate");
 
     setModal({
-      title: t("store_manager.streak.publishTitle"),
+      title: translate("store_manager.streak.publishTitle"),
       message: publishMessage,
       buttons: [
-        { label: t("label.cancel"),  variant: "secondary", onPress: () => setModal(null) },
+        { label: translate("label.cancel"),  variant: "secondary", onPress: () => setModal(null) },
         {
           label: primaryLabel,
           variant: "primary",
@@ -161,11 +161,11 @@ export default function ViewStreak() {
 
   const handleActivate = (streak: Streak) => {
     setModal({
-      title: t("store_manager.streak.activateTitle"),
-      message: t("store_manager.streak.activateMessage"),
+      title: translate("store_manager.streak.activateTitle"),
+      message: translate("store_manager.streak.activateMessage"),
       buttons: [
-        { label: t("label.cancel"),   variant: "secondary", onPress: () => setModal(null) },
-        { label: t("store_manager.streak.activate"), variant: "primary", onPress: () => { setModal(null); doActivate(streak.id!); } },
+        { label: translate("label.cancel"),   variant: "secondary", onPress: () => setModal(null) },
+        { label: translate("store_manager.streak.activate"), variant: "primary", onPress: () => { setModal(null); doActivate(streak.id!); } },
       ],
     });
   };
@@ -184,22 +184,22 @@ export default function ViewStreak() {
 
   const handleEnd = (streak: Streak) => {
     setModal({
-      title: t("store_manager.streak.endTitle"),
-      message: t("store_manager.streak.endMessage"),
+      title: translate("store_manager.streak.endTitle"),
+      message: translate("store_manager.streak.endMessage"),
       buttons: [
-        { label: t("label.cancel"),      variant: "secondary", onPress: () => setModal(null) },
-        { label: t("store_manager.streak.endProgram"), variant: "danger",   onPress: () => { setModal(null); doEnd(streak.id!); } },
+        { label: translate("label.cancel"),      variant: "secondary", onPress: () => setModal(null) },
+        { label: translate("store_manager.streak.endProgram"), variant: "danger",   onPress: () => { setModal(null); doEnd(streak.id!); } },
       ],
     });
   };
 
   const handleDelete = (streak: Streak) => {
     setModal({
-      title: t("store_manager.streak.deleteTitle"),
-      message: t("store_manager.streak.deleteMessage"),
+      title: translate("store_manager.streak.deleteTitle"),
+      message: translate("store_manager.streak.deleteMessage"),
       buttons: [
-        { label: t("label.cancel"), variant: "secondary", onPress: () => setModal(null) },
-				{ label: t("store_manager.streak.deleteProgram"), variant: "danger", onPress: () => { setModal(null); doDelete(streak.id!); } },
+        { label: translate("label.cancel"), variant: "secondary", onPress: () => setModal(null) },
+				{ label: translate("store_manager.streak.deleteProgram"), variant: "danger", onPress: () => { setModal(null); doDelete(streak.id!); } },
       ],
     });
   };
@@ -249,8 +249,8 @@ export default function ViewStreak() {
       />
 
       <AppHeader
-        title={t("store_manager.streak.title")}
-        description={t("store_manager.streak.description")}
+        title={translate("store_manager.streak.title")}
+        description={translate("store_manager.streak.description")}
         onBackPress={() => {
           router.push(`/(store_manager)/view-store/${storeId}`);
         }}
@@ -261,8 +261,8 @@ export default function ViewStreak() {
           <View className={`w-full rounded-xl border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/40 px-3 py-2.5 ${isWeb ? "max-w-4xl" : ""}`}>
             <Text className="text-xs font-poppins text-amber-900 dark:text-amber-200 leading-5">
               {expiresAtIso
-                ? t("store_manager.premiumCampaigns.bannerWithExpiry", { date: formatDate(expiresAtIso) })
-                : t("store_manager.premiumCampaigns.banner")}
+                ? translate("store_manager.premiumCampaigns.bannerWithExpiry", { date: formatDate(expiresAtIso) })
+                : translate("store_manager.premiumCampaigns.banner")}
             </Text>
           </View>
         </View>
@@ -298,7 +298,7 @@ export default function ViewStreak() {
                     }
                     numberOfLines={1}
                   >
-                    {t(`store_manager.streak.tabs.${tab.key}`)}
+                    {translate(`store_manager.streak.tabs.${tab.key}`)}
                   </Text>
                   {count > 0 && (
                     <View className={`rounded-full min-w-[18px] items-center px-1.5 ${active ? "bg-white/20" : "bg-slate-100 dark:bg-slate-800"}`}>
@@ -387,17 +387,17 @@ export default function ViewStreak() {
            <View className="items-center justify-center gap-y-1">
             <Text className="text-sm font-poppins-semibold text-slate-600 dark:text-slate-300 text-center">
                 {activeTab === "active"
-                  ? t("store_manager.streak.emptyActiveTitle")
+                  ? translate("store_manager.streak.emptyActiveTitle")
                   : activeTab === "upcoming"
-                  ? t("store_manager.streak.emptyUpcomingTitle")
-                  : t("store_manager.streak.emptyEndedTitle")}
+                  ? translate("store_manager.streak.emptyUpcomingTitle")
+                  : translate("store_manager.streak.emptyEndedTitle")}
               </Text>
               <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500 text-center">
                 {activeTab === "active"
-                  ? t("store_manager.streak.emptyActiveBody")
+                  ? translate("store_manager.streak.emptyActiveBody")
                   : activeTab === "upcoming"
-                  ? t("store_manager.streak.emptyUpcomingBody")
-                  : t("store_manager.streak.emptyEndedBody")}
+                  ? translate("store_manager.streak.emptyUpcomingBody")
+                  : translate("store_manager.streak.emptyEndedBody")}
               </Text>
            </View>
           </View>

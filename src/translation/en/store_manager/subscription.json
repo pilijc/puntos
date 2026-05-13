@@ -12,6 +12,7 @@
     "upgradeToPro": "Upgrade to Pro",
     "cancelSubscription": "Cancel Subscription",
     "fallbackPlanName": {
+      "basic": "Basic plan",
       "pro": "Pro plan"
     },
     "period": {
@@ -84,5 +85,15 @@
     "title": "Payment cancelled",
     "body": "No worries — you can try upgrading again anytime.",
     "back": "Back to Subscription"
+  },
+  "registration": {
+    "title": "Store Registration",
+    "description": "Pay the registration fee to activate your store.",
+    "amountToPay": "Amount to Pay",
+    "payWithGcash": "Pay with GCASH",
+    "cancel": "Cancel",
+    "errorTitle": "Payment Error",
+    "errorUnable": "Unable to create payment. Please try again.",
+    "errorGeneric": "Something went wrong. Please try again."
   }
 }

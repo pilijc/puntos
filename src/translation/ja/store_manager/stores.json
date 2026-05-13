@@ -12,6 +12,9 @@
     "inactive": "無効"
   },
   "noAddress": "住所未記入",
+  "locked": "ロック中",
+  "lockedSubscriptionEnded": "サブスクリプションが終了しました。アップグレードするまでこの店舗は表示のみです。",
+  "upgrade": "アップグレード",
   "empty": {
     "allTitle": "まだ店舗がありません",
     "activeTitle": "有効な店舗がありません",

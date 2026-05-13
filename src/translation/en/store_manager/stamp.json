@@ -55,5 +55,13 @@
     "ended": "Ended",
     "ended_grace": "Grace Period",
     "ended_expired": "Expired"
+  },
+  "rewardPicker": {
+    "title": "Choose a reward",
+    "scrollHint": "Scroll to load more ({{pageSize}} per page).",
+    "emptyTitle": "No rewards yet",
+    "emptyBody": "Create a reward first, then pick it here.",
+    "createButton": "Create a Reward",
+    "pointsSuffix": "pts"
   }
 }

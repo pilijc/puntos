@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { ActivityIndicator } from "react-native";
 import { Image } from "expo-image";
 import { View, Text, TouchableOpacity } from "@/tw";
@@ -28,10 +29,10 @@ export function StampCard({
   onEditDraft,
   endingId,
 }: StampCardProps) {
-  const { t } = useTranslation();
+  const { t: translate } = useTranslation();
   const status = getProgramStatus(stamp);
   const badge = STATUS_BADGE[status];
-  const statusLabel = t(`store_manager.stamp.status.${status}`);
+  const statusLabel = translate(`store_manager.stamp.status.${status}`);
   const hasMore = c.collectors.length < c.collectorsCount;
   const PAGE_SIZE = 5;
 
@@ -40,7 +41,7 @@ export function StampCard({
       <View className="flex-row items-center justify-between px-4 pt-4 pb-3 border-b border-slate-100 dark:border-slate-800">
         <View className="flex-row items-center gap-x-2">
           <StampIcon size={16} color="#94A3B8" />
-          <Text className="text-sm font-poppins-bold text-textPrimary">{t("store_manager.stamp.title")}</Text>
+          <Text className="text-sm font-poppins-bold text-textPrimary">{translate("store_manager.stamp.title")}</Text>
         </View>
         <View className={`flex-row items-center gap-x-1 ${badge.color} px-2.5 py-1 rounded-full`}>
           <View className={`w-1.5 h-1.5 rounded-full ${badge.dot}`} />
@@ -50,7 +51,7 @@ export function StampCard({
 
       {stamp.created_at && (
         <View className="flex-row items-center justify-between px-4 py-2.5 border-b border-slate-100 dark:border-slate-800">
-          <Text className="text-xs font-poppins text-textMuted">{t("store_manager.stamp.labelStarted")}</Text>
+          <Text className="text-xs font-poppins text-textMuted">{translate("store_manager.stamp.labelStarted")}</Text>
           <Text className="text-xs font-poppins-semibold text-textSecondary">
             {formatDate(stamp.created_at)}
           </Text>
@@ -59,7 +60,7 @@ export function StampCard({
 
       {status !== "active" && stamp.ended_at && (
         <View className="flex-row items-center justify-between px-4 py-2.5 border-b border-slate-100 dark:border-slate-800">
-          <Text className="text-xs font-poppins text-textMuted">{t("store_manager.stamp.labelEndedOn")}</Text>
+          <Text className="text-xs font-poppins text-textMuted">{translate("store_manager.stamp.labelEndedOn")}</Text>
           <Text className="text-xs font-poppins-semibold text-textSecondary">
             {formatDate(stamp.ended_at)}
           </Text>
@@ -67,16 +68,16 @@ export function StampCard({
       )}
 
       <View className="flex-row items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-slate-800">
-        <Text className="text-xs font-poppins text-textMuted">{t("store_manager.stamp.stampsRequired")}</Text>
+        <Text className="text-xs font-poppins text-textMuted">{translate("store_manager.stamp.stampsRequired")}</Text>
         <Text className="text-xs font-poppins-bold text-textSecondary">{stamp.total_stamps}</Text>
       </View>
 
       <View className="flex-row items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-slate-800">
-        <Text className="text-xs font-poppins text-textMuted">{t("store_manager.stamp.expiration")}</Text>
+        <Text className="text-xs font-poppins text-textMuted">{translate("store_manager.stamp.expiration")}</Text>
         <Text className="text-xs font-poppins-semibold text-textSecondary">
           {stamp.expiration_mode === "none"
-            ? t("store_manager.stamp.expirationNone")
-            : t("store_manager.stamp.expirationCardLimit", { count: stamp.expiration_days ?? 0 })}
+            ? translate("store_manager.stamp.expirationNone")
+            : translate("store_manager.stamp.expirationCardLimit", { count: stamp.expiration_days ?? 0 })}
         </Text>
       </View>
 
@@ -85,9 +86,9 @@ export function StampCard({
           <Image source={{ uri: reward.image_url }} style={{ width: 40, height: 40, borderRadius: 10 }} contentFit="cover" />
         ) : null}
         <View className="flex-1">
-          <Text className="text-xs font-poppins text-textMuted">{t("store_manager.stamp.reward")}</Text>
+          <Text className="text-xs font-poppins text-textMuted">{translate("store_manager.stamp.reward")}</Text>
           <Text className="text-sm font-poppins-semibold text-textPrimary" numberOfLines={1}>
-            {reward?.title ?? t("store_manager.stamp.noRewardLinked")}
+            {reward?.title ?? translate("store_manager.stamp.noRewardLinked")}
           </Text>
         </View>
       </View>
@@ -95,7 +96,7 @@ export function StampCard({
       {status === "ended_grace" && stamp.redemption_deadline && (
         <View className="mx-4 my-3 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-700 px-3 py-2.5 flex-row items-center gap-x-2">
           <Text className="text-xs font-poppins text-amber-700 dark:text-amber-400 flex-1">
-            {t("store_manager.stamp.graceBanner", { date: formatDate(stamp.redemption_deadline) })}
+            {translate("store_manager.stamp.graceBanner", { date: formatDate(stamp.redemption_deadline) })}
           </Text>
         </View>
       )}
@@ -120,7 +121,7 @@ export function StampCard({
             className="flex-row items-center justify-between px-4 py-3"
           >
             <View className="flex-row items-center gap-x-2">
-              <Text className="text-sm font-poppins-semibold text-textSecondary">{t("store_manager.stamp.collectors")}</Text>
+              <Text className="text-sm font-poppins-semibold text-textSecondary">{translate("store_manager.stamp.collectors")}</Text>
               <View className="bg-slate-100 dark:bg-slate-700 rounded-full px-2 py-0.5 min-w-[22px] items-center">
                 <Text className="text-xs font-poppins-bold text-textMuted">{c.collectorsCount}</Text>
               </View>
@@ -140,13 +141,13 @@ export function StampCard({
                 </View>
               ) : c.collectors.length === 0 ? (
                 <View className="py-8 items-center gap-y-2">
-                  <Text className="text-sm font-poppins text-textMuted">{t("store_manager.stamp.noCollectors")}</Text>
+                  <Text className="text-sm font-poppins text-textMuted">{translate("store_manager.stamp.noCollectors")}</Text>
                 </View>
               ) : (
                 <>
                   {c.collectors.map((item) => {
                     const progress = Math.min(item.stamps_count / Math.max(stamp.total_stamps, 1), 1);
-                    const name = item.users?.name ?? t("store_manager.stamp.unknownUser");
+                    const name = item.users?.name ?? translate("store_manager.stamp.unknownUser");
                     const initials = name
                       .split(" ")
                       .map((w) => w[0])
@@ -173,18 +174,18 @@ export function StampCard({
                           </Text>
                           {cardExpired && (
                             <View className="bg-red-50 dark:bg-red-900/20 px-1.5 py-0.5 rounded">
-                              <Text className="text-xs font-poppins-semibold text-red-500">{t("store_manager.stamp.badgeExpired")}</Text>
+                              <Text className="text-xs font-poppins-semibold text-red-500">{translate("store_manager.stamp.badgeExpired")}</Text>
                             </View>
                           )}
                           {item.card_status === "completed" && !cardExpired && (
                             <View className="bg-emerald-50 dark:bg-emerald-900/20 px-1.5 py-0.5 rounded">
-                              <Text className="text-xs font-poppins-semibold text-emerald-500">{t("store_manager.stamp.badgeRedeemable")}</Text>
+                              <Text className="text-xs font-poppins-semibold text-emerald-500">{translate("store_manager.stamp.badgeRedeemable")}</Text>
                             </View>
                           )}
                         </View>
                         <View className="flex-row items-center justify-between">
                           <Text className="text-xs font-poppins text-textMuted">
-                            {t("store_manager.stamp.lastStamp", { date: formatDate(item.last_stamp_at) })}
+                            {translate("store_manager.stamp.lastStamp", { date: formatDate(item.last_stamp_at) })}
                           </Text>
                           <Text className="text-xs font-poppins-bold text-primary">
                             {item.stamps_count}/{stamp.total_stamps}
@@ -237,7 +238,7 @@ export function StampCard({
                         <>
                           <ChevronDown size={16} color="#FF6600" />
                           <Text className="text-xs font-poppins-semibold text-primary">
-                            {t("store_manager.stamp.loadMoreRemaining", {
+                            {translate("store_manager.stamp.loadMoreRemaining", {
                               remaining: c.collectorsCount - c.collectors.length,
                             })}
                           </Text>
@@ -249,7 +250,7 @@ export function StampCard({
                   {!hasMore && c.collectors.length > 0 && (
                     <View className="py-2.5 items-center border-t border-slate-100 dark:border-slate-800">
                       <Text className="text-xs font-poppins text-textMuted">
-                        {t("store_manager.stamp.allCollectorsShown", { count: c.collectorsCount })}
+                        {translate("store_manager.stamp.allCollectorsShown", { count: c.collectorsCount })}
                       </Text>
                     </View>
                   )}
@@ -267,11 +268,11 @@ export function StampCard({
               activeOpacity={0.8}
               onPress={() =>
                 setModal({
-                  title: t("store_manager.stamp.deleteTitle"),
-                  message: t("store_manager.stamp.deleteMessage"),
+                  title: translate("store_manager.stamp.deleteTitle"),
+                  message: translate("store_manager.stamp.deleteMessage"),
                   buttons: [
-                    { label: t("label.cancel"), variant: "secondary", onPress: () => setModal(null) },
-                    { label: t("label.delete"), variant: "danger", onPress: () => { setModal(null); doDelete(stamp.id!) } },
+                    { label: translate("label.cancel"), variant: "secondary", onPress: () => setModal(null) },
+                    { label: translate("label.delete"), variant: "danger", onPress: () => { setModal(null); doDelete(stamp.id!) } },
                   ],
                 })
               }
@@ -285,9 +286,9 @@ export function StampCard({
                 onEditDraft ??
                 (() =>
                   setModal({
-                    title: t("store_manager.stamp.editPlaceholderTitle"),
-                    message: t("store_manager.stamp.editPlaceholderMessage"),
-                    buttons: [{ label: t("label.ok"), onPress: () => setModal(null) }],
+                    title: translate("store_manager.stamp.editPlaceholderTitle"),
+                    message: translate("store_manager.stamp.editPlaceholderMessage"),
+                    buttons: [{ label: translate("label.ok"), onPress: () => setModal(null) }],
                   }))
               }
               className="flex-1 h-8 rounded-lg items-center justify-center bg-gray-200"
@@ -299,17 +300,17 @@ export function StampCard({
               onPress={() =>
                 activeProgramCount > 0
                   ? setModal({
-                    title: t("store_manager.stamp.activeExistsTitle"),
-                    message: t("store_manager.stamp.activeExistsMessage"),
-                    buttons: [{ label: t("label.ok"), variant: "primary", onPress: () => setModal(null) }],
+                    title: translate("store_manager.stamp.activeExistsTitle"),
+                    message: translate("store_manager.stamp.activeExistsMessage"),
+                    buttons: [{ label: translate("label.ok"), variant: "primary", onPress: () => setModal(null) }],
                   })
                   : setModal({
-                    title: t("store_manager.stamp.activateDraftTitle"),
-                    message: t("store_manager.stamp.activateDraftMessage"),
+                    title: translate("store_manager.stamp.activateDraftTitle"),
+                    message: translate("store_manager.stamp.activateDraftMessage"),
                     buttons: [
-                      { label: t("label.cancel"), variant: "secondary", onPress: () => setModal(null) },
+                      { label: translate("label.cancel"), variant: "secondary", onPress: () => setModal(null) },
                       {
-                        label: t("store_manager.stamp.activateButton"),
+                        label: translate("store_manager.stamp.activateButton"),
                         variant: "primary",
                         onPress: () => {
                           setModal(null);
@@ -334,11 +335,11 @@ export function StampCard({
             disabled={endingId === stamp.id}
             onPress={() =>
               setModal({
-                title: t("store_manager.stamp.endStampTitle"),
-                message: t("store_manager.stamp.endStampMessage"),
+                title: translate("store_manager.stamp.endStampTitle"),
+                message: translate("store_manager.stamp.endStampMessage"),
                 buttons: [
                   {
-                    label: t("store_manager.stamp.gracePeriod14"),
+                    label: translate("store_manager.stamp.gracePeriod14"),
                     variant: "primary",
                     onPress: () => {
                       setModal(null);
@@ -346,7 +347,7 @@ export function StampCard({
                     },
                   },
                   {
-                    label: t("store_manager.stamp.gracePeriod7"),
+                    label: translate("store_manager.stamp.gracePeriod7"),
                     variant: "secondary",
                     onPress: () => {
                       setModal(null);
@@ -354,7 +355,7 @@ export function StampCard({
                     },
                   },
                   {
-                    label: t("store_manager.stamp.gracePeriodNone"),
+                    label: translate("store_manager.stamp.gracePeriodNone"),
                     variant: "secondary",
                     onPress: () => {
                       setModal(null);
@@ -371,7 +372,7 @@ export function StampCard({
             ) : (
               <>
                 <OctagonMinus size={16} color="#EF4444" />
-                <Text className="text-sm font-poppins-semibold text-red-500">{t("store_manager.stamp.endProgram")}</Text>
+                <Text className="text-sm font-poppins-semibold text-red-500">{translate("store_manager.stamp.endProgram")}</Text>
               </>
             )}
           </TouchableOpacity>

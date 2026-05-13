@@ -12,8 +12,9 @@ import { supabase } from "@/supabase/supabase";
 import { useManagerStoresStore } from "@/store/manager-stores-store";
 import { useSupportChatStore } from "@/store/support-chat-store";
 import { SupportConversation } from "@/type/support-chat";
+import { useTranslation } from "react-i18next";
 
-function formatTime(value: string | null) {
+function formatTime(value: string | null, translate: any) {
   if (!value) return "";
   const date = new Date(value);
   const now = new Date();
@@ -21,11 +22,12 @@ function formatTime(value: string | null) {
   yesterday.setDate(now.getDate() - 1);
   if (date.toDateString() === now.toDateString())
     return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-  if (date.toDateString() === yesterday.toDateString()) return "Yesterday";
+  if (date.toDateString() === yesterday.toDateString()) return translate("store_manager.chat.inbox.yesterday", "Yesterday");
   return date.toLocaleDateString([], { month: "short", day: "numeric" });
 }
 
 export default function ManagerInbox() {
+  const { t: translate } = useTranslation();
   const router = useRouter();
   const { stores, loading: storesLoading, fetchStores } = useManagerStoresStore();
   
@@ -96,7 +98,7 @@ export default function ManagerInbox() {
         <View style={{ flex: 1, flexDirection: "row", alignItems: "center", gap: 8 }}>
           <Headset size={18} color="#FF6600" />
           <Text style={{ fontSize: 20, fontFamily: "Poppins-Bold", color: "#0F172A" }}>
-            Support
+            {translate("store_manager.chat.inbox.title", "Support")}
           </Text>
         </View>
 
@@ -121,7 +123,7 @@ export default function ManagerInbox() {
       {/* Subtitle */}
       <View style={{ paddingHorizontal: 24, paddingTop: 12, paddingBottom: 4 }}>
         <Text style={{ fontSize: 12, fontFamily: "Poppins-Regular", color: "#94A3B8" }}>
-          Select a store to chat with Super Admin
+          {translate("store_manager.chat.inbox.subtitle", "Select a store to chat with Super Admin")}
         </Text>
       </View>
 
@@ -140,7 +142,7 @@ export default function ManagerInbox() {
                 color: "#94A3B8",
               }}
             >
-              Loading...
+              {translate("store_manager.chat.inbox.loading", "Loading...")}
             </Text>
           </View>
         ) : stores.length === 0 ? (
@@ -173,7 +175,7 @@ export default function ManagerInbox() {
                 textAlign: "center",
               }}
             >
-              No stores found
+              {translate("store_manager.chat.inbox.noStores", "No stores found")}
             </Text>
           </View>
         ) : (
@@ -273,7 +275,7 @@ export default function ManagerInbox() {
                             color: "#94A3B8",
                           }}
                         >
-                          {formatTime(lastTime)}
+                          {formatTime(lastTime, translate)}
                         </Text>
                       ) : null}
                     </View>
@@ -295,7 +297,7 @@ export default function ManagerInbox() {
                           paddingRight: 8,
                         }}
                       >
-                        {lastMsg ?? "Tap to start a conversation"}
+                        {lastMsg ?? translate("store_manager.chat.inbox.tapToStart", "Tap to start a conversation")}
                       </Text>
                       {unread > 0 ? (
                         <View

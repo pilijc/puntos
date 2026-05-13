@@ -36,7 +36,7 @@ const WEB_MAX_WIDTH = 896;
 Mapbox.setAccessToken(process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN);
 
 export default function CreateStore() {
-  const { t } = useTranslation();
+  const { t: translate } = useTranslation();
   const isWeb = Platform.OS === "web";
   const isDark = useColorScheme() === "dark";
   const [activeStep, setActiveStep] = useState<(typeof STEPS)[number]["key"]>("store");
@@ -86,9 +86,9 @@ export default function CreateStore() {
 
   const showError = (message: string) =>
     setModal({
-      title: t("store_manager.createStore.errorTitle"),
+      title: translate("store_manager.createStore.errorTitle"),
       message,
-      buttons: [{ label: t("label.ok"), onPress: () => setModal(null), variant: "secondary" }],
+      buttons: [{ label: translate("label.ok"), onPress: () => setModal(null), variant: "secondary" }],
     });
 
   const getCreateStoreErrorMessage = (error: unknown) => {
@@ -100,26 +100,26 @@ export default function CreateStore() {
       lowerMessage.includes("store_close") ||
       lowerMessage.includes("not-null constraint")
     ) {
-      return t("store_manager.createStore.storeHoursRequired");
+      return translate("store_manager.createStore.storeHoursRequired");
     }
 
-    return t("store_manager.createStore.createFailedMessage");
+    return translate("store_manager.createStore.createFailedMessage");
   };
 
   const showCreateStoreError = (error: unknown) =>
     setModal({
-      title: t("store_manager.createStore.createFailedTitle"),
+      title: translate("store_manager.createStore.createFailedTitle"),
       message: getCreateStoreErrorMessage(error),
-      buttons: [{ label: t("label.ok"), onPress: () => setModal(null), variant: "secondary" }],
+      buttons: [{ label: translate("label.ok"), onPress: () => setModal(null), variant: "secondary" }],
     });
 
   const pickImage = async (type: PickImageType, pictureIndex?: number) => {
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permissionResult.granted) {
       setModal({
-        title: t("store_manager.createStore.permissionPhotosTitle"),
-        message: t("store_manager.createStore.permissionPhotos"),
-        buttons: [{ label: t("label.ok"), onPress: () => setModal(null), variant: "secondary" }],
+        title: translate("store_manager.createStore.permissionPhotosTitle"),
+        message: translate("store_manager.createStore.permissionPhotos"),
+        buttons: [{ label: translate("label.ok"), onPress: () => setModal(null), variant: "secondary" }],
       });
       return;
     }
@@ -136,7 +136,7 @@ export default function CreateStore() {
 
     const asset = pickerResult.assets[0];
     if (!asset.base64) {
-      showError(t("store_manager.createStore.couldNotReadImage"));
+      showError(translate("store_manager.createStore.couldNotReadImage"));
       return;
     }
 
@@ -148,7 +148,7 @@ export default function CreateStore() {
       try {
         setLogo(dataUri);
       } catch (e: any) {
-        showError(e?.message ?? t("store_manager.createStore.uploadFailed"));
+        showError(e?.message ?? translate("store_manager.createStore.uploadFailed"));
       } finally {
         setIsUploadingImage(false);
       }
@@ -160,7 +160,7 @@ export default function CreateStore() {
       try {
         setBusinessDocumentImage(dataUri);
       } catch (e: any) {
-        showError(e?.message ?? t("store_manager.createStore.uploadFailed"));
+        showError(e?.message ?? translate("store_manager.createStore.uploadFailed"));
       } finally {
         setIsUploadingImage(false);
       }
@@ -182,7 +182,7 @@ export default function CreateStore() {
         else next.push(dataUri);
         setPictures(next);
       } catch (e: any) {
-        showError(e?.message ?? t("store_manager.createStore.uploadFailed"));
+        showError(e?.message ?? translate("store_manager.createStore.uploadFailed"));
       } finally {
         setIsUploadingImage(false);
       }
@@ -198,27 +198,27 @@ export default function CreateStore() {
 
   const getStoreStepMissing = () => {
     const missing: string[] = [];
-    if (!storeName.trim()) missing.push(t("label.storeName"));
-    if (!storeType.trim()) missing.push(t("label.storeType"));
-    if (!logo) missing.push(t("label.storeLogo"));
-    if (picturesCount < 3) missing.push(t("store_manager.createStore.missing.storePicturesMin"));
-    if (picturesCount > 6) missing.push(t("store_manager.createStore.missing.storePicturesMax"));
+    if (!storeName.trim()) missing.push(translate("label.storeName"));
+    if (!storeType.trim()) missing.push(translate("label.storeType"));
+    if (!logo) missing.push(translate("label.storeLogo"));
+    if (picturesCount < 3) missing.push(translate("store_manager.createStore.missing.storePicturesMin"));
+    if (picturesCount > 6) missing.push(translate("store_manager.createStore.missing.storePicturesMax"));
     return missing;
   };
 
   const getBusinessStepMissing = () => {
     const missing: string[] = [];
-    if (!registrationNumber.trim()) missing.push(t("store_manager.createStore.missing.registrationNumber"));
-    if (!businessDocumentImage) missing.push(t("store_manager.createStore.missing.businessDocumentImage"));
-    if (!storeDays || storeDays.length === 0) missing.push(t("store_manager.createStore.missing.storeDays"));
+    if (!registrationNumber.trim()) missing.push(translate("store_manager.createStore.missing.registrationNumber"));
+    if (!businessDocumentImage) missing.push(translate("store_manager.createStore.missing.businessDocumentImage"));
+    if (!storeDays || storeDays.length === 0) missing.push(translate("store_manager.createStore.missing.storeDays"));
     return missing;
   };
 
   const getLocationStepMissing = () => {
     const missing: string[] = [];
-    if (!address.trim()) missing.push(t("store_manager.createStore.missing.address"));
-    if (!hasPin) missing.push(t("store_manager.createStore.missing.pinLocation"));
-    if (effectiveRadius < 50 || effectiveRadius > 500) missing.push(t("store_manager.createStore.missing.radius"));
+    if (!address.trim()) missing.push(translate("store_manager.createStore.missing.address"));
+    if (!hasPin) missing.push(translate("store_manager.createStore.missing.pinLocation"));
+    if (effectiveRadius < 50 || effectiveRadius > 500) missing.push(translate("store_manager.createStore.missing.radius"));
     return missing;
   };
 
@@ -245,9 +245,9 @@ export default function CreateStore() {
     const { status } = await Location.requestForegroundPermissionsAsync();
     if (status !== "granted") {
       setModal({
-        title: t("store_manager.createStore.permissionLocationTitle"),
-        message: t("store_manager.createStore.permissionLocationBody"),
-        buttons: [{ label: t("label.ok"), onPress: () => setModal(null), variant: "secondary" }],
+        title: translate("store_manager.createStore.permissionLocationTitle"),
+        message: translate("store_manager.createStore.permissionLocationBody"),
+        buttons: [{ label: translate("label.ok"), onPress: () => setModal(null), variant: "secondary" }],
       });
       return;
     }
@@ -259,7 +259,7 @@ export default function CreateStore() {
       (await Location.getLastKnownPositionAsync({}).catch(() => null));
 
     if (!loc) {
-      showError(t("store_manager.createStore.couldNotGetLocation"));
+      showError(translate("store_manager.createStore.couldNotGetLocation"));
       return;
     }
 
@@ -280,7 +280,7 @@ export default function CreateStore() {
       setIsSubmitting(true);
       const { data: { user } } = await supabase.auth.getUser();
       if (!user?.id) {
-        showError(t("store_manager.createStore.createFailed"));
+        showError(translate("store_manager.createStore.createFailed"));
         return;
       }
 
@@ -300,7 +300,7 @@ export default function CreateStore() {
               },
             },
             {
-              label: t("label.cancel"),
+              label: translate("label.cancel"),
               variant: "secondary",
               onPress: () => setModal(null),
             },
@@ -349,11 +349,11 @@ export default function CreateStore() {
       });
 
       setModal({
-        title: t("store_manager.createStore.storeCreatedTitle"),
-        message: t("store_manager.createStore.storeCreatedMessage"),
+        title: translate("store_manager.createStore.storeCreatedTitle"),
+        message: translate("store_manager.createStore.storeCreatedMessage"),
         buttons: [
           {
-            label: t("store_manager.createStore.viewStore"),
+            label: translate("store_manager.createStore.viewStore"),
             variant: "primary",
             onPress: () => {
               setModal(null);
@@ -376,9 +376,9 @@ export default function CreateStore() {
       const missing = getStoreStepMissing();
       if (missing.length > 0) {
         setModal({
-          title: t("store_manager.createStore.storeDetailsRequired"),
-          message: t("store_manager.createStore.pleaseComplete", { fields: missing.join(", ") }),
-          buttons: [{ label: t("label.ok"), onPress: () => setModal(null), variant: "secondary" }],
+          title: translate("store_manager.createStore.storeDetailsRequired"),
+          message: translate("store_manager.createStore.pleaseComplete", { fields: missing.join(", ") }),
+          buttons: [{ label: translate("label.ok"), onPress: () => setModal(null), variant: "secondary" }],
         });
         return;
       }
@@ -390,9 +390,9 @@ export default function CreateStore() {
       const missing = getBusinessStepMissing();
       if (missing.length > 0) {
         setModal({
-          title: t("store_manager.createStore.businessDetailsRequired"),
-          message: t("store_manager.createStore.pleaseComplete", { fields: missing.join(", ") }),
-          buttons: [{ label: t("label.ok"), onPress: () => setModal(null), variant: "secondary" }],
+          title: translate("store_manager.createStore.businessDetailsRequired"),
+          message: translate("store_manager.createStore.pleaseComplete", { fields: missing.join(", ") }),
+          buttons: [{ label: translate("label.ok"), onPress: () => setModal(null), variant: "secondary" }],
         });
         return;
       }
@@ -403,12 +403,12 @@ export default function CreateStore() {
     if (!isFormValid) {
       const missing = getLocationStepMissing();
       setModal({
-        title: t("store_manager.createStore.missingDetails"),
+        title: translate("store_manager.createStore.missingDetails"),
         message:
           missing.length > 0
-            ? t("store_manager.createStore.pleaseComplete", { fields: missing.join(", ") })
-            : t("store_manager.createStore.completeAllFields"),
-        buttons: [{ label: t("label.ok"), onPress: () => setModal(null), variant: "secondary" }],
+            ? translate("store_manager.createStore.pleaseComplete", { fields: missing.join(", ") })
+            : translate("store_manager.createStore.completeAllFields"),
+        buttons: [{ label: translate("label.ok"), onPress: () => setModal(null), variant: "secondary" }],
       });
       return;
     }
@@ -430,7 +430,7 @@ export default function CreateStore() {
           setPictures={setPictures}
           isUploadingImage={isUploadingImage}
           pickImage={pickImage}
-          t={t}
+          translate={translate}
         />
       );
     }
@@ -453,7 +453,7 @@ export default function CreateStore() {
           isUploadingImage={isUploadingImage}
           pickImage={pickImage}
           isDark={isDark}
-          t={t}
+          translate={translate}
         />
       );
     }
@@ -475,7 +475,7 @@ export default function CreateStore() {
         setPin={setPin}
         onGetCurrent={handleGetCurrent}
         setScrollEnabled={setScrollEnabled}
-        t={t}
+        translate={translate}
       />
     );
   };
@@ -490,7 +490,7 @@ export default function CreateStore() {
         buttons={modal?.buttons}
       />
       <AppHeader
-        title={t("store_manager.createStore.title")}
+        title={translate("store_manager.createStore.title")}
         onBackPress={() => {
           router.push("/(store_manager)/stores");
         }}
@@ -525,7 +525,7 @@ export default function CreateStore() {
               {activeStep !== "store" && (
                 <View className="flex-1">
                   <Button
-                    label={t("store_manager.createStore.back")}
+                    label={translate("store_manager.createStore.back")}
                     onPress={goBack}
                     variant="secondary"
                     loading={false}
@@ -537,8 +537,8 @@ export default function CreateStore() {
                 <Button
                   label={
                     activeStep === "location"
-                      ? t("store_manager.createStore.createStore")
-                      : t("store_manager.createStore.continue")
+                      ? translate("store_manager.createStore.createStore")
+                      : translate("store_manager.createStore.continue")
                   }
                   onPress={goNext}
                   variant="primary"

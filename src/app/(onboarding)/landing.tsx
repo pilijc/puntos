@@ -19,7 +19,7 @@ const WELCOME_ROUTE = "/(onboarding)/welcome";
 const LOGIN_ROUTE = "/login";
 
 export default function MarketingLanding() {
-  const { t } = useTranslation();
+  const { t: translate } = useTranslation();
   const { width } = useWindowDimensions();
   const isWide = width >= 960;
   const isWeb = Platform.OS === "web";
@@ -60,7 +60,7 @@ export default function MarketingLanding() {
           setPlansError(
             e instanceof Error
               ? e.message
-              : t("onboarding.landing.pricingLoadError"),
+              : translate("onboarding.landing.pricingLoadError"),
           );
         }
       } finally {
@@ -70,7 +70,7 @@ export default function MarketingLanding() {
     return () => {
       cancelled = true;
     };
-  }, [isWeb, t]);
+  }, [isWeb, translate]);
 
   const sectionLayoutHandlers = useMemo(
     () => createSectionLayoutHandlers(sectionY),

@@ -12,10 +12,12 @@ import { useIsFocused } from "@react-navigation/native";
 import { ArrowLeft, Headset } from "lucide-react-native";
 import { SharedChatArea } from "@/components/chat/shared-chat-area";
 import { supabase } from "@/supabase/supabase";
+import { useTranslation } from "react-i18next";
 import { useManagerStoresStore } from "@/store/manager-stores-store";
 import { useSupportChatStore } from "@/store/support-chat-store";
 
 export default function ChatSupportScreen() {
+  const { t: translate } = useTranslation();
   const [ownerId, setOwnerId] = useState<string | null>(null);
   const scrollViewRef = useRef<ScrollView>(null);
   const insets = useSafeAreaInsets();
@@ -106,11 +108,11 @@ export default function ChatSupportScreen() {
   }, [activeConversationId, markRead, messages.length, isFocused]);
 
   const emptyMessage = useMemo(() => {
-    if (storesLoading || loading || loadingMessages) return "Loading support chat...";
-    if (!activeStore) return "Store not found.";
+    if (storesLoading || loading || loadingMessages) return translate("store_manager.chat.screen.loading", "Loading support chat...");
+    if (!activeStore) return translate("store_manager.chat.screen.storeNotFound", "Store not found.");
     if (error) return error;
-    return "Send a message to start a support conversation.";
-  }, [activeStore, error, loading, loadingMessages, storesLoading]);
+    return translate("store_manager.chat.screen.startConversation", "Send a message to start a support conversation.");
+  }, [activeStore, error, loading, loadingMessages, storesLoading, translate]);
 
   const handleBack = () => {
     if (from === "inbox") {
@@ -142,10 +144,10 @@ export default function ChatSupportScreen() {
 
         <View className="flex-1 justify-center">
           <Text className="text-base font-poppins-bold text-textPrimary dark:text-darkTextPrimary leading-tight">
-            {activeStore?.name ?? "Contact Support"}
+            {activeStore?.name ?? translate("store_manager.chat.screen.contactSupport", "Contact Support")}
           </Text>
           <Text className="text-xs font-poppins text-textMuted dark:text-darkTextMuted">
-            Super Admin Support
+            {translate("store_manager.chat.screen.superAdminSupport", "Super Admin Support")}
           </Text>
         </View>
       </View>
@@ -161,7 +163,7 @@ export default function ChatSupportScreen() {
         sending={sending}
         uploadingAttachment={uploadingAttachment}
         disabled={!activeConversationId || !activeStore}
-        placeholder="Message support..."
+        placeholder={translate("store_manager.chat.screen.messagePlaceholder", "Message support...")}
         currentUserRole="store_manager"
         isWeb={isWeb}
         bottomInset={insets.bottom}

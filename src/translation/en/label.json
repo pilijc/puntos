@@ -51,6 +51,12 @@
   "unpaid": "Unpaid",
   "paid": "Paid",
   "customer": "Customer",
+  "user": "User",
+  "unknownUser": "Unknown User",
+  "date": "Date",
+  "dateAndTime": "Date",
   "sessionExpired": "Session Expired",
-  "sessionExpiredMessage": "For security reasons, your session has expired. Please sign in again to continue."
+  "sessionExpiredMessage": "For security reasons, your session has expired. Please sign in again to continue.",
+  "termsOfServiceTitle": "Terms of Service",
+  "termsOfServiceMessage": "By continuing, you agree to our Terms of Service and Privacy Policy.\n\nTerms of Service includes: account eligibility, acceptable use (no abuse/fraud), security responsibilities, and service changes/availability.\n\nPrivacy Policy includes: what data we collect, how we use it, when we share it, how we protect it, how long we keep it, and your privacy choices/rights.\n\nThese policies may change over time."
 }

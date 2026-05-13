@@ -27,7 +27,7 @@ const WEB_MAX_WIDTH = 896;
 const WEB_TAB_PILL_STYLE = { flexGrow: 1, flexBasis: 120, minWidth: 0 };
 
 export default function ViewStamp() {
-  const { t } = useTranslation();
+  const { t: translate } = useTranslation();
   const isWeb = Platform.OS === "web";
   const router = useRouter();
   const colorScheme = useColorScheme();
@@ -75,9 +75,9 @@ export default function ViewStamp() {
       load();
     } catch (e) {
       setModal({
-        title: t("label.error"),
-        message: (e as Error).message ?? t("store_manager.stamp.endFailed"),
-        buttons: [{ label: t("label.ok"), variant: "secondary", onPress: () => setModal(null) }],
+        title: translate("label.error"),
+        message: (e as Error).message ?? translate("store_manager.stamp.endFailed"),
+        buttons: [{ label: translate("label.ok"), variant: "secondary", onPress: () => setModal(null) }],
       });
     } finally {
       setEndingId(null);
@@ -90,9 +90,9 @@ export default function ViewStamp() {
       load();
     } catch (e) {
       setModal({
-        title: t("label.error"),
-        message: (e as Error).message ?? t("store_manager.stamp.deleteFailed"),
-        buttons: [{ label: t("label.ok"), variant: "secondary", onPress: () => setModal(null) }],
+        title: translate("label.error"),
+        message: (e as Error).message ?? translate("store_manager.stamp.deleteFailed"),
+        buttons: [{ label: translate("label.ok"), variant: "secondary", onPress: () => setModal(null) }],
       });
     }
   };
@@ -103,9 +103,9 @@ export default function ViewStamp() {
       load();
     } catch (e) {
       setModal({
-        title: t("label.error"),
-        message: (e as Error).message ?? t("store_manager.stamp.activateFailed"),
-        buttons: [{ label: t("label.ok"), variant: "secondary", onPress: () => setModal(null) }],
+        title: translate("label.error"),
+        message: (e as Error).message ?? translate("store_manager.stamp.activateFailed"),
+        buttons: [{ label: translate("label.ok"), variant: "secondary", onPress: () => setModal(null) }],
       });
     }
   };
@@ -172,8 +172,8 @@ export default function ViewStamp() {
       />
 
       <AppHeader
-        title={t("store_manager.stamp.title")}
-        description={t("store_manager.stamp.description")}
+        title={translate("store_manager.stamp.title")}
+        description={translate("store_manager.stamp.description")}
         onBackPress={() => {
           router.push(`/(store_manager)/view-store/${storeId}`);
         }}
@@ -184,8 +184,8 @@ export default function ViewStamp() {
           <View className={`w-full rounded-xl border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/40 px-3 py-2.5 ${isWeb ? "max-w-4xl" : ""}`}>
             <Text className="text-xs font-poppins text-amber-900 dark:text-amber-200 leading-5">
               {expiresAtIso
-                ? t("store_manager.premiumCampaigns.bannerWithExpiry", { date: formatDate(expiresAtIso) })
-                : t("store_manager.premiumCampaigns.banner")}
+                ? translate("store_manager.premiumCampaigns.bannerWithExpiry", { date: formatDate(expiresAtIso) })
+                : translate("store_manager.premiumCampaigns.banner")}
             </Text>
           </View>
         </View>
@@ -221,7 +221,7 @@ export default function ViewStamp() {
                     }
                     numberOfLines={1}
                   >
-                    {t(`store_manager.stamp.tabs.${tab.key}`)}
+                    {translate(`store_manager.stamp.tabs.${tab.key}`)}
                   </Text>
                   {count > 0 && (
                     <View className={`rounded-full min-w-[18px] items-center px-1.5 ${active ? "bg-white/20" : "bg-slate-100 dark:bg-slate-800"}`}>
@@ -261,7 +261,7 @@ export default function ViewStamp() {
                         : "text-xs font-poppins-medium text-slate-400 dark:text-slate-500"
                     }
                   >
-                    {t(`store_manager.stamp.tabs.${tab.key}`)}
+                    {translate(`store_manager.stamp.tabs.${tab.key}`)}
                   </Text>
                   {count > 0 && (
                     <View className={`rounded-full min-w-[18px] items-center px-1.5 ${active ? "bg-white/20" : ""}`}>
@@ -301,17 +301,17 @@ export default function ViewStamp() {
             <View className="items-center justify-center gap-y-1">
               <Text className="text-sm font-poppins-semibold text-slate-600 dark:text-slate-300 text-center">
                 {activeTab === "draft"
-                  ? t("store_manager.stamp.emptyDraftTitle")
+                  ? translate("store_manager.stamp.emptyDraftTitle")
                   : activeTab === "active"
-                    ? t("store_manager.stamp.emptyActiveTitle")
-                    : t("store_manager.stamp.emptyEndedTitle")}
+                    ? translate("store_manager.stamp.emptyActiveTitle")
+                    : translate("store_manager.stamp.emptyEndedTitle")}
               </Text>
               <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500 text-center">
                 {activeTab === "active"
-                  ? t("store_manager.stamp.emptyActiveBody")
+                  ? translate("store_manager.stamp.emptyActiveBody")
                   : activeTab === "draft"
-                    ? t("store_manager.stamp.emptyDraftBody")
-                    : t("store_manager.stamp.emptyEndedBody")}
+                    ? translate("store_manager.stamp.emptyDraftBody")
+                    : translate("store_manager.stamp.emptyEndedBody")}
               </Text>
             </View>
           </View>
@@ -358,7 +358,7 @@ export default function ViewStamp() {
 
           {activeTab === "active" && activeStamps.length === 0 && !campaignsLocked && (
             <Button
-              label={t("store_manager.stamp.createProgram")}
+              label={translate("store_manager.stamp.createProgram")}
               onPress={() => router.push({ pathname: "/(store_manager)/stamp/configure-stamp", params: { storeId } })}
               variant="primary"
               fullWidth

@@ -1,5 +1,14 @@
 {
   "title": "Settings",
   "checking": "Checking...",
-  "copyright": "Copyright"
+  "copyright": "Copyright",
+  "chatSupport": {
+    "title": "Chat Support",
+    "subtitle": "Get help from Super Admin"
+  },
+  "subscription": {
+    "title": "Subscription",
+    "freePlan": "Free Plan",
+    "proPlan": "Pro Plan"
+  }
 }
