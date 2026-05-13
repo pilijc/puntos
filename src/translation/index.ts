@@ -11,6 +11,7 @@ import en_onboarding_resetPassword from './en/onboarding/resetPassword.json';
 import en_onboarding_signup from './en/onboarding/signup.json';
 import en_onboarding_slide from './en/onboarding/slide.json';
 import en_onboarding_index from './en/onboarding/index.json';
+import en_onboarding_landing from './en/onboarding/landing.json';
 import en_settings_account from './en/settings/account.json';
 import en_settings_deviceSessions from './en/settings/deviceSessions.json';
 import en_settings_logout from './en/settings/logout.json';
@@ -57,6 +58,7 @@ import ja_onboarding_resetPassword from './ja/onboarding/resetPassword.json';
 import ja_onboarding_signup from './ja/onboarding/signup.json';
 import ja_onboarding_slide from './ja/onboarding/slide.json';
 import ja_onboarding_index from './ja/onboarding/index.json';
+import ja_onboarding_landing from './ja/onboarding/landing.json';
 import ja_settings_account from './ja/settings/account.json';
 import ja_settings_deviceSessions from './ja/settings/deviceSessions.json';
 import ja_settings_logout from './ja/settings/logout.json';
@@ -108,6 +110,7 @@ const resources = {
         resetPassword: en_onboarding_resetPassword,
         signup: en_onboarding_signup,
         slide: en_onboarding_slide,
+        landing: en_onboarding_landing,
         ...en_onboarding_index,
       },
       settings: {
@@ -200,6 +203,7 @@ const resources = {
         resetPassword: ja_onboarding_resetPassword,
         signup: ja_onboarding_signup,
         slide: ja_onboarding_slide,
+        landing: ja_onboarding_landing,
         ...ja_onboarding_index,
       },
       settings: {

@@ -15,6 +15,7 @@ import {
 	getManagerSubscriptionPayments,
 	useSubscriptionCheckout,
 	getSubscriptionPlans,
+	pickBasicAndProPlans,
 	normalizeSubscriptionId,
 	cancelManagerSubscription,
 	subscribeToManagerSubscriptionRealtime,
@@ -44,13 +45,6 @@ function formatDateLong(value: string | number | Date | null | undefined): strin
 		month: "long",
 		day: "numeric",
 	}).format(d);
-}
-
-function pickBasicAndProPlans(plans: Array<Record<string, unknown>>) {
-	const basicPlan =
-		plans.find((p) => String(p?.slug ?? "").toLowerCase() === "basic") ?? plans[0] ?? null;
-	const proPlan = plans.find((p) => String(p?.slug ?? "").toLowerCase() === "pro") ?? null;
-	return { basicPlan, proPlan };
 }
 
 export default function SubscriptionScreen() {

@@ -98,7 +98,7 @@ export default function Layout() {
 
       if (!session && !storedSessionToken) {
         if (Platform.OS === "web") {
-          router.replace("/(onboarding)/welcome");
+          router.replace("/(onboarding)/landing");
         } else {
           const hasSeenOnboarding = await AsyncStorage.getItem("hasSeenOnboarding");
           if (!hasSeenOnboarding) {

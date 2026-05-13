@@ -17,7 +17,7 @@ export default function StoreManagerProfile() {
                 if (user) await signOutCurrentDevice(user.id);
                 markIntentionalSignOut();
                 await supabase.auth.signOut();
-                router.push("/(onboarding)/welcome");
+                router.push("/(onboarding)/landing");
             }
             return;
         }
@@ -35,7 +35,7 @@ export default function StoreManagerProfile() {
                     await supabase.auth.signOut();
                     router.push(
                       Platform.OS === "web"
-                        ? "/(onboarding)/welcome"
+                        ? "/(onboarding)/landing"
                         : "/(onboarding)/index",
                     );
                 },

@@ -269,7 +269,11 @@ export default function Login() {
       />
       <AppHeader
         title={""}
-        onBackPress={() => router.replace("/welcome")}
+        onBackPress={() =>
+          router.replace(
+            Platform.OS === "web" ? "/(onboarding)/landing" : "/welcome",
+          )
+        }
         rightIcon={<TranslateButton />}
       />
       {isWeb ? (

@@ -18,7 +18,7 @@ export default function WebUnavailable() {
     markIntentionalSignOut();
     await supabase.auth.signOut();
     await AsyncStorage.removeItem("sessionToken");
-    router.replace("/(onboarding)/welcome");
+    router.replace("/(onboarding)/landing");
   };
 
   return (
