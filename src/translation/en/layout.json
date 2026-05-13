@@ -10,5 +10,6 @@
   "settings": "Settings",
   "scan": "Scan",
   "transactions": "Transactions",
-  "inbox": "Inbox"
+  "inbox": "Inbox",
+  "collapseSidebar": "Collapse"
 }

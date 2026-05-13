@@ -72,7 +72,7 @@ export function DashboardDetailedMetrics({ storeId, transactions = [], loading }
                                 </View>
                                 <View className="flex-[2] px-2">
                                     <Text className="text-[13px] font-poppins-bold text-textPrimary dark:text-darkTextPrimary" numberOfLines={1}>
-                                        {tx.user?.name || 'Unknown User'}
+                                        {tx.user?.name || translate("label.unknownUser", "Unknown User")}
                                     </Text>
                                 </View>
                             </View>

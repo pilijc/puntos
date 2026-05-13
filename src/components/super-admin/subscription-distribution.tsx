@@ -4,6 +4,7 @@ import { View, Text } from "@/tw";
 import Svg, { Circle, G } from "react-native-svg";
 import { Store, RotateCcw, User } from "lucide-react-native";
 import { useDashboardStore } from "@/store/dashboard-store";
+import { useTranslation } from "react-i18next";
 import {
   Timeframe,
   getItemDate,
@@ -25,6 +26,7 @@ export function SubscriptionDistribution({
   onResetPayers,
 }: SubscriptionDistributionProps) {
   const { stores, subscriptions, users, loading } = useDashboardStore();
+  const { t: translate } = useTranslation();
   const isDark = useColorScheme() === "dark";
 
   const radius = 25;
@@ -77,12 +79,12 @@ export function SubscriptionDistribution({
       segments: [
         {
           color: "#FF6600",
-          label: "Pro Plan",
+          label: translate("superAdmin.dashboard.subscription.proPlan", "Pro Plan"),
           sub: `${Math.round(proPercent * 100)}%`,
         },
         {
           color: "#E2E8F0",
-          label: "Basic",
+          label: translate("superAdmin.dashboard.subscription.basicPlan", "Basic"),
           sub: `${Math.round(basicPercent * 100)}%`,
         },
       ],
@@ -111,7 +113,7 @@ export function SubscriptionDistribution({
       const name =
         ownerStores[0]?.owner_name ||
         usersByOwner.get(sub.owner_id)?.name ||
-        "Unknown Manager";
+        translate("superAdmin.dashboard.subscription.unknownManager", "Unknown Manager");
       const activeStores = ownerStores.filter(
         (s) => s.status === "active" || s.is_active
       ).length;
@@ -129,7 +131,7 @@ export function SubscriptionDistribution({
     return (
       <View className="bg-white dark:bg-darkBackgroundCard rounded-xl p-5 mb-[8px] items-center justify-center h-48 border border-transparent dark:border-darkBorder">
         <Text className="text-xs font-poppins text-textMuted dark:text-darkTextMuted">
-          Loading distribution...
+          {translate("superAdmin.dashboard.subscription.loading", "Loading distribution...")}
         </Text>
       </View>
     );
@@ -139,7 +141,7 @@ export function SubscriptionDistribution({
     return (
       <View className="bg-white dark:bg-darkBackgroundCard rounded-xl p-5 mb-[8px] items-center justify-center h-48 border border-transparent dark:border-darkBorder">
         <Text className="text-xs font-poppins text-textMuted dark:text-darkTextMuted">
-          No subscription data yet.
+          {translate("superAdmin.dashboard.subscription.noData", "No subscription data yet.")}
         </Text>
       </View>
     );
@@ -149,7 +151,7 @@ export function SubscriptionDistribution({
     <View className="bg-white dark:bg-darkBackgroundCard rounded-xl p-5 mb-[8px] border border-transparent dark:border-darkBorder">
       {/* Distribution Section */}
       <Text className="text-[13px] font-poppins-bold text-[#475569] dark:text-darkTextPrimary mb-4">
-        Subscription Distribution
+        {translate("superAdmin.dashboard.subscription.distribution", "Subscription Distribution")}
       </Text>
 
       <View className="flex-row items-center mb-8">
@@ -207,13 +209,13 @@ export function SubscriptionDistribution({
         <View className="flex-row items-center gap-2">
           <View className="w-1.5 h-4 rounded-full bg-orange-500" />
           <Text className="text-[11px] font-poppins-bold text-slate-800 dark:text-darkTextPrimary uppercase tracking-widest">
-            Subscription Payers
+            {translate("superAdmin.dashboard.subscription.payers", "Subscription Payers")}
           </Text>
         </View>
         <View className="flex-row items-center gap-2">
           <View className="bg-orange-50 px-2 py-0.5 rounded-md">
             <Text className="text-[9px] font-poppins-bold text-orange-600">
-              {payersList.list.length} Records
+              {payersList.list.length} {translate("superAdmin.dashboard.subscription.records", "Records")}
             </Text>
           </View>
           {onResetPayers && payersList.list.length > 5 && (
@@ -230,7 +232,7 @@ export function SubscriptionDistribution({
           <View className="py-10 items-center">
             <Store size={24} color="#CBD5E1" strokeWidth={1.5} />
             <Text className="text-xs font-poppins text-slate-400 mt-2">
-              No payers in this timeframe
+              {translate("superAdmin.dashboard.subscription.noPayers", "No payers in this timeframe")}
             </Text>
           </View>
         ) : (
@@ -262,7 +264,7 @@ export function SubscriptionDistribution({
                     {item.name}
                   </Text>
                   <Text className="text-[10px] font-poppins text-slate-400 dark:text-darkTextMuted">
-                    {item.activeStores} Active Store{item.activeStores !== 1 ? "s" : ""}
+                    {item.activeStores} {item.activeStores === 1 ? translate("superAdmin.dashboard.subscription.activeStore", "Active Store") : translate("superAdmin.dashboard.subscription.activeStores", "Active Stores")}
                   </Text>
                 </View>
                 <View className="items-end">
@@ -281,7 +283,7 @@ export function SubscriptionDistribution({
                   className="flex-row items-center gap-2 bg-orange-50 dark:bg-orange-950/20 px-5 py-2.5 rounded-full border border-orange-100/50 dark:border-orange-900/10 shadow-sm shadow-orange-100/50"
                 >
                   <Text className="text-[11px] font-poppins-bold text-orange-600 uppercase tracking-tighter">
-                    Show More
+                    {translate("superAdmin.dashboard.subscription.showMore", "Show More")}
                   </Text>
                 </TouchableOpacity>
               </View>

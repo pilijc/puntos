@@ -78,16 +78,16 @@ export default function FrontDeskScanner({
           onBarcodeScanned(scanResult[0].data);
         } else {
           setModal({
-            title: "QR Not Found",
-            message: "No QR code detected in the selected image.",
+            title: translate("frontdesk.transaction.error.qrNotFound"),
+            message: translate("frontdesk.transaction.error.noQrDetected"),
             buttons: [{ label: translate("label.ok"), variant: "secondary", onPress: () => setModal(null) }],
           });
         }
       }
     } catch (error) {
       setModal({
-        title: "Error",
-        message: "Failed to process the image.",
+        title: translate("label.error"),
+        message: translate("frontdesk.transaction.error.failedProcessImage"),
         buttons: [{ label: translate("label.ok"), variant: "secondary", onPress: () => setModal(null) }],
       });
     }
@@ -136,7 +136,7 @@ export default function FrontDeskScanner({
                   >
                     <MaterialIcons name="arrow-back-ios" size={16} color="#FF6600" />
                     <Text className="text-sm font-poppins-medium text-orange-500 ml-1">
-                      Back
+                      {translate("label.back")}
                     </Text>
                   </TouchableOpacity>
                 </View>
@@ -212,7 +212,7 @@ export default function FrontDeskScanner({
                 className="will-change-variable ml-2 text-sm font-poppins-semibold"
                 style={{ color: inputMode === "qr" ? "#FF6600" : (isDark ? "#6B7280" : "#9CA3AF") }}
               >
-                QR Scan
+                {translate("frontdesk.transaction.scanMode.qr")}
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
@@ -235,7 +235,7 @@ export default function FrontDeskScanner({
                 className="will-change-variable ml-2 text-sm font-poppins-semibold"
                 style={{ color: inputMode === "manual" ? "#FF6600" : (isDark ? "#6B7280" : "#9CA3AF") }}
               >
-                Input Code
+                {translate("frontdesk.transaction.scanMode.manual")}
               </Text>
             </TouchableOpacity>
           </View>
@@ -265,14 +265,14 @@ export default function FrontDeskScanner({
                       <MaterialIcons name="qr-code-scanner" size={48} color="#FF6600" />
                     </View>
                     <Text className="text-lg font-poppins-bold text-neutral-900 dark:text-darkTextPrimary mb-2 -mt-2">
-                      Scan QR Code
+                      {translate("frontdesk.transaction.scanMode.qrTitle")}
                     </Text>
                     <Text className="text-sm font-poppins text-neutral-400 dark:text-darkTextSoft text-center mb-6">
-                     Point the camera at the customer's QR
+                      {translate("frontdesk.transaction.scanMode.qrDescription")}
                     </Text>
                     <View className="-mt-1 flex-row gap-x-2 items-center justify-center">
                       <Button
-                        label="Camera"
+                        label={translate("frontdesk.transaction.buttons.camera")}
                         onPress={handleStartScanning}
                         icon="Camera"
                         fitContent
@@ -282,7 +282,7 @@ export default function FrontDeskScanner({
                         className="bg-white dark:bg-darkBackgroundCard border border-orange-500 rounded-xl px-3 py-[9px] flex-row items-center justify-center"
                       >
                         <MaterialIcons name="image" size={16} color="#FF6600" />
-                        <Text className="text-orange-500 font-poppins-semibold text-sm ml-1.5">Upload</Text>
+                        <Text className="text-orange-500 font-poppins-semibold text-sm ml-1.5">{translate("frontdesk.transaction.buttons.upload")}</Text>
                       </TouchableOpacity>
                     </View>
                   </View>
@@ -303,10 +303,10 @@ export default function FrontDeskScanner({
                     <View className="flex-row items-center mb-4 pt-15 -mt-12 pr-3">
                       <View>
                         <Text className="text-base font-poppins-bold text-neutral-900 dark:text-darkTextPrimary pl-15">
-                          Enter Voucher Code
+                          {translate("frontdesk.transaction.scanMode.manualTitle")}
                         </Text>
                         <Text className="text-xs font-poppins text-neutral-400 text-center pl-2">
-                          Type the code from the customer's voucher
+                          {translate("frontdesk.transaction.scanMode.manualDescription")}
                         </Text>
                       </View>
                     </View>

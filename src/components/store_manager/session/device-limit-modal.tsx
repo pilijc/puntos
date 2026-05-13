@@ -21,7 +21,7 @@ export function DeviceLimitModal({
     onCancel,
 }: DeviceLimitModalProps) {
     const [isRetrying, setIsRetrying] = useState(false);
-    const { t } = useTranslation();
+    const { t: translate } = useTranslation();
 
     const handleRetry = async () => {
         setIsRetrying(true);
@@ -36,10 +36,10 @@ export function DeviceLimitModal({
         <Modal 
             visible={visible}
             onClose={onCancel}
-            title={t("settings.deviceSessions.limitReached")}
+            title={translate("settings.deviceSessions.limitReached")}
             buttons={[
                 {
-                    label: t("settings.deviceSessions.checkAgain"),
+                    label: translate("settings.deviceSessions.checkAgain"),
                     onPress: handleRetry,
                     variant: "primary",
                     loading: isRetrying,
@@ -56,10 +56,10 @@ export function DeviceLimitModal({
                     </View>
                     <View className="flex-1">
                         <Text className="text-red-900 dark:text-red-200 text-sm font-poppins-semibold mb-0.5">
-                            {t("settings.deviceSessions.limitWarningTitle")}
+                            {translate("settings.deviceSessions.limitWarningTitle")}
                         </Text>
                         <Text className="text-red-700/80 dark:text-red-300 text-xs font-poppins leading-4">
-                            {t("settings.deviceSessions.limitWarningBody", { max: MAX_DEVICE_SESSIONS })}
+                            {translate("settings.deviceSessions.limitWarningBody", { max: MAX_DEVICE_SESSIONS })}
                         </Text>
                     </View>
                 </View>
@@ -67,7 +67,7 @@ export function DeviceLimitModal({
                 {/* device list */}
                 <View className="mb-2">
                     <Text className="text-textSecondary dark:text-darkTextSecondary text-[10px] font-poppins-semibold tracking-wider uppercase mb-3">
-                        {t("settings.deviceSessions.yourActiveDevices")}
+                        {translate("settings.deviceSessions.yourActiveDevices")}
                     </Text>
 
                     <View className="bg-backgroundMuted/50 dark:bg-darkBorder/10 border border-border dark:border-darkBorder rounded-xl px-1 overflow-hidden">

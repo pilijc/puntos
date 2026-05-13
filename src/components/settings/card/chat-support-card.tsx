@@ -29,7 +29,7 @@ export function ChatSupportCard() {
         <View className="flex-1 ml-2">
           <View className="flex-row items-center gap-1.5">
             <Text className="text-md font-poppins-semibold text-textPrimary dark:text-darkTextPrimary">
-              Chat Support
+              {translate("settings.chatSupport.title", "Chat Support")}
             </Text>
             {unreadCount > 0 && (
               <View
@@ -57,7 +57,7 @@ export function ChatSupportCard() {
             )}
           </View>
           <Text className="text-xs font-poppins text-textMuted dark:text-darkTextMuted">
-            Get help from Super Admin
+            {translate("settings.chatSupport.subtitle", "Get help from Super Admin")}
           </Text>
         </View>
 

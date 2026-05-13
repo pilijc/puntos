@@ -27,7 +27,7 @@ function webContainerStyle(paddingTop = 16, paddingBottom = 48) {
 
 export default function DetailIndex() {
   const router = useRouter();
-  const { t } = useTranslation();
+  const { t: translate } = useTranslation();
   const {
     storeId,
     detail,
@@ -41,17 +41,17 @@ export default function DetailIndex() {
 
   const statusKey = detail?.status && detail.status in STATUS_CONFIG ? detail.status : "pending_review";
   const statusCfg = STATUS_CONFIG[statusKey] ?? STATUS_CONFIG.pending_review;
-  const statusLabel = t(`store_manager.detail.status.${statusKey}`);
+  const statusLabel = translate(`store_manager.detail.status.${statusKey}`);
 
   const storeTypeLabel = useMemo(() => {
     if (!detail?.type) return "—";
     if (store_types_options.some((o) => o.value === detail.type)) {
-      return t(`store_manager.storeTypes.${detail.type}`);
+      return translate(`store_manager.storeTypes.${detail.type}`);
     }
     return detail.type;
-  }, [detail?.type, t]);
+  }, [detail?.type, translate]);
 
-  const notSet = t("store_manager.detail.notSet");
+  const notSet = translate("store_manager.detail.notSet");
   const [docPreviewVisible, setDocPreviewVisible] = useState(false);
   const bannerScrollRef = useRef<RNScrollView>(null);
   const [bannerIndex, setBannerIndex] = useState(0);
@@ -68,8 +68,8 @@ export default function DetailIndex() {
   return (
     <SafeAreaView edges={["top"]} className="flex-1 bg-backgroundMuted dark:bg-neutral-900">
       <AppHeader
-        title={detail?.name || t("store_manager.viewStore.fallbackTitle")}
-        description={detail?.address || t("store_manager.detail.headerDefaultDescription")}
+        title={detail?.name || translate("store_manager.viewStore.fallbackTitle")}
+        description={detail?.address || translate("store_manager.detail.headerDefaultDescription")}
         onBackPress={() => {
           router.push(`/(store_manager)/view-store/${storeId}`);
         }}
@@ -77,7 +77,7 @@ export default function DetailIndex() {
           <OptionsMenu
             options={[
               {
-                label: t("label.edit"),
+                label: translate("label.edit"),
                 icon: <Pencil size={14} color="text-primary" />,
                 onPress: () => router.push({ pathname: "/(store_manager)/detail/edit-details", params: { storeId } }),
               },
@@ -201,7 +201,7 @@ export default function DetailIndex() {
                   <View className="flex-1 ml-3 pb-1 pt-10">
                     <View className="flex-row items-center flex-wrap gap-x-2">
                       <Text className="text-base font-poppins-bold text-slate-800 dark:text-slate-100">
-                        {detail?.name || t("store_manager.detail.unnamedStore")}
+                        {detail?.name || translate("store_manager.detail.unnamedStore")}
                       </Text>
                       <View className={`flex-row items-center gap-x-1 px-2 py-0.5 rounded-full ${statusCfg.bg}`}>
                         <View className={`w-1.5 h-1.5 rounded-full ${statusCfg.dot}`} />
@@ -292,7 +292,7 @@ export default function DetailIndex() {
                       }}
                     >
                       <Text className="text-xs font-poppins-semibold text-textSecondary dark:text-textSecondary mb-1">
-                        {t("label.businessDocument")}
+                        {translate("label.businessDocument")}
                       </Text>
                       <TouchableOpacity
                         activeOpacity={0.75}
@@ -304,10 +304,10 @@ export default function DetailIndex() {
                         </View>
                         <View className="flex-1">
                           <Text className="text-xs font-poppins-semibold text-textPrimary dark:text-slate-100" numberOfLines={1}>
-                            {detail.business_document_image.split("/").pop() ?? t("label.businessDocument")}
+                            {detail.business_document_image.split("/").pop() ?? translate("label.businessDocument")}
                           </Text>
                           <Text className="text-[10px] font-poppins text-textMuted dark:text-slate-500 mt-0.5">
-                            {t("label.tapToView", "Tap to view")}
+                            {translate("label.tapToView", "Tap to view")}
                           </Text>
                         </View>
                       </TouchableOpacity>
@@ -316,7 +316,7 @@ export default function DetailIndex() {
                     <Modal
                       visible={docPreviewVisible}
                       onClose={() => setDocPreviewVisible(false)}
-                      title={t("label.businessDocument")}
+                      title={translate("label.businessDocument")}
                       showCloseButton
                       dismissOnBackdrop
                     >
@@ -332,7 +332,7 @@ export default function DetailIndex() {
 
                 <View className="px-6 py-3 gap-y-2">
                   <Text className="text-xs font-poppins-semibold text-textSecondary dark:text-textSecondary mb-1">
-                    {t("label.location")}
+                    {translate("label.location")}
                   </Text>
                   {detail?.address && (
                     <View className="flex-row items-start gap-x-1">
@@ -401,7 +401,7 @@ export default function DetailIndex() {
                       <View className="flex-1 bg-slate-50 dark:bg-neutral-700 items-center justify-center gap-y-1">
                         <MapPin size={24} color={isDark ? "#525252" : "#CBD5E1"} />
                         <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">
-                          {t("store_manager.detail.mapOnlyAndroidWeb")}
+                          {translate("store_manager.detail.mapOnlyAndroidWeb")}
                         </Text>
                       </View>
                     )
@@ -409,7 +409,7 @@ export default function DetailIndex() {
                     <View className="flex-1 bg-slate-50 dark:bg-neutral-700 items-center justify-center gap-y-1">
                       <MapPinOff size={24} color={isDark ? "#525252" : "#CBD5E1"} />
                       <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">
-                        {t("store_manager.detail.noLocationSet")}
+                        {translate("store_manager.detail.noLocationSet")}
                       </Text>
                     </View>
                   )}

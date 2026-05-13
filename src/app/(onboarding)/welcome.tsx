@@ -113,7 +113,7 @@ export default function OnboardingWelcome() {
                       authButton={true}
                     />
                     <Button
-                      label={"Sign up as Store Manager"}
+                      label={translate("onboarding.signup.managerButton", "Sign up as Store Manager")}
                       onPress={handleSignup}
                       variant="secondary"
                       fullWidth={true}
@@ -153,12 +153,11 @@ export default function OnboardingWelcome() {
                               className="text-primary font-poppins-semibold"
                               onPress={() =>
                                 setModal({
-                                  title: "Terms of Service",
-                                  message:
-                                    "By continuing, you agree to our Terms of Service and Privacy Policy.\n\nTerms of Service includes: account eligibility, acceptable use (no abuse/fraud), security responsibilities, and service changes/availability.\n\nPrivacy Policy includes: what data we collect, how we use it, when we share it, how we protect it, how long we keep it, and your privacy choices/rights.\n\nThese policies may change over time.",
+                                  title: translate("label.termsOfServiceTitle", "Terms of Service"),
+                                  message: translate("label.termsOfServiceMessage"),
                                   buttons: [
                                     {
-                                      label: "OK",
+                                      label: translate("label.ok", "OK"),
                                       variant: "primary",
                                       onPress: () => setModal(null),
                                     },
@@ -251,12 +250,11 @@ export default function OnboardingWelcome() {
                           className="text-primary font-poppins-semibold"
                           onPress={() =>
                             setModal({
-                              title: "Terms of Service",
-                              message:
-                                "By continuing, you agree to our Terms of Service and Privacy Policy.\n\nTerms of Service includes: account eligibility, acceptable use (no abuse/fraud), security responsibilities, and service changes/availability.\n\nPrivacy Policy includes: what data we collect, how we use it, when we share it, how we protect it, how long we keep it, and your privacy choices/rights.\n\nThese policies may change over time.",
+                              title: translate("label.termsOfServiceTitle", "Terms of Service"),
+                              message: translate("label.termsOfServiceMessage"),
                               buttons: [
                                 {
-                                  label: "OK",
+                                  label: translate("label.ok", "OK"),
                                   variant: "primary",
                                   onPress: () => setModal(null),
                                 },

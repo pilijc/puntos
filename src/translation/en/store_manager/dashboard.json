@@ -4,16 +4,35 @@
     "inStore": "IN-STORE",
     "realTimeUsers": "real-time users",
     "totalScanned": "TOTAL SCANNED",
-    "redeemedToday": "Redeemed today"
+    "redeemedToday": "Redeemed today",
+    "returning": "Returning Users",
+    "newUsers": "New Users"
   },
   "retention": {
-    "title": "Retention",
-    "subtitle": "User loyalty overview",
+    "title": "User Retention",
+    "subtitle": "Returning vs New Customers",
     "returning": "Returning",
-    "new": "New"
+    "new": "New",
+    "returningUsers": "Returning Users",
+    "newUsers": "New Users",
+    "totalCustomers": "Total Customers",
+    "users": "users"
   },
   "activity": {
-    "title": "Activity Overview"
+    "title": "Activity Overview",
+    "titleShort": "Activity",
+    "peakDay": "Peak Day",
+    "dailyAvg": "Daily Avg",
+    "metric": {
+      "scans": "Total Scans",
+      "unique_visitors": "Unique Visitors",
+      "redemptions": "Redemptions",
+      "new_members": "New Members"
+    }
+  },
+  "detailedMetrics": {
+    "title": "Recent Transactions",
+    "noTransactions": "No recent transactions found."
   },
   "stampProgress": {
     "title": "Stamp Progress",

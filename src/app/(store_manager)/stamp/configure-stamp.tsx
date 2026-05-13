@@ -22,7 +22,7 @@ import { useTranslation } from "react-i18next";
 import { useStorePremiumCampaignEdit } from "@/hooks/store-manager/use-store-premium-campaign-edit";
 
 export default function ConfigureStamp() {
-  const { t } = useTranslation();
+  const { t: translate } = useTranslation();
   const router = useRouter();
   const { storeId, stampId } = useLocalSearchParams<{ storeId: string; stampId?: string }>();
   const isEdit = !!stampId;
@@ -106,11 +106,11 @@ export default function ConfigureStamp() {
           .catch((e) => {
             if (cancelled) return;
             setModal({
-              title: t("store_manager.stampConfigure.cannotEditTitle"),
-              message: (e as Error).message ?? t("store_manager.stampConfigure.cannotEditDefault"),
+              title: translate("store_manager.stampConfigure.cannotEditTitle"),
+              message: (e as Error).message ?? translate("store_manager.stampConfigure.cannotEditDefault"),
               buttons: [
                 {
-                  label: t("label.ok"),
+                  label: translate("label.ok"),
                   onPress: () => {
                     setModal(null);
                     router.push({ pathname: "/(store_manager)/stamp", params: { storeId } });
@@ -128,7 +128,7 @@ export default function ConfigureStamp() {
       storeId,
       isEdit,
       programId,
-      t,
+      translate,
       router,
       setModal,
       setTotalStampsError,
@@ -197,10 +197,10 @@ export default function ConfigureStamp() {
       reset();
       setSelectedReward(null);
       setModal({
-        title: t("label.success"),
-        message: isEdit ? t("store_manager.stampConfigure.successUpdate") : t("store_manager.stampConfigure.successCreate"),
+        title: translate("label.success"),
+        message: isEdit ? translate("store_manager.stampConfigure.successUpdate") : translate("store_manager.stampConfigure.successCreate"),
         buttons: [{
-          label: t("label.ok"),
+          label: translate("label.ok"),
           onPress: () => {
             setModal(null);
             router.push({ pathname: "/(store_manager)/stamp", params: { storeId } });
@@ -209,9 +209,9 @@ export default function ConfigureStamp() {
       });
     } catch (error) {
       setModal({
-        title: t("label.error"),
-        message: (error as Error).message ?? t("store_manager.stampConfigure.saveFailed"),
-        buttons: [{ label: t("label.ok"), onPress: () => setModal(null) }],
+        title: translate("label.error"),
+        message: (error as Error).message ?? translate("store_manager.stampConfigure.saveFailed"),
+        buttons: [{ label: translate("label.ok"), onPress: () => setModal(null) }],
       });
     } finally {
       setIsSubmitting(false);
@@ -236,7 +236,7 @@ export default function ConfigureStamp() {
         buttons={modal?.buttons}
       />
       <AppHeader
-        title={isEdit ? t("store_manager.stampConfigure.editTitle") : t("store_manager.stampConfigure.newTitle")}
+        title={isEdit ? translate("store_manager.stampConfigure.editTitle") : translate("store_manager.stampConfigure.newTitle")}
         onBackPress={() => {
           router.push({ pathname: "/(store_manager)/stamp", params: { storeId } });
         }}
@@ -257,23 +257,23 @@ export default function ConfigureStamp() {
             <View className="gap-y-4">
               <View className="gap-y-1">
                 <Text className="text-base font-poppins-bold text-textPrimary dark:text-darkTextPrimary">
-                  {t("storeManager.stampConfigure.stampDetails")}
+                  {translate("storeManager.stampConfigure.stampDetails")}
                 </Text>
                 <Text className="text-sm font-poppins text-textSecondary dark:text-darkTextSecondary">
-                  {t("storeManager.stampConfigure.stampDetailsBody")}
+                  {translate("storeManager.stampConfigure.stampDetailsBody")}
                 </Text>
               </View>
 
             <View className="rounded-xl bg-amber-50 dark:bg-amber-900/20 p-4">
               <View className="flex-row items-center gap-x-2">
                 <Text className="text-sm font-poppins-bold text-amber-700 dark:text-amber-400">
-                  {t("store_manager.stampConfigure.beforeYouStart")}
+                  {translate("store_manager.stampConfigure.beforeYouStart")}
                 </Text>
               </View>
               <View>
                 {[
-                  t("store_manager.stampConfigure.rule1"),
-                  t("store_manager.stampConfigure.rule2"),
+                  translate("store_manager.stampConfigure.rule1"),
+                  translate("store_manager.stampConfigure.rule2"),
                 ].map((rule, i) => (
                   <View
                     key={i}
@@ -291,8 +291,8 @@ export default function ConfigureStamp() {
 
             <View className="gap-y-1.5">
               <TextField
-                label={t("store_manager.stampConfigure.stampsToRedeem")}
-                placeholder={t("label.eg10Placeholder")}
+                label={translate("store_manager.stampConfigure.stampsToRedeem")}
+                placeholder={translate("label.eg10Placeholder")}
                 keyboardType="decimal-pad"
                 value={total_stamps > 0 ? String(total_stamps) : ""}
                 onChangeText={(v) => {
@@ -305,7 +305,7 @@ export default function ConfigureStamp() {
               />
               {totalStampsError && (
                 <Text className="text-xs font-poppins text-red-500 dark:text-red-400 -mt-1">
-                  {t("store_manager.stampConfigure.stampsRequiredInvalid")}
+                  {translate("store_manager.stampConfigure.stampsRequiredInvalid")}
                 </Text>
               )}
             </View>
@@ -314,7 +314,7 @@ export default function ConfigureStamp() {
               <View className="flex-row items-center justify-between">
                 <View className="flex-row items-center gap-x-1">
                   <Text className="text-sm font-poppins-semibold text-slate-700 dark:text-slate-300">
-                    {t("store_manager.stampConfigure.reward")}
+                    {translate("store_manager.stampConfigure.reward")}
                   </Text>
                   <Text className="text-sm font-poppins text-red-500 dark:text-red-400 ">*</Text>
                 </View>
@@ -329,7 +329,7 @@ export default function ConfigureStamp() {
                     className="px-2 py-1"
                     hitSlop={8 as any}
                   >
-                    <Text className="text-xs font-poppins-semibold text-primary">{t("store_manager.stampConfigure.clear")}</Text>
+                    <Text className="text-xs font-poppins-semibold text-primary">{translate("store_manager.stampConfigure.clear")}</Text>
                   </TouchableOpacity>
                 )}
               </View>
@@ -344,10 +344,10 @@ export default function ConfigureStamp() {
                   <Gift size={26} color="#94A3B8" />
                   <View className="items-center gap-y-1">
                     <Text className="text-sm font-poppins-semibold text-slate-600 dark:text-slate-400">
-                      {t("store_manager.stampConfigure.noRewardsTitle")}
+                      {translate("store_manager.stampConfigure.noRewardsTitle")}
                     </Text>
                     <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500 text-center">
-                      {t("store_manager.stampConfigure.noRewardsBody")}
+                      {translate("store_manager.stampConfigure.noRewardsBody")}
                     </Text>
                   </View>
                   <TouchableOpacity
@@ -357,7 +357,7 @@ export default function ConfigureStamp() {
                       router.push({ pathname: "/(store_manager)/reward", params: { storeId } })
                     }
                   >
-                    <Text className="text-white text-xs font-poppins-bold">{t("store_manager.stampConfigure.createReward")}</Text>
+                    <Text className="text-white text-xs font-poppins-bold">{translate("store_manager.stampConfigure.createReward")}</Text>
                   </TouchableOpacity>
                 </View>
               ) : (
@@ -383,10 +383,10 @@ export default function ConfigureStamp() {
                   )}
                   <View className="flex-1">
                     <Text className="text-sm font-poppins-semibold text-slate-900 dark:text-slate-100">
-                      {selectedReward?.title ?? (reward_id ? t("store_manager.stampConfigure.loadingReward") : t("store_manager.stampConfigure.chooseReward"))}
+                      {selectedReward?.title ?? (reward_id ? translate("store_manager.stampConfigure.loadingReward") : translate("store_manager.stampConfigure.chooseReward"))}
                     </Text>
                     <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500 mt-0.5">
-                      {selectedReward ? t("store_manager.reward.pts", { points: selectedReward.points_cost }) : t("store_manager.stampConfigure.opensList")}
+                      {selectedReward ? translate("store_manager.reward.pts", { points: selectedReward.points_cost }) : translate("store_manager.stampConfigure.opensList")}
                     </Text>
                   </View>
                   <ChevronRight size={20} color="#94A3B8" />
@@ -394,7 +394,7 @@ export default function ConfigureStamp() {
               )}
               {rewardError && (
                 <Text className="text-xs font-poppins text-red-500 dark:text-red-400 -mt-1">
-                  {t("store_manager.stampConfigure.selectReward")}
+                  {translate("store_manager.stampConfigure.selectReward")}
                 </Text>
               )}
             </View>
@@ -404,12 +404,12 @@ export default function ConfigureStamp() {
             <View className="gap-y-1">
               <View className="flex-row items-center gap-x-1">
                 <Text className="text-sm font-poppins-semibold text-slate-700 dark:text-slate-300">
-                  {t("store_manager.stampConfigure.expirationMode")}
+                  {translate("store_manager.stampConfigure.expirationMode")}
                 </Text>
                 <Text className="text-sm font-poppins text-red-500 dark:text-red-400 ">*</Text>
               </View>
               <Text className="text-xs font-poppins text-slate-500 dark:text-slate-400">
-                {t("store_manager.stampConfigure.expirationModeHint")}
+                {translate("store_manager.stampConfigure.expirationModeHint")}
               </Text>
             </View>
 
@@ -432,12 +432,12 @@ export default function ConfigureStamp() {
                   <View className="flex-row items-center justify-between">
                     <View className="flex-1 pr-3">
                       <Text className="text-sm font-poppins pr-8 text-textSecondary dark:text-darkTextSecondary mt-1 font-poppins-semibold">
-                        {t(`store_manager.stampConfigure.expiration.${opt.key}.label`)}
+                        {translate(`store_manager.stampConfigure.expiration.${opt.key}.label`)}
                       </Text>
                       <Text
                         className="text-xs font-poppins pr-8 text-textMuted dark:text-darkTextMuted mt-1"
                       >
-                        {t(`store_manager.stampConfigure.expiration.${opt.key}.description`)}
+                        {translate(`store_manager.stampConfigure.expiration.${opt.key}.description`)}
                       </Text>
                     </View>
                     <View
@@ -455,8 +455,8 @@ export default function ConfigureStamp() {
             {expiration_mode === "card" && (
               <View className="gap-y-1.5 pl-1">
                 <TextField
-                  label={t("store_manager.stampConfigure.expirationDays")}
-                  placeholder={t("store_manager.stampConfigure.expirationDaysPlaceholder")}
+                  label={translate("store_manager.stampConfigure.expirationDays")}
+                  placeholder={translate("store_manager.stampConfigure.expirationDaysPlaceholder")}
                   keyboardType="numeric"
                   value={expiration_days > 0 ? String(expiration_days) : ""}
                   onChangeText={(v) => {
@@ -469,7 +469,7 @@ export default function ConfigureStamp() {
                 />
                 {expirationDaysError && (
                   <Text className="text-xs font-poppins text-red-500 dark:text-red-400 -mt-1">
-                    {t("store_manager.stampConfigure.expirationDaysInvalid")}
+                    {translate("store_manager.stampConfigure.expirationDaysInvalid")}
                   </Text>
                 )}
               </View>
@@ -479,7 +479,7 @@ export default function ConfigureStamp() {
           {isWeb ? (
             <View className="flex-row gap-x-3 justify-center items-center">
               <Button
-                label={t("storeManager.stampConfigure.cancel")}
+                label={translate("storeManager.stampConfigure.cancel")}
                 onPress={() => {
                   router.push({ pathname: "/(store_manager)/stamp", params: { storeId } });
                 }}
@@ -487,7 +487,7 @@ export default function ConfigureStamp() {
                 fullWidth={false}
               />
               <Button
-                label={isEdit ? t("storeManager.stampConfigure.saveChanges") : t("storeManager.stampConfigure.launchProgram")}
+                label={isEdit ? translate("storeManager.stampConfigure.saveChanges") : translate("storeManager.stampConfigure.launchProgram")}
                 onPress={handleSave}
                 disabled={isSubmitting}
                 variant="primary"
@@ -497,14 +497,14 @@ export default function ConfigureStamp() {
           ) : (
             <View className="gap-y-3">
               <Button
-                label={isEdit ? t("storeManager.stampConfigure.saveChanges") : t("storeManager.stampConfigure.launchProgram")}
+                label={isEdit ? translate("storeManager.stampConfigure.saveChanges") : translate("storeManager.stampConfigure.launchProgram")}
                 onPress={handleSave}
                 disabled={isSubmitting}
                 variant="primary"
                 fullWidth={true}
               />
               <Button
-                label={t("storeManager.stampConfigure.cancel")}
+                label={translate("storeManager.stampConfigure.cancel")}
                 onPress={() => {
                   router.push({ pathname: "/(store_manager)/stamp", params: { storeId } });
                 }}

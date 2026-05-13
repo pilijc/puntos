@@ -55,5 +55,13 @@
     "ended": "終了",
     "ended_grace": "猶予中",
     "ended_expired": "期限切れ"
+  },
+  "rewardPicker": {
+    "title": "特典を選択",
+    "scrollHint": "スクロールしてさらに読み込む（1ページあたり{{pageSize}}件）",
+    "emptyTitle": "特典がまだありません",
+    "emptyBody": "先に特典を作成してから、ここで選択してください。",
+    "createButton": "特典を作成する",
+    "pointsSuffix": "ポイント"
   }
 }

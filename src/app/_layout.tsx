@@ -48,7 +48,7 @@ export async function initOneSignal(): Promise<string | null> {
 
 export default function Layout() {
   useAuthListener();
-  const { t } = useTranslation();
+  const { t: translate } = useTranslation();
   const router = useRouter();
   const pathname = usePathname();
   const [fontsLoaded] = useFonts({
@@ -211,14 +211,14 @@ export default function Layout() {
       <Modal
         visible={sessionExpiredNotice}
         onClose={() => setSessionExpiredNotice(false)}
-        title={t("onboarding.sessionExpired.title")}
-        message={t("onboarding.sessionExpired.message")}
+        title={translate("onboarding.sessionExpired.title")}
+        message={translate("onboarding.sessionExpired.message")}
         showCloseButton={false}
         dismissOnBackdrop={false}
         timer={3000}
         buttons={[
           {
-            label: t("onboarding.sessionExpiredButton"),
+            label: translate("onboarding.sessionExpiredButton"),
             onPress: () => {
               setSessionExpiredNotice(false);
             },

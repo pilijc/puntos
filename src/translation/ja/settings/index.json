@@ -1,5 +1,14 @@
 {
   "title": "設定",
-  "checking": "確認中…",
-  "copyright": "著作権"
+  "checking": "確認中...",
+  "copyright": "著作権",
+  "chatSupport": {
+    "title": "チャットサポート",
+    "subtitle": "管理者へのお問い合わせ"
+  },
+  "subscription": {
+    "title": "サブスクリプション",
+    "freePlan": "フリープラン",
+    "proPlan": "プロプラン"
+  }
 }
