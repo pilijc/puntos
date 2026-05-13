@@ -15,15 +15,15 @@ export function DashboardStampDistribution({ buckets, maxStamps, loading }: Stam
 
     if (buckets.length === 0) {
         return (
-            <View className="flex-1 bg-white dark:bg-darkBackgroundCard rounded-xl p-6 elevation-1 border border-transparent dark:border-darkBorder items-center justify-center">
+            <View className="flex-1 bg-white dark:bg-darkBackgroundCard rounded-xl p-6 elevation-1 border border-slate-100 dark:border-darkBorder items-center justify-center">
                 <View className="bg-slate-50 dark:bg-darkBackgroundMuted p-4 rounded-full mb-4">
                     <Ticket size={32} color={isDark ? "#525252" : "#cbd5e1"} />
                 </View>
                 <Text className="text-base font-poppins-bold text-textPrimary dark:text-darkTextPrimary text-center">
-                    {translate("store_manager.dashboard.stampProgress.noProgram", "No active stamp program")}
+                    {translate("storeManager.dashboard.stampProgress.noProgram", "No active stamp program")}
                 </Text>
                 <Text className="text-xs font-poppins text-textSecondary dark:text-darkTextSecondary mt-1.5 text-center px-4 leading-5">
-                    {translate("store_manager.dashboard.stampProgress.noProgramDesc", "Create a stamp program to reward loyal customers and track their progress here.")}
+                    {translate("storeManager.dashboard.stampProgress.noProgramDesc", "Create a stamp program to reward loyal customers and track their progress here.")}
                 </Text>
             </View>
         );
@@ -33,32 +33,32 @@ export function DashboardStampDistribution({ buckets, maxStamps, loading }: Stam
     const maxCount = Math.max(...buckets.map(b => b.count));
 
     return (
-        <View className="flex-1 bg-white dark:bg-darkBackgroundCard rounded-xl p-4 elevation-1 border border-transparent dark:border-darkBorder">
-            <Text className="text-lg font-poppins-bold text-textPrimary dark:text-darkTextPrimary leading-6">
-                {translate("store_manager.dashboard.stampProgress.title", "Stamp Progress")}
+        <View className="flex-1 bg-white dark:bg-darkBackgroundCard rounded-xl p-5 elevation-1 border border-slate-100 dark:border-darkBorder">
+            <Text className="text-[17px] font-poppins-bold text-textPrimary dark:text-darkTextPrimary leading-6">
+                {translate("storeManager.dashboard.stampProgress.title", "Stamp Progress")}
             </Text>
-            <Text className="text-xs font-poppins text-textSecondary dark:text-darkTextSecondary mt-0.5 mb-2">
-                {translate("store_manager.dashboard.stampProgress.distribution", "Distribution of {{users}} users", {
+            <Text className="text-[12px] font-poppins text-textSecondary dark:text-darkTextSecondary mt-0.5 mb-4">
+                {translate("storeManager.dashboard.stampProgress.distribution", "Distribution of {{users}} users", {
                     users: totalUsers,
                     goal: maxStamps,
                 })}
             </Text>
 
-            <View className="flex-col gap-3">
+            <View className="flex-col gap-3.5">
                 {buckets.map((bucket, index) => {
                     const widthPercent = maxCount === 0 ? 0 : (bucket.count / maxCount) * 100;
                     return (
                         <View key={index} className="flex-row items-center">
-                            <Text className="text-xs font-poppins text-textSecondary dark:text-darkTextSecondary w-10 text-right mr-3">
+                            <Text className="text-[12px] font-poppins-medium text-textSecondary dark:text-darkTextSecondary w-10 text-right mr-3">
                                 {bucket.label}
                             </Text>
-                            <View className="flex-1 h-2.5 bg-slate-100 dark:bg-darkBackgroundMuted rounded-full overflow-hidden">
+                            <View className="flex-1 h-3 bg-slate-100 dark:bg-darkBackgroundMuted rounded-full overflow-hidden">
                                 <View 
                                     className="h-full bg-[#ff6600] rounded-full" 
                                     style={{ width: `${widthPercent}%` }} 
                                 />
                             </View>
-                            <Text className="text-xs font-poppins-bold text-textPrimary dark:text-darkTextPrimary w-8 text-right ml-3">
+                            <Text className="text-[12px] font-poppins-bold text-textPrimary dark:text-darkTextPrimary w-8 text-right ml-3">
                                 {bucket.count}
                             </Text>
                         </View>

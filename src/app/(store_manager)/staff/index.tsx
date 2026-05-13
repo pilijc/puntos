@@ -61,10 +61,10 @@ export default function ViewStaff() {
   }, [fetchStaff, setRefreshing]);
 
   const confirmDelete = (staffId: string, name: string | null) => {
-    const displayName = name ?? translate("store_manager.staff.removeFallbackName");
+    const displayName = name ?? translate("storeManager.staff.removeFallbackName");
     setModal({
-      title: translate("store_manager.staff.removeTitle"),
-      message: translate("store_manager.staff.removeMessage", { name: displayName }),
+      title: translate("storeManager.staff.removeTitle"),
+      message: translate("storeManager.staff.removeMessage", { name: displayName }),
       buttons: [
         {
           label: translate("label.cancel"),
@@ -73,13 +73,13 @@ export default function ViewStaff() {
           disabled: deleting === staffId,
         },
         {
-          label: translate("store_manager.staff.removeAction"),
+          label: translate("storeManager.staff.removeAction"),
           variant: "primary",
           onPress: async () => {
             setDeleting(staffId);
             setModal({
-              title: translate("store_manager.staff.removeTitle"),
-              message: translate("store_manager.staff.removeMessage", { name: displayName }),
+              title: translate("storeManager.staff.removeTitle"),
+              message: translate("storeManager.staff.removeMessage", { name: displayName }),
               buttons: [
                 {
                   label: translate("label.cancel"),
@@ -88,7 +88,7 @@ export default function ViewStaff() {
                   disabled: true,
                 },
                 {
-                  label: translate("store_manager.staff.removeAction"),
+                  label: translate("storeManager.staff.removeAction"),
                   onPress: async () => {},
                   variant: "primary",
                   loading: true,
@@ -102,8 +102,8 @@ export default function ViewStaff() {
               setModal(null);
             } catch {
               setModal({
-                title: translate("store_manager.staff.removeFailedTitle"),
-                message: translate("store_manager.staff.removeFailedMessage"),
+                title: translate("storeManager.staff.removeFailedTitle"),
+                message: translate("storeManager.staff.removeFailedMessage"),
                 buttons: [{ label: translate("label.ok"), onPress: () => setModal(null), variant: "secondary" }],
               });
             } finally {
@@ -125,8 +125,8 @@ export default function ViewStaff() {
         buttons={modal?.buttons}
       />
       <AppHeader
-        title={translate("store_manager.staff.title")}
-        description={translate("store_manager.staff.description")}
+        title={translate("storeManager.staff.title")}
+        description={translate("storeManager.staff.description")}
         onBackPress={() => {
           router.push(`/(store_manager)/view-store/${storeId}`);
         }}
@@ -157,9 +157,9 @@ export default function ViewStaff() {
               </View>
               <View className="flex-1">
                 <Text className="text-sm font-poppins-bold text-slate-800 dark:text-slate-100">
-                  {loading ? "—" : translate("store_manager.staff.memberCount", { count: staff.length })}
+                  {loading ? "—" : translate("storeManager.staff.memberCount", { count: staff.length })}
                 </Text>
-                <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">{translate("store_manager.staff.subtitle")}</Text>
+                <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">{translate("storeManager.staff.subtitle")}</Text>
               </View>
               {staff.length > 0 && (
                 <TouchableOpacity
@@ -183,9 +183,9 @@ export default function ViewStaff() {
             ) : staff.length === 0 ? (
               <View className="mx-4 bg-white dark:bg-neutral-800 rounded-xl border border-slate-100 dark:border-neutral-700 px-4 py-14 items-center gap-y-2">
                 <UserRoundX size={36} color="#CBD5E1" />
-                <Text className="text-sm font-poppins-semibold text-slate-400 dark:text-slate-500">{translate("store_manager.staff.emptyTitle")}</Text>
+                <Text className="text-sm font-poppins-semibold text-slate-400 dark:text-slate-500">{translate("storeManager.staff.emptyTitle")}</Text>
                 <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500 text-center px-6">
-                  {translate("store_manager.staff.emptyBody")}
+                  {translate("storeManager.staff.emptyBody")}
                 </Text>
                 <TouchableOpacity
                   onPress={() =>
@@ -197,7 +197,7 @@ export default function ViewStaff() {
                   className="mt-2 bg-primary px-5 py-2.5 rounded-xl"
                   activeOpacity={0.85}
                 >
-                  <Text className="text-xs font-poppins-semibold text-white">{translate("store_manager.staff.addFirst")}</Text>
+                  <Text className="text-xs font-poppins-semibold text-white">{translate("storeManager.staff.addFirst")}</Text>
                 </TouchableOpacity>
               </View>
             ) : (

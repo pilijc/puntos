@@ -92,7 +92,7 @@ export default function QRIndex() {
     } catch {
       setModal({
         title: translate("label.error"),
-        message: translate("store_manager.qr.toggleError"),
+        message: translate("storeManager.qr.toggleError"),
         buttons: [{ label: translate("label.ok"), onPress: () => setModal(null), variant: "secondary" }],
       });
     } finally {
@@ -110,8 +110,8 @@ export default function QRIndex() {
         buttons={modal?.buttons}
       />
       <AppHeader
-        title={translate("store_manager.qr.title")}
-        description={translate("store_manager.qr.description")}
+        title={translate("storeManager.qr.title")}
+        description={translate("storeManager.qr.description")}
         onBackPress={() => {
           router.push(`/(store_manager)/view-store/${storeIdForFetch}`);
         }}
@@ -153,7 +153,7 @@ export default function QRIndex() {
                   {translate("storeManager.qr.notConfiguredBody")}
                 </Text>
                 <Button
-                  label={translate("store_manager.qr.configureNow")}
+                  label={translate("storeManager.qr.configureNow")}
                   onPress={() =>
                     router.push({
                       pathname: "/(store_manager)/qr/configure-qr",
@@ -176,10 +176,10 @@ export default function QRIndex() {
                   </View>
                   <View className="flex-1">
                     <Text className="text-sm font-poppins-bold text-slate-800 dark:text-slate-100">
-                      {config.qr_enabled ? translate("store_manager.qr.enabled") : translate("store_manager.qr.disabled")}
+                      {config.qr_enabled ? translate("storeManager.qr.enabled") : translate("storeManager.qr.disabled")}
                     </Text>
                     <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">
-                      {config.qr_enabled ? translate("store_manager.qr.enabledSubtitle") : translate("store_manager.qr.disabledSubtitle")}
+                      {config.qr_enabled ? translate("storeManager.qr.enabledSubtitle") : translate("storeManager.qr.disabledSubtitle")}
                     </Text>
                   </View>
                   {toggling ? (
@@ -191,31 +191,31 @@ export default function QRIndex() {
 
                 <View className="bg-white dark:bg-neutral-800 rounded-xl border border-slate-100 dark:border-neutral-700 overflow-hidden">
                   <View className="px-4 pt-4 pb-3 border-b border-slate-100 dark:border-neutral-700">
-                    <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">{translate("store_manager.qr.earningsType")}</Text>
+                    <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">{translate("storeManager.qr.earningsType")}</Text>
                     <Text className="text-sm font-poppins-bold text-textPrimary dark:text-darkTextPrimary mt-0.5">
-                      {config.earning_type === "percentage" ? translate("store_manager.qr.percentage") : translate("label.fixed")}
+                      {config.earning_type === "percentage" ? translate("storeManager.qr.percentage") : translate("label.fixed")}
                     </Text>
                   </View>
 
                   <View className="px-4 pt-4 pb-3 border-b border-slate-100 dark:border-neutral-700">
-                    <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">{translate("store_manager.qr.howCustomersEarn")}</Text>
+                    <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">{translate("storeManager.qr.howCustomersEarn")}</Text>
                     <Text className="text-sm font-poppins-bold text-textPrimary dark:text-darkTextPrimary mt-0.5">
                       {config.earning_type === "percentage"
-                        ? translate("store_manager.qr.earnPercentageLine", { pct: config.percentage ?? 0, base: config.base_amount ?? 0 })
-                        : translate("store_manager.qr.earnFixedLine", { pts: config.fixed_points ?? 0 })}
+                        ? translate("storeManager.qr.earnPercentageLine", { pct: config.percentage ?? 0, base: config.base_amount ?? 0 })
+                        : translate("storeManager.qr.earnFixedLine", { pts: config.fixed_points ?? 0 })}
                     </Text>
                   </View>
 
                   {config.earning_type === "percentage" ? (
                     <View className="flex-row">
                       <View className="flex-1 px-4 py-3 border-r border-slate-100 dark:border-neutral-700">
-                        <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">{translate("store_manager.qr.rate")}</Text>
+                        <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">{translate("storeManager.qr.rate")}</Text>
                         <Text className="text-base font-poppins-bold text-textPrimary dark:text-darkTextPrimary mt-0.5">
                           {config.percentage ?? 0}%
                         </Text>
                       </View>
                       <View className="flex-1 px-4 py-3">
-                        <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">{translate("store_manager.qr.per")}</Text>
+                        <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">{translate("storeManager.qr.per")}</Text>
                         <Text className="text-base font-poppins-bold text-textPrimary dark:text-darkTextPrimary mt-0.5">
                           ₱{config.base_amount ?? 0}
                         </Text>
@@ -226,22 +226,22 @@ export default function QRIndex() {
                       <View className="flex-1 px-4 py-3 border-r border-slate-100 dark:border-neutral-700">
                         <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">{translate("label.points")}</Text>
                         <Text className="text-base font-poppins-bold text-textPrimary dark:text-darkTextPrimary mt-0.5">
-                          {translate("store_manager.reward.pts", { points: config.fixed_points ?? 0 })}
+                          {translate("storeManager.reward.pts", { points: config.fixed_points ?? 0 })}
                         </Text>
                       </View>
                       <View className="flex-1 px-4 py-3">
-                        <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">{translate("store_manager.qr.minSpend")}</Text>
+                        <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">{translate("storeManager.qr.minSpend")}</Text>
                         <Text className="text-base font-poppins-bold text-textPrimary dark:text-darkTextPrimary mt-0.5">
-                          {config.minimum_spend != null && config.minimum_spend > 0 ? `₱${config.minimum_spend}` : translate("store_manager.qr.none")}
+                          {config.minimum_spend != null && config.minimum_spend > 0 ? `₱${config.minimum_spend}` : translate("storeManager.qr.none")}
                         </Text>
                       </View>
                     </View>
                   )}
 
                   <View className="border-t border-slate-100 dark:border-neutral-700 px-4 py-3 flex-row items-center justify-between">
-                    <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">{translate("store_manager.qr.maxPointsPerTxn")}</Text>
+                    <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">{translate("storeManager.qr.maxPointsPerTxn")}</Text>
                     <Text className="text-sm font-poppins-bold text-textPrimary dark:text-darkTextPrimary">
-                      {config.max_points_per_txn != null ? translate("store_manager.qr.ptsUnit", { n: config.max_points_per_txn }) : translate("store_manager.qr.noCap")}
+                      {config.max_points_per_txn != null ? translate("storeManager.qr.ptsUnit", { n: config.max_points_per_txn }) : translate("storeManager.qr.noCap")}
                     </Text>
                   </View>
 
@@ -249,7 +249,7 @@ export default function QRIndex() {
                     <View className="border-t border-slate-100 dark:border-neutral-700 px-4 py-2.5 flex-row items-center gap-x-1.5">
                       <RefreshCcw size={12} color="#94A3B8" />
                       <Text className="text-[10px] font-poppins text-slate-400 dark:text-slate-500">
-                        {translate("store_manager.qr.lastUpdated", { date: formatDate(config.updated_at) })}
+                        {translate("storeManager.qr.lastUpdated", { date: formatDate(config.updated_at) })}
                       </Text>
                     </View>
                   )}

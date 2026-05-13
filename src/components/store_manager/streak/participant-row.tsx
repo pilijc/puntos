@@ -30,22 +30,22 @@ export function ParticipantRow({ item, streakLength }: ParticipantRowProps) {
         </Text>
         {item.completion_bonus_awarded && (
           <View className="bg-amber-50 dark:bg-amber-900/20 px-1.5 py-0.5 rounded">
-            <Text className="text-xs font-poppins-semibold text-amber-500">{translate("store_manager.streak.bonusBadge")}</Text>
+            <Text className="text-xs font-poppins-semibold text-amber-500">{translate("storeManager.streak.bonusBadge")}</Text>
           </View>
         )}
         {item.status === "completed" && (
           <View className="bg-emerald-50 dark:bg-emerald-900/20 px-1.5 py-0.5 rounded">
-            <Text className="text-xs font-poppins-semibold text-emerald-500">{translate("store_manager.streak.doneBadge")}</Text>
+            <Text className="text-xs font-poppins-semibold text-emerald-500">{translate("storeManager.streak.doneBadge")}</Text>
           </View>
         )}
       </View>
 
       <View className="flex-row items-center justify-between">
         <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">
-          {translate("store_manager.streak.daysEarned", { count: item.total_earned_days })}
+          {translate("storeManager.streak.daysEarned", { count: item.total_earned_days })}
         </Text>
         <Text className="text-xs font-poppins-bold text-primary">
-          {translate("store_manager.streak.pointsShort", { points: item.points_earned })}
+          {translate("storeManager.streak.pointsShort", { points: item.points_earned })}
         </Text>
       </View>
 

@@ -24,15 +24,15 @@ export default function PaymentModal({
         Linking.openURL(checkoutUrl)
       } else {
         Alert.alert(
-          translate("store_manager.subscription.registration.errorTitle"),
-          translate("store_manager.subscription.registration.errorUnable")
+          translate("storeManager.subscription.registration.errorTitle"),
+          translate("storeManager.subscription.registration.errorUnable")
         )
       }
     } catch (err) {
       console.error("Error calling payment function:", err)
       Alert.alert(
-        translate("store_manager.subscription.registration.errorTitle"),
-        translate("store_manager.subscription.registration.errorGeneric")
+        translate("storeManager.subscription.registration.errorTitle"),
+        translate("storeManager.subscription.registration.errorGeneric")
       )
     }
   }
@@ -57,16 +57,16 @@ export default function PaymentModal({
 
           {/* Title */}
           <Text className="text-xl font-bold text-gray-800 mb-1">
-            {translate("store_manager.subscription.registration.title")}
+            {translate("storeManager.subscription.registration.title")}
           </Text>
 
           <Text className="text-gray-500 text-center mb-5">
-            {translate("store_manager.subscription.registration.description")}
+            {translate("storeManager.subscription.registration.description")}
           </Text>
 
           {/* Amount Card */}
           <View className="w-full bg-orange-50 border border-orange-200 rounded-xl p-4 items-center mb-6">
-            <Text className="text-gray-500 text-sm mb-1">{translate("store_manager.subscription.registration.amountToPay")}</Text>
+            <Text className="text-gray-500 text-sm mb-1">{translate("storeManager.subscription.registration.amountToPay")}</Text>
             <Text className="text-3xl font-bold text-orange-500">
               ₱{amount}
             </Text>
@@ -78,7 +78,7 @@ export default function PaymentModal({
             className="w-full bg-orange-500 py-3 rounded-xl items-center mb-3 active:opacity-80"
           >
             <Text className="text-white font-semibold text-base">
-              {translate("store_manager.subscription.registration.payWithGcash")}
+              {translate("storeManager.subscription.registration.payWithGcash")}
             </Text>
           </TouchableOpacity>
 
@@ -88,7 +88,7 @@ export default function PaymentModal({
             className="w-full border border-orange-500 py-3 rounded-xl items-center"
           >
             <Text className="text-orange-500 font-semibold">
-              {translate("store_manager.subscription.registration.cancel")}
+              {translate("storeManager.subscription.registration.cancel")}
             </Text>
           </TouchableOpacity>
 

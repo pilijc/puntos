@@ -68,7 +68,7 @@ export default function ViewReward() {
       if (linkedToStamp && reward.stock > 0) {
         setModal({
           title: translate("label.oops"),
-          message: translate("store_manager.rewardView.deleteBlockedMessage"),
+          message: translate("storeManager.rewardView.deleteBlockedMessage"),
           buttons: [{ label: translate("label.ok"), variant: "secondary", onPress: () => setModal(null) }],
         });
         return;
@@ -76,15 +76,15 @@ export default function ViewReward() {
     } catch (e) {
       setModal({
         title: translate("label.error"),
-        message: (e as Error).message ?? translate("store_manager.rewardView.verifyStampError"),
+        message: (e as Error).message ?? translate("storeManager.rewardView.verifyStampError"),
         buttons: [{ label: translate("label.ok"), onPress: () => setModal(null), variant: "secondary" }],
       });
       return;
     }
 
     setModal({
-      title: translate("store_manager.rewardView.deleteTitle"),
-      message: translate("store_manager.rewardView.deleteMessage", { title: reward.title }),
+      title: translate("storeManager.rewardView.deleteTitle"),
+      message: translate("storeManager.rewardView.deleteMessage", { title: reward.title }),
       buttons: [
         { label: translate("label.cancel"), variant: "secondary", onPress: () => setModal(null) },
         {
@@ -99,7 +99,7 @@ export default function ViewReward() {
             } catch (e) {
               setModal({
                 title: translate("label.error"),
-                message: (e as Error).message ?? translate("store_manager.rewardView.deleteError"),
+                message: (e as Error).message ?? translate("storeManager.rewardView.deleteError"),
                 buttons: [{ label: translate("label.ok"), onPress: () => setModal(null), variant: "secondary" }],
               });
             } finally {
@@ -122,8 +122,8 @@ export default function ViewReward() {
       />
 
       <AppHeader
-        title={translate("store_manager.rewardView.title")}
-        description={translate("store_manager.rewardView.description")}
+        title={translate("storeManager.rewardView.title")}
+        description={translate("storeManager.rewardView.description")}
         onBackPress={() => {
           router.push({ pathname: "/(store_manager)/reward", params: { storeId } });
         }}
@@ -151,12 +151,12 @@ export default function ViewReward() {
             {loading ? (
               <View className="items-center justify-center py-20">
                 <ActivityIndicator size="large" color="#FF6600" />
-                <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500 mt-3">{translate("store_manager.rewardView.loading")}</Text>
+                <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500 mt-3">{translate("storeManager.rewardView.loading")}</Text>
               </View>
             ) : !reward ? (
               <View className="mx-4 bg-white dark:bg-neutral-800 rounded-xl border border-slate-100 dark:border-neutral-700 px-4 py-14 items-center gap-y-2">
                 <Gift size={36} color="#CBD5E1" />
-                <Text className="text-sm font-poppins-semibold text-slate-400 dark:text-slate-500">{translate("store_manager.rewardView.notFoundTitle")}</Text>
+                <Text className="text-sm font-poppins-semibold text-slate-400 dark:text-slate-500">{translate("storeManager.rewardView.notFoundTitle")}</Text>
               </View>
             ) : (
               <View className="mx-4 bg-white dark:bg-neutral-800 rounded-xl border border-slate-100 dark:border-neutral-700 p-4 gap-y-4">
@@ -177,15 +177,15 @@ export default function ViewReward() {
 
                 <View className="flex-row border-t border-slate-100 dark:border-neutral-700 pt-2 gap-y-2">
                   <View className="flex-1 border-r border-slate-100 dark:border-neutral-700 pr-3">
-                    <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">{translate("store_manager.rewardView.pointsCost")}</Text>
+                    <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">{translate("storeManager.rewardView.pointsCost")}</Text>
                     <View className="flex-row items-center gap-x-1 mt-0.5">
-                      <Text className="text-sm font-poppins-semibold text-textPrimary">{translate("store_manager.reward.pts", { points: formatPoints(reward.points_cost) })}</Text>
+                      <Text className="text-sm font-poppins-semibold text-textPrimary">{translate("storeManager.reward.pts", { points: formatPoints(reward.points_cost) })}</Text>
                     </View>
                   </View>
                   <View className="flex-1 pl-3">
-                    <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">{translate("store_manager.rewardView.stock")}</Text>
+                    <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">{translate("storeManager.rewardView.stock")}</Text>
                     <Text className="text-sm font-poppins-semibold text-slate-800 dark:text-slate-100 mt-0.5">
-                      {reward.stock > 0 ? translate("store_manager.reward.stockLeft", { count: reward.stock }) : translate("store_manager.reward.outOfStock")}
+                      {reward.stock > 0 ? translate("storeManager.reward.stockLeft", { count: reward.stock }) : translate("storeManager.reward.outOfStock")}
                     </Text>
                   </View>
                 </View>
@@ -193,7 +193,7 @@ export default function ViewReward() {
                 <View className="flex-row gap-x-2 pt-2">
                   <View className="flex-1">
                     <Button
-                      label={translate("store_manager.rewardView.delete")}
+                      label={translate("storeManager.rewardView.delete")}
                       onPress={handleDelete}
                       variant="danger"
                       fullWidth

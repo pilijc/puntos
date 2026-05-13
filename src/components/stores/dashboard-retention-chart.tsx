@@ -110,13 +110,13 @@ export function DashboardRetentionChart({ data, loading }: Props) {
 
     const legendItems = [
         {
-            label: translate("store_manager.dashboard.retention.returning", "Returning"),
+            label: translate("storeManager.dashboard.retention.returning", "Returning"),
             count: data.returningCount,
             percent: returningPercent,
             color: "#ff6600",
         },
         {
-            label: translate("store_manager.dashboard.retention.new", "New"),
+            label: translate("storeManager.dashboard.retention.new", "New"),
             count: data.newCount,
             percent: newPercent,
             color: isDark ? "#334155" : "#cbd5e1",
@@ -124,12 +124,12 @@ export function DashboardRetentionChart({ data, loading }: Props) {
     ];
 
     return (
-        <View className="flex-1 bg-white dark:bg-darkBackgroundCard rounded-xl p-4 elevation-1 border border-transparent dark:border-darkBorder">
-            <Text className="text-lg font-poppins-bold text-textPrimary dark:text-darkTextPrimary leading-6">
-                {translate("store_manager.dashboard.retention.title", "User Retention")}
+        <View className="flex-1 bg-white dark:bg-darkBackgroundCard rounded-xl p-5 elevation-1 border border-slate-100 dark:border-darkBorder">
+            <Text className="text-[17px] font-poppins-bold text-textPrimary dark:text-darkTextPrimary leading-6">
+                {translate("storeManager.dashboard.retention.title", "User Retention")}
             </Text>
-            <Text className="text-xs font-poppins text-textSecondary dark:text-darkTextSecondary mt-0.5 mb-2">
-                {translate("store_manager.dashboard.retention.subtitle", "Returning vs New Customers")}
+            <Text className="text-[12px] font-poppins text-textSecondary dark:text-darkTextSecondary mt-0.5 mb-3">
+                {translate("storeManager.dashboard.retention.subtitle", "Returning vs New Customers")}
             </Text>
 
             <View
@@ -158,10 +158,10 @@ export function DashboardRetentionChart({ data, loading }: Props) {
                         <View className={isWide ? 'flex-1 pr-2' : 'w-full'}>
                             {isWide && (
                                 <View className="mb-3">
-                                    <Text className="text-[10px] font-poppins text-textSecondary dark:text-darkTextSecondary uppercase tracking-wider">
-                                        {translate("store_manager.dashboard.retention.totalCustomers", "Total Customers")}
+                                    <Text className="text-[10px] font-poppins-semibold text-textSecondary dark:text-darkTextSecondary uppercase tracking-wider">
+                                        {translate("storeManager.dashboard.retention.totalCustomers", "Total Customers")}
                                     </Text>
-                                    <Text className="text-xl font-poppins-bold text-textPrimary dark:text-darkTextPrimary">
+                                    <Text className="text-[24px] font-poppins-bold text-textPrimary dark:text-darkTextPrimary leading-8">
                                         {total}
                                     </Text>
                                 </View>
@@ -174,17 +174,17 @@ export function DashboardRetentionChart({ data, loading }: Props) {
                                             className="w-2.5 h-2.5 rounded-full"
                                             style={{ backgroundColor: item.color }}
                                         />
-                                        <Text className="text-[12px] font-poppins text-textSecondary dark:text-darkTextSecondary">
+                                        <Text className="text-[12px] font-poppins-medium text-textSecondary dark:text-darkTextSecondary">
                                             {item.label}
                                         </Text>
                                     </View>
                                     <View className="items-end">
-                                        <Text className="text-[12px] font-poppins-bold text-textPrimary dark:text-darkTextPrimary">
+                                        <Text className="text-[13px] font-poppins-bold text-textPrimary dark:text-darkTextPrimary">
                                             {item.percent}%
                                         </Text>
                                         {isWide && (
                                             <Text className="text-[10px] font-poppins text-textSecondary/60 dark:text-darkTextSecondary/40">
-                                                {item.count} {translate("store_manager.dashboard.retention.users", "users")}
+                                                {item.count} {translate("storeManager.dashboard.retention.users", "users")}
                                             </Text>
                                         )}
                                     </View>

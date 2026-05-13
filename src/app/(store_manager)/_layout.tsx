@@ -573,7 +573,7 @@ export default function StoreManagerLayout() {
             <Tabs.Screen
                 name="stores"
                 options={{
-                    title: translate("store_manager.tabs.stores"),
+                    title: translate("storeManager.tabs.stores"),
                     tabBarIcon: ({ color, size }) => (
                         <Store
                             size={isWeb ? WEB_TAB_ICON_SIZE : Platform.OS === "android" ? 20 : size}
@@ -583,7 +583,7 @@ export default function StoreManagerLayout() {
                     tabBarLabel: isWeb
                         ? ({ color, position }) => webSidebarMode !== "collapsed" ? (
                             <StoresTabLabel
-                                text={translate("store_manager.tabs.stores")}
+                                text={translate("storeManager.tabs.stores")}
                                 navColor={color}
                                 position={position}
                                 isRowActive={storesRowActive}
@@ -598,7 +598,7 @@ export default function StoreManagerLayout() {
             <Tabs.Screen
                 name="subscription"
                 options={{
-                    title: translate("store_manager.tabs.subscription"),
+                    title: translate("storeManager.tabs.subscription"),
                     tabBarIcon: ({ color, size }) => (
                         <CreditCard
                             size={isWeb ? WEB_TAB_ICON_SIZE : Platform.OS === "android" ? 20 : size}
@@ -608,7 +608,7 @@ export default function StoreManagerLayout() {
                     tabBarLabel: isWeb
                         ? ({ color, position }) => webSidebarMode !== "collapsed" ? (
                               <WebSidebarTabLabel
-                                  text={translate("store_manager.tabs.subscription")}
+                                  text={translate("storeManager.tabs.subscription")}
                                   navColor={color}
                                   position={position}
                                   isRowActive={activeTab === "subscription"}
