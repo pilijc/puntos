@@ -23,6 +23,7 @@ import { TYPO, COLORS, getBadge } from "@/type/super-admin/user";
 import { UserRecord } from "@/store/super-admin/user-store";
 import { useSuperAdminStoresStore } from "@/store/super-admin/super-admin-stores-store";
 import { useTranslation } from "react-i18next";
+import { useAppearanceStore } from "@/store/appearance-store";
 
 
 
@@ -294,8 +295,11 @@ export function BlockUserModal({
   const [cardWidth, setCardWidth] = useState(0);
   const scrollRef = useRef<GestureScrollView>(null);
   const { t: translate } = useTranslation();
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === "dark";
+  const nativeColorScheme = useColorScheme();
+  const { theme } = useAppearanceStore();
+  const isDark = isWeb
+    ? theme === "dark" || (theme === "system" && nativeColorScheme === "dark")
+    : nativeColorScheme === "dark";
 
   const allAdminStores = useSuperAdminStoresStore(s => s.stores);
   const fetchAdminStores = useSuperAdminStoresStore(s => s.fetchStores);
@@ -426,7 +430,7 @@ export function BlockUserModal({
 
           {/* Drawer body — scrollable */}
           <ScrollView
-            style={{ flex: 1 }}
+            style={{ flex: 1, backgroundColor: isDark ? "#1a1a1a" : "#f8fafc" }}
             contentContainerStyle={{ padding: 20, paddingBottom: 120 }}
             showsVerticalScrollIndicator={true}
           >

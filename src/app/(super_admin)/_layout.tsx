@@ -261,6 +261,7 @@ export default function SuperAdminLayout() {
             tabBar={isWeb ? renderWebTabBar : undefined}
             screenOptions={{
                 headerShown: false,
+                sceneStyle: { backgroundColor: isDark ? "#171717" : "#F3F4F6" },
                 tabBarPosition: isWeb ? "left" : "bottom",
                 ...(isWeb ? { animation: "none" as const } : {}),
                 tabBarStyle: isWeb

@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef, useMemo } from "react";
 import { ScrollView, Platform, useColorScheme } from "react-native";
+import { useAppearanceStore } from "@/store/appearance-store";
 import Carousel from 'react-native-reanimated-carousel';
 import { View, Text, TouchableOpacity } from "@/tw";
 import { useTranslation } from "react-i18next";
@@ -78,7 +79,11 @@ export function AdminStoreDetails({
   const scrollRef = useRef<any>(null);
   const [layoutWidth, setLayoutWidth] = useState(0);
 
-  const isDark = useColorScheme() === "dark";
+  const nativeColorScheme = useColorScheme();
+  const { theme } = useAppearanceStore();
+  const isDark = isWeb
+    ? theme === "dark" || (theme === "system" && nativeColorScheme === "dark")
+    : nativeColorScheme === "dark";
 
   const statusKey = getEffectiveStatus(store);
   const statusCfg = STATUS_CONFIG[statusKey] ?? STATUS_CONFIG.pending_review;
@@ -122,7 +127,10 @@ export function AdminStoreDetails({
   const LOGO_OFFSET = isWeb ? -LOGO_SIZE / 2 : -LOGO_SIZE / 2 + 4;
 
   return (
-    <ScreenWrapper className="flex-1 bg-[#F1F5F9] dark:bg-darkBackgroundMuted">
+    <ScreenWrapper
+      className="flex-1"
+      style={{ backgroundColor: isDark ? "#171717" : "#F1F5F9" }}
+    >
       <ScrollView
         className="flex-1"
         contentContainerStyle={[
@@ -131,7 +139,7 @@ export function AdminStoreDetails({
         ]}
         showsVerticalScrollIndicator={false}
         bounces={false}
-        style={{ backgroundColor: isDark ? "#0A0A0A" : "#F1F5F9" }}
+        style={{ backgroundColor: isDark ? "#171717" : "#F1F5F9" }}
       >
         {/* ── Banner ── */}
         <View className="relative w-full overflow-visible" style={{ height: BANNER_HEIGHT, backgroundColor: "#0F172A" }}>

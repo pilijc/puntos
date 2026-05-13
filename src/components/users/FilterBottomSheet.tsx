@@ -5,6 +5,7 @@ import {
   PanResponder,
   Platform,
   Pressable,
+  useColorScheme,
 } from "react-native";
 import { View, Text, TouchableOpacity } from "@/tw";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -12,6 +13,7 @@ import { Feather } from "@expo/vector-icons";
 import { Button } from "@/components/button";
 import { TYPO, COLORS, FILTER_OPTIONS } from "@/type/super-admin/user";
 import type { AccountStatusFilter } from "@/store/super-admin/user-store";
+import { useAppearanceStore } from "@/store/appearance-store";
 
 interface FilterBottomSheetProps {
   visible: boolean;
@@ -29,6 +31,11 @@ export function FilterBottomSheet({
   onSelectFilter,
 }: FilterBottomSheetProps) {
   const insets = useSafeAreaInsets();
+  const nativeColorScheme = useColorScheme();
+  const { theme } = useAppearanceStore();
+  const isDark = isWeb
+    ? theme === "dark" || (theme === "system" && nativeColorScheme === "dark")
+    : nativeColorScheme === "dark";
   const translateY = useRef(new Animated.Value(300)).current;
   const backdropOpacity = useRef(new Animated.Value(0)).current;
 
@@ -124,10 +131,10 @@ export function FilterBottomSheet({
                 top: 130,
                 right: 0,    // Aligns with the right-aligned filter button in 896px layout
               width: 280,
-              backgroundColor: "#ffffff",
+              backgroundColor: isDark ? "#262626" : "#ffffff",
               borderRadius: 14,
               borderWidth: 1,
-              borderColor: "#e2e8f0",
+              borderColor: isDark ? "#404040" : "#e2e8f0",
               shadowColor: "#000",
               shadowOffset: { width: 0, height: 8 },
               shadowOpacity: 0.12,
@@ -147,16 +154,16 @@ export function FilterBottomSheet({
                 paddingTop: 14,
                 paddingBottom: 12,
                 borderBottomWidth: 1,
-                borderBottomColor: "#f1f5f9",
+                borderBottomColor: isDark ? "#404040" : "#f1f5f9",
               }}
             >
               <Text
-                style={{ fontSize: 13, fontFamily: "Poppins-SemiBold", color: "#0f172a" }}
+                style={{ fontSize: 13, fontFamily: "Poppins-SemiBold", color: isDark ? "#f8fafc" : "#0f172a" }}
               >
                 Filter Users
               </Text>
               <Pressable onPress={() => onClose()} style={{ padding: 4 }}>
-                <Feather name="x" size={15} color="#94a3b8" />
+                <Feather name="x" size={15} color={isDark ? "#737373" : "#94a3b8"} />
               </Pressable>
             </View>
 
@@ -178,8 +185,8 @@ export function FilterBottomSheet({
                     paddingVertical: 10,
                     borderRadius: 10,
                     borderWidth: 1,
-                    borderColor: isActive ? "#fed7aa" : "#f1f5f9",
-                    backgroundColor: isActive ? "#fff7ed" : "#f8fafc",
+                    borderColor: isActive ? (isDark ? "#7c2d12" : "#fed7aa") : (isDark ? "#525252" : "#f1f5f9"),
+                    backgroundColor: isActive ? (isDark ? "#431407" : "#fff7ed") : (isDark ? "#404040" : "#f8fafc"),
                   }}
                 >
                   <View style={{ flex: 1 }}>
@@ -187,13 +194,13 @@ export function FilterBottomSheet({
                       style={{
                         fontSize: 13,
                         fontFamily: isActive ? "Poppins-SemiBold" : "Poppins-Medium",
-                        color: isActive ? COLORS.primary : "#334155",
+                        color: isActive ? COLORS.primary : (isDark ? "#e2e8f0" : "#334155"),
                       }}
                     >
                       {option.label}
                     </Text>
                     <Text
-                      style={{ fontSize: 10, fontFamily: "Poppins-Regular", color: "#94a3b8", marginTop: 1 }}
+                      style={{ fontSize: 10, fontFamily: "Poppins-Regular", color: isDark ? "#737373" : "#94a3b8", marginTop: 1 }}
                     >
                       {option.desc}
                     </Text>
@@ -212,7 +219,7 @@ export function FilterBottomSheet({
               paddingHorizontal: 12,
               paddingBottom: 12,
               borderTopWidth: 1,
-              borderTopColor: "#f1f5f9",
+              borderTopColor: isDark ? "#404040" : "#f1f5f9",
               paddingTop: 8,
             }}
           >
@@ -225,10 +232,10 @@ export function FilterBottomSheet({
                 alignItems: "center",
                 paddingVertical: 8,
                 borderRadius: 8,
-                backgroundColor: "#f1f5f9",
+                backgroundColor: isDark ? "#404040" : "#f1f5f9",
               }}
             >
-              <Text style={{ fontSize: 12, fontFamily: "Poppins-SemiBold", color: "#64748b" }}>
+              <Text style={{ fontSize: 12, fontFamily: "Poppins-SemiBold", color: isDark ? "#a3a3a3" : "#64748b" }}>
                 Reset filter
               </Text>
             </Pressable>
