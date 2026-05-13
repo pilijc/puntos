@@ -1,16 +1,13 @@
 import { supabase } from '@/supabase/supabase';
 import { router } from 'expo-router';
-import { Alert, Platform } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Alert } from 'react-native';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
-import { useAuthStore } from '@/store/auth-store';
 import { deactivateCurrentDeviceSessionService } from '@/services/store-manager/device-session-service';
 import { markIntentionalSignOut } from '@/lib/intentional-signout';
 
 export const useAuthActions = () => {
     const handleLogout = async () => {
         try {
-            // Get user before signing out to deactivate device session
             const { data: { user } } = await supabase.auth.getUser();
             if (user) {
                 await deactivateCurrentDeviceSessionService(user.id).catch(e => console.warn(e));
@@ -28,15 +25,11 @@ export const useAuthActions = () => {
                 console.error("Supabase signOut error (ignoring to allow local logout):", error.message);
             }
 
-            router.replace(
-                Platform.OS === "web" ? "/(onboarding)/landing" : "/(onboarding)/welcome",
-            );
+            router.replace("/(onboarding)/welcome");
         } catch (error: any) {
             console.error("Logout process error:", error);
             Alert.alert("Logout error", "An unexpected error occurred during logout. Please try again.");
-            router.replace(
-                Platform.OS === "web" ? "/(onboarding)/landing" : "/(onboarding)/welcome",
-            );
+            router.replace("/(onboarding)/welcome");
         }
     };
 

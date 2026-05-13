@@ -83,11 +83,11 @@ export default function MarketingLanding() {
   }, []);
 
   const goWelcome = useCallback(() => {
-    void router.push(WELCOME_ROUTE);
+    void router.replace(WELCOME_ROUTE);
   }, []);
 
   const goLogin = useCallback(() => {
-    void router.push(LOGIN_ROUTE);
+    void router.replace(LOGIN_ROUTE);
   }, []);
 
   const onHeroBandLayout = useCallback((e: LayoutChangeEvent) => {
