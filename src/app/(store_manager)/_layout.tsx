@@ -1,6 +1,6 @@
 import { Tabs } from "expo-router";
-import { useColorScheme, Platform, Text, View, Image, useWindowDimensions } from "react-native";
-import React, { useCallback, useEffect, useState } from "react";
+import { AppState, useColorScheme, Platform, Text, View, Image, useWindowDimensions } from "react-native";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "expo-router";
 import { BottomTabBar, type BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import { PlatformPressable } from "@react-navigation/elements";
@@ -11,11 +11,15 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 import { LayoutDashboard, Store, ArrowLeftRight, Settings, CreditCard, PanelLeft, PanelLeftClose } from "lucide-react-native";
 import { useDeviceSession } from "@/hooks/store-manager/use-device-session";
+import { useAuthActions } from "@/hooks/use-auth-actions";
 import { useManagerStoresStore } from "@/store/manager-stores-store";
 import { useSupportChatStore } from "@/store/support-chat-store";
 import { getManagerSubscription, getSubscriptionPlans } from "@/services/store-manager/subscription-service";
 import { isPaidUnlimitedPlan } from "@/services/store-manager/subscription-limits";
 import { lockExtraOwnerStores } from "@/services/store-service";
+import { Modal } from "@/components/modal";
+import { refreshDeviceHeartbeatService } from "@/services/store-manager/device-session-service";
+import { SESSION_TIMEOUT_MS } from "@/type/store-manager/device-session";
 
 const WEB_SIDEBAR_WIDTH = 260;
 const WEB_SIDEBAR_COLLAPSED_WIDTH = 76;
@@ -26,6 +30,9 @@ const WEB_TAB_ACTIVE_BG_DARK = "#431407";
 const WEB_SIDEBAR_BORDER_LIGHT = "#F1F5F9";
 const WEB_SIDEBAR_BORDER_DARK = "#404040";
 const TAB_ACCENT = "#FF6600";
+const IDLE_LOGOUT_GRACE_MS = 60 * 1000;
+const IDLE_WARNING_MS = Math.max(SESSION_TIMEOUT_MS - IDLE_LOGOUT_GRACE_MS, 1000);
+const ACTIVITY_THROTTLE_MS = 10 * 1000;
 
 type SidebarTabId = "index" | "stores" | "transactions" | "subscription" | "settings";
 type TabLabelPosition = "beside-icon" | "below-icon";
@@ -385,8 +392,18 @@ export default function StoreManagerLayout() {
     const insets = useSafeAreaInsets();
     const pathname = usePathname();
     const path = withTrailingSlash(pathname);
+    const { handleLogout } = useAuthActions();
+    const handleLogoutRef = useRef(handleLogout);
     const [currentUserId, setCurrentUserId] = useState<string | undefined>(undefined);
     const [webSidebarMode, setWebSidebarMode] = useState<WebSidebarMode>("collapsed");
+    const [idleWarningVisible, setIdleWarningVisible] = useState(false);
+    const [idleWarningHasCountdown, setIdleWarningHasCountdown] = useState(true);
+    const [idleCountdown, setIdleCountdown] = useState(IDLE_LOGOUT_GRACE_MS / 1000);
+    const idleWarningVisibleRef = useRef(false);
+    const idleWarningTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const idleLogoutTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const idleCountdownTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+    const lastActivityRecordedAtRef = useRef(0);
     const { } = useDeviceSession(currentUserId);
 
     // Bootstrap support chat so unread count shows in settings
@@ -394,6 +411,136 @@ export default function StoreManagerLayout() {
     const fetchStores = useManagerStoresStore((state) => state.fetchStores);
     const { loadAllManagerConversations, conversations, subscribeInbox, cleanupRealtime } = useSupportChatStore();
     const [didEnforceStoreLocks, setDidEnforceStoreLocks] = useState(false);
+
+    useEffect(() => {
+        handleLogoutRef.current = handleLogout;
+    }, [handleLogout]);
+
+    useEffect(() => {
+        idleWarningVisibleRef.current = idleWarningVisible;
+    }, [idleWarningVisible]);
+
+    const clearIdleTimers = useCallback(() => {
+        if (idleWarningTimerRef.current) {
+            clearTimeout(idleWarningTimerRef.current);
+            idleWarningTimerRef.current = null;
+        }
+        if (idleLogoutTimerRef.current) {
+            clearTimeout(idleLogoutTimerRef.current);
+            idleLogoutTimerRef.current = null;
+        }
+        if (idleCountdownTimerRef.current) {
+            clearInterval(idleCountdownTimerRef.current);
+            idleCountdownTimerRef.current = null;
+        }
+    }, []);
+
+    const handleIdleLogout = useCallback(async () => {
+        clearIdleTimers();
+        setIdleWarningVisible(false);
+        await handleLogoutRef.current();
+    }, [clearIdleTimers]);
+
+    const showIdleWarning = useCallback((withCountdown = true) => {
+        setIdleCountdown(IDLE_LOGOUT_GRACE_MS / 1000);
+        setIdleWarningHasCountdown(withCountdown);
+        setIdleWarningVisible(true);
+
+        if (!withCountdown) return;
+
+        idleCountdownTimerRef.current = setInterval(() => {
+            setIdleCountdown((seconds) => Math.max(seconds - 1, 0));
+        }, 1000);
+
+        idleLogoutTimerRef.current = setTimeout(() => {
+            void handleIdleLogout();
+        }, IDLE_LOGOUT_GRACE_MS);
+    }, [handleIdleLogout]);
+
+    const scheduleIdleWarning = useCallback((delayMs = IDLE_WARNING_MS) => {
+        if (!currentUserId) return;
+        if (idleWarningTimerRef.current) {
+            clearTimeout(idleWarningTimerRef.current);
+        }
+        idleWarningTimerRef.current = setTimeout(() => showIdleWarning(true), Math.max(delayMs, 1000));
+    }, [currentUserId, showIdleWarning]);
+
+    const recordActivity = useCallback(() => {
+        if (!currentUserId || idleWarningVisibleRef.current) return;
+        const now = Date.now();
+        if (now - lastActivityRecordedAtRef.current < ACTIVITY_THROTTLE_MS) return;
+
+        lastActivityRecordedAtRef.current = now;
+        scheduleIdleWarning();
+    }, [currentUserId, scheduleIdleWarning]);
+
+    const handleStaySignedIn = useCallback(async () => {
+        if (!currentUserId) return;
+
+        clearIdleTimers();
+        setIdleWarningVisible(false);
+        setIdleWarningHasCountdown(true);
+        setIdleCountdown(IDLE_LOGOUT_GRACE_MS / 1000);
+
+        try {
+            await refreshDeviceHeartbeatService(currentUserId);
+        } finally {
+            lastActivityRecordedAtRef.current = Date.now();
+            scheduleIdleWarning();
+        }
+    }, [clearIdleTimers, currentUserId, scheduleIdleWarning]);
+
+    useEffect(() => {
+        if (!currentUserId) {
+            clearIdleTimers();
+            setIdleWarningVisible(false);
+            setIdleWarningHasCountdown(true);
+            return;
+        }
+
+        lastActivityRecordedAtRef.current = Date.now();
+        scheduleIdleWarning();
+
+        return clearIdleTimers;
+    }, [clearIdleTimers, currentUserId, scheduleIdleWarning]);
+
+    useEffect(() => {
+        if (!currentUserId) return;
+
+        const sub = AppState.addEventListener("change", (state) => {
+            if (state !== "active") {
+                clearIdleTimers();
+                if (idleWarningVisibleRef.current) {
+                    setIdleWarningHasCountdown(false);
+                }
+                return;
+            }
+
+            if (idleWarningVisibleRef.current) return;
+
+            const idleMs = Date.now() - lastActivityRecordedAtRef.current;
+            if (idleMs >= IDLE_WARNING_MS) {
+                clearIdleTimers();
+                showIdleWarning(false);
+                return;
+            }
+
+            scheduleIdleWarning(IDLE_WARNING_MS - idleMs);
+        });
+
+        return () => sub.remove();
+    }, [clearIdleTimers, currentUserId, scheduleIdleWarning, showIdleWarning]);
+
+    useEffect(() => {
+        if (Platform.OS !== "web" || typeof window === "undefined") return;
+
+        const events = ["mousedown", "mousemove", "keydown", "scroll", "touchstart"];
+        events.forEach((eventName) => window.addEventListener(eventName, recordActivity, { passive: true }));
+
+        return () => {
+            events.forEach((eventName) => window.removeEventListener(eventName, recordActivity));
+        };
+    }, [recordActivity]);
 
     useEffect(() => {
         fetchStores();
@@ -514,10 +661,11 @@ export default function StoreManagerLayout() {
     );
 
     return (
-        <Tabs
-            initialRouteName="index"
-            tabBar={isWeb ? renderWebTabBar : undefined}
-            screenOptions={{
+        <View style={{ flex: 1 }} onTouchStart={recordActivity}>
+            <Tabs
+                initialRouteName="index"
+                tabBar={isWeb ? renderWebTabBar : undefined}
+                screenOptions={{
                 headerShown: false,
                 tabBarPosition: isWeb ? "left" : "bottom",
                 tabBarLabelPosition: isWeb ? "beside-icon" : undefined,
@@ -539,9 +687,9 @@ export default function StoreManagerLayout() {
                     marginBottom: isWeb ? 0 : insets.bottom > 0 ? 0 : 4,
                     ...(isWeb ? { paddingRight: 8 } : {}),
                 },
-            }}
-        >
-            <Tabs.Screen
+                }}
+            >
+                <Tabs.Screen
                 name="index"
                 options={{
                     title: translate("label.dashboard"),
@@ -682,7 +830,32 @@ export default function StoreManagerLayout() {
             <Tabs.Screen name="detail/index" options={{ href: null }} />
             <Tabs.Screen name="detail/edit-details" options={{ href: null }} />
             <Tabs.Screen name="chat-support" options={{ href: null, tabBarStyle: isWeb ? undefined : { display: "none" } }} />
-            <Tabs.Screen name="manager-inbox" options={{ href: null, tabBarStyle: isWeb ? undefined : { display: "none" } }} />
-        </Tabs>
+                <Tabs.Screen name="manager-inbox" options={{ href: null, tabBarStyle: isWeb ? undefined : { display: "none" } }} />
+            </Tabs>
+            <Modal
+                visible={idleWarningVisible}
+                onClose={handleStaySignedIn}
+                title={translate("storeManager.sessionTimeout.title")}
+                message={
+                    idleWarningHasCountdown
+                        ? translate("storeManager.sessionTimeout.message", { seconds: idleCountdown })
+                        : translate("storeManager.sessionTimeout.resumeMessage")
+                }
+                showCloseButton={false}
+                dismissOnBackdrop={false}
+                buttons={[
+                    {
+                        label: translate("storeManager.sessionTimeout.signOut"),
+                        variant: "secondary",
+                        onPress: handleIdleLogout,
+                    },
+                    {
+                        label: translate("storeManager.sessionTimeout.staySignedIn"),
+                        variant: "primary",
+                        onPress: handleStaySignedIn,
+                    },
+                ]}
+            />
+        </View>
     );
 }

@@ -110,6 +110,22 @@ const ja_store_manager_premiumCampaigns = {
   serviceLockedMessage: "スタンプ、ストリーク、リワードキャンペーンを作成または編集するにはプランをアップグレードしてください。",
 };
 
+const en_store_manager_sessionTimeout = {
+  title: "Still there?",
+  message: "For your security, this session will sign out in {{seconds}} seconds unless you choose to stay signed in.",
+  resumeMessage: "You've been away for a while. Do you want to stay signed in?",
+  staySignedIn: "Stay signed in",
+  signOut: "Sign out",
+};
+
+const ja_store_manager_sessionTimeout = {
+  title: "まだ操作中ですか？",
+  message: "セキュリティ保護のため、続行しない場合は{{seconds}}秒後にサインアウトします。",
+  resumeMessage: "しばらく操作がありませんでした。サインインを続けますか？",
+  staySignedIn: "サインインを続ける",
+  signOut: "サインアウト",
+};
+
 const resources = {
   en: {
     translation: {
@@ -139,6 +155,7 @@ const resources = {
       },
       store_manager: {
         premiumCampaigns: en_store_manager_premiumCampaigns,
+        sessionTimeout: en_store_manager_sessionTimeout,
         createStore: en_store_manager_createStore,
         chat: en_store_manager_chat,
         dashboard: en_store_manager_dashboard,
@@ -164,6 +181,7 @@ const resources = {
       },
       storeManager: {
         premiumCampaigns: en_store_manager_premiumCampaigns,
+        sessionTimeout: en_store_manager_sessionTimeout,
         createStore: en_store_manager_createStore,
         chat: en_store_manager_chat,
         dashboard: en_store_manager_dashboard,
@@ -235,6 +253,7 @@ const resources = {
       },
       store_manager: {
         premiumCampaigns: ja_store_manager_premiumCampaigns,
+        sessionTimeout: ja_store_manager_sessionTimeout,
         createStore: ja_store_manager_createStore,
         chat: ja_store_manager_chat,
         dashboard: ja_store_manager_dashboard,
@@ -261,6 +280,7 @@ const resources = {
       // Back-compat alias: app screens use `storeManager.*` keys.
       storeManager: {
         premiumCampaigns: ja_store_manager_premiumCampaigns,
+        sessionTimeout: ja_store_manager_sessionTimeout,
         createStore: ja_store_manager_createStore,
         chat: ja_store_manager_chat,
         dashboard: ja_store_manager_dashboard,
