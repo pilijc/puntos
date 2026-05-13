@@ -29,23 +29,23 @@ function DeviceIcon({ type }: { type: string }) {
     );
 }
 
-function resolveDisplayName(session: ManagerDeviceSession, t: any): string {
+function resolveDisplayName(session: ManagerDeviceSession, translate: any): string {
     if (session.device_name) return session.device_name;
     if (session.device_model) return session.device_model;
-    return session.device_type === "web" ? t("settings.deviceSessions.webBrowser") : t("settings.deviceSessions.unknownDevice");
+    return session.device_type === "web" ? translate("settings.deviceSessions.webBrowser") : translate("settings.deviceSessions.unknownDevice");
 }
 
 // nowMs is the trusted reference point (server time stored in Zustand).
 // falls back to Date.now() only when no fetch has occurred yet in this session.
-function timeAgo(isoString: string, nowMs: number, t: any): string {
+function timeAgo(isoString: string, nowMs: number, translate: any): string {
     const diff = nowMs - new Date(isoString).getTime();
     const minutes = Math.floor(diff / 60_000);
-    if (minutes < 1) return t("settings.deviceSessions.justNow");
-    if (minutes < 60) return t("settings.deviceSessions.minutesAgo", { minutes });
+    if (minutes < 1) return translate("settings.deviceSessions.justNow");
+    if (minutes < 60) return translate("settings.deviceSessions.minutesAgo", { minutes });
     const hours = Math.floor(minutes / 60);
-    if (hours < 24) return t("settings.deviceSessions.hoursAgo", { hours });
+    if (hours < 24) return translate("settings.deviceSessions.hoursAgo", { hours });
     const days = Math.floor(hours / 24);
-    return t("settings.deviceSessions.daysAgo", { days }); 
+    return translate("settings.deviceSessions.daysAgo", { days });
 }
 
 interface DeviceSessionCardProps {
@@ -53,10 +53,10 @@ interface DeviceSessionCardProps {
 }
 
 export function DeviceSessionCard({ session }: DeviceSessionCardProps) {
-    const { t } = useTranslation();
+    const { t: translate } = useTranslation();
     const serverTimeMs = useDeviceSessionStore((s) => s.serverTimeMs);
     const nowMs = serverTimeMs ?? Date.now();
-    const displayName = resolveDisplayName(session, t);
+    const displayName = resolveDisplayName(session, translate);
 
     return (
         <View className='flex-row items-center gap-3 w-full bg-transparent py-1'>
@@ -84,7 +84,7 @@ export function DeviceSessionCard({ session }: DeviceSessionCardProps) {
                 <View className="flex-row items-center gap-1">
                     <Clock size={12} color="#8b8d98" className="dark:text-slate-500" />
                     <Text className='text-textSecondary dark:text-darkTextSecondary text-xs font-poppins'>
-                        {t("settings.deviceSessions.lastActive", { time: timeAgo(session.last_active_at, nowMs, t) })}
+                        {translate("settings.deviceSessions.lastActive", { time: timeAgo(session.last_active_at, nowMs, translate) })}
                     </Text>
                 </View>
             </View>

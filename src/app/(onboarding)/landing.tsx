@@ -119,7 +119,7 @@ function PricingTierCard({
   onChoose: () => void;
   features: string[];
 }) {
-  const { t } = useTranslation();
+  const { t: translate } = useTranslation();
   const isDark = useColorScheme() === "dark";
   const mutedIcon = isDark ? "#a3a3a3" : "#64748b";
   const name = plan ? String(plan.name ?? nameFallback) : nameFallback;
@@ -133,13 +133,13 @@ function PricingTierCard({
       : "—"
     : hasPaidAmount
       ? `PHP ${amt.toFixed(2)}`
-      : t("superAdmin.subscription.basic.price");
+      : translate("superAdmin.subscription.basic.price");
 
   const showPerMonth = hasPaidAmount;
 
   const blurb = featured
-    ? t("onboarding.landing.pricingProBlurb")
-    : t("onboarding.landing.pricingBasicBlurb");
+    ? translate("onboarding.landing.pricingProBlurb")
+    : translate("onboarding.landing.pricingBasicBlurb");
 
   const shellClass = featured
     ? "flex w-[400px] shrink-0 flex-col rounded-2xl border border-primary bg-white dark:bg-darkBackgroundCard md:min-h-[420px]"
@@ -171,7 +171,7 @@ function PricingTierCard({
             </Text>
             {showPerMonth ? (
               <Text className="font-poppins text-sm text-textMuted dark:text-darkTextMuted">
-                {t("onboarding.landing.pricingPerMonth")}
+                {translate("onboarding.landing.pricingPerMonth")}
               </Text>
             ) : null}
           </View>
@@ -273,7 +273,7 @@ function FeatureCard({
 }
 
 export default function MarketingLanding() {
-  const { t } = useTranslation();
+  const { t: translate } = useTranslation();
   const { width } = useWindowDimensions();
   const isWide = width >= 960;
   const isWeb = Platform.OS === "web";
@@ -315,7 +315,7 @@ export default function MarketingLanding() {
           setPlansError(
             e instanceof Error
               ? e.message
-              : t("onboarding.landing.pricingLoadError"),
+              : translate("onboarding.landing.pricingLoadError"),
           );
         }
       } finally {
@@ -325,7 +325,7 @@ export default function MarketingLanding() {
     return () => {
       cancelled = true;
     };
-  }, [isWeb, t]);
+  }, [isWeb, translate]);
 
   if (!isWeb) {
     return <Redirect href={WELCOME_ROUTE} />;
@@ -346,52 +346,52 @@ export default function MarketingLanding() {
   const goLogin = () => router.push(LOGIN_ROUTE);
 
   const basicPricingInclusions = [
-    t("onboarding.landing.pricingBasicInc1"),
-    t("onboarding.landing.pricingBasicInc2"),
-    t("onboarding.landing.pricingBasicInc3"),
-    t("onboarding.landing.pricingBasicInc4"),
-    t("onboarding.landing.pricingBasicInc5"),
+    translate("onboarding.landing.pricingBasicInc1"),
+    translate("onboarding.landing.pricingBasicInc2"),
+    translate("onboarding.landing.pricingBasicInc3"),
+    translate("onboarding.landing.pricingBasicInc4"),
+    translate("onboarding.landing.pricingBasicInc5"),
   ];
 
   const proPricingInclusions = [
-    t("onboarding.landing.pricingProInc1"),
-    t("onboarding.landing.pricingProInc2"),
-    t("onboarding.landing.pricingProInc3"),
-    t("onboarding.landing.pricingProInc4"),
-    t("onboarding.landing.pricingProInc6"),
-    t("onboarding.landing.pricingProInc7"),
-    t("onboarding.landing.pricingProInc8"),
+    translate("onboarding.landing.pricingProInc1"),
+    translate("onboarding.landing.pricingProInc2"),
+    translate("onboarding.landing.pricingProInc3"),
+    translate("onboarding.landing.pricingProInc4"),
+    translate("onboarding.landing.pricingProInc6"),
+    translate("onboarding.landing.pricingProInc7"),
+    translate("onboarding.landing.pricingProInc8"),
   ];
 
   const features = [
     {
-      title: t("onboarding.landing.feat1Title"),
-      description: t("onboarding.landing.feat1Desc"),
+      title: translate("onboarding.landing.feat1Title"),
+      description: translate("onboarding.landing.feat1Desc"),
       Icon: Smartphone,
     },
     {
-      title: t("onboarding.landing.feat2Title"),
-      description: t("onboarding.landing.feat2Desc"),
+      title: translate("onboarding.landing.feat2Title"),
+      description: translate("onboarding.landing.feat2Desc"),
       Icon: QrCode,
     },
     {
-      title: t("onboarding.landing.feat3Title"),
-      description: t("onboarding.landing.feat3Desc"),
+      title: translate("onboarding.landing.feat3Title"),
+      description: translate("onboarding.landing.feat3Desc"),
       Icon: Gift,
     },
     {
-      title: t("onboarding.landing.feat4Title"),
-      description: t("onboarding.landing.feat4Desc"),
+      title: translate("onboarding.landing.feat4Title"),
+      description: translate("onboarding.landing.feat4Desc"),
       Icon: BarChart3,
     },
     {
-      title: t("onboarding.landing.feat5Title"),
-      description: t("onboarding.landing.feat5Desc"),
+      title: translate("onboarding.landing.feat5Title"),
+      description: translate("onboarding.landing.feat5Desc"),
       Icon: Ticket,
     },
     {
-      title: t("onboarding.landing.feat6Title"),
-      description: t("onboarding.landing.feat6Desc"),
+      title: translate("onboarding.landing.feat6Title"),
+      description: translate("onboarding.landing.feat6Desc"),
       Icon: Monitor,
     },
   ] as const;
@@ -399,18 +399,18 @@ export default function MarketingLanding() {
   const steps = [
     {
       n: 1,
-      title: t("onboarding.landing.step1Title"),
-      desc: t("onboarding.landing.step1Desc"),
+      title: translate("onboarding.landing.step1Title"),
+      desc: translate("onboarding.landing.step1Desc"),
     },
     {
       n: 2,
-      title: t("onboarding.landing.step2Title"),
-      desc: t("onboarding.landing.step2Desc"),
+      title: translate("onboarding.landing.step2Title"),
+      desc: translate("onboarding.landing.step2Desc"),
     },
     {
       n: 3,
-      title: t("onboarding.landing.step3Title"),
-      desc: t("onboarding.landing.step3Desc"),
+      title: translate("onboarding.landing.step3Title"),
+      desc: translate("onboarding.landing.step3Desc"),
     },
   ];
 
@@ -442,29 +442,29 @@ export default function MarketingLanding() {
               />
               <View className="hidden flex-1 flex-row flex-wrap items-center justify-center gap-1 lg:flex">
                 <NavLink
-                  label={t("onboarding.landing.nav.overview")}
+                  label={translate("onboarding.landing.nav.overview")}
                   onPress={scrollToSection("hero")}
                 />
                 <NavLink
-                  label={t("onboarding.landing.nav.features")}
+                  label={translate("onboarding.landing.nav.features")}
                   onPress={scrollToSection("features")}
                 />
                 <NavLink
-                  label={t("onboarding.landing.nav.howItWorks")}
+                  label={translate("onboarding.landing.nav.howItWorks")}
                   onPress={scrollToSection("how")}
                 />
                 <NavLink
-                  label={t("onboarding.landing.nav.pricing")}
+                  label={translate("onboarding.landing.nav.pricing")}
                   onPress={scrollToSection("pricing")}
                 />
                 <NavLink
-                  label={t("onboarding.landing.nav.footer")}
+                  label={translate("onboarding.landing.nav.footer")}
                   onPress={scrollToSection("footer")}
                 />
               </View>
               <View className="flex-row items-center gap-3">
                 <Button
-                  label={t("onboarding.landing.signIn")}
+                  label={translate("onboarding.landing.signIn")}
                   onPress={goLogin}
                   variant="primary"
                   roundedFull={true}
@@ -483,13 +483,13 @@ export default function MarketingLanding() {
             >
               <View className="flex-1 gap-5">
                 <Text className="font-poppins-bold text-4xl leading-tight text-textPrimary dark:text-darkTextPrimary md:text-5xl">
-                  {t("onboarding.landing.heroLine1")}{" "}
+                  {translate("onboarding.landing.heroLine1")}{" "}
                   <Text className="text-primary dark:text-darkPrimaryText">
-                    {t("onboarding.landing.heroHighlight")}
+                    {translate("onboarding.landing.heroHighlight")}
                   </Text>
                 </Text>
                 <Text className="max-w-xl font-poppins text-sm leading-relaxed text-textSecondary dark:text-darkTextSecondary md:text-base">
-                  {t("onboarding.landing.heroSub")}
+                  {translate("onboarding.landing.heroSub")}
                 </Text>
                 <View className="flex-row flex-wrap gap-3">
                   <TouchableOpacity
@@ -498,7 +498,7 @@ export default function MarketingLanding() {
                     accessibilityRole="button"
                   >
                     <Text className="font-poppins-semibold text-base text-white">
-                      {t("onboarding.landing.getStarted")}
+                      {translate("onboarding.landing.getStarted")}
                     </Text>
                   </TouchableOpacity>
                 </View>
@@ -523,10 +523,10 @@ export default function MarketingLanding() {
           <View className="mx-auto w-full max-w-6xl">
             <View className="mx-auto mb-10 max-w-xl md:mb-12">
               <Text className="mb-2 text-center font-poppins-bold text-2xl tracking-tight text-textPrimary dark:text-darkTextPrimary md:text-3xl">
-                {t("onboarding.landing.featuresTitle")}
+                {translate("onboarding.landing.featuresTitle")}
               </Text>
               <Text className="text-center font-poppins text-sm leading-6 text-textSecondary dark:text-darkTextSecondary md:text-[15px]">
-                {t("onboarding.landing.featuresSub")}
+                {translate("onboarding.landing.featuresSub")}
               </Text>
             </View>
             <View className="flex-row flex-wrap justify-center gap-x-6 gap-y-8 md:gap-x-8 md:gap-y-10">
@@ -544,10 +544,10 @@ export default function MarketingLanding() {
           <View className="mx-auto w-full max-w-6xl">
             <View className="mb-10 items-center md:mb-14">
               <Text className="mb-1 text-center font-poppins-bold text-2xl tracking-tight text-textPrimary dark:text-darkTextPrimary md:text-3xl">
-                {t("onboarding.landing.howTitleMain")}
+                {translate("onboarding.landing.howTitleMain")}
               </Text>
               <Text className="text-center font-poppins-bold text-xl text-primary dark:text-darkTextSecondary md:text-2xl">
-                {t("onboarding.landing.howTitleSub")}
+                {translate("onboarding.landing.howTitleSub")}
               </Text>
             </View>
 
@@ -583,10 +583,10 @@ export default function MarketingLanding() {
         >
           <View className="mx-auto w-full max-w-6xl">
             <Text className="mb-3 text-center font-poppins-bold text-3xl text-textPrimary dark:text-darkTextPrimary">
-              {t("onboarding.landing.pricingTitle")}
+              {translate("onboarding.landing.pricingTitle")}
             </Text>
             <Text className="mb-10 text-center font-poppins text-textSecondary dark:text-darkTextSecondary">
-              {t("onboarding.landing.pricingSub")}
+              {translate("onboarding.landing.pricingSub")}
             </Text>
             {plansLoading ? (
               <View className="items-center py-10">
@@ -598,7 +598,7 @@ export default function MarketingLanding() {
               </Text>
             ) : !basicPlan && !proPlan ? (
               <Text className="text-center font-poppins text-textSecondary dark:text-darkTextSecondary">
-                {t("onboarding.landing.pricingEmpty")}
+                {translate("onboarding.landing.pricingEmpty")}
               </Text>
             ) : (
               <View className="mx-auto flex w-full max-w-[900px] flex-row flex-nowrap items-center justify-center gap-6 overflow-x-auto px-2 py-1">
@@ -606,7 +606,7 @@ export default function MarketingLanding() {
                     <PricingTierCard
                       plan={basicPlan}
                       tier="basic"
-                      nameFallback={t(
+                      nameFallback={translate(
                         "onboarding.landing.pricingFallbackBasic",
                       )}
                       onChoose={goWelcome}
@@ -617,7 +617,7 @@ export default function MarketingLanding() {
                     <PricingTierCard
                       plan={proPlan}
                       tier="pro"
-                      nameFallback={t("onboarding.landing.pricingFallbackPro")}
+                      nameFallback={translate("onboarding.landing.pricingFallbackPro")}
                       onChoose={goWelcome}
                       features={proPricingInclusions}
                     />
@@ -633,10 +633,10 @@ export default function MarketingLanding() {
         >
           <View className="mx-auto w-full max-w-3xl items-center gap-y-1">
             <Text className="text-center font-poppins-bold text-2xl leading-tight text-white">
-              {t("onboarding.landing.ctaTitle")}
+              {translate("onboarding.landing.ctaTitle")}
             </Text>
             <Text className="text-center font-poppins text-base leading-relaxed text-white/90">
-              {t("onboarding.landing.ctaSub")}
+              {translate("onboarding.landing.ctaSub")}
             </Text>
           </View>
         </View>
@@ -648,55 +648,55 @@ export default function MarketingLanding() {
           <View className="mx-auto w-full max-w-6xl flex-col gap-10 md:flex-row md:justify-between">
             <View className="max-w-sm gap-3">
               <Text className="font-poppins-bold text-xl text-primary dark:text-darkPrimaryText">
-                {t("onboarding.landing.brand")}
+                {translate("onboarding.landing.brand")}
               </Text>
               <Text className="font-poppins text-sm text-textSecondary dark:text-darkTextSecondary">
-                {t("onboarding.landing.footerBlurb")}
+                {translate("onboarding.landing.footerBlurb")}
               </Text>
             </View>
             <View className="flex-row flex-wrap gap-10">
               <View className="gap-2">
                 <Text className="font-poppins-semibold text-textPrimary dark:text-darkTextPrimary">
-                  {t("onboarding.landing.colProduct")}
+                  {translate("onboarding.landing.colProduct")}
                 </Text>
                 <TouchableOpacity onPress={goWelcome}>
                   <Text className="font-poppins text-sm text-textSecondary dark:text-darkTextSecondary">
-                    {t("onboarding.landing.linkOverview")}
+                    {translate("onboarding.landing.linkOverview")}
                   </Text>
                 </TouchableOpacity>
                 <TouchableOpacity onPress={goWelcome}>
                   <Text className="font-poppins text-sm text-textSecondary dark:text-darkTextSecondary">
-                    {t("onboarding.landing.linkSecurity")}
+                    {translate("onboarding.landing.linkSecurity")}
                   </Text>
                 </TouchableOpacity>
               </View>
               <View className="gap-2">
                 <Text className="font-poppins-semibold text-textPrimary dark:text-darkTextPrimary">
-                  {t("onboarding.landing.colCompany")}
+                  {translate("onboarding.landing.colCompany")}
                 </Text>
                 <TouchableOpacity onPress={goWelcome}>
                   <Text className="font-poppins text-sm text-textSecondary dark:text-darkTextSecondary">
-                    {t("onboarding.landing.linkAbout")}
+                    {translate("onboarding.landing.linkAbout")}
                   </Text>
                 </TouchableOpacity>
                 <TouchableOpacity onPress={goWelcome}>
                   <Text className="font-poppins text-sm text-textSecondary dark:text-darkTextSecondary">
-                    {t("onboarding.landing.linkCareers")}
+                    {translate("onboarding.landing.linkCareers")}
                   </Text>
                 </TouchableOpacity>
               </View>
               <View className="gap-2">
                 <Text className="font-poppins-semibold text-textPrimary dark:text-darkTextPrimary">
-                  {t("onboarding.landing.colLegal")}
+                  {translate("onboarding.landing.colLegal")}
                 </Text>
                 <TouchableOpacity onPress={goWelcome}>
                   <Text className="font-poppins text-sm text-textSecondary dark:text-darkTextSecondary">
-                    {t("onboarding.landing.linkPrivacy")}
+                    {translate("onboarding.landing.linkPrivacy")}
                   </Text>
                 </TouchableOpacity>
                 <TouchableOpacity onPress={goWelcome}>
                   <Text className="font-poppins text-sm text-textSecondary dark:text-darkTextSecondary">
-                    {t("onboarding.landing.linkTerms")}
+                    {translate("onboarding.landing.linkTerms")}
                   </Text>
                 </TouchableOpacity>
               </View>

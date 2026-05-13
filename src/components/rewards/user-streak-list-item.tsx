@@ -17,10 +17,10 @@ interface UserStreakListItemProps {
   };
 }
 
-const getTier = (completed: number, t: any) => {
-  if (completed >= 5) return { label: t("user.rewards.streaks.tiers.gold"), color: "text-amber-500" };
-  if (completed >= 3) return { label: t("user.rewards.streaks.tiers.silver"), color: "text-slate-400" };
-  return { label: t("user.rewards.streaks.tiers.bronze"), color: "text-amber-700" };
+const getTier = (completed: number, translate: (key: string) => string) => {
+  if (completed >= 5) return { label: translate("user.rewards.streaks.tiers.gold"), color: "text-amber-500" };
+  if (completed >= 3) return { label: translate("user.rewards.streaks.tiers.silver"), color: "text-slate-400" };
+  return { label: translate("user.rewards.streaks.tiers.bronze"), color: "text-amber-700" };
 };
 
 export default function UserStreakListItem({ stamp }: UserStreakListItemProps) {

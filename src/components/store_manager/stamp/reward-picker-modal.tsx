@@ -17,7 +17,7 @@ export function RewardPickerModal({
   onSelect,
 }: RewardPickerModalProps) {
   const router = useRouter();
-  const { t } = useTranslation();
+  const { t: translate } = useTranslation();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
 
@@ -87,14 +87,14 @@ export function RewardPickerModal({
           className={isDark ? "rounded-t-2xl bg-darkBackgroundCard" : "rounded-t-2xl bg-white dark:bg-slate-900"}
         >
           <View className="flex-row items-center justify-between px-4 py-2">
-            <Text className="text-base font-poppins-bold text-textPrimary dark:text-darkTextPrimary">{t("store_manager.stamp.rewardPicker.title")}</Text>
+            <Text className="text-base font-poppins-bold text-textPrimary dark:text-darkTextPrimary">{translate("store_manager.stamp.rewardPicker.title")}</Text>
             <TouchableOpacity onPress={onClose} activeOpacity={0.8} className="p-2" hitSlop={8 as any}>
               <X size={22} color={mutedIconColor} />
             </TouchableOpacity>
           </View>
 
           <Text className="px-4 pb-2 text-xs font-poppins text-textMuted dark:text-darkTextMuted">
-            {t("store_manager.stamp.rewardPicker.scrollHint", { pageSize: PAGE_SIZE })}
+            {translate("store_manager.stamp.rewardPicker.scrollHint", { pageSize: PAGE_SIZE })}
           </Text>
 
           {loading ? (
@@ -105,10 +105,10 @@ export function RewardPickerModal({
             <View className="px-6 py-10 items-center justify-center">
               <Gift size={40} color={emptyIconColor} />
               <Text className="text-base mt-3 font-poppins-semibold text-textSecondary dark:text-darkTextSecondary">
-                {t("store_manager.stamp.rewardPicker.emptyTitle")}
+                {translate("store_manager.stamp.rewardPicker.emptyTitle")}
               </Text>
               <Text className="text-sm mt-2 text-center font-poppins text-textMuted dark:text-darkTextMuted">
-                {t("store_manager.stamp.rewardPicker.emptyBody")}
+                {translate("store_manager.stamp.rewardPicker.emptyBody")}
               </Text>
               <TouchableOpacity
                 activeOpacity={0.85}
@@ -118,7 +118,7 @@ export function RewardPickerModal({
                 }}
                 className="mt-4 bg-primary rounded-xl px-6 py-3"
               >
-                <Text className="text-white text-xs font-poppins-bold">{t("store_manager.stamp.rewardPicker.createButton")}</Text>
+                <Text className="text-white text-xs font-poppins-bold">{translate("store_manager.stamp.rewardPicker.createButton")}</Text>
               </TouchableOpacity>
             </View>
           ) : (
@@ -162,7 +162,7 @@ export function RewardPickerModal({
                         {item.title}
                       </Text>
                       <Text className="text-xs font-poppins text-textMuted dark:text-darkTextMuted">
-                        {item.points_cost} {t("store_manager.stamp.rewardPicker.pointsSuffix")}
+                        {item.points_cost} {translate("store_manager.stamp.rewardPicker.pointsSuffix")}
                       </Text>
                     </View>
 

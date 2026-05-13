@@ -3,6 +3,7 @@ import { initReactI18next } from 'react-i18next';
 
 import en_frontdesk_transaction from './en/frontdesk/transaction.json';
 import en_frontdesk_transactionHistory from './en/frontdesk/transactionHistory.json';
+import en_frontdesk_password from './en/frontdesk/password.json';
 import en_label from './en/label.json';
 import en_layout from './en/layout.json';
 import en_onboarding_forgotPassword from './en/onboarding/forgotPassword.json';
@@ -50,6 +51,7 @@ import en_user_qr from './en/user/qr.json';
 import en_user_rewards from './en/user/rewards.json';
 import ja_frontdesk_transaction from './ja/frontdesk/transaction.json';
 import ja_frontdesk_transactionHistory from './ja/frontdesk/transactionHistory.json';
+import ja_frontdesk_password from './ja/frontdesk/password.json';
 import ja_label from './ja/label.json';
 import ja_layout from './ja/layout.json';
 import ja_onboarding_forgotPassword from './ja/onboarding/forgotPassword.json';
@@ -95,10 +97,24 @@ import ja_user_activity from './ja/user/activity.json';
 import ja_user_discover from './ja/user/discover.json';
 import ja_user_qr from './ja/user/qr.json';
 import ja_user_rewards from './ja/user/rewards.json';
+
+const en_store_manager_premiumCampaigns = {
+  banner: "Your current plan doesn't include editing stamp programs, streak programs, or the rewards catalog. Existing programs stay active - current participants can keep earning, but new customers can't join these campaigns until you upgrade.",
+  bannerWithExpiry: "Your current plan doesn't include editing stamp programs, streak programs, or the rewards catalog. Existing programs stay active - current participants can keep earning, but new customers can't join these campaigns until you upgrade. Program changes will be fully disabled until {{date}}.",
+  serviceLockedMessage: "Upgrade your plan to create or edit stamp, streak, and reward campaigns.",
+};
+
+const ja_store_manager_premiumCampaigns = {
+  banner: "現在のプランではスタンプ、ストリーク、リワードカタログを編集できません。既存のプログラムは有効なままですが、新しいお客様はアップグレードするまで参加できません。",
+  bannerWithExpiry: "現在のプランではスタンプ、ストリーク、リワードカタログを編集できません。既存のプログラムは有効なままですが、新しいお客様はアップグレードするまで参加できません。{{date}}までプログラム変更は完全に無効になります。",
+  serviceLockedMessage: "スタンプ、ストリーク、リワードキャンペーンを作成または編集するにはプランをアップグレードしてください。",
+};
+
 const resources = {
   en: {
     translation: {
       frontdesk: {
+        password: en_frontdesk_password,
         transaction: en_frontdesk_transaction,
         transactionHistory: en_frontdesk_transactionHistory,
       },
@@ -122,6 +138,7 @@ const resources = {
         ...en_settings_index,
       },
       store_manager: {
+        premiumCampaigns: en_store_manager_premiumCampaigns,
         createStore: en_store_manager_createStore,
         chat: en_store_manager_chat,
         dashboard: en_store_manager_dashboard,
@@ -146,6 +163,7 @@ const resources = {
         viewStore: en_store_manager_viewStore,
       },
       storeManager: {
+        premiumCampaigns: en_store_manager_premiumCampaigns,
         createStore: en_store_manager_createStore,
         chat: en_store_manager_chat,
         dashboard: en_store_manager_dashboard,
@@ -192,6 +210,7 @@ const resources = {
   ja: {
     translation: {
       frontdesk: {
+        password: ja_frontdesk_password,
         transaction: ja_frontdesk_transaction,
         transactionHistory: ja_frontdesk_transactionHistory,
       },
@@ -215,6 +234,7 @@ const resources = {
         ...ja_settings_index,
       },
       store_manager: {
+        premiumCampaigns: ja_store_manager_premiumCampaigns,
         createStore: ja_store_manager_createStore,
         chat: ja_store_manager_chat,
         dashboard: ja_store_manager_dashboard,
@@ -240,6 +260,7 @@ const resources = {
       },
       // Back-compat alias: app screens use `storeManager.*` keys.
       storeManager: {
+        premiumCampaigns: ja_store_manager_premiumCampaigns,
         createStore: ja_store_manager_createStore,
         chat: ja_store_manager_chat,
         dashboard: ja_store_manager_dashboard,

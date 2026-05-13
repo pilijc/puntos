@@ -18,7 +18,7 @@ import { VoucherGenerator } from '@/components/users/voucher';
 import { Modal } from '@/components/modal';
 
 export default function Qr() {
-  const { t } = useTranslation();
+  const { t: translate } = useTranslation();
   const router = useRouter();
   const { from } = useLocalSearchParams<{ from?: string }>();
   const insets = useSafeAreaInsets();
@@ -96,10 +96,10 @@ export default function Qr() {
           <View className="flex-1">
             <View className="items-center mt-4 mb-6">
               <Text className="text-xl font-poppins-bold text-slate-900 dark:text-slate-100 tracking-tight">
-                {t('user.qr.title')}
+                {translate('user.qr.title')}
               </Text>
               <Text className="text-[13px] font-poppins text-slate-400 dark:text-zinc-500 text-center mt-1 px-4">
-                {t('user.qr.instruction')}
+                {translate('user.qr.instruction')}
               </Text>
             </View>
 
@@ -123,7 +123,7 @@ export default function Qr() {
                   <View className="flex-row items-center justify-center gap-x-2 py-3">
                     <View className="w-1 h-1 rounded-full bg-primary opacity-60" />
                     <Text className="text-xs font-poppins-medium text-slate-400 dark:text-zinc-500">
-                      {t('user.qr.prompt')}
+                      {translate('user.qr.prompt')}
                     </Text>
                     <View className="w-1 h-1 rounded-full bg-primary opacity-60" />
                   </View>
@@ -131,7 +131,7 @@ export default function Qr() {
               ) : (
                 <View className="items-center py-16">
                   <Text className="text-sm font-poppins text-slate-400 dark:text-zinc-500">
-                    {t('user.qr.error')}
+                    {translate('user.qr.error')}
                   </Text>
                 </View>
               )}
@@ -150,15 +150,15 @@ export default function Qr() {
       <Modal
         visible={showCongrats}
         onClose={() => setShowCongrats(false)}
-        title={t('user.qr.success.title')}
-        buttons={[{ label: t('user.qr.success.button'), onPress: () => setShowCongrats(false), variant: 'primary' }]}
+        title={translate('user.qr.success.title')}
+        buttons={[{ label: translate('user.qr.success.button'), onPress: () => setShowCongrats(false), variant: 'primary' }]}
       >
         <Text className="text-sm font-poppins text-slate-500 dark:text-zinc-400 text-center mb-4">
-          {t('user.qr.success.message')}
+          {translate('user.qr.success.message')}
         </Text>
         <View className="bg-orange-50 rounded-2xl py-5 px-8 items-center border border-orange-100">
           <Text className="text-4xl font-poppins-bold text-orange-600">+{earnedPoints}</Text>
-          <Text className="text-xs font-poppins text-orange-400 mt-1">{t('user.qr.success.added')}</Text>
+          <Text className="text-xs font-poppins text-orange-400 mt-1">{translate('user.qr.success.added')}</Text>
         </View>
       </Modal>
     </SafeAreaView>
