@@ -1,5 +1,6 @@
 import { Tabs } from "expo-router";
 import { useColorScheme, Platform, Text, View, Image } from "react-native";
+import { useAppearanceStore } from "@/store/appearance-store";
 import React, { useCallback, useState } from "react";
 import { usePathname } from "expo-router";
 import { type BottomTabBarProps } from "@react-navigation/bottom-tabs";
@@ -231,7 +232,11 @@ export default function SuperAdminLayout() {
     useSuperAdminLayout();
 
     const { t: translate } = useTranslation();
-    const colorScheme = useColorScheme();
+    const nativeColorScheme = useColorScheme();
+    const { theme } = useAppearanceStore();
+    const colorScheme = Platform.OS === 'web'
+        ? (theme === 'system' ? nativeColorScheme : theme)
+        : nativeColorScheme;
     const isDark = colorScheme === "dark";
     const insets = useSafeAreaInsets();
     const isWeb = Platform.OS === "web";

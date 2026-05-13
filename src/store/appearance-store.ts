@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Appearance, ColorSchemeName } from 'react-native';
+import { Appearance, ColorSchemeName, Platform } from 'react-native';
 import { AppearanceState } from "@/type/appearance";
 
 export type ThemeType = 'light' | 'dark' | 'system';
@@ -17,6 +17,11 @@ export const useAppearanceStore = create<AppearanceState>()(
 
       applyTheme: () => {
         const { theme } = get();
+        if (Platform.OS === 'web') {
+          const isDark = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+          document.documentElement.classList.toggle('dark', isDark);
+          return;
+        }
         if (theme === 'system') {
           Appearance.setColorScheme(null as unknown as ColorSchemeName);
         } else {
