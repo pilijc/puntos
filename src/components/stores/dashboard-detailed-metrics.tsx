@@ -44,8 +44,8 @@ export function DashboardDetailedMetrics({ storeId, transactions = [], loading }
             <View className="w-full">
                 {/* Table Header */}
                 <View className="flex-row pb-3 mb-1 border-b border-slate-50 dark:border-darkBorder/30">
-                    <Text className="flex-1 text-[11px] font-poppins-bold text-textSecondary dark:text-darkTextSecondary uppercase tracking-wider">{translate("label.dateAndTime", "Date")}</Text>
-                    <Text className="flex-[2] text-[11px] font-poppins-bold text-textSecondary dark:text-darkTextSecondary uppercase tracking-wider">{translate("label.user", "User")}</Text>
+                    <Text className="flex-1 text-[12px] font-poppins-medium text-textSecondary dark:text-darkTextSecondary">{translate("label.dateAndTime", "Date")}</Text>
+                    <Text className="flex-[2] text-[12px] font-poppins-medium text-textSecondary dark:text-darkTextSecondary">{translate("label.user", "User")}</Text>
                 </View>
 
                 {/* Table Body */}

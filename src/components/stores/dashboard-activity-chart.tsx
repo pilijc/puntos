@@ -247,7 +247,7 @@ export const DashboardActivityChart: React.FC<ExtendedDashboardActivityChartProp
                 <View className="flex-row items-center mt-5 pt-5 border-t border-slate-100 dark:border-darkBorder">
                     {/* Always remains: Total Stat (Fixed 1/3 width) */}
                     <View className="flex-1 items-center">
-                        <Text className="text-[11px] font-poppins text-textSecondary dark:text-darkTextSecondary uppercase tracking-[0.5px] text-center" numberOfLines={1}>
+                        <Text className="text-[12px] font-poppins-medium text-textSecondary dark:text-darkTextSecondary text-center" numberOfLines={1}>
                             {translate(`store_manager.dashboard.activity.metric.${selectedMetric}`)}
                         </Text>
                         <Text className="text-2xl font-poppins-bold text-textPrimary dark:text-darkTextPrimary mt-1">
@@ -260,7 +260,7 @@ export const DashboardActivityChart: React.FC<ExtendedDashboardActivityChartProp
                         <>
                             <View className="w-px h-10 bg-slate-100 dark:bg-darkBorder" />
                             <View className="flex-1 items-center">
-                                <Text className="text-[11px] font-poppins text-textSecondary dark:text-darkTextSecondary uppercase tracking-[0.5px] text-center">
+                                <Text className="text-[12px] font-poppins-medium text-textSecondary dark:text-darkTextSecondary text-center">
                                     {translate("store_manager.dashboard.activity.peakDay", "Peak Day")}
                                 </Text>
                                 <Text className="text-2xl font-poppins-bold text-[#FF6600] mt-1">
@@ -275,7 +275,7 @@ export const DashboardActivityChart: React.FC<ExtendedDashboardActivityChartProp
                         <>
                             <View className="w-px h-10 bg-slate-100 dark:bg-darkBorder" />
                             <View className="flex-1 items-center">
-                                <Text className="text-[11px] font-poppins text-textSecondary dark:text-darkTextSecondary uppercase tracking-[0.5px] text-center">
+                                <Text className="text-[12px] font-poppins-medium text-textSecondary dark:text-darkTextSecondary text-center">
                                     {translate("store_manager.dashboard.activity.dailyAvg", "Daily Avg")}
                                 </Text>
                                 <Text className="text-2xl font-poppins-bold text-textPrimary dark:text-darkTextPrimary mt-1">

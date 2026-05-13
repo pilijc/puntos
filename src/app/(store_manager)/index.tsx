@@ -1,8 +1,9 @@
 import React from "react";
 import { RefreshControl, ScrollView as RNScrollView } from "react-native";
 import { ScrollView, View, Text, SafeAreaView, TouchableOpacity } from "@/tw";
-import { Users, ScanLine, ChevronLeft, ChevronRight } from "lucide-react-native";
+import { Users, ScanLine, ChevronLeft, ChevronRight, Store, Plus } from "lucide-react-native";
 import { useTranslation } from "react-i18next";
+import { useRouter } from "expo-router";
 
 import { useStoreDashboard } from "@/hooks/store-manager/use-store-metrics";
 
@@ -15,6 +16,7 @@ import { DashboardDetailedMetrics } from "@/components/stores/dashboard-detailed
 
 export default function StoreManagerDashboard() {
   const { t: translate } = useTranslation();
+  const router = useRouter();
   const {
     isWeb,
     stores,
@@ -256,13 +258,25 @@ export default function StoreManagerDashboard() {
             )}
           </View>
         ) : (
-          <View className="py-10 items-center">
-            <Text className="font-poppins text-textPrimary">
-              {translate(
-                "store_manager.dashboard.noStores",
-                "No Stores Available",
-              )}
+          <View className="flex-1 items-center justify-center py-20 px-6 mt-10">
+            <View className="w-24 h-24 bg-orange-50 dark:bg-[#431407] rounded-full items-center justify-center mb-6">
+              <Store size={48} color="#FF6600" />
+            </View>
+            <Text className="text-2xl font-poppins-bold text-textPrimary dark:text-darkTextPrimary text-center mb-3">
+              {translate("store_manager.dashboard.noStores", "Let's Grow Your Business!")}
             </Text>
+            <Text className="text-sm font-poppins text-textSecondary dark:text-darkTextSecondary text-center max-w-sm mb-8 leading-6">
+              {translate("store_manager.dashboard.noStoresDesc", "Create your first store to start rewarding loyal customers, tracking insights, and boosting your sales.")}
+            </Text>
+            <TouchableOpacity
+              onPress={() => router.push("/(store_manager)/store/create-store" as any)}
+              className="bg-[#FF6600] flex-row items-center px-6 py-3.5 rounded-xl shadow-sm"
+            >
+              <Plus size={20} color="#FFFFFF" className="mr-2" />
+              <Text className="text-white font-poppins-bold text-sm">
+                {translate("store_manager.dashboard.createStore", "Create My First Store")}
+              </Text>
+            </TouchableOpacity>
           </View>
         )}
       </ScrollView>

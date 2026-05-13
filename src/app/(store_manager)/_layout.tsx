@@ -291,7 +291,11 @@ function WebStoreManagerSidebarTabBar({
                                 paddingVertical: 10,
                                 marginBottom: 2,
                                 backgroundColor: isActive ? activeBackground : "transparent",
-                            }}
+                                width: mode === "collapsed" ? 42 : "100%",
+                                overflow: "hidden",
+                                transitionProperty: "width, background-color",
+                                transitionDuration: "180ms",
+                            } as any}
                         >
                             {/* Icon + optional badge */}
                             <View style={{ width: 18, alignItems: 'center', justifyContent: 'center', position: "relative" }}>

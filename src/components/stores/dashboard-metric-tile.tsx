@@ -21,7 +21,7 @@ export const DashboardMetricTile: React.FC<Props> = ({
     return (
         <View className={`bg-white dark:bg-darkBackgroundCard rounded-xl px-4 py-3 flex-1 elevation-1 border border-transparent dark:border-darkBorder justify-center${compact ? ' py-2' : ''}`}>
             <Text 
-                className={`${compact ? 'text-[9px]' : 'text-[11px]'} font-poppins-bold text-textSecondary dark:text-darkTextSecondary tracking-[0.5px] uppercase mb-[2px]`}
+                className={`${compact ? 'text-[11px]' : 'text-[13px]'} font-poppins-medium text-textSecondary dark:text-darkTextSecondary mb-[2px]`}
                 numberOfLines={1}
             >
                 {label}
@@ -31,7 +31,7 @@ export const DashboardMetricTile: React.FC<Props> = ({
                 {IconComponent && (
                     <View style={{ marginTop: -2 }}>
                         <IconComponent
-                            size={compact ? 16 : 20}
+                            size={compact ? 16 : 22}
                             color={isDark ? "#A3A3A3" : "#94A3B8"}
                         />
                     </View>
