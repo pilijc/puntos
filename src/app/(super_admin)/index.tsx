@@ -148,9 +148,9 @@ export default function SuperAdminDashboard() {
               <View className="mb-4">
                 <View className="flex-row rounded-xl bg-[#EEF2F7] dark:bg-darkBackgroundMuted p-1 self-start">
                   {([
-                    { id: "today", label: "Today" },
-                    { id: "7d", label: "7d" },
-                    { id: "1m", label: "1m" },
+                  { id: "today", label: translate("superAdmin.dashboard.timeframe.today", "Today") },
+                  { id: "7d", label: translate("superAdmin.dashboard.timeframe.sevenDays", "7d") },
+                  { id: "1m", label: translate("superAdmin.dashboard.timeframe.oneMonth", "1m") },
                   ] as Array<{ id: Timeframe; label: string }>).map((opt) => {
                     const active = timeframe === opt.id;
                     return (
@@ -211,9 +211,9 @@ export default function SuperAdminDashboard() {
             <View className="mb-4">
               <View className="flex-row rounded-xl bg-[#EEF2F7] dark:bg-darkBackgroundMuted p-1 self-start">
                 {([
-                  { id: "today", label: "Today" },
-                  { id: "7d", label: "7d" },
-                  { id: "1m", label: "1m" },
+                { id: "today", label: translate("superAdmin.dashboard.timeframe.today", "Today") },
+                { id: "7d", label: translate("superAdmin.dashboard.timeframe.sevenDays", "7d") },
+                { id: "1m", label: translate("superAdmin.dashboard.timeframe.oneMonth", "1m") },
                 ] as Array<{ id: Timeframe; label: string }>).map((opt) => {
                   const active = timeframe === opt.id;
                   return (

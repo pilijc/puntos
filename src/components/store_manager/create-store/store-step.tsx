@@ -17,7 +17,7 @@ type StoreStepProps = {
   setPictures: (v: string[] | null) => void;
   isUploadingImage: boolean;
   pickImage: (type: PickImageType, pictureIndex?: number) => void | Promise<void>;
-  t: (key: string, options?: Record<string, unknown>) => string;
+  translate: (key: string, options?: Record<string, unknown>) => string;
 };
 
 export function StoreStep({
@@ -31,7 +31,7 @@ export function StoreStep({
   setPictures,
   isUploadingImage,
   pickImage,
-  t,
+  translate,
 }: StoreStepProps) {
   const isWeb = Platform.OS === "web";
 
@@ -43,9 +43,9 @@ export function StoreStep({
         }`}
       >
         <TextField
-          label={t("label.storeName")}
+          label={translate("label.storeName")}
           required
-          placeholder={t("store_manager.detailEdit.storeNamePlaceholder")}
+          placeholder={translate("store_manager.detailEdit.storeNamePlaceholder")}
           value={storeName}
           onChangeText={setStoreName}
           sanitize={(v) => v}
@@ -53,7 +53,7 @@ export function StoreStep({
 
         <View className="flex-col gap-2 justify-start">
           <Text className="text-slate-700 dark:text-slate-300 text-sm font-poppins-medium px-1">
-            {t("label.storeType")}{" "}
+            {translate("label.storeType")}{" "}
             <Text className="text-red-500 dark:text-red-400">*</Text>
           </Text>
           <View className="flex-row flex-wrap gap-2 mt-1">
@@ -77,7 +77,7 @@ export function StoreStep({
                         : "text-slate-600 dark:text-slate-300"
                     }`}
                   >
-                    {t(`store_manager.storeTypes.${type.value}`)}
+                    {translate(`store_manager.storeTypes.${type.value}`)}
                   </Text>
                 </TouchableOpacity>
               );
@@ -88,7 +88,7 @@ export function StoreStep({
         <View className="flex-row gap-4 gap-y-2">
           <View className="flex-1 flex-col gap-2">
             <Text className="text-slate-700 dark:text-slate-300 text-sm font-poppins-medium px-1">
-              {t("label.storeLogo")}{" "}
+              {translate("label.storeLogo")}{" "}
               <Text className="text-red-500 dark:text-red-400">*</Text>
             </Text>
             <TouchableOpacity
@@ -115,7 +115,7 @@ export function StoreStep({
                 <>
                   <ImagePlus size={18} color="#94A3B8" />
                   <Text className="text-[10px] text-slate-500 font-poppins">
-                    {t("store_manager.createStore.logo")}
+                    {translate("store_manager.createStore.logo")}
                   </Text>
                 </>
               )}
@@ -125,11 +125,11 @@ export function StoreStep({
 
         <View className="flex-col gap-2">
           <Text className="text-slate-700 dark:text-slate-300 text-sm font-poppins-medium px-1">
-            {t("store_manager.createStore.storePictures")}{" "}
+            {translate("store_manager.createStore.storePictures")}{" "}
             <Text className="text-red-500 dark:text-red-400">*</Text>
           </Text>
           <Text className="text-slate-600 dark:text-slate-400 text-xs font-poppins mb-3 px-1">
-            {t("store_manager.createStore.storePicturesHint")}
+            {translate("store_manager.createStore.storePicturesHint")}
           </Text>
           <View className="flex-row flex-wrap gap-2">
             {[0, 1, 2, 3, 4, 5].map((index) => {
@@ -171,7 +171,7 @@ export function StoreStep({
                     >
                       <ImagePlus size={20} color="#94A3B8" />
                       <Text className="text-[10px] text-slate-500 font-poppins mt-0.5">
-                        {t("label.add")}
+                        {translate("label.add")}
                       </Text>
                     </TouchableOpacity>
                   )}

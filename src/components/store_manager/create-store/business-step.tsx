@@ -28,7 +28,7 @@ type BusinessStepProps = {
   isUploadingImage: boolean;
   pickImage: (type: PickImageType, pictureIndex?: number) => void | Promise<void>;
   isDark: boolean;
-  t: (key: string, options?: Record<string, unknown>) => string;
+  translate: (key: string, options?: Record<string, unknown>) => string;
 };
 
 export function BusinessStep({
@@ -47,7 +47,7 @@ export function BusinessStep({
   isUploadingImage,
   pickImage,
   isDark,
-  t,
+  translate,
 }: BusinessStepProps) {
   const isWeb = Platform.OS === "web";
   const uploadDocImageKey = isWeb
@@ -58,8 +58,8 @@ export function BusinessStep({
     <View className="gap-2">
       <View className="bg-white dark:bg-neutral-800 rounded-xl border border-slate-100 dark:border-neutral-700 p-4 gap-4">
         <TextField
-          label={t("store_manager.createStore.phoneNumber")}
-          placeholder={t("store_manager.detailEdit.phonePlaceholder")}
+          label={translate("store_manager.createStore.phoneNumber")}
+          placeholder={translate("store_manager.detailEdit.phonePlaceholder")}
           keyboardType="phone-pad"
           value={phone}
           onChangeText={(text) => {
@@ -72,9 +72,9 @@ export function BusinessStep({
         />
 
         <TextField
-          label={t("store_manager.createStore.registrationNumber")}
+          label={translate("store_manager.createStore.registrationNumber")}
           required
-          placeholder={t("store_manager.detailEdit.registrationPlaceholder")}
+          placeholder={translate("store_manager.detailEdit.registrationPlaceholder")}
           value={registrationNumber}
           onChangeText={setRegistrationNumber}
           sanitize={(v) => v}
@@ -82,7 +82,7 @@ export function BusinessStep({
 
         <View className="flex flex-col gap-2">
           <Text className="text-slate-700 dark:text-slate-300 text-sm font-poppins-medium px-1">
-            {t("label.businessDocument")}{" "}
+            {translate("label.businessDocument")}{" "}
             <Text className="text-red-500 dark:text-red-400">*</Text>
           </Text>
           <TouchableOpacity
@@ -112,7 +112,7 @@ export function BusinessStep({
               <>
                 <FileText size={24} color="#94A3B8" />
                 <Text className="text-xs text-slate-500 font-poppins mt-1">
-                  {t(uploadDocImageKey)}
+                  {translate(uploadDocImageKey)}
                 </Text>
               </>
             )}
@@ -123,7 +123,7 @@ export function BusinessStep({
           <View className="flex-1 flex-col gap-1.5" style={{ zIndex: 30 }}>
             <View className="flex-row items-center gap-1 px-1">
               <Text className="text-slate-700 dark:text-slate-300 text-sm font-poppins-medium">
-                {t("store_manager.createStore.openingTime")}
+                {translate("store_manager.createStore.openingTime")}
                 {isWeb && (
                   <Text className="text-red-500 dark:text-red-400 ml-1">*</Text>
                 )}
@@ -139,7 +139,7 @@ export function BusinessStep({
           <View className="flex-1 flex-col gap-1.5" style={{ zIndex: 30 }}>
             <View className="flex-row items-center gap-1 px-1">
               <Text className="text-slate-700 dark:text-slate-300 text-sm font-poppins-medium">
-                {t("store_manager.createStore.closingTime")}
+                {translate("store_manager.createStore.closingTime")}
                 {isWeb && (
                   <Text className="text-red-500 dark:text-red-400 ml-1">*</Text>
                 )}
@@ -160,21 +160,21 @@ export function BusinessStep({
               <CalendarDays size={14} color={isDark ? "#cbd5e1" : "#475569"} />
             )}
             <Text className="text-slate-700 dark:text-slate-300 text-sm font-poppins-medium">
-              {t("store_manager.createStore.storeDays")}{" "}
+              {translate("store_manager.createStore.storeDays")}{" "}
               <Text className="text-red-500 dark:text-red-400">*</Text>
             </Text>
           </View>
           <Text className="text-slate-600 dark:text-slate-400 text-xs font-poppins px-1">
-            {t("store_manager.createStore.storeDaysHint")}
+            {translate("store_manager.createStore.storeDaysHint")}
           </Text>
           <DaysBadgeSelector
             selectedDays={storeDays}
             onToggle={toggleStoreDay}
-            t={t}
+            translate={translate}
           />
           {storeDays.length === 7 && (
             <Text className="text-xs text-slate-400 dark:text-slate-500 font-poppins px-1">
-              {t("store_manager.createStore.storeDaysAllSelected")}
+              {translate("store_manager.createStore.storeDaysAllSelected")}
             </Text>
           )}
         </View>

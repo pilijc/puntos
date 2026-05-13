@@ -18,6 +18,7 @@ import { Modal } from "@/components/modal";
 import { Button } from "@/components/button";
 import { getQRCodeData } from "@/services/user/rewards-redemption";
 import { RedemptionQRSkeleton } from "@/components/skeleton/user/redemption-qr-skeleton";
+import { useTranslation } from "react-i18next";
 
 const isWeb = Platform.OS === "web";
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
@@ -46,11 +47,12 @@ export function RedemptionDrawer({
   rewardDescription,
   rewardImage,
   redemptionCode,
-  timeRemaining = 1200,
-  status = "active",
+  timeRemaining = 0,
+  status,
   onClose,
   onCancel,
 }: RedemptionDrawerProps) {
+  const { t: translate } = useTranslation();
   const insets = useSafeAreaInsets();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
@@ -215,7 +217,7 @@ export function RedemptionDrawer({
               <View className="bg-primary pb-4">
                 <View className="mb-4 items-center py-3 relative px-4 bg-[#FFFFFF] dark:bg-darkBackgroundCard border-b border-neutral-200">
                   <Text className="text-lg text-neutral-900 dark:text-white font-poppins-semibold">
-                    {status === "redeemed" ? "Reward Redeemed" : "Scan to redeem"}
+                    {status === "redeemed" ? translate("user.rewards.redemption.titleRedeemed") : translate("user.rewards.redemption.title")}
                   </Text>
 
                   <TouchableOpacity
@@ -242,13 +244,13 @@ export function RedemptionDrawer({
                           <>
                             <RedemptionQRSkeleton />
                             <Text className="text-neutral-400 text-xs font-poppins-medium mt-3 text-center">
-                              Generating code...
+                              {translate("user.rewards.redemption.generating")}
                             </Text>
                           </>
                         ): status === "expired" || timeRemaining === 0 ? (
                           <View className="w-[140px] h-[140px] items-center justify-center bg-gray-100 dark:bg-gray-800 rounded-lg">
                             <Text className="text-red-500 text-sm font-poppins-bold text-center px-4"> 
-                            Code Expired
+                              {translate("user.rewards.redemption.codeExpired")}
                             </Text>
                           </View>
                         ) : (
@@ -257,7 +259,7 @@ export function RedemptionDrawer({
                       </View>
 
                       <Text className="text-2xl font-poppins-bold tracking-[0.15em] text-neutral-900 dark:text-white">
-                        {status === "loading" ? "..." : status === "expired" || timeRemaining === 0 ? "EXPIRED" : formattedCode}
+                        {status === "loading" ? "..." : status === "expired" || timeRemaining === 0 ? translate("user.rewards.redemption.expired") : formattedCode}
                       </Text>
 
                       {/* Expired overlay */}
@@ -269,13 +271,13 @@ export function RedemptionDrawer({
                     </View>
 
                     {status !== "loading" && (
-                      <Text className="text-[11px] text-neutral-500 dark:text-neutral-400 font-poppins mt-1">Time left to redeem</Text>
+                      <Text className="text-[11px] text-neutral-500 dark:text-neutral-400 font-poppins mt-1">{translate("user.rewards.redemption.timeLeft")}</Text>
                     )}
 
                     {status !== "loading" && (
                       <Text className={`text-2xl font-poppins-bold mt-1 ${isExpiringSoon ? "text-red-500" : "text-neutral-900 dark:text-white"}`}>
                         {status === "redeemed"
-                          ? "Redeemed!"
+                          ? translate("user.rewards.redemption.redeemed")
                           : status === "expired" || timeRemaining === 0
                             ? "0:00"
                             : formatTime(timeRemaining)}
@@ -318,7 +320,7 @@ export function RedemptionDrawer({
               <View className="flex-1  px-4 pb-6 bg-backgroundMuted dark:bg-darkBackgroundMuted">
                 <View className="mt-4 min-h-[450px] bg-[rgba(255,102,0,0.07)] p-4 rounded-2xl justify-start">
                   <Text className="text-[10px] text-neutral-400 font-poppins-bold mb-4 uppercase tracking-[2px]">
-                    How to redeem
+                    {translate("user.rewards.redemption.howToRedeem")}
                   </Text>
 
                   <View className="flex-row items-center">
@@ -327,10 +329,10 @@ export function RedemptionDrawer({
                     </View>
                     <View className="flex-1">
                       <Text className="text-sm font-poppins-bold text-neutral-900">
-                        In the restaurant
+                        {translate("user.rewards.redemption.inRestaurant")}
                       </Text>
                       <Text className="text-xs text-neutral-500 font-poppins mt-0.5">
-                        Scan or show code to staff
+                        {translate("user.rewards.redemption.instructions")}
                       </Text>
                     </View>
                   </View>
@@ -348,21 +350,21 @@ export function RedemptionDrawer({
         <Modal
           visible={showConfirmModal}
           onClose={handleKeepIt}
-          title="Cancel Redemption?"
-          message="Are you sure you want to cancel this redemption? Points will be returned to your balance."
+          title={translate("user.rewards.redemption.cancelConfirmTitle")}
+          message={translate("user.rewards.redemption.cancelConfirmMessage")}
           buttons={[
-            { label: "Keep it", onPress: handleKeepIt, variant: "secondary" },
-            { label: "Cancel", onPress: handleConfirmCancel, variant: "danger" },
+            { label: translate("user.rewards.redemption.cancelKeep"), onPress: handleKeepIt, variant: "secondary" },
+            { label: translate("user.rewards.redemption.cancelConfirm"), onPress: handleConfirmCancel, variant: "danger" },
           ]}
         />
 
         <Modal
           visible={showSuccessModal}
           onClose={handleSuccessClose}
-          title="Cancelled"
-          message="Your code is cancelled."
+          title={translate("user.rewards.redemption.cancelledTitle")}
+          message={translate("user.rewards.redemption.cancelledMessage")}
           buttons={[
-            { label: "Got it", onPress: handleSuccessClose, variant: "primary" },
+            { label: translate("user.rewards.redemption.gotIt"), onPress: handleSuccessClose, variant: "primary" },
           ]}
         />
       </View>

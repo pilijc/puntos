@@ -2,6 +2,7 @@ import React from "react";
 import { Image } from "expo-image";
 import { View, Text } from "@/tw";
 import { StreakParticipant } from "@/type/store-manager/streak";
+import { useTranslation } from "react-i18next";
 
 interface ParticipantRowProps {
   item: StreakParticipant;
@@ -9,8 +10,9 @@ interface ParticipantRowProps {
 }
 
 export function ParticipantRow({ item, streakLength }: ParticipantRowProps) {
+  const { t: translate } = useTranslation();
   const progress = Math.min(item.total_earned_days / Math.max(streakLength, 1), 1);
-  const name = item.users?.name ?? "Unknown User";
+  const name = item.users?.name ?? translate("label.unknownUser");
   const initials = name.split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase();
 
   return (
@@ -28,22 +30,22 @@ export function ParticipantRow({ item, streakLength }: ParticipantRowProps) {
         </Text>
         {item.completion_bonus_awarded && (
           <View className="bg-amber-50 dark:bg-amber-900/20 px-1.5 py-0.5 rounded">
-            <Text className="text-xs font-poppins-semibold text-amber-500">BONUS</Text>
+            <Text className="text-xs font-poppins-semibold text-amber-500">{translate("store_manager.streak.bonusBadge")}</Text>
           </View>
         )}
         {item.status === "completed" && (
           <View className="bg-emerald-50 dark:bg-emerald-900/20 px-1.5 py-0.5 rounded">
-            <Text className="text-xs font-poppins-semibold text-emerald-500">DONE</Text>
+            <Text className="text-xs font-poppins-semibold text-emerald-500">{translate("store_manager.streak.doneBadge")}</Text>
           </View>
         )}
       </View>
 
       <View className="flex-row items-center justify-between">
         <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">
-          {item.total_earned_days} day{item.total_earned_days !== 1 ? "s" : ""} earned
+          {translate("store_manager.streak.daysEarned", { count: item.total_earned_days })}
         </Text>
         <Text className="text-xs font-poppins-bold text-primary">
-          {item.points_earned} pts
+          {translate("store_manager.streak.pointsShort", { points: item.points_earned })}
         </Text>
       </View>
 

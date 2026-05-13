@@ -5,13 +5,13 @@ import { STORE_DAYS } from "@/type/store-manager/store";
 type DaysBadgeSelectorProps = {
   selectedDays: string[];
   onToggle: (day: string) => void;
-  t: (key: string) => string;
+  translate: (key: string) => string;
 };
 
 export function DaysBadgeSelector({
   selectedDays,
   onToggle,
-  t,
+  translate,
 }: DaysBadgeSelectorProps) {
   return (
     <View className="flex-row flex-wrap gap-2">
@@ -33,7 +33,7 @@ export function DaysBadgeSelector({
                 selected ? "text-primary" : "text-slate-600 dark:text-slate-300"
               }`}
             >
-              {t(`store_manager.createStore.days.${day.shortKey}`)}
+              {translate(`store_manager.createStore.days.${day.shortKey}`)}
             </Text>
           </TouchableOpacity>
         );

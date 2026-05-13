@@ -12,7 +12,7 @@ export function ActiveSessionSection() {
     const { activeSessions, fetchActiveSessions } = useDeviceSession();
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
-    const { t } = useTranslation();
+    const { t: translate } = useTranslation();
 
     const loadData = useCallback(async () => {
         await fetchActiveSessions();
@@ -38,10 +38,10 @@ export function ActiveSessionSection() {
 
                 <View className="flex-1 ml-2">
                     <Text className="text-md font-poppins-semibold text-textPrimary dark:text-darkTextPrimary">
-                        {t("settings.deviceSessions.title")}
+                        {translate("settings.deviceSessions.title")}
                     </Text>
                     <Text className="text-xs font-poppins text-textMuted dark:text-darkTextMuted">
-                        {t("settings.deviceSessions.subtitle", { max: MAX_DEVICE_SESSIONS })}
+                        {translate("settings.deviceSessions.subtitle", { max: MAX_DEVICE_SESSIONS })}
                     </Text>
                 </View>
                 
@@ -63,7 +63,7 @@ export function ActiveSessionSection() {
                     <DeviceSessionSkeleton />
                 ) : activeSessions.length === 0 ? (
                     <Text className='text-textSecondary dark:text-darkTextSecondary text-sm py-2 font-poppins'>
-                        {t("settings.deviceSessions.noSessions")}
+                        {translate("settings.deviceSessions.noSessions")}
                     </Text>
                 ): (
                     activeSessions.map((session, index) => (

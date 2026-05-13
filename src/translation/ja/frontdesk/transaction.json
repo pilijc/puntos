@@ -57,7 +57,22 @@
     },
     "invalid": "無効",
     "redemption": "引き換えエラー",
-    "unknown": "問題が発生しました。もう一度お試しください。"
+    "unknown": "問題が発生しました。もう一度お試しください。",
+    "qrNotFound": "QRが見つかりません",
+    "noQrDetected": "選択された画像からQRコードが検出されませんでした。",
+    "failedProcessImage": "画像の処理に失敗しました。"
+  },
+  "scanMode": {
+    "qr": "QRスキャン",
+    "manual": "コード入力",
+    "qrTitle": "QRコードをスキャン",
+    "qrDescription": "お客様のQRコードにカメラを向けてください",
+    "manualTitle": "クーポンコードを入力",
+    "manualDescription": "お客様のクーポンに記載されているコードを入力してください"
+  },
+  "buttons": {
+    "upload": "アップロード",
+    "camera": "カメラ"
   },
   "access": {
     "checking": "QRアクセスの確認中...",

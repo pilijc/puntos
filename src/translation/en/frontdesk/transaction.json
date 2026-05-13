@@ -57,7 +57,22 @@
     },
     "invalid": "Invalid",
     "redemption": "Redemption Error",
-    "unknown": "Something went wrong. Please try again."
+    "unknown": "Something went wrong. Please try again.",
+    "qrNotFound": "QR Not Found",
+    "noQrDetected": "No QR code detected in the selected image.",
+    "failedProcessImage": "Failed to process the image."
+  },
+  "scanMode": {
+    "qr": "QR Scan",
+    "manual": "Input Code",
+    "qrTitle": "Scan QR Code",
+    "qrDescription": "Point the camera at the customer's QR",
+    "manualTitle": "Enter Voucher Code",
+    "manualDescription": "Type the code from the customer's voucher"
+  },
+  "buttons": {
+    "upload": "Upload",
+    "camera": "Camera"
   },
   "access": {
     "checking": "Checking QR access...",

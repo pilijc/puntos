@@ -34,5 +34,19 @@
   "hideDetails": "Hide Details",
   "noRecords": "No records for this period.",
   "loadMore": "Load More",
-  "reset": "Reset"
+  "reset": "Reset",
+  "subscription": {
+    "distribution": "Subscription Distribution",
+    "payers": "Subscription Payers",
+    "proPlan": "Pro Plan",
+    "basicPlan": "Basic",
+    "loading": "Loading distribution...",
+    "noData": "No subscription data yet.",
+    "noPayers": "No payers in this timeframe",
+    "records": "Records",
+    "activeStore": "Active Store",
+    "activeStores": "Active Stores",
+    "showMore": "Show More",
+    "unknownManager": "Unknown Manager"
+  }
 }

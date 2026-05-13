@@ -189,6 +189,7 @@ function WebStoreManagerSidebarTabBar({
     descriptors,
     navigation,
 }: WebStoreManagerSidebarTabBarProps) {
+    const { t: translate } = useTranslation();
     const pathname = usePathname();
     const chromeBg = isDark ? "#262626" : "#FFFFFF";
     const sidebarWidth = mode === "normal" ? WEB_SIDEBAR_WIDTH : WEB_SIDEBAR_COLLAPSED_WIDTH;
@@ -345,7 +346,7 @@ function WebStoreManagerSidebarTabBar({
                                     color: isDark ? "#A3A3A3" : "#6B7280",
                                 }}
                             >
-                                Collapse
+                              {translate("layout.collapseSidebar", "Collapse")}
                             </Text>
                         )}
                     </PlatformPressable>

@@ -3,10 +3,12 @@ import { ActivityIndicator } from "react-native";
 import { useFocusEffect, useRouter } from "expo-router";
 import { View, Text, TouchableOpacity } from "@/tw";
 import { ChevronRight, CreditCard } from "lucide-react-native";
+import { useTranslation } from "react-i18next";
 import { getAuthenticatedUserId, getManagerSubscription, getSubscriptionPlans } from "@/services/store-manager/subscription-service";
 import { isPaidUnlimitedPlan } from "@/services/store-manager/subscription-limits";
 
 export function SubscriptionCard() {
+  const { t: translate } = useTranslation();
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [isPro, setIsPro] = useState(false);
@@ -46,7 +48,7 @@ export function SubscriptionCard() {
     }, [loadPlan]),
   );
 
-  const planLabel = useMemo(() => (loading ? "—" : isPro ? "Pro Plan" : "Free Plan"), [isPro, loading]);
+  const planLabel = useMemo(() => (loading ? "—" : isPro ? translate("settings.subscription.proPlan", "Pro Plan") : translate("settings.subscription.freePlan", "Free Plan")), [isPro, loading, translate]);
 
   return (
     <View className="bg-white dark:bg-darkBackground px-2.5 py-3 overflow-hidden">
@@ -61,7 +63,7 @@ export function SubscriptionCard() {
 
         <View className="flex-1 ml-2">
           <Text className="text-md font-poppins-semibold text-textPrimary dark:text-darkTextPrimary">
-            Subscription
+            {translate("settings.subscription.title", "Subscription")}
           </Text>
           <Text className="text-xs font-poppins text-textMuted dark:text-darkTextMuted">
             {planLabel}

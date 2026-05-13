@@ -58,11 +58,11 @@ export default function RewardRedemptionScanner({
         if (scanResult && scanResult.length > 0) {
           handleBarcodeScanned(scanResult[0].data);
         } else {
-          onError("No QR code detected in the selected image.");
+          onError(translate("frontdesk.transaction.error.noQrDetected"));
         }
       }
     } catch (error) {
-      onError("Failed to process the image.");
+      onError(translate("frontdesk.transaction.error.failedProcessImage"));
     }
   };
 
@@ -283,7 +283,7 @@ export default function RewardRedemptionScanner({
                         className="bg-white dark:bg-darkBackgroundCard border border-orange-500 rounded-xl px-3 py-[9px] flex-row items-center justify-center"
                       >
                         <MaterialIcons name="image" size={16} color="#FF6600" />
-                        <Text className="text-orange-500 font-poppins-semibold text-sm ml-1.5">Upload</Text>
+                        <Text className="text-orange-500 font-poppins-semibold text-sm ml-1.5">{translate("frontdesk.transaction.buttons.upload")}</Text>
                       </TouchableOpacity>
                     </View>
                   </View>

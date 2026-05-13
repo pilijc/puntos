@@ -1,0 +1,18 @@
+{
+  "inbox": {
+    "title": "Support",
+    "subtitle": "Select a store to chat with Super Admin",
+    "noStores": "No stores found",
+    "loading": "Loading...",
+    "tapToStart": "Tap to start a conversation",
+    "yesterday": "Yesterday"
+  },
+  "screen": {
+    "loading": "Loading support chat...",
+    "storeNotFound": "Store not found.",
+    "startConversation": "Send a message to start a support conversation.",
+    "contactSupport": "Contact Support",
+    "superAdminSupport": "Super Admin Support",
+    "messagePlaceholder": "Message support..."
+  }
+}

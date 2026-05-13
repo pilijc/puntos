@@ -10,5 +10,6 @@
   "settings": "設定",
   "scan": "スキャン",
   "transactions": "取引履歴",
-  "inbox": "受信トレイ"
+  "inbox": "受信トレイ",
+  "collapseSidebar": "閉じる"
 }
