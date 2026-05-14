@@ -1,9 +1,21 @@
 import React, { useCallback, useMemo, useRef, useState } from "react";
-import { Modal, useColorScheme, RefreshControl, ActivityIndicator, ListRenderItemInfo, Dimensions, Platform, View as RNView } from "react-native";
+import {
+  Modal,
+  useColorScheme,
+  RefreshControl,
+  ActivityIndicator,
+  ListRenderItemInfo,
+  Dimensions,
+  Platform,
+  View as RNView,
+  Keyboard,
+} from "react-native";
 import { TransactionSkeleton, StoresAndFunnelSkeleton } from "@/components/skeleton/store_manager/transaction-skeleton";
-import { QrCode, Stamp, Flame, ReceiptText, Funnel, Check } from "lucide-react-native";
+import { QrCode, Stamp, Flame, Funnel, Check, Star } from "lucide-react-native";
 import { useTransactions } from "@/hooks/store-manager/transaction";
+import { useStarredTxStores } from "@/hooks/store-manager/use-starred-tx-stores";
 import { TxType, ListItem } from "@/type/store-manager/transaction";
+import type { StoreRow } from "@/services/store-service";
 import { formatTxTime } from "@/utils/store_manager/transaction";
 import { useTranslation } from "react-i18next";
 import {
@@ -12,6 +24,7 @@ import {
   SafeAreaView,
   FlatList,
   ScrollView,
+  TextInput,
   TouchableOpacity,
   Pressable,
   Image,
@@ -56,7 +69,12 @@ export default function TransactionsScreen() {
     hasMore, loadMore,
     handleRefresh,
   } = useTransactions();
+  const { starredIds, toggleStar } = useStarredTxStores();
   const funnelRef = useRef<RNView>(null);
+  const selectingStoreFromResultsRef = useRef(false);
+  const [storeSearchQuery, setStoreSearchQuery] = useState("");
+  const [isStoreSearching, setIsStoreSearching] = useState(false);
+  const [showStarredStores, setShowStarredStores] = useState(false);
   const [funnelOpen, setFunnelOpen] = useState(false);
   const [funnelAnchor, setFunnelAnchor] = useState({
     top: 0,
@@ -78,6 +96,9 @@ export default function TransactionsScreen() {
       });
     });
   }, []);
+
+  const showSearchResults =
+    stores.length > 1 && isStoreSearching && storeSearchQuery.trim().length > 0;
 
   const filterOptions = useMemo(
     () =>
@@ -103,6 +124,77 @@ export default function TransactionsScreen() {
         },
       ] as const,
     [translate],
+  );
+
+  const selectedStore = useMemo(
+    () =>
+      stores.find((s) => Number(s.id) === selectedStoreId) ?? stores[0] ?? null,
+    [stores, selectedStoreId],
+  );
+
+  const storeSearchValue = isStoreSearching
+    ? storeSearchQuery
+    : (selectedStore?.name ?? "");
+
+  const starredStoresOrdered = useMemo(() => {
+    return starredIds
+      .map((id) => stores.find((s) => Number(s.id) === id))
+      .filter((s): s is StoreRow => s != null);
+  }, [starredIds, stores]);
+
+  const hasStarredStores = starredStoresOrdered.length > 0;
+
+  const filteredStoresForPicker = useMemo(() => {
+    const q = storeSearchQuery.trim().toLowerCase();
+    if (!q) return stores;
+    return stores.filter(
+      (s) =>
+        s.name.toLowerCase().includes(q) ||
+        String(s.id).includes(q),
+    );
+  }, [stores, storeSearchQuery]);
+
+  const storePickerExtraData = useMemo(
+    () => ({ starredIds, selectedStoreId }),
+    [starredIds, selectedStoreId],
+  );
+
+  const stopSearching = useCallback(() => {
+    setIsStoreSearching(false);
+    setStoreSearchQuery("");
+  }, []);
+
+  const renderStorePickerRow = useCallback(
+    ({ item }: ListRenderItemInfo<StoreRow>) => {
+      const id = Number(item.id);
+      const active = selectedStoreId !== null && id === selectedStoreId;
+      const starred = starredIds.includes(id);
+      return (
+        <View className="flex-row items-center border-b border-slate-100 dark:border-neutral-800">
+          <TouchableOpacity
+            onPress={() => {
+              selectingStoreFromResultsRef.current = true;
+              selectStore(id);
+              stopSearching();
+              Keyboard.dismiss();
+              requestAnimationFrame(() => {
+                selectingStoreFromResultsRef.current = false;
+              });
+            }}
+            activeOpacity={0.7}
+            className="min-w-0 flex-1 flex-row items-center gap-2 py-2.5 pl-3 pr-2"
+          >
+            <Text
+              className={`min-w-0 flex-1 text-sm font-poppins ${active ? "font-poppins-semibold text-primary" : "text-textPrimary dark:text-darkTextPrimary"}`}
+              numberOfLines={2}
+            >
+              {item.name}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      );
+    },
+    [selectStore, selectedStoreId, starredIds, stopSearching, toggleStar, translate],
   );
 
   const renderItem = useCallback(
@@ -212,67 +304,207 @@ export default function TransactionsScreen() {
       {storesLoading ? (
         <StoresAndFunnelSkeleton />
       ) : stores.length >= 1 ? (
-        <View className={isWeb ? "bg-backgroundMuted dark:bg-darkBackground px-4 pt-4 pb-3 items-center" : "flex-row items-center bg-background dark:bg-darkBackground border-b border-neutral-100 dark:border-darkBorder pl-5 mb-4"}>
-          
-          {isWeb ? (
-            <View className="w-full max-w-4xl bg-white dark:bg-darkBackground border border-neutral-100 dark:border-darkBorder rounded-xl overflow-hidden flex-row items-center">
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerClassName="px-4 py-2.5 gap-x-2"
-              >
-                {stores.map((store) => {
-                  const storeId = Number(store.id);
-                  const active = selectedStoreId !== null && storeId === selectedStoreId;
-                  return (
-                    <TouchableOpacity
-                      key={store.id}
-                      onPress={() => selectStore(storeId)}
-                      activeOpacity={0.75}
-                      disabled={stores.length === 1}
-                      className={`rounded-full px-2.5 py-1 ${active ? "bg-primary" : "bg-slate-100 dark:bg-neutral-800"}`}
-                    >
-                      <Text
-                        className={`text-xs font-poppins-semibold ${active ? "text-white" : "text-textMuted dark:text-darkTextMuted"}`}
-                        numberOfLines={1}
-                      >
-                        {store.name}
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                })}
-              </ScrollView>
-
-              <RNView ref={funnelRef} collapsable={false} className="self-stretch">
-                <TouchableOpacity
-                  onPress={handleFunnelOpen}
-                  activeOpacity={0.7}
-                  className="self-stretch items-center justify-center px-3.5 py-2.5 border-l border-slate-100 dark:border-[#262626]"
+        <View
+          className={
+            isWeb
+              ? "w-full items-center bg-backgroundMuted px-4 pb-3 pt-4 dark:bg-darkBackground"
+              : "mb-4 w-full items-center border-b border-neutral-100 bg-background px-4 pb-3 pt-3 dark:border-darkBorder dark:bg-darkBackground"
+          }
+          style={{ position: "relative", zIndex: 100, elevation: 30 }}
+        >
+          <View
+            className={
+              isWeb
+                ? "w-full max-w-4xl self-center"
+                : "w-full max-w-4xl self-center"
+            }
+            style={{ zIndex: 100 }}
+          >
+            <View
+              className="w-full flex-row items-stretch gap-x-2"
+              style={{ zIndex: 50 }}
+            >
+              {stores.length > 1 ? (
+                <View
+                  className="min-w-0 flex-1 basis-0 rounded-xl border border-neutral-100 bg-white dark:border-darkBorder dark:bg-darkBackground"
+                  style={{ position: "relative", zIndex: 50 }}
                 >
-                  {triggerIcon}
+                  <RNView
+                    collapsable={false}
+                    className="w-full"
+                  >
+                    <TextInput
+                      value={storeSearchValue}
+                      onChangeText={(text) => {
+                        if (!isStoreSearching) setIsStoreSearching(true);
+                        setStoreSearchQuery(text);
+                      }}
+                      onFocus={() => {
+                        if (!isStoreSearching) {
+                          setIsStoreSearching(true);
+                          setStoreSearchQuery(storeSearchValue);
+                        }
+                      }}
+                      onPressIn={() => {
+                        if (!isStoreSearching) {
+                          setIsStoreSearching(true);
+                          setStoreSearchQuery(storeSearchValue);
+                        }
+                      }}
+                      onBlur={() => {
+                        setTimeout(() => {
+                          if (selectingStoreFromResultsRef.current) return;
+                          stopSearching();
+                        }, 120);
+                      }}
+                      selectTextOnFocus={false}
+                      placeholder={translate(
+                        "storeManager.transactions.storePicker.searchPlaceholder",
+                      )}
+                      placeholderTextColor={isDark ? "#737373" : "#94A3B8"}
+                      autoCorrect={false}
+                      autoCapitalize="none"
+                      clearButtonMode="while-editing"
+                      returnKeyType="search"
+                      accessibilityLabel={translate(
+                        "storeManager.transactions.storePicker.searchAccessibility",
+                      )}
+                      style={[
+                        isWeb ? ({ outlineStyle: "none" } as any) : null,
+                        {
+                          height: 42,
+                          lineHeight: 20,
+                          paddingVertical: 0,
+                          textAlignVertical: "center",
+                          includeFontPadding: false,
+                        },
+                      ]}
+                      className="px-3 text-sm font-poppins text-slate-900 dark:text-slate-100"
+                    />
+                  </RNView>
+
+                  {showSearchResults ? (
+                    <View
+                      className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg shadow-black/15 dark:border-[#2a2a2a] dark:bg-[#1c1c1c] dark:shadow-black/40"
+                      style={{
+                        position: "absolute",
+                        top: "100%",
+                        left: 0,
+                        right: 0,
+                        marginTop: 6,
+                        maxHeight: Math.min(
+                          320,
+                          Dimensions.get("window").height * 0.5,
+                        ),
+                        zIndex: 100,
+                        elevation: 20,
+                      }}
+                    >
+                      <FlatList<StoreRow>
+                        data={filteredStoresForPicker}
+                        keyExtractor={(s) => String(s.id)}
+                        renderItem={renderStorePickerRow}
+                        extraData={storePickerExtraData}
+                        keyboardShouldPersistTaps="handled"
+                        keyboardDismissMode="none"
+                        nestedScrollEnabled
+                        initialNumToRender={16}
+                        maxToRenderPerBatch={24}
+                        windowSize={8}
+                        ListEmptyComponent={
+                          <View className="items-center px-4 py-8">
+                            <Text className="text-center text-xs font-poppins text-textSecondary dark:text-darkTextSecondary">
+                              {translate(
+                                "storeManager.transactions.storePicker.noMatches",
+                              )}
+                            </Text>
+                          </View>
+                        }
+                      />
+                    </View>
+                  ) : null}
+                </View>
+              ) : (
+                <View className="min-w-0 flex-1 basis-0 justify-center overflow-hidden rounded-xl border border-neutral-100 bg-white px-3 py-2.5 dark:border-darkBorder dark:bg-darkBackground">
+                  <Text
+                    className="text-xs font-poppins-semibold text-slate-800 dark:text-slate-100"
+                    numberOfLines={1}
+                  >
+                    {selectedStore?.name ?? "—"}
+                  </Text>
+                </View>
+              )}
+
+              <View className="w-11 shrink-0 overflow-hidden rounded-xl border border-neutral-100 bg-white dark:border-darkBorder dark:bg-darkBackground">
+                <TouchableOpacity
+                  onPress={() => {
+                    if (!hasStarredStores) return;
+                    setShowStarredStores((v) => !v);
+                  }}
+                  disabled={!hasStarredStores}
+                  activeOpacity={0.7}
+                  hitSlop={{ top: 4, bottom: 4, left: 4, right: 4 }}
+                  className="h-full min-h-[42px] w-full items-center justify-center"
+                  accessibilityRole="button"
+                  accessibilityLabel={translate("storeManager.transactions.storePicker.hint", {
+                    count: stores.length,
+                  })}
+                >
+                  <Star
+                    size={16}
+                    color={hasStarredStores ? "#FF6600" : triggerColor}
+                    fill={showStarredStores && hasStarredStores ? "#FF6600" : "transparent"}
+                  />
                 </TouchableOpacity>
-              </RNView>
+              </View>
+
+              <View className="w-11 shrink-0 overflow-hidden rounded-xl border border-neutral-100 bg-white dark:border-darkBorder dark:bg-darkBackground">
+                <RNView ref={funnelRef} collapsable={false} className="w-full h-full">
+                  <TouchableOpacity
+                    onPress={handleFunnelOpen}
+                    activeOpacity={0.7}
+                    hitSlop={{ top: 4, bottom: 4, left: 4, right: 4 }}
+                    className="h-full min-h-[42px] w-full items-center justify-center"
+                  >
+                    {triggerIcon}
+                  </TouchableOpacity>
+                </RNView>
+              </View>
             </View>
-          ) : (
-            <>
+
+            {showStarredStores && starredStoresOrdered.length > 0 ? (
               <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
-                contentContainerClassName="px-4 py-2.5 gap-x-2"
+                className="mt-2 w-full"
+                contentContainerClassName="flex-row gap-x-2 py-0.5"
               >
-                {stores.map((store) => {
-                  const storeId = Number(store.id);
-                  const active = selectedStoreId !== null && storeId === selectedStoreId;
+                {starredStoresOrdered.map((store) => {
+                  const sid = Number(store.id);
+                  const active =
+                    selectedStoreId !== null && sid === selectedStoreId;
                   return (
                     <TouchableOpacity
                       key={store.id}
-                      onPress={() => selectStore(storeId)}
+                      onPress={() => selectStore(sid)}
                       activeOpacity={0.75}
-                      disabled={stores.length === 1}
-                      className={`rounded-full px-2.5 py-1 ${active ? "bg-primary" : "bg-slate-100 dark:bg-neutral-800"}`}
+                      className={`flex-row items-center gap-1 rounded-full px-2.5 py-1 ${
+                        active
+                          ? "border-primary bg-primary"
+                          : "bg-white dark:border-neutral-600 dark:bg-neutral-800"
+                      }`}
                     >
+                      <Star
+                        size={11}
+                        color={active ? "#FFFFFF" : "#FF6600"}
+                        fill={active ? "#FFFFFF" : "#FF6600"}
+                      />
                       <Text
-                        className={`text-xs font-poppins-semibold ${active ? "text-white" : "text-textMuted dark:text-darkTextMuted"}`}
+                        className={`max-w-[140px] text-xs font-poppins-semibold ${
+                          active
+                            ? "text-white"
+                            : "text-slate-700 dark:text-slate-200"
+                        }`}
                         numberOfLines={1}
                       >
                         {store.name}
@@ -281,18 +513,8 @@ export default function TransactionsScreen() {
                   );
                 })}
               </ScrollView>
-
-              <RNView ref={funnelRef} collapsable={false} className="self-stretch">
-                <TouchableOpacity
-                  onPress={handleFunnelOpen}
-                  activeOpacity={0.7}
-                  className="self-stretch items-center justify-center px-3.5 py-2.5 border-l border-slate-100 dark:border-[#262626]"
-                >
-                  {triggerIcon}
-                </TouchableOpacity>
-              </RNView>
-            </>
-          )}
+            ) : null}
+          </View>
         </View>
       ) : null}
 
@@ -341,6 +563,7 @@ export default function TransactionsScreen() {
           renderItem={renderItem}
           onEndReached={loadMore}
           onEndReachedThreshold={0.35}
+          style={{ zIndex: 0 }}
           ListFooterComponent={
             loadingMore ? (
               <View className="py-3 items-center">
