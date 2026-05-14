@@ -11,6 +11,15 @@
     "stamp": "スタンプ",
     "streak": "ストリーク"
   },
+  "storePicker": {
+    "searchPlaceholder": "店舗を検索…",
+    "noMatches": "一致する店舗がありません",
+    "selectAccessibility": "店舗を選択",
+    "searchAccessibility": "店舗を検索",
+    "hint": "店舗 {{count}}件 — 下の行をタップして選択",
+    "addStar": "お気に入りに追加",
+    "removeStar": "お気に入りから削除"
+  },
   "empty": {
     "noStoresTitle": "店舗が見つかりません",
     "noStoresBody": "取引を記録するには、まず店舗を作成してください。",
