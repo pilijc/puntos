@@ -8,7 +8,7 @@ import { getRewardsByStoreId } from "@/services/store-manager/reward-service";
 import { Reward } from "@/type/store-manager/reward";
 import { Modal, type ModalButton } from "@/components/modal";
 import { AppHeader } from "@/components/header";
-import { ChevronRight, CircleStar, Gift } from "lucide-react-native";
+import { Plus, CircleStar, Gift } from "lucide-react-native";
 import { useTranslation } from "react-i18next";
 import { useStorePremiumCampaignEdit } from "@/hooks/store-manager/use-store-premium-campaign-edit";
 import { formatDate } from "@/utils/store_manager/stamp-utils";
@@ -126,11 +126,11 @@ export default function RewardIndex() {
                     params: { storeId },
                   })
                 }
-                className="flex-row items-center gap-x-0.5"
+                className="flex-row items-center gap-x-1"
                 activeOpacity={campaignsLocked ? 1 : 0.7}
               >
-                <Text className={`text-xs font-poppins-semibold ${campaignsLocked ? "text-slate-400 dark:text-slate-500" : "text-primary"}`}>{translate("label.add")}</Text>
-                <ChevronRight size={14} color={campaignsLocked ? "#CBD5E1" : "#FF6600"} />
+                <Text className={`text-xs font-poppins-semibold ${campaignsLocked ? "text-slate-400 dark:text-slate-500" : "text-primary"}`}>{t("label.add")}</Text>
+                <Plus size={14} color={campaignsLocked ? "#CBD5E1" : "#FF6600"} strokeWidth={3} style={{ marginTop: -1.5 }}/>
               </TouchableOpacity>
             </View>
 
@@ -173,10 +173,10 @@ export default function RewardIndex() {
                         params: { storeId, rewardId: String(reward.id) },
                       });
                     }}
-                    className="bg-white dark:bg-neutral-800 rounded-xl flex-row items-center px-4 py-2 gap-2.5"
+                    className="bg-white dark:bg-neutral-800 rounded-xl flex-row items-stretch p-3 gap-2.5"
                   >
                     <View
-                      className="rounded-lg overflow-hidden bg-white dark:bg-neutral-700 border border-slate-100 dark:border-neutral-600 shrink-0"
+                      className="self-start rounded-lg overflow-hidden bg-white dark:bg-neutral-700 border border-slate-100 dark:border-neutral-600 shrink-0"
                       style={{ width: 60, height: 60 }}
                     >
                       {reward.image_url ? (
@@ -188,29 +188,38 @@ export default function RewardIndex() {
                       )}
                     </View>
 
-                    <View className="flex-1 min-w-0 justify-between">
-                      <View>
-                        <Text className="text-sm font-poppins-semibold text-slate-800 dark:text-slate-100 leading-5" numberOfLines={1}>
+                    <View className="min-h-[60px] flex-1 flex-row gap-2 min-w-0">
+                      <View className="min-w-0 flex-1">
+                        <Text
+                          className="text-sm font-poppins-semibold text-slate-800 dark:text-slate-100 leading-5"
+                          numberOfLines={1}
+                        >
                           {reward.title}
                         </Text>
                         {!!reward.description && (
-                          <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500 mt-0.5" numberOfLines={2}>
+                          <Text
+                            className="mt-0.5 text-xs font-poppins text-slate-400 dark:text-slate-500"
+                            numberOfLines={2}
+                          >
                             {reward.description}
                           </Text>
                         )}
                       </View>
 
-                      <View className="flex-row items-center justify-between mt-1">
+                      <View className="shrink-0 justify-between self-stretch items-end">
                         <View className="flex-row items-center gap-x-1">
                           <CircleStar size={13} color="#FF6600" />
-                          <Text className="text-xs font-poppins-semibold text-primary">{translate("store_manager.reward.pts", { points: formatPoints(reward.points_cost) })}</Text>
-                        </View>
-
-                        <View className="flex-row items-center gap-x-1 px-2 py-0.5 rounded-full">
-                          <Text className="text-xs font-poppins text-textMuted dark:text-textMuted">
-                            {reward.stock > 0 ? translate("store_manager.reward.stockLeft", { count: reward.stock }) : translate("store_manager.reward.outOfStock")}
+                          <Text className="text-xs font-poppins-semibold text-primary">
+                            {t("store_manager.reward.pts", {
+                              points: formatPoints(reward.points_cost),
+                            })}
                           </Text>
                         </View>
+                        <Text className="text-right text-xs font-poppins text-textMuted dark:text-textMuted">
+                          {reward.stock > 0
+                            ? t("store_manager.reward.stockLeft", { count: reward.stock })
+                            : t("store_manager.reward.outOfStock")}
+                        </Text>
                       </View>
                     </View>
                   </TouchableOpacity>

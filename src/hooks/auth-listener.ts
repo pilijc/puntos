@@ -54,9 +54,7 @@ export function useAuthListener() {
               useAuthStore.getState().setSessionExpiredNotice(true);
             }
             if (!isAtAuthFlow) {
-              router.replace(
-                Platform.OS === "web" ? "/(onboarding)/landing" : "/(onboarding)/welcome",
-              );
+              router.replace("/(onboarding)/welcome");
             }
           })();
         } else if (event === 'SIGNED_IN' && session && !isOnSignupFlow) {
