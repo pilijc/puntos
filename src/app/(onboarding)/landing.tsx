@@ -1,33 +1,16 @@
-import React, { useMemo, useRef, useState } from "react";
+import React, { useCallback, useMemo, useRef, useState } from "react";
 import { Redirect, router } from "expo-router";
-import {  Platform, ScrollView as RNScrollView, useWindowDimensions, type LayoutChangeEvent } from "react-native";
+import {
+  Platform,
+  ScrollView as RNScrollView,
+  useWindowDimensions,
+  type LayoutChangeEvent,
+} from "react-native";
 import { useTranslation } from "react-i18next";
 import { SafeAreaView } from "@/tw";
-import {  getSubscriptionPlans,  pickBasicAndProPlans, } from "@/services/store-manager/subscription-service";
-import {
-  View,
-  Text,
-  Image,
-  TouchableOpacity,
-  SafeAreaView,
-} from "@/tw";
-import {
-  Smartphone,
-  QrCode,
-  Gift,
-  BarChart3,
-  Ticket,
-  Monitor,
-  Check,
-  Store,
-  Sparkles,
-  ChevronRight,
-  ChevronDown,
-} from "lucide-react-native";
-import Svg, { Path } from "react-native-svg";
-import { Button } from "@/components/button";
 import { pickBasicAndProPlans } from "@/services/store-manager/subscription-service";
 import { useSubscriptionPlansQuery } from "@/hooks/store-manager/rq";
+import {
   createSectionLayoutHandlers,
   LandingCtaSection,
   LandingFeaturesSection,

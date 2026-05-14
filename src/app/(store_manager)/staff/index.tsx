@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { RefreshControl, useColorScheme, Platform } from "react-native";
 import { View, Text, TouchableOpacity, ScrollView, SafeAreaView } from "@/tw";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -7,7 +7,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { deleteStoreStaff } from "@/services/store-manager/staff-service";
 import { Modal } from "@/components/modal";
 import { useStaffStore } from "@/store/store-manager/staff-store";
-import { ChevronRight, UsersRound, Pencil, Trash, UserRoundX } from "lucide-react-native";
+import { UsersRound, Pencil, Trash, UserRoundX, Plus } from "lucide-react-native";
 import StaffSkeleton from "@/components/skeleton/store_manager/staff-skeleton";
 import { getInitials } from "@/utils/store_manager/staff-utils";
 import { AppHeader } from "@/components/header";
@@ -156,7 +156,7 @@ export default function ViewStaff() {
                   className="flex-row items-center gap-x-1"
                   activeOpacity={0.7}
                 >
-                  <Text className="text-xs font-poppins-semibold text-primary">{t("label.add")}</Text>
+                  <Text className="text-xs font-poppins-semibold text-primary">{translate("label.add")}</Text>
                   <Plus size={14} color="#FF6600" strokeWidth={3} style={{ marginTop: -1.5 }}/>
                 </TouchableOpacity>
               )}
