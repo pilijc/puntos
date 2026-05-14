@@ -41,17 +41,17 @@ export default function DetailIndex() {
 
   const statusKey = detail?.status && detail.status in STATUS_CONFIG ? detail.status : "pending_review";
   const statusCfg = STATUS_CONFIG[statusKey] ?? STATUS_CONFIG.pending_review;
-  const statusLabel = translate(`store_manager.detail.status.${statusKey}`);
+  const statusLabel = translate(`storeManager.detail.status.${statusKey}`);
 
   const storeTypeLabel = useMemo(() => {
     if (!detail?.type) return "—";
     if (store_types_options.some((o) => o.value === detail.type)) {
-      return translate(`store_manager.storeTypes.${detail.type}`);
+      return translate(`storeManager.storeTypes.${detail.type}`);
     }
     return detail.type;
   }, [detail?.type, translate]);
 
-  const notSet = translate("store_manager.detail.notSet");
+  const notSet = translate("storeManager.detail.notSet");
   const [docPreviewVisible, setDocPreviewVisible] = useState(false);
   const bannerScrollRef = useRef<RNScrollView>(null);
   const [bannerIndex, setBannerIndex] = useState(0);
@@ -68,8 +68,8 @@ export default function DetailIndex() {
   return (
     <SafeAreaView edges={["top"]} className="flex-1 bg-backgroundMuted dark:bg-neutral-900">
       <AppHeader
-        title={detail?.name || translate("store_manager.viewStore.fallbackTitle")}
-        description={detail?.address || translate("store_manager.detail.headerDefaultDescription")}
+        title={detail?.name || translate("storeManager.viewStore.fallbackTitle")}
+        description={detail?.address || translate("storeManager.detail.headerDefaultDescription")}
         onBackPress={() => {
           router.push(`/(store_manager)/view-store/${storeId}`);
         }}
@@ -201,7 +201,7 @@ export default function DetailIndex() {
                   <View className="flex-1 ml-3 pb-1 pt-10">
                     <View className="flex-row items-center flex-wrap gap-x-2">
                       <Text className="text-base font-poppins-bold text-slate-800 dark:text-slate-100">
-                        {detail?.name || translate("store_manager.detail.unnamedStore")}
+                        {detail?.name || translate("storeManager.detail.unnamedStore")}
                       </Text>
                       <View className={`flex-row items-center gap-x-1 px-2 py-0.5 rounded-full ${statusCfg.bg}`}>
                         <View className={`w-1.5 h-1.5 rounded-full ${statusCfg.dot}`} />
@@ -401,7 +401,7 @@ export default function DetailIndex() {
                       <View className="flex-1 bg-slate-50 dark:bg-neutral-700 items-center justify-center gap-y-1">
                         <MapPin size={24} color={isDark ? "#525252" : "#CBD5E1"} />
                         <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">
-                          {translate("store_manager.detail.mapOnlyAndroidWeb")}
+                          {translate("storeManager.detail.mapOnlyAndroidWeb")}
                         </Text>
                       </View>
                     )
@@ -409,7 +409,7 @@ export default function DetailIndex() {
                     <View className="flex-1 bg-slate-50 dark:bg-neutral-700 items-center justify-center gap-y-1">
                       <MapPinOff size={24} color={isDark ? "#525252" : "#CBD5E1"} />
                       <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">
-                        {translate("store_manager.detail.noLocationSet")}
+                        {translate("storeManager.detail.noLocationSet")}
                       </Text>
                     </View>
                   )}

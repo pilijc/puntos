@@ -22,10 +22,10 @@ export function DashboardDetailedMetrics({ storeId, transactions = [], loading }
     }
 
     return (
-        <View className="bg-white dark:bg-darkBackgroundCard rounded-xl p-4 elevation-1 border border-transparent dark:border-darkBorder mb-6 mt-2">
-            <View className="flex-row justify-between items-center mb-4">
-                <Text className="text-lg font-poppins-bold text-textPrimary dark:text-darkTextPrimary">
-                    {translate("store_manager.dashboard.detailedMetrics.title", "Recent Transactions")}
+        <View className="bg-white dark:bg-darkBackgroundCard rounded-xl p-5 elevation-1 border border-slate-100 dark:border-darkBorder mb-6">
+            <View className="flex-row justify-between items-center mb-5">
+                <Text className="text-[17px] font-poppins-bold text-textPrimary dark:text-darkTextPrimary leading-6">
+                    {translate("storeManager.dashboard.detailedMetrics.title", "Recent Transactions")}
                 </Text>
 
                 <TouchableOpacity 
@@ -35,7 +35,7 @@ export function DashboardDetailedMetrics({ storeId, transactions = [], loading }
                         params: { storeId }
                     })}
                 >
-                    <Text className="text-xs font-poppins-bold text-[#ff6600]">
+                    <Text className="text-[12px] font-poppins-bold text-[#ff6600]">
                         {translate("label.viewAll", "View All")}
                     </Text>
                 </TouchableOpacity>
@@ -43,16 +43,16 @@ export function DashboardDetailedMetrics({ storeId, transactions = [], loading }
 
             <View className="w-full">
                 {/* Table Header */}
-                <View className="flex-row pb-3 mb-1 border-b border-slate-50 dark:border-darkBorder/30">
-                    <Text className="flex-1 text-[11px] font-poppins-bold text-textSecondary dark:text-darkTextSecondary uppercase tracking-wider">{translate("label.dateAndTime", "Date")}</Text>
-                    <Text className="flex-[2] text-[11px] font-poppins-bold text-textSecondary dark:text-darkTextSecondary uppercase tracking-wider">{translate("label.user", "User")}</Text>
+                <View className="flex-row pb-3 mb-1 border-b border-slate-100 dark:border-darkBorder/30">
+                    <Text className="flex-1 text-[11px] font-poppins-semibold text-textSecondary dark:text-darkTextSecondary uppercase">{translate("label.dateAndTime", "Date")}</Text>
+                    <Text className="flex-[2] text-[11px] font-poppins-semibold text-textSecondary dark:text-darkTextSecondary uppercase">{translate("label.user", "User")}</Text>
                 </View>
 
                 {/* Table Body */}
                 {(!displayTransactions || displayTransactions.length === 0) ? (
                     <View className="p-8 items-center">
                         <Text className="text-sm font-poppins text-textSecondary dark:text-darkTextSecondary">
-                            {translate("store_manager.dashboard.detailedMetrics.noTransactions", "No recent transactions found.")}
+                            {translate("storeManager.dashboard.detailedMetrics.noTransactions", "No recent transactions found.")}
                         </Text>
                     </View>
                 ) : (
@@ -62,16 +62,16 @@ export function DashboardDetailedMetrics({ storeId, transactions = [], loading }
                         const timeStr = date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
 
                         return (
-                            <View 
+                            <View
                                 key={tx.id || index.toString()} 
-                                className={`flex-row py-3.5 items-center ${index !== displayTransactions.length - 1 ? 'border-b border-slate-50 dark:border-darkBorder/20' : ''}`}
+                                className={`flex-row py-4 items-center ${index !== displayTransactions.length - 1 ? 'border-b border-slate-50 dark:border-darkBorder/20' : ''}`}
                             >
                                 <View className="flex-1">
                                     <Text className="text-[13px] font-poppins-bold text-textPrimary dark:text-darkTextPrimary">{dateStr}</Text>
-                                    <Text className="text-[11px] font-poppins text-textSecondary dark:text-darkTextSecondary">{timeStr}</Text>
+                                    <Text className="text-[11px] font-poppins text-textSecondary dark:text-darkTextSecondary mt-0.5">{timeStr}</Text>
                                 </View>
                                 <View className="flex-[2] px-2">
-                                    <Text className="text-[13px] font-poppins-bold text-textPrimary dark:text-darkTextPrimary" numberOfLines={1}>
+                                    <Text className="text-[13px] font-poppins-semibold text-textPrimary dark:text-darkTextPrimary" numberOfLines={1}>
                                         {tx.user?.name || translate("label.unknownUser", "Unknown User")}
                                     </Text>
                                 </View>

@@ -1,6 +1,6 @@
 import { Tabs } from "expo-router";
-import { useColorScheme, Platform, Text, View, Image,} from "react-native";
-import React, { useCallback, useEffect, useState } from "react";
+import { AppState, useColorScheme, Platform, Text, View, Image, useWindowDimensions } from "react-native";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "expo-router";
 import { BottomTabBar, type BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import { PlatformPressable } from "@react-navigation/elements";
@@ -11,6 +11,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 import { LayoutDashboard, Store, ArrowLeftRight, Settings, CreditCard, PanelLeft, PanelLeftClose } from "lucide-react-native";
 import { useDeviceSession } from "@/hooks/store-manager/use-device-session";
+import { useAuthActions } from "@/hooks/use-auth-actions";
 import { useManagerStoresStore } from "@/store/manager-stores-store";
 import { useSupportChatStore } from "@/store/support-chat-store";
 import { getManagerSubscription, getSubscriptionPlans } from "@/services/store-manager/subscription-service";
@@ -18,6 +19,9 @@ import { isPaidUnlimitedPlan } from "@/services/store-manager/subscription-limit
 import { getQueryClient } from "@/lib/query-client";
 import { storeManagerKeys } from "@/hooks/store-manager/rq/query-keys";
 import { lockExtraOwnerStores } from "@/services/store-service";
+import { Modal } from "@/components/modal";
+import { refreshDeviceHeartbeatService } from "@/services/store-manager/device-session-service";
+import { SESSION_TIMEOUT_MS } from "@/type/store-manager/device-session";
 
 const WEB_SIDEBAR_WIDTH = 260;
 const WEB_SIDEBAR_COLLAPSED_WIDTH = 76;
@@ -28,6 +32,9 @@ const WEB_TAB_ACTIVE_BG_DARK = "#431407";
 const WEB_SIDEBAR_BORDER_LIGHT = "#F1F5F9";
 const WEB_SIDEBAR_BORDER_DARK = "#404040";
 const TAB_ACCENT = "#FF6600";
+const IDLE_LOGOUT_GRACE_MS = 60 * 1000;
+const IDLE_WARNING_MS = Math.max(SESSION_TIMEOUT_MS - IDLE_LOGOUT_GRACE_MS, 1000);
+const ACTIVITY_THROTTLE_MS = 10 * 1000;
 
 type SidebarTabId = "index" | "stores" | "transactions" | "subscription" | "settings";
 type TabLabelPosition = "beside-icon" | "below-icon";
@@ -193,8 +200,11 @@ function WebStoreManagerSidebarTabBar({
 }: WebStoreManagerSidebarTabBarProps) {
     const { t: translate } = useTranslation();
     const pathname = usePathname();
+    const { width: windowWidth } = useWindowDimensions();
+    const isMobileWeb = windowWidth < 768;
     const chromeBg = isDark ? "#262626" : "#FFFFFF";
-    const sidebarWidth = mode === "normal" ? WEB_SIDEBAR_WIDTH : WEB_SIDEBAR_COLLAPSED_WIDTH;
+    const expandedWidth = isMobileWeb ? windowWidth : WEB_SIDEBAR_WIDTH;
+    const sidebarWidth = mode === "normal" ? expandedWidth : WEB_SIDEBAR_COLLAPSED_WIDTH;
     const activeTab = activeSidebarTabFromPath(withTrailingSlash(pathname));
     const activeBackground = isDark ? WEB_TAB_ACTIVE_BG_DARK : WEB_TAB_ACTIVE_BG_LIGHT;
     const inactiveColor = isDark ? "#737373" : "#8B8D98";
@@ -220,6 +230,7 @@ function WebStoreManagerSidebarTabBar({
                 overflow: "hidden",
             }}
         >
+            <View style={{ width: expandedWidth, flex: 1, flexDirection: "column" }}>
             {/* ── Brand header ── */}
             <View
                 style={{
@@ -235,16 +246,17 @@ function WebStoreManagerSidebarTabBar({
                     style={{ width: 36, height: 36 }}
                     resizeMode="contain"
                 />
-                {mode !== "collapsed" && (
-                    <Text style={{ 
-                        fontSize: 18, 
-                        fontFamily: "Poppins-Bold", 
-                        color: isDark ? "#FFFFFF" : TAB_ACCENT,
-                        marginStart: 12 
-                    }}>
-                        PUNTOS
-                    </Text>
-                )}
+                <Text style={{ 
+                    fontSize: 18, 
+                    fontFamily: "Poppins-Bold", 
+                    color: isDark ? "#FFFFFF" : TAB_ACCENT,
+                    marginStart: 12,
+                    opacity: mode === "collapsed" ? 0 : 1,
+                    transitionProperty: "opacity",
+                    transitionDuration: "180ms",
+                } as any}>
+                    PUNTOS
+                </Text>
             </View>
 
 
@@ -263,6 +275,11 @@ function WebStoreManagerSidebarTabBar({
                             target: route.key,
                             canPreventDefault: true,
                         });
+
+                        if (isMobileWeb && mode === "normal") {
+                            onToggleCollapse();
+                        }
+
                         if (!isActive && !(event as any).defaultPrevented) {
                             navigation.navigate(route.name as never);
                         }
@@ -283,7 +300,11 @@ function WebStoreManagerSidebarTabBar({
                                 paddingVertical: 10,
                                 marginBottom: 2,
                                 backgroundColor: isActive ? activeBackground : "transparent",
-                            }}
+                                width: mode === "collapsed" ? 42 : "100%",
+                                overflow: "hidden",
+                                transitionProperty: "width, background-color",
+                                transitionDuration: "180ms",
+                            } as any}
                         >
                             {/* Icon + optional badge */}
                             <View style={{ width: 18, alignItems: 'center', justifyContent: 'center', position: "relative" }}>
@@ -304,16 +325,20 @@ function WebStoreManagerSidebarTabBar({
                             </View>
 
                             {/* Label (expanded only) */}
-                            {mode !== "collapsed" && (
-                                <Text style={{
+                            <Text
+                                numberOfLines={1}
+                                style={{
                                     fontSize: 12,
                                     fontFamily: "Poppins-Medium",
                                     marginStart: 10,
                                     color: isActive ? TAB_ACCENT : inactiveColor,
-                                }}>
-                                    {String(options.title ?? route.name)}
-                                </Text>
-                            )}
+                                    opacity: mode === "collapsed" ? 0 : 1,
+                                    transitionProperty: "opacity",
+                                    transitionDuration: "180ms",
+                                } as any}
+                            >
+                                {String(options.title ?? route.name)}
+                            </Text>
                         </PlatformPressable>
                     );
                 })}
@@ -339,20 +364,23 @@ function WebStoreManagerSidebarTabBar({
                                 <PanelLeftClose size={18} color={isDark ? "#A3A3A3" : "#6B7280"} />
                             )}
                         </View>
-                        {mode !== "collapsed" && (
-                            <Text
-                                style={{
-                                    marginStart: 12,
-                                    fontSize: 12,
-                                    fontFamily: "Poppins-Medium",
-                                    color: isDark ? "#A3A3A3" : "#6B7280",
-                                }}
-                            >
-                              {translate("layout.collapseSidebar", "Collapse")}
-                            </Text>
-                        )}
+                        <Text
+                            numberOfLines={1}
+                            style={{
+                                marginStart: 12,
+                                fontSize: 12,
+                                fontFamily: "Poppins-Medium",
+                                color: isDark ? "#A3A3A3" : "#6B7280",
+                                opacity: mode === "collapsed" ? 0 : 1,
+                                transitionProperty: "opacity",
+                                transitionDuration: "180ms",
+                            } as any}
+                        >
+                            {translate("layout.collapseSidebar", "Collapse")}
+                        </Text>
                     </PlatformPressable>
                 </View>
+            </View>
             </View>
         </View>
     );
@@ -366,8 +394,18 @@ export default function StoreManagerLayout() {
     const insets = useSafeAreaInsets();
     const pathname = usePathname();
     const path = withTrailingSlash(pathname);
+    const { handleLogout } = useAuthActions();
+    const handleLogoutRef = useRef(handleLogout);
     const [currentUserId, setCurrentUserId] = useState<string | undefined>(undefined);
     const [webSidebarMode, setWebSidebarMode] = useState<WebSidebarMode>("collapsed");
+    const [idleWarningVisible, setIdleWarningVisible] = useState(false);
+    const [idleWarningHasCountdown, setIdleWarningHasCountdown] = useState(true);
+    const [idleCountdown, setIdleCountdown] = useState(IDLE_LOGOUT_GRACE_MS / 1000);
+    const idleWarningVisibleRef = useRef(false);
+    const idleWarningTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const idleLogoutTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const idleCountdownTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+    const lastActivityRecordedAtRef = useRef(0);
     const { } = useDeviceSession(currentUserId);
 
     // Bootstrap support chat so unread count shows in settings
@@ -375,6 +413,136 @@ export default function StoreManagerLayout() {
     const fetchStores = useManagerStoresStore((state) => state.fetchStores);
     const { loadAllManagerConversations, conversations, subscribeInbox, cleanupRealtime } = useSupportChatStore();
     const [didEnforceStoreLocks, setDidEnforceStoreLocks] = useState(false);
+
+    useEffect(() => {
+        handleLogoutRef.current = handleLogout;
+    }, [handleLogout]);
+
+    useEffect(() => {
+        idleWarningVisibleRef.current = idleWarningVisible;
+    }, [idleWarningVisible]);
+
+    const clearIdleTimers = useCallback(() => {
+        if (idleWarningTimerRef.current) {
+            clearTimeout(idleWarningTimerRef.current);
+            idleWarningTimerRef.current = null;
+        }
+        if (idleLogoutTimerRef.current) {
+            clearTimeout(idleLogoutTimerRef.current);
+            idleLogoutTimerRef.current = null;
+        }
+        if (idleCountdownTimerRef.current) {
+            clearInterval(idleCountdownTimerRef.current);
+            idleCountdownTimerRef.current = null;
+        }
+    }, []);
+
+    const handleIdleLogout = useCallback(async () => {
+        clearIdleTimers();
+        setIdleWarningVisible(false);
+        await handleLogoutRef.current();
+    }, [clearIdleTimers]);
+
+    const showIdleWarning = useCallback((withCountdown = true) => {
+        setIdleCountdown(IDLE_LOGOUT_GRACE_MS / 1000);
+        setIdleWarningHasCountdown(withCountdown);
+        setIdleWarningVisible(true);
+
+        if (!withCountdown) return;
+
+        idleCountdownTimerRef.current = setInterval(() => {
+            setIdleCountdown((seconds) => Math.max(seconds - 1, 0));
+        }, 1000);
+
+        idleLogoutTimerRef.current = setTimeout(() => {
+            void handleIdleLogout();
+        }, IDLE_LOGOUT_GRACE_MS);
+    }, [handleIdleLogout]);
+
+    const scheduleIdleWarning = useCallback((delayMs = IDLE_WARNING_MS) => {
+        if (!currentUserId) return;
+        if (idleWarningTimerRef.current) {
+            clearTimeout(idleWarningTimerRef.current);
+        }
+        idleWarningTimerRef.current = setTimeout(() => showIdleWarning(true), Math.max(delayMs, 1000));
+    }, [currentUserId, showIdleWarning]);
+
+    const recordActivity = useCallback(() => {
+        if (!currentUserId || idleWarningVisibleRef.current) return;
+        const now = Date.now();
+        if (now - lastActivityRecordedAtRef.current < ACTIVITY_THROTTLE_MS) return;
+
+        lastActivityRecordedAtRef.current = now;
+        scheduleIdleWarning();
+    }, [currentUserId, scheduleIdleWarning]);
+
+    const handleStaySignedIn = useCallback(async () => {
+        if (!currentUserId) return;
+
+        clearIdleTimers();
+        setIdleWarningVisible(false);
+        setIdleWarningHasCountdown(true);
+        setIdleCountdown(IDLE_LOGOUT_GRACE_MS / 1000);
+
+        try {
+            await refreshDeviceHeartbeatService(currentUserId);
+        } finally {
+            lastActivityRecordedAtRef.current = Date.now();
+            scheduleIdleWarning();
+        }
+    }, [clearIdleTimers, currentUserId, scheduleIdleWarning]);
+
+    useEffect(() => {
+        if (!currentUserId) {
+            clearIdleTimers();
+            setIdleWarningVisible(false);
+            setIdleWarningHasCountdown(true);
+            return;
+        }
+
+        lastActivityRecordedAtRef.current = Date.now();
+        scheduleIdleWarning();
+
+        return clearIdleTimers;
+    }, [clearIdleTimers, currentUserId, scheduleIdleWarning]);
+
+    useEffect(() => {
+        if (!currentUserId) return;
+
+        const sub = AppState.addEventListener("change", (state) => {
+            if (state !== "active") {
+                clearIdleTimers();
+                if (idleWarningVisibleRef.current) {
+                    setIdleWarningHasCountdown(false);
+                }
+                return;
+            }
+
+            if (idleWarningVisibleRef.current) return;
+
+            const idleMs = Date.now() - lastActivityRecordedAtRef.current;
+            if (idleMs >= IDLE_WARNING_MS) {
+                clearIdleTimers();
+                showIdleWarning(false);
+                return;
+            }
+
+            scheduleIdleWarning(IDLE_WARNING_MS - idleMs);
+        });
+
+        return () => sub.remove();
+    }, [clearIdleTimers, currentUserId, scheduleIdleWarning, showIdleWarning]);
+
+    useEffect(() => {
+        if (Platform.OS !== "web" || typeof window === "undefined") return;
+
+        const events = ["mousedown", "mousemove", "keydown", "scroll", "touchstart"];
+        events.forEach((eventName) => window.addEventListener(eventName, recordActivity, { passive: true }));
+
+        return () => {
+            events.forEach((eventName) => window.removeEventListener(eventName, recordActivity));
+        };
+    }, [recordActivity]);
 
     useEffect(() => {
         fetchStores();
@@ -502,10 +670,11 @@ export default function StoreManagerLayout() {
     );
 
     return (
-        <Tabs
-            initialRouteName="index"
-            tabBar={isWeb ? renderWebTabBar : undefined}
-            screenOptions={{
+        <View style={{ flex: 1 }} onTouchStart={recordActivity}>
+            <Tabs
+                initialRouteName="index"
+                tabBar={isWeb ? renderWebTabBar : undefined}
+                screenOptions={{
                 headerShown: false,
                 tabBarPosition: isWeb ? "left" : "bottom",
                 tabBarLabelPosition: isWeb ? "beside-icon" : undefined,
@@ -527,9 +696,9 @@ export default function StoreManagerLayout() {
                     marginBottom: isWeb ? 0 : insets.bottom > 0 ? 0 : 4,
                     ...(isWeb ? { paddingRight: 8 } : {}),
                 },
-            }}
-        >
-            <Tabs.Screen
+                }}
+            >
+                <Tabs.Screen
                 name="index"
                 options={{
                     title: translate("label.dashboard"),
@@ -561,7 +730,7 @@ export default function StoreManagerLayout() {
             <Tabs.Screen
                 name="stores"
                 options={{
-                    title: translate("store_manager.tabs.stores"),
+                    title: translate("storeManager.tabs.stores"),
                     tabBarIcon: ({ color, size }) => (
                         <Store
                             size={isWeb ? WEB_TAB_ICON_SIZE : Platform.OS === "android" ? 20 : size}
@@ -571,7 +740,7 @@ export default function StoreManagerLayout() {
                     tabBarLabel: isWeb
                         ? ({ color, position }) => webSidebarMode !== "collapsed" ? (
                             <StoresTabLabel
-                                text={translate("store_manager.tabs.stores")}
+                                text={translate("storeManager.tabs.stores")}
                                 navColor={color}
                                 position={position}
                                 isRowActive={storesRowActive}
@@ -586,7 +755,7 @@ export default function StoreManagerLayout() {
             <Tabs.Screen
                 name="subscription"
                 options={{
-                    title: translate("store_manager.tabs.subscription"),
+                    title: translate("storeManager.tabs.subscription"),
                     tabBarIcon: ({ color, size }) => (
                         <CreditCard
                             size={isWeb ? WEB_TAB_ICON_SIZE : Platform.OS === "android" ? 20 : size}
@@ -596,7 +765,7 @@ export default function StoreManagerLayout() {
                     tabBarLabel: isWeb
                         ? ({ color, position }) => webSidebarMode !== "collapsed" ? (
                               <WebSidebarTabLabel
-                                  text={translate("store_manager.tabs.subscription")}
+                                  text={translate("storeManager.tabs.subscription")}
                                   navColor={color}
                                   position={position}
                                   isRowActive={activeTab === "subscription"}
@@ -670,7 +839,32 @@ export default function StoreManagerLayout() {
             <Tabs.Screen name="detail/index" options={{ href: null }} />
             <Tabs.Screen name="detail/edit-details" options={{ href: null }} />
             <Tabs.Screen name="chat-support" options={{ href: null, tabBarStyle: isWeb ? undefined : { display: "none" } }} />
-            <Tabs.Screen name="manager-inbox" options={{ href: null, tabBarStyle: isWeb ? undefined : { display: "none" } }} />
-        </Tabs>
+                <Tabs.Screen name="manager-inbox" options={{ href: null, tabBarStyle: isWeb ? undefined : { display: "none" } }} />
+            </Tabs>
+            <Modal
+                visible={idleWarningVisible}
+                onClose={handleStaySignedIn}
+                title={translate("storeManager.sessionTimeout.title")}
+                message={
+                    idleWarningHasCountdown
+                        ? translate("storeManager.sessionTimeout.message", { seconds: idleCountdown })
+                        : translate("storeManager.sessionTimeout.resumeMessage")
+                }
+                showCloseButton={false}
+                dismissOnBackdrop={false}
+                buttons={[
+                    {
+                        label: translate("storeManager.sessionTimeout.signOut"),
+                        variant: "secondary",
+                        onPress: handleIdleLogout,
+                    },
+                    {
+                        label: translate("storeManager.sessionTimeout.staySignedIn"),
+                        variant: "primary",
+                        onPress: handleStaySignedIn,
+                    },
+                ]}
+            />
+        </View>
     );
 }

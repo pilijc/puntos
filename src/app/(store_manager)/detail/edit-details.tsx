@@ -183,8 +183,8 @@ export default function EditDetails() {
         setDetail(null);
         reset();
         setModal({
-          title: translate("store_manager.detailEdit.loadFailedTitle"),
-          message: translate("store_manager.detailEdit.loadFailedMessage"),
+          title: translate("storeManager.detailEdit.loadFailedTitle"),
+          message: translate("storeManager.detailEdit.loadFailedMessage"),
           buttons: [{ label: translate("label.ok"), onPress: () => setModal(null), variant: "primary" }],
         });
       })
@@ -197,7 +197,7 @@ export default function EditDetails() {
 
   const showError = (message: string) =>
     setModal({
-      title: translate("store_manager.detailEdit.errorTitle"),
+      title: translate("storeManager.detailEdit.errorTitle"),
       message,
       buttons: [{ label: translate("label.ok"), onPress: () => setModal(null), variant: "primary" }],
     });
@@ -205,7 +205,7 @@ export default function EditDetails() {
   const pickImage = async (kind: PickImageType, index?: number) => {
     const { granted } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!granted) {
-      showError(translate("store_manager.detailEdit.photoLibraryPermission"));
+      showError(translate("storeManager.detailEdit.photoLibraryPermission"));
       return;
     }
 
@@ -218,7 +218,7 @@ export default function EditDetails() {
 
     if (result.canceled || !result.assets?.[0]) return;
     const asset = result.assets[0];
-    if (!asset.base64) { showError(translate("store_manager.detailEdit.couldNotReadImage")); return; }
+    if (!asset.base64) { showError(translate("storeManager.detailEdit.couldNotReadImage")); return; }
 
     const dataUri = `data:${asset.mimeType ?? "image/jpeg"};base64,${asset.base64}`;
 
@@ -245,7 +245,7 @@ export default function EditDetails() {
   const handleGetCurrentLocation = async () => {
     const { status } = await Location.requestForegroundPermissionsAsync();
     if (status !== "granted") {
-      showError(translate("store_manager.detailEdit.locationPermission"));
+      showError(translate("storeManager.detailEdit.locationPermission"));
       return;
     }
 
@@ -256,7 +256,7 @@ export default function EditDetails() {
       (await Location.getLastKnownPositionAsync({}).catch(() => null));
 
     if (!loc) {
-      showError(translate("store_manager.detailEdit.couldNotGetLocation"));
+      showError(translate("storeManager.detailEdit.couldNotGetLocation"));
       return;
     }
 
@@ -275,12 +275,12 @@ export default function EditDetails() {
   );
 
   const handleSave = async () => {
-    if (!logo) { showError(translate("store_manager.detailEdit.logoRequired")); return; }
-    if (!name.trim()) { showError(translate("store_manager.detailEdit.nameRequired")); return; }
-    if (!type) { showError(translate("store_manager.detailEdit.typeRequired")); return; }
+    if (!logo) { showError(translate("storeManager.detailEdit.logoRequired")); return; }
+    if (!name.trim()) { showError(translate("storeManager.detailEdit.nameRequired")); return; }
+    if (!type) { showError(translate("storeManager.detailEdit.typeRequired")); return; }
 
     const validPics = pictures.filter(Boolean) as string[];
-    if (validPics.length === 0) { showError(translate("store_manager.detailEdit.picturesRequired")); return; }
+    if (validPics.length === 0) { showError(translate("storeManager.detailEdit.picturesRequired")); return; }
 
     setIsSaving(true);
     try {
@@ -309,11 +309,11 @@ export default function EditDetails() {
       setDetail(null);
       initFromDetail(null);
       setModal({
-        title: translate("store_manager.detailEdit.savedTitle"),
-        message: translate("store_manager.detailEdit.savedMessage"),
+        title: translate("storeManager.detailEdit.savedTitle"),
+        message: translate("storeManager.detailEdit.savedMessage"),
         buttons: [
           {
-            label: translate("store_manager.detailEdit.done"),
+            label: translate("storeManager.detailEdit.done"),
             onPress: () => {
               setModal(null);
               router.push({ pathname: "/(store_manager)/detail", params: { storeId } });
@@ -323,7 +323,7 @@ export default function EditDetails() {
         ],
       });
     } catch (err: any) {
-      showError(err?.message ?? translate("store_manager.detailEdit.saveFailed"));
+      showError(err?.message ?? translate("storeManager.detailEdit.saveFailed"));
     } finally {
       setIsSaving(false);
       setIsUploading(false);
@@ -349,8 +349,8 @@ export default function EditDetails() {
       />
 
       <AppHeader
-        title={translate("store_manager.detailEdit.title")}
-        description={translate("store_manager.detailEdit.description")}
+        title={translate("storeManager.detailEdit.title")}
+        description={translate("storeManager.detailEdit.description")}
         onBackPress={() => {
           router.push({ pathname: "/(store_manager)/detail", params: { storeId } });
         }}
@@ -374,7 +374,7 @@ export default function EditDetails() {
 
           <View className="m-4 rounded-xl px-3 pt-2 pb-3 gap-y-3">
             <Text className="text-base font-poppins-semibold text-textPrimary dark:text-textPrimary">
-              {translate("store_manager.detailEdit.mediaBrand", "Media & Brand")}
+              {translate("storeManager.detailEdit.mediaBrand", "Media & Brand")}
             </Text>
 
             <Text className="text-sm font-poppins-semibold text-textSecondary dark:text-textSecondary">
@@ -401,14 +401,14 @@ export default function EditDetails() {
                 ) : (
                   <View className="flex-1 items-center justify-center gap-y-1">
                     <MaterialIcons name="add-a-photo" size={20} color="#94A3B8" />
-                    <Text className="text-[9px] font-poppins text-slate-400">{translate("store_manager.detailEdit.logo")}</Text>
+                    <Text className="text-[9px] font-poppins text-slate-400">{translate("storeManager.detailEdit.logo")}</Text>
                   </View>
                 )}
               </TouchableOpacity>
             </View>
 
             <Text className="text-sm font-poppins-semibold text-textSecondary dark:text-textSecondary">
-              {translate("store_manager.detailEdit.storePictures")}
+              {translate("storeManager.detailEdit.storePictures")}
             </Text>
             <View
               className="flex-row gap-x-2"
@@ -484,12 +484,12 @@ export default function EditDetails() {
 
           <View className="mx-4 rounded-xl px-3 pt-2 pb-3 gap-y-4">
             <Text className="text-base font-poppins-semibold text-textPrimary dark:text-textPrimary">
-              {translate("store_manager.detailEdit.storeInformation", "Store Information")}
+              {translate("storeManager.detailEdit.storeInformation", "Store Information")}
             </Text>
 
             <TextField
               label={translate("label.storeName")}
-              placeholder={translate("store_manager.detailEdit.storeNamePlaceholder")}
+              placeholder={translate("storeManager.detailEdit.storeNamePlaceholder")}
               value={name}
               onChangeText={setName}
               sanitize={(v) => v}
@@ -518,7 +518,7 @@ export default function EditDetails() {
                           selected ? "text-primary" : "text-textSecondary dark:text-textSecondary"
                         }`}
                       >
-                        {translate(`store_manager.storeTypes.${opt.value}`)}
+                        {translate(`storeManager.storeTypes.${opt.value}`)}
                       </Text>
                     </TouchableOpacity>
                   );
@@ -527,16 +527,16 @@ export default function EditDetails() {
             </View>
 
             <TextField
-              label={translate("store_manager.detailEdit.phoneNumber")}
-              placeholder={translate("store_manager.detailEdit.phonePlaceholder")}
+              label={translate("storeManager.detailEdit.phoneNumber")}
+              placeholder={translate("storeManager.detailEdit.phonePlaceholder")}
               keyboardType="phone-pad"
               value={phone}
               onChangeText={setPhone}
             />
 
             <TextField
-              label={translate("store_manager.detailEdit.registrationNumber")}
-              placeholder={translate("store_manager.detailEdit.registrationPlaceholder")}
+              label={translate("storeManager.detailEdit.registrationNumber")}
+              placeholder={translate("storeManager.detailEdit.registrationPlaceholder")}
               value={registrationNumber}
               onChangeText={setRegistrationNumber}
               sanitize={(v) => v}
@@ -545,13 +545,13 @@ export default function EditDetails() {
 
           <View className="mx-4 rounded-xl px-3 pt-2 pb-3 gap-y-4" style={{ zIndex: 10 }}>
             <Text className="text-base font-poppins-semibold text-textPrimary dark:text-textPrimary">
-              {translate("store_manager.detailEdit.operatingHours", "Operating Hours")}
+              {translate("storeManager.detailEdit.operatingHours", "Operating Hours")}
             </Text>
 
             <View className="flex-row gap-x-3">
               <View className="flex-1" style={{ zIndex: 20 }}>
                 <Text className="text-sm font-poppins-semibold text-textSecondary dark:text-textSecondary mb-1.5">
-                  {translate("store_manager.detailEdit.openingTime")}
+                  {translate("storeManager.detailEdit.openingTime")}
                 </Text>
                 {isWeb ? (
                   <WebTimePicker value={storeOpen} onChange={setStoreOpen} isDark={isDark} />
@@ -568,7 +568,7 @@ export default function EditDetails() {
 
               <View className="flex-1" style={{ zIndex: 10 }}>
                 <Text className="text-sm font-poppins-semibold text-textSecondary dark:text-textSecondary mb-1.5">
-                  {translate("store_manager.detailEdit.closingTime")}
+                  {translate("storeManager.detailEdit.closingTime")}
                 </Text>
                 {isWeb ? (
                   <WebTimePicker value={storeClose} onChange={setStoreClose} isDark={isDark} />
@@ -613,7 +613,7 @@ export default function EditDetails() {
                 >
                   <MaterialIcons name="my-location" size={14} color="#FF6600" />
                   <Text className="text-xs font-poppins-semibold text-textPrimary dark:text-textPrimary">
-                    {translate("store_manager.detailEdit.useCurrent")}
+                    {translate("storeManager.detailEdit.useCurrent")}
                   </Text>
                 </TouchableOpacity>
               )}
@@ -666,7 +666,7 @@ export default function EditDetails() {
                   </MapView>
                   <View className="absolute bottom-2 left-2 bg-black/50 rounded-lg px-2 py-1">
                     <Text style={{ color: "#fff", fontSize: 10, fontFamily: "Poppins-Regular" }}>
-                      {translate("store_manager.detailEdit.tapMapMovePin")}
+                      {translate("storeManager.detailEdit.tapMapMovePin")}
                     </Text>
                   </View>
                 </>
@@ -674,7 +674,7 @@ export default function EditDetails() {
                 <View className="flex-1 h-full bg-slate-50 dark:bg-neutral-800 items-center justify-center gap-y-1 px-4">
                   <MaterialIcons name="map" size={28} color={isDark ? "#525252" : "#CBD5E1"} />
                   <Text className="text-xs font-poppins text-center text-slate-400 dark:text-slate-500">
-                    {translate("store_manager.detailEdit.mapFallbackMessage")}
+                    {translate("storeManager.detailEdit.mapFallbackMessage")}
                   </Text>
                 </View>
               )}
@@ -682,8 +682,8 @@ export default function EditDetails() {
 
             <View className="px-3 gap-y-4">
               <TextField
-                label={translate("store_manager.detailEdit.addressLandmark")}
-                placeholder={translate("store_manager.detailEdit.addressPlaceholder")}
+                label={translate("storeManager.detailEdit.addressLandmark")}
+                placeholder={translate("storeManager.detailEdit.addressPlaceholder")}
                 value={address}
                 onChangeText={setAddress}
                 multiline
@@ -694,10 +694,10 @@ export default function EditDetails() {
               <View className="gap-y-2">
                 <View className="flex-row justify-between items-center">
                   <Text className="text-sm font-poppins-semibold text-textSecondary dark:text-textSecondary">
-                    {translate("store_manager.detailEdit.storeRadius")}
+                    {translate("storeManager.detailEdit.storeRadius")}
                   </Text>
                   <Text className="text-sm font-poppins-bold text-primary">
-                    {translate("store_manager.detailEdit.radiusMeters", { meters: radius ?? 50 })}
+                    {translate("storeManager.detailEdit.radiusMeters", { meters: radius ?? 50 })}
                   </Text>
                 </View>
                 <Slider
@@ -711,8 +711,8 @@ export default function EditDetails() {
                   thumbTintColor="#FF6600"
                 />
                 <View className="flex-row justify-between">
-                  <Text className="text-xs font-poppins text-slate-400">{translate("store_manager.detailEdit.radiusMin")}</Text>
-                  <Text className="text-xs font-poppins text-slate-400">{translate("store_manager.detailEdit.radiusMax")}</Text>
+                  <Text className="text-xs font-poppins text-slate-400">{translate("storeManager.detailEdit.radiusMin")}</Text>
+                  <Text className="text-xs font-poppins text-slate-400">{translate("storeManager.detailEdit.radiusMax")}</Text>
                 </View>
               </View>
             </View>
@@ -721,7 +721,7 @@ export default function EditDetails() {
           {/* ── Compliance ────────────────────────────────── */}
           <View className="m-4 rounded-xl px-3 pt-2 pb-3 gap-y-3">
             <Text className="text-base font-poppins-semibold text-textPrimary dark:text-textPrimary">
-              {translate("store_manager.detailEdit.compliance", "Compliance")}
+              {translate("storeManager.detailEdit.compliance", "Compliance")}
             </Text>
 
             <Text className="text-sm font-poppins-semibold text-textSecondary dark:text-textSecondary">
@@ -756,7 +756,7 @@ export default function EditDetails() {
                 <>
                   <MaterialIcons name="description" size={26} color="#94A3B8" />
                   <Text className="text-xs font-poppins text-slate-400 mt-1.5">
-                    {translate("store_manager.detailEdit.uploadDocumentImage")}
+                    {translate("storeManager.detailEdit.uploadDocumentImage")}
                   </Text>
                 </>
               )}
@@ -766,7 +766,7 @@ export default function EditDetails() {
           {/* ── Save / Cancel ─────────────────────────────── */}
           <View className="m-4 gap-y-3">
             <Button
-              label={isUploading ? translate("store_manager.detailEdit.uploadingImages") : translate("label.saveChanges")}
+              label={isUploading ? translate("storeManager.detailEdit.uploadingImages") : translate("label.saveChanges")}
               onPress={handleSave}
               variant="primary"
               loading={isSaving}
@@ -793,7 +793,7 @@ export default function EditDetails() {
               <TouchableOpacity activeOpacity={1} onPress={(e) => e.stopPropagation()} className="bg-white dark:bg-slate-800 rounded-t-2xl pb-8 pt-2">
                 <DateTimePicker value={timeStringToDate(storeOpen || "09:00", 9, 0)} mode="time" onChange={(_, d) => { if (d) setStoreOpen(dateToTimeString(d)); }} />
                 <View className="px-4">
-                  <Button label={translate("store_manager.detailEdit.done")} onPress={() => setShowOpenPicker(false)} variant="primary" fullWidth />
+                  <Button label={translate("storeManager.detailEdit.done")} onPress={() => setShowOpenPicker(false)} variant="primary" fullWidth />
                 </View>
               </TouchableOpacity>
             </TouchableOpacity>
@@ -805,7 +805,7 @@ export default function EditDetails() {
               <TouchableOpacity activeOpacity={1} onPress={(e) => e.stopPropagation()} className="bg-white dark:bg-slate-800 rounded-t-2xl pb-8 pt-2">
                 <DateTimePicker value={timeStringToDate(storeClose || "21:00", 21, 0)} mode="time" onChange={(_, d) => { if (d) setStoreClose(dateToTimeString(d)); }} />
                 <View className="px-4">
-                  <Button label={translate("store_manager.detailEdit.done")} onPress={() => setShowClosePicker(false)} variant="primary" fullWidth />
+                  <Button label={translate("storeManager.detailEdit.done")} onPress={() => setShowClosePicker(false)} variant="primary" fullWidth />
                 </View>
               </TouchableOpacity>
             </TouchableOpacity>

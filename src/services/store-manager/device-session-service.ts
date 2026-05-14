@@ -39,13 +39,21 @@ function resolveDeviceType(): "mobile" | "tablet" | "web" {
 function resolveDeviceModel(): string {
     if (Platform.OS === "web") {
         const ua = typeof navigator !== "undefined" ? navigator.userAgent : "Web Browser";
-        if (ua.includes("Chrome")) return "Chrome Browser";
-        if (ua.includes("Firefox")) return "Firefox Browser";
-        if (ua.includes("Safari")) return "Safari Browser";
+        // IMPORTANT: Check more specific browsers BEFORE Chrome, because Edge/Opera/etc.
+        // all include "Chrome" in their User-Agent string.
+        if (ua.includes("Edg/") || ua.includes("EdgA/") || ua.includes("EdgiOS/")) return "Edge Browser";
+        if (ua.includes("OPR/") || ua.includes("Opera")) return "Opera Browser";
+        if (ua.includes("SamsungBrowser/")) return "Samsung Browser";
+        if (ua.includes("YaBrowser/")) return "Yandex Browser";
+        if (ua.includes("Chrome/")) return "Chrome Browser";
+        if (ua.includes("Firefox/")) return "Firefox Browser";
+        // Safari must come after Chrome since Chrome also includes "Safari" in its UA
+        if (ua.includes("Safari/")) return "Safari Browser";
         return "Web Browser";
     }
     return Device.modelName ?? Device.deviceName ?? "Unknown Device";
 }
+
 
 // ------ core services 
 

@@ -64,8 +64,8 @@ export default function AddStaff() {
     if (!isEditMode || !staffId) return;
     if (memberQuery.isError) {
       setModal({
-        title: translate("store_manager.staffForm.loadErrorTitle"),
-        message: translate("store_manager.staffForm.loadErrorMessage"),
+        title: translate("storeManager.staffForm.loadErrorTitle"),
+        message: translate("storeManager.staffForm.loadErrorMessage"),
         buttons: [{ label: translate("label.ok"), onPress: () => setModal(null), variant: "secondary" }],
       });
       return;
@@ -97,10 +97,10 @@ export default function AddStaff() {
       }
 
       setModal({
-        title: isEditMode ? translate("store_manager.staffForm.updatedTitle") : translate("store_manager.staffForm.addedTitle"),
+        title: isEditMode ? translate("storeManager.staffForm.updatedTitle") : translate("storeManager.staffForm.addedTitle"),
         message: isEditMode
-          ? translate("store_manager.staffForm.updatedMessage")
-          : translate("store_manager.staffForm.addedMessage"),
+          ? translate("storeManager.staffForm.updatedMessage")
+          : translate("storeManager.staffForm.addedMessage"),
         buttons: [
           {
             label: translate("label.ok"),
@@ -127,7 +127,7 @@ export default function AddStaff() {
     } catch (error) {
       setModal({
         title: translate("label.error"),
-        message: (error as Error).message ?? translate("store_manager.staffForm.saveError"),
+        message: (error as Error).message ?? translate("storeManager.staffForm.saveError"),
         buttons: [{ label: translate("label.ok"), onPress: () => setModal(null), variant: "secondary" }],
       });
     } finally {
@@ -147,11 +147,11 @@ export default function AddStaff() {
       />
 
       <AppHeader
-        title={isEditMode ? translate("store_manager.staffForm.editTitle") : translate("store_manager.staffForm.addTitle")}
+        title={isEditMode ? translate("storeManager.staffForm.editTitle") : translate("storeManager.staffForm.addTitle")}
         description={
           isEditMode
-            ? translate("store_manager.staffForm.editDescription")
-            : translate("store_manager.staffForm.addDescription")
+            ? translate("storeManager.staffForm.editDescription")
+            : translate("storeManager.staffForm.addDescription")
         }
         onBackPress={() => {
           router.push({
@@ -187,56 +187,56 @@ export default function AddStaff() {
                   </Text>
                   <Text className="text-xs font-poppins text-textSecondary dark:text-darkTextSecondary">
                     {isEditMode
-                      ? translate("store_manager.staffForm.profileHintEdit")
-                      : translate("store_manager.staffForm.profileHintAdd")}
+                      ? translate("storeManager.staffForm.profileHintEdit")
+                      : translate("storeManager.staffForm.profileHintAdd")}
                   </Text>
                 </View>
 
                 {!isEditMode && (
                   <View className="rounded-xl bg-primary/5 p-4 dark:bg-primary-800">
-                    <Text className="text-sm font-poppins-semibold text-primary">{translate("store_manager.staffForm.loginInfoTitle")}</Text>
+                    <Text className="text-sm font-poppins-semibold text-primary">{translate("storeManager.staffForm.loginInfoTitle")}</Text>
                     <View className="mt-1 gap-y-1">
                       <Text className="text-xs font-poppins text-primary">
-                        • {translate("store_manager.staffForm.loginBullet1")}
+                        • {translate("storeManager.staffForm.loginBullet1")}
                       </Text>
                       <Text className="text-xs font-poppins text-primary">
-                        • {translate("store_manager.staffForm.loginBullet2")}
+                        • {translate("storeManager.staffForm.loginBullet2")}
                       </Text>
                       <Text className="text-xs font-poppins text-primary">
-                        • {translate("store_manager.staffForm.loginBullet3")}
+                        • {translate("storeManager.staffForm.loginBullet3")}
                       </Text>
                       <Text className="text-xs font-poppins text-primary">
-                        • {translate("store_manager.staffForm.loginBullet4")}
+                        • {translate("storeManager.staffForm.loginBullet4")}
                       </Text>
                     </View>
                   </View>
                 )}
 
                 <TextField
-                  label={translate("store_manager.staffForm.fullName")}
+                  label={translate("storeManager.staffForm.fullName")}
                   value={name}
                   onChangeText={(v) => { setName(v); if (v.trim()) setNameError(false); }}
-                  placeholder={translate("store_manager.staffForm.fullNamePlaceholder")}
+                  placeholder={translate("storeManager.staffForm.fullNamePlaceholder")}
                   required={true}
                   error={nameError}
                 />
                 {nameError && (
                   <Text className="text-xs font-poppins text-red-500 dark:text-red-400 -mt-2">
-                    {translate("store_manager.staffForm.fullNameRequiredInline")}
+                    {translate("storeManager.staffForm.fullNameRequiredInline")}
                   </Text>
                 )}
 
                 <TextField
-                  label={translate("store_manager.staffForm.email")}
+                  label={translate("storeManager.staffForm.email")}
                   value={email}
                   onChangeText={(v) => { setEmail(v); if (/\S+@\S+\.\S+/.test(v.trim())) setEmailError(false); }}
-                  placeholder={translate("store_manager.staffForm.emailPlaceholder")}
+                  placeholder={translate("storeManager.staffForm.emailPlaceholder")}
                   required={true}
                   error={emailError}
                 />
                 {emailError && (
                   <Text className="text-xs font-poppins text-red-500 dark:text-red-400 -mt-2">
-                    {trimmedEmail ? translate("store_manager.staffForm.invalidEmailMessage") : translate("store_manager.staffForm.emailRequiredInline")}
+                    {trimmedEmail ? translate("storeManager.staffForm.invalidEmailMessage") : translate("storeManager.staffForm.emailRequiredInline")}
                   </Text>
                 )}
 
@@ -245,7 +245,7 @@ export default function AddStaff() {
                     <View className="flex-row items-center justify-between gap-x-0.5">
                       <View className="flex-row items-center gap-x-0.5">
                         <Text className="text-sm font-poppins-semibold text-slate-700 dark:text-slate-300">
-                          {translate("store_manager.staffForm.password")}
+                          {translate("storeManager.staffForm.password")}
                         </Text>
                         <Text className="text-xs font-poppins-bold text-red-500">*</Text>
                       </View>
@@ -267,7 +267,7 @@ export default function AddStaff() {
                         fontSize: 13,
                       }}
                       keyboardType="default"
-                      placeholder={translate("store_manager.staffForm.passwordPlaceholder")}
+                      placeholder={translate("storeManager.staffForm.passwordPlaceholder")}
                       placeholderTextColor="#94A3B8"
                       value={password}
                     />
@@ -337,17 +337,17 @@ export default function AddStaff() {
         >
           <View className="w-full max-w-sm rounded-xl border border-slate-200 bg-white p-5 shadow-2xl dark:border-slate-700 dark:bg-slate-900">
             <Text className="mb-2 text-base font-poppins-bold text-slate-900 dark:text-slate-100">
-              {isEditMode ? translate("store_manager.staffForm.confirmEditTitle") : translate("store_manager.staffForm.confirmAddTitle")}
+              {isEditMode ? translate("storeManager.staffForm.confirmEditTitle") : translate("storeManager.staffForm.confirmAddTitle")}
             </Text>
 
             <Text className="mb-4 text-sm font-poppins text-slate-500 dark:text-slate-400">
               {isEditMode
-                ? translate("store_manager.staffForm.confirmEditBody")
-                : translate("store_manager.staffForm.confirmAddBody")}
+                ? translate("storeManager.staffForm.confirmEditBody")
+                : translate("storeManager.staffForm.confirmAddBody")}
             </Text>
 
             <View className="mb-3 gap-y-1.5">
-              <Text className="text-xs font-poppins text-slate-500 dark:text-slate-400">{translate("store_manager.staffForm.email")}</Text>
+              <Text className="text-xs font-poppins text-slate-500 dark:text-slate-400">{translate("storeManager.staffForm.email")}</Text>
               <View className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 dark:border-slate-700 dark:bg-slate-800">
                 <Text className="text-sm font-poppins-bold text-slate-900 dark:text-slate-100">{email}</Text>
               </View>
@@ -355,7 +355,7 @@ export default function AddStaff() {
 
             {!isEditMode && (
               <View className="mb-4 gap-y-1.5">
-                <Text className="text-xs font-poppins text-slate-500 dark:text-slate-400">{translate("store_manager.staffForm.tempPassword")}</Text>
+                <Text className="text-xs font-poppins text-slate-500 dark:text-slate-400">{translate("storeManager.staffForm.tempPassword")}</Text>
                 <View className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 dark:border-slate-700 dark:bg-slate-800">
                   <Text className="text-sm font-poppins-bold text-slate-900 dark:text-slate-100">{password}</Text>
                 </View>
@@ -380,7 +380,7 @@ export default function AddStaff() {
                 }}
               >
                 <Text className="text-xs font-poppins-semibold text-white">
-                  {isEditMode ? translate("label.saveChanges") : translate("store_manager.staffForm.createStaff")}
+                  {isEditMode ? translate("label.saveChanges") : translate("storeManager.staffForm.createStaff")}
                 </Text>
               </TouchableOpacity>
             </View>

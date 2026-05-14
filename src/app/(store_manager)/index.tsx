@@ -1,8 +1,9 @@
 import React from "react";
 import { RefreshControl, ScrollView as RNScrollView } from "react-native";
 import { ScrollView, View, Text, SafeAreaView, TouchableOpacity } from "@/tw";
-import { Users, ScanLine, ChevronLeft, ChevronRight } from "lucide-react-native";
+import { Users, ScanLine, ChevronLeft, ChevronRight, Store, Plus } from "lucide-react-native";
 import { useTranslation } from "react-i18next";
+import { useRouter } from "expo-router";
 
 import { useStoreDashboard } from "@/hooks/store-manager/use-store-metrics";
 
@@ -15,6 +16,7 @@ import { DashboardDetailedMetrics } from "@/components/stores/dashboard-detailed
 
 export default function StoreManagerDashboard() {
   const { t: translate } = useTranslation();
+  const router = useRouter();
   const {
     isWeb,
     stores,
@@ -47,18 +49,23 @@ export default function StoreManagerDashboard() {
       className="flex-1 bg-backgroundMuted dark:bg-darkBackground"
     >
       {/* page header */}
-      <View className="bg-white dark:bg-darkBackground border-b border-neutral-100 dark:border-darkBorder px-6 py-3 flex-row justify-between items-center">
-        <Text className="text-xl font-poppins-bold text-textPrimary dark:text-darkTextPrimary py-1">
-          {translate("label.dashboard", "Dashboard")}
-        </Text>
-        <StorePickerDropdown
-          stores={stores}
-          selectedStore={selectedStore}
-          isVisible={isDropdownVisible}
-          onOpen={() => setDropdownVisible(true)}
-          onClose={() => setDropdownVisible(false)}
-          onSelect={(id) => setSelectedStoreId(id)}
-        />
+      <View className="bg-white dark:bg-darkBackground border-b border-neutral-100 dark:border-darkBorder px-4 py-3">
+        <View className="w-full max-w-7xl mx-auto flex-row justify-between items-center gap-3">
+          <Text
+            className="flex-1 min-w-0 text-[22px] font-poppins-bold text-textPrimary dark:text-darkTextPrimary leading-8"
+            numberOfLines={1}
+          >
+            {translate("label.dashboard", "Dashboard")}
+          </Text>
+          <StorePickerDropdown
+            stores={stores}
+            selectedStore={selectedStore}
+            isVisible={isDropdownVisible}
+            onOpen={() => setDropdownVisible(true)}
+            onClose={() => setDropdownVisible(false)}
+            onSelect={(id) => setSelectedStoreId(id)}
+          />
+        </View>
       </View>
 
       <ScrollView
@@ -77,16 +84,16 @@ export default function StoreManagerDashboard() {
       >
 
         {selectedStore ? (
-          <View className={`w-full max-w-7xl mx-auto ${isWeb ? (containerWidth > 600 ? 'px-8 pt-6' : 'px-4 pt-4') : 'px-5 pt-2'}`}>
+          <View className={`w-full max-w-7xl mx-auto ${isWeb ? (containerWidth > 600 ? 'px-8 pt-7' : 'px-4 pt-4') : 'px-4 pt-3'}`}>
 
             {isWeb ? (
               /* ─────────── WEB LAYOUT ─────────── */
               <>
                 {/* Row 1: KPI Tiles with Horizontal Slider on Small Web Views */}
-                <View className="relative flex-row items-center mb-6">
+                <View className="relative flex-row items-center mb-7">
                   {/* Left Arrow for Slider */}
                   {containerWidth < 1100 && (
-                    <TouchableOpacity 
+                    <TouchableOpacity
                       onPress={() => handleMetricScroll('left')}
                       className={`absolute -left-5 z-10 p-1 bg-white dark:bg-darkBackgroundCard rounded-full shadow-md border border-slate-100 dark:border-darkBorder ${scrollIndex === 0 ? 'opacity-30' : 'opacity-100'}`}
                       disabled={scrollIndex === 0}
@@ -95,44 +102,44 @@ export default function StoreManagerDashboard() {
                     </TouchableOpacity>
                   )}
 
-                  <RNScrollView 
+                  <RNScrollView
                     ref={metricScrollRef}
-                    horizontal 
+                    horizontal
                     showsHorizontalScrollIndicator={false}
                     scrollEnabled={containerWidth < 1100}
                     style={{ width: '100%' }}
-                    contentContainerStyle={containerWidth >= 1100 ? { flex: 1, gap: 16 } : { gap: 16, paddingRight: 40 }}
+                    contentContainerStyle={containerWidth >= 1100 ? { flex: 1, gap: 18 } : { gap: 16, paddingRight: 40 }}
                   >
-                    <View style={containerWidth < 1100 ? { width: Math.min(240, Math.max(containerWidth - 32, 160)) } : { flex: 1 }}>
+                    <View style={containerWidth < 1100 ? { width: Math.min(260, Math.max(containerWidth - 32, 176)) } : { flex: 1 }}>
                       <DashboardMetricTile
-                        label={`${translate("store_manager.dashboard.metrics.inStore", "Active Users")} (${selectedStore?.radius ?? 100}m)`}
+                        label={`${translate("storeManager.dashboard.metrics.inStore", "Active Users")} (${selectedStore?.radius ?? 100}m)`}
                         value={activeUsers}
                         icon={Users}
                         loading={metricsLoading}
                         compact={containerWidth < 1200}
                       />
                     </View>
-                    <View style={containerWidth < 1100 ? { width: Math.min(240, Math.max(containerWidth - 32, 160)) } : { flex: 1 }}>
+                    <View style={containerWidth < 1100 ? { width: Math.min(260, Math.max(containerWidth - 32, 176)) } : { flex: 1 }}>
                       <DashboardMetricTile
-                        label={translate("store_manager.dashboard.metrics.totalScanned", "Today's Scans")}
+                        label={translate("storeManager.dashboard.metrics.totalScanned", "Today's Scans")}
                         value={todayTransactions}
                         icon={ScanLine}
                         loading={metricsLoading}
                         compact={containerWidth < 1200}
                       />
                     </View>
-                    <View style={containerWidth < 1100 ? { width: Math.min(240, Math.max(containerWidth - 32, 160)) } : { flex: 1 }}>
+                    <View style={containerWidth < 1100 ? { width: Math.min(260, Math.max(containerWidth - 32, 176)) } : { flex: 1 }}>
                       <DashboardMetricTile
-                        label={translate("store_manager.dashboard.metrics.returning", "Returning Users")}
+                        label={translate("storeManager.dashboard.metrics.returning", "Returning Users")}
                         value={`${retention.returningPercent}%`}
                         icon={Users}
                         loading={metricsLoading}
                         compact={containerWidth < 1200}
                       />
                     </View>
-                    <View style={containerWidth < 1100 ? { width: Math.min(240, Math.max(containerWidth - 32, 160)) } : { flex: 1 }}>
+                    <View style={containerWidth < 1100 ? { width: Math.min(260, Math.max(containerWidth - 32, 176)) } : { flex: 1 }}>
                       <DashboardMetricTile
-                        label={translate("store_manager.dashboard.metrics.newUsers", "New Users")}
+                        label={translate("storeManager.dashboard.metrics.newUsers", "New Users")}
                         value={`${retention.newPercent}%`}
                         icon={ScanLine}
                         loading={metricsLoading}
@@ -143,7 +150,7 @@ export default function StoreManagerDashboard() {
 
                   {/* Right Arrow for Slider */}
                   {containerWidth < 1100 && (
-                    <TouchableOpacity 
+                    <TouchableOpacity
                       onPress={() => handleMetricScroll('right')}
                       className={`absolute -right-5 z-10 p-1 bg-white dark:bg-darkBackgroundCard rounded-full shadow-md border border-slate-100 dark:border-darkBorder ${scrollIndex >= 3 ? 'opacity-30' : 'opacity-100'}`}
                       disabled={scrollIndex >= 3}
@@ -154,15 +161,15 @@ export default function StoreManagerDashboard() {
                 </View>
 
                 {/* Row 2: Main Chart (65%) | Right Sidebar (35%) */}
-                <View 
-                  className={`${containerWidth > 950 ? 'flex-row' : 'flex-col'} gap-6 mb-6`} 
+                <View
+                  className={`${containerWidth > 950 ? 'flex-row' : 'flex-col'} gap-6 mb-7`}
                 >
                   {/* Left – Activity Chart */}
                   <View style={containerWidth > 950 ? { flex: 2, height: 504 } : { width: '100%' }}>
                     <DashboardActivityChart
-                      title={containerWidth > 950 
-                        ? translate("store_manager.dashboard.activity.title", "Activity Overview")
-                        : translate("store_manager.dashboard.activity.titleShort", "Activity")
+                      title={containerWidth > 950
+                        ? translate("storeManager.dashboard.activity.title", "Activity Overview")
+                        : translate("storeManager.dashboard.activity.titleShort", "Activity")
                       }
                       data={displayActivity}
                       labels={dayLabels}
@@ -172,7 +179,7 @@ export default function StoreManagerDashboard() {
                   </View>
 
                   {/* Right Sidebar – Retention + Stamp stacked vertically */}
-                  <View 
+                  <View
                     style={containerWidth > 950 ? { flex: 1 } : { width: '100%' }}
                     className="flex-col gap-6"
                   >
@@ -201,19 +208,19 @@ export default function StoreManagerDashboard() {
               </>
             ) : (
               /* ─────────── MOBILE LAYOUT ─────────── */
-              <View className="flex-col gap-[14px]">
+              <View className="flex-col gap-4">
                 {/* Top row: Retention (50%) | Metrics stacked (50%) */}
-                <View className="flex-row gap-[10px]">
+                <View className="flex-row gap-3">
                   <View className="flex-1">
                     <DashboardRetentionChart
                       data={retention}
                       loading={metricsLoading}
                     />
                   </View>
-                  <View className="flex-1 flex-col gap-[10px]">
+                  <View className="flex-1 flex-col gap-3">
                     <View className="flex-1">
                       <DashboardMetricTile
-                        label={`${translate("store_manager.dashboard.metrics.inStore", "Active Users")} (${selectedStore?.radius ?? 100}m)`}
+                        label={`${translate("storeManager.dashboard.metrics.inStore", "Active Users")} (${selectedStore?.radius ?? 100}m)`}
                         value={activeUsers}
                         icon={Users}
                         loading={metricsLoading}
@@ -221,7 +228,7 @@ export default function StoreManagerDashboard() {
                     </View>
                     <View className="flex-1">
                       <DashboardMetricTile
-                        label={translate("store_manager.dashboard.metrics.totalScanned", "Today's Scans")}
+                        label={translate("storeManager.dashboard.metrics.totalScanned", "Today's Scans")}
                         value={todayTransactions}
                         icon={ScanLine}
                         loading={metricsLoading}
@@ -232,7 +239,7 @@ export default function StoreManagerDashboard() {
 
                 {/* Activity Chart */}
                 <DashboardActivityChart
-                  title={translate("store_manager.dashboard.activity.title", "Weekly Activity")}
+                  title={translate("storeManager.dashboard.activity.title", "Weekly Activity")}
                   data={displayActivity}
                   labels={dayLabels}
                   loading={metricsLoading}
@@ -256,13 +263,25 @@ export default function StoreManagerDashboard() {
             )}
           </View>
         ) : (
-          <View className="py-10 items-center">
-            <Text className="font-poppins text-textPrimary">
-              {translate(
-                "store_manager.dashboard.noStores",
-                "No Stores Available",
-              )}
+          <View className="flex-1 items-center justify-center py-20 px-6 mt-10">
+            <View className="w-24 h-24 bg-orange-50 dark:bg-[#431407] rounded-full items-center justify-center mb-6">
+              <Store size={48} color="#FF6600" />
+            </View>
+            <Text className="text-2xl font-poppins-bold text-textPrimary dark:text-darkTextPrimary text-center mb-3">
+              {translate("storeManager.dashboard.noStores", "Let's Grow Your Business!")}
             </Text>
+            <Text className="text-sm font-poppins text-textSecondary dark:text-darkTextSecondary text-center max-w-sm mb-8 leading-6">
+              {translate("storeManager.dashboard.noStoresDesc", "Create your first store to start rewarding loyal customers, tracking insights, and boosting your sales.")}
+            </Text>
+            <TouchableOpacity
+              onPress={() => router.push("/(store_manager)/store/create-store" as any)}
+              className="bg-[#FF6600] flex-row items-center px-6 py-3.5 rounded-xl shadow-sm"
+            >
+              <Plus size={20} color="#FFFFFF" className="mr-2" />
+              <Text className="text-white font-poppins-bold text-sm">
+                {translate("storeManager.dashboard.createStore", "Create My First Store")}
+              </Text>
+            </TouchableOpacity>
           </View>
         )}
       </ScrollView>

@@ -51,15 +51,15 @@ export function BusinessStep({
 }: BusinessStepProps) {
   const isWeb = Platform.OS === "web";
   const uploadDocImageKey = isWeb
-    ? "store_manager.createStore.uploadDocumentImage"
-    : "store_manager.detailEdit.uploadDocumentImage";
+    ? "storeManager.createStore.uploadDocumentImage"
+    : "storeManager.detailEdit.uploadDocumentImage";
 
   return (
     <View className="gap-2">
       <View className="bg-white dark:bg-neutral-800 rounded-xl border border-slate-100 dark:border-neutral-700 p-4 gap-4">
         <TextField
-          label={translate("store_manager.createStore.phoneNumber")}
-          placeholder={translate("store_manager.detailEdit.phonePlaceholder")}
+          label={translate("storeManager.createStore.phoneNumber")}
+          placeholder={translate("storeManager.detailEdit.phonePlaceholder")}
           keyboardType="phone-pad"
           value={phone}
           onChangeText={(text) => {
@@ -72,9 +72,9 @@ export function BusinessStep({
         />
 
         <TextField
-          label={translate("store_manager.createStore.registrationNumber")}
+          label={translate("storeManager.createStore.registrationNumber")}
           required
-          placeholder={translate("store_manager.detailEdit.registrationPlaceholder")}
+          placeholder={translate("storeManager.detailEdit.registrationPlaceholder")}
           value={registrationNumber}
           onChangeText={setRegistrationNumber}
           sanitize={(v) => v}
@@ -123,7 +123,7 @@ export function BusinessStep({
           <View className="flex-1 flex-col gap-1.5" style={{ zIndex: 30 }}>
             <View className="flex-row items-center gap-1 px-1">
               <Text className="text-slate-700 dark:text-slate-300 text-sm font-poppins-medium">
-                {translate("store_manager.createStore.openingTime")}
+                {translate("storeManager.createStore.openingTime")}
                 {isWeb && (
                   <Text className="text-red-500 dark:text-red-400 ml-1">*</Text>
                 )}
@@ -139,7 +139,7 @@ export function BusinessStep({
           <View className="flex-1 flex-col gap-1.5" style={{ zIndex: 30 }}>
             <View className="flex-row items-center gap-1 px-1">
               <Text className="text-slate-700 dark:text-slate-300 text-sm font-poppins-medium">
-                {translate("store_manager.createStore.closingTime")}
+                {translate("storeManager.createStore.closingTime")}
                 {isWeb && (
                   <Text className="text-red-500 dark:text-red-400 ml-1">*</Text>
                 )}
@@ -160,12 +160,12 @@ export function BusinessStep({
               <CalendarDays size={14} color={isDark ? "#cbd5e1" : "#475569"} />
             )}
             <Text className="text-slate-700 dark:text-slate-300 text-sm font-poppins-medium">
-              {translate("store_manager.createStore.storeDays")}{" "}
+              {translate("storeManager.createStore.storeDays")}{" "}
               <Text className="text-red-500 dark:text-red-400">*</Text>
             </Text>
           </View>
           <Text className="text-slate-600 dark:text-slate-400 text-xs font-poppins px-1">
-            {translate("store_manager.createStore.storeDaysHint")}
+            {translate("storeManager.createStore.storeDaysHint")}
           </Text>
           <DaysBadgeSelector
             selectedDays={storeDays}
@@ -174,7 +174,7 @@ export function BusinessStep({
           />
           {storeDays.length === 7 && (
             <Text className="text-xs text-slate-400 dark:text-slate-500 font-poppins px-1">
-              {translate("store_manager.createStore.storeDaysAllSelected")}
+              {translate("storeManager.createStore.storeDaysAllSelected")}
             </Text>
           )}
         </View>

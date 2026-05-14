@@ -45,7 +45,7 @@ export function StoreStep({
         <TextField
           label={translate("label.storeName")}
           required
-          placeholder={translate("store_manager.detailEdit.storeNamePlaceholder")}
+          placeholder={translate("storeManager.detailEdit.storeNamePlaceholder")}
           value={storeName}
           onChangeText={setStoreName}
           sanitize={(v) => v}
@@ -77,7 +77,7 @@ export function StoreStep({
                         : "text-slate-600 dark:text-slate-300"
                     }`}
                   >
-                    {translate(`store_manager.storeTypes.${type.value}`)}
+                    {translate(`storeManager.storeTypes.${type.value}`)}
                   </Text>
                 </TouchableOpacity>
               );
@@ -115,7 +115,7 @@ export function StoreStep({
                 <>
                   <ImagePlus size={18} color="#94A3B8" />
                   <Text className="text-[10px] text-slate-500 font-poppins">
-                    {translate("store_manager.createStore.logo")}
+                    {translate("storeManager.createStore.logo")}
                   </Text>
                 </>
               )}
@@ -125,11 +125,11 @@ export function StoreStep({
 
         <View className="flex-col gap-2">
           <Text className="text-slate-700 dark:text-slate-300 text-sm font-poppins-medium px-1">
-            {translate("store_manager.createStore.storePictures")}{" "}
+            {translate("storeManager.createStore.storePictures")}{" "}
             <Text className="text-red-500 dark:text-red-400">*</Text>
           </Text>
           <Text className="text-slate-600 dark:text-slate-400 text-xs font-poppins mb-3 px-1">
-            {translate("store_manager.createStore.storePicturesHint")}
+            {translate("storeManager.createStore.storePicturesHint")}
           </Text>
           <View className="flex-row flex-wrap gap-2">
             {[0, 1, 2, 3, 4, 5].map((index) => {

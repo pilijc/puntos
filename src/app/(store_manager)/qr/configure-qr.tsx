@@ -72,17 +72,17 @@ export default function ConfigureStreaks() {
 
       if (!percentageInput || isNaN(pct) || pct <= 0) {
         nextErrors.percentage = true;
-        nextErrors.percentageErrorMessage = translate("store_manager.qrConfigure.validPercentage");
+        nextErrors.percentageErrorMessage = translate("storeManager.qrConfigure.validPercentage");
         hasErrors = true;
       } else if (pct > 100) {
         nextErrors.percentage = true;
-        nextErrors.percentageErrorMessage = translate("store_manager.qrConfigure.percentageOver100");
+        nextErrors.percentageErrorMessage = translate("storeManager.qrConfigure.percentageOver100");
         hasErrors = true;
       }
 
       if (!baseAmountInput || isNaN(base) || base < 0) {
         nextErrors.baseAmount = true;
-        nextErrors.baseAmountErrorMessage = translate("store_manager.qrConfigure.validBaseAmount");
+        nextErrors.baseAmountErrorMessage = translate("storeManager.qrConfigure.validBaseAmount");
         hasErrors = true;
       }
     } else {
@@ -92,13 +92,13 @@ export default function ConfigureStreaks() {
       if (!fixedPointsInput || isNaN(pts) || pts <= 0) {
  
         nextErrors.fixedPoints = true;
-        nextErrors.fixedPointsErrorMessage = translate("store_manager.qrConfigure.validFixedPoints");
+        nextErrors.fixedPointsErrorMessage = translate("storeManager.qrConfigure.validFixedPoints");
         hasErrors = true;
       }
 
       if (!minimumSpendInput || isNaN(minSpend) || minSpend < 0) {
         nextErrors.minimumSpend = true;
-        nextErrors.minimumSpendErrorMessage = translate("store_manager.qrConfigure.validMinimumSpend");
+        nextErrors.minimumSpendErrorMessage = translate("storeManager.qrConfigure.validMinimumSpend");
         hasErrors = true;
       }
 
@@ -106,11 +106,11 @@ export default function ConfigureStreaks() {
       if (!isNaN(maxTxn)) {
         if (maxTxn < 0) {
           nextErrors.maxPointsPerTxn = true;
-          nextErrors.maxPointsPerTxnErrorMessage = translate("store_manager.qrConfigure.validMaxPointsPerTxn");
+          nextErrors.maxPointsPerTxnErrorMessage = translate("storeManager.qrConfigure.validMaxPointsPerTxn");
           hasErrors = true;
         } else if (maxTxn > 0 && maxTxn < pts) {
           nextErrors.maxPointsPerTxn = true;
-          nextErrors.maxPointsPerTxnErrorMessage = translate("store_manager.qrConfigure.maxLowerThanFixed");
+          nextErrors.maxPointsPerTxnErrorMessage = translate("storeManager.qrConfigure.maxLowerThanFixed");
           hasErrors = true;
         }
       }
@@ -120,7 +120,7 @@ export default function ConfigureStreaks() {
       const maxTxn = parseFloat(maxPointsInput);
       if (isNaN(maxTxn) || maxTxn < 0) {
         nextErrors.maxPointsPerTxn = true;
-        nextErrors.maxPointsPerTxnErrorMessage = translate("store_manager.qrConfigure.validMaxPointsPerTxn");
+        nextErrors.maxPointsPerTxnErrorMessage = translate("storeManager.qrConfigure.validMaxPointsPerTxn");
         hasErrors = true;
       }
     }
@@ -215,8 +215,8 @@ export default function ConfigureStreaks() {
 		if (isSubmitting) return;
     if (!storeIdForDb) {
       setModal({
-        title: translate("store_manager.qrConfigure.invalidStoreTitle"),
-        message: translate("store_manager.qrConfigure.invalidStoreMessage"),
+        title: translate("storeManager.qrConfigure.invalidStoreTitle"),
+        message: translate("storeManager.qrConfigure.invalidStoreMessage"),
         buttons: [{ label: translate("label.ok"), onPress: () => setModal(null), variant: "secondary" }],
       });
       return;
@@ -262,13 +262,13 @@ export default function ConfigureStreaks() {
       
 			setModal({
 				title: translate("label.success"),
-				message: translate("store_manager.qrConfigure.successMessage"),
+				message: translate("storeManager.qrConfigure.successMessage"),
         buttons: [{ label: translate("label.ok"), onPress: () => router.push({ pathname: "/(store_manager)/qr", params: { storeId: storeIdForDb } }), variant: "secondary" }],
 			});
 		} catch (error) {
 			setModal({
 				title: translate("label.error"),
-				message: (error as Error).message ?? translate("store_manager.qrConfigure.saveFailed"),
+				message: (error as Error).message ?? translate("storeManager.qrConfigure.saveFailed"),
 				buttons: [{ label: translate("label.ok"), onPress: () => setModal(null), variant: "secondary" }],
 			});
 		} finally {
@@ -291,7 +291,7 @@ export default function ConfigureStreaks() {
       />
       
       <AppHeader
-        title={translate("store_manager.qrConfigure.title")}
+        title={translate("storeManager.qrConfigure.title")}
         onBackPress={() => {
           router.push({ pathname: "/(store_manager)/qr", params: { storeId: storeIdParam } });
         }}
@@ -322,12 +322,12 @@ export default function ConfigureStreaks() {
           </View>
         <View className="gap-y-2">
           <Text className="text-sm font-poppins-semibold text-slate-700 dark:text-slate-300">
-            {translate("store_manager.qrConfigure.pointsType")}
+            {translate("storeManager.qrConfigure.pointsType")}
           </Text>
           <View className="flex-row gap-x-2">
             {([
-              { key: "percentage" as EarningType, label: translate("store_manager.qrConfigure.percentageOptionTitle"), desc: translate("store_manager.qrConfigure.percentageOptionDesc") },
-              { key: "fixed" as EarningType, label: translate("label.fixed"), desc: translate("store_manager.qrConfigure.fixedOptionDesc") },
+              { key: "percentage" as EarningType, label: translate("storeManager.qrConfigure.percentageOptionTitle"), desc: translate("storeManager.qrConfigure.percentageOptionDesc") },
+              { key: "fixed" as EarningType, label: translate("label.fixed"), desc: translate("storeManager.qrConfigure.fixedOptionDesc") },
             ] as const)
               .map((opt) => {
               const selected = earning_type === opt.key;
@@ -379,7 +379,7 @@ export default function ConfigureStreaks() {
             <View className="flex-row gap-x-3">
               <View className="flex-1">
                 <TextField
-                  label={translate("store_manager.qrConfigure.percentageLabel")}
+                  label={translate("storeManager.qrConfigure.percentageLabel")}
                   placeholder={translate("label.eg10Placeholder")}
                   keyboardType="decimal-pad"
                   value={percentageInput}
@@ -405,7 +405,7 @@ export default function ConfigureStreaks() {
               </View>
               <View className="flex-1">
                 <TextField
-                  label={translate("store_manager.qrConfigure.baseAmount")}
+                  label={translate("storeManager.qrConfigure.baseAmount")}
                   placeholder={translate("label.eg10Placeholder")}
                   keyboardType="decimal-pad"
                   value={baseAmountInput}
@@ -433,7 +433,7 @@ export default function ConfigureStreaks() {
 
             <View className="bg-yellow-50 dark:bg-yellow-900/20 rounded-xl px-4 py-3">
               <Text className="text-xs font-poppins text-yellow-800 dark:text-yellow-200">
-                {translate("store_manager.qrConfigure.percentageHint")}
+                {translate("storeManager.qrConfigure.percentageHint")}
               </Text>
             </View>
           </View>
@@ -445,8 +445,8 @@ export default function ConfigureStreaks() {
 						<View className="flex-row gap-x-3">
 							<View className="flex-1">
 								<TextField
-									label={translate("store_manager.qrConfigure.fixedPoints")}
-									placeholder={translate("store_manager.qrConfigure.fixedPointsPlaceholder")}
+									label={translate("storeManager.qrConfigure.fixedPoints")}
+									placeholder={translate("storeManager.qrConfigure.fixedPointsPlaceholder")}
 									keyboardType="decimal-pad"
 									value={fixedPointsInput}
 									onChangeText={(v) => {
@@ -471,8 +471,8 @@ export default function ConfigureStreaks() {
 							</View>
 							<View className="flex-1">
 								<TextField
-									label={translate("store_manager.qrConfigure.minimumSpend")}
-									placeholder={translate("store_manager.qrConfigure.minimumSpendPlaceholder")}
+									label={translate("storeManager.qrConfigure.minimumSpend")}
+									placeholder={translate("storeManager.qrConfigure.minimumSpendPlaceholder")}
 									keyboardType="decimal-pad"
 									value={minimumSpendInput}
 									onChangeText={(v) => {
@@ -499,7 +499,7 @@ export default function ConfigureStreaks() {
 
             <View className="bg-yellow-50 dark:bg-yellow-900/20 rounded-xl px-4 py-3">
               <Text className="text-xs font-poppins text-yellow-800 dark:text-yellow-200">
-                {translate("store_manager.qrConfigure.fixedHint")}
+                {translate("storeManager.qrConfigure.fixedHint")}
               </Text>
             </View>
 					</>
@@ -508,9 +508,9 @@ export default function ConfigureStreaks() {
         {/* Max points per transaction — shared */}
         <View className="gap-y-1.5">
           <TextField
-            label={translate("store_manager.qrConfigure.maxPointsPerTxn")}
-            hint={translate("store_manager.qrConfigure.maxPointsHint")}
-            placeholder={translate("store_manager.qrConfigure.maxPointsPlaceholder")}
+            label={translate("storeManager.qrConfigure.maxPointsPerTxn")}
+            hint={translate("storeManager.qrConfigure.maxPointsHint")}
+            placeholder={translate("storeManager.qrConfigure.maxPointsPlaceholder")}
             keyboardType="decimal-pad"
             value={maxPointsInput}
             onChangeText={(v) => {
@@ -536,7 +536,7 @@ export default function ConfigureStreaks() {
         {/* Actions */}
         <View className="gap-y-3">
           <Button
-            label={translate("store_manager.qrConfigure.saveRules")}
+            label={translate("storeManager.qrConfigure.saveRules")}
             onPress={handleSave}
             disabled={isSubmitting}
             loading={isSubmitting}

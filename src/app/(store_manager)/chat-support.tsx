@@ -108,10 +108,10 @@ export default function ChatSupportScreen() {
   }, [activeConversationId, markRead, messages.length, isFocused]);
 
   const emptyMessage = useMemo(() => {
-    if (storesLoading || loading || loadingMessages) return translate("store_manager.chat.screen.loading", "Loading support chat...");
-    if (!activeStore) return translate("store_manager.chat.screen.storeNotFound", "Store not found.");
+    if (storesLoading || loading || loadingMessages) return translate("storeManager.chat.screen.loading", "Loading support chat...");
+    if (!activeStore) return translate("storeManager.chat.screen.storeNotFound", "Store not found.");
     if (error) return error;
-    return translate("store_manager.chat.screen.startConversation", "Send a message to start a support conversation.");
+    return translate("storeManager.chat.screen.startConversation", "Send a message to start a support conversation.");
   }, [activeStore, error, loading, loadingMessages, storesLoading, translate]);
 
   const handleBack = () => {
@@ -144,10 +144,10 @@ export default function ChatSupportScreen() {
 
         <View className="flex-1 justify-center">
           <Text className="text-base font-poppins-bold text-textPrimary dark:text-darkTextPrimary leading-tight">
-            {activeStore?.name ?? translate("store_manager.chat.screen.contactSupport", "Contact Support")}
+            {activeStore?.name ?? translate("storeManager.chat.screen.contactSupport", "Contact Support")}
           </Text>
           <Text className="text-xs font-poppins text-textMuted dark:text-darkTextMuted">
-            {translate("store_manager.chat.screen.superAdminSupport", "Super Admin Support")}
+            {translate("storeManager.chat.screen.superAdminSupport", "Super Admin Support")}
           </Text>
         </View>
       </View>
@@ -163,7 +163,7 @@ export default function ChatSupportScreen() {
         sending={sending}
         uploadingAttachment={uploadingAttachment}
         disabled={!activeConversationId || !activeStore}
-        placeholder={translate("store_manager.chat.screen.messagePlaceholder", "Message support...")}
+        placeholder={translate("storeManager.chat.screen.messagePlaceholder", "Message support...")}
         currentUserRole="store_manager"
         isWeb={isWeb}
         bottomInset={insets.bottom}

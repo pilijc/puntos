@@ -87,7 +87,7 @@ export default function ViewStreak() {
     : visibleEndedStreaks;
 
   const showError = (message: string) =>
-    setModal({ title: translate("store_manager.streak.error"), message, buttons: [{ label: translate("label.ok"), onPress: () => setModal(null) }] });
+    setModal({ title: translate("storeManager.streak.error"), message, buttons: [{ label: translate("label.ok"), onPress: () => setModal(null) }] });
 
   const showStreakError = (e: unknown) => {
     const key = resolveStreakErrorI18nKey(e);
@@ -96,7 +96,7 @@ export default function ViewStreak() {
       ? translate(key)
       : raw.length > 0 && raw.length < 200
         ? raw
-        : translate("store_manager.streak.errors.generic");
+        : translate("storeManager.streak.errors.generic");
     showError(message);
   };
 
@@ -109,8 +109,8 @@ export default function ViewStreak() {
 
     if (!hasSchedule && hasActiveProgram) {
       setModal({
-        title: translate("store_manager.streak.activeExistsTitle"),
-        message: translate("store_manager.streak.activeExistsMessage"),
+        title: translate("storeManager.streak.activeExistsTitle"),
+        message: translate("storeManager.streak.activeExistsMessage"),
         buttons: [{ label: translate("label.ok"), onPress: () => setModal(null) }],
       });
       return;
@@ -119,22 +119,22 @@ export default function ViewStreak() {
     const publishWouldCreateUpcoming = hasSchedule || hasActiveProgram;
     if (publishWouldCreateUpcoming && hasOtherUpcoming) {
       setModal({
-        title: translate("store_manager.streak.upcomingExistsTitle"),
-        message: translate("store_manager.streak.upcomingExistsMessage"),
+        title: translate("storeManager.streak.upcomingExistsTitle"),
+        message: translate("storeManager.streak.upcomingExistsMessage"),
         buttons: [{ label: translate("label.ok"), onPress: () => setModal(null) }],
       });
       return;
     }
 
     const publishMessage = hasSchedule
-      ? translate("store_manager.streak.publishMessage")
-      : translate("store_manager.streak.publishMessageNoScheduleLive");
+      ? translate("storeManager.streak.publishMessage")
+      : translate("storeManager.streak.publishMessageNoScheduleLive");
     const primaryLabel = hasSchedule
-      ? translate("store_manager.streak.publish")
-      : translate("store_manager.streak.activate");
+      ? translate("storeManager.streak.publish")
+      : translate("storeManager.streak.activate");
 
     setModal({
-      title: translate("store_manager.streak.publishTitle"),
+      title: translate("storeManager.streak.publishTitle"),
       message: publishMessage,
       buttons: [
         { label: translate("label.cancel"),  variant: "secondary", onPress: () => setModal(null) },
@@ -171,11 +171,11 @@ export default function ViewStreak() {
 
   const handleActivate = (streak: Streak) => {
     setModal({
-      title: translate("store_manager.streak.activateTitle"),
-      message: translate("store_manager.streak.activateMessage"),
+      title: translate("storeManager.streak.activateTitle"),
+      message: translate("storeManager.streak.activateMessage"),
       buttons: [
         { label: translate("label.cancel"),   variant: "secondary", onPress: () => setModal(null) },
-        { label: translate("store_manager.streak.activate"), variant: "primary", onPress: () => { setModal(null); doActivate(streak.id!); } },
+        { label: translate("storeManager.streak.activate"), variant: "primary", onPress: () => { setModal(null); doActivate(streak.id!); } },
       ],
     });
   };
@@ -194,22 +194,22 @@ export default function ViewStreak() {
 
   const handleEnd = (streak: Streak) => {
     setModal({
-      title: translate("store_manager.streak.endTitle"),
-      message: translate("store_manager.streak.endMessage"),
+      title: translate("storeManager.streak.endTitle"),
+      message: translate("storeManager.streak.endMessage"),
       buttons: [
         { label: translate("label.cancel"),      variant: "secondary", onPress: () => setModal(null) },
-        { label: translate("store_manager.streak.endProgram"), variant: "danger",   onPress: () => { setModal(null); doEnd(streak.id!); } },
+        { label: translate("storeManager.streak.endProgram"), variant: "danger",   onPress: () => { setModal(null); doEnd(streak.id!); } },
       ],
     });
   };
 
   const handleDelete = (streak: Streak) => {
     setModal({
-      title: translate("store_manager.streak.deleteTitle"),
-      message: translate("store_manager.streak.deleteMessage"),
+      title: translate("storeManager.streak.deleteTitle"),
+      message: translate("storeManager.streak.deleteMessage"),
       buttons: [
         { label: translate("label.cancel"), variant: "secondary", onPress: () => setModal(null) },
-				{ label: translate("store_manager.streak.deleteProgram"), variant: "danger", onPress: () => { setModal(null); doDelete(streak.id!); } },
+				{ label: translate("storeManager.streak.deleteProgram"), variant: "danger", onPress: () => { setModal(null); doDelete(streak.id!); } },
       ],
     });
   };
@@ -259,8 +259,8 @@ export default function ViewStreak() {
       />
 
       <AppHeader
-        title={translate("store_manager.streak.title")}
-        description={translate("store_manager.streak.description")}
+        title={translate("storeManager.streak.title")}
+        description={translate("storeManager.streak.description")}
         onBackPress={() => {
           router.push(`/(store_manager)/view-store/${storeId}`);
         }}
@@ -271,8 +271,8 @@ export default function ViewStreak() {
           <View className={`w-full rounded-xl border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/40 px-3 py-2.5 ${isWeb ? "max-w-4xl" : ""}`}>
             <Text className="text-xs font-poppins text-amber-900 dark:text-amber-200 leading-5">
               {expiresAtIso
-                ? translate("store_manager.premiumCampaigns.bannerWithExpiry", { date: formatDate(expiresAtIso) })
-                : translate("store_manager.premiumCampaigns.banner")}
+                ? translate("storeManager.premiumCampaigns.bannerWithExpiry", { date: formatDate(expiresAtIso) })
+                : translate("storeManager.premiumCampaigns.banner")}
             </Text>
           </View>
         </View>
@@ -308,7 +308,7 @@ export default function ViewStreak() {
                     }
                     numberOfLines={1}
                   >
-                    {translate(`store_manager.streak.tabs.${tab.key}`)}
+                    {translate(`storeManager.streak.tabs.${tab.key}`)}
                   </Text>
                   {count > 0 && (
                     <View className={`rounded-full min-w-[18px] items-center px-1.5 ${active ? "bg-white/20" : "bg-slate-100 dark:bg-slate-800"}`}>
@@ -397,17 +397,17 @@ export default function ViewStreak() {
            <View className="items-center justify-center gap-y-1">
             <Text className="text-sm font-poppins-semibold text-slate-600 dark:text-slate-300 text-center">
                 {activeTab === "active"
-                  ? translate("store_manager.streak.emptyActiveTitle")
+                  ? translate("storeManager.streak.emptyActiveTitle")
                   : activeTab === "upcoming"
-                  ? translate("store_manager.streak.emptyUpcomingTitle")
-                  : translate("store_manager.streak.emptyEndedTitle")}
+                  ? translate("storeManager.streak.emptyUpcomingTitle")
+                  : translate("storeManager.streak.emptyEndedTitle")}
               </Text>
               <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500 text-center">
                 {activeTab === "active"
-                  ? translate("store_manager.streak.emptyActiveBody")
+                  ? translate("storeManager.streak.emptyActiveBody")
                   : activeTab === "upcoming"
-                  ? translate("store_manager.streak.emptyUpcomingBody")
-                  : translate("store_manager.streak.emptyEndedBody")}
+                  ? translate("storeManager.streak.emptyUpcomingBody")
+                  : translate("storeManager.streak.emptyEndedBody")}
               </Text>
            </View>
           </View>

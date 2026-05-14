@@ -15,8 +15,7 @@ interface ExtendedDashboardActivityChartProps extends DashboardActivityChartProp
 }
 
 import { Text, View, Pressable } from "@/tw";
-import { Check } from "lucide-react-native";
-import { Button } from "@/components/button";
+import { Check, ChevronDown, ChevronUp } from "lucide-react-native";
 
 const isWeb = Platform.OS === "web";
 
@@ -101,8 +100,8 @@ export const DashboardActivityChart: React.FC<ExtendedDashboardActivityChartProp
 
     return (
         <View
-            className={`bg-white dark:bg-darkBackgroundCard rounded-xl p-4 elevation-1 border border-transparent dark:border-darkBorder${isWeb && !isCompactWeb ? ' flex-1' : ''}`}
-            onLayout={(e) => setContainerWidth(Math.max(e.nativeEvent.layout.width - 32, 0))}
+            className={`bg-white dark:bg-darkBackgroundCard rounded-xl p-5 elevation-1 border border-slate-100 dark:border-darkBorder${isWeb && !isCompactWeb ? ' flex-1' : ''}`}
+            onLayout={(e) => setContainerWidth(Math.max(e.nativeEvent.layout.width - 40, 0))}
         >
             <View
                 className={`${isCompactWeb ? "flex-col" : "flex-row justify-between items-start"} mb-4 relative z-50`}
@@ -121,20 +120,28 @@ export const DashboardActivityChart: React.FC<ExtendedDashboardActivityChartProp
                 
                 {!isCompactWeb && (
                     <View className="relative z-50 min-w-0" style={{ zIndex: 110, maxWidth: "100%" }}>
-                        <Button
-                            label={translate(`store_manager.dashboard.activity.metric.${selectedMetric}`)}
+                        <Pressable
                             onPress={() => setDropdownOpen(!dropdownOpen)}
-                            variant="secondary"
-                            rightIcon={dropdownOpen ? "ChevronUp" : "ChevronDown"}
-                            roundedFull
-                            fitContent
-                        />
+                            className="h-10 w-[190px] flex-row items-center justify-between rounded-full bg-slate-100 dark:bg-slate-800 px-4"
+                        >
+                            <Text
+                                className="flex-1 text-[13px] font-poppins-semibold text-textPrimary dark:text-slate-300"
+                                numberOfLines={1}
+                            >
+                                {translate(`storeManager.dashboard.activity.metric.${selectedMetric}`)}
+                            </Text>
+                            {dropdownOpen ? (
+                                <ChevronUp size={16} color="#94A3B8" />
+                            ) : (
+                                <ChevronDown size={16} color="#94A3B8" />
+                            )}
+                        </Pressable>
 
                         {dropdownOpen && (
                             <View
-                                className="absolute top-full right-0 mt-2 bg-white dark:bg-darkBackgroundCard rounded-[28px] shadow-2xl border border-slate-100 dark:border-darkBorder p-2 z-50 elevation-10"
+                                className="absolute top-full right-0 mt-2 bg-white dark:bg-darkBackgroundCard rounded-[20px] shadow-2xl border border-slate-100 dark:border-darkBorder p-2 z-50 elevation-10"
                                 style={{
-                                    width: 256,
+                                    width: 232,
                                     zIndex: 1000,
                                     shadowColor: '#000',
                                     shadowOffset: { width: 0, height: 12 },
@@ -151,7 +158,7 @@ export const DashboardActivityChart: React.FC<ExtendedDashboardActivityChartProp
                                                     { backgroundColor: pressed ? (isWeb ? '#f8fafc' : '#f1f5f9') : 'transparent' },
                                                     isActive ? { backgroundColor: '#fff7ed' } : {}
                                                 ]}
-                                                className="px-4 py-3 rounded-[20px]"
+                                                className="px-4 py-3 rounded-[14px]"
                                                 onPress={() => {
                                                     setSelectedMetric(opt.value);
                                                     setDropdownOpen(false);
@@ -162,7 +169,7 @@ export const DashboardActivityChart: React.FC<ExtendedDashboardActivityChartProp
                                                         className={`text-[14px] font-poppins flex-1 mr-2 ${isActive ? 'text-[#FF6600] font-poppins-bold' : 'text-slate-600 dark:text-darkTextSecondary'}`}
                                                         numberOfLines={1}
                                                     >
-                                                        {translate(`store_manager.dashboard.activity.metric.${opt.value}`)}
+                                                        {translate(`storeManager.dashboard.activity.metric.${opt.value}`)}
                                                     </Text>
                                                     {isActive && (
                                                         <View>
@@ -247,10 +254,10 @@ export const DashboardActivityChart: React.FC<ExtendedDashboardActivityChartProp
                 <View className="flex-row items-center mt-5 pt-5 border-t border-slate-100 dark:border-darkBorder">
                     {/* Always remains: Total Stat (Fixed 1/3 width) */}
                     <View className="flex-1 items-center">
-                        <Text className="text-[11px] font-poppins text-textSecondary dark:text-darkTextSecondary uppercase tracking-[0.5px] text-center" numberOfLines={1}>
-                            {translate(`store_manager.dashboard.activity.metric.${selectedMetric}`)}
+                        <Text className="text-[11px] font-poppins-semibold text-textSecondary dark:text-darkTextSecondary text-center" numberOfLines={1}>
+                            {translate(`storeManager.dashboard.activity.metric.${selectedMetric}`)}
                         </Text>
-                        <Text className="text-2xl font-poppins-bold text-textPrimary dark:text-darkTextPrimary mt-1">
+                        <Text className="text-[26px] font-poppins-bold text-textPrimary dark:text-darkTextPrimary mt-1 leading-8">
                             {totalStat}
                         </Text>
                     </View>
@@ -260,10 +267,10 @@ export const DashboardActivityChart: React.FC<ExtendedDashboardActivityChartProp
                         <>
                             <View className="w-px h-10 bg-slate-100 dark:bg-darkBorder" />
                             <View className="flex-1 items-center">
-                                <Text className="text-[11px] font-poppins text-textSecondary dark:text-darkTextSecondary uppercase tracking-[0.5px] text-center">
-                                    {translate("store_manager.dashboard.activity.peakDay", "Peak Day")}
+                                <Text className="text-[11px] font-poppins-semibold text-textSecondary dark:text-darkTextSecondary text-center">
+                                    {translate("storeManager.dashboard.activity.peakDay", "Peak Day")}
                                 </Text>
-                                <Text className="text-2xl font-poppins-bold text-[#FF6600] mt-1">
+                                <Text className="text-[26px] font-poppins-bold text-[#FF6600] mt-1 leading-8">
                                     {peakLabel}
                                 </Text>
                             </View>
@@ -275,10 +282,10 @@ export const DashboardActivityChart: React.FC<ExtendedDashboardActivityChartProp
                         <>
                             <View className="w-px h-10 bg-slate-100 dark:bg-darkBorder" />
                             <View className="flex-1 items-center">
-                                <Text className="text-[11px] font-poppins text-textSecondary dark:text-darkTextSecondary uppercase tracking-[0.5px] text-center">
-                                    {translate("store_manager.dashboard.activity.dailyAvg", "Daily Avg")}
+                                <Text className="text-[11px] font-poppins-semibold text-textSecondary dark:text-darkTextSecondary text-center">
+                                    {translate("storeManager.dashboard.activity.dailyAvg", "Daily Avg")}
                                 </Text>
-                                <Text className="text-2xl font-poppins-bold text-textPrimary dark:text-darkTextPrimary mt-1">
+                                <Text className="text-[26px] font-poppins-bold text-textPrimary dark:text-darkTextPrimary mt-1 leading-8">
                                     {avgStat}
                                 </Text>
                             </View>

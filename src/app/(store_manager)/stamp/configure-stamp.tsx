@@ -106,8 +106,8 @@ export default function ConfigureStamp() {
           .catch((e) => {
             if (cancelled) return;
             setModal({
-              title: translate("store_manager.stampConfigure.cannotEditTitle"),
-              message: (e as Error).message ?? translate("store_manager.stampConfigure.cannotEditDefault"),
+              title: translate("storeManager.stampConfigure.cannotEditTitle"),
+              message: (e as Error).message ?? translate("storeManager.stampConfigure.cannotEditDefault"),
               buttons: [
                 {
                   label: translate("label.ok"),
@@ -198,7 +198,7 @@ export default function ConfigureStamp() {
       setSelectedReward(null);
       setModal({
         title: translate("label.success"),
-        message: isEdit ? translate("store_manager.stampConfigure.successUpdate") : translate("store_manager.stampConfigure.successCreate"),
+        message: isEdit ? translate("storeManager.stampConfigure.successUpdate") : translate("storeManager.stampConfigure.successCreate"),
         buttons: [{
           label: translate("label.ok"),
           onPress: () => {
@@ -210,7 +210,7 @@ export default function ConfigureStamp() {
     } catch (error) {
       setModal({
         title: translate("label.error"),
-        message: (error as Error).message ?? translate("store_manager.stampConfigure.saveFailed"),
+        message: (error as Error).message ?? translate("storeManager.stampConfigure.saveFailed"),
         buttons: [{ label: translate("label.ok"), onPress: () => setModal(null) }],
       });
     } finally {
@@ -236,7 +236,7 @@ export default function ConfigureStamp() {
         buttons={modal?.buttons}
       />
       <AppHeader
-        title={isEdit ? translate("store_manager.stampConfigure.editTitle") : translate("store_manager.stampConfigure.newTitle")}
+        title={isEdit ? translate("storeManager.stampConfigure.editTitle") : translate("storeManager.stampConfigure.newTitle")}
         onBackPress={() => {
           router.push({ pathname: "/(store_manager)/stamp", params: { storeId } });
         }}
@@ -267,13 +267,13 @@ export default function ConfigureStamp() {
             <View className="rounded-xl bg-amber-50 dark:bg-amber-900/20 p-4">
               <View className="flex-row items-center gap-x-2">
                 <Text className="text-sm font-poppins-bold text-amber-700 dark:text-amber-400">
-                  {translate("store_manager.stampConfigure.beforeYouStart")}
+                  {translate("storeManager.stampConfigure.beforeYouStart")}
                 </Text>
               </View>
               <View>
                 {[
-                  translate("store_manager.stampConfigure.rule1"),
-                  translate("store_manager.stampConfigure.rule2"),
+                  translate("storeManager.stampConfigure.rule1"),
+                  translate("storeManager.stampConfigure.rule2"),
                 ].map((rule, i) => (
                   <View
                     key={i}
@@ -291,7 +291,7 @@ export default function ConfigureStamp() {
 
             <View className="gap-y-1.5">
               <TextField
-                label={translate("store_manager.stampConfigure.stampsToRedeem")}
+                label={translate("storeManager.stampConfigure.stampsToRedeem")}
                 placeholder={translate("label.eg10Placeholder")}
                 keyboardType="decimal-pad"
                 value={total_stamps > 0 ? String(total_stamps) : ""}
@@ -305,7 +305,7 @@ export default function ConfigureStamp() {
               />
               {totalStampsError && (
                 <Text className="text-xs font-poppins text-red-500 dark:text-red-400 -mt-1">
-                  {translate("store_manager.stampConfigure.stampsRequiredInvalid")}
+                  {translate("storeManager.stampConfigure.stampsRequiredInvalid")}
                 </Text>
               )}
             </View>
@@ -314,7 +314,7 @@ export default function ConfigureStamp() {
               <View className="flex-row items-center justify-between">
                 <View className="flex-row items-center gap-x-1">
                   <Text className="text-sm font-poppins-semibold text-slate-700 dark:text-slate-300">
-                    {translate("store_manager.stampConfigure.reward")}
+                    {translate("storeManager.stampConfigure.reward")}
                   </Text>
                   <Text className="text-sm font-poppins text-red-500 dark:text-red-400 ">*</Text>
                 </View>
@@ -329,7 +329,7 @@ export default function ConfigureStamp() {
                     className="px-2 py-1"
                     hitSlop={8 as any}
                   >
-                    <Text className="text-xs font-poppins-semibold text-primary">{translate("store_manager.stampConfigure.clear")}</Text>
+                    <Text className="text-xs font-poppins-semibold text-primary">{translate("storeManager.stampConfigure.clear")}</Text>
                   </TouchableOpacity>
                 )}
               </View>
@@ -344,10 +344,10 @@ export default function ConfigureStamp() {
                   <Gift size={26} color="#94A3B8" />
                   <View className="items-center gap-y-1">
                     <Text className="text-sm font-poppins-semibold text-slate-600 dark:text-slate-400">
-                      {translate("store_manager.stampConfigure.noRewardsTitle")}
+                      {translate("storeManager.stampConfigure.noRewardsTitle")}
                     </Text>
                     <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500 text-center">
-                      {translate("store_manager.stampConfigure.noRewardsBody")}
+                      {translate("storeManager.stampConfigure.noRewardsBody")}
                     </Text>
                   </View>
                   <TouchableOpacity
@@ -357,7 +357,7 @@ export default function ConfigureStamp() {
                       router.push({ pathname: "/(store_manager)/reward", params: { storeId } })
                     }
                   >
-                    <Text className="text-white text-xs font-poppins-bold">{translate("store_manager.stampConfigure.createReward")}</Text>
+                    <Text className="text-white text-xs font-poppins-bold">{translate("storeManager.stampConfigure.createReward")}</Text>
                   </TouchableOpacity>
                 </View>
               ) : (
@@ -383,10 +383,10 @@ export default function ConfigureStamp() {
                   )}
                   <View className="flex-1">
                     <Text className="text-sm font-poppins-semibold text-slate-900 dark:text-slate-100">
-                      {selectedReward?.title ?? (reward_id ? translate("store_manager.stampConfigure.loadingReward") : translate("store_manager.stampConfigure.chooseReward"))}
+                      {selectedReward?.title ?? (reward_id ? translate("storeManager.stampConfigure.loadingReward") : translate("storeManager.stampConfigure.chooseReward"))}
                     </Text>
                     <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500 mt-0.5">
-                      {selectedReward ? translate("store_manager.reward.pts", { points: selectedReward.points_cost }) : translate("store_manager.stampConfigure.opensList")}
+                      {selectedReward ? translate("storeManager.reward.pts", { points: selectedReward.points_cost }) : translate("storeManager.stampConfigure.opensList")}
                     </Text>
                   </View>
                   <ChevronRight size={20} color="#94A3B8" />
@@ -394,7 +394,7 @@ export default function ConfigureStamp() {
               )}
               {rewardError && (
                 <Text className="text-xs font-poppins text-red-500 dark:text-red-400 -mt-1">
-                  {translate("store_manager.stampConfigure.selectReward")}
+                  {translate("storeManager.stampConfigure.selectReward")}
                 </Text>
               )}
             </View>
@@ -404,12 +404,12 @@ export default function ConfigureStamp() {
             <View className="gap-y-1">
               <View className="flex-row items-center gap-x-1">
                 <Text className="text-sm font-poppins-semibold text-slate-700 dark:text-slate-300">
-                  {translate("store_manager.stampConfigure.expirationMode")}
+                  {translate("storeManager.stampConfigure.expirationMode")}
                 </Text>
                 <Text className="text-sm font-poppins text-red-500 dark:text-red-400 ">*</Text>
               </View>
               <Text className="text-xs font-poppins text-slate-500 dark:text-slate-400">
-                {translate("store_manager.stampConfigure.expirationModeHint")}
+                {translate("storeManager.stampConfigure.expirationModeHint")}
               </Text>
             </View>
 
@@ -432,12 +432,12 @@ export default function ConfigureStamp() {
                   <View className="flex-row items-center justify-between">
                     <View className="flex-1 pr-3">
                       <Text className="text-sm font-poppins pr-8 text-textSecondary dark:text-darkTextSecondary mt-1 font-poppins-semibold">
-                        {translate(`store_manager.stampConfigure.expiration.${opt.key}.label`)}
+                        {translate(`storeManager.stampConfigure.expiration.${opt.key}.label`)}
                       </Text>
                       <Text
                         className="text-xs font-poppins pr-8 text-textMuted dark:text-darkTextMuted mt-1"
                       >
-                        {translate(`store_manager.stampConfigure.expiration.${opt.key}.description`)}
+                        {translate(`storeManager.stampConfigure.expiration.${opt.key}.description`)}
                       </Text>
                     </View>
                     <View
@@ -455,8 +455,8 @@ export default function ConfigureStamp() {
             {expiration_mode === "card" && (
               <View className="gap-y-1.5 pl-1">
                 <TextField
-                  label={translate("store_manager.stampConfigure.expirationDays")}
-                  placeholder={translate("store_manager.stampConfigure.expirationDaysPlaceholder")}
+                  label={translate("storeManager.stampConfigure.expirationDays")}
+                  placeholder={translate("storeManager.stampConfigure.expirationDaysPlaceholder")}
                   keyboardType="numeric"
                   value={expiration_days > 0 ? String(expiration_days) : ""}
                   onChangeText={(v) => {
@@ -469,7 +469,7 @@ export default function ConfigureStamp() {
                 />
                 {expirationDaysError && (
                   <Text className="text-xs font-poppins text-red-500 dark:text-red-400 -mt-1">
-                    {translate("store_manager.stampConfigure.expirationDaysInvalid")}
+                    {translate("storeManager.stampConfigure.expirationDaysInvalid")}
                   </Text>
                 )}
               </View>

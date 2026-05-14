@@ -1,10 +1,12 @@
 {
-  "noStores": "No stores available.",
+  "noStores": "Let's Grow Your Business!",
+  "noStoresDesc": "Create your first store to start rewarding loyal customers, tracking insights, and boosting your sales.",
+  "createStore": "Create My First Store",
   "metrics": {
-    "inStore": "IN-STORE",
-    "realTimeUsers": "real-time users",
-    "totalScanned": "TOTAL SCANNED",
-    "redeemedToday": "Redeemed today",
+    "inStore": "Active Users",
+    "realTimeUsers": "Real-time Users",
+    "totalScanned": "Today's Scans",
+    "redeemedToday": "Redeemed Today",
     "returning": "Returning Users",
     "newUsers": "New Users"
   },
@@ -38,6 +40,7 @@
     "title": "Stamp Progress",
     "distribution": "Distribution of {{users}} users · Goal: {{goal}} stamps",
     "noProgram": "No active stamp program found",
+    "noProgramDesc": "Create a stamp program to reward loyal customers and track their progress here.",
     "stamps": "stamps",
     "user": "user",
     "users": "users"

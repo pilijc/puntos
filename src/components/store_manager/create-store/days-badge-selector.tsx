@@ -33,7 +33,7 @@ export function DaysBadgeSelector({
                 selected ? "text-primary" : "text-slate-600 dark:text-slate-300"
               }`}
             >
-              {translate(`store_manager.createStore.days.${day.shortKey}`)}
+              {translate(`storeManager.createStore.days.${day.shortKey}`)}
             </Text>
           </TouchableOpacity>
         );

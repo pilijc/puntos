@@ -79,10 +79,10 @@ export default function ConfigureStreaks() {
   const isActivationValid = start_at ? !Number.isNaN(activationAt.getTime()) : false;
   const activationDateText = isActivationValid
     ? activationAt.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })
-    : translate("store_manager.streakConfigure.selectDate");
+    : translate("storeManager.streakConfigure.selectDate");
   const activationTimeText = isActivationValid
     ? activationAt.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })
-    : translate("store_manager.streakConfigure.selectTime");
+    : translate("storeManager.streakConfigure.selectTime");
   const minActivationAt = min_start_at ? new Date(min_start_at) : new Date();
 
   useEffect(() => {
@@ -205,7 +205,7 @@ export default function ConfigureStreaks() {
         .catch((error) => {
           const key = resolveStreakErrorI18nKey(error);
           const message =
-            key != null ? translate(key) : ((error as Error).message ?? translate("store_manager.streakConfigure.loadError"));
+            key != null ? translate(key) : ((error as Error).message ?? translate("storeManager.streakConfigure.loadError"));
           setModal({
             title: translate("label.error"),
             message,
@@ -322,7 +322,7 @@ export default function ConfigureStreaks() {
       }
       setModal({
         title: translate("label.success"),
-        message: isEditMode ? translate("store_manager.streakConfigure.successUpdate") : translate("store_manager.streakConfigure.successCreate"),
+        message: isEditMode ? translate("storeManager.streakConfigure.successUpdate") : translate("storeManager.streakConfigure.successCreate"),
         buttons: [{
           label: translate("label.ok"),
           onPress: () => {
@@ -334,7 +334,7 @@ export default function ConfigureStreaks() {
     } catch (error) {
       const key = resolveStreakErrorI18nKey(error);
       const message =
-        key != null ? translate(key) : ((error as Error).message ?? translate("store_manager.streakConfigure.saveFailed"));
+        key != null ? translate(key) : ((error as Error).message ?? translate("storeManager.streakConfigure.saveFailed"));
       setModal({
         title: translate("label.error"),
         message,
@@ -371,7 +371,7 @@ export default function ConfigureStreaks() {
         buttons={modal?.buttons}
       />
         <AppHeader
-          title={isEditMode ? translate("store_manager.streakConfigure.editTitle") : translate("store_manager.streakConfigure.newTitle")}
+          title={isEditMode ? translate("storeManager.streakConfigure.editTitle") : translate("storeManager.streakConfigure.newTitle")}
           onBackPress={() => {
             router.push({ pathname: "/(store_manager)/streak", params: { storeId } });
           }}
@@ -404,12 +404,12 @@ export default function ConfigureStreaks() {
           {/* Points mode toggle */}
           <View className="gap-y-2">
             <Text className="text-sm font-poppins-semibold text-slate-700 dark:text-slate-300">
-              {translate("store_manager.streakConfigure.pointsType")}
+              {translate("storeManager.streakConfigure.pointsType")}
             </Text>
             <View className="flex-row gap-x-2">
               {([
-                { key: "fixed" as PointsMode, label: translate("label.fixed"), icon: <Coins size={14} />, desc: translate("store_manager.streakConfigure.fixedDesc") },
-                { key: "incremental" as PointsMode, label: translate("store_manager.streakConfigure.incrementalTitle"), icon: <TrendingUp size={14} />, desc: translate("store_manager.streakConfigure.incrementalDesc") },
+                { key: "fixed" as PointsMode, label: translate("label.fixed"), icon: <Coins size={14} />, desc: translate("storeManager.streakConfigure.fixedDesc") },
+                { key: "incremental" as PointsMode, label: translate("storeManager.streakConfigure.incrementalTitle"), icon: <TrendingUp size={14} />, desc: translate("storeManager.streakConfigure.incrementalDesc") },
               ]).map((opt) => {
                 const selected = points_mode === opt.key;
                 return (
@@ -444,7 +444,7 @@ export default function ConfigureStreaks() {
           {isFixed && (
             <View className="gap-y-2">
               <TextField
-                label={translate("store_manager.streakConfigure.pointsPerDay")}
+                label={translate("storeManager.streakConfigure.pointsPerDay")}
                 placeholder={translate("label.eg10Placeholder")}
                 keyboardType="decimal-pad"
                 value={fixed_points_per_day != null ? String(fixed_points_per_day) : ""}
@@ -458,7 +458,7 @@ export default function ConfigureStreaks() {
               />
               {fixedPointsError && (
                 <Text className="text-xs font-poppins text-red-500 dark:text-red-400 -mt-1">
-                  {translate("store_manager.streakConfigure.fixedPointsInvalid")}
+                  {translate("storeManager.streakConfigure.fixedPointsInvalid")}
                 </Text>
               )}
             </View>
@@ -468,8 +468,8 @@ export default function ConfigureStreaks() {
             <View className="flex-row gap-x-3">
               <View className="flex-1 gap-y-2">
                 <TextField
-                  label={translate("store_manager.streakConfigure.startPoint")}
-                  placeholder={translate("store_manager.streakConfigure.startPointPlaceholder")}
+                  label={translate("storeManager.streakConfigure.startPoint")}
+                  placeholder={translate("storeManager.streakConfigure.startPointPlaceholder")}
                   keyboardType="decimal-pad"
                   value={starting_points != null ? String(starting_points) : ""}
                   onChangeText={(v) => {
@@ -482,14 +482,14 @@ export default function ConfigureStreaks() {
                 />
                 {startingPointsError && (
                   <Text className="text-xs font-poppins text-red-500 dark:text-red-400 -mt-1">
-                    {translate("store_manager.streakConfigure.startingPointsInvalid")}
+                    {translate("storeManager.streakConfigure.startingPointsInvalid")}
                   </Text>
                 )}
               </View>
               <View className="flex-1 gap-y-2">
                 <TextField
-                  label={translate("store_manager.streakConfigure.incrementPerDay")}
-                  placeholder={translate("store_manager.streakConfigure.incrementPlaceholder")}
+                  label={translate("storeManager.streakConfigure.incrementPerDay")}
+                  placeholder={translate("storeManager.streakConfigure.incrementPlaceholder")}
                   keyboardType="decimal-pad"
                   value={increment_value != null ? String(increment_value) : ""}
                   onChangeText={(v) => {
@@ -502,7 +502,7 @@ export default function ConfigureStreaks() {
                 />
                 {incrementError && (
                   <Text className="text-xs font-poppins text-red-500 dark:text-red-400 -mt-1">
-                    {translate("store_manager.streakConfigure.incrementInvalid")}
+                    {translate("storeManager.streakConfigure.incrementInvalid")}
                   </Text>
                 )}
               </View>
@@ -511,8 +511,8 @@ export default function ConfigureStreaks() {
 
           <View className="gap-y-2">
             <TextField
-              label={translate("store_manager.streakConfigure.streakDaysLength")}
-              placeholder={translate("store_manager.streakConfigure.streakDaysPlaceholder")}
+              label={translate("storeManager.streakConfigure.streakDaysLength")}
+              placeholder={translate("storeManager.streakConfigure.streakDaysPlaceholder")}
               keyboardType="numeric"
               value={streak_length ? String(streak_length) : ""}
               onChangeText={(v) => { const n = parseInt(v) || 0; setStreakLength(n); if (n >= 1) setStreakLengthError(false); }}
@@ -521,7 +521,7 @@ export default function ConfigureStreaks() {
             />
             {streakLengthError && (
               <Text className="text-xs font-poppins text-red-500 dark:text-red-400 -mt-1">
-                {translate("store_manager.streakConfigure.streakLengthInvalid")}
+                {translate("storeManager.streakConfigure.streakLengthInvalid")}
               </Text>
             )}
           </View>
@@ -529,8 +529,8 @@ export default function ConfigureStreaks() {
           {/* Max days cap */}
           <View className="gap-y-2">
             <TextField
-              label={translate("store_manager.streakConfigure.maxDaysCap")}
-              placeholder={translate("store_manager.streakConfigure.maxDaysPlaceholder")}
+              label={translate("storeManager.streakConfigure.maxDaysCap")}
+              placeholder={translate("storeManager.streakConfigure.maxDaysPlaceholder")}
               keyboardType="numeric"
               value={max_days_cap ? String(max_days_cap) : ""}
               onChangeText={(v) => {
@@ -538,12 +538,12 @@ export default function ConfigureStreaks() {
                 setMaxDaysCap(n);
                 if (!n || !streak_length || n <= streak_length) setMaxDaysCapError(false);
               }}
-              hint={streak_length && streak_length > 0 ? translate("store_manager.streakConfigure.maxDaysCapHint", { max: streak_length }) : undefined}
+              hint={streak_length && streak_length > 0 ? translate("storeManager.streakConfigure.maxDaysCapHint", { max: streak_length }) : undefined}
               error={maxDaysCapError}
             />
             {maxDaysCapError && (
               <Text className="text-xs font-poppins text-red-500 dark:text-red-400 -mt-1">
-                {translate("store_manager.streakConfigure.maxDaysCapInvalid")}
+                {translate("storeManager.streakConfigure.maxDaysCapInvalid")}
               </Text>
             )}
           </View>
@@ -551,11 +551,11 @@ export default function ConfigureStreaks() {
           {/* Reward description */}
           <View className="gap-y-2">
             <Text className="text-sm font-poppins-semibold text-slate-700 dark:text-slate-300">
-              {translate("store_manager.streakConfigure.rewardDescription")}
+              {translate("storeManager.streakConfigure.rewardDescription")}
             </Text>
             <TextInput
               className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-4 text-base font-poppins text-slate-900 dark:text-slate-100"
-              placeholder={translate("store_manager.streakConfigure.rewardDescriptionPlaceholder")}
+              placeholder={translate("storeManager.streakConfigure.rewardDescriptionPlaceholder")}
               placeholderTextColor="#94A3B8"
               multiline
               numberOfLines={3}
@@ -570,10 +570,10 @@ export default function ConfigureStreaks() {
             <View className="flex-row items-center justify-between gap-x-3">
               <View className="flex-1">
                 <Text className="text-sm font-poppins-semibold text-slate-700 dark:text-slate-300">
-                  {translate("store_manager.streakConfigure.activationSchedule")}
+                  {translate("storeManager.streakConfigure.activationSchedule")}
                 </Text>
                 <Text className="text-xs font-poppins text-slate-500 dark:text-slate-400 mt-0.5">
-                  {translate("store_manager.streakConfigure.activationScheduleHint")}
+                  {translate("storeManager.streakConfigure.activationScheduleHint")}
                 </Text>
               </View>
               <Toggle value={scheduleEnabled} onValueChange={handleScheduleToggle} size="sm" />
@@ -583,7 +583,7 @@ export default function ConfigureStreaks() {
               <View className="rounded-xl bg-amber-50 dark:bg-amber-900/20 px-3 py-3 my-2 flex-row gap-x-2">
                 <Info size={14} color="#D97706" />
                 <Text className="text-xs font-poppins text-amber-900 dark:text-amber-200 flex-1">
-                  {translate("store_manager.streakConfigure.barrierInfo", { date: formatDateTime(minActivationAt.toISOString()) })}
+                  {translate("storeManager.streakConfigure.barrierInfo", { date: formatDateTime(minActivationAt.toISOString()) })}
                 </Text>
               </View>
             )}
@@ -594,7 +594,7 @@ export default function ConfigureStreaks() {
                   <View className="gap-y-3">
                     <View className="gap-y-1">
                       <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">
-                        {translate("store_manager.streakConfigure.date")}
+                        {translate("storeManager.streakConfigure.date")}
                       </Text>
                       <WebStreakActivationCalendar
                         minActivationAt={minActivationAt}
@@ -613,7 +613,7 @@ export default function ConfigureStreaks() {
                     </View>
                     <View className="gap-y-1">
                       <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">
-                        {translate("store_manager.streakConfigure.time")}
+                        {translate("storeManager.streakConfigure.time")}
                       </Text>
                       <View className="flex-row gap-x-2">
                         <View className="flex-1" style={{ position: "relative" }}>
@@ -707,7 +707,7 @@ export default function ConfigureStreaks() {
                         className="flex-1 rounded-xl border border-slate-200 dark:border-slate-700 px-3 py-3"
                       >
                         <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">
-                          {translate("store_manager.streakConfigure.date")}
+                          {translate("storeManager.streakConfigure.date")}
                         </Text>
                         <Text className="text-sm font-poppins-semibold text-slate-900 dark:text-slate-100 mt-0.5">
                           {activationDateText}
@@ -722,7 +722,7 @@ export default function ConfigureStreaks() {
                         className="flex-1 rounded-xl border border-slate-200 dark:border-slate-700 px-3 py-3"
                       >
                         <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">
-                          {translate("store_manager.streakConfigure.time")}
+                          {translate("storeManager.streakConfigure.time")}
                         </Text>
                         <Text className="text-sm font-poppins-semibold text-slate-900 dark:text-slate-100 mt-0.5">
                           {activationTimeText}
@@ -758,7 +758,7 @@ export default function ConfigureStreaks() {
 
                 {startTimeError && (
                   <Text className="text-xs font-poppins text-red-500 dark:text-red-400 -mt-1">
-                    {translate("store_manager.streakConfigure.startTimeAfter", { time: minActivationAt.toLocaleString() })}
+                    {translate("storeManager.streakConfigure.startTimeAfter", { time: minActivationAt.toLocaleString() })}
                   </Text>
                 )}
               </>

@@ -73,7 +73,7 @@ export default function RewardIndex() {
 
       <AppHeader
         title={translate("label.rewards")}
-        description={translate("store_manager.reward.description")}
+        description={translate("storeManager.reward.description")}
         onBackPress={() => {
           router.push(`/(store_manager)/view-store/${storeId}`);
         }}
@@ -84,8 +84,8 @@ export default function RewardIndex() {
           <View style={Platform.OS === "web" ? { width: "100%", maxWidth: WEB_MAX_WIDTH } : undefined} className="rounded-xl border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/40 px-3 py-2.5">
             <Text className="text-xs font-poppins text-amber-900 dark:text-amber-200 leading-5">
               {expiresAtIso
-                ? translate("store_manager.premiumCampaigns.bannerWithExpiry", { date: formatDate(expiresAtIso) })
-                : translate("store_manager.premiumCampaigns.banner")}
+                ? translate("storeManager.premiumCampaigns.bannerWithExpiry", { date: formatDate(expiresAtIso) })
+                : translate("storeManager.premiumCampaigns.banner")}
             </Text>
           </View>
         </View>
@@ -116,10 +116,10 @@ export default function RewardIndex() {
               </View>
               <View className="flex-1">
                 <Text className="text-sm font-poppins-bold text-slate-800 dark:text-slate-100">
-                  {loading ? "—" : translate("store_manager.reward.rewardCount", { count: rewards.length })}
+                  {loading ? "—" : translate("storeManager.reward.rewardCount", { count: rewards.length })}
                 </Text>
                 <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">
-                  {translate("store_manager.reward.subtitle")}
+                  {translate("storeManager.reward.subtitle")}
                 </Text>
               </View>
               <TouchableOpacity
@@ -141,14 +141,14 @@ export default function RewardIndex() {
             {loading ? (
               <View className="items-center justify-center py-20">
                 <ActivityIndicator size="large" color="#FF6600" />
-                <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500 mt-3">{translate("store_manager.reward.loading")}</Text>
+                <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500 mt-3">{translate("storeManager.reward.loading")}</Text>
               </View>
             ) : rewards.length === 0 ? (
               <View className="mx-4 bg-white dark:bg-neutral-800 rounded-xl border border-slate-100 dark:border-neutral-700 px-4 py-14 items-center gap-y-2">
                 <Gift size={36} color="#CBD5E1" />
-                <Text className="text-sm font-poppins-semibold text-slate-400 dark:text-slate-500">{translate("store_manager.reward.emptyTitle")}</Text>
+                <Text className="text-sm font-poppins-semibold text-slate-400 dark:text-slate-500">{translate("storeManager.reward.emptyTitle")}</Text>
                 <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500 text-center px-8">
-                  {translate("store_manager.reward.emptyBody")}
+                  {translate("storeManager.reward.emptyBody")}
                 </Text>
                 <TouchableOpacity
                   disabled={campaignsLocked}
@@ -161,7 +161,7 @@ export default function RewardIndex() {
                   className={`mt-3 px-6 py-2.5 rounded-xl ${campaignsLocked ? "bg-slate-200 dark:bg-slate-700" : "bg-primary"}`}
                   activeOpacity={campaignsLocked ? 1 : 0.85}
                 >
-                  <Text className={`text-xs font-poppins-semibold ${campaignsLocked ? "text-slate-500 dark:text-slate-400" : "text-white"}`}>{translate("store_manager.reward.addFirst")}</Text>
+                  <Text className={`text-xs font-poppins-semibold ${campaignsLocked ? "text-slate-500 dark:text-slate-400" : "text-white"}`}>{translate("storeManager.reward.addFirst")}</Text>
                 </TouchableOpacity>
               </View>
             ) : (

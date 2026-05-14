@@ -84,7 +84,7 @@ export function StreakCard({
             <Flame size={16} color="gray" />
           </View>
           <Text className="text-md font-poppins-bold text-textPrimary ">
-            {streak.title ?? translate("store_manager.streak.programFallbackTitle")}
+            {streak.title ?? translate("storeManager.streak.programFallbackTitle")}
           </Text>
         </View>
         <StatusBadge status={status} />
@@ -92,7 +92,7 @@ export function StreakCard({
 
       {streak.start_at && (
         <View className="flex-row items-center justify-between px-4 py-2.5 border-b border-slate-100 dark:border-slate-800">
-          <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">{translate("store_manager.streak.startsAt")}</Text>
+          <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">{translate("storeManager.streak.startsAt")}</Text>
           <Text className="text-xs font-poppins-semibold text-slate-600 dark:text-slate-300">
             {formatDateTime(streak.start_at)}
           </Text>
@@ -101,7 +101,7 @@ export function StreakCard({
 
       {streak.end_date && status !== "ended" && (
         <View className="flex-row items-center justify-between px-4 py-2.5 border-b border-slate-100 dark:border-slate-800">
-          <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">{translate("store_manager.streak.ends")}</Text>
+          <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">{translate("storeManager.streak.ends")}</Text>
           <Text className="text-xs font-poppins-semibold text-slate-600 dark:text-slate-300">
             {formatDate(streak.end_date)}
           </Text>
@@ -110,7 +110,7 @@ export function StreakCard({
 
       {status === "ended" && streak.ended_at && (
         <View className="flex-row items-center justify-between px-4 py-2.5 border-b border-slate-100 dark:border-slate-800">
-          <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">{translate("store_manager.streak.endedOn")}</Text>
+          <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">{translate("storeManager.streak.endedOn")}</Text>
           <Text className="text-xs font-poppins-semibold text-slate-600 dark:text-slate-300">
             {formatDate(streak.ended_at)}
           </Text>
@@ -119,7 +119,7 @@ export function StreakCard({
 
       {!streak.start_at && streak.created_at && (
         <View className="flex-row items-center justify-between px-4 py-2.5 border-b border-slate-100 dark:border-slate-800">
-          <Text className="text-xs font-poppins text-textMuted">{translate("store_manager.streak.created")}</Text>
+          <Text className="text-xs font-poppins text-textMuted">{translate("storeManager.streak.created")}</Text>
           <Text className="text-xs font-poppins-semibold text-textSecondary">
             {formatDate(streak.created_at)}
           </Text>
@@ -128,16 +128,16 @@ export function StreakCard({
 
       {streak.streak_length != null && (
         <View className="flex-row items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-slate-800">
-          <Text className="text-xs font-poppins text-textMuted">{translate("store_manager.streak.streakLength")}</Text>
-          <Text className="text-xs font-poppins-bold text-textSecondary">{translate("store_manager.streak.daysCount", { count: streak.streak_length })}</Text>
+          <Text className="text-xs font-poppins text-textMuted">{translate("storeManager.streak.streakLength")}</Text>
+          <Text className="text-xs font-poppins-bold text-textSecondary">{translate("storeManager.streak.daysCount", { count: streak.streak_length })}</Text>
         </View>
       )}
 
       {streak.max_days_cap != null && (
         <View className="flex-row items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-slate-800">
-          <Text className="text-xs font-poppins text-textMuted">{translate("store_manager.streak.maxDaysCap")}</Text>
+          <Text className="text-xs font-poppins text-textMuted">{translate("storeManager.streak.maxDaysCap")}</Text>
           <Text className="text-xs font-poppins-semibold text-textSecondary">
-            {translate("store_manager.streak.daysCount", { count: streak.max_days_cap })}
+            {translate("storeManager.streak.daysCount", { count: streak.max_days_cap })}
           </Text>
         </View>
       )}
@@ -147,8 +147,8 @@ export function StreakCard({
         <View className="flex-row items-center gap-x-1">
           <Text className="text-xs font-poppins-semibold text-textSecondary">
             {isFixed
-              ? translate("store_manager.streak.pointsPerDay", { points: streak.fixed_points_per_day ?? "—" })
-              : translate("store_manager.streak.pointsIncrementPerDay", {
+              ? translate("storeManager.streak.pointsPerDay", { points: streak.fixed_points_per_day ?? "—" })
+              : translate("storeManager.streak.pointsIncrementPerDay", {
                   points: streak.starting_points ?? "—",
                   increment: streak.increment_value ?? "—",
                 })}
@@ -158,11 +158,11 @@ export function StreakCard({
 
       {(streak.completion_bonus_points ?? 0) > 0 && (
         <View className="flex-row items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-slate-800">
-          <Text className="text-xs font-poppins text-textMuted">{translate("store_manager.streak.completionBonus")}</Text>
+          <Text className="text-xs font-poppins text-textMuted">{translate("storeManager.streak.completionBonus")}</Text>
           <View className="flex-row items-center gap-x-1">
             <Gift size={14} color="#F59E0B" />
             <Text className="text-xs font-poppins-bold text-textPrimary">
-              {translate("store_manager.streak.bonusPoints", { points: streak.completion_bonus_points })}
+              {translate("storeManager.streak.bonusPoints", { points: streak.completion_bonus_points })}
             </Text>
           </View>
         </View>
@@ -180,7 +180,7 @@ export function StreakCard({
         <View className="mx-4 my-3 rounded-xl bg-backgroundMuted border border-slate-100 px-3 py-2.5 flex-row items-center gap-x-2">
           <Pencil size={14} color="#94A3B8" />
           <Text className="text-xs font-poppins text-textMuted flex-1">
-            {translate("store_manager.streak.draftBanner")}
+            {translate("storeManager.streak.draftBanner")}
           </Text>
         </View>
       )}
@@ -190,10 +190,10 @@ export function StreakCard({
           <Info size={14} color="#3B82F6" />
           <Text className="text-xs font-poppins text-textSecondary flex-1">
             {streak.start_at
-              ? translate("store_manager.streak.upcomingBannerScheduled", {
+              ? translate("storeManager.streak.upcomingBannerScheduled", {
                   date: formatDateTime(streak.start_at),
                 })
-              : translate("store_manager.streak.upcomingBannerFlexible")}
+              : translate("storeManager.streak.upcomingBannerFlexible")}
           </Text>
         </View>
       )}
@@ -203,8 +203,8 @@ export function StreakCard({
           <Check size={14} color="#10B981" />
           <Text className="text-xs font-poppins text-textSecondary flex-1">
             {streak.radius_meters
-              ? translate("store_manager.streak.activeBannerWithRadius", { radius: streak.radius_meters })
-              : translate("store_manager.streak.activeBanner")}
+              ? translate("storeManager.streak.activeBannerWithRadius", { radius: streak.radius_meters })
+              : translate("storeManager.streak.activeBanner")}
           </Text>
         </View>
       )}
@@ -220,7 +220,7 @@ export function StreakCard({
             <Users size={16} color={COLORS.textMuted} />
           </View>
           <Text className="text-sm font-poppins-semibold text-textSecondary">
-            {translate("store_manager.streak.participants")}
+            {translate("storeManager.streak.participants")}
           </Text>
           {showParticipantsCount && (
             <View className="px-2 py-0.5 min-w-[22px] items-center">
@@ -244,7 +244,7 @@ export function StreakCard({
             <View className="py-8 items-center gap-y-2">
               <Users size={28} color={COLORS.textMuted} />
               <Text className="text-sm font-poppins text-textMuted">
-                {translate("store_manager.streak.noParticipants")}
+                {translate("storeManager.streak.noParticipants")}
               </Text>
             </View>
           ) : (
@@ -271,8 +271,8 @@ export function StreakCard({
                       <ChevronDown size={16} color={COLORS.primary} />
                       <Text className="text-xs font-poppins-semibold text-primary">
                         {showParticipantsCount
-                          ? translate("store_manager.streak.loadMoreRemaining", { count: participantsCount - participants.length })
-                          : translate("store_manager.streak.loadMore")}
+                          ? translate("storeManager.streak.loadMoreRemaining", { count: participantsCount - participants.length })
+                          : translate("storeManager.streak.loadMore")}
                       </Text>
                     </>
                   )}
@@ -283,8 +283,8 @@ export function StreakCard({
                 <View className="py-2.5 items-center border-t border-slate-100 dark:border-slate-800">
                   <Text className="text-[10px] font-poppins text-textMuted">
                     {showParticipantsCount
-                      ? translate("store_manager.streak.allParticipantsShownCount", { count: participantsCount })
-                      : translate("store_manager.streak.allParticipantsShown")}
+                      ? translate("storeManager.streak.allParticipantsShownCount", { count: participantsCount })
+                      : translate("storeManager.streak.allParticipantsShown")}
                   </Text>
                 </View>
               )}
