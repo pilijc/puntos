@@ -133,7 +133,7 @@ export default function RewardIndex() {
                 className="flex-row items-center gap-x-1"
                 activeOpacity={campaignsLocked ? 1 : 0.7}
               >
-                <Text className={`text-xs font-poppins-semibold ${campaignsLocked ? "text-slate-400 dark:text-slate-500" : "text-primary"}`}>{t("label.add")}</Text>
+                <Text className={`text-xs font-poppins-semibold ${campaignsLocked ? "text-slate-400 dark:text-slate-500" : "text-primary"}`}>{translate("label.add")}</Text>
                 <Plus size={14} color={campaignsLocked ? "#CBD5E1" : "#FF6600"} strokeWidth={3} style={{ marginTop: -1.5 }}/>
               </TouchableOpacity>
             </View>
@@ -214,15 +214,15 @@ export default function RewardIndex() {
                         <View className="flex-row items-center gap-x-1">
                           <CircleStar size={13} color="#FF6600" />
                           <Text className="text-xs font-poppins-semibold text-primary">
-                            {t("store_manager.reward.pts", {
+                            {translate("store_manager.reward.pts", {
                               points: formatPoints(reward.points_cost),
                             })}
                           </Text>
                         </View>
                         <Text className="text-right text-xs font-poppins text-textMuted dark:text-textMuted">
                           {reward.stock > 0
-                            ? t("store_manager.reward.stockLeft", { count: reward.stock })
-                            : t("store_manager.reward.outOfStock")}
+                            ? translate("store_manager.reward.stockLeft", { count: reward.stock })
+                            : translate("store_manager.reward.outOfStock")}
                         </Text>
                       </View>
                     </View>
