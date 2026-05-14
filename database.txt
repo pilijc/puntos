@@ -4589,6 +4589,17 @@
   {
     "object_type": "function",
     "table_name": "extensions",
+    "column_name": "st_mpointfromtext",
+    "data_type": "USER-DEFINED",
+    "is_primary_key": null,
+    "is_foreign_key": null,
+    "foreign_table_name": null,
+    "foreign_column_name": null,
+    "extra": null
+  },
+  {
+    "object_type": "function",
+    "table_name": "extensions",
     "column_name": "st_multipointfromtext",
     "data_type": "USER-DEFINED",
     "is_primary_key": null,
@@ -13344,17 +13355,6 @@
   },
   {
     "object_type": "function",
-    "table_name": "extensions",
-    "column_name": "st_mpointfromtext",
-    "data_type": "USER-DEFINED",
-    "is_primary_key": null,
-    "is_foreign_key": null,
-    "foreign_table_name": null,
-    "foreign_column_name": null,
-    "extra": null
-  },
-  {
-    "object_type": "function",
     "table_name": "graphql_public",
     "column_name": "graphql",
     "data_type": "jsonb",
@@ -13363,182 +13363,6 @@
     "foreign_table_name": null,
     "foreign_column_name": null,
     "extra": null
-  },
-  {
-    "object_type": "function",
-    "table_name": "public",
-    "column_name": "handle_subscription_payment_status",
-    "data_type": "trigger",
-    "is_primary_key": null,
-    "is_foreign_key": null,
-    "foreign_table_name": null,
-    "foreign_column_name": null,
-    "extra": "\r\nbegin\r\n  if new.payment_status = 'paid' then\r\n    -- Only set start date if it hasn't been set yet\r\n    if new.current_period_start is null then\r\n      new.current_period_start := now();\r\n      new.current_period_end := now() + interval '1 month';\r\n    end if;\r\n\r\n  elsif new.payment_status = 'unpaid' or new.payment_status is null then\r\n    new.current_period_start := null;\r\n    new.current_period_end := null;\r\n  end if;\r\n\r\n  return new;\r\nend;\r\n"
-  },
-  {
-    "object_type": "function",
-    "table_name": "public",
-    "column_name": "issue_stamp_for_purchase",
-    "data_type": "jsonb",
-    "is_primary_key": null,
-    "is_foreign_key": null,
-    "foreign_table_name": null,
-    "foreign_column_name": null,
-    "extra": "\r\nDECLARE\r\n  v_purchase     purchases%ROWTYPE;\r\n  v_program      store_stamps%ROWTYPE;\r\n  v_progress     stamp_progress%ROWTYPE;\r\n  v_feature      store_feature%ROWTYPE;\r\n  v_new_count    smallint;\r\n  v_status       text;\r\n  v_now          timestamp with time zone := now();\r\n  v_tz           text;\r\n  v_today        date;\r\nBEGIN\r\n  -- 1. Load purchase\r\n  SELECT * INTO v_purchase FROM purchases WHERE id = p_purchase_id;\r\n  IF NOT FOUND THEN\r\n    RETURN jsonb_build_object('success', false, 'reason', 'purchase_not_found');\r\n  END IF;\r\n\r\n  -- 2. Check feature flag\r\n  SELECT * INTO v_feature FROM store_feature WHERE store_id = v_purchase.store_id;\r\n  IF NOT FOUND OR v_feature.stamp_enabled IS NOT TRUE THEN\r\n    RETURN jsonb_build_object('success', false, 'reason', 'stamp_not_enabled');\r\n  END IF;\r\n\r\n  -- 3. Check active program\r\n  SELECT * INTO v_program FROM store_stamps \r\n  WHERE store_id = v_purchase.store_id AND status = 'active';\r\n  IF NOT FOUND THEN\r\n    RETURN jsonb_build_object('success', false, 'reason', 'stamp_not_enabled');\r\n  END IF;\r\n\r\n  -- 4. Check duplicate\r\n  IF EXISTS (SELECT 1 FROM stamp_events WHERE purchase_id = p_purchase_id) THEN\r\n    RETURN jsonb_build_object('success', true, 'duplicate', true);\r\n  END IF;\r\n\r\n  -- 5. Timezone resolution\r\n  v_tz := COALESCE(NULLIF(TRIM(v_program.timezone), ''), 'UTC');\r\n  v_today := (timezone(v_tz, v_now))::date;\r\n\r\n  -- 6. Load or initialize progress\r\n  SELECT * INTO v_progress FROM stamp_progress \r\n  WHERE user_id = v_purchase.user_id AND stamp_program_id = v_program.id;\r\n\r\n  IF FOUND THEN\r\n    -- Check if completed\r\n    IF v_progress.card_status = 'completed' THEN\r\n      RETURN jsonb_build_object('success', false, 'reason', 'already_completed');\r\n    END IF;\r\n\r\n    -- Check if already stamped today\r\n    IF (timezone(v_tz, v_progress.last_stamp_at))::date = v_today THEN\r\n       RETURN jsonb_build_object('success', false, 'reason', 'already_stamped_today');\r\n    END IF;\r\n\r\n    v_new_count := v_progress.stamps_count + 1;\r\n    v_status := CASE WHEN v_new_count >= v_progress.target THEN 'completed' ELSE 'active' END;\r\n\r\n    UPDATE stamp_progress SET\r\n      stamps_count = v_new_count,\r\n      last_stamp_at = v_now,\r\n      card_status = v_status,\r\n      updated_at = v_now\r\n    WHERE id = v_progress.id;\r\n  ELSE\r\n    -- Insert new progress card\r\n    v_new_count := 1;\r\n    v_status := CASE WHEN v_new_count >= v_program.total_stamps THEN 'completed' ELSE 'active' END;\r\n\r\n    INSERT INTO stamp_progress (\r\n      user_id, store_id, stamp_program_id,\r\n      stamps_count, target, card_status,\r\n      card_started_at, last_stamp_at, updated_at\r\n    ) VALUES (\r\n      v_purchase.user_id, v_purchase.store_id, v_program.id,\r\n      v_new_count, v_program.total_stamps, v_status,\r\n      v_now, v_now, v_now\r\n    ) RETURNING * INTO v_progress;\r\n  END IF;\r\n\r\n  -- 7. Insert stamp event history\r\n  INSERT INTO stamp_events (\r\n    user_id, store_id, purchase_id, created_at\r\n  ) VALUES (\r\n    v_purchase.user_id, v_purchase.store_id, p_purchase_id, v_now\r\n  );\r\n\r\n  RETURN jsonb_build_object('success', true);\r\nEXCEPTION WHEN OTHERS THEN\r\n  RAISE WARNING '[issue_stamp_for_purchase] % %', SQLSTATE, SQLERRM;\r\n  RETURN jsonb_build_object('success', false, 'reason', SQLERRM);\r\nEND;\r\n"
-  },
-  {
-    "object_type": "function",
-    "table_name": "public",
-    "column_name": "handle_new_user",
-    "data_type": "trigger",
-    "is_primary_key": null,
-    "is_foreign_key": null,
-    "foreign_table_name": null,
-    "foreign_column_name": null,
-    "extra": "\r\nbegin\r\n  insert into public.users (id, name, email)\r\n  values (\r\n    new.id,\r\n    new.raw_user_meta_data->>'name',\r\n    new.email\r\n  )\r\n  ON CONFLICT (id) DO UPDATE\r\n    SET\r\n      name  = COALESCE(EXCLUDED.name, public.users.name),\r\n      email = COALESCE(EXCLUDED.email, public.users.email);\r\n  return new;\r\nend;\r\n"
-  },
-  {
-    "object_type": "function",
-    "table_name": "public",
-    "column_name": "update_subscription_updated_at_column",
-    "data_type": "trigger",
-    "is_primary_key": null,
-    "is_foreign_key": null,
-    "foreign_table_name": null,
-    "foreign_column_name": null,
-    "extra": "\r\nbegin\r\n  new.updated_at := now();\r\n  return new;\r\nend;\r\n"
-  },
-  {
-    "object_type": "function",
-    "table_name": "public",
-    "column_name": "validate_upcoming_start_at",
-    "data_type": "trigger",
-    "is_primary_key": null,
-    "is_foreign_key": null,
-    "foreign_table_name": null,
-    "foreign_column_name": null,
-    "extra": "\r\ndeclare\r\n  active_row record;\r\n  min_allowed timestamptz;\r\nbegin\r\n  if new.status <> 'upcoming' then\r\n    return new;\r\n  end if;\r\n\r\n  if new.start_at is null then\r\n    raise exception 'Upcoming streak requires start_at.';\r\n  end if;\r\n\r\n  select id, start_at, end_date, streak_length\r\n  into active_row\r\n  from public.store_streaks\r\n  where store_id = new.store_id\r\n    and status = 'active'\r\n    and id <> coalesce(new.id, -1)\r\n  order by created_at desc\r\n  limit 1;\r\n\r\n  if not found then\r\n    if new.start_at < now() then\r\n      raise exception 'start_at must be now or in the future.';\r\n    end if;\r\n    return new;\r\n  end if;\r\n\r\n  if active_row.end_date is not null then\r\n    min_allowed := (active_row.end_date::timestamp + interval '1 day' - interval '1 second') at time zone 'UTC';\r\n  elsif active_row.start_at is not null and active_row.streak_length is not null then\r\n    min_allowed := active_row.start_at + make_interval(days => active_row.streak_length);\r\n  else\r\n    raise exception 'Active streak has no schedulable boundary (missing end_date and start_at/streak_length).';\r\n  end if;\r\n\r\n  if new.start_at <= min_allowed then\r\n    raise exception 'Upcoming start_at (%) must be after active boundary (%).', new.start_at, min_allowed;\r\n  end if;\r\n\r\n  if new.start_at < now() then\r\n    raise exception 'start_at must be now or in the future.';\r\n  end if;\r\n\r\n  return new;\r\nend;\r\n"
-  },
-  {
-    "object_type": "function",
-    "table_name": "public",
-    "column_name": "update_store_metrics_on_purchase",
-    "data_type": "trigger",
-    "is_primary_key": null,
-    "is_foreign_key": null,
-    "foreign_table_name": null,
-    "foreign_column_name": null,
-    "extra": "\r\ndeclare\r\n    today date := (new.created_at at time zone 'UTC')::date;\r\nbegin\r\n    -- Update Daily Activity\r\n    insert into public.store_daily_metrics (store_id, metric_date, scans_count)\r\n    values (new.store_id, today, 1)\r\n    on conflict (store_id, metric_date)\r\n    do update\r\n    set scans_count = public.store_daily_metrics.scans_count + 1;\r\n\r\n    -- Update User Loyalty\r\n    insert into public.store_user_loyalty (store_id, user_id, purchase_count)\r\n    values (new.store_id, new.user_id, 1)\r\n    on conflict (store_id, user_id)\r\n    do update\r\n    set purchase_count = public.store_user_loyalty.purchase_count + 1;\r\n\r\n    return new;\r\nend;\r\n"
-  },
-  {
-    "object_type": "function",
-    "table_name": "public",
-    "column_name": "get_retention_data",
-    "data_type": "json",
-    "is_primary_key": null,
-    "is_foreign_key": null,
-    "foreign_table_name": null,
-    "foreign_column_name": null,
-    "extra": "\r\n    SELECT JSON_BUILD_OBJECT(\r\n        'returning_count', COUNT(*) FILTER (WHERE purchase_count > 1),\r\n        'new_count',       COUNT(*) FILTER (WHERE purchase_count <= 1)\r\n    )\r\n    FROM store_user_loyalty\r\n    WHERE store_id = store_id_input;\r\n"
-  },
-  {
-    "object_type": "function",
-    "table_name": "public",
-    "column_name": "tg_sync_manager_subscription_from_payment",
-    "data_type": "trigger",
-    "is_primary_key": null,
-    "is_foreign_key": null,
-    "foreign_table_name": null,
-    "foreign_column_name": null,
-    "extra": "\r\ndeclare\r\n  v_now timestamptz;\r\n  v_start timestamptz;\r\n  v_end timestamptz;\r\nbegin\r\n  -- Only react when status changes or on insert.\r\n  if tg_op = 'UPDATE' and new.payment_status is not distinct from old.payment_status then\r\n    return new;\r\n  end if;\r\n\r\n  if new.payment_status = 'paid' then\r\n    v_now := coalesce(new.paid_at, now());\r\n    v_start := coalesce(new.billing_period_start, v_now);\r\n    v_end := coalesce(new.billing_period_end, v_start + interval '1 month');\r\n\r\n    update public.manager_subscriptions\r\n    set payment_status = 'paid',\r\n        subscription_id = coalesce(new.subscription_id, subscription_id),\r\n        current_period_start = v_start,\r\n        current_period_end = v_end,\r\n        is_enforced = false,\r\n        updated_at = v_now\r\n    where owner_id = new.owner_id;\r\n\r\n    if not found then\r\n      insert into public.manager_subscriptions (\r\n        owner_id,\r\n        subscription_id,\r\n        payment_status,\r\n        current_period_start,\r\n        current_period_end,\r\n        is_enforced,\r\n        updated_at\r\n      ) values (\r\n        new.owner_id,\r\n        new.subscription_id,\r\n        'paid',\r\n        v_start,\r\n        v_end,\r\n        false,\r\n        v_now\r\n      );\r\n    end if;\r\n\r\n  elsif new.payment_status = 'failed' then\r\n    update public.manager_subscriptions\r\n    set payment_status = 'failed',\r\n        updated_at = now()\r\n    where owner_id = new.owner_id;\r\n  end if;\r\n\r\n  return new;\r\nend;\r\n"
-  },
-  {
-    "object_type": "function",
-    "table_name": "public",
-    "column_name": "your_function_name",
-    "data_type": "trigger",
-    "is_primary_key": null,
-    "is_foreign_key": null,
-    "foreign_table_name": null,
-    "foreign_column_name": null,
-    "extra": "\r\ndeclare\r\n  v_store_timezone text;\r\nbegin\r\n  if app.normalize_timezone(new.timezone) is null then\r\n    select timezone\r\n      into v_store_timezone\r\n    from public.stores\r\n    where id = new.store_id\r\n    limit 1;\r\n\r\n    new.timezone := app.require_valid_timezone(v_store_timezone);\r\n  else\r\n    new.timezone := app.require_valid_timezone(new.timezone);\r\n  end if;\r\n\r\n  if app.normalize_timezone(new.timezone) is null then\r\n    raise exception 'Store % is missing a valid timezone. Set the store timezone before saving reward programs.', new.store_id\r\n      using errcode = '23514';\r\n  end if;\r\n\r\n  return new;\r\nend;\r\n"
-  },
-  {
-    "object_type": "function",
-    "table_name": "public",
-    "column_name": "snapshot_program_timezone",
-    "data_type": "trigger",
-    "is_primary_key": null,
-    "is_foreign_key": null,
-    "foreign_table_name": null,
-    "foreign_column_name": null,
-    "extra": "\r\ndeclare\r\n  v_store_timezone text;\r\nbegin\r\n  if app.normalize_timezone(new.timezone) is null then\r\n    select timezone\r\n      into v_store_timezone\r\n    from public.stores\r\n    where id = new.store_id\r\n    limit 1;\r\n\r\n    new.timezone := app.require_valid_timezone(v_store_timezone);\r\n  else\r\n    new.timezone := app.require_valid_timezone(new.timezone);\r\n  end if;\r\n\r\n  if app.normalize_timezone(new.timezone) is null then\r\n    raise exception 'Store % is missing a valid timezone. Set the store timezone before saving reward programs.', new.store_id\r\n      using errcode = '23514';\r\n  end if;\r\n\r\n  return new;\r\nend;\r\n"
-  },
-  {
-    "object_type": "function",
-    "table_name": "public",
-    "column_name": "sync_store_feature_on_program_status",
-    "data_type": "trigger",
-    "is_primary_key": null,
-    "is_foreign_key": null,
-    "foreign_table_name": null,
-    "foreign_column_name": null,
-    "extra": "\r\nBEGIN\r\n  -- Determine the table being modified\r\n  IF TG_TABLE_NAME = 'store_streaks' THEN\r\n    UPDATE store_feature\r\n    SET\r\n      streak_enabled = EXISTS (\r\n        SELECT 1 FROM store_streaks\r\n        WHERE store_id = NEW.store_id AND status = 'active'\r\n      ),\r\n      updated_at = now()\r\n    WHERE store_id = NEW.store_id;\r\n\r\n  ELSIF TG_TABLE_NAME = 'store_stamps' THEN\r\n    UPDATE store_feature\r\n    SET\r\n      stamp_enabled = EXISTS (\r\n        SELECT 1 FROM store_stamps\r\n        WHERE store_id = NEW.store_id AND status = 'active'\r\n      ),\r\n      updated_at = now()\r\n    WHERE store_id = NEW.store_id;\r\n  END IF;\r\n\r\n  RETURN NEW;\r\nEND;\r\n"
-  },
-  {
-    "object_type": "function",
-    "table_name": "public",
-    "column_name": "update_daily_metrics_on_scan",
-    "data_type": "trigger",
-    "is_primary_key": null,
-    "is_foreign_key": null,
-    "foreign_table_name": null,
-    "foreign_column_name": null,
-    "extra": "\r\nDECLARE\r\n  is_first_visit_today BOOLEAN;\r\n  is_new_member BOOLEAN;\r\nBEGIN\r\n  -- Check if this is the user's first scan today at this store\r\n  SELECT NOT EXISTS (\r\n    SELECT 1 FROM qr_transactions \r\n    WHERE user_id = NEW.user_id \r\n      AND store_id = NEW.store_id \r\n      AND DATE(created_at) = DATE(NEW.created_at)\r\n      AND id != NEW.id -- exclude the current row since this is an AFTER trigger\r\n  ) INTO is_first_visit_today;\r\n\r\n  -- Check if this is their first ever scan at this store\r\n  SELECT NOT EXISTS (\r\n    SELECT 1 FROM qr_transactions \r\n    WHERE user_id = NEW.user_id \r\n      AND store_id = NEW.store_id \r\n      AND created_at < NEW.created_at\r\n  ) INTO is_new_member;\r\n\r\n  -- Insert the new day row, or UPDATE it if the day already exists\r\n  INSERT INTO store_daily_metrics (\r\n    store_id, \r\n    metric_date, \r\n    scans_count, \r\n    unique_visitors, \r\n    new_members_count, \r\n    points_earned\r\n  )\r\n  VALUES (\r\n    NEW.store_id, \r\n    DATE(NEW.created_at), \r\n    1, \r\n    CASE WHEN is_first_visit_today THEN 1 ELSE 0 END, \r\n    CASE WHEN is_new_member THEN 1 ELSE 0 END, \r\n    COALESCE(NEW.points_earned, 0)\r\n  )\r\n  ON CONFLICT (store_id, metric_date) \r\n  DO UPDATE SET\r\n    scans_count = store_daily_metrics.scans_count + 1,\r\n    unique_visitors = store_daily_metrics.unique_visitors + CASE WHEN is_first_visit_today THEN 1 ELSE 0 END,\r\n    new_members_count = store_daily_metrics.new_members_count + CASE WHEN is_new_member THEN 1 ELSE 0 END,\r\n    points_earned = store_daily_metrics.points_earned + COALESCE(NEW.points_earned, 0);\r\n\r\n  RETURN NEW;\r\nEND;\r\n"
-  },
-  {
-    "object_type": "function",
-    "table_name": "public",
-    "column_name": "update_daily_metrics_on_redemption",
-    "data_type": "trigger",
-    "is_primary_key": null,
-    "is_foreign_key": null,
-    "foreign_table_name": null,
-    "foreign_column_name": null,
-    "extra": "\r\nBEGIN\r\n  -- Insert the new day row, or UPDATE it if the day already exists\r\n  INSERT INTO store_daily_metrics (\r\n    store_id, \r\n    metric_date, \r\n    redemptions_count\r\n  )\r\n  VALUES (\r\n    NEW.store_id, \r\n    DATE(NEW.created_at), \r\n    1\r\n  )\r\n  ON CONFLICT (store_id, metric_date) \r\n  DO UPDATE SET\r\n    redemptions_count = COALESCE(store_daily_metrics.redemptions_count, 0) + 1;\r\n\r\n  RETURN NEW;\r\nEND;\r\n"
-  },
-  {
-    "object_type": "function",
-    "table_name": "public",
-    "column_name": "tg_touch_support_conversation_from_message",
-    "data_type": "trigger",
-    "is_primary_key": null,
-    "is_foreign_key": null,
-    "foreign_table_name": null,
-    "foreign_column_name": null,
-    "extra": "\r\nbegin\r\n  update public.support_conversations\r\n  set\r\n    last_message = case\r\n      when new.message_kind = 'image' then '[Image]'\r\n      when new.message_kind = 'file' then coalesce('[File] ' || new.attachment_name, '[File]')\r\n      else new.body\r\n    end,\r\n    last_message_at = new.created_at,\r\n    last_message_sender = new.sender_role,\r\n    updated_at = now(),\r\n    status = 'open'\r\n  where id = new.conversation_id;\r\n\r\n  return new;\r\nend;\r\n"
-  },
-  {
-    "object_type": "function",
-    "table_name": "public",
-    "column_name": "st_makepoint",
-    "data_type": "USER-DEFINED",
-    "is_primary_key": null,
-    "is_foreign_key": null,
-    "foreign_table_name": null,
-    "foreign_column_name": null,
-    "extra": " select extensions.st_makepoint($1, $2) "
-  },
-  {
-    "object_type": "function",
-    "table_name": "public",
-    "column_name": "resolve_timezone_from_point",
-    "data_type": "text",
-    "is_primary_key": null,
-    "is_foreign_key": null,
-    "foreign_table_name": null,
-    "foreign_column_name": null,
-    "extra": "\r\n  select app.resolve_timezone_from_point(p_longitude, p_latitude);\r\n"
   },
   {
     "object_type": "function",
@@ -13565,6 +13389,39 @@
   {
     "object_type": "function",
     "table_name": "public",
+    "column_name": "tg_sync_manager_subscription_from_payment",
+    "data_type": "trigger",
+    "is_primary_key": null,
+    "is_foreign_key": null,
+    "foreign_table_name": null,
+    "foreign_column_name": null,
+    "extra": "\r\ndeclare\r\n  v_now timestamptz;\r\n  v_start timestamptz;\r\n  v_end timestamptz;\r\nbegin\r\n  -- Only react when status changes or on insert.\r\n  if tg_op = 'UPDATE' and new.payment_status is not distinct from old.payment_status then\r\n    return new;\r\n  end if;\r\n\r\n  if new.payment_status = 'paid' then\r\n    v_now := coalesce(new.paid_at, now());\r\n    v_start := coalesce(new.billing_period_start, v_now);\r\n    v_end := coalesce(new.billing_period_end, v_start + interval '1 month');\r\n\r\n    update public.manager_subscriptions\r\n    set payment_status = 'paid',\r\n        subscription_id = coalesce(new.subscription_id, subscription_id),\r\n        current_period_start = v_start,\r\n        current_period_end = v_end,\r\n        is_enforced = false,\r\n        updated_at = v_now\r\n    where owner_id = new.owner_id;\r\n\r\n    if not found then\r\n      insert into public.manager_subscriptions (\r\n        owner_id,\r\n        subscription_id,\r\n        payment_status,\r\n        current_period_start,\r\n        current_period_end,\r\n        is_enforced,\r\n        updated_at\r\n      ) values (\r\n        new.owner_id,\r\n        new.subscription_id,\r\n        'paid',\r\n        v_start,\r\n        v_end,\r\n        false,\r\n        v_now\r\n      );\r\n    end if;\r\n\r\n  elsif new.payment_status = 'failed' then\r\n    update public.manager_subscriptions\r\n    set payment_status = 'failed',\r\n        updated_at = now()\r\n    where owner_id = new.owner_id;\r\n  end if;\r\n\r\n  return new;\r\nend;\r\n"
+  },
+  {
+    "object_type": "function",
+    "table_name": "public",
+    "column_name": "update_store_metrics_on_purchase",
+    "data_type": "trigger",
+    "is_primary_key": null,
+    "is_foreign_key": null,
+    "foreign_table_name": null,
+    "foreign_column_name": null,
+    "extra": "\r\ndeclare\r\n    today date := (new.created_at at time zone 'UTC')::date;\r\nbegin\r\n    -- Update Daily Activity\r\n    insert into public.store_daily_metrics (store_id, metric_date, scans_count)\r\n    values (new.store_id, today, 1)\r\n    on conflict (store_id, metric_date)\r\n    do update\r\n    set scans_count = public.store_daily_metrics.scans_count + 1;\r\n\r\n    -- Update User Loyalty\r\n    insert into public.store_user_loyalty (store_id, user_id, purchase_count)\r\n    values (new.store_id, new.user_id, 1)\r\n    on conflict (store_id, user_id)\r\n    do update\r\n    set purchase_count = public.store_user_loyalty.purchase_count + 1;\r\n\r\n    return new;\r\nend;\r\n"
+  },
+  {
+    "object_type": "function",
+    "table_name": "public",
+    "column_name": "validate_upcoming_start_at",
+    "data_type": "trigger",
+    "is_primary_key": null,
+    "is_foreign_key": null,
+    "foreign_table_name": null,
+    "foreign_column_name": null,
+    "extra": "\r\ndeclare\r\n  active_row record;\r\n  min_allowed timestamptz;\r\nbegin\r\n  if new.status <> 'upcoming' then\r\n    return new;\r\n  end if;\r\n\r\n  if new.start_at is null then\r\n    raise exception 'Upcoming streak requires start_at.';\r\n  end if;\r\n\r\n  select id, start_at, end_date, streak_length\r\n  into active_row\r\n  from public.store_streaks\r\n  where store_id = new.store_id\r\n    and status = 'active'\r\n    and id <> coalesce(new.id, -1)\r\n  order by created_at desc\r\n  limit 1;\r\n\r\n  if not found then\r\n    if new.start_at < now() then\r\n      raise exception 'start_at must be now or in the future.';\r\n    end if;\r\n    return new;\r\n  end if;\r\n\r\n  if active_row.end_date is not null then\r\n    min_allowed := (active_row.end_date::timestamp + interval '1 day' - interval '1 second') at time zone 'UTC';\r\n  elsif active_row.start_at is not null and active_row.streak_length is not null then\r\n    min_allowed := active_row.start_at + make_interval(days => active_row.streak_length);\r\n  else\r\n    raise exception 'Active streak has no schedulable boundary (missing end_date and start_at/streak_length).';\r\n  end if;\r\n\r\n  if new.start_at <= min_allowed then\r\n    raise exception 'Upcoming start_at (%) must be after active boundary (%).', new.start_at, min_allowed;\r\n  end if;\r\n\r\n  if new.start_at < now() then\r\n    raise exception 'start_at must be now or in the future.';\r\n  end if;\r\n\r\n  return new;\r\nend;\r\n"
+  },
+  {
+    "object_type": "function",
+    "table_name": "public",
     "column_name": "record_user_streak",
     "data_type": "jsonb",
     "is_primary_key": null,
@@ -13572,17 +13429,6 @@
     "foreign_table_name": null,
     "foreign_column_name": null,
     "extra": "\r\nDECLARE\r\n  v_program          store_streaks%ROWTYPE;\r\n  v_tz               text;\r\n  v_today            date;\r\n  v_yesterday        date;\r\n  v_user_streak      user_streaks%ROWTYPE;\r\n  v_found_streak     boolean := false;\r\n  v_is_consecutive   boolean := false;\r\n  v_new_streak_days  int;\r\n  v_total_earned     int;\r\n  v_points_delta     numeric := 0;\r\n  v_just_completed   boolean := false;\r\n  v_streak_row_id    bigint;\r\nBEGIN\r\n  -- 1. Load the active streak program\r\n  SELECT * INTO v_program\r\n  FROM store_streaks\r\n  WHERE id       = p_store_streak_id\r\n    AND store_id = p_store_id\r\n    AND status   = 'active';\r\n\r\n  IF NOT FOUND THEN\r\n    RETURN jsonb_build_object(\r\n      'alreadyRecorded', false, 'newStreakDays', 0,\r\n      'pointsEarned', 0, 'justCompleted', false,\r\n      'reason', 'program_not_active'\r\n    );\r\n  END IF;\r\n\r\n  -- 2. Resolve timezone — fully inlined, no app.* helpers\r\n  v_tz := COALESCE(\r\n    NULLIF(TRIM(v_program.timezone), ''),\r\n    (SELECT NULLIF(TRIM(timezone), '') FROM stores WHERE id = p_store_id),\r\n    'UTC'\r\n  );\r\n  -- Compute today/yesterday in store-local time directly\r\n  v_today     := (timezone(v_tz, now()))::date;\r\n  v_yesterday := v_today - 1;\r\n\r\n  -- 3. Load existing user_streaks row\r\n  SELECT * INTO v_user_streak\r\n  FROM user_streaks\r\n  WHERE user_id         = p_user_id\r\n    AND store_id        = p_store_id\r\n    AND store_streak_id = p_store_streak_id;\r\n\r\n  v_found_streak := FOUND;\r\n\r\n  -- 4. Duplicate guard via streak_events\r\n  IF v_found_streak THEN\r\n    IF EXISTS (\r\n      SELECT 1 FROM streak_events\r\n      WHERE user_streak_id = v_user_streak.id\r\n        AND earned_date    = v_today\r\n    ) THEN\r\n      RETURN jsonb_build_object(\r\n        'alreadyRecorded', true,\r\n        'newStreakDays',    v_user_streak.streak_days,\r\n        'pointsEarned',    v_user_streak.points_earned,\r\n        'justCompleted',   false,\r\n        'earnedDate',      v_today::text,\r\n        'programTimezone', v_tz\r\n      );\r\n    END IF;\r\n  END IF;\r\n\r\n  -- 5. Compute streak counters\r\n  IF v_found_streak THEN\r\n    v_is_consecutive  := (v_user_streak.last_activity_date = v_yesterday);\r\n    v_new_streak_days := CASE WHEN v_is_consecutive\r\n                              THEN COALESCE(v_user_streak.streak_days, 0) + 1\r\n                              ELSE 1\r\n                         END;\r\n    v_total_earned    := COALESCE(v_user_streak.total_earned_days, 0) + 1;\r\n  ELSE\r\n    v_new_streak_days := 1;\r\n    v_total_earned    := 1;\r\n  END IF;\r\n\r\n  -- 6. Points — inlined from app.streak_points_for_day logic\r\n  v_points_delta := CASE\r\n    WHEN COALESCE(v_program.points_mode, 'fixed') = 'incremental'\r\n      THEN GREATEST(\r\n        COALESCE(v_program.starting_points, 0) +\r\n        (GREATEST(v_total_earned, 1) - 1) * COALESCE(v_program.increment_value, 0),\r\n        0\r\n      )\r\n    ELSE GREATEST(COALESCE(v_program.fixed_points_per_day, 0), 0)\r\n  END;\r\n\r\n  -- 7. Completion check\r\n  IF v_total_earned >= COALESCE(v_program.streak_length, 2147483647) THEN\r\n    v_just_completed := true;\r\n  END IF;\r\n\r\n  -- 8. Upsert user_streaks\r\n  IF v_found_streak THEN\r\n    UPDATE user_streaks SET\r\n      streak_days        = v_new_streak_days,\r\n      last_activity_date = v_today,\r\n      total_earned_days  = v_total_earned,\r\n      points_earned      = COALESCE(points_earned, 0) + v_points_delta,\r\n      status             = CASE WHEN v_just_completed THEN 'completed' ELSE status END,\r\n      completed_at       = CASE WHEN v_just_completed AND completed_at IS NULL\r\n                                THEN now() ELSE completed_at END,\r\n      updated_at         = now()\r\n    WHERE user_id         = p_user_id\r\n      AND store_id        = p_store_id\r\n      AND store_streak_id = p_store_streak_id;\r\n\r\n    v_streak_row_id := v_user_streak.id;\r\n  ELSE\r\n    INSERT INTO user_streaks (\r\n      user_id, store_id, store_streak_id,\r\n      streak_days, last_activity_date,\r\n      total_earned_days, points_earned,\r\n      completion_bonus_awarded, completed_at, status, updated_at\r\n    ) VALUES (\r\n      p_user_id, p_store_id, p_store_streak_id,\r\n      v_new_streak_days, v_today,\r\n      v_total_earned, v_points_delta,\r\n      false,\r\n      CASE WHEN v_just_completed THEN now() ELSE NULL END,\r\n      CASE WHEN v_just_completed THEN 'completed' ELSE 'in_progress' END,\r\n      now()\r\n    )\r\n    RETURNING id INTO v_streak_row_id;\r\n  END IF;\r\n\r\n  -- 9. Insert streak_events with required user_streak_id FK\r\n  INSERT INTO streak_events (\r\n    user_id, store_id, store_streak_id, user_streak_id, earned_date\r\n  ) VALUES (\r\n    p_user_id, p_store_id, p_store_streak_id, v_streak_row_id, v_today\r\n  );\r\n\r\n  RETURN jsonb_build_object(\r\n    'alreadyRecorded', false,\r\n    'newStreakDays',    v_new_streak_days,\r\n    'pointsEarned',    COALESCE(\r\n                         (SELECT points_earned FROM user_streaks WHERE id = v_streak_row_id),\r\n                         0\r\n                       ),\r\n    'justCompleted',   v_just_completed,\r\n    'earnedDate',      v_today::text,\r\n    'programTimezone', v_tz\r\n  );\r\n\r\nEXCEPTION WHEN OTHERS THEN\r\n  RAISE WARNING '[record_user_streak] % %', SQLSTATE, SQLERRM;\r\n  RETURN jsonb_build_object(\r\n    'alreadyRecorded', false, 'newStreakDays', 0,\r\n    'pointsEarned', 0, 'justCompleted', false,\r\n    'reason', SQLERRM\r\n  );\r\nEND;\r\n"
-  },
-  {
-    "object_type": "function",
-    "table_name": "public",
-    "column_name": "import_timezone_boundary",
-    "data_type": "void",
-    "is_primary_key": null,
-    "is_foreign_key": null,
-    "foreign_table_name": null,
-    "foreign_column_name": null,
-    "extra": "\r\nBEGIN\r\n  INSERT INTO public.timezone_boundaries (tzid, geom)\r\n  VALUES (p_tzid, ST_GeomFromGeoJSON(p_geom_geojson)::geometry);\r\nEND;\r\n"
   },
   {
     "object_type": "function",
@@ -13620,13 +13466,167 @@
   {
     "object_type": "function",
     "table_name": "public",
-    "column_name": "is_super_admin_user",
-    "data_type": "boolean",
+    "column_name": "tg_touch_support_conversation_from_message",
+    "data_type": "trigger",
     "is_primary_key": null,
     "is_foreign_key": null,
     "foreign_table_name": null,
     "foreign_column_name": null,
-    "extra": "\r\n  select exists (\r\n    select 1\r\n    from public.user_roles ur\r\n    left join public.roles r on r.id = ur.role_id\r\n    where ur.user_id = p_user_id\r\n      and (\r\n        ur.role_id::text = '1'\r\n        or r.role_type in ('super_admin', 'superadmin')\r\n      )\r\n  );\r\n"
+    "extra": "\r\nbegin\r\n  update public.support_conversations\r\n  set\r\n    last_message = case\r\n      when new.message_kind = 'image' then '[Image]'\r\n      when new.message_kind = 'file' then coalesce('[File] ' || new.attachment_name, '[File]')\r\n      else new.body\r\n    end,\r\n    last_message_at = new.created_at,\r\n    last_message_sender = new.sender_role,\r\n    updated_at = now(),\r\n    status = 'open'\r\n  where id = new.conversation_id;\r\n\r\n  return new;\r\nend;\r\n"
+  },
+  {
+    "object_type": "function",
+    "table_name": "public",
+    "column_name": "resolve_timezone_from_point",
+    "data_type": "text",
+    "is_primary_key": null,
+    "is_foreign_key": null,
+    "foreign_table_name": null,
+    "foreign_column_name": null,
+    "extra": "\r\n  select app.resolve_timezone_from_point(p_longitude, p_latitude);\r\n"
+  },
+  {
+    "object_type": "function",
+    "table_name": "public",
+    "column_name": "update_daily_metrics_on_redemption",
+    "data_type": "trigger",
+    "is_primary_key": null,
+    "is_foreign_key": null,
+    "foreign_table_name": null,
+    "foreign_column_name": null,
+    "extra": "\r\nBEGIN\r\n  -- Insert the new day row, or UPDATE it if the day already exists\r\n  INSERT INTO store_daily_metrics (\r\n    store_id, \r\n    metric_date, \r\n    redemptions_count\r\n  )\r\n  VALUES (\r\n    NEW.store_id, \r\n    DATE(NEW.created_at), \r\n    1\r\n  )\r\n  ON CONFLICT (store_id, metric_date) \r\n  DO UPDATE SET\r\n    redemptions_count = COALESCE(store_daily_metrics.redemptions_count, 0) + 1;\r\n\r\n  RETURN NEW;\r\nEND;\r\n"
+  },
+  {
+    "object_type": "function",
+    "table_name": "public",
+    "column_name": "update_daily_metrics_on_scan",
+    "data_type": "trigger",
+    "is_primary_key": null,
+    "is_foreign_key": null,
+    "foreign_table_name": null,
+    "foreign_column_name": null,
+    "extra": "\r\nDECLARE\r\n  is_first_visit_today BOOLEAN;\r\n  is_new_member BOOLEAN;\r\nBEGIN\r\n  -- Check if this is the user's first scan today at this store\r\n  SELECT NOT EXISTS (\r\n    SELECT 1 FROM qr_transactions \r\n    WHERE user_id = NEW.user_id \r\n      AND store_id = NEW.store_id \r\n      AND DATE(created_at) = DATE(NEW.created_at)\r\n      AND id != NEW.id -- exclude the current row since this is an AFTER trigger\r\n  ) INTO is_first_visit_today;\r\n\r\n  -- Check if this is their first ever scan at this store\r\n  SELECT NOT EXISTS (\r\n    SELECT 1 FROM qr_transactions \r\n    WHERE user_id = NEW.user_id \r\n      AND store_id = NEW.store_id \r\n      AND created_at < NEW.created_at\r\n  ) INTO is_new_member;\r\n\r\n  -- Insert the new day row, or UPDATE it if the day already exists\r\n  INSERT INTO store_daily_metrics (\r\n    store_id, \r\n    metric_date, \r\n    scans_count, \r\n    unique_visitors, \r\n    new_members_count, \r\n    points_earned\r\n  )\r\n  VALUES (\r\n    NEW.store_id, \r\n    DATE(NEW.created_at), \r\n    1, \r\n    CASE WHEN is_first_visit_today THEN 1 ELSE 0 END, \r\n    CASE WHEN is_new_member THEN 1 ELSE 0 END, \r\n    COALESCE(NEW.points_earned, 0)\r\n  )\r\n  ON CONFLICT (store_id, metric_date) \r\n  DO UPDATE SET\r\n    scans_count = store_daily_metrics.scans_count + 1,\r\n    unique_visitors = store_daily_metrics.unique_visitors + CASE WHEN is_first_visit_today THEN 1 ELSE 0 END,\r\n    new_members_count = store_daily_metrics.new_members_count + CASE WHEN is_new_member THEN 1 ELSE 0 END,\r\n    points_earned = store_daily_metrics.points_earned + COALESCE(NEW.points_earned, 0);\r\n\r\n  RETURN NEW;\r\nEND;\r\n"
+  },
+  {
+    "object_type": "function",
+    "table_name": "public",
+    "column_name": "sync_store_feature_on_program_status",
+    "data_type": "trigger",
+    "is_primary_key": null,
+    "is_foreign_key": null,
+    "foreign_table_name": null,
+    "foreign_column_name": null,
+    "extra": "\r\nBEGIN\r\n  -- Determine the table being modified\r\n  IF TG_TABLE_NAME = 'store_streaks' THEN\r\n    UPDATE store_feature\r\n    SET\r\n      streak_enabled = EXISTS (\r\n        SELECT 1 FROM store_streaks\r\n        WHERE store_id = NEW.store_id AND status = 'active'\r\n      ),\r\n      updated_at = now()\r\n    WHERE store_id = NEW.store_id;\r\n\r\n  ELSIF TG_TABLE_NAME = 'store_stamps' THEN\r\n    UPDATE store_feature\r\n    SET\r\n      stamp_enabled = EXISTS (\r\n        SELECT 1 FROM store_stamps\r\n        WHERE store_id = NEW.store_id AND status = 'active'\r\n      ),\r\n      updated_at = now()\r\n    WHERE store_id = NEW.store_id;\r\n  END IF;\r\n\r\n  RETURN NEW;\r\nEND;\r\n"
+  },
+  {
+    "object_type": "function",
+    "table_name": "public",
+    "column_name": "snapshot_program_timezone",
+    "data_type": "trigger",
+    "is_primary_key": null,
+    "is_foreign_key": null,
+    "foreign_table_name": null,
+    "foreign_column_name": null,
+    "extra": "\r\ndeclare\r\n  v_store_timezone text;\r\nbegin\r\n  if app.normalize_timezone(new.timezone) is null then\r\n    select timezone\r\n      into v_store_timezone\r\n    from public.stores\r\n    where id = new.store_id\r\n    limit 1;\r\n\r\n    new.timezone := app.require_valid_timezone(v_store_timezone);\r\n  else\r\n    new.timezone := app.require_valid_timezone(new.timezone);\r\n  end if;\r\n\r\n  if app.normalize_timezone(new.timezone) is null then\r\n    raise exception 'Store % is missing a valid timezone. Set the store timezone before saving reward programs.', new.store_id\r\n      using errcode = '23514';\r\n  end if;\r\n\r\n  return new;\r\nend;\r\n"
+  },
+  {
+    "object_type": "function",
+    "table_name": "public",
+    "column_name": "your_function_name",
+    "data_type": "trigger",
+    "is_primary_key": null,
+    "is_foreign_key": null,
+    "foreign_table_name": null,
+    "foreign_column_name": null,
+    "extra": "\r\ndeclare\r\n  v_store_timezone text;\r\nbegin\r\n  if app.normalize_timezone(new.timezone) is null then\r\n    select timezone\r\n      into v_store_timezone\r\n    from public.stores\r\n    where id = new.store_id\r\n    limit 1;\r\n\r\n    new.timezone := app.require_valid_timezone(v_store_timezone);\r\n  else\r\n    new.timezone := app.require_valid_timezone(new.timezone);\r\n  end if;\r\n\r\n  if app.normalize_timezone(new.timezone) is null then\r\n    raise exception 'Store % is missing a valid timezone. Set the store timezone before saving reward programs.', new.store_id\r\n      using errcode = '23514';\r\n  end if;\r\n\r\n  return new;\r\nend;\r\n"
+  },
+  {
+    "object_type": "function",
+    "table_name": "public",
+    "column_name": "get_retention_data",
+    "data_type": "json",
+    "is_primary_key": null,
+    "is_foreign_key": null,
+    "foreign_table_name": null,
+    "foreign_column_name": null,
+    "extra": "\r\n    SELECT JSON_BUILD_OBJECT(\r\n        'returning_count', COUNT(*) FILTER (WHERE purchase_count > 1),\r\n        'new_count',       COUNT(*) FILTER (WHERE purchase_count <= 1)\r\n    )\r\n    FROM store_user_loyalty\r\n    WHERE store_id = store_id_input;\r\n"
+  },
+  {
+    "object_type": "function",
+    "table_name": "public",
+    "column_name": "update_subscription_updated_at_column",
+    "data_type": "trigger",
+    "is_primary_key": null,
+    "is_foreign_key": null,
+    "foreign_table_name": null,
+    "foreign_column_name": null,
+    "extra": "\r\nbegin\r\n  new.updated_at := now();\r\n  return new;\r\nend;\r\n"
+  },
+  {
+    "object_type": "function",
+    "table_name": "public",
+    "column_name": "handle_subscription_payment_status",
+    "data_type": "trigger",
+    "is_primary_key": null,
+    "is_foreign_key": null,
+    "foreign_table_name": null,
+    "foreign_column_name": null,
+    "extra": "\r\nbegin\r\n  if new.payment_status = 'paid' then\r\n    -- Only set start date if it hasn't been set yet\r\n    if new.current_period_start is null then\r\n      new.current_period_start := now();\r\n      new.current_period_end := now() + interval '1 month';\r\n    end if;\r\n\r\n  elsif new.payment_status = 'unpaid' or new.payment_status is null then\r\n    new.current_period_start := null;\r\n    new.current_period_end := null;\r\n  end if;\r\n\r\n  return new;\r\nend;\r\n"
+  },
+  {
+    "object_type": "function",
+    "table_name": "public",
+    "column_name": "activate_due_store_streaks",
+    "data_type": "void",
+    "is_primary_key": null,
+    "is_foreign_key": null,
+    "foreign_table_name": null,
+    "foreign_column_name": null,
+    "extra": "\r\nBEGIN\r\n  UPDATE store_streaks\r\n  SET    status = 'active'\r\n  WHERE  status   = 'upcoming'\r\n    AND  start_at <= now()\r\n    AND  (target_store_id IS NULL OR store_id = target_store_id);\r\nEND;\r\n"
+  },
+  {
+    "object_type": "function",
+    "table_name": "public",
+    "column_name": "get_user_points_summary",
+    "data_type": "record",
+    "is_primary_key": null,
+    "is_foreign_key": null,
+    "foreign_table_name": null,
+    "foreign_column_name": null,
+    "extra": "\r\nDECLARE\r\n    v_purchase_points integer := 0;\r\n    v_streak_points integer := 0;\r\n    v_spent_points integer := 0;\r\nBEGIN\r\n    -- If a specific store is provided, filter by store_id\r\n    IF p_store_id IS NOT NULL THEN\r\n        SELECT COALESCE(SUM(points_earned), 0) INTO v_purchase_points \r\n        FROM purchases \r\n        WHERE user_id = p_user_id AND store_id = p_store_id;\r\n\r\n        SELECT COALESCE(SUM(points_earned), 0) INTO v_streak_points \r\n        FROM user_streaks \r\n        WHERE user_id = p_user_id AND store_id = p_store_id;\r\n\r\n        SELECT COALESCE(SUM(points_spent), 0) INTO v_spent_points \r\n        FROM reward_redemptions \r\n        WHERE user_id = p_user_id AND store_id = p_store_id;\r\n    ELSE\r\n        -- Otherwise, calculate global points across all stores\r\n        SELECT COALESCE(SUM(points_earned), 0) INTO v_purchase_points \r\n        FROM purchases \r\n        WHERE user_id = p_user_id;\r\n\r\n        SELECT COALESCE(SUM(points_earned), 0) INTO v_streak_points \r\n        FROM user_streaks \r\n        WHERE user_id = p_user_id;\r\n\r\n        SELECT COALESCE(SUM(points_spent), 0) INTO v_spent_points \r\n        FROM reward_redemptions \r\n        WHERE user_id = p_user_id;\r\n    END IF;\r\n\r\n    -- Calculate the final summary\r\n    total_points := v_purchase_points + v_streak_points;\r\n    spent_points := v_spent_points;\r\n    available_points := GREATEST(0, total_points - spent_points);\r\n    \r\n    RETURN NEXT;\r\nEND;\r\n"
+  },
+  {
+    "object_type": "function",
+    "table_name": "public",
+    "column_name": "handle_new_user",
+    "data_type": "trigger",
+    "is_primary_key": null,
+    "is_foreign_key": null,
+    "foreign_table_name": null,
+    "foreign_column_name": null,
+    "extra": "\r\nbegin\r\n  insert into public.users (id, name, email)\r\n  values (\r\n    new.id,\r\n    new.raw_user_meta_data->>'name',\r\n    new.email\r\n  )\r\n  ON CONFLICT (id) DO UPDATE\r\n    SET\r\n      name  = COALESCE(EXCLUDED.name, public.users.name),\r\n      email = COALESCE(EXCLUDED.email, public.users.email);\r\n  return new;\r\nend;\r\n"
+  },
+  {
+    "object_type": "function",
+    "table_name": "public",
+    "column_name": "issue_stamp_for_purchase",
+    "data_type": "jsonb",
+    "is_primary_key": null,
+    "is_foreign_key": null,
+    "foreign_table_name": null,
+    "foreign_column_name": null,
+    "extra": "\r\nDECLARE\r\n  v_purchase     purchases%ROWTYPE;\r\n  v_program      store_stamps%ROWTYPE;\r\n  v_progress     stamp_progress%ROWTYPE;\r\n  v_feature      store_feature%ROWTYPE;\r\n  v_new_count    smallint;\r\n  v_status       text;\r\n  v_now          timestamp with time zone := now();\r\n  v_tz           text;\r\n  v_today        date;\r\nBEGIN\r\n  -- 1. Load purchase\r\n  SELECT * INTO v_purchase FROM purchases WHERE id = p_purchase_id;\r\n  IF NOT FOUND THEN\r\n    RETURN jsonb_build_object('success', false, 'reason', 'purchase_not_found');\r\n  END IF;\r\n\r\n  -- 2. Check feature flag\r\n  SELECT * INTO v_feature FROM store_feature WHERE store_id = v_purchase.store_id;\r\n  IF NOT FOUND OR v_feature.stamp_enabled IS NOT TRUE THEN\r\n    RETURN jsonb_build_object('success', false, 'reason', 'stamp_not_enabled');\r\n  END IF;\r\n\r\n  -- 3. Check active program\r\n  SELECT * INTO v_program FROM store_stamps \r\n  WHERE store_id = v_purchase.store_id AND status = 'active';\r\n  IF NOT FOUND THEN\r\n    RETURN jsonb_build_object('success', false, 'reason', 'stamp_not_enabled');\r\n  END IF;\r\n\r\n  -- 4. Check duplicate\r\n  IF EXISTS (SELECT 1 FROM stamp_events WHERE purchase_id = p_purchase_id) THEN\r\n    RETURN jsonb_build_object('success', true, 'duplicate', true);\r\n  END IF;\r\n\r\n  -- 5. Timezone resolution\r\n  v_tz := COALESCE(NULLIF(TRIM(v_program.timezone), ''), 'UTC');\r\n  v_today := (timezone(v_tz, v_now))::date;\r\n\r\n  -- 6. Load or initialize progress\r\n  SELECT * INTO v_progress FROM stamp_progress \r\n  WHERE user_id = v_purchase.user_id AND stamp_program_id = v_program.id;\r\n\r\n  IF FOUND THEN\r\n    -- Check if completed\r\n    IF v_progress.card_status = 'completed' THEN\r\n      RETURN jsonb_build_object('success', false, 'reason', 'already_completed');\r\n    END IF;\r\n\r\n    -- Check if already stamped today\r\n    IF (timezone(v_tz, v_progress.last_stamp_at))::date = v_today THEN\r\n       RETURN jsonb_build_object('success', false, 'reason', 'already_stamped_today');\r\n    END IF;\r\n\r\n    v_new_count := v_progress.stamps_count + 1;\r\n    v_status := CASE WHEN v_new_count >= v_progress.target THEN 'completed' ELSE 'active' END;\r\n\r\n    UPDATE stamp_progress SET\r\n      stamps_count = v_new_count,\r\n      last_stamp_at = v_now,\r\n      card_status = v_status,\r\n      updated_at = v_now\r\n    WHERE id = v_progress.id;\r\n  ELSE\r\n    -- Insert new progress card\r\n    v_new_count := 1;\r\n    v_status := CASE WHEN v_new_count >= v_program.total_stamps THEN 'completed' ELSE 'active' END;\r\n\r\n    INSERT INTO stamp_progress (\r\n      user_id, store_id, stamp_program_id,\r\n      stamps_count, target, card_status,\r\n      card_started_at, last_stamp_at, updated_at\r\n    ) VALUES (\r\n      v_purchase.user_id, v_purchase.store_id, v_program.id,\r\n      v_new_count, v_program.total_stamps, v_status,\r\n      v_now, v_now, v_now\r\n    ) RETURNING * INTO v_progress;\r\n  END IF;\r\n\r\n  -- 7. Insert stamp event history\r\n  INSERT INTO stamp_events (\r\n    user_id, store_id, purchase_id, created_at\r\n  ) VALUES (\r\n    v_purchase.user_id, v_purchase.store_id, p_purchase_id, v_now\r\n  );\r\n\r\n  RETURN jsonb_build_object('success', true);\r\nEXCEPTION WHEN OTHERS THEN\r\n  RAISE WARNING '[issue_stamp_for_purchase] % %', SQLSTATE, SQLERRM;\r\n  RETURN jsonb_build_object('success', false, 'reason', SQLERRM);\r\nEND;\r\n"
+  },
+  {
+    "object_type": "function",
+    "table_name": "public",
+    "column_name": "st_makepoint",
+    "data_type": "USER-DEFINED",
+    "is_primary_key": null,
+    "is_foreign_key": null,
+    "foreign_table_name": null,
+    "foreign_column_name": null,
+    "extra": " select extensions.st_makepoint($1, $2) "
   },
   {
     "object_type": "function",
@@ -13642,19 +13642,30 @@
   {
     "object_type": "function",
     "table_name": "public",
-    "column_name": "activate_due_store_streaks",
+    "column_name": "import_timezone_boundary",
     "data_type": "void",
     "is_primary_key": null,
     "is_foreign_key": null,
     "foreign_table_name": null,
     "foreign_column_name": null,
-    "extra": "\r\nBEGIN\r\n  UPDATE store_streaks\r\n  SET    status = 'active'\r\n  WHERE  status   = 'upcoming'\r\n    AND  start_at <= now()\r\n    AND  (target_store_id IS NULL OR store_id = target_store_id);\r\nEND;\r\n"
+    "extra": "\r\nBEGIN\r\n  INSERT INTO public.timezone_boundaries (tzid, geom)\r\n  VALUES (p_tzid, ST_GeomFromGeoJSON(p_geom_geojson)::geometry);\r\nEND;\r\n"
+  },
+  {
+    "object_type": "function",
+    "table_name": "public",
+    "column_name": "is_super_admin_user",
+    "data_type": "boolean",
+    "is_primary_key": null,
+    "is_foreign_key": null,
+    "foreign_table_name": null,
+    "foreign_column_name": null,
+    "extra": "\r\n  select exists (\r\n    select 1\r\n    from public.user_roles ur\r\n    left join public.roles r on r.id = ur.role_id\r\n    where ur.user_id = p_user_id\r\n      and (\r\n        ur.role_id::text = '1'\r\n        or r.role_type in ('super_admin', 'superadmin')\r\n      )\r\n  );\r\n"
   },
   {
     "object_type": "function",
     "table_name": "realtime",
-    "column_name": "is_visible_through_filters",
-    "data_type": "boolean",
+    "column_name": "to_regrole",
+    "data_type": "regrole",
     "is_primary_key": null,
     "is_foreign_key": null,
     "foreign_table_name": null,
@@ -13665,6 +13676,17 @@
     "object_type": "function",
     "table_name": "realtime",
     "column_name": "build_prepared_statement_sql",
+    "data_type": "text",
+    "is_primary_key": null,
+    "is_foreign_key": null,
+    "foreign_table_name": null,
+    "foreign_column_name": null,
+    "extra": null
+  },
+  {
+    "object_type": "function",
+    "table_name": "realtime",
+    "column_name": "quote_wal2json",
     "data_type": "text",
     "is_primary_key": null,
     "is_foreign_key": null,
@@ -13686,61 +13708,6 @@
   {
     "object_type": "function",
     "table_name": "realtime",
-    "column_name": "list_changes",
-    "data_type": "record",
-    "is_primary_key": null,
-    "is_foreign_key": null,
-    "foreign_table_name": null,
-    "foreign_column_name": null,
-    "extra": null
-  },
-  {
-    "object_type": "function",
-    "table_name": "realtime",
-    "column_name": "apply_rls",
-    "data_type": "USER-DEFINED",
-    "is_primary_key": null,
-    "is_foreign_key": null,
-    "foreign_table_name": null,
-    "foreign_column_name": null,
-    "extra": null
-  },
-  {
-    "object_type": "function",
-    "table_name": "realtime",
-    "column_name": "broadcast_changes",
-    "data_type": "void",
-    "is_primary_key": null,
-    "is_foreign_key": null,
-    "foreign_table_name": null,
-    "foreign_column_name": null,
-    "extra": null
-  },
-  {
-    "object_type": "function",
-    "table_name": "realtime",
-    "column_name": "to_regrole",
-    "data_type": "regrole",
-    "is_primary_key": null,
-    "is_foreign_key": null,
-    "foreign_table_name": null,
-    "foreign_column_name": null,
-    "extra": null
-  },
-  {
-    "object_type": "function",
-    "table_name": "realtime",
-    "column_name": "quote_wal2json",
-    "data_type": "text",
-    "is_primary_key": null,
-    "is_foreign_key": null,
-    "foreign_table_name": null,
-    "foreign_column_name": null,
-    "extra": null
-  },
-  {
-    "object_type": "function",
-    "table_name": "realtime",
     "column_name": "cast",
     "data_type": "jsonb",
     "is_primary_key": null,
@@ -13752,8 +13719,19 @@
   {
     "object_type": "function",
     "table_name": "realtime",
-    "column_name": "send",
-    "data_type": "void",
+    "column_name": "is_visible_through_filters",
+    "data_type": "boolean",
+    "is_primary_key": null,
+    "is_foreign_key": null,
+    "foreign_table_name": null,
+    "foreign_column_name": null,
+    "extra": null
+  },
+  {
+    "object_type": "function",
+    "table_name": "realtime",
+    "column_name": "subscription_check_filters",
+    "data_type": "trigger",
     "is_primary_key": null,
     "is_foreign_key": null,
     "foreign_table_name": null,
@@ -13774,8 +13752,41 @@
   {
     "object_type": "function",
     "table_name": "realtime",
-    "column_name": "subscription_check_filters",
-    "data_type": "trigger",
+    "column_name": "send",
+    "data_type": "void",
+    "is_primary_key": null,
+    "is_foreign_key": null,
+    "foreign_table_name": null,
+    "foreign_column_name": null,
+    "extra": null
+  },
+  {
+    "object_type": "function",
+    "table_name": "realtime",
+    "column_name": "broadcast_changes",
+    "data_type": "void",
+    "is_primary_key": null,
+    "is_foreign_key": null,
+    "foreign_table_name": null,
+    "foreign_column_name": null,
+    "extra": null
+  },
+  {
+    "object_type": "function",
+    "table_name": "realtime",
+    "column_name": "apply_rls",
+    "data_type": "USER-DEFINED",
+    "is_primary_key": null,
+    "is_foreign_key": null,
+    "foreign_table_name": null,
+    "foreign_column_name": null,
+    "extra": null
+  },
+  {
+    "object_type": "function",
+    "table_name": "realtime",
+    "column_name": "list_changes",
+    "data_type": "record",
     "is_primary_key": null,
     "is_foreign_key": null,
     "foreign_table_name": null,
@@ -13785,41 +13796,8 @@
   {
     "object_type": "function",
     "table_name": "storage",
-    "column_name": "extension",
+    "column_name": "operation",
     "data_type": "text",
-    "is_primary_key": null,
-    "is_foreign_key": null,
-    "foreign_table_name": null,
-    "foreign_column_name": null,
-    "extra": null
-  },
-  {
-    "object_type": "function",
-    "table_name": "storage",
-    "column_name": "allow_any_operation",
-    "data_type": "boolean",
-    "is_primary_key": null,
-    "is_foreign_key": null,
-    "foreign_table_name": null,
-    "foreign_column_name": null,
-    "extra": null
-  },
-  {
-    "object_type": "function",
-    "table_name": "storage",
-    "column_name": "allow_only_operation",
-    "data_type": "boolean",
-    "is_primary_key": null,
-    "is_foreign_key": null,
-    "foreign_table_name": null,
-    "foreign_column_name": null,
-    "extra": null
-  },
-  {
-    "object_type": "function",
-    "table_name": "storage",
-    "column_name": "protect_delete",
-    "data_type": "trigger",
     "is_primary_key": null,
     "is_foreign_key": null,
     "foreign_table_name": null,
@@ -13862,7 +13840,117 @@
   {
     "object_type": "function",
     "table_name": "storage",
+    "column_name": "allow_any_operation",
+    "data_type": "boolean",
+    "is_primary_key": null,
+    "is_foreign_key": null,
+    "foreign_table_name": null,
+    "foreign_column_name": null,
+    "extra": null
+  },
+  {
+    "object_type": "function",
+    "table_name": "storage",
+    "column_name": "allow_only_operation",
+    "data_type": "boolean",
+    "is_primary_key": null,
+    "is_foreign_key": null,
+    "foreign_table_name": null,
+    "foreign_column_name": null,
+    "extra": null
+  },
+  {
+    "object_type": "function",
+    "table_name": "storage",
+    "column_name": "extension",
+    "data_type": "text",
+    "is_primary_key": null,
+    "is_foreign_key": null,
+    "foreign_table_name": null,
+    "foreign_column_name": null,
+    "extra": null
+  },
+  {
+    "object_type": "function",
+    "table_name": "storage",
+    "column_name": "filename",
+    "data_type": "text",
+    "is_primary_key": null,
+    "is_foreign_key": null,
+    "foreign_table_name": null,
+    "foreign_column_name": null,
+    "extra": null
+  },
+  {
+    "object_type": "function",
+    "table_name": "storage",
+    "column_name": "foldername",
+    "data_type": "ARRAY",
+    "is_primary_key": null,
+    "is_foreign_key": null,
+    "foreign_table_name": null,
+    "foreign_column_name": null,
+    "extra": null
+  },
+  {
+    "object_type": "function",
+    "table_name": "storage",
+    "column_name": "update_updated_at_column",
+    "data_type": "trigger",
+    "is_primary_key": null,
+    "is_foreign_key": null,
+    "foreign_table_name": null,
+    "foreign_column_name": null,
+    "extra": null
+  },
+  {
+    "object_type": "function",
+    "table_name": "storage",
     "column_name": "list_objects_with_delimiter",
+    "data_type": "record",
+    "is_primary_key": null,
+    "is_foreign_key": null,
+    "foreign_table_name": null,
+    "foreign_column_name": null,
+    "extra": null
+  },
+  {
+    "object_type": "function",
+    "table_name": "storage",
+    "column_name": "protect_delete",
+    "data_type": "trigger",
+    "is_primary_key": null,
+    "is_foreign_key": null,
+    "foreign_table_name": null,
+    "foreign_column_name": null,
+    "extra": null
+  },
+  {
+    "object_type": "function",
+    "table_name": "storage",
+    "column_name": "can_insert_object",
+    "data_type": "void",
+    "is_primary_key": null,
+    "is_foreign_key": null,
+    "foreign_table_name": null,
+    "foreign_column_name": null,
+    "extra": null
+  },
+  {
+    "object_type": "function",
+    "table_name": "storage",
+    "column_name": "list_multipart_uploads_with_delimiter",
+    "data_type": "record",
+    "is_primary_key": null,
+    "is_foreign_key": null,
+    "foreign_table_name": null,
+    "foreign_column_name": null,
+    "extra": null
+  },
+  {
+    "object_type": "function",
+    "table_name": "storage",
+    "column_name": "get_size_by_bucket",
     "data_type": "record",
     "is_primary_key": null,
     "is_foreign_key": null,
@@ -13894,75 +13982,9 @@
   },
   {
     "object_type": "function",
-    "table_name": "storage",
-    "column_name": "operation",
-    "data_type": "text",
-    "is_primary_key": null,
-    "is_foreign_key": null,
-    "foreign_table_name": null,
-    "foreign_column_name": null,
-    "extra": null
-  },
-  {
-    "object_type": "function",
-    "table_name": "storage",
-    "column_name": "get_size_by_bucket",
-    "data_type": "record",
-    "is_primary_key": null,
-    "is_foreign_key": null,
-    "foreign_table_name": null,
-    "foreign_column_name": null,
-    "extra": null
-  },
-  {
-    "object_type": "function",
-    "table_name": "storage",
-    "column_name": "list_multipart_uploads_with_delimiter",
-    "data_type": "record",
-    "is_primary_key": null,
-    "is_foreign_key": null,
-    "foreign_table_name": null,
-    "foreign_column_name": null,
-    "extra": null
-  },
-  {
-    "object_type": "function",
-    "table_name": "storage",
-    "column_name": "can_insert_object",
-    "data_type": "void",
-    "is_primary_key": null,
-    "is_foreign_key": null,
-    "foreign_table_name": null,
-    "foreign_column_name": null,
-    "extra": null
-  },
-  {
-    "object_type": "function",
-    "table_name": "storage",
-    "column_name": "update_updated_at_column",
-    "data_type": "trigger",
-    "is_primary_key": null,
-    "is_foreign_key": null,
-    "foreign_table_name": null,
-    "foreign_column_name": null,
-    "extra": null
-  },
-  {
-    "object_type": "function",
-    "table_name": "storage",
-    "column_name": "foldername",
-    "data_type": "ARRAY",
-    "is_primary_key": null,
-    "is_foreign_key": null,
-    "foreign_table_name": null,
-    "foreign_column_name": null,
-    "extra": null
-  },
-  {
-    "object_type": "function",
-    "table_name": "storage",
-    "column_name": "filename",
-    "data_type": "text",
+    "table_name": "vault",
+    "column_name": "_crypto_aead_det_decrypt",
+    "data_type": "bytea",
     "is_primary_key": null,
     "is_foreign_key": null,
     "foreign_table_name": null,
@@ -13985,17 +14007,6 @@
     "table_name": "vault",
     "column_name": "update_secret",
     "data_type": "void",
-    "is_primary_key": null,
-    "is_foreign_key": null,
-    "foreign_table_name": null,
-    "foreign_column_name": null,
-    "extra": null
-  },
-  {
-    "object_type": "function",
-    "table_name": "vault",
-    "column_name": "_crypto_aead_det_decrypt",
-    "data_type": "bytea",
     "is_primary_key": null,
     "is_foreign_key": null,
     "foreign_table_name": null,
@@ -14027,17 +14038,6 @@
   {
     "object_type": "index",
     "table_name": "manager_device_sessions",
-    "column_name": "manager_device_sessions_user_id_device_id_key",
-    "data_type": null,
-    "is_primary_key": null,
-    "is_foreign_key": null,
-    "foreign_table_name": null,
-    "foreign_column_name": null,
-    "extra": "CREATE UNIQUE INDEX manager_device_sessions_user_id_device_id_key ON public.manager_device_sessions USING btree (user_id, device_id)"
-  },
-  {
-    "object_type": "index",
-    "table_name": "manager_device_sessions",
     "column_name": "idx_manager_device_sessions_user_active",
     "data_type": null,
     "is_primary_key": null,
@@ -14048,25 +14048,14 @@
   },
   {
     "object_type": "index",
-    "table_name": "manager_subscription_payments",
-    "column_name": "manager_subscription_payments_owner_period_end_uniq",
+    "table_name": "manager_device_sessions",
+    "column_name": "manager_device_sessions_user_id_device_id_key",
     "data_type": null,
     "is_primary_key": null,
     "is_foreign_key": null,
     "foreign_table_name": null,
     "foreign_column_name": null,
-    "extra": "CREATE UNIQUE INDEX manager_subscription_payments_owner_period_end_uniq ON public.manager_subscription_payments USING btree (owner_id, billing_period_end)"
-  },
-  {
-    "object_type": "index",
-    "table_name": "manager_subscription_payments",
-    "column_name": "manager_subscription_payments_pkey",
-    "data_type": null,
-    "is_primary_key": null,
-    "is_foreign_key": null,
-    "foreign_table_name": null,
-    "foreign_column_name": null,
-    "extra": "CREATE UNIQUE INDEX manager_subscription_payments_pkey ON public.manager_subscription_payments USING btree (id)"
+    "extra": "CREATE UNIQUE INDEX manager_device_sessions_user_id_device_id_key ON public.manager_device_sessions USING btree (user_id, device_id)"
   },
   {
     "object_type": "index",
@@ -14082,6 +14071,17 @@
   {
     "object_type": "index",
     "table_name": "manager_subscription_payments",
+    "column_name": "manager_subscription_payments_owner_period_end_uniq",
+    "data_type": null,
+    "is_primary_key": null,
+    "is_foreign_key": null,
+    "foreign_table_name": null,
+    "foreign_column_name": null,
+    "extra": "CREATE UNIQUE INDEX manager_subscription_payments_owner_period_end_uniq ON public.manager_subscription_payments USING btree (owner_id, billing_period_end)"
+  },
+  {
+    "object_type": "index",
+    "table_name": "manager_subscription_payments",
     "column_name": "manager_subscription_payments_checkout_session_id_uniq",
     "data_type": null,
     "is_primary_key": null,
@@ -14089,6 +14089,28 @@
     "foreign_table_name": null,
     "foreign_column_name": null,
     "extra": "CREATE UNIQUE INDEX manager_subscription_payments_checkout_session_id_uniq ON public.manager_subscription_payments USING btree (checkout_session_id)"
+  },
+  {
+    "object_type": "index",
+    "table_name": "manager_subscription_payments",
+    "column_name": "manager_subscription_payments_pkey",
+    "data_type": null,
+    "is_primary_key": null,
+    "is_foreign_key": null,
+    "foreign_table_name": null,
+    "foreign_column_name": null,
+    "extra": "CREATE UNIQUE INDEX manager_subscription_payments_pkey ON public.manager_subscription_payments USING btree (id)"
+  },
+  {
+    "object_type": "index",
+    "table_name": "manager_subscriptions",
+    "column_name": "manager_subscriptions_owner_id_idx",
+    "data_type": null,
+    "is_primary_key": null,
+    "is_foreign_key": null,
+    "foreign_table_name": null,
+    "foreign_column_name": null,
+    "extra": "CREATE INDEX manager_subscriptions_owner_id_idx ON public.manager_subscriptions USING btree (owner_id)"
   },
   {
     "object_type": "index",
@@ -14111,17 +14133,6 @@
     "foreign_table_name": null,
     "foreign_column_name": null,
     "extra": "CREATE UNIQUE INDEX manager_subscriptions_pkey ON public.manager_subscriptions USING btree (id)"
-  },
-  {
-    "object_type": "index",
-    "table_name": "manager_subscriptions",
-    "column_name": "manager_subscriptions_owner_id_idx",
-    "data_type": null,
-    "is_primary_key": null,
-    "is_foreign_key": null,
-    "foreign_table_name": null,
-    "foreign_column_name": null,
-    "extra": "CREATE INDEX manager_subscriptions_owner_id_idx ON public.manager_subscriptions USING btree (owner_id)"
   },
   {
     "object_type": "index",
@@ -14181,6 +14192,28 @@
   {
     "object_type": "index",
     "table_name": "reward_redemption_codes",
+    "column_name": "idx_redemption_codes_expires",
+    "data_type": null,
+    "is_primary_key": null,
+    "is_foreign_key": null,
+    "foreign_table_name": null,
+    "foreign_column_name": null,
+    "extra": "CREATE INDEX idx_redemption_codes_expires ON public.reward_redemption_codes USING btree (expires_at)"
+  },
+  {
+    "object_type": "index",
+    "table_name": "reward_redemption_codes",
+    "column_name": "idx_redemption_codes_status",
+    "data_type": null,
+    "is_primary_key": null,
+    "is_foreign_key": null,
+    "foreign_table_name": null,
+    "foreign_column_name": null,
+    "extra": "CREATE INDEX idx_redemption_codes_status ON public.reward_redemption_codes USING btree (status)"
+  },
+  {
+    "object_type": "index",
+    "table_name": "reward_redemption_codes",
     "column_name": "reward_redemption_codes_code_key",
     "data_type": null,
     "is_primary_key": null,
@@ -14202,28 +14235,6 @@
   },
   {
     "object_type": "index",
-    "table_name": "reward_redemption_codes",
-    "column_name": "idx_redemption_codes_status",
-    "data_type": null,
-    "is_primary_key": null,
-    "is_foreign_key": null,
-    "foreign_table_name": null,
-    "foreign_column_name": null,
-    "extra": "CREATE INDEX idx_redemption_codes_status ON public.reward_redemption_codes USING btree (status)"
-  },
-  {
-    "object_type": "index",
-    "table_name": "reward_redemption_codes",
-    "column_name": "idx_redemption_codes_expires",
-    "data_type": null,
-    "is_primary_key": null,
-    "is_foreign_key": null,
-    "foreign_table_name": null,
-    "foreign_column_name": null,
-    "extra": "CREATE INDEX idx_redemption_codes_expires ON public.reward_redemption_codes USING btree (expires_at)"
-  },
-  {
-    "object_type": "index",
     "table_name": "reward_redemptions",
     "column_name": "reward_redemptions_pkey",
     "data_type": null,
@@ -14236,13 +14247,13 @@
   {
     "object_type": "index",
     "table_name": "reward_redemptions",
-    "column_name": "idx_reward_redemptions_created_at",
+    "column_name": "idx_reward_redemptions_store_user",
     "data_type": null,
     "is_primary_key": null,
     "is_foreign_key": null,
     "foreign_table_name": null,
     "foreign_column_name": null,
-    "extra": "CREATE INDEX idx_reward_redemptions_created_at ON public.reward_redemptions USING btree (created_at DESC)"
+    "extra": "CREATE INDEX idx_reward_redemptions_store_user ON public.reward_redemptions USING btree (store_id, user_id)"
   },
   {
     "object_type": "index",
@@ -14258,13 +14269,13 @@
   {
     "object_type": "index",
     "table_name": "reward_redemptions",
-    "column_name": "idx_reward_redemptions_store_user",
+    "column_name": "idx_reward_redemptions_created_at",
     "data_type": null,
     "is_primary_key": null,
     "is_foreign_key": null,
     "foreign_table_name": null,
     "foreign_column_name": null,
-    "extra": "CREATE INDEX idx_reward_redemptions_store_user ON public.reward_redemptions USING btree (store_id, user_id)"
+    "extra": "CREATE INDEX idx_reward_redemptions_created_at ON public.reward_redemptions USING btree (created_at DESC)"
   },
   {
     "object_type": "index",
@@ -14291,17 +14302,6 @@
   {
     "object_type": "index",
     "table_name": "stamp_events",
-    "column_name": "stamp_events_purchase_id_uidx",
-    "data_type": null,
-    "is_primary_key": null,
-    "is_foreign_key": null,
-    "foreign_table_name": null,
-    "foreign_column_name": null,
-    "extra": "CREATE UNIQUE INDEX stamp_events_purchase_id_uidx ON public.stamp_events USING btree (purchase_id) WHERE (purchase_id IS NOT NULL)"
-  },
-  {
-    "object_type": "index",
-    "table_name": "stamp_events",
     "column_name": "stamp_events_pkey",
     "data_type": null,
     "is_primary_key": null,
@@ -14312,14 +14312,14 @@
   },
   {
     "object_type": "index",
-    "table_name": "stamp_progress",
-    "column_name": "stamp_progress_pkey",
+    "table_name": "stamp_events",
+    "column_name": "stamp_events_purchase_id_uidx",
     "data_type": null,
     "is_primary_key": null,
     "is_foreign_key": null,
     "foreign_table_name": null,
     "foreign_column_name": null,
-    "extra": "CREATE UNIQUE INDEX stamp_progress_pkey ON public.stamp_progress USING btree (id)"
+    "extra": "CREATE UNIQUE INDEX stamp_events_purchase_id_uidx ON public.stamp_events USING btree (purchase_id) WHERE (purchase_id IS NOT NULL)"
   },
   {
     "object_type": "index",
@@ -14334,14 +14334,14 @@
   },
   {
     "object_type": "index",
-    "table_name": "stamp_rewards",
-    "column_name": "stamp_rewards_user_id_store_id_key",
+    "table_name": "stamp_progress",
+    "column_name": "stamp_progress_pkey",
     "data_type": null,
     "is_primary_key": null,
     "is_foreign_key": null,
     "foreign_table_name": null,
     "foreign_column_name": null,
-    "extra": "CREATE UNIQUE INDEX stamp_rewards_user_id_store_id_key ON public.stamp_rewards USING btree (user_id, store_id)"
+    "extra": "CREATE UNIQUE INDEX stamp_progress_pkey ON public.stamp_progress USING btree (id)"
   },
   {
     "object_type": "index",
@@ -14356,14 +14356,25 @@
   },
   {
     "object_type": "index",
-    "table_name": "store_daily_metrics",
-    "column_name": "store_daily_metrics_pkey",
+    "table_name": "stamp_rewards",
+    "column_name": "stamp_rewards_user_id_store_id_key",
     "data_type": null,
     "is_primary_key": null,
     "is_foreign_key": null,
     "foreign_table_name": null,
     "foreign_column_name": null,
-    "extra": "CREATE UNIQUE INDEX store_daily_metrics_pkey ON public.store_daily_metrics USING btree (id)"
+    "extra": "CREATE UNIQUE INDEX stamp_rewards_user_id_store_id_key ON public.stamp_rewards USING btree (user_id, store_id)"
+  },
+  {
+    "object_type": "index",
+    "table_name": "store_daily_metrics",
+    "column_name": "store_daily_metrics_store_id_metric_date_key",
+    "data_type": null,
+    "is_primary_key": null,
+    "is_foreign_key": null,
+    "foreign_table_name": null,
+    "foreign_column_name": null,
+    "extra": "CREATE UNIQUE INDEX store_daily_metrics_store_id_metric_date_key ON public.store_daily_metrics USING btree (store_id, metric_date)"
   },
   {
     "object_type": "index",
@@ -14379,24 +14390,13 @@
   {
     "object_type": "index",
     "table_name": "store_daily_metrics",
-    "column_name": "store_daily_metrics_store_id_metric_date_key",
+    "column_name": "store_daily_metrics_pkey",
     "data_type": null,
     "is_primary_key": null,
     "is_foreign_key": null,
     "foreign_table_name": null,
     "foreign_column_name": null,
-    "extra": "CREATE UNIQUE INDEX store_daily_metrics_store_id_metric_date_key ON public.store_daily_metrics USING btree (store_id, metric_date)"
-  },
-  {
-    "object_type": "index",
-    "table_name": "store_feature",
-    "column_name": "store_feature_store_id_key",
-    "data_type": null,
-    "is_primary_key": null,
-    "is_foreign_key": null,
-    "foreign_table_name": null,
-    "foreign_column_name": null,
-    "extra": "CREATE UNIQUE INDEX store_feature_store_id_key ON public.store_feature USING btree (store_id)"
+    "extra": "CREATE UNIQUE INDEX store_daily_metrics_pkey ON public.store_daily_metrics USING btree (id)"
   },
   {
     "object_type": "index",
@@ -14408,6 +14408,17 @@
     "foreign_table_name": null,
     "foreign_column_name": null,
     "extra": "CREATE UNIQUE INDEX store_feature_pkey ON public.store_feature USING btree (id)"
+  },
+  {
+    "object_type": "index",
+    "table_name": "store_feature",
+    "column_name": "store_feature_store_id_key",
+    "data_type": null,
+    "is_primary_key": null,
+    "is_foreign_key": null,
+    "foreign_table_name": null,
+    "foreign_column_name": null,
+    "extra": "CREATE UNIQUE INDEX store_feature_store_id_key ON public.store_feature USING btree (store_id)"
   },
   {
     "object_type": "index",
@@ -14478,17 +14489,6 @@
   {
     "object_type": "index",
     "table_name": "store_stamps",
-    "column_name": "store_stamp_pkey",
-    "data_type": null,
-    "is_primary_key": null,
-    "is_foreign_key": null,
-    "foreign_table_name": null,
-    "foreign_column_name": null,
-    "extra": "CREATE UNIQUE INDEX store_stamp_pkey ON public.store_stamps USING btree (id)"
-  },
-  {
-    "object_type": "index",
-    "table_name": "store_stamps",
     "column_name": "store_stamps_one_active_status_per_store",
     "data_type": null,
     "is_primary_key": null,
@@ -14496,6 +14496,17 @@
     "foreign_table_name": null,
     "foreign_column_name": null,
     "extra": "CREATE UNIQUE INDEX store_stamps_one_active_status_per_store ON public.store_stamps USING btree (store_id) WHERE (status = 'active'::text)"
+  },
+  {
+    "object_type": "index",
+    "table_name": "store_stamps",
+    "column_name": "store_stamp_pkey",
+    "data_type": null,
+    "is_primary_key": null,
+    "is_foreign_key": null,
+    "foreign_table_name": null,
+    "foreign_column_name": null,
+    "extra": "CREATE UNIQUE INDEX store_stamp_pkey ON public.store_stamps USING btree (id)"
   },
   {
     "object_type": "index",
@@ -14533,28 +14544,6 @@
   {
     "object_type": "index",
     "table_name": "store_subscriptions",
-    "column_name": "store_subscriptions_pkey",
-    "data_type": null,
-    "is_primary_key": null,
-    "is_foreign_key": null,
-    "foreign_table_name": null,
-    "foreign_column_name": null,
-    "extra": "CREATE UNIQUE INDEX store_subscriptions_pkey ON public.store_subscriptions USING btree (id)"
-  },
-  {
-    "object_type": "index",
-    "table_name": "store_subscriptions",
-    "column_name": "idx_store_subscriptions_owner_id",
-    "data_type": null,
-    "is_primary_key": null,
-    "is_foreign_key": null,
-    "foreign_table_name": null,
-    "foreign_column_name": null,
-    "extra": "CREATE INDEX idx_store_subscriptions_owner_id ON public.store_subscriptions USING btree (owner_id)"
-  },
-  {
-    "object_type": "index",
-    "table_name": "store_subscriptions",
     "column_name": "idx_store_subscriptions_store_id",
     "data_type": null,
     "is_primary_key": null,
@@ -14566,6 +14555,17 @@
   {
     "object_type": "index",
     "table_name": "store_subscriptions",
+    "column_name": "store_subscriptions_pkey",
+    "data_type": null,
+    "is_primary_key": null,
+    "is_foreign_key": null,
+    "foreign_table_name": null,
+    "foreign_column_name": null,
+    "extra": "CREATE UNIQUE INDEX store_subscriptions_pkey ON public.store_subscriptions USING btree (id)"
+  },
+  {
+    "object_type": "index",
+    "table_name": "store_subscriptions",
     "column_name": "uq_store_subscriptions_store_id",
     "data_type": null,
     "is_primary_key": null,
@@ -14573,6 +14573,17 @@
     "foreign_table_name": null,
     "foreign_column_name": null,
     "extra": "CREATE UNIQUE INDEX uq_store_subscriptions_store_id ON public.store_subscriptions USING btree (store_id)"
+  },
+  {
+    "object_type": "index",
+    "table_name": "store_subscriptions",
+    "column_name": "idx_store_subscriptions_owner_id",
+    "data_type": null,
+    "is_primary_key": null,
+    "is_foreign_key": null,
+    "foreign_table_name": null,
+    "foreign_column_name": null,
+    "extra": "CREATE INDEX idx_store_subscriptions_owner_id ON public.store_subscriptions USING btree (owner_id)"
   },
   {
     "object_type": "index",
@@ -14599,13 +14610,13 @@
   {
     "object_type": "index",
     "table_name": "streak_events",
-    "column_name": "streak_events_user_streak_id_earned_date_key",
+    "column_name": "streak_events_pkey",
     "data_type": null,
     "is_primary_key": null,
     "is_foreign_key": null,
     "foreign_table_name": null,
     "foreign_column_name": null,
-    "extra": "CREATE UNIQUE INDEX streak_events_user_streak_id_earned_date_key ON public.streak_events USING btree (user_streak_id, earned_date)"
+    "extra": "CREATE UNIQUE INDEX streak_events_pkey ON public.streak_events USING btree (id)"
   },
   {
     "object_type": "index",
@@ -14632,13 +14643,13 @@
   {
     "object_type": "index",
     "table_name": "streak_events",
-    "column_name": "streak_events_pkey",
+    "column_name": "streak_events_user_streak_id_earned_date_key",
     "data_type": null,
     "is_primary_key": null,
     "is_foreign_key": null,
     "foreign_table_name": null,
     "foreign_column_name": null,
-    "extra": "CREATE UNIQUE INDEX streak_events_pkey ON public.streak_events USING btree (id)"
+    "extra": "CREATE UNIQUE INDEX streak_events_user_streak_id_earned_date_key ON public.streak_events USING btree (user_streak_id, earned_date)"
   },
   {
     "object_type": "index",
@@ -14665,6 +14676,17 @@
   {
     "object_type": "index",
     "table_name": "support_conversations",
+    "column_name": "idx_support_conversations_store_id",
+    "data_type": null,
+    "is_primary_key": null,
+    "is_foreign_key": null,
+    "foreign_table_name": null,
+    "foreign_column_name": null,
+    "extra": "CREATE INDEX idx_support_conversations_store_id ON public.support_conversations USING btree (store_id)"
+  },
+  {
+    "object_type": "index",
+    "table_name": "support_conversations",
     "column_name": "support_conversations_store_id_key",
     "data_type": null,
     "is_primary_key": null,
@@ -14676,13 +14698,13 @@
   {
     "object_type": "index",
     "table_name": "support_conversations",
-    "column_name": "idx_support_conversations_latest",
+    "column_name": "support_conversations_pkey",
     "data_type": null,
     "is_primary_key": null,
     "is_foreign_key": null,
     "foreign_table_name": null,
     "foreign_column_name": null,
-    "extra": "CREATE INDEX idx_support_conversations_latest ON public.support_conversations USING btree (status, last_message_at DESC NULLS LAST, updated_at DESC)"
+    "extra": "CREATE UNIQUE INDEX support_conversations_pkey ON public.support_conversations USING btree (id)"
   },
   {
     "object_type": "index",
@@ -14698,35 +14720,13 @@
   {
     "object_type": "index",
     "table_name": "support_conversations",
-    "column_name": "idx_support_conversations_store_id",
+    "column_name": "idx_support_conversations_latest",
     "data_type": null,
     "is_primary_key": null,
     "is_foreign_key": null,
     "foreign_table_name": null,
     "foreign_column_name": null,
-    "extra": "CREATE INDEX idx_support_conversations_store_id ON public.support_conversations USING btree (store_id)"
-  },
-  {
-    "object_type": "index",
-    "table_name": "support_conversations",
-    "column_name": "support_conversations_pkey",
-    "data_type": null,
-    "is_primary_key": null,
-    "is_foreign_key": null,
-    "foreign_table_name": null,
-    "foreign_column_name": null,
-    "extra": "CREATE UNIQUE INDEX support_conversations_pkey ON public.support_conversations USING btree (id)"
-  },
-  {
-    "object_type": "index",
-    "table_name": "support_messages",
-    "column_name": "idx_support_messages_conversation_created",
-    "data_type": null,
-    "is_primary_key": null,
-    "is_foreign_key": null,
-    "foreign_table_name": null,
-    "foreign_column_name": null,
-    "extra": "CREATE INDEX idx_support_messages_conversation_created ON public.support_messages USING btree (conversation_id, created_at)"
+    "extra": "CREATE INDEX idx_support_conversations_latest ON public.support_conversations USING btree (status, last_message_at DESC NULLS LAST, updated_at DESC)"
   },
   {
     "object_type": "index",
@@ -14760,6 +14760,17 @@
     "foreign_table_name": null,
     "foreign_column_name": null,
     "extra": "CREATE INDEX idx_support_messages_store_unread ON public.support_messages USING btree (conversation_id, sender_role, read_by_store_at) WHERE (sender_role = 'super_admin'::text)"
+  },
+  {
+    "object_type": "index",
+    "table_name": "support_messages",
+    "column_name": "idx_support_messages_conversation_created",
+    "data_type": null,
+    "is_primary_key": null,
+    "is_foreign_key": null,
+    "foreign_table_name": null,
+    "foreign_column_name": null,
+    "extra": "CREATE INDEX idx_support_messages_conversation_created ON public.support_messages USING btree (conversation_id, created_at)"
   },
   {
     "object_type": "index",
@@ -14841,17 +14852,6 @@
   {
     "object_type": "index",
     "table_name": "user_settings",
-    "column_name": "user_settings_pkey",
-    "data_type": null,
-    "is_primary_key": null,
-    "is_foreign_key": null,
-    "foreign_table_name": null,
-    "foreign_column_name": null,
-    "extra": "CREATE UNIQUE INDEX user_settings_pkey ON public.user_settings USING btree (id)"
-  },
-  {
-    "object_type": "index",
-    "table_name": "user_settings",
     "column_name": "user_settings_location_idx",
     "data_type": null,
     "is_primary_key": null,
@@ -14859,6 +14859,17 @@
     "foreign_table_name": null,
     "foreign_column_name": null,
     "extra": "CREATE INDEX user_settings_location_idx ON public.user_settings USING gist (location)"
+  },
+  {
+    "object_type": "index",
+    "table_name": "user_settings",
+    "column_name": "user_settings_pkey",
+    "data_type": null,
+    "is_primary_key": null,
+    "is_foreign_key": null,
+    "foreign_table_name": null,
+    "foreign_column_name": null,
+    "extra": "CREATE UNIQUE INDEX user_settings_pkey ON public.user_settings USING btree (id)"
   },
   {
     "object_type": "index",
@@ -14907,17 +14918,6 @@
   {
     "object_type": "index",
     "table_name": "vouchers",
-    "column_name": "vouchers_code_key",
-    "data_type": null,
-    "is_primary_key": null,
-    "is_foreign_key": null,
-    "foreign_table_name": null,
-    "foreign_column_name": null,
-    "extra": "CREATE UNIQUE INDEX vouchers_code_key ON public.vouchers USING btree (code)"
-  },
-  {
-    "object_type": "index",
-    "table_name": "vouchers",
     "column_name": "user_voucher_status",
     "data_type": null,
     "is_primary_key": null,
@@ -14929,13 +14929,13 @@
   {
     "object_type": "index",
     "table_name": "vouchers",
-    "column_name": "user_voucher_used_at",
+    "column_name": "vouchers_code_key",
     "data_type": null,
     "is_primary_key": null,
     "is_foreign_key": null,
     "foreign_table_name": null,
     "foreign_column_name": null,
-    "extra": "CREATE INDEX user_voucher_used_at ON public.vouchers USING btree (used_at)"
+    "extra": "CREATE UNIQUE INDEX vouchers_code_key ON public.vouchers USING btree (code)"
   },
   {
     "object_type": "index",
@@ -14949,6 +14949,17 @@
     "extra": "CREATE UNIQUE INDEX vouchers_pkey ON public.vouchers USING btree (id)"
   },
   {
+    "object_type": "index",
+    "table_name": "vouchers",
+    "column_name": "user_voucher_used_at",
+    "data_type": null,
+    "is_primary_key": null,
+    "is_foreign_key": null,
+    "foreign_table_name": null,
+    "foreign_column_name": null,
+    "extra": "CREATE INDEX user_voucher_used_at ON public.vouchers USING btree (used_at)"
+  },
+  {
     "object_type": "policy",
     "table_name": "manager_device_sessions",
     "column_name": "manager_own_device_sessions",
@@ -14958,6 +14969,17 @@
     "foreign_table_name": null,
     "foreign_column_name": null,
     "extra": "(user_id = auth.uid()) | (user_id = auth.uid())"
+  },
+  {
+    "object_type": "policy",
+    "table_name": "stamp_events",
+    "column_name": "Users can read their own stamp events",
+    "data_type": null,
+    "is_primary_key": null,
+    "is_foreign_key": null,
+    "foreign_table_name": null,
+    "foreign_column_name": null,
+    "extra": null
   },
   {
     "object_type": "policy",
@@ -14983,8 +15005,19 @@
   },
   {
     "object_type": "policy",
-    "table_name": "stamp_events",
-    "column_name": "Users can read their own stamp events",
+    "table_name": "stamp_rewards",
+    "column_name": "Users can view their own stamp rewards",
+    "data_type": null,
+    "is_primary_key": null,
+    "is_foreign_key": null,
+    "foreign_table_name": null,
+    "foreign_column_name": null,
+    "extra": null
+  },
+  {
+    "object_type": "policy",
+    "table_name": "stamp_rewards",
+    "column_name": "Users can insert their own stamp rewards",
     "data_type": null,
     "is_primary_key": null,
     "is_foreign_key": null,
@@ -15028,29 +15061,7 @@
   {
     "object_type": "policy",
     "table_name": "stamp_rewards",
-    "column_name": "Users can insert their own stamp rewards",
-    "data_type": null,
-    "is_primary_key": null,
-    "is_foreign_key": null,
-    "foreign_table_name": null,
-    "foreign_column_name": null,
-    "extra": null
-  },
-  {
-    "object_type": "policy",
-    "table_name": "stamp_rewards",
     "column_name": "Users can update their own stamp rewards",
-    "data_type": null,
-    "is_primary_key": null,
-    "is_foreign_key": null,
-    "foreign_table_name": null,
-    "foreign_column_name": null,
-    "extra": null
-  },
-  {
-    "object_type": "policy",
-    "table_name": "stamp_rewards",
-    "column_name": "Users can view their own stamp rewards",
     "data_type": null,
     "is_primary_key": null,
     "is_foreign_key": null,
@@ -15094,7 +15105,29 @@
   {
     "object_type": "policy",
     "table_name": "stores",
+    "column_name": "store_manager_select_own_store",
+    "data_type": null,
+    "is_primary_key": null,
+    "is_foreign_key": null,
+    "foreign_table_name": null,
+    "foreign_column_name": null,
+    "extra": null
+  },
+  {
+    "object_type": "policy",
+    "table_name": "stores",
     "column_name": "super_admin_all_stores",
+    "data_type": null,
+    "is_primary_key": null,
+    "is_foreign_key": null,
+    "foreign_table_name": null,
+    "foreign_column_name": null,
+    "extra": null
+  },
+  {
+    "object_type": "policy",
+    "table_name": "stores",
+    "column_name": "store_manager_insert_store",
     "data_type": null,
     "is_primary_key": null,
     "is_foreign_key": null,
@@ -15112,28 +15145,6 @@
     "foreign_table_name": null,
     "foreign_column_name": null,
     "extra": "(owner_id = auth.uid()) | (owner_id = auth.uid())"
-  },
-  {
-    "object_type": "policy",
-    "table_name": "stores",
-    "column_name": "store_manager_insert_store",
-    "data_type": null,
-    "is_primary_key": null,
-    "is_foreign_key": null,
-    "foreign_table_name": null,
-    "foreign_column_name": null,
-    "extra": null
-  },
-  {
-    "object_type": "policy",
-    "table_name": "stores",
-    "column_name": "store_manager_select_own_store",
-    "data_type": null,
-    "is_primary_key": null,
-    "is_foreign_key": null,
-    "foreign_table_name": null,
-    "foreign_column_name": null,
-    "extra": null
   },
   {
     "object_type": "policy",
@@ -15171,17 +15182,6 @@
   {
     "object_type": "policy",
     "table_name": "support_conversations",
-    "column_name": "Store managers can create own support conversations",
-    "data_type": null,
-    "is_primary_key": null,
-    "is_foreign_key": null,
-    "foreign_table_name": null,
-    "foreign_column_name": null,
-    "extra": null
-  },
-  {
-    "object_type": "policy",
-    "table_name": "support_conversations",
     "column_name": "Conversation participants can update support conversations",
     "data_type": null,
     "is_primary_key": null,
@@ -15192,8 +15192,8 @@
   },
   {
     "object_type": "policy",
-    "table_name": "support_messages",
-    "column_name": "Super admins can send support messages",
+    "table_name": "support_conversations",
+    "column_name": "Store managers can create own support conversations",
     "data_type": null,
     "is_primary_key": null,
     "is_foreign_key": null,
@@ -15215,17 +15215,6 @@
   {
     "object_type": "policy",
     "table_name": "support_messages",
-    "column_name": "Store managers can send support messages",
-    "data_type": null,
-    "is_primary_key": null,
-    "is_foreign_key": null,
-    "foreign_table_name": null,
-    "foreign_column_name": null,
-    "extra": null
-  },
-  {
-    "object_type": "policy",
-    "table_name": "support_messages",
     "column_name": "Participants can mark support messages read",
     "data_type": null,
     "is_primary_key": null,
@@ -15236,8 +15225,19 @@
   },
   {
     "object_type": "policy",
-    "table_name": "user_roles",
-    "column_name": "manager_insert_user_roles",
+    "table_name": "support_messages",
+    "column_name": "Super admins can send support messages",
+    "data_type": null,
+    "is_primary_key": null,
+    "is_foreign_key": null,
+    "foreign_table_name": null,
+    "foreign_column_name": null,
+    "extra": null
+  },
+  {
+    "object_type": "policy",
+    "table_name": "support_messages",
+    "column_name": "Store managers can send support messages",
     "data_type": null,
     "is_primary_key": null,
     "is_foreign_key": null,
@@ -15260,6 +15260,17 @@
     "object_type": "policy",
     "table_name": "user_roles",
     "column_name": "super_admin_all_user_roles",
+    "data_type": null,
+    "is_primary_key": null,
+    "is_foreign_key": null,
+    "foreign_table_name": null,
+    "foreign_column_name": null,
+    "extra": null
+  },
+  {
+    "object_type": "policy",
+    "table_name": "user_roles",
+    "column_name": "manager_insert_user_roles",
     "data_type": null,
     "is_primary_key": null,
     "is_foreign_key": null,
@@ -15776,6 +15787,17 @@
   {
     "object_type": "trigger",
     "table_name": "store_stamps",
+    "column_name": "trg_sync_stamp_feature",
+    "data_type": "AFTER",
+    "is_primary_key": null,
+    "is_foreign_key": null,
+    "foreign_table_name": null,
+    "foreign_column_name": null,
+    "extra": "EXECUTE FUNCTION sync_store_feature_on_program_status()"
+  },
+  {
+    "object_type": "trigger",
+    "table_name": "store_stamps",
     "column_name": "trg_snapshot_stamp_timezone",
     "data_type": "BEFORE",
     "is_primary_key": null,
@@ -15808,36 +15830,14 @@
   },
   {
     "object_type": "trigger",
-    "table_name": "store_stamps",
-    "column_name": "trg_sync_stamp_feature",
+    "table_name": "store_streaks",
+    "column_name": "trg_sync_streak_feature",
     "data_type": "AFTER",
     "is_primary_key": null,
     "is_foreign_key": null,
     "foreign_table_name": null,
     "foreign_column_name": null,
     "extra": "EXECUTE FUNCTION sync_store_feature_on_program_status()"
-  },
-  {
-    "object_type": "trigger",
-    "table_name": "store_streaks",
-    "column_name": "trg_snapshot_streak_timezone",
-    "data_type": "BEFORE",
-    "is_primary_key": null,
-    "is_foreign_key": null,
-    "foreign_table_name": null,
-    "foreign_column_name": null,
-    "extra": "EXECUTE FUNCTION app.snapshot_program_timezone()"
-  },
-  {
-    "object_type": "trigger",
-    "table_name": "store_streaks",
-    "column_name": "trg_validate_upcoming_start_at",
-    "data_type": "BEFORE",
-    "is_primary_key": null,
-    "is_foreign_key": null,
-    "foreign_table_name": null,
-    "foreign_column_name": null,
-    "extra": "EXECUTE FUNCTION validate_upcoming_start_at()"
   },
   {
     "object_type": "trigger",
@@ -15864,13 +15864,13 @@
   {
     "object_type": "trigger",
     "table_name": "store_streaks",
-    "column_name": "trg_sync_streak_feature",
-    "data_type": "AFTER",
+    "column_name": "trg_validate_upcoming_start_at",
+    "data_type": "BEFORE",
     "is_primary_key": null,
     "is_foreign_key": null,
     "foreign_table_name": null,
     "foreign_column_name": null,
-    "extra": "EXECUTE FUNCTION sync_store_feature_on_program_status()"
+    "extra": "EXECUTE FUNCTION validate_upcoming_start_at()"
   },
   {
     "object_type": "trigger",
@@ -15882,6 +15882,28 @@
     "foreign_table_name": null,
     "foreign_column_name": null,
     "extra": "EXECUTE FUNCTION app.snapshot_program_timezone()"
+  },
+  {
+    "object_type": "trigger",
+    "table_name": "store_streaks",
+    "column_name": "trg_snapshot_streak_timezone",
+    "data_type": "BEFORE",
+    "is_primary_key": null,
+    "is_foreign_key": null,
+    "foreign_table_name": null,
+    "foreign_column_name": null,
+    "extra": "EXECUTE FUNCTION app.snapshot_program_timezone()"
+  },
+  {
+    "object_type": "trigger",
+    "table_name": "store_subscriptions",
+    "column_name": "on_payment_status_change",
+    "data_type": "BEFORE",
+    "is_primary_key": null,
+    "is_foreign_key": null,
+    "foreign_table_name": null,
+    "foreign_column_name": null,
+    "extra": "EXECUTE FUNCTION handle_subscription_payment_status()"
   },
   {
     "object_type": "trigger",
@@ -15907,14 +15929,25 @@
   },
   {
     "object_type": "trigger",
-    "table_name": "store_subscriptions",
-    "column_name": "on_payment_status_change",
+    "table_name": "stores",
+    "column_name": "trg_sync_store_geo_and_timezone",
     "data_type": "BEFORE",
     "is_primary_key": null,
     "is_foreign_key": null,
     "foreign_table_name": null,
     "foreign_column_name": null,
-    "extra": "EXECUTE FUNCTION handle_subscription_payment_status()"
+    "extra": "EXECUTE FUNCTION app.sync_store_geo_and_timezone()"
+  },
+  {
+    "object_type": "trigger",
+    "table_name": "stores",
+    "column_name": "trg_sync_store_geo_and_timezone",
+    "data_type": "BEFORE",
+    "is_primary_key": null,
+    "is_foreign_key": null,
+    "foreign_table_name": null,
+    "foreign_column_name": null,
+    "extra": "EXECUTE FUNCTION app.sync_store_geo_and_timezone()"
   },
   {
     "object_type": "trigger",
@@ -15929,28 +15962,6 @@
   },
   {
     "object_type": "trigger",
-    "table_name": "stores",
-    "column_name": "trg_sync_store_geo_and_timezone",
-    "data_type": "BEFORE",
-    "is_primary_key": null,
-    "is_foreign_key": null,
-    "foreign_table_name": null,
-    "foreign_column_name": null,
-    "extra": "EXECUTE FUNCTION app.sync_store_geo_and_timezone()"
-  },
-  {
-    "object_type": "trigger",
-    "table_name": "stores",
-    "column_name": "trg_sync_store_geo_and_timezone",
-    "data_type": "BEFORE",
-    "is_primary_key": null,
-    "is_foreign_key": null,
-    "foreign_table_name": null,
-    "foreign_column_name": null,
-    "extra": "EXECUTE FUNCTION app.sync_store_geo_and_timezone()"
-  },
-  {
-    "object_type": "trigger",
     "table_name": "support_messages",
     "column_name": "trg_touch_support_conversation_from_message",
     "data_type": "AFTER",
@@ -15959,16 +15970,5 @@
     "foreign_table_name": null,
     "foreign_column_name": null,
     "extra": "EXECUTE FUNCTION tg_touch_support_conversation_from_message()"
-  },
-  {
-    "object_type": "function",
-    "table_name": "public",
-    "column_name": "get_user_points_summary",
-    "data_type": "record",
-    "is_primary_key": null,
-    "is_foreign_key": null,
-    "foreign_table_name": null,
-    "foreign_column_name": null,
-    "extra": "\r\nCREATE OR REPLACE FUNCTION get_user_points_summary(p_user_id uuid, p_store_id bigint DEFAULT NULL)\r\n..."
   }
 ]

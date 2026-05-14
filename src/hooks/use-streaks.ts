@@ -1,45 +1,47 @@
-import { useState, useCallback, useEffect } from "react";
+import { create } from "zustand";
 import { getUserStreaks, UserStreak } from "@/services/streak-service";
-import { useAuthStore } from "@/store/auth-store";
 import { supabase } from "@/supabase/supabase";
 
-export function useStreaks() {
-  const [streaks, setStreaks] = useState<UserStreak[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
+interface StreaksState {
+  streaks: UserStreak[];
+  isLoading: boolean;
+  error: Error | null;
+  hasFetchedOnce: boolean;
+  fetchStreaks: () => Promise<void>;
+  refetch: () => Promise<void>; 
+}
 
-  const { sessionToken } = useAuthStore(); // Check session
+export const useStreaks = create<StreaksState>((set, get) => ({
+  streaks: [],
+  isLoading: false,
+  error: null,
+  hasFetchedOnce: false,
 
-  const fetchStreaks = useCallback(async () => {
+  fetchStreaks: async () => {
+    // Only set loading true if it's the very first fetch, to prevent UI flashes on background refetches
+    if (!get().hasFetchedOnce) {
+      set({ isLoading: true, error: null });
+    } else {
+      set({ error: null });
+    }
+
     try {
-      setIsLoading(true);
-      setError(null);
-
-      const { data: { user } } = await supabase.auth.getUser();
+      // getSession() uses the locally cached token — no network round-trip.
+      const { data: { session } } = await supabase.auth.getSession();
+      const user = session?.user;
       if (!user?.id) {
-        setIsLoading(false);
-        setStreaks([]);
+        set({ streaks: [], isLoading: false, hasFetchedOnce: true });
         return;
       }
 
       const data = await getUserStreaks(user.id);
-      setStreaks(data);
+      set({ streaks: data, isLoading: false, hasFetchedOnce: true });
     } catch (e: any) {
-      setError(e);
-    } finally {
-      setIsLoading(false);
+      set({ error: e, isLoading: false, hasFetchedOnce: true });
     }
-  }, [sessionToken]);
+  },
 
-  // Initial fetch
-  useEffect(() => {
-    fetchStreaks();
-  }, [fetchStreaks]);
-
-  return {
-    streaks,
-    isLoading,
-    error,
-    refetch: fetchStreaks,
-  };
-}
+  refetch: async () => {
+    await get().fetchStreaks();
+  },
+}));

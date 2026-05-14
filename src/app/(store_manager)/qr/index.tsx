@@ -26,19 +26,19 @@ export default function QRIndex() {
   } | null>(null);
   const [toggling, setToggling] = useState(false);
 
-  const qrQuery = useQRConfigQuery(storeIdForFetch);
+  const { data, isPending, isRefetching, refetch } = useQRConfigQuery(storeIdForFetch);
   const toggleMutation = useToggleQREnabledMutation();
-  const config = qrQuery.data ?? null;
-  const loading = qrQuery.isPending;
-  const refreshing = qrQuery.isRefetching && !qrQuery.isPending;
+  const config = data ?? null;
+  const loading = isPending;
+  const refreshing = isRefetching && !isPending;
 
   useFocusEffect(
     useCallback(() => {
-      void qrQuery.refetch();
-    }, [qrQuery]),
+      void refetch();
+    }, [refetch]),
   );
 
-  const handleRefresh = () => void qrQuery.refetch();
+  const handleRefresh = () => void refetch();
 
   const handleToggleEnabled = async () => {
     if (!config || toggling || !storeIdForFetch) return;

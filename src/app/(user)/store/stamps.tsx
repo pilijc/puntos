@@ -286,7 +286,9 @@ export default function StampLogScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
 
-  const { storeId } = useLocalSearchParams<{ storeId?: string }>();
+  const params = useLocalSearchParams<{ storeId?: string }>();
+  const rawStoreId = params.storeId;
+  const storeId = Array.isArray(rawStoreId) ? rawStoreId[0] : rawStoreId;
 
   const { stamps, isLoading: isStampsLoading, fetchStamps } = useStamps();
   const [activePrograms, setActivePrograms] = useState<any[]>([]);

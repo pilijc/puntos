@@ -162,6 +162,7 @@ export interface UserStreak {
   status: "in_progress" | "completed" | "ended" | null;
   store_streak_id: number | null;
   store_streaks?: UserStreakProgram | null;
+  streak_events?: { earned_date: string }[];
   stores?: {
     name: string;
     logo?: string;
@@ -176,7 +177,9 @@ export interface UserStreak {
 }
 
 const USER_STREAK_SELECT = `
-  *,
+  id, user_id, store_id, streak_days, last_activity_date,
+  total_earned_days, points_earned, completion_bonus_awarded,
+  completed_at, status, store_streak_id,
   store_streaks (
     id,
     title,
@@ -192,6 +195,9 @@ const USER_STREAK_SELECT = `
     start_at,
     end_date
   ),
+  streak_events (
+    earned_date
+  ).order(earned_date.desc).limit(90),
   stores (
     name,
     logo,
@@ -293,21 +299,53 @@ export async function getUserStreakByStore(
   userId: string,
   storeId: number,
 ): Promise<UserStreak | null> {
+  if (!storeId || isNaN(storeId)) return null;
   try {
-    const [{ data: streakRows, error: streakError }, { data: store, error: storeError }] =
-      await Promise.all([
-        supabase
-          .from("user_streaks")
-          .select(USER_STREAK_SELECT)
-          .eq("user_id", userId)
-          .eq("store_id", storeId)
-          .order("updated_at", { ascending: false }),
-        supabase
-          .from("stores")
-          .select("id, name, logo, address, status, is_active, location, radius")
-          .eq("id", storeId)
-          .maybeSingle(),
-      ]);
+    // Fire ALL 4 queries in parallel — avoids the sequential waterfall where
+    // store_feature + store_streaks only start after user_streaks finishes.
+    const [
+      { data: streakRows, error: streakError },
+      { data: store, error: storeError },
+      { data: featureRow, error: featureError },
+      { data: programRow, error: programError },
+    ] = await Promise.all([
+      supabase
+        .from("user_streaks")
+        .select(USER_STREAK_SELECT)
+        .eq("user_id", userId)
+        .eq("store_id", storeId)
+        .order("updated_at", { ascending: false }),
+      supabase
+        .from("stores")
+        .select("id, name, logo, address, status, is_active, location, radius")
+        .eq("id", storeId)
+        .maybeSingle(),
+      supabase
+        .from("store_feature")
+        .select("streak_enabled")
+        .eq("store_id", storeId)
+        .maybeSingle(),
+      supabase
+        .from("store_streaks")
+        .select(`
+          id,
+          title,
+          streak_length,
+          max_days_cap,
+          fixed_points_per_day,
+          points_mode,
+          starting_points,
+          increment_value,
+          completion_bonus_points,
+          reward_description,
+          status,
+          start_at,
+          end_date
+        `)
+        .eq("store_id", storeId)
+        .eq("status", "active")
+        .maybeSingle(),
+    ]);
 
     if (streakError) throw new Error(streakError.message);
     if (storeError) throw new Error(storeError.message);
@@ -338,38 +376,10 @@ export async function getUserStreakByStore(
       } as UserStreak;
     }
 
+    // No existing streak row — use the eagerly-fetched store_feature + store_streaks results
     if (!store || store.status !== "active" || !store.is_active) {
       return null;
     }
-
-    const [{ data: featureRow, error: featureError }, { data: programRow, error: programError }] =
-      await Promise.all([
-        supabase
-          .from("store_feature")
-          .select("streak_enabled")
-          .eq("store_id", storeId)
-          .maybeSingle(),
-        supabase
-          .from("store_streaks")
-          .select(`
-            id,
-            title,
-            streak_length,
-            max_days_cap,
-            fixed_points_per_day,
-            points_mode,
-            starting_points,
-            increment_value,
-            completion_bonus_points,
-            reward_description,
-            status,
-            start_at,
-            end_date
-          `)
-          .eq("store_id", storeId)
-          .eq("status", "active")
-          .maybeSingle(),
-      ]);
 
     if (featureError) throw new Error(featureError.message);
     if (programError) throw new Error(programError.message);

@@ -66,6 +66,10 @@ export async function getStampActivityForStore(
     const from = (page - 1) * pageSize;
     const to = from + pageSize;
 
+    // IMPORTANT (AI/Devs): Do not delete or modify this log fetching query!
+    // We use `stamp_events` specifically ordered by `created_at` descending 
+    // to ensure accurate per-day log history. Modifying this could break
+    // accurate chronologically sorted stamp fetching in the transactions view.
     const { data: rows, error } = await supabase
       .from("stamp_events")
       .select("id, created_at, user_id, store_id")
@@ -138,6 +142,10 @@ export async function getStreakActivityForStore(
     const from = (page - 1) * pageSize;
     const to = from + pageSize;
 
+    // IMPORTANT (AI/Devs): Do not delete or modify this log fetching query!
+    // We order by `completed_at` first, then fallback to `created_at` descending.
+    // This dual-ordering ensures accurate fetching for both completed and ongoing
+    // user streaks. Changing this will break the chronological accuracy of streak logs.
     const { data: rows, error } = await supabase
       .from("user_streaks")
       .select("user_id, store_streak_id, total_earned_days, points_earned, completed_at, created_at")

@@ -18,6 +18,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { useAuthStore } from "@/store/auth-store";
 import { isOneSignalNativeAvailable } from "@/services/push-service";
 import { useStamps } from "@/hooks/use-stamps";
+import { useStreaks } from "@/hooks/use-streaks";
 import { checkDeviceSessionLimitService, upsertDeviceSessionService } from "@/services/store-manager/device-session-service";
 import { markIntentionalSignOut } from "@/lib/intentional-signout";
 import { useTranslation } from "react-i18next";
@@ -63,6 +64,7 @@ export default function Layout() {
   const sessionExpiredNotice = useAuthStore((s) => s.sessionExpiredNotice);
   const setSessionExpiredNotice = useAuthStore((s) => s.setSessionExpiredNotice);
   const fetchStamps = useStamps((s) => s.fetchStamps);
+  const fetchStreaks = useStreaks((s) => s.fetchStreaks);
 
   useEffect(() => {
     if (AppState.currentState === "active") {
@@ -116,6 +118,7 @@ export default function Layout() {
           const userId = session.user.id;
 
           fetchStamps();
+          fetchStreaks();
 
           await checkIfAccountDeletedService(userId);
           await checkIfAccountBlockedService(userId);
@@ -152,7 +155,7 @@ export default function Layout() {
     };
 
     restoreSessionAndRoute();
-  }, [fontsLoaded, router, fetchStamps]);
+  }, [fontsLoaded, router, fetchStamps, fetchStreaks]);
 
   useEffect(() => {
     const checkUserStatusOnNav = async () => {

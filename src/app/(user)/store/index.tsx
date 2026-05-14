@@ -292,8 +292,15 @@ export default function StoreListScreen() {
   return (
     <SafeAreaView
       className="flex-1 bg-backgroundMuted dark:bg-darkBackground"
-      edges={["left", "right"]}
+      edges={["top", "left", "right"]}
     >
+      <View className="bg-white dark:bg-darkBackground border-b border-neutral-100 dark:border-darkBorder px-6 py-3 flex-row justify-between items-center">
+        <Text className="text-xl font-poppins-bold text-textPrimary dark:text-darkTextPrimary py-1">
+          {translate("user.rewards.storesList.title")}
+        </Text>
+        <View className="w-10 h-10 opacity-0" />
+      </View>
+
       <FlatList
         data={listData}
         keyExtractor={keyExtractor}
@@ -304,7 +311,7 @@ export default function StoreListScreen() {
         maxToRenderPerBatch={8}
         windowSize={5}
         contentContainerStyle={{
-          paddingTop: Math.max(insets.top, 24),
+          paddingTop: 16,
           paddingBottom: Math.max(insets.bottom, 40),
         }}
         refreshControl={
@@ -316,13 +323,7 @@ export default function StoreListScreen() {
           />
         }
         ListHeaderComponent={
-          <View className="px-6 gap-y-4">
-            <View className="flex-row justify-between items-center w-full ml-1 mt-2">
-              <Text className="text-xl font-poppins-bold text-neutral-900 dark:text-darkTextPrimary">
-                {translate("user.rewards.storesList.title")}
-              </Text>
-              <View className="w-10 h-10 opacity-0" />
-            </View>
+          <View className="px-6 mb-4">
             <View className="flex-row items-center bg-white dark:bg-darkBackgroundCard rounded-2xl px-4 py-1 border border-neutral-100 dark:border-darkBorder shadow-sm shadow-neutral-100 dark:shadow-none">
               <Search size={20} color="#9CA3AF" />
               <TextInput

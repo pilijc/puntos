@@ -41,7 +41,12 @@ export default function UserStreakCard({
   //   diffDays(Fri, Wed) = 2 ≥ streak_days=1  → Wed incorrectly shows as "missed"
   // Without this Set, previously-earned circles flash to "missed" on re-render.
   // If you remove this state you WILL break the circle history display. — PUNTOS team
-  const [earnedWeekDates, setEarnedWeekDates] = useState<Set<string>>(new Set());
+  const [earnedWeekDates, setEarnedWeekDates] = useState<Set<string>>(() => {
+    if (streak.streak_events && Array.isArray(streak.streak_events)) {
+      return new Set(streak.streak_events.map((e: any) => e.earned_date));
+    }
+    return new Set();
+  });
   const [modalConfig, setModalConfig] = useState<{
     visible: boolean;
     title: string;

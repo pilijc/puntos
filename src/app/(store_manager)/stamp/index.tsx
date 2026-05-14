@@ -50,25 +50,25 @@ export default function ViewStamp() {
   const { canEdit, loading: permLoading, expiresAtIso } = useStorePremiumCampaignEdit(storeId);
   const campaignsLocked = !permLoading && !canEdit;
 
-  const stampsQuery = useStampsByStoreQuery(storeId);
-  const rewardsQuery = useRewardsByStoreQuery(storeId);
+  const { data: stampsData, isPending: stampsPending, refetch: refetchStamps } = useStampProgramQuery(storeId);
+  const { data: rewardsData, isPending: rewardsPending, refetch: refetchRewards } = useRewardsByStoreQuery(storeId);
 
   useEffect(() => {
-    if (stampsQuery.data) setStamps(stampsQuery.data);
-  }, [stampsQuery.data, setStamps]);
+    if (stampsData) setStamps(stampsData);
+  }, [stampsData, setStamps]);
 
   useEffect(() => {
-    if (rewardsQuery.data) setRewards(rewardsQuery.data);
-  }, [rewardsQuery.data, setRewards]);
+    if (rewardsData) setRewards(rewardsData);
+  }, [rewardsData, setRewards]);
 
   useEffect(() => {
-    setLoading(stampsQuery.isPending || rewardsQuery.isPending);
-  }, [stampsQuery.isPending, rewardsQuery.isPending, setLoading]);
+    setLoading(stampsPending || rewardsPending);
+  }, [stampsPending, rewardsPending, setLoading]);
 
   const refetchStampRewards = useCallback(() => {
-    void stampsQuery.refetch();
-    void rewardsQuery.refetch();
-  }, [stampsQuery, rewardsQuery]);
+    void refetchStamps();
+    void refetchRewards();
+  }, [refetchStamps, refetchRewards]);
 
   useFocusEffect(
     useCallback(() => {
