@@ -1,17 +1,16 @@
-import React, { useCallback, useRef } from "react";
-import { RefreshControl, useColorScheme, ActivityIndicator, Platform } from "react-native";
+import React, { useCallback, useState } from "react";
+import { RefreshControl, ActivityIndicator, Platform } from "react-native";
 import { View, Text, TouchableOpacity, ScrollView, SafeAreaView } from "@/tw";
 import { useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
-import { getQRConfig, toggleQREnabled } from "@/services/store-manager/qr-service";
 import { Modal } from "@/components/modal";
 import { Button } from "@/components/button";
 import { Toggle } from "@/components/toggle";
 import { QrCode, RefreshCcw } from "lucide-react-native";
 import { formatDate } from "@/utils/store_manager/streak-utils";
-import { useQRStore } from "@/store/store-manager/qr-store";
 import { QRSkeleton } from "@/components/skeleton/store_manager/qr-skeleton";
 import { AppHeader } from "@/components/header";
 import { useTranslation } from "react-i18next";
+import { useQRConfigQuery, useToggleQREnabledMutation } from "@/hooks/store-manager/rq";
 
 const WEB_MAX_WIDTH = 896;
 
@@ -19,76 +18,34 @@ export default function QRIndex() {
   const { t: translate } = useTranslation();
   const router = useRouter();
   const { storeId } = useLocalSearchParams<{ storeId?: string }>();
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === "dark";
-  const lastUpdatedRef = useRef<string | null>(null);
   const storeIdForFetch = storeId && storeId !== "undefined" ? storeId : undefined;
-  const lastStoreIdRef = useRef<string | undefined>(undefined);
-  const hasLoadedOnceRef = useRef(false);
-  const isFetchingRef = useRef(false);
-  const {
-    config,
-    loading,
-    refreshing,
-    toggling,
-    modal,
-    setConfig,
-    setLoading,
-    setRefreshing,
-    setToggling,
-    setModal,
-  } = useQRStore();
+  const [modal, setModal] = useState<{
+    title: string;
+    message: string;
+    buttons: { label: string; onPress: () => void; variant: "secondary" }[];
+  } | null>(null);
+  const [toggling, setToggling] = useState(false);
 
-  const loadConfig = useCallback(
-    async (isRefresh = false) => {
-      if (!storeIdForFetch || isFetchingRef.current) return;
-  
-      const isNewStore = storeIdForFetch !== lastStoreIdRef.current;
-      if (isNewStore) {
-        lastStoreIdRef.current = storeIdForFetch;
-        lastUpdatedRef.current = null;
-        hasLoadedOnceRef.current = false;
-        setConfig(null);
-      }
-  
-      if (!hasLoadedOnceRef.current && !isRefresh) setLoading(true);
-      if (isRefresh) setRefreshing(true);
-      isFetchingRef.current = true;
-  
-      try {
-        const data = await getQRConfig(storeIdForFetch);
-        if (lastUpdatedRef.current !== data?.updated_at) {
-          lastUpdatedRef.current = data?.updated_at ?? null;
-          setConfig(data ?? null);
-        }
-      } catch {
-        lastUpdatedRef.current = null;
-        setConfig(null);
-      } finally {
-        hasLoadedOnceRef.current = true;
-        isFetchingRef.current = false;
-        setLoading(false);
-        setRefreshing(false);
-      }
-    },
-    [storeIdForFetch]
-  );
-  
+  const qrQuery = useQRConfigQuery(storeIdForFetch);
+  const toggleMutation = useToggleQREnabledMutation();
+  const config = qrQuery.data ?? null;
+  const loading = qrQuery.isPending;
+  const refreshing = qrQuery.isRefetching && !qrQuery.isPending;
+
   useFocusEffect(
     useCallback(() => {
-      loadConfig();
-    }, [loadConfig])
+      void qrQuery.refetch();
+    }, [qrQuery]),
   );
-  
-  const handleRefresh = () => loadConfig(true);
+
+  const handleRefresh = () => void qrQuery.refetch();
 
   const handleToggleEnabled = async () => {
     if (!config || toggling || !storeIdForFetch) return;
     setToggling(true);
     try {
       const next = !config.qr_enabled;
-      await toggleQREnabled(storeIdForFetch, next);
-      setConfig({ ...config, qr_enabled: next });
+      await toggleMutation.mutateAsync({ storeId: storeIdForFetch, enabled: next });
     } catch {
       setModal({
         title: translate("label.error"),
@@ -217,7 +174,7 @@ export default function QRIndex() {
                       <View className="flex-1 px-4 py-3">
                         <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">{translate("storeManager.qr.per")}</Text>
                         <Text className="text-base font-poppins-bold text-textPrimary dark:text-darkTextPrimary mt-0.5">
-                          ₱{config.base_amount ?? 0}
+                          PHP {config.base_amount ?? 0}
                         </Text>
                       </View>
                     </View>
@@ -232,7 +189,7 @@ export default function QRIndex() {
                       <View className="flex-1 px-4 py-3">
                         <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">{translate("storeManager.qr.minSpend")}</Text>
                         <Text className="text-base font-poppins-bold text-textPrimary dark:text-darkTextPrimary mt-0.5">
-                          {config.minimum_spend != null && config.minimum_spend > 0 ? `₱${config.minimum_spend}` : translate("storeManager.qr.none")}
+                          {config.minimum_spend != null && config.minimum_spend > 0 ? `PHP ${config.minimum_spend}` : translate("store_manager.qr.none")}
                         </Text>
                       </View>
                     </View>

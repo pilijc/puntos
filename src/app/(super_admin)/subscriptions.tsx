@@ -336,7 +336,7 @@ export default function SubscriptionConfig() {
                   flex: 2,
                   align: "center",
                   render: (p: ManagerSubscriptionPaymentRow) =>
-                    `₱${parseAmount(p.amount_paid)?.toFixed(2) ?? "0.00"}`,
+                    `PHP ${parseAmount(p.amount_paid)?.toFixed(2) ?? "0.00"}`,
                 },
                 {
                   key: "billing_period_start",

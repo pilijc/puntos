@@ -1,4 +1,5 @@
-import React, { useCallback, useEffect, useMemo, useRef } from "react";
+import React, { useCallback, useEffect, useMemo } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { ActivityIndicator, Animated, Linking, Platform, useColorScheme } from "react-native";
 import { View, Text, SafeAreaView, ScrollView } from "@/tw";
@@ -10,17 +11,22 @@ import { Table, type TableColumn } from "@/components/ui/table";
 import { Modal } from "@/components/modal";
 import { useStoreManagerSubscriptionStore } from "@/store/store-manager/subscription-store";
 import {
-	getAuthenticatedUserId,
-	getManagerSubscription,
-	getManagerSubscriptionPayments,
 	useSubscriptionCheckout,
-	getSubscriptionPlans,
 	pickBasicAndProPlans,
 	normalizeSubscriptionId,
 	cancelManagerSubscription,
 	subscribeToManagerSubscriptionRealtime,
+	getAuthenticatedUserId,
+	getManagerSubscription,
 	type ManagerSubscriptionPaymentRow,
 } from "@/services/store-manager/subscription-service";
+import {
+	useAuthenticatedUserIdQuery,
+	useSubscriptionPlansQuery,
+	useManagerSubscriptionQuery,
+	useManagerInvoicesQuery,
+} from "@/hooks/store-manager/rq/subscription-queries";
+import { storeManagerKeys } from "@/hooks/store-manager/rq/query-keys";
 
 function toAmountNumber(value: unknown): number | null {
 	if (typeof value === "number" && Number.isFinite(value)) return value;
@@ -49,17 +55,12 @@ function formatDateLong(value: string | number | Date | null | undefined): strin
 
 export default function SubscriptionScreen() {
 	const { t: translate } = useTranslation();
+	const queryClient = useQueryClient();
 	const insets = useSafeAreaInsets();
 	const isWeb = Platform.OS === "web";
 	const scrollBottom = Math.max(insets.bottom, 40);
 	const colorScheme = useColorScheme();
 	const {
-		ownerId,
-		plans,
-		managerRow,
-		invoices,
-		loading,
-		loadingInvoices,
 		startingCheckout,
 		cancellingSubscription,
 		modal,
@@ -67,49 +68,20 @@ export default function SubscriptionScreen() {
 	} = useStoreManagerSubscriptionStore();
 	usePaymentReturnHandler();
 
+	const { data: ownerId } = useAuthenticatedUserIdQuery();
+	const plansQuery = useSubscriptionPlansQuery(Boolean(ownerId));
+	const subQuery = useManagerSubscriptionQuery(ownerId ?? undefined);
+	const invoicesQuery = useManagerInvoicesQuery(ownerId ?? undefined);
+
+	const plans = plansQuery.data ?? [];
+	const managerRow = subQuery.data ?? null;
+	const invoices = invoicesQuery.data ?? [];
+	const loading =
+		plansQuery.isPending || subQuery.isPending || (Boolean(ownerId) && invoicesQuery.isPending);
+	const loadingInvoices = invoicesQuery.isPending;
+
 	useEffect(() => {
-		let cancelled = false;
-		const { reset, setLoading, setLoadingInvoices, hydrate } =
-			useStoreManagerSubscriptionStore.getState();
-
-		reset();
-
-		void (async () => {
-			try {
-				const uid = await getAuthenticatedUserId();
-				if (!uid) {
-					if (!cancelled) setLoading(false);
-					return;
-				}
-
-				setLoadingInvoices(true);
-				const [planList, mgr, paymentRows] = await Promise.all([
-					getSubscriptionPlans(),
-					getManagerSubscription(uid),
-					getManagerSubscriptionPayments(uid),
-				]);
-
-				if (cancelled) {
-					setLoadingInvoices(false);
-					return;
-				}
-
-				hydrate({
-					ownerId: uid,
-					plans: planList,
-					managerRow: mgr,
-					invoices: paymentRows,
-				});
-			} catch (e) {
-				if (!cancelled) console.error("Subscription screen load error:", e);
-			} finally {
-				if (!cancelled) setLoading(false);
-			}
-		})();
-
-		return () => {
-			cancelled = true;
-		};
+		useStoreManagerSubscriptionStore.getState().reset();
 	}, []);
 
 	// Realtime refresh when subscription/payment rows change.
@@ -117,27 +89,19 @@ export default function SubscriptionScreen() {
 		if (!ownerId) return;
 
 		let cancelled = false;
-		let refreshTimer: any = null;
+		let refreshTimer: ReturnType<typeof setTimeout> | null = null;
 
 		const scheduleRefresh = () => {
 			if (cancelled) return;
 			if (refreshTimer) clearTimeout(refreshTimer);
-			// small debounce to collapse bursty events
-			refreshTimer = setTimeout(async () => {
-				try {
-					const [mgr, paymentRows] = await Promise.all([
-						getManagerSubscription(ownerId),
-						getManagerSubscriptionPayments(ownerId),
-					]);
-					if (cancelled) return;
-					useStoreManagerSubscriptionStore.setState({
-						managerRow: mgr,
-						invoices: paymentRows,
-						loadingInvoices: false,
-					});
-				} catch (e) {
-					if (!cancelled) console.warn("[subscription] realtime refresh failed:", e);
-				}
+			refreshTimer = setTimeout(() => {
+				if (cancelled) return;
+				void queryClient.invalidateQueries({
+					queryKey: storeManagerKeys.managerSubscription(ownerId),
+				});
+				void queryClient.invalidateQueries({
+					queryKey: storeManagerKeys.managerInvoices(ownerId),
+				});
 			}, 250);
 		};
 
@@ -151,7 +115,7 @@ export default function SubscriptionScreen() {
 			if (refreshTimer) clearTimeout(refreshTimer);
 			unsubscribe();
 		};
-	}, [ownerId]);
+	}, [ownerId, queryClient]);
 
 	const { basicPlan, proPlan } = useMemo(() => pickBasicAndProPlans(plans), [plans]);
 
@@ -228,7 +192,7 @@ export default function SubscriptionScreen() {
 		});
 	}, [nextPaymentDate, translate]);
 
-	const invoiceColumns = useMemo((): Array<TableColumn<ManagerSubscriptionPaymentRow>> => {
+	const invoiceColumns = useMemo((): Array<TableColumn<ManagerSubscriptionPaymentRow>> => { 	
 		return [
 			{
 				key: "payment_reference",
@@ -311,7 +275,7 @@ export default function SubscriptionScreen() {
 
 	const handleSubscribe = useCallback(async (amount: number, name: string) => {
 		const s = useStoreManagerSubscriptionStore.getState();
-		if (!s.ownerId) {
+		if (!ownerId) {
 			s.showMessage(
 				translate("label.somethingWentWrong"),
 				translate("storeManager.subscription.billing.errors.mustBeSignedInToSubscribe"),
@@ -319,12 +283,12 @@ export default function SubscriptionScreen() {
 			return;
 		}
 
-		const { proPlan } = pickBasicAndProPlans(s.plans);
+		const { proPlan } = pickBasicAndProPlans(plans);
 		const selectedSlug = String(proPlan?.slug ?? "pro");
 
 		try {
 			s.setStartingCheckout(true);
-			const checkoutUrl = await useSubscriptionCheckout(s.ownerId, selectedSlug, amount, name);
+			const checkoutUrl = await useSubscriptionCheckout(ownerId, selectedSlug, amount, name);
 			if (checkoutUrl) {
 				await Linking.openURL(checkoutUrl);
 			} else {
@@ -341,13 +305,13 @@ export default function SubscriptionScreen() {
 		} finally {
 			s.setStartingCheckout(false);
 		}
-	}, [translate]);
+	}, [translate, ownerId, plans]);
 
 	const performCancel = useCallback(async () => {
 		const s = useStoreManagerSubscriptionStore.getState();
 		s.setCancellingSubscription(true);
 		try {
-			const uid = s.ownerId;
+			const uid = ownerId;
 			const result = await cancelManagerSubscription();
 			if (result.ok === false) {
 				s.showMessage(translate("storeManager.subscription.billing.cancel.failedTitle"), result.error);
@@ -356,11 +320,16 @@ export default function SubscriptionScreen() {
 
 			let refreshedEnd = result.current_period_end ?? null;
 			const refreshId = uid ?? (await getAuthenticatedUserId());
-			const mgr = refreshId ? await getManagerSubscription(refreshId) : null;
-			if (mgr) {
-				useStoreManagerSubscriptionStore.setState({ managerRow: mgr });
+			if (refreshId) {
+				await queryClient.invalidateQueries({
+					queryKey: storeManagerKeys.managerSubscription(refreshId),
+				});
+				const mgr = await queryClient.fetchQuery({
+					queryKey: storeManagerKeys.managerSubscription(refreshId),
+					queryFn: () => getManagerSubscription(refreshId),
+				});
+				refreshedEnd = refreshedEnd ?? mgr?.current_period_end ?? null;
 			}
-			refreshedEnd = refreshedEnd ?? mgr?.current_period_end ?? null;
 
 			const endFormatted = formatDateLong(refreshedEnd);
 			s.showMessage(
@@ -377,7 +346,7 @@ export default function SubscriptionScreen() {
 		} finally {
 			s.setCancellingSubscription(false);
 		}
-	}, [translate]);
+	}, [translate, ownerId, queryClient]);
 
 	const openCancelConfirm = useCallback(() => {
 		const s = useStoreManagerSubscriptionStore.getState();

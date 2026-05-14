@@ -3,22 +3,28 @@ import { KeyboardAvoidingView, Platform, ScrollView, useColorScheme } from "reac
 import { View, Text, TouchableOpacity } from "@/tw";
 import { Check } from "lucide-react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
+import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/button";
 import { Modal } from "@/components/modal";
 import { TextField } from "@/components/text-field";
 import { EarningType } from "@/type/store-manager/qr.purchase";
 import { useQRStore } from "@/store/store-manager/qr-store";
-import { createQRService, getQRConfig } from "@/services/store-manager/qr-service";
+import { createQRService } from "@/services/store-manager/qr-service";
 import { AppHeader } from "@/components/header";
 import { useTranslation } from "react-i18next";
+import { useQRConfigQuery } from "@/hooks/store-manager/rq";
+import { storeManagerKeys } from "@/hooks/store-manager/rq/query-keys";
 
 const WEB_MAX_WIDTH = 896;
 
 export default function ConfigureStreaks() {
   const { t: translate } = useTranslation();
+  const queryClient = useQueryClient();
   const router = useRouter();
   const { storeId, id } = useLocalSearchParams<{ storeId?: string; id?: string }>();
   const storeIdParam = storeId ?? id;
+  const storeIdForDb = storeIdParam && storeIdParam !== "undefined" ? storeIdParam : null;
+  const qrQuery = useQRConfigQuery(storeIdForDb ?? undefined);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [percentageInput, setPercentageInput] = useState("");
   const [baseAmountInput, setBaseAmountInput] = useState("");
@@ -123,93 +129,90 @@ export default function ConfigureStreaks() {
     return !hasErrors;
 	};
 
-  useEffect(() => {
-    const storeIdForDb = storeIdParam && storeIdParam !== "undefined" ? storeIdParam : null;
-    if (!storeIdForDb) return;
+  const emptyFieldErrors = {
+    percentage: false,
+    percentageErrorMessage: "",
+    baseAmount: false,
+    baseAmountErrorMessage: "",
+    fixedPoints: false,
+    fixedPointsErrorMessage: "",
+    minimumSpend: false,
+    minimumSpendErrorMessage: "",
+    maxPointsPerTxn: false,
+    maxPointsPerTxnErrorMessage: "",
+  };
 
-    let cancelled = false;
+  useEffect(() => {
+    if (!storeIdForDb) return;
     reset();
     setPercentageInput("");
     setBaseAmountInput("");
     setFixedPointsInput("");
     setMinimumSpendInput("");
     setMaxPointsInput("");
-    setErrors({
-      ...errors,
-      percentage: false,
-      percentageErrorMessage: "",
-      baseAmount: false,
-      baseAmountErrorMessage: "",
-      fixedPoints: false,
-      fixedPointsErrorMessage: "",
-      minimumSpend: false,
-      minimumSpendErrorMessage: "",
-      maxPointsPerTxn: false,
-      maxPointsPerTxnErrorMessage: "",
-    });
+    setErrors(emptyFieldErrors);
+  }, [storeIdForDb, reset, setErrors]);
 
-    getQRConfig(storeIdForDb)
-      .then((cfg) => {
-        if (cancelled) return;
-        if (!cfg) {
-          reset();
-          setPercentageInput("");
-          setBaseAmountInput("");
-          setFixedPointsInput("");
-          setMinimumSpendInput("");
-          setMaxPointsInput("");
-          return;
-        }
-        const type = (cfg.earning_type as EarningType) ?? "percentage";
-        setEarningType(type);
-
-        if (type === "percentage") {
-          const pct = cfg.percentage ?? 0;
-          const base = cfg.base_amount ?? 0;
-          setPercentage(pct);
-          setBaseAmount(base);
-          setPercentageInput(pct ? String(pct) : "");
-          setBaseAmountInput(base ? String(base) : "");
-        } else {
-          const fixed = cfg.fixed_points ?? 0;
-          const minSpend = cfg.minimum_spend ?? 0;
-          setFixedPoints(fixed);
-          setMinimumSpend(minSpend);
-          setFixedPointsInput(fixed ? String(fixed) : "");
-          setMinimumSpendInput(minSpend ? String(minSpend) : "");
-        }
-
-        const maxPerTxn = cfg.max_points_per_txn ?? 0;
-        setMaxPointsPerTxn(maxPerTxn);
-        setMaxPointsInput(maxPerTxn ? String(maxPerTxn) : "");
-      })
-      .catch((error) => {
-        if (cancelled) return;
-        setModal({
-          title: translate("storeManager.qrConfigure.loadErrorTitle"),
-          message: translate("storeManager.qrConfigure.loadErrorMessage"),
-          buttons: [{ label: translate("label.ok"), onPress: () => setModal(null), variant: "secondary" }],
-        });
+  useEffect(() => {
+    if (!storeIdForDb) return;
+    if (qrQuery.isPending) return;
+    if (qrQuery.isError) {
+      setModal({
+        title: translate("store_manager.qrConfigure.loadErrorTitle"),
+        message: translate("store_manager.qrConfigure.loadErrorMessage"),
+        buttons: [{ label: translate("label.ok"), onPress: () => setModal(null), variant: "secondary" }],
       });
+      return;
+    }
+    const cfg = qrQuery.data;
+    if (!cfg) {
+      reset();
+      setPercentageInput("");
+      setBaseAmountInput("");
+      setFixedPointsInput("");
+      setMinimumSpendInput("");
+      setMaxPointsInput("");
+      return;
+    }
+    const type = (cfg.earning_type as EarningType) ?? "percentage";
+    setEarningType(type);
 
-    return () => {
-      cancelled = true;
-    };
+    if (type === "percentage") {
+      const pct = cfg.percentage ?? 0;
+      const base = cfg.base_amount ?? 0;
+      setPercentage(pct);
+      setBaseAmount(base);
+      setPercentageInput(pct ? String(pct) : "");
+      setBaseAmountInput(base ? String(base) : "");
+    } else {
+      const fixed = cfg.fixed_points ?? 0;
+      const minSpend = cfg.minimum_spend ?? 0;
+      setFixedPoints(fixed);
+      setMinimumSpend(minSpend);
+      setFixedPointsInput(fixed ? String(fixed) : "");
+      setMinimumSpendInput(minSpend ? String(minSpend) : "");
+    }
+
+    const maxPerTxn = cfg.max_points_per_txn ?? 0;
+    setMaxPointsPerTxn(maxPerTxn);
+    setMaxPointsInput(maxPerTxn ? String(maxPerTxn) : "");
   }, [
-    storeIdParam,
+    storeIdForDb,
+    qrQuery.isPending,
+    qrQuery.isError,
+    qrQuery.data,
+    reset,
     setEarningType,
     setPercentage,
     setBaseAmount,
     setFixedPoints,
     setMinimumSpend,
     setMaxPointsPerTxn,
-    reset,
     translate,
   ]);
 
 	const handleSave = async () => {
 		if (isSubmitting) return;
-    const storeIdForDb = storeIdParam && storeIdParam !== "undefined" ? storeIdParam : null;
     if (!storeIdForDb) {
       setModal({
         title: translate("storeManager.qrConfigure.invalidStoreTitle"),
@@ -231,6 +234,10 @@ export default function ConfigureStreaks() {
 				minimum_spend,
 				max_points_per_txn,
 			});
+
+      await queryClient.invalidateQueries({
+        queryKey: storeManagerKeys.qrConfig(storeIdForDb),
+      });
       
       reset();
       setPercentageInput("");

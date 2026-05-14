@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef } from "react";
-import { useFocusEffect, useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams } from "expo-router";
 import { useManagerStoresStore } from "@/store/manager-stores-store";
-import { getTransactionsPageForStore } from "@/services/store-manager/transactions-service";
 import { useTransactionStore } from "@/store/store-manager/transaction";
-import { TypeFilter, ListItem } from "@/type/store-manager/transaction";
+import { TypeFilter, ListItem, TransactionItem } from "@/type/store-manager/transaction";
 import { buildListData } from "@/utils/store_manager/transaction";
+import { useStoreTransactionsInfinite } from "@/hooks/store-manager/rq";
 
 export function useTransactions() {
   const { stores, isFetching: storesLoading } = useManagerStoresStore();
@@ -15,19 +15,8 @@ export function useTransactions() {
   const {
     selectedStoreId,
     typeFilter,
-    items,
-    page,
-    hasMore,
-    loading,
-    loadingMore,
-    refreshing,
     setSelectedStoreId,
     setTypeFilter,
-    replaceItems,
-    appendItems,
-    setLoading,
-    setLoadingMore,
-    setRefreshing,
   } = useTransactionStore();
 
   useEffect(() => {
@@ -64,47 +53,21 @@ export function useTransactions() {
     didInitSelectedStore.current = true;
   }, [stores, storeIdParam, selectedStoreId, setSelectedStoreId]);
 
-  const fetchPage = useCallback(
-    async (storeId: number, filter: TypeFilter, pageNum: number, isRefresh = false) => {
-      if (pageNum === 1 || isRefresh) {
-        isRefresh ? setRefreshing(true) : setLoading(true);
-      } else {
-        setLoadingMore(true);
-      }
+  const txQuery = useStoreTransactionsInfinite(selectedStoreId, typeFilter);
 
-      try {
-        const result = await getTransactionsPageForStore(storeId, filter, pageNum);
-
-        if (pageNum === 1) {
-          replaceItems(result.items, result.hasMore, pageNum);
-        } else {
-          appendItems(result.items, result.hasMore, pageNum);
-        }
-      } catch (error) {
-        throw error;
-      } finally {
-        setLoading(false);
-        setLoadingMore(false);
-        setRefreshing(false);
-      }
-    },
-    [appendItems, replaceItems, setLoading, setLoadingMore, setRefreshing]
+  const items: TransactionItem[] = useMemo(
+    () => txQuery.data?.pages.flatMap((p) => p.items) ?? [],
+    [txQuery.data?.pages],
   );
 
-  useFocusEffect(
-    useCallback(() => {
-      if (selectedStoreId !== null) {
-        fetchPage(selectedStoreId, typeFilter, 1);
-      }
-    }, [selectedStoreId, typeFilter, fetchPage])
-  );
+  const listItems = useMemo<ListItem[]>(() => buildListData(items), [items]);
 
   const selectStore = useCallback(
     (id: number) => {
       if (id === selectedStoreId) return;
       setSelectedStoreId(id);
     },
-    [selectedStoreId, setSelectedStoreId]
+    [selectedStoreId, setSelectedStoreId],
   );
 
   const changeFilter = useCallback(
@@ -112,22 +75,22 @@ export function useTransactions() {
       if (filter === typeFilter) return;
       setTypeFilter(filter);
     },
-    [typeFilter, setTypeFilter]
+    [typeFilter, setTypeFilter],
   );
 
   const loadMore = useCallback(() => {
-    if (selectedStoreId === null) return;
-    if (!hasMore) return;
-    if (loadingMore || loading) return;
-    fetchPage(selectedStoreId, typeFilter, page + 1);
-  }, [selectedStoreId, hasMore, loadingMore, loading, typeFilter, page, fetchPage]);
+    if (!txQuery.hasNextPage || txQuery.isFetchingNextPage) return;
+    void txQuery.fetchNextPage();
+  }, [txQuery]);
 
   const handleRefresh = useCallback(() => {
-    if (selectedStoreId === null) return;
-    fetchPage(selectedStoreId, typeFilter, 1, true);
-  }, [selectedStoreId, typeFilter, fetchPage]);
+    void txQuery.refetch();
+  }, [txQuery]);
 
-  const listItems = useMemo<ListItem[]>(() => buildListData(items), [items]);
+  const loading = Boolean(selectedStoreId != null && txQuery.isPending && !txQuery.data);
+  const loadingMore = txQuery.isFetchingNextPage;
+  const refreshing = txQuery.isRefetching && !txQuery.isFetchingNextPage;
+  const hasMore = Boolean(txQuery.hasNextPage);
 
   return {
     stores,

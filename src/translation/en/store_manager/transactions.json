@@ -10,6 +10,15 @@
     "stamp": "Stamp",
     "streak": "Streak"
   },
+  "storePicker": {
+    "searchPlaceholder": "Search stores…",
+    "noMatches": "No stores match your search.",
+    "selectAccessibility": "Select store",
+    "searchAccessibility": "Search stores",
+    "hint": "{{count}} stores — tap the row below to choose",
+    "addStar": "Add to starred",
+    "removeStar": "Remove from starred"
+  },
   "empty": {
     "noStoresTitle": "No Stores Found",
     "noStoresBody": "Create a store to start tracking transactions.",

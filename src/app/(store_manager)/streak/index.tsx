@@ -1,10 +1,10 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useEffect } from "react";
 import { FlatList, useColorScheme, Platform } from "react-native";
 import { Image } from "expo-image";
 import { View, Text, TouchableOpacity, SafeAreaView } from "@/tw";
 import { Modal } from "@/components/modal";
 import { useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
-import { getAllStreaksByStoreId, endStreakProgram, publishStreakProgram, activateStreakProgram, deleteStreakProgram } from "@/services/store-manager/streak-service";
+import { endStreakProgram, publishStreakProgram, activateStreakProgram, deleteStreakProgram } from "@/services/store-manager/streak-service";
 import { Streak, StreakTabs } from "@/type/store-manager/streak";
 import { Plus } from "lucide-react-native";
 import { StreakCard } from "@/components/store_manager/streak/streak-card";
@@ -15,6 +15,7 @@ import { useTranslation } from "react-i18next";
 import { useStorePremiumCampaignEdit } from "@/hooks/store-manager/use-store-premium-campaign-edit";
 import { formatDate } from "@/utils/store_manager/streak-utils";
 import { resolveStreakErrorI18nKey } from "@/services/store-manager/streak-user-messages";
+import { useStreaksByStoreQuery } from "@/hooks/store-manager/rq";
 
 const WEB_MAX_WIDTH = 896;
 const CONTENT_INSET = 16;
@@ -48,20 +49,29 @@ export default function ViewStreak() {
   const { canEdit, loading: permLoading, expiresAtIso } = useStorePremiumCampaignEdit(storeId);
   const campaignsLocked = !permLoading && !canEdit;
 
-  const load = useCallback(() => {
-    if (!storeId) return;
-    setLoading(true);
-    getAllStreaksByStoreId(storeId)
-      .then((rows) => {
-        setStreaks(rows);
-        setUpcomingVisible(PAGE_SIZE);
-        setEndedVisible(PAGE_SIZE);
-      })
-      .catch(() => setStreaks([]))
-      .finally(() => setLoading(false));
-  }, [storeId, setLoading, setStreaks, setUpcomingVisible, setEndedVisible]);
+  const streaksQuery = useStreaksByStoreQuery(storeId);
 
-  useFocusEffect(load);
+  useEffect(() => {
+    if (streaksQuery.data) {
+      setStreaks(streaksQuery.data);
+      setUpcomingVisible(PAGE_SIZE);
+      setEndedVisible(PAGE_SIZE);
+    }
+  }, [streaksQuery.data, setStreaks, setUpcomingVisible, setEndedVisible]);
+
+  useEffect(() => {
+    setLoading(streaksQuery.isPending);
+  }, [streaksQuery.isPending, setLoading]);
+
+  const refetchStreaks = useCallback(() => {
+    void streaksQuery.refetch();
+  }, [streaksQuery]);
+
+  useFocusEffect(
+    useCallback(() => {
+      refetchStreaks();
+    }, [refetchStreaks]),
+  );
 
   const activeStreaks = streaks.filter((s) => s.status === "active");
   const upcomingStreaks = streaks.filter((s) => s.status === "draft" || s.status === "upcoming");
@@ -151,7 +161,7 @@ export default function ViewStreak() {
     setActing({ id: programId, action: "publish" });
     try {
       await publishStreakProgram(programId);
-      load();
+      refetchStreaks();
     } catch (e) {
       showStreakError(e);
     } finally {
@@ -174,7 +184,7 @@ export default function ViewStreak() {
     setActing({ id: programId, action: "activate" });
     try {
       await activateStreakProgram(programId);
-      load();
+      refetchStreaks();
     } catch (e) {
       showStreakError(e);
     } finally {
@@ -208,7 +218,7 @@ export default function ViewStreak() {
     setActing({ id: programId, action: "end" });
     try {
       await endStreakProgram(programId);
-      load();
+      refetchStreaks();
     } catch (e) {
       showStreakError(e);
     } finally {
@@ -220,7 +230,7 @@ export default function ViewStreak() {
     setActing({ id: programId, action: "delete" });
     try {
       await deleteStreakProgram(programId);
-      load();
+      refetchStreaks();
     } catch (e) {
       showStreakError(e);
     } finally {

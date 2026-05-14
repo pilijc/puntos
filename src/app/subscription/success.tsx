@@ -7,6 +7,8 @@ import { ActivityIndicator } from "react-native";
 import { supabase } from "@/supabase/supabase";
 import { getSubscriptionPaymentStatus } from "@/services/store-manager/subscription-service";
 import { useTranslation } from "react-i18next";
+import { getQueryClient } from "@/lib/query-client";
+import { storeManagerKeys } from "@/hooks/store-manager/rq/query-keys";
 
 export default function SubscriptionSuccessScreen() {
   const router = useRouter();
@@ -36,7 +38,10 @@ export default function SubscriptionSuccessScreen() {
         return;
       }
 
-      const status = await getSubscriptionPaymentStatus(userId);
+      const status = await getQueryClient().fetchQuery({
+        queryKey: storeManagerKeys.subscriptionPaymentStatus(userId),
+        queryFn: () => getSubscriptionPaymentStatus(userId),
+      });
       if (cancelled) return;
 
       if (status === "paid") {

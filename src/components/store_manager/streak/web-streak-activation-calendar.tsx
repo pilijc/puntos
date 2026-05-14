@@ -197,8 +197,6 @@ export function WebStreakActivationCalendar({
                   className="flex-1 items-center justify-center rounded-lg min-h-[36px] aspect-square max-h-[44px]"
                   style={{
                     opacity: cell.disabled ? 0.35 : 1,
-                    borderWidth: selected ? 2 : 1,
-                    borderColor: selected ? accent : borderMuted,
                     backgroundColor: selected ? (isDark ? "#431407" : "#FFF7ED") : "transparent",
                   }}
                 >

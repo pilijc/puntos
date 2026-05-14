@@ -3,65 +3,47 @@ import { RefreshControl, useColorScheme, Platform } from "react-native";
 import { View, Text, TouchableOpacity, ScrollView, SafeAreaView } from "@/tw";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
-import { getStoreStaff, deleteStoreStaff } from "@/services/store-manager/staff-service";
+import { useQueryClient } from "@tanstack/react-query";
+import { deleteStoreStaff } from "@/services/store-manager/staff-service";
 import { Modal } from "@/components/modal";
-import { useStaffStore, useStaffViewStore } from "@/store/store-manager/staff-store";
-import { ChevronRight, UsersRound, Pencil, Trash, UserRoundX } from "lucide-react-native";
+import { useStaffStore } from "@/store/store-manager/staff-store";
+import { UsersRound, Pencil, Trash, UserRoundX, Plus } from "lucide-react-native";
 import StaffSkeleton from "@/components/skeleton/store_manager/staff-skeleton";
 import { getInitials } from "@/utils/store_manager/staff-utils";
 import { AppHeader } from "@/components/header";
 import { useTranslation } from "react-i18next";
+import { useStoreStaffQuery } from "@/hooks/store-manager/rq";
+import { storeManagerKeys } from "@/hooks/store-manager/rq/query-keys";
 
 const WEB_MAX_WIDTH = 896;
 
 export default function ViewStaff() {
   const { t: translate } = useTranslation();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const insets = useSafeAreaInsets();
   const { storeId } = useLocalSearchParams<{ storeId: string }>();
   const isDark = useColorScheme() === "dark";
   const { modal, setModal } = useStaffStore();
-  const {
-    staff,
-    loading,
-    refreshing,
-    deleting,
-    setStaff,
-    setLoading,
-    setRefreshing,
-    setDeleting,
-    removeStaff,
-    reset,
-  } = useStaffViewStore();
+  const [deleting, setDeleting] = useState<string | null>(null);
 
-  const fetchStaff = useCallback(async () => {
-    try {
-      const data = await getStoreStaff(storeId);
-      setStaff(data ?? []);
-    } catch {
-      setStaff([]);
-    }
-  }, [storeId, setStaff]);
-
-  useEffect(() => {
-    return () => reset();
-  }, [reset]);
+  const staffQuery = useStoreStaffQuery(storeId);
+  const staff = staffQuery.data ?? [];
+  const loading = staffQuery.isPending;
+  const refreshing = staffQuery.isRefetching && !staffQuery.isPending;
 
   useFocusEffect(
     useCallback(() => {
-      setLoading(true);
-      fetchStaff().finally(() => setLoading(false));
-    }, [fetchStaff, setLoading])
+      void staffQuery.refetch();
+    }, [staffQuery]),
   );
 
-  const handleRefresh = useCallback(async () => {
-    setRefreshing(true);
-    await fetchStaff();
-    setRefreshing(false);
-  }, [fetchStaff, setRefreshing]);
+  const handleRefresh = useCallback(() => {
+    void staffQuery.refetch();
+  }, [staffQuery]);
 
-  const confirmDelete = (staffId: string, name: string | null) => {
-    const displayName = name ?? translate("storeManager.staff.removeFallbackName");
+  const confirmDelete = (staffMemberId: string, name: string | null) => {
+    const displayName = name ?? translate("store_manager.staff.removeFallbackName");
     setModal({
       title: translate("storeManager.staff.removeTitle"),
       message: translate("storeManager.staff.removeMessage", { name: displayName }),
@@ -70,13 +52,13 @@ export default function ViewStaff() {
           label: translate("label.cancel"),
           onPress: () => setModal(null),
           variant: "secondary",
-          disabled: deleting === staffId,
+          disabled: deleting === staffMemberId,
         },
         {
           label: translate("storeManager.staff.removeAction"),
           variant: "primary",
           onPress: async () => {
-            setDeleting(staffId);
+            setDeleting(staffMemberId);
             setModal({
               title: translate("storeManager.staff.removeTitle"),
               message: translate("storeManager.staff.removeMessage", { name: displayName }),
@@ -97,8 +79,10 @@ export default function ViewStaff() {
               ],
             });
             try {
-              await deleteStoreStaff(staffId);
-              removeStaff(staffId);
+              await deleteStoreStaff(staffMemberId);
+              await queryClient.invalidateQueries({
+                queryKey: storeManagerKeys.staff(String(storeId)),
+              });
               setModal(null);
             } catch {
               setModal({
@@ -169,11 +153,11 @@ export default function ViewStaff() {
                       params: { storeId },
                     })
                   }
-                  className="flex-row items-center gap-x-0.5"
+                  className="flex-row items-center gap-x-1"
                   activeOpacity={0.7}
                 >
                   <Text className="text-xs font-poppins-semibold text-primary">{translate("label.add")}</Text>
-                  <ChevronRight size={14} color="#FF6600" />
+                  <Plus size={14} color="#FF6600" strokeWidth={3} style={{ marginTop: -1.5 }}/>
                 </TouchableOpacity>
               )}
             </View>

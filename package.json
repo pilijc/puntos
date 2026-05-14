@@ -26,6 +26,7 @@
     "@supabase/phoenix": "^0.4.1",
     "@supabase/supabase-js": "^2.96.0",
     "@tailwindcss/postcss": "^4.1.18",
+    "@tanstack/react-query": "^5.100.10",
     "@turf/circle": "^7.3.4",
     "@turf/turf": "^7.3.4",
     "expo": "^54.0.33",

@@ -9,6 +9,35 @@ export function formatTxTime(dateStr: string | null): string {
   });
 }
 
+const TX_MONTH_LABELS = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sept",
+  "Oct",
+  "Nov",
+  "Dec",
+] as const;
+
+export function formatTxDateTime(dateStr: string | null): string {
+  if (!dateStr) return "—";
+  const d = new Date(dateStr);
+  const mon = TX_MONTH_LABELS[d.getMonth()];
+  const dd = String(d.getDate()).padStart(2, "0");
+  const yyyy = d.getFullYear();
+  const time = d.toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  });
+  return `${mon} ${dd}, ${yyyy}, ${time}`;
+}
+
 export function getDateSection(dateStr: string | null): string {
   if (!dateStr) return "Earlier";
 

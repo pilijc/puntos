@@ -16,6 +16,8 @@ import { useManagerStoresStore } from "@/store/manager-stores-store";
 import { useSupportChatStore } from "@/store/support-chat-store";
 import { getManagerSubscription, getSubscriptionPlans } from "@/services/store-manager/subscription-service";
 import { isPaidUnlimitedPlan } from "@/services/store-manager/subscription-limits";
+import { getQueryClient } from "@/lib/query-client";
+import { storeManagerKeys } from "@/hooks/store-manager/rq/query-keys";
 import { lockExtraOwnerStores } from "@/services/store-service";
 import { Modal } from "@/components/modal";
 import { refreshDeviceHeartbeatService } from "@/services/store-manager/device-session-service";
@@ -559,9 +561,16 @@ export default function StoreManagerLayout() {
                     return;
                 }
 
+                const qc = getQueryClient();
                 const [plans, managerRow] = await Promise.all([
-                    getSubscriptionPlans(),
-                    getManagerSubscription(currentUserId),
+                    qc.fetchQuery({
+                        queryKey: storeManagerKeys.subscriptionPlans(),
+                        queryFn: getSubscriptionPlans,
+                    }),
+                    qc.fetchQuery({
+                        queryKey: storeManagerKeys.managerSubscription(currentUserId),
+                        queryFn: () => getManagerSubscription(currentUserId),
+                    }),
                 ]);
 
                 const planListForGate = (plans ?? []) as Array<{ id: number; slug?: string | null }>;
