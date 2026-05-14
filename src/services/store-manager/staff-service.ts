@@ -29,6 +29,8 @@ export const getStoreStaff = async (storeId: string) => {
 	}
 };
 
+export type StoreStaffRow = NonNullable<Awaited<ReturnType<typeof getStoreStaff>>>[number];
+
 export const deleteStoreStaff = async (staffId: string) => {
   try {
     const { error } = await supabase

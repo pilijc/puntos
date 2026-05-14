@@ -1,9 +1,9 @@
 import React from "react"
 import { Modal, Linking, Alert } from "react-native"
 import { View, Text, TouchableOpacity } from "@/tw"
-import { createPayMongoPayment } from "@/services/store-manager/payment-service"
 import { PaymentModalProps } from "@/type/store-manager/payment"
 import { useTranslation } from "react-i18next";
+import { useCreatePayMongoPaymentMutation } from "@/hooks/store-manager/rq";
 
 
 export default function PaymentModal({
@@ -12,29 +12,34 @@ export default function PaymentModal({
   amount = 199,
 }: PaymentModalProps) {
   const { t: translate } = useTranslation();
+  const payMutation = useCreatePayMongoPaymentMutation();
   
-  const handlePayNow = async () => {
-    try {
-      const checkoutUrl = await createPayMongoPayment({
+  const handlePayNow = () => {
+    payMutation.mutate(
+      {
         user_id: userId,
         amount,
-      })
-
-      if (checkoutUrl) {
-        Linking.openURL(checkoutUrl)
-      } else {
-        Alert.alert(
-          translate("store_manager.subscription.registration.errorTitle"),
-          translate("store_manager.subscription.registration.errorUnable")
-        )
-      }
-    } catch (err) {
-      console.error("Error calling payment function:", err)
-      Alert.alert(
-        translate("store_manager.subscription.registration.errorTitle"),
-        translate("store_manager.subscription.registration.errorGeneric")
-      )
-    }
+      },
+      {
+        onSuccess: (checkoutUrl) => {
+          if (checkoutUrl) {
+            Linking.openURL(checkoutUrl)
+          } else {
+            Alert.alert(
+              translate("store_manager.subscription.registration.errorTitle"),
+              translate("store_manager.subscription.registration.errorUnable")
+            )
+          }
+        },
+        onError: (err) => {
+          console.error("Error calling payment function:", err)
+          Alert.alert(
+            translate("store_manager.subscription.registration.errorTitle"),
+            translate("store_manager.subscription.registration.errorGeneric")
+          )
+        },
+      },
+    )
   }
 
   return (
@@ -75,6 +80,7 @@ export default function PaymentModal({
           {/* Pay Button */}
           <TouchableOpacity
             onPress={handlePayNow}
+            disabled={payMutation.isPending}
             className="w-full bg-orange-500 py-3 rounded-xl items-center mb-3 active:opacity-80"
           >
             <Text className="text-white font-semibold text-base">
@@ -91,9 +97,7 @@ export default function PaymentModal({
               {translate("store_manager.subscription.registration.cancel")}
             </Text>
           </TouchableOpacity>
-
         </View>
-
       </View>
     </Modal>
   )

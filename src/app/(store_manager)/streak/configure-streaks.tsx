@@ -8,7 +8,7 @@ import { createStreak, getAllStreaksByStoreId, getStreakProgramById, updateStrea
 import { PointsMode, Streak } from "@/type/store-manager/streak";
 import { Button } from "@/components/button";
 import { Modal } from "@/components/modal";
-import { Coins, TrendingUp, Check, Info } from "lucide-react-native";
+import { Coins, TrendingUp, Check, Info, ChevronDown } from "lucide-react-native";
 import { AppHeader } from "@/components/header";
 import { TextField } from "@/components/text-field";
 import { Toggle } from "@/components/toggle";
@@ -93,7 +93,11 @@ export default function ConfigureStreaks() {
     () =>
       ({
         width: "100%",
-        padding: 12,
+        boxSizing: "border-box",
+        paddingTop: 12,
+        paddingBottom: 12,
+        paddingLeft: 12,
+        paddingRight: 44,
         borderRadius: 12,
         borderWidth: 1,
         borderStyle: "solid",
@@ -102,9 +106,14 @@ export default function ConfigureStreaks() {
         fontFamily: "Poppins-Medium",
         backgroundColor: isDarkScheme ? "#0f172a" : "#ffffff",
         color: isDarkScheme ? "#f1f5f9" : "#0f172a",
+        WebkitAppearance: "none",
+        MozAppearance: "none",
+        appearance: "none" as const,
       }) as const,
     [isDarkScheme],
   );
+
+  const webTimeSelectChevronColor = isDarkScheme ? "#94a3b8" : "#64748b";
 
   const webMinuteOptions = useMemo(() => {
     const opts: number[] = [];
@@ -607,7 +616,7 @@ export default function ConfigureStreaks() {
                         {translate("store_manager.streakConfigure.time")}
                       </Text>
                       <View className="flex-row gap-x-2">
-                        <View className="flex-1">
+                        <View className="flex-1" style={{ position: "relative" }}>
                           {domEl(
                             "select",
                             {
@@ -632,8 +641,20 @@ export default function ConfigureStreaks() {
                               ),
                             ),
                           )}
+                          <View
+                            pointerEvents="none"
+                            style={{
+                              position: "absolute",
+                              top: 0,
+                              right: 14,
+                              bottom: 0,
+                              justifyContent: "center",
+                            }}
+                          >
+                            <ChevronDown size={16} color={webTimeSelectChevronColor} />
+                          </View>
                         </View>
-                        <View className="flex-1">
+                        <View className="flex-1" style={{ position: "relative" }}>
                           {domEl(
                             "select",
                             {
@@ -658,6 +679,18 @@ export default function ConfigureStreaks() {
                               ),
                             ),
                           )}
+                          <View
+                            pointerEvents="none"
+                            style={{
+                              position: "absolute",
+                              top: 0,
+                              right: 14,
+                              bottom: 0,
+                              justifyContent: "center",
+                            }}
+                          >
+                            <ChevronDown size={16} color={webTimeSelectChevronColor} />
+                          </View>
                         </View>
                       </View>
                     </View>

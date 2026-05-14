@@ -1,10 +1,10 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useFocusEffect } from "expo-router";
 import { RefreshControl, ActivityIndicator, Platform } from "react-native";
 import { View, Text, TouchableOpacity, ScrollView, SafeAreaView } from "@/tw";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Image } from "expo-image";
-import { getRewardsByStoreId } from "@/services/store-manager/reward-service";
+import { useRewardsByStoreQuery } from "@/hooks/store-manager/rq";
 import { Reward } from "@/type/store-manager/reward";
 import { Modal, type ModalButton } from "@/components/modal";
 import { AppHeader } from "@/components/header";
@@ -32,27 +32,31 @@ export default function RewardIndex() {
   const { canEdit, loading: permLoading, expiresAtIso } = useStorePremiumCampaignEdit(storeId);
   const campaignsLocked = !permLoading && !canEdit;
 
-  const fetchRewards = useCallback(async () => {
-    try {
-      const data = await getRewardsByStoreId(storeId);
-      setRewards(data);
-    } catch {
-      setRewards([]);
-    }
-  }, [storeId]);
+  const rewardsQuery = useRewardsByStoreQuery(storeId);
+
+  useEffect(() => {
+    if (rewardsQuery.data) setRewards(rewardsQuery.data);
+  }, [rewardsQuery.data, setRewards]);
+
+  useEffect(() => {
+    setLoading(rewardsQuery.isPending);
+  }, [rewardsQuery.isPending, setLoading]);
+
+  const refetchRewards = useCallback(() => {
+    void rewardsQuery.refetch();
+  }, [rewardsQuery]);
 
   useFocusEffect(
     useCallback(() => {
-      setLoading(true);
-      fetchRewards().finally(() => setLoading(false));
-    }, [fetchRewards])
+      refetchRewards();
+    }, [refetchRewards]),
   );
 
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
-    await fetchRewards();
+    await rewardsQuery.refetch();
     setRefreshing(false);
-  }, [fetchRewards]);
+  }, [rewardsQuery]);
 
   const formatPoints = (pts: number) =>
     pts >= 1000 ? `${(pts / 1000).toFixed(pts % 1000 === 0 ? 0 : 1)}k` : `${pts}`;

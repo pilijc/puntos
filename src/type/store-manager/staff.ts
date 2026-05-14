@@ -1,7 +1,7 @@
-import { getStoreStaff } from "@/services/store-manager/staff-service";
+import type { StoreStaffRow } from "@/services/store-manager/staff-service";
 import { ModalButton } from "@/components/modal";
 
-export type StaffMember = Awaited<ReturnType<typeof getStoreStaff>>[number];
+export type StaffMember = StoreStaffRow;
 
 export interface StaffFormState {
   name: string;

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useMemo, useRef, useState } from "react";
 import { Redirect, router } from "expo-router";
 import {
   ActivityIndicator,
@@ -26,19 +26,13 @@ import {
   Check,
   Store,
   Sparkles,
-  Rocket,
   ChevronRight,
   ChevronDown,
-  Users,
-  LineChart,
-  DollarSign,
 } from "lucide-react-native";
 import Svg, { Path } from "react-native-svg";
 import { Button } from "@/components/button";
-import {
-  getSubscriptionPlans,
-  pickBasicAndProPlans,
-} from "@/services/store-manager/subscription-service";
+import { pickBasicAndProPlans } from "@/services/store-manager/subscription-service";
+import { useSubscriptionPlansQuery } from "@/hooks/store-manager/rq";
 
 const WELCOME_ROUTE = "/(onboarding)/welcome";
 const LOGIN_ROUTE = "/login";
@@ -288,44 +282,19 @@ export default function MarketingLanding() {
     footer: 0,
   });
 
-  const [plansLoading, setPlansLoading] = useState(true);
-  const [plansError, setPlansError] = useState<string | null>(null);
-  const [basicPlan, setBasicPlan] = useState<Record<string, unknown> | null>(
-    null,
-  );
-  const [proPlan, setProPlan] = useState<Record<string, unknown> | null>(null);
   const [heroBandSize, setHeroBandSize] = useState({ w: 0, h: 0 });
 
-  useEffect(() => {
-    if (!isWeb) return;
-    let cancelled = false;
-    void (async () => {
-      setPlansLoading(true);
-      setPlansError(null);
-      try {
-        const rows = await getSubscriptionPlans();
-        if (cancelled) return;
-        const picked = pickBasicAndProPlans(
-          rows as Array<Record<string, unknown>>,
-        );
-        setBasicPlan(picked.basicPlan);
-        setProPlan(picked.proPlan);
-      } catch (e) {
-        if (!cancelled) {
-          setPlansError(
-            e instanceof Error
-              ? e.message
-              : translate("onboarding.landing.pricingLoadError"),
-          );
-        }
-      } finally {
-        if (!cancelled) setPlansLoading(false);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [isWeb, translate]);
+  const plansQuery = useSubscriptionPlansQuery(isWeb);
+  const plansLoading = plansQuery.isPending;
+  const plansError = plansQuery.isError
+    ? plansQuery.error instanceof Error
+      ? plansQuery.error.message
+      : translate("onboarding.landing.pricingLoadError")
+    : null;
+  const { basicPlan, proPlan } = useMemo(
+    () => pickBasicAndProPlans((plansQuery.data ?? []) as Array<Record<string, unknown>>),
+    [plansQuery.data],
+  );
 
   if (!isWeb) {
     return <Redirect href={WELCOME_ROUTE} />;

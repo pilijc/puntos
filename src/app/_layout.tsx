@@ -21,6 +21,7 @@ import { useStamps } from "@/hooks/use-stamps";
 import { checkDeviceSessionLimitService, upsertDeviceSessionService } from "@/services/store-manager/device-session-service";
 import { markIntentionalSignOut } from "@/lib/intentional-signout";
 import { useTranslation } from "react-i18next";
+import { QueryProvider } from "@/providers/query-provider";
 
 let OneSignal: typeof import("react-native-onesignal").OneSignal | null = null;
 
@@ -186,6 +187,7 @@ export default function Layout() {
 
   return (
     <GestureHandlerRootView className="flex-1">
+      <QueryProvider>
       <StatusBar barStyle="light-content" backgroundColor="#121212" />
       <Slot />
       <Modal
@@ -226,6 +228,7 @@ export default function Layout() {
           },
         ]}
       />
+      </QueryProvider>
     </GestureHandlerRootView>
   );
 }
