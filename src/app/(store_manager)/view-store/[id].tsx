@@ -10,7 +10,7 @@ import {
 import { View, Text, TouchableOpacity, ScrollView, Image, SafeAreaView } from "@/tw";
 import { useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
 import { getStoreById } from "@/services/store-service";
-import { getTransactionsPageForStore } from "@/services/store-manager/transactions-service";
+import { useStoreTransactionsPreview } from "@/hooks/store-manager/rq";
 import { TransactionItem, type_badge } from "@/type/store-manager/transaction";
 import { formatTxDateTime } from "@/utils/store_manager/transaction";
 import { Modal, ModalButton } from "@/components/modal";
@@ -33,8 +33,9 @@ export default function ViewStore() {
   const [store, setStore] = useState<Awaited<ReturnType<typeof getStoreById>> | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
-  const [recentTxs, setRecentTxs] = useState<TransactionItem[]>([]);
-  const [txLoading, setTxLoading] = useState(true);
+  const txPreview = useStoreTransactionsPreview(Number.isFinite(storeId) && storeId > 0 ? storeId : undefined);
+  const recentTxs = txPreview.data?.items ?? [];
+  const txLoading = txPreview.isPending;
   const [modal, setModal] = useState<{
     title: string;
     message: string;
@@ -124,34 +125,21 @@ export default function ViewStore() {
     setStore(storeData);
   }, [storeId]);
 
-  const fetchRecentTransactions = useCallback(async () => {
-    if (!Number.isFinite(storeId) || storeId <= 0) return;
-    setTxLoading(true);
-    try {
-      const { items } = await getTransactionsPageForStore(storeId, "all", 1, 10);
-      setRecentTxs(items);
-    } catch {
-      setRecentTxs([]);
-    } finally {
-      setTxLoading(false);
-    }
-  }, [storeId]);
-
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
     try {
-      await Promise.all([fetchStore(), fetchRecentTransactions()]);
+      await Promise.all([fetchStore(), txPreview.refetch()]);
     } finally {
       setRefreshing(false);
     }
-  }, [fetchStore, fetchRecentTransactions]);
+  }, [fetchStore, txPreview]);
 
   useEffect(() => {
     setStore(null);
     setActiveImageIndex(0);
     void fetchStore();
-    void fetchRecentTransactions();
-  }, [fetchStore, fetchRecentTransactions]);
+    void txPreview.refetch();
+  }, [storeId, fetchStore, txPreview.refetch]);
 
   return (
     <SafeAreaView edges={["top", "left", "right"]} className="flex-1 bg-backgroundMuted dark:bg-darkBackground">

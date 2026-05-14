@@ -5,7 +5,6 @@ import { Modal } from "@/components/modal";
 import { useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
 import { Image } from "expo-image";
 import {
-  getAllStampsByStoreId,
   getCollectorsByProgramId,
   getCollectorsCountByProgramId,
   endStampProgram,
@@ -17,11 +16,11 @@ import { Button } from "@/components/button";
 import { Plus } from "lucide-react-native";
 import { AppHeader } from "@/components/header";
 import { useStampViewStore } from "@/store/store-manager/stamp-store";
-import { getRewardsByStoreId } from "@/services/store-manager/reward-service";
 import { StampCard } from "@/components/store_manager/stamp/stamp-card";
 import { useTranslation } from "react-i18next";
 import { useStorePremiumCampaignEdit } from "@/hooks/store-manager/use-store-premium-campaign-edit";
 import { formatDate } from "@/utils/store_manager/stamp-utils";
+import { useStampsByStoreQuery, useRewardsByStoreQuery } from "@/hooks/store-manager/rq";
 
 const WEB_MAX_WIDTH = 896;
 const WEB_TAB_PILL_STYLE = { flexGrow: 1, flexBasis: 120, minWidth: 0 };
@@ -51,28 +50,37 @@ export default function ViewStamp() {
   const { canEdit, loading: permLoading, expiresAtIso } = useStorePremiumCampaignEdit(storeId);
   const campaignsLocked = !permLoading && !canEdit;
 
-  const load = useCallback(() => {
-    if (!storeId) return;
-    setLoading(true);
-    Promise.all([getAllStampsByStoreId(storeId), getRewardsByStoreId(storeId)])
-      .then(([stampsData, rewardsData]) => {
-        setStamps(stampsData);
-        setRewards(rewardsData);
-      })
-      .catch(() => {
-        setStamps([]);
-        setRewards([]);
-      })
-      .finally(() => setLoading(false));
-  }, [storeId, setLoading, setStamps, setRewards]);
+  const stampsQuery = useStampsByStoreQuery(storeId);
+  const rewardsQuery = useRewardsByStoreQuery(storeId);
 
-  useFocusEffect(load);
+  useEffect(() => {
+    if (stampsQuery.data) setStamps(stampsQuery.data);
+  }, [stampsQuery.data, setStamps]);
+
+  useEffect(() => {
+    if (rewardsQuery.data) setRewards(rewardsQuery.data);
+  }, [rewardsQuery.data, setRewards]);
+
+  useEffect(() => {
+    setLoading(stampsQuery.isPending || rewardsQuery.isPending);
+  }, [stampsQuery.isPending, rewardsQuery.isPending, setLoading]);
+
+  const refetchStampRewards = useCallback(() => {
+    void stampsQuery.refetch();
+    void rewardsQuery.refetch();
+  }, [stampsQuery, rewardsQuery]);
+
+  useFocusEffect(
+    useCallback(() => {
+      refetchStampRewards();
+    }, [refetchStampRewards]),
+  );
 
   const doEnd = async (programId: number, graceDays: number) => {
     setEndingId(programId);
     try {
       await endStampProgram(programId, graceDays);
-      load();
+      refetchStampRewards();
     } catch (e) {
       setModal({
         title: translate("label.error"),
@@ -87,7 +95,7 @@ export default function ViewStamp() {
   const doDelete = async (programId: number) => {
     try {
       await deleteStampProgram(programId);
-      load();
+      refetchStampRewards();
     } catch (e) {
       setModal({
         title: translate("label.error"),
@@ -100,7 +108,7 @@ export default function ViewStamp() {
   const doActivate = async (programId: number) => {
     try {
       await activateStampProgram(programId);
-      load();
+      refetchStampRewards();
     } catch (e) {
       setModal({
         title: translate("label.error"),

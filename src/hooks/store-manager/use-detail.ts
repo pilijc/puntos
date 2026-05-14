@@ -1,10 +1,10 @@
 import React, { useCallback, useEffect } from "react";
 import { useColorScheme, useWindowDimensions } from "react-native";
 import { useLocalSearchParams } from "expo-router";
-import { getStoreDetail } from "@/services/store-manager/detail-service";
 import { useDetailViewStore } from "@/store/store-manager/detail-store";
 import { store_types_options } from "@/type/store-manager/store";
 import { STATUS_CONFIG } from "@/type/store-manager/detail";
+import { useStoreDetailQuery } from "@/hooks/store-manager/rq";
 
 export function useStoreDetail() {
   const { storeId } = useLocalSearchParams<{ storeId: string }>();
@@ -12,33 +12,24 @@ export function useStoreDetail() {
   const { width: screenWidth } = useWindowDimensions();
 
   const { detail, setDetail, reset } = useDetailViewStore();
-  const [loading, setLoading] = React.useState(true);
-  const [refreshing, setRefreshing] = React.useState(false);
+  const detailQuery = useStoreDetailQuery(storeId);
 
-  const fetchDetail = useCallback(async () => {
-    try {
-      const data = await getStoreDetail(storeId);
-      setDetail(data);
-    } catch {
-      setDetail(null);
+  useEffect(() => {
+    if (detailQuery.data !== undefined) {
+      setDetail(detailQuery.data);
     }
-  }, [storeId, setDetail]);
+  }, [detailQuery.data, setDetail]);
 
   useEffect(() => {
     reset();
-    setLoading(true);
-    fetchDetail().finally(() => setLoading(false));
-
     return () => {
       reset();
     };
-  }, [storeId]);
+  }, [storeId, reset]);
 
-  const handleRefresh = useCallback(async () => {
-    setRefreshing(true);
-    await fetchDetail();
-    setRefreshing(false);
-  }, [fetchDetail]);
+  const handleRefresh = useCallback(() => {
+    void detailQuery.refetch();
+  }, [detailQuery]);
 
   const pictures = (detail?.store_pictures ?? []).filter(Boolean).slice(0, 3);
   const storeTypeLabelmap = Object.fromEntries(store_types_options.map((o) => [o.value, o.label]));
@@ -52,8 +43,8 @@ export function useStoreDetail() {
   return {
     storeId,
     detail,
-    loading,
-    refreshing,
+    loading: detailQuery.isPending,
+    refreshing: detailQuery.isRefetching && !detailQuery.isPending,
     handleRefresh,
     pictures,
     storeTypeLabelmap,

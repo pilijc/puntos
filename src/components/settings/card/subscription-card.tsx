@@ -1,54 +1,45 @@
-import React, { useCallback, useMemo, useState } from "react";
-import { ActivityIndicator } from "react-native";
-import { useFocusEffect, useRouter } from "expo-router";
+import React, { useMemo } from "react";
+import { useRouter } from "expo-router";
 import { View, Text, TouchableOpacity } from "@/tw";
 import { ChevronRight, CreditCard } from "lucide-react-native";
 import { useTranslation } from "react-i18next";
-import { getAuthenticatedUserId, getManagerSubscription, getSubscriptionPlans } from "@/services/store-manager/subscription-service";
 import { isPaidUnlimitedPlan } from "@/services/store-manager/subscription-limits";
+import {
+  useAuthenticatedUserIdQuery,
+  useSubscriptionPlansQuery,
+  useManagerSubscriptionQuery,
+} from "@/hooks/store-manager/rq/subscription-queries";
 
 export function SubscriptionCard() {
   const { t: translate } = useTranslation();
   const router = useRouter();
-  const [loading, setLoading] = useState(true);
-  const [isPro, setIsPro] = useState(false);
+  const { data: ownerId, isPending: authPending } = useAuthenticatedUserIdQuery();
+  const plansQuery = useSubscriptionPlansQuery(Boolean(ownerId));
+  const subQuery = useManagerSubscriptionQuery(ownerId ?? undefined);
 
-  const loadPlan = useCallback(async () => {
-    setLoading(true);
-    try {
-      const ownerId = await getAuthenticatedUserId();
-      if (!ownerId) {
-        setIsPro(false);
-        return;
-      }
+  const loading =
+    authPending || (Boolean(ownerId) && (plansQuery.isPending || subQuery.isPending));
 
-      const [plans, managerRow] = await Promise.all([
-        getSubscriptionPlans(),
-        getManagerSubscription(ownerId),
-      ]);
+  const isPro = useMemo(() => {
+    if (!ownerId || !plansQuery.data || subQuery.data === undefined) return false;
+    const planListForGate = (plansQuery.data ?? [])
+      .map((p: any) => ({
+        id: Number(p.id),
+        slug: p.slug != null ? String(p.slug) : null,
+      }))
+      .filter((p: any) => Number.isFinite(p.id));
+    return isPaidUnlimitedPlan(subQuery.data, planListForGate);
+  }, [ownerId, plansQuery.data, subQuery.data]);
 
-      const planListForGate = (plans ?? [])
-        .map((p: any) => ({
-          id: Number(p.id),
-          slug: p.slug != null ? String(p.slug) : null,
-        }))
-        .filter((p: any) => Number.isFinite(p.id));
-
-      setIsPro(isPaidUnlimitedPlan(managerRow, planListForGate));
-    } catch {
-      setIsPro(false);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useFocusEffect(
-    useCallback(() => {
-      void loadPlan();
-    }, [loadPlan]),
+  const planLabel = useMemo(
+    () =>
+      loading
+        ? "—"
+        : isPro
+          ? translate("settings.subscription.proPlan", "Pro Plan")
+          : translate("settings.subscription.freePlan", "Free Plan"),
+    [isPro, loading, translate],
   );
-
-  const planLabel = useMemo(() => (loading ? "—" : isPro ? translate("settings.subscription.proPlan", "Pro Plan") : translate("settings.subscription.freePlan", "Free Plan")), [isPro, loading, translate]);
 
   return (
     <View className="bg-white dark:bg-darkBackground px-2.5 py-3 overflow-hidden">
@@ -73,4 +64,3 @@ export function SubscriptionCard() {
     </View>
   );
 }
-

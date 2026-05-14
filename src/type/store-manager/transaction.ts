@@ -24,12 +24,6 @@ export type ListItem =
 export const initialState = {
   selectedStoreId: null as number | null,
   typeFilter: "all" as TypeFilter,
-  items: [] as TransactionItem[],
-  page: 1,
-  hasMore: false,
-  loading: false,
-  loadingMore: false,
-  refreshing: false,
 };
 
 export const type_badge: Record<TxType, string> = { qr: "QR", stamp: "Stamp", streak: "Streak" };

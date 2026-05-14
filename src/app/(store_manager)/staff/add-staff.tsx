@@ -2,25 +2,30 @@ import React, { useEffect } from "react";
 import { KeyboardAvoidingView, Platform, ScrollView } from "react-native";
 import { View, Text, TouchableOpacity, TextInput, SafeAreaView } from "@/tw";
 import { useRouter, useLocalSearchParams } from "expo-router";
+import { useQueryClient } from "@tanstack/react-query";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Button } from "@/components/button";
 import { Modal } from "@/components/modal";
-import { createStoreStaff, getStoreStaffMember, updateStoreStaffMember } from "@/services/store-manager/staff-service";
+import { createStoreStaff, updateStoreStaffMember } from "@/services/store-manager/staff-service";
 import { useStaffStore } from "@/store/store-manager/staff-store";
 import { generateRandomPassword } from "@/utils/store_manager/staff-utils";
 import { TextField } from "@/components/text-field";
 import { RefreshCcw } from "lucide-react-native";
 import { AppHeader } from "@/components/header";
 import { useTranslation } from "react-i18next";
+import { useStoreStaffMemberQuery } from "@/hooks/store-manager/rq";
+import { storeManagerKeys } from "@/hooks/store-manager/rq/query-keys";
 
 const WEB_MAX_WIDTH = 896;
 
 export default function AddStaff() {
   const { t: translate } = useTranslation();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { storeId, staffId } = useLocalSearchParams<{ storeId: string; staffId?: string }>();
   const isEditMode = !!staffId;
   const isWeb = Platform.OS === "web";
+  const memberQuery = useStoreStaffMemberQuery(isEditMode ? staffId : undefined);
   const {
     name,
     email,
@@ -46,28 +51,31 @@ export default function AddStaff() {
   const emailPattern = /\S+@\S+\.\S+/;
 
   useEffect(() => {
-    const init = async () => {
-      if (isEditMode && staffId) {
-        const member = await getStoreStaffMember(staffId);
-        const user = member?.user as { name?: string | null; email?: string | null } | null;
-        setName(user?.name ?? "");
-        setEmail(user?.email ?? "");
-        setPassword("");
-      } else {
-        setPassword(generateRandomPassword(8));
-      }
-    };
+    return () => resetStaff();
+  }, [resetStaff]);
 
-    init().catch(() => {
+  useEffect(() => {
+    if (!isEditMode) {
+      setPassword(generateRandomPassword(8));
+    }
+  }, [isEditMode, setPassword]);
+
+  useEffect(() => {
+    if (!isEditMode || !staffId) return;
+    if (memberQuery.isError) {
       setModal({
         title: translate("store_manager.staffForm.loadErrorTitle"),
         message: translate("store_manager.staffForm.loadErrorMessage"),
         buttons: [{ label: translate("label.ok"), onPress: () => setModal(null), variant: "secondary" }],
       });
-    });
-
-    return () => resetStaff();
-  }, [isEditMode, staffId, setName, setEmail, setPassword, setModal, resetStaff, translate]);
+      return;
+    }
+    if (!memberQuery.data) return;
+    const user = memberQuery.data.user as { name?: string | null; email?: string | null } | null;
+    setName(user?.name ?? "");
+    setEmail(user?.email ?? "");
+    setPassword("");
+  }, [isEditMode, staffId, memberQuery.isError, memberQuery.data, setName, setEmail, setPassword, setModal, translate]);
 
   const openConfirm = () => {
     const hasNameError = !trimmedName;
@@ -104,6 +112,14 @@ export default function AddStaff() {
         ],
       });
       resetStaff();
+      await queryClient.invalidateQueries({
+        queryKey: storeManagerKeys.staff(String(storeId)),
+      });
+      if (isEditMode && staffId) {
+        await queryClient.invalidateQueries({
+          queryKey: storeManagerKeys.staffMember(staffId),
+        });
+      }
       router.push({
         pathname: "/(store_manager)/staff",
         params: { storeId },

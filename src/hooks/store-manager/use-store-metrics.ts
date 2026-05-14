@@ -3,9 +3,9 @@ import { Platform, ScrollView as RNScrollView, useWindowDimensions } from "react
 import { useFocusEffect } from "expo-router";
 
 import { useManagerStoresStore } from "@/store/manager-stores-store";
-import { getStoreMetrics, getRetentionData, getStampDistribution, getRecentTransactions } from "@/services/store-manager/store-metrics-service";
 import { RecentTransaction, RetentionData, StampBucket, ActivityChartData } from "@/type/store-manager/metric";
 import { getLast7Labels, getWeekDateRange, getLast14Labels, get14DayDateRange } from "@/utils/date-helpers";
+import { useStoreDashboardBundleQuery } from "@/hooks/store-manager/rq";
 
 export function useStoreDashboard() {
     const { width, height } = useWindowDimensions();
@@ -36,63 +36,30 @@ export function useStoreDashboard() {
 
     const selectedStore = stores.find((s) => s.id === selectedStoreId) || stores[0];
 
-    // Metrics state
-    const [activeUsers, setActiveUsers] = useState(0);
-    const [todayTransactions, setTodayTransactions] = useState(0);
-    const [weeklyActivity, setWeeklyActivity] = useState<ActivityChartData>({
+    const bundleQuery = useStoreDashboardBundleQuery(selectedStore?.id);
+
+    const activeUsers = bundleQuery.data?.metricsData.activeUsers ?? 0;
+    const todayTransactions = bundleQuery.data?.metricsData.todayTransactions ?? 0;
+    const weeklyActivity: ActivityChartData = bundleQuery.data?.metricsData.weeklyActivity ?? {
         scans: Array(14).fill(0),
         unique_visitors: Array(14).fill(0),
         redemptions: Array(14).fill(0),
         new_members: Array(14).fill(0),
-    });
-    
-    const [retention, setRetention] = useState<RetentionData>({
+    };
+    const retention: RetentionData = bundleQuery.data?.retentionData ?? {
         returningCount: 0,
         newCount: 0,
         returningPercent: 0,
         newPercent: 0,
-    });
-    const [metricsLoading, setMetricsLoading] = useState(true);
-    const [stampBuckets, setStampBuckets] = useState<StampBucket[]>([]);
-    const [stampMaxStamps, setStampMaxStamps] = useState(0);
-    const [recentTransactions, setRecentTransactions] = useState<RecentTransaction[]>([])
-
-    const fetchMetrics = useCallback(async (showSkeleton = true) => {
-        const storeId = selectedStore?.id ?? 0;
-        const radius = selectedStore?.radius ?? 100;
-
-        if (!storeId) return;
-        if (showSkeleton) setMetricsLoading(true);
-
-        try {
-            const [metricsData, retentionData, stampDistData, recentTxs] = await Promise.all([
-                getStoreMetrics(storeId),
-                getRetentionData(storeId),
-                getStampDistribution(storeId),
-                getRecentTransactions(storeId, 10)
-            ]);
-
-            setActiveUsers(metricsData.activeUsers);
-            setTodayTransactions(metricsData.todayTransactions);
-            setWeeklyActivity(metricsData.weeklyActivity);
-            setRetention(retentionData);
-            setStampBuckets(stampDistData.buckets);
-            setStampMaxStamps(stampDistData.maxStamps);
-            setRecentTransactions(recentTxs);
-        } catch (error) {
-            console.error("Error fetching store dashboard metrics:", error);
-        } finally {
-            setMetricsLoading(false);
-        }
-    }, [selectedStore?.id, selectedStore?.radius]);
-
-    useEffect(() => {
-        fetchMetrics(true);
-    }, [fetchMetrics]);
+    };
+    const stampBuckets: StampBucket[] = bundleQuery.data?.stampDistData.buckets ?? [];
+    const stampMaxStamps = bundleQuery.data?.stampDistData.maxStamps ?? 0;
+    const recentTransactions: RecentTransaction[] = bundleQuery.data?.recentTxs ?? [];
+    const metricsLoading = bundleQuery.isPending;
 
     const handleRefresh = useCallback(async () => {
-        await Promise.all([refresh(true), fetchMetrics(false)]);
-    }, [refresh, fetchMetrics]);
+        await Promise.all([refresh(true), bundleQuery.refetch()]);
+    }, [refresh, bundleQuery]);
 
     const dayLabels = useMemo(() => isWeb ? getLast14Labels() : getLast7Labels(), [isWeb]);
     const weekRange = useMemo(() => isWeb ? get14DayDateRange() : getWeekDateRange(), [isWeb]);
