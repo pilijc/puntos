@@ -14,16 +14,28 @@ export function useMuteStore(storeId?: number) {
         if (!storeId || isLoading) return;
 
         setIsLoading(true);
+        // Optimistic update
+        const currentlyMuted = isMuted;
+        if (currentlyMuted) {
+            setMutedStoreIds(prev => prev.filter(id => id !== storeId));
+        } else {
+            setMutedStoreIds(prev => [...prev, storeId]);
+        }
+
         try {
-            if (isMuted) {
+            if (currentlyMuted) {
                 await unmuteStore(storeId);
-                setMutedStoreIds(prev => prev.filter(id => id !== storeId));
             } else {
                 await muteStore(storeId);
-                setMutedStoreIds(prev => [...prev, storeId]);
             }
         } catch (error) {
             console.error("Failed to toggle mute state:", error);
+            // Revert optimistic update on error
+            if (currentlyMuted) {
+                setMutedStoreIds(prev => [...prev, storeId]);
+            } else {
+                setMutedStoreIds(prev => prev.filter(id => id !== storeId));
+            }
         } finally {
             setIsLoading(false);
         }

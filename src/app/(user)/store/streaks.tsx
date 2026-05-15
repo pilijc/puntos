@@ -11,7 +11,7 @@ import Svg, { Circle } from "react-native-svg";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { storeLogos } from "@/data/rewards";
-import { getStreakEarnedDates, getUserStreakByStore, UserStreak } from "@/services/streak-service";
+import { getUserStreakByStore, UserStreak } from "@/services/streak-service";
 import { supabase } from "@/supabase/supabase";
 import {
   ChevronLeft,
@@ -426,7 +426,8 @@ function SectionHeader({ icon, title, sub }: { icon: React.ReactNode; title: str
 
 
 export default function StoreStreakDetail() {
-  const { storeId } = useLocalSearchParams<{ storeId?: string }>();
+  const { storeId: rawStoreId } = useLocalSearchParams<{ storeId?: string }>();
+  const storeId = Array.isArray(rawStoreId) ? rawStoreId[0] : rawStoreId;
   const router = useRouter();
   const { t: translate } = useTranslation();
   const [streak, setStreak] = useState<UserStreak | null>(null);
@@ -448,29 +449,38 @@ export default function StoreStreakDetail() {
 
         try {
           setIsLoading(true);
-          const { data: { user } } = await supabase.auth.getUser();
+          // Use getSession() — returns the cached local token without a network call.
+          // getUser() hits the Supabase auth server every time and adds ~200-500ms latency.
+          const { data: { session } } = await supabase.auth.getSession();
+          const user = session?.user;
           if (!user?.id) {
             if (!cancelled) setStreak(null);
             return;
           }
 
-          // Fetch streak record + earned dates in parallel
-          const [data, dates] = await Promise.all([
-            getUserStreakByStore(user.id, Number(storeId)),
-            getStreakEarnedDates(user.id, Number(storeId)),
-          ]);
+          const data = await getUserStreakByStore(user.id, Number(storeId));
 
           if (!cancelled) {
             setStreak(data);
-            setEarnedDates(dates);
+            if (data?.streak_events && Array.isArray(data.streak_events)) {
+              setEarnedDates(new Set(data.streak_events.map((e: any) => e.earned_date)));
+            } else {
+              setEarnedDates(new Set());
+            }
           }
+        } catch (error) {
+          console.error("Failed to load streak:", error);
         } finally {
-          if (!cancelled) setIsLoading(false);
+          // Always set loading to false to prevent infinite skeleton if cancelled incorrectly
+          setIsLoading(false);
         }
       };
 
       loadStreak();
-      return () => { cancelled = true; };
+      return () => { 
+        if (__DEV__) console.log("[StoreStreakDetail] Cleanup called for storeId:", storeId);
+        cancelled = true; 
+      };
     }, [storeId]),
   );
 

@@ -20,7 +20,12 @@ const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 export default function ClaimRewardsScreen() {
   const { t: translate } = useTranslation();
-  const { storeId, storeName, storeLogo, storeAddress } = useLocalSearchParams<{ storeId?: string; storeName?: string; storeLogo?: string; storeAddress?: string }>();
+  const params = useLocalSearchParams<{ storeId?: string; storeName?: string; storeLogo?: string; storeAddress?: string }>();
+  const rawStoreId = params.storeId;
+  const storeId = Array.isArray(rawStoreId) ? rawStoreId[0] : rawStoreId;
+  const storeName = params.storeName;
+  const storeLogo = params.storeLogo;
+  const storeAddress = params.storeAddress;
   const [rewards, setRewards] = useState<Reward[]>([]);
   const [userPoints, setUserPoints] = useState(0);
   const [isLoading, setIsLoading] = useState(true);

@@ -32,19 +32,19 @@ export default function RewardIndex() {
   const { canEdit, loading: permLoading, expiresAtIso } = useStorePremiumCampaignEdit(storeId);
   const campaignsLocked = !permLoading && !canEdit;
 
-  const rewardsQuery = useRewardsByStoreQuery(storeId);
+  const { data, isPending, refetch } = useRewardsByStoreQuery(storeId);
 
   useEffect(() => {
-    if (rewardsQuery.data) setRewards(rewardsQuery.data);
-  }, [rewardsQuery.data, setRewards]);
+    if (data) setRewards(data);
+  }, [data, setRewards]);
 
   useEffect(() => {
-    setLoading(rewardsQuery.isPending);
-  }, [rewardsQuery.isPending, setLoading]);
+    setLoading(isPending);
+  }, [isPending, setLoading]);
 
   const refetchRewards = useCallback(() => {
-    void rewardsQuery.refetch();
-  }, [rewardsQuery]);
+    void refetch();
+  }, [refetch]);
 
   useFocusEffect(
     useCallback(() => {
@@ -54,9 +54,9 @@ export default function RewardIndex() {
 
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
-    await rewardsQuery.refetch();
+    await refetch();
     setRefreshing(false);
-  }, [rewardsQuery]);
+  }, [refetch]);
 
   const formatPoints = (pts: number) =>
     pts >= 1000 ? `${(pts / 1000).toFixed(pts % 1000 === 0 ? 0 : 1)}k` : `${pts}`;

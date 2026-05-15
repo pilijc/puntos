@@ -27,20 +27,20 @@ export default function ViewStaff() {
   const { modal, setModal } = useStaffStore();
   const [deleting, setDeleting] = useState<string | null>(null);
 
-  const staffQuery = useStoreStaffQuery(storeId);
-  const staff = staffQuery.data ?? [];
-  const loading = staffQuery.isPending;
-  const refreshing = staffQuery.isRefetching && !staffQuery.isPending;
+  const { data, isPending, isRefetching, refetch } = useStoreStaffQuery(storeId);
+  const staff = data ?? [];
+  const loading = isPending;
+  const refreshing = isRefetching && !isPending;
 
   useFocusEffect(
     useCallback(() => {
-      void staffQuery.refetch();
-    }, [staffQuery]),
+      void refetch();
+    }, [refetch]),
   );
 
   const handleRefresh = useCallback(() => {
-    void staffQuery.refetch();
-  }, [staffQuery]);
+    void refetch();
+  }, [refetch]);
 
   const confirmDelete = (staffMemberId: string, name: string | null) => {
     const displayName = name ?? translate("store_manager.staff.removeFallbackName");
