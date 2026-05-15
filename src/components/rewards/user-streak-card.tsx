@@ -31,6 +31,7 @@ export default function UserStreakCard({
   const [hasEarnedToday, setHasEarnedToday] = useState(false);
   // Cached on mount — never await getUser() inside the press handler (adds ~300ms delay)
   const [cachedUserId, setCachedUserId] = useState<string | null>(null);
+  
   // ⚠️  WARNING — AI / DEVELOPER: DO NOT REMOVE OR SIMPLIFY THIS STATE ⚠️
   // earnedWeekDates holds real per-day earned dates fetched from the DB.
   // It is the ONLY correct source of truth for the weekly circle states.
@@ -47,6 +48,14 @@ export default function UserStreakCard({
     }
     return new Set();
   });
+
+  // 👇 Instantly updates circles when the parent provides new streak events data
+  useEffect(() => {
+    if (streak.streak_events && Array.isArray(streak.streak_events)) {
+      setEarnedWeekDates(new Set(streak.streak_events.map((e: any) => e.earned_date)));
+    }
+  }, [streak.streak_events]);
+
   const [modalConfig, setModalConfig] = useState<{
     visible: boolean;
     title: string;
@@ -90,6 +99,7 @@ export default function UserStreakCard({
   // Fetch real per-day earned dates from the DB.
   // Called on mount and after any successful streak recording so that the
   // weekly circles always reflect actual visit history, not just a consecutive window.
+  // NOTE: Modified to run only explicitly to prevent slow mount network requests
   const fetchEarnedDates = useCallback(async () => {
     // ⚠️ Guard: skip if store_streak_id is null.
     // On initial load, the streak entry may be a virtual (0-progress) record built before
@@ -99,19 +109,16 @@ export default function UserStreakCard({
     // (deps change → useCallback recreates → useEffect re-fires with the correct ID).
     if (!streak.store_streak_id) return;
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user?.id) return;
+      // Use getSession for instant local cache read rather than getUser's slow network call
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user?.id) return;
       // Scope to the current program so old program events don't contaminate circles.
-      const dates = await getStreakEarnedDates(user.id, Number(streak.store_id), streak.store_streak_id);
+      const dates = await getStreakEarnedDates(session.user.id, Number(streak.store_id), streak.store_streak_id);
       setEarnedWeekDates(dates);
     } catch {
       // silent: the fallback streak_days window (below) covers this case
     }
   }, [streak.store_id, streak.store_streak_id]);
-
-  useEffect(() => {
-    fetchEarnedDates();
-  }, [fetchEarnedDates]);
 
   // Cache the user ID once on mount so the press handler has it synchronously.
   useEffect(() => {

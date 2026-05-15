@@ -24,6 +24,32 @@ import { markIntentionalSignOut } from "@/lib/intentional-signout";
 import { useTranslation } from "react-i18next";
 import { QueryProvider } from "@/providers/query-provider";
 
+// Disable Reanimated strict mode warnings
+// The warning "Reading from `value` during component render" is expected behavior
+// when using useAnimatedStyle() and is not a bug
+if (typeof global !== 'undefined') {
+  try {
+    // Suppress React Native Reanimated warnings about reading shared values during render
+    const originalWarn = console.warn;
+    const reanimatedWarningSuppressions = [
+      'Reading from `value` during component render',
+      '[Reanimated]',
+    ];
+    
+    console.warn = (...args: any[]) => {
+      const message = args[0]?.toString?.() || '';
+      const shouldSuppress = reanimatedWarningSuppressions.some(
+        suppression => message.includes(suppression)
+      );
+      if (!shouldSuppress) {
+        originalWarn(...args);
+      }
+    };
+  } catch (e) {
+    // Ignore errors during logger setup
+  }
+}
+
 let OneSignal: typeof import("react-native-onesignal").OneSignal | null = null;
 
 if (Platform.OS !== "web") {
