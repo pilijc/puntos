@@ -40,7 +40,7 @@ export async function getDashboardData(): Promise<DashboardData> {
       .order("id", { ascending: true }),
     supabase
       .from("stores")
-      .select("id, name, owner_id, status, is_active, created_at, updated_at, users!owner_id ( name )")
+      .select("id, name, logo, owner_id, status, is_active, created_at, updated_at, users!owner_id ( name )")
       .order("created_at", { ascending: false }),
     supabase
       .from("manager_subscriptions")
