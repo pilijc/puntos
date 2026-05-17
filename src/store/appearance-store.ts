@@ -18,6 +18,7 @@ export const useAppearanceStore = create<AppearanceState>()(
       applyTheme: () => {
         const { theme } = get();
         if (Platform.OS === 'web') {
+          if (typeof window === 'undefined') return;
           const isDark = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
           document.documentElement.classList.toggle('dark', isDark);
           return;

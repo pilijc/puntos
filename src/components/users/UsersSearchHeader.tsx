@@ -1,5 +1,5 @@
 import React, { useRef } from "react";
-import { TextInput, FlatList, Platform, Pressable, useColorScheme } from "react-native";
+import { TextInput, FlatList, Platform, Pressable } from "react-native";
 import { useTranslation } from "react-i18next";
 import { View, Text, TouchableOpacity } from "@/tw";
 import { Search, X } from "lucide-react-native";
@@ -7,7 +7,7 @@ import { Feather } from "@expo/vector-icons";
 import { TYPO, COLORS } from "@/type/super-admin/user";
 import { WEB_PAGE_PADDING } from "@/type/super-admin/layout";
 import type { UserRoleTab, AccountStatusFilter } from "@/store/super-admin/user-store";
-import { useAppearanceStore } from "@/store/appearance-store";
+import { useIsDark } from "@/hooks/use-is-dark";
 
 interface UsersSearchHeaderProps {
   search: string;
@@ -37,11 +37,7 @@ export function UsersSearchHeader({
   const searchInputRef = useRef<import("react-native").TextInput>(null);
   const { t: translate } = useTranslation();
   const isWeb = Platform.OS === "web";
-  const nativeColorScheme = useColorScheme();
-  const { theme } = useAppearanceStore();
-  const isDark = isWeb
-    ? theme === "dark" || (theme === "system" && nativeColorScheme === "dark")
-    : nativeColorScheme === "dark";
+  const isDark = useIsDark();
 
   // ── Web layout (Separated: Title | Tabs+Filter | Search) ──
   if (isWeb) {

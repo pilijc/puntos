@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef, useMemo } from "react";
-import { ScrollView, Platform, useColorScheme } from "react-native";
-import { useAppearanceStore } from "@/store/appearance-store";
+import { ScrollView, Platform } from "react-native";
+import { useIsDark } from "@/hooks/use-is-dark";
 import Carousel from 'react-native-reanimated-carousel';
 import { View, Text, TouchableOpacity } from "@/tw";
 import { useTranslation } from "react-i18next";
@@ -79,11 +79,7 @@ export function AdminStoreDetails({
   const scrollRef = useRef<any>(null);
   const [layoutWidth, setLayoutWidth] = useState(0);
 
-  const nativeColorScheme = useColorScheme();
-  const { theme } = useAppearanceStore();
-  const isDark = isWeb
-    ? theme === "dark" || (theme === "system" && nativeColorScheme === "dark")
-    : nativeColorScheme === "dark";
+  const isDark = useIsDark();
 
   const statusKey = getEffectiveStatus(store);
   const statusCfg = STATUS_CONFIG[statusKey] ?? STATUS_CONFIG.pending_review;

@@ -32,8 +32,7 @@ import { useSupportChatStore } from "@/store/support-chat-store";
 import { SupportConversation, SupportInboxFilter } from "@/type/support-chat";
 import { SharedChatArea } from "@/components/chat/shared-chat-area";
 import { getMyStores, StoreRow } from "@/services/store-service";
-import { useAppearanceStore } from "@/store/appearance-store";
-import { useColorScheme } from "react-native";
+import { useIsDark } from "@/hooks/use-is-dark";
 
 const FILTERS: { key: SupportInboxFilter; label: string }[] = [
   { key: "all", label: "All" },
@@ -89,11 +88,7 @@ export default function SuperAdminInbox() {
   const isWeb = Platform.OS === "web";
   const isLargeScreen = width > 768;
 
-  const nativeColorScheme = useColorScheme();
-  const { theme } = useAppearanceStore();
-  const isDark = isWeb
-    ? theme === "dark" || (theme === "system" && nativeColorScheme === "dark")
-    : nativeColorScheme === "dark";
+  const isDark = useIsDark();
 
   const c = {
     bg: isDark ? "#171717" : "#FFFFFF",
@@ -105,7 +100,7 @@ export default function SuperAdminInbox() {
     textPrimary: isDark ? "#FFFFFF" : "#0F172A",
     textSecondary: isDark ? "#A3A3A3" : "#334155",
     textMuted: isDark ? "#737373" : "#94A3B8",
-    iconMuted: isDark ? "#737373" : "#1e293b",
+    iconMuted: isDark ? "#737373" : "#64748B",
     iconAction: isDark ? "#A3A3A3" : "#64748B",
     bgInput: isDark ? "#262626" : "#FFFFFF",
     bgEmpty: isDark ? "#262626" : "#F1F5F9",

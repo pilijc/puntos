@@ -20,8 +20,7 @@ import {
 	useSuperAdminStores,
 	FILTERS,
 } from "@/hooks/super-admin/use-super-admin-stores";
-import { useAppearanceStore } from "@/store/appearance-store";
-import { useColorScheme } from "react-native";
+import { useIsDark } from "@/hooks/use-is-dark";
 
 // ── Screen ──────────────────────────────────────────────────────────────────
 const isWeb = Platform.OS === "web";
@@ -29,11 +28,7 @@ const WEB_TAB_PILL_STYLE = { flexGrow: 1, flexBasis: 120, minWidth: 0 };
 
 export default function SuperAdminStores() {
 	const { t: translate } = useTranslation();
-	const nativeColorScheme = useColorScheme();
-	const { theme } = useAppearanceStore();
-	const isDark = isWeb
-		? theme === "dark" || (theme === "system" && nativeColorScheme === "dark")
-		: nativeColorScheme === "dark";
+	const isDark = useIsDark();
 	const {
 		stores,
 		loading,

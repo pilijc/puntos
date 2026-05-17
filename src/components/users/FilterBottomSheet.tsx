@@ -5,7 +5,6 @@ import {
   PanResponder,
   Platform,
   Pressable,
-  useColorScheme,
 } from "react-native";
 import { View, Text, TouchableOpacity } from "@/tw";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -13,7 +12,7 @@ import { Feather } from "@expo/vector-icons";
 import { Button } from "@/components/button";
 import { TYPO, COLORS, FILTER_OPTIONS } from "@/type/super-admin/user";
 import type { AccountStatusFilter } from "@/store/super-admin/user-store";
-import { useAppearanceStore } from "@/store/appearance-store";
+import { useIsDark } from "@/hooks/use-is-dark";
 
 interface FilterBottomSheetProps {
   visible: boolean;
@@ -31,11 +30,7 @@ export function FilterBottomSheet({
   onSelectFilter,
 }: FilterBottomSheetProps) {
   const insets = useSafeAreaInsets();
-  const nativeColorScheme = useColorScheme();
-  const { theme } = useAppearanceStore();
-  const isDark = isWeb
-    ? theme === "dark" || (theme === "system" && nativeColorScheme === "dark")
-    : nativeColorScheme === "dark";
+  const isDark = useIsDark();
   const translateY = useRef(new Animated.Value(300)).current;
   const backdropOpacity = useRef(new Animated.Value(0)).current;
 
