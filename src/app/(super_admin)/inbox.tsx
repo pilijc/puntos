@@ -32,6 +32,7 @@ import { useSupportChatStore } from "@/store/support-chat-store";
 import { SupportConversation, SupportInboxFilter } from "@/type/support-chat";
 import { SharedChatArea } from "@/components/chat/shared-chat-area";
 import { getMyStores, StoreRow } from "@/services/store-service";
+import { useIsDark } from "@/hooks/use-is-dark";
 
 const FILTERS: { key: SupportInboxFilter; label: string }[] = [
   { key: "all", label: "All" },
@@ -86,6 +87,24 @@ export default function SuperAdminInbox() {
   const { width } = useWindowDimensions();
   const isWeb = Platform.OS === "web";
   const isLargeScreen = width > 768;
+
+  const isDark = useIsDark();
+
+  const c = {
+    bg: isDark ? "#171717" : "#FFFFFF",
+    bgMuted: isDark ? "#262626" : "#F8FAFC",
+    bgCard: isDark ? "#404040" : "#FFFFFF",
+    bgSelected: isDark ? "#431407" : "#FFF8F4",
+    border: isDark ? "#404040" : "#F1F5F9",
+    borderInput: isDark ? "#404040" : "#E2E8F0",
+    textPrimary: isDark ? "#FFFFFF" : "#0F172A",
+    textSecondary: isDark ? "#A3A3A3" : "#334155",
+    textMuted: isDark ? "#737373" : "#94A3B8",
+    iconMuted: isDark ? "#737373" : "#64748B",
+    iconAction: isDark ? "#A3A3A3" : "#64748B",
+    bgInput: isDark ? "#262626" : "#FFFFFF",
+    bgEmpty: isDark ? "#262626" : "#F1F5F9",
+  };
 
   const [messageText, setMessageText] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
@@ -198,19 +217,19 @@ export default function SuperAdminInbox() {
         minWidth: 400,
         flexShrink: 0,
         borderRightWidth: 1,
-        borderRightColor: "#F1F5F9",
-        backgroundColor: "#FFFFFF",
+        borderRightColor: c.border,
+        backgroundColor: c.bg,
       } : {
         flex: activeConversationId ? 0 : 1,
         display: activeConversationId ? "none" : "flex",
-        backgroundColor: "#FFFFFF",
+        backgroundColor: c.bg,
       }}
     >
       <View
         style={{
-          backgroundColor: "#FFFFFF",
+          backgroundColor: c.bg,
           borderBottomWidth: 1,
-          borderBottomColor: "#F1F5F9",
+          borderBottomColor: c.border,
           paddingLeft: 24,
           paddingRight: 16,
           paddingTop: 12,
@@ -224,9 +243,9 @@ export default function SuperAdminInbox() {
           onPress={() => router.back()}
           style={{ padding: 8, marginLeft: -8, marginRight: 8, borderRadius: 20 }}
         >
-          <ArrowLeft size={22} color="#1e293b" />
+          <ArrowLeft size={22} color={c.iconMuted} />
         </TouchableOpacity>
-        <Text style={{ flex: 1, fontSize: 20, fontFamily: "Poppins-Bold", color: "#0F172A" }}>
+        <Text style={{ flex: 1, fontSize: 20, fontFamily: "Poppins-Bold", color: c.textPrimary }}>
           Inbox
         </Text>
         {totalUnread > 0 && (
@@ -249,24 +268,24 @@ export default function SuperAdminInbox() {
 
       <View
         style={{
-          backgroundColor: "#F8FAFC",
+          backgroundColor: c.bgMuted,
           paddingHorizontal: 16,
           paddingTop: 12,
           paddingBottom: 12,
           borderBottomWidth: 1,
-          borderBottomColor: "#F1F5F9",
+          borderBottomColor: c.border,
         }}
       >
         <View
           style={{
             flexDirection: "row",
             alignItems: "center",
-            backgroundColor: "#FFFFFF",
+            backgroundColor: c.bgInput,
             borderRadius: 14,
             paddingHorizontal: 14,
             height: 44,
             borderWidth: 1,
-            borderColor: "#E2E8F0",
+            borderColor: c.borderInput,
             marginBottom: 10,
           }}
         >
@@ -281,7 +300,7 @@ export default function SuperAdminInbox() {
               marginLeft: 10,
               fontFamily: "Poppins-Regular",
               fontSize: 13,
-              color: "#111827",
+              color: c.textPrimary,
               height: 44,
               // @ts-ignore - web only
               outlineStyle: "none",
@@ -338,11 +357,11 @@ export default function SuperAdminInbox() {
         </ScrollView>
       </View>
 
-      <ScrollView style={{ flex: 1, backgroundColor: "#F8FAFC" }} showsVerticalScrollIndicator={false}>
+      <ScrollView style={{ flex: 1, backgroundColor: c.bgMuted }} showsVerticalScrollIndicator={false}>
         {loading ? (
           <View style={{ alignItems: "center", justifyContent: "center", paddingTop: 80 }}>
             <ActivityIndicator color="#FF6600" />
-            <Text style={{ marginTop: 12, fontSize: 13, fontFamily: "Poppins-Medium", color: "#94A3B8" }}>
+            <Text style={{ marginTop: 12, fontSize: 13, fontFamily: "Poppins-Medium", color: c.textMuted }}>
               Loading inbox...
             </Text>
           </View>
@@ -353,7 +372,7 @@ export default function SuperAdminInbox() {
                 width: 56,
                 height: 56,
                 borderRadius: 28,
-                backgroundColor: "#F1F5F9",
+                backgroundColor: c.bgEmpty,
                 alignItems: "center",
                 justifyContent: "center",
                 marginBottom: 12,
@@ -361,7 +380,7 @@ export default function SuperAdminInbox() {
             >
               <MessageSquare size={24} color="#CBD5E1" />
             </View>
-            <Text style={{ fontSize: 13, fontFamily: "Poppins-Medium", color: "#94A3B8", textAlign: "center" }}>
+            <Text style={{ fontSize: 13, fontFamily: "Poppins-Medium", color: c.textMuted, textAlign: "center" }}>
               {error || (searchQuery ? `No results for "${searchQuery}"` : `No ${activeFilter} conversations`)}
             </Text>
           </View>
@@ -369,10 +388,10 @@ export default function SuperAdminInbox() {
           <View
             style={{
               margin: 12,
-              backgroundColor: "#FFFFFF",
+              backgroundColor: c.bgCard,
               borderRadius: 16,
               borderWidth: 1,
-              borderColor: "#F1F5F9",
+              borderColor: c.border,
               overflow: "hidden",
             }}
           >
@@ -393,8 +412,8 @@ export default function SuperAdminInbox() {
                     paddingVertical: 14,
                     paddingLeft: isSelected ? 17 : 20,
                     borderBottomWidth: 1,
-                    borderBottomColor: "#F8FAFC",
-                    backgroundColor: isSelected ? "#FFF8F4" : "#FFFFFF",
+                    borderBottomColor: c.bgMuted,
+                    backgroundColor: isSelected ? c.bgSelected : c.bgCard,
                     borderLeftWidth: isSelected ? 3 : 0,
                     borderLeftColor: "#FF6600",
                   }}
@@ -445,14 +464,14 @@ export default function SuperAdminInbox() {
                         style={{
                           fontSize: 14,
                           fontFamily: unread > 0 ? "Poppins-SemiBold" : "Poppins-Medium",
-                          color: "#0F172A",
+                          color: c.textPrimary,
                           flex: 1,
                           paddingRight: 8,
                         }}
                       >
                         {name}
                       </Text>
-                      <Text style={{ fontSize: 11, fontFamily: "Poppins-Regular", color: "#94A3B8" }}>
+                      <Text style={{ fontSize: 11, fontFamily: "Poppins-Regular", color: c.textMuted }}>
                         {formatTime(conversation.last_message_at ?? conversation.updated_at)}
                       </Text>
                     </View>
@@ -463,7 +482,7 @@ export default function SuperAdminInbox() {
                         style={{
                           fontSize: 13,
                           fontFamily: unread > 0 ? "Poppins-Medium" : "Poppins-Regular",
-                          color: unread > 0 ? "#334155" : "#94A3B8",
+                          color: unread > 0 ? c.textSecondary : c.textMuted,
                           flex: 1,
                           paddingRight: 8,
                         }}
@@ -541,14 +560,14 @@ export default function SuperAdminInbox() {
           flex: !isLargeScreen && !activeConversationId ? 0 : 1,
           display: !isLargeScreen && !activeConversationId ? "none" : "flex",
           borderLeftWidth: 1,
-          borderLeftColor: "#F1F5F9",
+          borderLeftColor: c.border,
         }}
       >
         <View
           style={{
-            backgroundColor: "#FFFFFF",
+            backgroundColor: c.bg,
             borderBottomWidth: 1,
-            borderBottomColor: "#F1F5F9",
+            borderBottomColor: c.border,
             paddingLeft: 24,
             paddingRight: 16,
             paddingTop: 12,
@@ -563,7 +582,7 @@ export default function SuperAdminInbox() {
               onPress={() => useSupportChatStore.setState({ activeConversationId: null })}
               style={{ padding: 8, marginLeft: -8, marginRight: 8, borderRadius: 20 }}
             >
-              <ArrowLeft size={22} color="#1e293b" />
+              <ArrowLeft size={22} color={c.iconMuted} />
             </TouchableOpacity>
           )}
 
@@ -585,7 +604,7 @@ export default function SuperAdminInbox() {
                     height: 36,
                     borderRadius: 18,
                     marginRight: 10,
-                    backgroundColor: "#F1F5F9",
+                    backgroundColor: c.bgEmpty,
                     overflow: "hidden",
                   }}
                   resizeMode="cover"
@@ -609,10 +628,10 @@ export default function SuperAdminInbox() {
               )}
 
               <View style={{ flexShrink: 1 }}>
-                <Text numberOfLines={1} style={{ fontSize: 15, fontFamily: "Poppins-Bold", color: "#0F172A", lineHeight: 20 }}>
+                <Text numberOfLines={1} style={{ fontSize: 15, fontFamily: "Poppins-Bold", color: c.textPrimary, lineHeight: 20 }}>
                   {name}
                 </Text>
-                <Text style={{ fontSize: 11, fontFamily: "Poppins-Regular", color: "#94A3B8" }}>
+                <Text style={{ fontSize: 11, fontFamily: "Poppins-Regular", color: c.textMuted }}>
                   {activeConversation.owner_name || "Store Manager"}
                 </Text>
               </View>
@@ -656,7 +675,7 @@ export default function SuperAdminInbox() {
   };
 
   return (
-    <SafeAreaView edges={["top", "left", "right"]} style={{ flex: 1, flexDirection: "row", backgroundColor: "#FFFFFF" }}>
+    <SafeAreaView edges={["top", "left", "right"]} style={{ flex: 1, flexDirection: "row", backgroundColor: c.bg }}>
       {renderInboxList()}
       {renderChatArea()}
 

@@ -1,0 +1,30 @@
+
+@config "../tailwind.config.js";
+
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/preflight.css" layer(base);
+@import "tailwindcss/utilities.css";
+@import "nativewind/theme";
+
+@variant dark (&:where(.dark, .dark *));
+
+@layer theme {
+  @theme {
+    --font-poppins: "Poppins-Regular";
+    --font-poppins-medium: "Poppins-Medium";
+    --font-poppins-semibold: "Poppins-SemiBold";
+    --font-poppins-bold: "Poppins-Bold";
+    --font-rounded: "SF Pro Rounded", "Hiragino Maru Gothic ProN", Meiryo,
+      "MS PGothic", sans-serif;
+
+    --color-primary: #ff6600;
+    --color-accent: #8b8d98;
+    --color-background: #F9FAFB;
+    --color-background-muted: #F3F4F6;
+    --color-text-primary: #0f172a;
+    --color-text-secondary: #475569;
+    --color-text-muted: #94a3b8;
+    --color-success: #22c55e;
+    --color-danger: #ef4444;
+  }
+}

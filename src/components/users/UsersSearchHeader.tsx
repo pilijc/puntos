@@ -7,6 +7,7 @@ import { Feather } from "@expo/vector-icons";
 import { TYPO, COLORS } from "@/type/super-admin/user";
 import { WEB_PAGE_PADDING } from "@/type/super-admin/layout";
 import type { UserRoleTab, AccountStatusFilter } from "@/store/super-admin/user-store";
+import { useIsDark } from "@/hooks/use-is-dark";
 
 interface UsersSearchHeaderProps {
   search: string;
@@ -36,6 +37,7 @@ export function UsersSearchHeader({
   const searchInputRef = useRef<import("react-native").TextInput>(null);
   const { t: translate } = useTranslation();
   const isWeb = Platform.OS === "web";
+  const isDark = useIsDark();
 
   // ── Web layout (Separated: Title | Tabs+Filter | Search) ──
   if (isWeb) {
@@ -59,11 +61,11 @@ export function UsersSearchHeader({
                 alignSelf: "center",
                 flexDirection: "row",
                 alignItems: "center",
-                backgroundColor: "#ffffff",
+                backgroundColor: isDark ? "#262626" : "#ffffff",
                 borderWidth: 1,
-                borderColor: "#f6f2f2ff",
+                borderColor: isDark ? "#404040" : "#f6f2f2ff",
                 height: 50,
-                borderRadius: 16, // rounded-2xl
+                borderRadius: 16,
                 overflow: "hidden",
               }}
             >
@@ -82,7 +84,7 @@ export function UsersSearchHeader({
                     flex: 1,
                     fontSize: 14,
                     fontFamily: "Poppins-Medium",
-                    color: "#334155",
+                    color: isDark ? "#FFFFFF" : "#334155",
                     outline: "none",
                     border: "none",
                     marginLeft: 10,
@@ -97,7 +99,7 @@ export function UsersSearchHeader({
               </View>
 
               {/* Vertical Divider */}
-              <View style={{ width: 1, height: 32, backgroundColor: "#f1f5f9" }} />
+              <View style={{ width: 1, height: 32, backgroundColor: isDark ? "#404040" : "#f1f5f9" }} />
 
               {/* 2. Tabs Section (Right) */}
               <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 12, gap: 6 }}>
@@ -131,7 +133,7 @@ export function UsersSearchHeader({
               </View>
 
               {/* Vertical Divider */}
-              <View style={{ width: 1, height: 32, backgroundColor: "#f1f5f9" }} />
+              <View style={{ width: 1, height: 32, backgroundColor: isDark ? "#404040" : "#f1f5f9" }} />
 
               {/* 3. Filter Icon Section (Right) */}
               <Pressable
