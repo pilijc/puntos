@@ -13,7 +13,12 @@ import { AppHeader } from "@/components/header";
 import { TextField } from "@/components/text-field";
 import { Toggle } from "@/components/toggle";
 import { formatDateTime, computeMinStartAtFromActiveProgram } from "@/utils/store_manager/streak-utils";
-import { resolveStreakErrorI18nKey } from "@/services/store-manager/streak-user-messages";
+import {
+  isStreakConfigureInlineMessageKey,
+  isStreakNoticeMessageKey,
+  resolveStreakErrorI18nKey,
+  resolveStreakErrorTitleKey,
+} from "@/services/store-manager/streak-user-messages";
 import { useTranslation } from "react-i18next";
 import { useStorePremiumCampaignEdit } from "@/hooks/store-manager/use-store-premium-campaign-edit";
 import { WebStreakActivationCalendar } from "@/components/store_manager/streak/web-streak-activation-calendar";
@@ -40,7 +45,7 @@ function snapMinuteToStep(m: number): number {
 }
 
 export default function ConfigureStreaks() {
-  const { t: translate } = useTranslation();
+  const { t: translate, i18n } = useTranslation();
   const router = useRouter();
   const { storeId, streakId } = useLocalSearchParams<{ storeId: string; streakId?: string }>();
   const isEditMode = !!streakId;
@@ -68,7 +73,7 @@ export default function ConfigureStreaks() {
   } = useStreakStore();
 
   const [scheduleEnabled, setScheduleEnabled] = React.useState(!isEditMode);
-  const [startTimeError, setStartTimeError] = React.useState(false);
+  const [startTimeError, setStartTimeError] = React.useState<false | "past" | "barrier" | "required">(false);
   const [hasActiveProgramBarrier, setHasActiveProgramBarrier] = React.useState(false);
   const createDefaultsAppliedRef = useRef(false);
   const colorScheme = useColorScheme();
@@ -273,9 +278,17 @@ export default function ConfigureStreaks() {
     setMaxDaysCapError(hasMaxDaysCapError);
     if (hasStreakLengthError || hasFixedPointsError || hasStartingPointsError || hasIncrementError || hasMaxDaysCapError) return;
 
-    if (scheduleEnabled && start_at && new Date(start_at) < minActivationAt) {
-      setStartTimeError(true);
-      return;
+    if (scheduleEnabled && start_at) {
+      const start = new Date(start_at);
+      const now = new Date();
+      if (start < now) {
+        setStartTimeError("past");
+        return;
+      }
+      if (start < minActivationAt) {
+        setStartTimeError("barrier");
+        return;
+      }
     }
 
     setIsSubmitting(true);
@@ -333,10 +346,29 @@ export default function ConfigureStreaks() {
       });
     } catch (error) {
       const key = resolveStreakErrorI18nKey(error);
+      if (isStreakConfigureInlineMessageKey(key)) {
+        if (key === "storeManager.streak.errors.upcomingNeedsStart") {
+          setScheduleEnabled(true);
+          if (!start_at) {
+            setStartAt(defaultScheduleStart(minActivationAt).toISOString());
+          }
+          setStartTimeError("required");
+        } else {
+          setStartTimeError("past");
+        }
+        return;
+      }
       const message =
         key != null ? translate(key) : ((error as Error).message ?? translate("storeManager.streakConfigure.saveFailed"));
+      const titleKey = key != null ? resolveStreakErrorTitleKey(key) : null;
+      const title =
+        titleKey != null && i18n.exists(titleKey)
+          ? translate(titleKey)
+          : key != null && isStreakNoticeMessageKey(key)
+            ? translate("label.almostThere")
+            : translate("label.error");
       setModal({
-        title: translate("label.error"),
+        title,
         message,
         buttons: [{ label: translate("label.ok"), onPress: () => setModal(null) }],
       });
@@ -758,7 +790,11 @@ export default function ConfigureStreaks() {
 
                 {startTimeError && (
                   <Text className="text-xs font-poppins text-red-500 dark:text-red-400 -mt-1">
-                    {translate("storeManager.streakConfigure.startTimeAfter", { time: minActivationAt.toLocaleString() })}
+                    {startTimeError === "barrier"
+                      ? translate("storeManager.streakConfigure.startTimeAfter", { time: minActivationAt.toLocaleString() })
+                      : startTimeError === "required"
+                        ? translate("storeManager.streakConfigure.startTimeRequired")
+                        : translate("storeManager.streakConfigure.startTimeInPast")}
                   </Text>
                 )}
               </>

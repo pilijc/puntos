@@ -2,16 +2,30 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const STORAGE_KEY = "transactions_starred_store_ids_v1";
 
+export const MAX_STARRED_TX_STORES = 10;
+
+export function normalizeStarredStoreIds(values: unknown): number[] {
+  if (!Array.isArray(values)) return [];
+  const ids: number[] = [];
+  for (const value of values) {
+    const id =
+      typeof value === "number"
+        ? value
+        : typeof value === "string"
+          ? Number(value)
+          : NaN;
+    if (Number.isFinite(id) && id > 0 && !ids.includes(id)) {
+      ids.push(id);
+    }
+  }
+  return ids;
+}
+
 export async function loadStarredTransactionStoreIds(): Promise<number[]> {
   try {
     const raw = await AsyncStorage.getItem(STORAGE_KEY);
     if (!raw) return [];
-    const parsed = JSON.parse(raw) as unknown;
-    if (!Array.isArray(parsed)) return [];
-    return parsed.filter(
-      (x): x is number =>
-        typeof x === "number" && Number.isFinite(x) && x > 0,
-    );
+    return normalizeStarredStoreIds(JSON.parse(raw));
   } catch {
     return [];
   }
