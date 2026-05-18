@@ -4,6 +4,7 @@ import { GoogleSignin } from "@react-native-google-signin/google-signin";
 import { Alert } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { getHomeRouteForUserId, getRoleTypeForUser, getWebAdjustedHomeRoute } from "./access-service";
+import { forceDeactivateAllDeviceSessions } from "@/services/shared/device-session-route-service";
 import { router } from "expo-router";
  
 export class AccountDeletedError extends Error {
@@ -31,6 +32,7 @@ export async function checkIfAccountDeletedService(userId: string): Promise<void
 
   if (userSettings?.deleted_at) {
     markIntentionalSignOut();
+    await forceDeactivateAllDeviceSessions().catch(e => console.warn(e));
     await supabase.auth.signOut();
     throw new AccountDeletedError();
   }
@@ -58,6 +60,7 @@ export async function softDeleteUserService(userId: string): Promise<void> {
 
   if (error) throw error;
   markIntentionalSignOut();
+  await forceDeactivateAllDeviceSessions().catch(e => console.warn(e));
   await supabase.auth.signOut();
 }
 
@@ -213,6 +216,7 @@ export async function loginService(email: string, password: string) {
 
         if (error || !storeStaff?.store_id) {
           markIntentionalSignOut();
+          await forceDeactivateAllDeviceSessions().catch(e => console.warn(e));
           await supabase.auth.signOut();   
           await AsyncStorage.removeItem("sessionToken");
           

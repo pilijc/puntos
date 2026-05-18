@@ -10,6 +10,7 @@ import { useTranslation } from 'react-i18next';
 interface DeviceLimitModalProps {
     visible: boolean;
     sessions: ManagerDeviceSession[];
+    maxSessions?: number;
     onCheckAgain: () => Promise<void>;
     onCancel: () => void;
 }
@@ -17,6 +18,7 @@ interface DeviceLimitModalProps {
 export function DeviceLimitModal({
     visible,
     sessions,
+    maxSessions = MAX_DEVICE_SESSIONS,
     onCheckAgain,
     onCancel,
 }: DeviceLimitModalProps) {
@@ -59,7 +61,7 @@ export function DeviceLimitModal({
                             {translate("settings.deviceSessions.limitWarningTitle")}
                         </Text>
                         <Text className="text-red-700/80 dark:text-red-300 text-xs font-poppins leading-4">
-                            {translate("settings.deviceSessions.limitWarningBody", { max: MAX_DEVICE_SESSIONS })}
+                            {translate("settings.deviceSessions.limitWarningBody", { max: maxSessions })}
                         </Text>
                     </View>
                 </View>

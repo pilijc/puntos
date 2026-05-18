@@ -1,34 +1,29 @@
-export const MAX_DEVICE_SESSIONS = 3;
-export const SESSION_TIMEOUT_MS = 15 * 60 * 1000; // 15 minutes
-export type DeviceType = "mobile" | "tablet" | "web";
+/**
+ * Type definitions for the store-manager device session feature.
+ *
+ * NOTE: MAX_DEVICE_SESSIONS and SESSION_TIMEOUT_MS are intentionally kept here
+ * as re-exports from the central config so existing import sites don't break.
+ * Adjust limits in `@/config/session-limits` — not here.
+ */
+import { SESSION_CONFIGS } from "@/config/session-limits";
+import type { DeviceSession } from "@/services/shared/device-session-service";
 
-export interface ManagerDeviceSession {
-    id: string;
-    user_id: string;
-    device_id: string;
-    device_name: string | null;
-    device_model: string | null;
-    device_type: DeviceType;
-    location_label: string | null;
-    last_active_at: string;
-    created_at: string;
-    is_active: boolean;
-}
+// Backwards-compatible named re-exports
+export const MAX_DEVICE_SESSIONS  = SESSION_CONFIGS.manager.maxSessions;
+export const SESSION_TIMEOUT_MS   = SESSION_CONFIGS.manager.timeoutMs;
 
-export interface DeviceSessionCheckResult {
-    // true = current device is already in the table and was just refreshed
-    // false = the user has >=2 active sessions elsewhere. current devie is blocked
-    allowed: boolean;
-    activeSessions: ManagerDeviceSession[];
-}
+// Re-export types from the shared service so existing import sites still work
+export type { DeviceType, DeviceSessionCheckResult } from "@/services/shared/device-session-service";
+export type ManagerDeviceSession = DeviceSession;
+
 
 export interface DeviceSessionState {
-    //populated when the manager is blocked from logging in
+    /** populated when the manager is blocked from logging in */
     blockedSessions: ManagerDeviceSession[];
-    // proactively displayed on the settings page
+    /** proactively displayed on the settings page */
     activeSessions: ManagerDeviceSession[];
     isCheckingLimit: boolean;
-    // last trusted server timestamp (ms) fetched during a session check
+    /** last trusted server timestamp (ms) fetched during a session check */
     serverTimeMs: number | null;
 
     setBlockedSessions: (sessions: ManagerDeviceSession[]) => void;

@@ -1,6 +1,6 @@
 import { Tabs, Redirect } from 'expo-router';
 import React, { useEffect } from 'react';
-import { useColorScheme, Platform } from 'react-native';
+import { useColorScheme, Platform, AppState } from 'react-native';
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 import { Compass, Store, History, Settings } from 'lucide-react-native';
@@ -8,6 +8,8 @@ import { useProfile } from '@/hooks/user/use-profile';
 import { useLocationSync } from '@/hooks/user/use-location-sync';
 import { getMutedStores } from '@/services/user/mute-service';
 import { useStoreStore } from '@/store/user/store-store';
+import { refreshUserDeviceHeartbeatService } from '@/services/user/device-session-service';
+
 
 function UserTabs() {
   const colorScheme = useColorScheme();
@@ -40,6 +42,27 @@ function UserTabs() {
       isActive = false;
     };
   }, [user?.id]);
+
+  // Keep the user's device session alive while they are actively using the app
+  useEffect(() => {
+    if (!user?.id) return;
+    const userId = user.id;
+
+    const pulse = () => { refreshUserDeviceHeartbeatService(userId).catch(() => {}); };
+
+    // ping when app comes back to foreground
+    const appStateSub = AppState.addEventListener('change', (state) => {
+      if (state === 'active') pulse();
+    });
+    // also ping every 1 minute while app is open
+    const intervalId = setInterval(pulse, 1 * 60 * 1000);
+
+    return () => {
+      appStateSub.remove();
+      clearInterval(intervalId);
+    };
+  }, [user?.id]);
+
 
   return (
     <Tabs
