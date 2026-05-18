@@ -854,16 +854,7 @@ export default function Discover() {
             style={{
               iconImage: ["get", "icon"],
               iconAllowOverlap: true,
-              iconSize: [
-                "interpolate",
-                ["linear"],
-                ["zoom"],
-                5, 0.005,
-                10, 0.03,
-                15, 0.02,
-                18, 0.05,
-                20, 0.07  
-              ]
+              iconSize: 0.025,
             }}
           />
         </Mapbox.ShapeSource>
