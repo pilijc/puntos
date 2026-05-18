@@ -10,6 +10,11 @@ export interface UserLocation {
   heading?: number;
 }
 
+export interface UserHeading {
+  heading: number;
+  accuracy?: number;
+}
+
 export interface LocationPermissionStatus {
   granted: boolean;
   canAskAgain: boolean;
@@ -126,6 +131,18 @@ const toUserLocation = (loc: { coords: { latitude: number; longitude: number; ac
   accuracy: loc.coords.accuracy ?? undefined,
   heading: loc.coords.heading ?? undefined,
 });
+
+const normalizeHeading = (heading: number): number => ((heading % 360) + 360) % 360;
+
+const toUserHeading = (heading: Location.LocationHeadingObject): UserHeading | null => {
+  const rawHeading = heading.trueHeading >= 0 ? heading.trueHeading : heading.magHeading;
+  if (!Number.isFinite(rawHeading)) return null;
+
+  return {
+    heading: normalizeHeading(rawHeading),
+    accuracy: heading.accuracy,
+  };
+};
 
 async function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T | null> {
   let timeout: ReturnType<typeof setTimeout> | undefined;
@@ -273,6 +290,44 @@ export async function watchLocation(
     return subscription;
   } catch (error) {
     console.error('[LocationService] Error watching location:', error);
+    return null;
+  }
+}
+
+/**
+ * Watch device compass heading. Unlike GPS `coords.heading`, this updates when
+ * the user turns in place, so map direction indicators can react immediately.
+ */
+export async function watchHeading(
+  callback: (heading: UserHeading) => void,
+  options?: {
+    requestPermission?: boolean;
+  }
+): Promise<Location.LocationSubscription | null> {
+  try {
+    if (Platform.OS === 'web') return null;
+
+    const permissionStatus = options?.requestPermission === false
+      ? await checkLocationPermission()
+      : await ensureLocationPermission();
+
+    if (!permissionStatus.granted) {
+      return null;
+    }
+
+    const subscription = await Location.watchHeadingAsync(
+      (heading) => {
+        const userHeading = toUserHeading(heading);
+        if (userHeading) callback(userHeading);
+      },
+      (error) => {
+        console.error('[LocationService] Heading watch update error:', error);
+      }
+    );
+
+    return subscription;
+  } catch (error) {
+    console.error('[LocationService] Error watching heading:', error);
     return null;
   }
 }
