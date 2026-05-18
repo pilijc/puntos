@@ -81,8 +81,6 @@ export function useAuthListener() {
                 await upsertPushId();
               }
 
-              if (isLoginDeviceSessionFlowActive()) return;
-
               const isAtAuthFlow =
                 pathname?.includes('/login') ||
                 pathname?.includes('/signup') ||

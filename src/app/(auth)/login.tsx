@@ -129,6 +129,7 @@ export default function Login() {
         const maxSessions = getDeviceSessionLimitForRoute(homeRoute);
         setBlockedMaxSessions(maxSessions ?? 1);
         setShowDeviceLimitModal(true);
+        endLoginDeviceSessionFlow();
         return;
       }
       resetAuthForm();
@@ -172,6 +173,7 @@ export default function Login() {
         const maxSessions = getDeviceSessionLimitForRoute(homeRoute);
         setBlockedMaxSessions(maxSessions ?? 1);
         setShowDeviceLimitModal(true);
+        endLoginDeviceSessionFlow();
         return;
       }
       resetAuthForm();

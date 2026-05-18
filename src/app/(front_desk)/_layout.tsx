@@ -10,6 +10,7 @@ import { checkPasswordSetupRequired } from "@/services/frontdesk/password-servic
 import { useTranslation } from "react-i18next";
 import { History, Settings, ScanLine } from 'lucide-react-native';
 import { refreshFrontdeskDeviceHeartbeatService } from "@/services/frontdesk/device-session-service";
+import { useAuthActions } from "@/hooks/use-auth-actions";
 
 function FrontDeskTabs() {
     const router = useRouter();
@@ -20,6 +21,7 @@ function FrontDeskTabs() {
     const isDark = colorScheme === 'dark';
     const { t: translate } = useTranslation();
     const [currentUserId, setCurrentUserId] = useState<string | undefined>(undefined);
+    const { handleLogout } = useAuthActions();
 
     const isOnPasswordSetup = pathname.includes('setup-password');
 
@@ -50,6 +52,17 @@ function FrontDeskTabs() {
                         return;
                     }
 
+                    // Enforce session limit on direct navigation bypass
+                    const { getHomeRouteForUserId } = require("@/services/access-service");
+                    const { getWebAdjustedHomeRoute } = require("@/services/access-service");
+                    const { registerDeviceSessionForRoute } = require("@/services/shared/device-session-route-service");
+                    const nextRoute = getWebAdjustedHomeRoute(await getHomeRouteForUserId(user.id));
+                    const sessionCheck = await registerDeviceSessionForRoute(user.id, nextRoute);
+                    if (!sessionCheck.allowed) {
+                        await handleLogout();
+                        return;
+                    }
+
                     const requiresPasswordSetup = await checkPasswordSetupRequired(user.id);
                     if (requiresPasswordSetup) {
                         router.replace("/(front_desk)/setup-password");
@@ -75,6 +88,17 @@ function FrontDeskTabs() {
                     } else {
                         router.replace("/(user)");
                     }
+                    return;
+                }
+
+                // Enforce session limit on direct navigation bypass
+                const { getHomeRouteForUserId } = require("@/services/access-service");
+                const { getWebAdjustedHomeRoute } = require("@/services/access-service");
+                const { registerDeviceSessionForRoute } = require("@/services/shared/device-session-route-service");
+                const nextRoute = getWebAdjustedHomeRoute(await getHomeRouteForUserId(user.id));
+                const sessionCheck = await registerDeviceSessionForRoute(user.id, nextRoute);
+                if (!sessionCheck.allowed) {
+                    await handleLogout();
                     return;
                 }
 

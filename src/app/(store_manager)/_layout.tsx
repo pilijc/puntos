@@ -639,6 +639,15 @@ export default function StoreManagerLayout() {
                         router.replace(getWebAdjustedHomeRoute("/(user)") as any);
                     }
                 } else {
+                    // Enforce session limit on direct navigation bypass
+                    const { getHomeRouteForUserId } = require("@/services/access-service");
+                    const { registerDeviceSessionForRoute } = require("@/services/shared/device-session-route-service");
+                    const nextRoute = getWebAdjustedHomeRoute(await getHomeRouteForUserId(user.id));
+                    const sessionCheck = await registerDeviceSessionForRoute(user.id, nextRoute);
+                    if (!sessionCheck.allowed) {
+                        await handleLogoutRef.current();
+                        return;
+                    }
                     // valid manager/owner — activate heartbeat by providing userId to the hook
                     setCurrentUserId(user.id);
                 }
