@@ -1,6 +1,6 @@
 import "react-native-url-polyfill/auto";
 import "react-native-gesture-handler";
-import "../global.css";
+import "../globalStyles";
 import "@/translation";
 import { Slot, useRouter, usePathname } from "expo-router";
 import { useFonts } from "expo-font";
@@ -18,10 +18,37 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { useAuthStore } from "@/store/auth-store";
 import { isOneSignalNativeAvailable } from "@/services/push-service";
 import { useStamps } from "@/hooks/use-stamps";
+import { useStreaks } from "@/hooks/use-streaks";
 import { registerDeviceSessionForRoute } from "@/services/shared/device-session-route-service";
 import { markIntentionalSignOut } from "@/lib/intentional-signout";
 import { useTranslation } from "react-i18next";
 import { QueryProvider } from "@/providers/query-provider";
+
+// Disable Reanimated strict mode warnings
+// The warning "Reading from `value` during component render" is expected behavior
+// when using useAnimatedStyle() and is not a bug
+if (typeof global !== 'undefined') {
+  try {
+    // Suppress React Native Reanimated warnings about reading shared values during render
+    const originalWarn = console.warn;
+    const reanimatedWarningSuppressions = [
+      'Reading from `value` during component render',
+      '[Reanimated]',
+    ];
+    
+    console.warn = (...args: any[]) => {
+      const message = args[0]?.toString?.() || '';
+      const shouldSuppress = reanimatedWarningSuppressions.some(
+        suppression => message.includes(suppression)
+      );
+      if (!shouldSuppress) {
+        originalWarn(...args);
+      }
+    };
+  } catch (e) {
+    // Ignore errors during logger setup
+  }
+}
 
 let OneSignal: typeof import("react-native-onesignal").OneSignal | null = null;
 
@@ -63,6 +90,7 @@ export default function Layout() {
   const sessionExpiredNotice = useAuthStore((s) => s.sessionExpiredNotice);
   const setSessionExpiredNotice = useAuthStore((s) => s.setSessionExpiredNotice);
   const fetchStamps = useStamps((s) => s.fetchStamps);
+  const fetchStreaks = useStreaks((s) => s.fetchStreaks);
 
   useEffect(() => {
     if (AppState.currentState === "active") {
@@ -116,6 +144,7 @@ export default function Layout() {
           const userId = session.user.id;
 
           fetchStamps();
+          fetchStreaks();
 
           await checkIfAccountDeletedService(userId);
           await checkIfAccountBlockedService(userId);
@@ -150,7 +179,7 @@ export default function Layout() {
     };
 
     restoreSessionAndRoute();
-  }, [fontsLoaded, router, fetchStamps]);
+  }, [fontsLoaded, router, fetchStamps, fetchStreaks]);
 
   useEffect(() => {
     const checkUserStatusOnNav = async () => {

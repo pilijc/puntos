@@ -7,6 +7,9 @@ export function useCarouselAutoplayPause(
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const handleCarouselInteraction = useCallback(() => {
+    // We only update if we need to, but since we don't have access to current state here,
+    // we can use the setter with a callback if the store supports it, or simply rely
+    // on Zustand not updating if the value is the same. Wait, Zustand only avoids update if value is same.
     setIsAutoPlayEnabled(false);
 
     if (timeoutRef.current) {
@@ -16,7 +19,7 @@ export function useCarouselAutoplayPause(
     timeoutRef.current = setTimeout(() => {
       setIsAutoPlayEnabled(true);
     }, resumeDelayMs);
-  }, [resumeDelayMs, setIsAutoPlayEnabled]);
+  }, [setIsAutoPlayEnabled, resumeDelayMs]);
 
   useEffect(() => {
     return () => {

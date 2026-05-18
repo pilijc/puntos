@@ -6,10 +6,14 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 
 interface UserStreakListItemProps {
-  stamp: {
+  streak: {
     store_id: number;
-    stamps_count: number;
-    target: number;
+    streak_days?: number;
+    total_earned_days?: number;
+    store_streaks?: {
+      streak_length?: number;
+      completion_bonus_points?: number;
+    };
     stores?: {
       name: string;
       is_active?: boolean;
@@ -23,19 +27,22 @@ const getTier = (completed: number, translate: (key: string) => string) => {
   return { label: translate("user.rewards.streaks.tiers.bronze"), color: "text-amber-700" };
 };
 
-export default function UserStreakListItem({ stamp }: UserStreakListItemProps) {
+export default function UserStreakListItem({ streak }: UserStreakListItemProps) {
   const router = useRouter();
   const { t: translate } = useTranslation();
-  const targetDays = stamp.target || 7;
-  const completed = stamp.stamps_count;
-  const bonus = 500;
+  
+  // Read from the correct streak fields
+  const targetDays = streak.store_streaks?.streak_length || 7;
+  const completed = streak.total_earned_days ?? streak.streak_days ?? 0;
+  const bonus = streak.store_streaks?.completion_bonus_points ?? 0;
+  
   const progress = Math.round((completed / targetDays) * 100);
   const safeProgress = Math.min(Math.max(progress, 0), 100);
   const tier = getTier(completed, translate);
 
   return (
     <TouchableOpacity
-      onPress={() => router.push(`/store/${stamp.store_id}`)}
+      onPress={() => router.push(`/store/${streak.store_id}`)}
       className="bg-white dark:bg-neutral-800 rounded-3xl p-4 border border-neutral-100 dark:border-neutral-700"
     >
       <TWView className="flex-row items-center justify-between">
@@ -45,10 +52,10 @@ export default function UserStreakListItem({ stamp }: UserStreakListItemProps) {
           </TWView>
           <TWView>
             <TWText className="font-poppins-semibold text-neutral-900 dark:text-white">
-              {stamp.stores?.name ?? translate("user.rewards.store")}
+              {streak.stores?.name ?? translate("user.rewards.store")}
             </TWText>
             <TWText className="text-xs text-neutral-500 font-poppins mt-1">
-              {stamp.stores?.is_active 
+              {streak.stores?.is_active 
                 ? translate("user.rewards.streaks.activeStore") 
                 : translate("user.rewards.streaks.inactiveStore")}
             </TWText>

@@ -49,23 +49,23 @@ export default function ViewStreak() {
   const { canEdit, loading: permLoading, expiresAtIso } = useStorePremiumCampaignEdit(storeId);
   const campaignsLocked = !permLoading && !canEdit;
 
-  const streaksQuery = useStreaksByStoreQuery(storeId);
+  const { refetch, data, isPending } = useStreaksByStoreQuery(storeId);
 
   useEffect(() => {
-    if (streaksQuery.data) {
-      setStreaks(streaksQuery.data);
+    if (data) {
+      setStreaks(data);
       setUpcomingVisible(PAGE_SIZE);
       setEndedVisible(PAGE_SIZE);
     }
-  }, [streaksQuery.data, setStreaks, setUpcomingVisible, setEndedVisible]);
+  }, [data, setStreaks, setUpcomingVisible, setEndedVisible]);
 
   useEffect(() => {
-    setLoading(streaksQuery.isPending);
-  }, [streaksQuery.isPending, setLoading]);
+    setLoading(isPending);
+  }, [isPending, setLoading]);
 
   const refetchStreaks = useCallback(() => {
-    void streaksQuery.refetch();
-  }, [streaksQuery]);
+    void refetch();
+  }, [refetch]);
 
   useFocusEffect(
     useCallback(() => {

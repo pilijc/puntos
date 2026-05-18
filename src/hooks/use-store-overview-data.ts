@@ -319,18 +319,18 @@ export function useStoreOverviewData(storeId?: string) {
   const prevFetchParams = useRef<string | null>(null);
 
   useEffect(() => {
-    const nearbyIds = nearbyStores.map((store) => Number(store.id));
-    const displayStampStoreIds = sortedStamps.map((stamp) => Number(stamp.store_id));
+    const nearbyIds = nearbyStores.map((store) => Number(store.id)).filter(id => !isNaN(id));
+    const displayStampStoreIds = sortedStamps.map((stamp) => Number(stamp.store_id)).filter(id => !isNaN(id));
     
     // Ensure we fetch feature flags for out-of-range Discover stores when viewing their details
-    if (storeId && !nearbyIds.includes(Number(storeId))) {
-      nearbyIds.push(Number(storeId));
-    }
-
-    // Ensure reward program is fetched for the focused store even when the user has
-    // no stamp_progress row yet (virtual card path — after erasure or first visit)
-    if (storeId && !displayStampStoreIds.includes(Number(storeId))) {
-      displayStampStoreIds.push(Number(storeId));
+    const numericStoreId = storeId ? Number(storeId) : NaN;
+    if (!isNaN(numericStoreId)) {
+      if (!nearbyIds.includes(numericStoreId)) {
+        nearbyIds.push(numericStoreId);
+      }
+      if (!displayStampStoreIds.includes(numericStoreId)) {
+        displayStampStoreIds.push(numericStoreId);
+      }
     }
     
     const currentParams = JSON.stringify({
@@ -372,7 +372,6 @@ export function useStoreOverviewData(storeId?: string) {
   }, [activeStreakProgramMap, heroIndex, nearbyStores, storeId, upcomingStreakProgramMap]);
 
   const swipeIndicatorStyle = useAnimatedStyle(() => {
-    'worklet';
     return {
       opacity: swipeIndicatorOpacity.value,
     };
