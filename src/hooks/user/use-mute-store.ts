@@ -1,45 +1,34 @@
 import { useStoreStore } from "@/store/user/store-store";
-import { muteStore, unmuteStore, getMutedStores } from "@/services/user/mute-service";
-import { useEffect, useState } from "react";;
+import { useProfile } from "@/hooks/user/use-profile";
+import { useMutedStoresQuery, useToggleMuteStoreMutation } from "@/hooks/user/rq";
+import { useEffect } from "react";
 
 export function useMuteStore(storeId?: number) {
     const { mutedStoreIds, setMutedStoreIds } = useStoreStore();
-    const [isLoading, setIsLoading] = useState(false);
+    const { user } = useProfile();
+    const mutedStoresQuery = useMutedStoresQuery(user?.id);
+    const toggleMuteMutation = useToggleMuteStoreMutation(user?.id);
 
-    const isMuted = storeId ? mutedStoreIds.includes(storeId) : false;
+    useEffect(() => {
+        if (mutedStoresQuery.data) {
+            setMutedStoreIds(mutedStoresQuery.data);
+        }
+    }, [mutedStoresQuery.data, setMutedStoreIds]);
+
+    const queryMutedStoreIds = mutedStoresQuery.data ?? mutedStoreIds;
+    const isMuted = storeId ? queryMutedStoreIds.includes(storeId) : false;
 
 
 
     const toggleMute = async () => {
-        if (!storeId || isLoading) return;
-
-        setIsLoading(true);
-        // Optimistic update
-        const currentlyMuted = isMuted;
-        if (currentlyMuted) {
-            setMutedStoreIds(prev => prev.filter(id => id !== storeId));
-        } else {
-            setMutedStoreIds(prev => [...prev, storeId]);
-        }
+        if (!storeId || !user?.id || toggleMuteMutation.isPending) return;
 
         try {
-            if (currentlyMuted) {
-                await unmuteStore(storeId);
-            } else {
-                await muteStore(storeId);
-            }
+            await toggleMuteMutation.mutateAsync({ storeId, currentlyMuted: isMuted });
         } catch (error) {
             console.error("Failed to toggle mute state:", error);
-            // Revert optimistic update on error
-            if (currentlyMuted) {
-                setMutedStoreIds(prev => [...prev, storeId]);
-            } else {
-                setMutedStoreIds(prev => prev.filter(id => id !== storeId));
-            }
-        } finally {
-            setIsLoading(false);
         }
     };
 
-    return { isMuted, toggleMute, isLoading };
+    return { isMuted, toggleMute, isLoading: toggleMuteMutation.isPending };
 };

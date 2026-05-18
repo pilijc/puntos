@@ -1,4 +1,5 @@
 export { storeManagerKeys } from "./query-keys";
+export { useManagerStoresQuery } from "./store-queries";
 export {
   useAuthenticatedUserIdQuery,
   useSubscriptionPlansQuery,

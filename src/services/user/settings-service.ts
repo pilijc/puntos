@@ -73,6 +73,46 @@ export async function updateUserProfileService(userId: string, updates: Partial<
     if (error) throw error;
 }
 
+export async function uploadUserAvatarService(userId: string, uri: string): Promise<string | null> {
+    if (uri.startsWith('http')) return uri;
+
+    const fileExt = uri.split('.').pop()?.toLowerCase() || 'jpeg';
+    const fileName = `${userId}_${Date.now()}.${fileExt}`;
+    const filePath = `profile-pictures/${fileName}`;
+    const fileType = `image/${fileExt === 'jpg' ? 'jpeg' : fileExt}`;
+
+    const formData = new FormData();
+    formData.append('file', { uri, name: fileName, type: fileType } as any);
+
+    const { error: uploadError } = await supabase.storage
+        .from('puntos-public')
+        .upload(filePath, formData, { contentType: fileType, upsert: true });
+
+    if (uploadError) throw uploadError;
+
+    const { data } = supabase.storage.from('puntos-public').getPublicUrl(filePath);
+    return data.publicUrl;
+}
+
+export async function saveUserProfileService(params: {
+    userId: string;
+    username: string;
+    avatarUri: string | null;
+    initialAvatar: string | null;
+}): Promise<Partial<UserProfile>> {
+    const { userId, username, avatarUri, initialAvatar } = params;
+    let finalAvatarUrl = initialAvatar;
+
+    if (avatarUri && avatarUri !== initialAvatar) {
+        finalAvatarUrl = await uploadUserAvatarService(userId, avatarUri);
+        if (initialAvatar) await deleteOldAvatar(initialAvatar);
+    }
+
+    const profileUpdates = { name: username, avatar_url: finalAvatarUrl };
+    await updateUserProfileService(userId, profileUpdates);
+    return profileUpdates;
+}
+
 export async function deleteOldAvatar(oldUrl: string | null): Promise<void> {
     if (!oldUrl) return;
     try {
@@ -109,6 +149,24 @@ export async function deleteUserAccountService(): Promise<void> {
 
     markIntentionalSignOut();
     await supabase.auth.signOut();
+}
+
+export async function changePasswordService(params: {
+    currentPassword: string;
+    newPassword: string;
+}): Promise<void> {
+    const { currentPassword, newPassword } = params;
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user?.email) throw new Error("Could not find authenticated user");
+
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: user.email,
+        password: currentPassword,
+    });
+    if (signInError) throw new Error("INCORRECT_CURRENT_PASSWORD");
+
+    const { error: updateError } = await supabase.auth.updateUser({ password: newPassword });
+    if (updateError) throw updateError;
 }
 
 export async function getUsersNearStoreService(

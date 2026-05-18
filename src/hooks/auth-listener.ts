@@ -10,6 +10,7 @@ import { useAuthStore } from '@/store/auth-store';
 import { markIntentionalSignOut, consumeIntentionalSignOut } from '@/lib/intentional-signout';
 import { isLoginDeviceSessionFlowActive } from '@/lib/login-device-session-flow';
 import { registerDeviceSessionForRoute, forceDeactivateAllDeviceSessions } from '@/services/shared/device-session-route-service';
+import { getQueryClient } from '@/lib/query-client';
 
 let OneSignal: typeof import("react-native-onesignal").OneSignal | null = null;
 
@@ -30,6 +31,7 @@ export function useAuthListener() {
           router.replace("/reset-password");
         } else if (event === 'SIGNED_OUT') {
           const intentional = consumeIntentionalSignOut();
+          getQueryClient().removeQueries();
           // Deactivate this device across all role session tables.
           // Only one table will have a matching row; the others are no-ops.
           forceDeactivateAllDeviceSessions();
@@ -57,6 +59,7 @@ export function useAuthListener() {
             }
           })();
         } else if (event === 'SIGNED_IN' && session && !isOnSignupFlow) {
+          void getQueryClient().invalidateQueries();
           useAuthStore.getState().setSessionExpiredNotice(false);
           void (async () => {
             try {
