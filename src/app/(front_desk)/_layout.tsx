@@ -1,7 +1,7 @@
 import { Tabs, usePathname, Redirect } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { useRouter } from "expo-router";
-import { Platform, View, StyleSheet, useColorScheme } from "react-native";
+import { Platform, View, StyleSheet, useColorScheme, AppState } from "react-native";
 import { supabase } from "@/supabase/supabase";
 import { getRoleTypeForUser } from "@/services/access-service";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -9,6 +9,7 @@ import { getCurrentUserIsActive } from "@/services/frontdesk/scan-service";
 import { checkPasswordSetupRequired } from "@/services/frontdesk/password-service";
 import { useTranslation } from "react-i18next";
 import { History, Settings, ScanLine } from 'lucide-react-native';
+import { refreshFrontdeskDeviceHeartbeatService } from "@/services/frontdesk/device-session-service";
 
 function FrontDeskTabs() {
     const router = useRouter();
@@ -18,6 +19,7 @@ function FrontDeskTabs() {
     const colorScheme = useColorScheme();
     const isDark = colorScheme === 'dark';
     const { t: translate } = useTranslation();
+    const [currentUserId, setCurrentUserId] = useState<string | undefined>(undefined);
 
     const isOnPasswordSetup = pathname.includes('setup-password');
 
@@ -31,6 +33,7 @@ function FrontDeskTabs() {
 
                 const user = session.user;
                 if (!user) return;
+                setCurrentUserId(user.id);
 
                 try {
                     const activeStatus = await getCurrentUserIsActive();
@@ -62,6 +65,7 @@ function FrontDeskTabs() {
             try {
                 const { data: { user } } = await supabase.auth.getUser();
                 if (!user) return;
+                setCurrentUserId(user.id);
                 const activeStatus = await getCurrentUserIsActive();
                 setIsActive(activeStatus);
                 const roleType = await getRoleTypeForUser(user.id);
@@ -88,6 +92,25 @@ function FrontDeskTabs() {
             subscription?.unsubscribe();
         };
     }, []);
+
+    // Keep the front desk device session alive while the app is in use
+    useEffect(() => {
+        if (!currentUserId) return;
+        const userId = currentUserId;
+
+        const pulse = () => { refreshFrontdeskDeviceHeartbeatService(userId).catch(() => {}); };
+
+        const appStateSub = AppState.addEventListener('change', (state) => {
+            if (state === 'active') pulse();
+        });
+        const intervalId = setInterval(pulse, 1 * 60 * 1000);
+
+        return () => {
+            appStateSub.remove();
+            clearInterval(intervalId);
+        };
+    }, [currentUserId]);
+
 
     return (
         <Tabs

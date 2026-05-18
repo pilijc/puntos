@@ -8,6 +8,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { upsertPushId, isOneSignalNativeAvailable } from '@/services/push-service';
 import { useAuthStore } from '@/store/auth-store';
 import { markIntentionalSignOut, consumeIntentionalSignOut } from '@/lib/intentional-signout';
+import { registerDeviceSessionForRoute, forceDeactivateAllDeviceSessions } from '@/services/shared/device-session-route-service';
 
 let OneSignal: typeof import("react-native-onesignal").OneSignal | null = null;
 
@@ -28,12 +29,9 @@ export function useAuthListener() {
           router.replace("/reset-password");
         } else if (event === 'SIGNED_OUT') {
           const intentional = consumeIntentionalSignOut();
-          try {
-            const { forceDeactivateCurrentDeviceService } = require("@/services/store-manager/device-session-service");
-            forceDeactivateCurrentDeviceService().catch((e: any) => console.warn("[AuthListener] Force deactivate failed", e));
-          } catch (e) {
-            // ignore
-          }
+          // Deactivate this device across all role session tables.
+          // Only one table will have a matching row; the others are no-ops.
+          forceDeactivateAllDeviceSessions();
 
           // if we're already on the login page or auth/signup flows, don't boot the user back to welcome.
           // this allows them to stay on login after cancelling a device limit modal.
@@ -88,27 +86,23 @@ export function useAuthListener() {
                 pathname?.includes('/welcome') ||
                 pathname?.includes('/landing');
 
-              // Enforce device session limit to prevent the global listener from hijacking routing into the dashboard!
-              if (nextRoute === "/(store_manager)" || (typeof nextRoute === "string" && nextRoute.startsWith("/(store_manager)"))) {
-                const { checkDeviceSessionLimitService, upsertDeviceSessionService } = require("@/services/store-manager/device-session-service");
-                try {
-                  const sessionCheck = await checkDeviceSessionLimitService(userId);
-                  if (sessionCheck.allowed) {
-                    await upsertDeviceSessionService(userId);
-                  } else {
-                    // If we're on the login page, we let the login page itself handle the modal state.
-                    // We simply return so line 72 doesn't execute and "unhide" the auth screen.
-                    if (isAtAuthFlow) return;
+              if (!isAtAuthFlow) return;
 
-                    // Session token expired
-                    markIntentionalSignOut();
-                    await supabase.auth.signOut();
-                    router.replace("/(auth)/login");
-                    return; 
-                  }
-                } catch (e) {
-                  console.warn("[AuthListener] Device session check failed", e);
+              try {
+                const sessionCheck = await registerDeviceSessionForRoute(userId, nextRoute);
+                if (!sessionCheck.allowed) {
+                  markIntentionalSignOut();
+                  await supabase.auth.signOut();
+                  router.replace("/(auth)/login");
+                  return;
                 }
+              } catch (e) {
+                // Fail closed on active login flow to prevent bypassing session limits
+                markIntentionalSignOut();
+                await supabase.auth.signOut();
+                Alert.alert("Session Error", "Could not verify device session. Please try again.");
+                router.replace("/(auth)/login");
+                return;
               }
 
               router.replace(nextRoute as any);

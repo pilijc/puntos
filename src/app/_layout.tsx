@@ -19,7 +19,7 @@ import { useAuthStore } from "@/store/auth-store";
 import { isOneSignalNativeAvailable } from "@/services/push-service";
 import { useStamps } from "@/hooks/use-stamps";
 import { useStreaks } from "@/hooks/use-streaks";
-import { checkDeviceSessionLimitService, upsertDeviceSessionService } from "@/services/store-manager/device-session-service";
+import { registerDeviceSessionForRoute } from "@/services/shared/device-session-route-service";
 import { markIntentionalSignOut } from "@/lib/intentional-signout";
 import { useTranslation } from "react-i18next";
 import { QueryProvider } from "@/providers/query-provider";
@@ -150,20 +150,18 @@ export default function Layout() {
           await checkIfAccountBlockedService(userId);
           const nextRoute = getWebAdjustedHomeRoute(await getHomeRouteForUserId(userId));
 
-          if (nextRoute === "/(store_manager)" || (typeof nextRoute === "string" && nextRoute.startsWith("/(store_manager)"))) {
-            try {
-              const sessionCheck = await checkDeviceSessionLimitService(userId);
-              if (sessionCheck.allowed) {
-                await upsertDeviceSessionService(userId);
-              } else {
-                markIntentionalSignOut();
-                await supabase.auth.signOut();
-                router.replace("/(auth)/login");
-                return;
-              }
-            } catch (deviceErr) {
-              console.warn("[DeviceSession] check failed during session restore:", deviceErr);
+          try {
+            const sessionCheck = await registerDeviceSessionForRoute(userId, nextRoute);
+            if (!sessionCheck.allowed) {
+              markIntentionalSignOut();
+              await supabase.auth.signOut();
+              router.replace("/(auth)/login");
+              return;
             }
+          } catch (deviceErr) {
+            // Network / RPC failure — fail open so a transient error doesn't log the user out.
+            // The atomic RPC already falls back internally on missing-migration errors.
+            console.warn("[DeviceSession] check failed during session restore, proceeding:", deviceErr);
           }
 
           router.replace(nextRoute as any);

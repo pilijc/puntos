@@ -2,16 +2,13 @@ import { supabase } from '@/supabase/supabase';
 import { router } from 'expo-router';
 import { Alert } from 'react-native';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
-import { deactivateCurrentDeviceSessionService } from '@/services/store-manager/device-session-service';
+import { forceDeactivateAllDeviceSessions } from '@/services/shared/device-session-route-service';
 import { markIntentionalSignOut } from '@/lib/intentional-signout';
 
 export const useAuthActions = () => {
     const handleLogout = async () => {
         try {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (user) {
-                await deactivateCurrentDeviceSessionService(user.id).catch(e => console.warn(e));
-            }
+
 
             try {
                 await GoogleSignin.signOut();
