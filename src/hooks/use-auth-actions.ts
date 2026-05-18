@@ -8,10 +8,7 @@ import { markIntentionalSignOut } from '@/lib/intentional-signout';
 export const useAuthActions = () => {
     const handleLogout = async () => {
         try {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (user) {
-                await forceDeactivateAllDeviceSessions().catch(e => console.warn(e));
-            }
+
 
             try {
                 await GoogleSignin.signOut();

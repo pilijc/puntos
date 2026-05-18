@@ -212,10 +212,6 @@ export async function registerDeviceSession(
         throw error;
     }
 
-    console.warn(
-        "[DeviceSession] register_device_session RPC is missing; falling back to non-atomic client-side registration.",
-    );
-
     const result = await checkDeviceSessionLimit(config, userId);
     if (result.allowed) {
         await upsertDeviceSession(config, userId, locationLabel);

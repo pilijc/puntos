@@ -32,7 +32,6 @@ export async function checkIfAccountDeletedService(userId: string): Promise<void
 
   if (userSettings?.deleted_at) {
     markIntentionalSignOut();
-    await forceDeactivateAllDeviceSessions().catch(e => console.warn(e));
     await supabase.auth.signOut();
     throw new AccountDeletedError();
   }
@@ -60,7 +59,6 @@ export async function softDeleteUserService(userId: string): Promise<void> {
 
   if (error) throw error;
   markIntentionalSignOut();
-  await forceDeactivateAllDeviceSessions().catch(e => console.warn(e));
   await supabase.auth.signOut();
 }
 

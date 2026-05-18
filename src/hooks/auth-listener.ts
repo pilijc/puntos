@@ -86,18 +86,23 @@ export function useAuthListener() {
                 pathname?.includes('/welcome') ||
                 pathname?.includes('/landing');
 
+              if (!isAtAuthFlow) return;
+
               try {
                 const sessionCheck = await registerDeviceSessionForRoute(userId, nextRoute);
                 if (!sessionCheck.allowed) {
-                  if (isAtAuthFlow) return;
                   markIntentionalSignOut();
                   await supabase.auth.signOut();
                   router.replace("/(auth)/login");
                   return;
                 }
               } catch (e) {
-                // Network / RPC failure — fail open so a transient error doesn't log the user out.
-                console.warn("[AuthListener] Device session check failed, proceeding:", e);
+                // Fail closed on active login flow to prevent bypassing session limits
+                markIntentionalSignOut();
+                await supabase.auth.signOut();
+                Alert.alert("Session Error", "Could not verify device session. Please try again.");
+                router.replace("/(auth)/login");
+                return;
               }
 
               router.replace(nextRoute as any);
