@@ -1,27 +1,20 @@
-import { useState } from 'react';
-import { router } from 'expo-router';
-import { deleteUserAccountService } from '@/services/user/settings-service';
+import { useDeleteAccountMutation } from '@/hooks/user/rq';
 
 export function useDeleteAccount() {
-    const [isDeleting, setIsDeleting] = useState(false);
+    const deleteAccountMutation = useDeleteAccountMutation();
 
     const deleteAccount = async () => {
-        if (isDeleting) return;
-
-        setIsDeleting(true);
+        if (deleteAccountMutation.isPending) return;
 
         try {
-            await deleteUserAccountService();
-            router.replace('/(onboarding)/welcome');
+            await deleteAccountMutation.mutateAsync();
         } catch (error) {
             console.error('[useDeleteAccount] Failed to delete account:', error);
-        } finally {
-            setIsDeleting(false);
         }
     };
     
     return {
         deleteAccount,
-        isDeleting,
+        isDeleting: deleteAccountMutation.isPending,
     };
 }

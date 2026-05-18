@@ -4,7 +4,7 @@ import { View, Text, TouchableOpacity, ScrollView } from "@/tw";
 import * as ImagePicker from "expo-image-picker";
 import { Image } from "expo-image";
 import { User, Camera } from "lucide-react-native";
-import { useProfileStore } from "@/store/profile-store";
+import { useProfile } from "@/hooks/user/use-profile";
 import { Modal } from "@/components/modal";
 import { TextField } from "@/components/text-field";
 import { useTranslation } from "react-i18next";
@@ -18,7 +18,7 @@ export default function EditProfileModal({ visible, onClose }: Props) {
     const isDark = useColorScheme() === "dark";
     const { t: translate } = useTranslation();
 
-    const { user, profile, isSaving, saveProfile } = useProfileStore();
+    const { user, profile, isSaving, saveProfile } = useProfile();
     const [username, setUsername] = useState(profile?.name || "");
     const [avatarUri, setAvatarUri] = useState<string | null>(profile?.avatar_url || null);
     const [errorVisible, setErrorVisible] = useState(false);

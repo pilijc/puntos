@@ -3,6 +3,8 @@ export const storeManagerKeys = {
 
   authUserId: () => [...storeManagerKeys.root, "auth-user-id"] as const,
 
+  managerStores: () => [...storeManagerKeys.root, "manager-stores"] as const,
+
   subscriptionPlans: () => [...storeManagerKeys.root, "subscription-plans"] as const,
 
   managerSubscription: (ownerId: string) =>

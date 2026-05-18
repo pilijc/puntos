@@ -1,6 +1,8 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useEffect, useCallback } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import * as Notifications from 'expo-notifications';
 import { AppState, AppStateStatus } from 'react-native';
+import { userKeys } from '@/hooks/user/rq';
 
 export interface NotificationPermissionStatus {
     granted: boolean;
@@ -17,80 +19,81 @@ export interface UseNotificationsReturn {
     checkPermissionStatus: () => Promise<void>;
 }
 
+const defaultStatus: NotificationPermissionStatus = {
+    granted: false,
+    canAskAgain: true,
+    status: Notifications.PermissionStatus.UNDETERMINED,
+};
+
+const toPermissionStatus = (
+    response: Notifications.NotificationPermissionsStatus,
+): NotificationPermissionStatus => ({
+    granted: response.granted,
+    canAskAgain: response.canAskAgain,
+    status: response.status,
+});
+
 export function useNotifications(): UseNotificationsReturn {
-    const [hasPermission, setHasPermission] = useState<boolean>(false);
-    const [permissionStatus, setPermissionStatus] = useState<NotificationPermissionStatus>({
-        granted: false,
-        canAskAgain: true,
-        status: Notifications.PermissionStatus.UNDETERMINED,
+    const queryClient = useQueryClient();
+
+    const permissionQuery = useQuery({
+        queryKey: userKeys.notificationPermission(),
+        queryFn: async () => toPermissionStatus(await Notifications.getPermissionsAsync()),
+        staleTime: 10_000,
     });
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
 
-    const applyPermissionStatus = (response: Notifications.NotificationPermissionsStatus) => {
-        const nextStatus = {
-            granted: response.granted,
-            canAskAgain: response.canAskAgain,
-            status: response.status,
-        };
-        setHasPermission(nextStatus.granted);
-        setPermissionStatus(nextStatus);
-        return nextStatus;
-    };
-
-    const checkPermissionStatus = useCallback(async () => {
-        try {
-            setLoading(true);
-            const response = await Notifications.getPermissionsAsync();
-            applyPermissionStatus(response);
-        } catch (err: any) {
-            setError(err.message || 'Failed to check notification permission');
-        } finally {
-            setLoading(false);
-        }
-    }, []);
+    const requestPermissionMutation = useMutation({
+        mutationFn: async () => toPermissionStatus(await Notifications.requestPermissionsAsync()),
+        onSuccess: (status) => {
+            queryClient.setQueryData(userKeys.notificationPermission(), status);
+        },
+        onError: () => {
+            queryClient.setQueryData(userKeys.notificationPermission(), {
+                granted: false,
+                canAskAgain: false,
+                status: Notifications.PermissionStatus.DENIED,
+            });
+        },
+    });
+    const refetchPermission = permissionQuery.refetch;
+    const requestPermissionAsync = requestPermissionMutation.mutateAsync;
 
     useEffect(() => {
-        checkPermissionStatus();
-
-        // Check if permissions changed when app returns to active state
         const subscription = AppState.addEventListener('change', (nextAppState: AppStateStatus) => {
             if (nextAppState === 'active') {
-                checkPermissionStatus();
+                void refetchPermission();
             }
         });
 
         return () => {
             subscription.remove();
         };
-    }, [checkPermissionStatus]);
+    }, [refetchPermission]);
 
-    const requestPermission = async () => {
+    const requestPermission = useCallback(async () => {
         try {
-            setLoading(true);
-            setError(null);
-            const response = await Notifications.requestPermissionsAsync();
-            return applyPermissionStatus(response);
-        } catch (err: any) {
-            setError(err.message || 'Failed to request notification permission');
-            const deniedStatus = {
+            return await requestPermissionAsync();
+        } catch {
+            return {
                 granted: false,
                 canAskAgain: false,
                 status: Notifications.PermissionStatus.DENIED,
             };
-            setHasPermission(false);
-            setPermissionStatus(deniedStatus);
-            return deniedStatus;
-        } finally {
-            setLoading(false);
         }
-    };
+    }, [requestPermissionAsync]);
+
+    const checkPermissionStatus = useCallback(async () => {
+        await refetchPermission();
+    }, [refetchPermission]);
+
+    const permissionStatus = permissionQuery.data ?? defaultStatus;
+    const error = permissionQuery.error ?? requestPermissionMutation.error;
 
     return {
-        hasPermission,
+        hasPermission: permissionStatus.granted,
         permissionStatus,
-        loading,
-        error,
+        loading: permissionQuery.isPending || requestPermissionMutation.isPending,
+        error: error?.message ?? null,
         requestPermission,
         checkPermissionStatus,
     };
