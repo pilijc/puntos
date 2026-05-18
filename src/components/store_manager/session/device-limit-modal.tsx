@@ -29,6 +29,8 @@ export function DeviceLimitModal({
         setIsRetrying(true);
         try {
             await onCheckAgain();
+        } catch (error) {
+            console.error("Failed to recheck device session limit:", error);
         } finally {
             setIsRetrying(false);
         }
@@ -45,6 +47,7 @@ export function DeviceLimitModal({
                     onPress: handleRetry,
                     variant: "primary",
                     loading: isRetrying,
+                    disabled: isRetrying,
                 }
             ]}
             dismissOnBackdrop={false}
