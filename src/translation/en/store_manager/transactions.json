@@ -17,7 +17,11 @@
     "searchAccessibility": "Search stores",
     "hint": "{{count}} stores — tap the row below to choose",
     "addStar": "Add to starred",
-    "removeStar": "Remove from starred"
+    "removeStar": "Remove from starred",
+    "showStarred": "Show starred stores",
+    "hideStarred": "Hide starred stores",
+    "starLimitTitle": "Star limit reached",
+    "starLimitMessage": "You can star up to {{max}} stores. Remove one from your starred list to add another."
   },
   "empty": {
     "noStoresTitle": "No Stores Found",

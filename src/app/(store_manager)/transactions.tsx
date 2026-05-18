@@ -9,9 +9,10 @@ import {
   Platform,
   View as RNView,
   Keyboard,
+  Alert,
 } from "react-native";
 import { TransactionSkeleton, StoresAndFunnelSkeleton } from "@/components/skeleton/store_manager/transaction-skeleton";
-import { QrCode, Stamp, Flame, Funnel, Check, Star } from "lucide-react-native";
+import { QrCode, Stamp, Flame, Funnel, Check, Star, X } from "lucide-react-native";
 import { useTransactions } from "@/hooks/store-manager/transaction";
 import { useStarredTxStores } from "@/hooks/store-manager/use-starred-tx-stores";
 import { TxType, ListItem } from "@/type/store-manager/transaction";
@@ -69,12 +70,28 @@ export default function TransactionsScreen() {
     hasMore, loadMore,
     handleRefresh,
   } = useTransactions();
-  const { starredIds, toggleStar } = useStarredTxStores();
+  const availableStoreIdsKey = useMemo(
+    () =>
+      stores
+        .map((s) => Number(s.id))
+        .filter((id) => Number.isFinite(id))
+        .sort((a, b) => a - b)
+        .join(","),
+    [stores],
+  );
+  const availableStoreIds = useMemo(
+    () =>
+      availableStoreIdsKey
+        ? availableStoreIdsKey.split(",").map((id) => Number(id))
+        : [],
+    [availableStoreIdsKey],
+  );
+  const { starredIds, toggleStar, isStarred, canStarStore, maxStarred } =
+    useStarredTxStores(availableStoreIds);
   const funnelRef = useRef<RNView>(null);
   const selectingStoreFromResultsRef = useRef(false);
   const [storeSearchQuery, setStoreSearchQuery] = useState("");
   const [isStoreSearching, setIsStoreSearching] = useState(false);
-  const [showStarredStores, setShowStarredStores] = useState(false);
   const [funnelOpen, setFunnelOpen] = useState(false);
   const [funnelAnchor, setFunnelAnchor] = useState({
     top: 0,
@@ -138,11 +155,49 @@ export default function TransactionsScreen() {
 
   const starredStoresOrdered = useMemo(() => {
     return starredIds
-      .map((id) => stores.find((s) => Number(s.id) === id))
+      .map((id) => {
+        const numId = Number(id);
+        return (
+          stores.find((s) => Number(s.id) === numId) ??
+          (selectedStore && Number(selectedStore.id) === numId ? selectedStore : null)
+        );
+      })
       .filter((s): s is StoreRow => s != null);
-  }, [starredIds, stores]);
+  }, [starredIds, stores, selectedStore]);
 
-  const hasStarredStores = starredStoresOrdered.length > 0;
+  const isCurrentStoreStarred =
+    selectedStoreId != null && isStarred(Number(selectedStoreId));
+  const canStarCurrentStore =
+    selectedStoreId != null && canStarStore(Number(selectedStoreId));
+
+  const showStarLimitAlert = useCallback(() => {
+    Alert.alert(
+      translate("storeManager.transactions.storePicker.starLimitTitle"),
+      translate("storeManager.transactions.storePicker.starLimitMessage", {
+        max: maxStarred,
+      }),
+    );
+  }, [translate, maxStarred]);
+
+  const handleToggleStar = useCallback(
+    (storeId: number) => {
+      const id = Number(storeId);
+      if (!isStarred(id) && !canStarStore(id)) {
+        showStarLimitAlert();
+        return;
+      }
+      const result = toggleStar(id);
+      if (result === "limit_reached") {
+        showStarLimitAlert();
+      }
+    },
+    [canStarStore, isStarred, showStarLimitAlert, toggleStar],
+  );
+
+  const handleToggleCurrentStoreStar = useCallback(() => {
+    if (selectedStoreId == null) return;
+    handleToggleStar(Number(selectedStoreId));
+  }, [selectedStoreId, handleToggleStar]);
 
   const filteredStoresForPicker = useMemo(() => {
     const q = storeSearchQuery.trim().toLowerCase();
@@ -164,11 +219,14 @@ export default function TransactionsScreen() {
     setStoreSearchQuery("");
   }, []);
 
+  const triggerColor = isDark ? "#737373" : "#94A3B8";
+
   const renderStorePickerRow = useCallback(
     ({ item }: ListRenderItemInfo<StoreRow>) => {
       const id = Number(item.id);
       const active = selectedStoreId !== null && id === selectedStoreId;
-      const starred = starredIds.includes(id);
+      const starred = isStarred(id);
+      const canStar = canStarStore(id);
       return (
         <View className="flex-row items-center border-b border-slate-100 dark:border-neutral-800">
           <TouchableOpacity
@@ -191,10 +249,37 @@ export default function TransactionsScreen() {
               {item.name}
             </Text>
           </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => handleToggleStar(id)}
+            activeOpacity={0.7}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            className="shrink-0 items-center justify-center px-3 py-2.5"
+            accessibilityRole="button"
+            accessibilityLabel={
+              starred
+                ? translate("storeManager.transactions.storePicker.removeStar")
+                : translate("storeManager.transactions.storePicker.addStar")
+            }
+          >
+            <Star
+              size={16}
+              color={starred ? "#FF6600" : canStar ? triggerColor : "#CBD5E1"}
+              fill={starred ? "#FF6600" : "transparent"}
+            />
+          </TouchableOpacity>
         </View>
       );
     },
-    [selectStore, selectedStoreId, starredIds, stopSearching, toggleStar, translate],
+    [
+      selectStore,
+      selectedStoreId,
+      isStarred,
+      canStarStore,
+      stopSearching,
+      handleToggleStar,
+      translate,
+      triggerColor,
+    ],
   );
 
   const renderItem = useCallback(
@@ -283,7 +368,6 @@ export default function TransactionsScreen() {
 
     </View>
   );
-  const triggerColor = isDark ? "#737373" : "#94A3B8";
   const triggerIcon =
     typeFilter === "qr"
       ? <QrCode size={16} color={triggerColor} />
@@ -329,10 +413,7 @@ export default function TransactionsScreen() {
                   className="min-w-0 flex-1 basis-0 rounded-xl border border-neutral-100 bg-white dark:border-darkBorder dark:bg-darkBackground"
                   style={{ position: "relative", zIndex: 50 }}
                 >
-                  <RNView
-                    collapsable={false}
-                    className="w-full"
-                  >
+                  <RNView collapsable={false} className="w-full">
                     <TextInput
                       value={storeSearchValue}
                       onChangeText={(text) => {
@@ -437,23 +518,28 @@ export default function TransactionsScreen() {
 
               <View className="w-11 shrink-0 overflow-hidden rounded-xl border border-neutral-100 bg-white dark:border-darkBorder dark:bg-darkBackground">
                 <TouchableOpacity
-                  onPress={() => {
-                    if (!hasStarredStores) return;
-                    setShowStarredStores((v) => !v);
-                  }}
-                  disabled={!hasStarredStores}
+                  onPress={handleToggleCurrentStoreStar}
+                  disabled={selectedStoreId == null}
                   activeOpacity={0.7}
                   hitSlop={{ top: 4, bottom: 4, left: 4, right: 4 }}
                   className="h-full min-h-[42px] w-full items-center justify-center"
                   accessibilityRole="button"
-                  accessibilityLabel={translate("storeManager.transactions.storePicker.hint", {
-                    count: stores.length,
-                  })}
+                  accessibilityLabel={
+                    isCurrentStoreStarred
+                      ? translate("storeManager.transactions.storePicker.removeStar")
+                      : translate("storeManager.transactions.storePicker.addStar")
+                  }
                 >
                   <Star
                     size={16}
-                    color={hasStarredStores ? "#FF6600" : triggerColor}
-                    fill={showStarredStores && hasStarredStores ? "#FF6600" : "transparent"}
+                    color={
+                      isCurrentStoreStarred
+                        ? "#FF6600"
+                        : canStarCurrentStore
+                          ? triggerColor
+                          : "#CBD5E1"
+                    }
+                    fill={isCurrentStoreStarred ? "#FF6600" : "transparent"}
                   />
                 </TouchableOpacity>
               </View>
@@ -472,44 +558,69 @@ export default function TransactionsScreen() {
               </View>
             </View>
 
-            {showStarredStores && starredStoresOrdered.length > 0 ? (
+            {starredStoresOrdered.length > 0 ? (
               <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
                 className="mt-2 w-full"
                 contentContainerClassName="flex-row gap-x-2 py-0.5"
+                keyboardShouldPersistTaps="handled"
               >
                 {starredStoresOrdered.map((store) => {
                   const sid = Number(store.id);
                   const active =
                     selectedStoreId !== null && sid === selectedStoreId;
                   return (
-                    <TouchableOpacity
-                      key={store.id}
-                      onPress={() => selectStore(sid)}
-                      activeOpacity={0.75}
-                      className={`flex-row items-center gap-1 rounded-full px-2.5 py-1 ${
+                    <View
+                      key={`starred-${sid}`}
+                      className={`flex-row items-center rounded-full ${
                         active
-                          ? "border-primary bg-primary"
-                          : "bg-white dark:border-neutral-600 dark:bg-neutral-800"
+                          ? "border border-primary bg-primary"
+                          : "border border-transparent bg-white dark:border-neutral-600 dark:bg-neutral-800"
                       }`}
                     >
-                      <Star
-                        size={11}
-                        color={active ? "#FFFFFF" : "#FF6600"}
-                        fill={active ? "#FFFFFF" : "#FF6600"}
-                      />
-                      <Text
-                        className={`max-w-[140px] text-xs font-poppins-semibold ${
-                          active
-                            ? "text-white"
-                            : "text-slate-700 dark:text-slate-200"
-                        }`}
-                        numberOfLines={1}
+                      <TouchableOpacity
+                        onPress={() => selectStore(sid)}
+                        activeOpacity={0.75}
+                        className="flex-row items-center gap-1 py-1 pl-2.5 pr-1"
+                        accessibilityRole="button"
+                        accessibilityLabel={store.name}
                       >
-                        {store.name}
-                      </Text>
-                    </TouchableOpacity>
+                        <Star
+                          size={11}
+                          color={active ? "#FFFFFF" : "#FF6600"}
+                          fill={active ? "#FFFFFF" : "#FF6600"}
+                        />
+                        <Text
+                          className={`max-w-[140px] text-xs font-poppins-semibold ${
+                            active
+                              ? "text-white"
+                              : "text-slate-700 dark:text-slate-200"
+                          }`}
+                          numberOfLines={1}
+                        >
+                          {store.name}
+                        </Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        onPress={(e) => {
+                          (e as unknown as { stopPropagation?: () => void })?.stopPropagation?.();
+                          handleToggleStar(sid);
+                        }}
+                        hitSlop={{ top: 8, bottom: 8, left: 6, right: 8 }}
+                        activeOpacity={0.7}
+                        className="items-center justify-center py-1 pl-1 pr-2"
+                        accessibilityRole="button"
+                        accessibilityLabel={translate(
+                          "storeManager.transactions.storePicker.removeStar",
+                        )}
+                      >
+                        <X
+                          size={12}
+                          color={active ? "#FFFFFF" : "#94A3B8"}
+                        />
+                      </TouchableOpacity>
+                    </View>
                   );
                 })}
               </ScrollView>

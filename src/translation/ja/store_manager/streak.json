@@ -61,5 +61,23 @@
   "doneBadge": "完了",
   "daysEarned": "{{count}}日獲得",
   "pointsShort": "{{points}}ポイント",
-  "error": "エラー"
+  "error": "エラー",
+  "errors": {
+    "generic": "エラーが発生しました。もう一度お試しください。",
+    "upcomingNeedsStart": "開始日と時刻を設定してから、もう一度公開してください。",
+    "upcomingNeedsStartTitle": "開始日が必要です",
+    "startInPast": "設定した開始時刻はすでに過ぎています。プログラムを編集し、これから先の日時を選んでください。",
+    "startInPastTitle": "開始時刻を更新してください",
+    "duplicateUpcoming": "この店舗にはすでに予定中のストリークがあります。別のものを追加する前に、終了または有効化してください。",
+    "duplicateUpcomingTitle": "予定中は1つまでです",
+    "duplicateActive": "別のストリークがまだ有効です。先に終了するか、後で始まるようスケジュールしてください。",
+    "duplicateActiveTitle": "有効なプログラムがあります",
+    "notFound": "ストリークが見つかりません。",
+    "premiumRequired": "ストリークの作成・編集にはプランのアップグレードが必要です。",
+    "premiumRequiredTitle": "プランのアップグレードが必要です",
+    "onlyDraftPublish": "下書きのプログラムだけ公開できます。このプログラムはすでに公開済みまたは予定です。",
+    "onlyDraftPublishTitle": "公開できません",
+    "onlyUpcomingActivate": "予定中のプログラムだけがこの方法で有効化できます。",
+    "onlyUpcomingActivateTitle": "まだ有効化できません"
+  }
 }
