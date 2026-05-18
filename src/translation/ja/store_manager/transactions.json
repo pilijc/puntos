@@ -18,7 +18,11 @@
     "searchAccessibility": "店舗を検索",
     "hint": "店舗 {{count}}件 — 下の行をタップして選択",
     "addStar": "お気に入りに追加",
-    "removeStar": "お気に入りから削除"
+    "removeStar": "お気に入りから削除",
+    "showStarred": "お気に入り店舗を表示",
+    "hideStarred": "お気に入り店舗を非表示",
+    "starLimitTitle": "お気に入りの上限です",
+    "starLimitMessage": "お気に入りは{{max}}店舗までです。別の店舗を追加するには、お気に入りから1つ削除してください。"
   },
   "empty": {
     "noStoresTitle": "店舗が見つかりません",

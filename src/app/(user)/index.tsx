@@ -349,6 +349,14 @@ export default function Discover() {
         ({ heading }) => {
           if (cancelled) return;
           const smoothed = setSmoothedHeading(heading);
+          setLocation((current) =>
+            current
+              ? {
+                  ...current,
+                  heading: smoothed,
+                }
+              : current,
+          );
           if (locationRef.current) {
             locationRef.current = {
               ...locationRef.current,
