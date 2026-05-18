@@ -8,6 +8,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { upsertPushId, isOneSignalNativeAvailable } from '@/services/push-service';
 import { useAuthStore } from '@/store/auth-store';
 import { markIntentionalSignOut, consumeIntentionalSignOut } from '@/lib/intentional-signout';
+import { isLoginDeviceSessionFlowActive } from '@/lib/login-device-session-flow';
 import { registerDeviceSessionForRoute, forceDeactivateAllDeviceSessions } from '@/services/shared/device-session-route-service';
 
 let OneSignal: typeof import("react-native-onesignal").OneSignal | null = null;
@@ -79,6 +80,8 @@ export function useAuthListener() {
                 await OneSignal.login(userId);
                 await upsertPushId();
               }
+
+              if (isLoginDeviceSessionFlowActive()) return;
 
               const isAtAuthFlow =
                 pathname?.includes('/login') ||

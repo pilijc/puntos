@@ -12,7 +12,7 @@ import { useStoreStore } from "@/store/user/store-store";
 import { Store } from "@/type/user/store";
 import type * as GeoJSON from "geojson";
 import { getOneSignalId, sendPushNotification, isOneSignalNativeAvailable } from "@/services/push-service";
-import { getCurrentLocation, isStoreNearby, watchLocation } from "@/services/user/location-service";
+import { getCurrentLocation, isStoreNearby, watchHeading, watchLocation } from "@/services/user/location-service";
 import type { UserLocation } from "@/services/user/location-service";
 import * as turf from "@turf/turf";
 import { getStores } from "@/services/store-service";
@@ -30,6 +30,23 @@ if (Platform.OS !== "web") {
 }
 
 Mapbox.setAccessToken(process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN);
+
+const HEADING_SMOOTHING_FACTOR = 0.2;
+const HEADING_CAMERA_MIN_DELTA_DEG = 1.25;
+const HEADING_CAMERA_THROTTLE_MS = 120;
+
+function normalizeDegrees(value: number): number {
+  return ((value % 360) + 360) % 360;
+}
+
+function shortestHeadingDelta(from: number, to: number): number {
+  return ((to - from + 540) % 360) - 180;
+}
+
+function smoothHeading(current: number | null, next: number): number {
+  if (current == null) return normalizeDegrees(next);
+  return normalizeDegrees(current + shortestHeadingDelta(current, next) * HEADING_SMOOTHING_FACTOR);
+}
 
 function mapboxStyleUrlToApiUrl(styleUrl: string): string | null {
   const accessToken = process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN;
@@ -103,14 +120,26 @@ export default function Discover() {
   const routeAnimationRef = useRef<ReturnType<typeof requestAnimationFrame> | null>(null);
   const notifiedStoreIds = useRef<Set<number>>(new Set());
   const locationWatchRef = useRef<Location.LocationSubscription | null>(null);
+  const headingWatchRef = useRef<Location.LocationSubscription | null>(null);
+  const headingRef = useRef<number | null>(null);
+  const locationRef = useRef<UserLocation | null>(null);
+  const isHeadingUpEnabledRef = useRef(false);
+  const cameraHeadingRef = useRef<number | null>(null);
+  const lastCameraHeadingUpdateRef = useRef(0);
   const hasCenteredOnUserRef = useRef(false);
   const isFollowingRef = useRef(false);
   const [isFollowing, setIsFollowing] = useState(false);
   const [mapHeading, setMapHeading] = useState(0);
+  const [isHeadingUpEnabled, setIsHeadingUpEnabled] = useState(false);
+  const [userHeading, setUserHeading] = useState<number | null>(null);
   const [localizedMapStyleJSON, setLocalizedMapStyleJSON] = useState<string | null>(null);
   const { t: translate } = useTranslation();
   const language = useLanguageStore((s) => s.language);
   const { preferences } = useProfile();
+
+  useEffect(() => {
+    locationRef.current = location;
+  }, [location]);
 
   const discoverMoreStores = useMemo(() => {
     if (!location) return [];
@@ -152,12 +181,50 @@ export default function Discover() {
         coordinates: [longitude, latitude],
       },
       properties: {
-        bearing: typeof location.heading === "number" && Number.isFinite(location.heading)
-          ? location.heading
-          : 0,
+        bearing:
+          typeof userHeading === "number" && Number.isFinite(userHeading)
+            ? userHeading
+            : typeof location.heading === "number" && Number.isFinite(location.heading)
+              ? location.heading
+              : 0,
       },
     };
-  }, [location]);
+  }, [location, userHeading]);
+
+  const setSmoothedHeading = useCallback((nextHeading: number) => {
+    const smoothed = smoothHeading(headingRef.current, nextHeading);
+    headingRef.current = smoothed;
+    setUserHeading(smoothed);
+    return smoothed;
+  }, []);
+
+  const maybeRotateCameraToHeading = useCallback((heading: number) => {
+    if (!isHeadingUpEnabledRef.current || !isFollowingRef.current) return;
+
+    const now = Date.now();
+    const previousHeading = cameraHeadingRef.current;
+    const delta = previousHeading == null
+      ? Number.POSITIVE_INFINITY
+      : Math.abs(shortestHeadingDelta(previousHeading, heading));
+
+    if (
+      previousHeading != null &&
+      delta < HEADING_CAMERA_MIN_DELTA_DEG &&
+      now - lastCameraHeadingUpdateRef.current < 350
+    ) {
+      return;
+    }
+
+    if (now - lastCameraHeadingUpdateRef.current < HEADING_CAMERA_THROTTLE_MS) return;
+
+    cameraHeadingRef.current = heading;
+    lastCameraHeadingUpdateRef.current = now;
+    cameraRef.current?.setCamera({
+      heading,
+      animationDuration: 180,
+      animationMode: "easeTo",
+    });
+  }, []);
 
   useEffect(() => {
     (async () => {
@@ -248,17 +315,63 @@ export default function Discover() {
       locationWatchRef.current = null;
     };
 
+    const stopHeadingWatch = () => {
+      headingWatchRef.current?.remove();
+      headingWatchRef.current = null;
+    };
+
     const startLocationWatch = async () => {
       stopLocationWatch();
+      stopHeadingWatch();
 
       if (!preferences.location_enabled) {
         setLocation(null);
+        locationRef.current = null;
+        headingRef.current = null;
+        setUserHeading(null);
         return;
       }
 
       const initial = await getCurrentLocation();
       if (initial && !cancelled) {
-        setLocation(initial);
+        if (typeof initial.heading === "number" && Number.isFinite(initial.heading)) {
+          setSmoothedHeading(initial.heading);
+        }
+        const nextLocation = {
+          ...initial,
+          heading: headingRef.current ?? initial.heading,
+        };
+        locationRef.current = nextLocation;
+        setLocation(nextLocation);
+      }
+
+      const headingSub = await watchHeading(
+        ({ heading }) => {
+          if (cancelled) return;
+          const smoothed = setSmoothedHeading(heading);
+          setLocation((current) =>
+            current
+              ? {
+                  ...current,
+                  heading: smoothed,
+                }
+              : current,
+          );
+          if (locationRef.current) {
+            locationRef.current = {
+              ...locationRef.current,
+              heading: smoothed,
+            };
+          }
+          maybeRotateCameraToHeading(smoothed);
+        },
+        { requestPermission: false },
+      );
+
+      if (!cancelled) {
+        headingWatchRef.current = headingSub;
+      } else {
+        headingSub?.remove();
       }
 
       const sub = await watchLocation(
@@ -266,12 +379,24 @@ export default function Discover() {
           if (cancelled) return;
 
           try {
-            setLocation(position);
+            if (typeof position.heading === "number" && Number.isFinite(position.heading) && headingRef.current == null) {
+              setSmoothedHeading(position.heading);
+            }
+
+            const nextLocation = {
+              ...position,
+              heading: headingRef.current ?? position.heading,
+            };
+            locationRef.current = nextLocation;
+            setLocation(nextLocation);
 
             // Follow mode — re-center the camera every time location updates
             if (isFollowingRef.current) {
               cameraRef.current?.setCamera({
                 centerCoordinate: [position.longitude, position.latitude],
+                heading: isHeadingUpEnabledRef.current
+                  ? headingRef.current ?? position.heading ?? undefined
+                  : undefined,
                 zoomLevel: 16,
                 animationDuration: 400,
                 animationMode: "easeTo",
@@ -359,6 +484,7 @@ export default function Discover() {
         startLocationWatch();
       } else if (nextAppState === 'background' || nextAppState === 'inactive') {
         stopLocationWatch();
+        stopHeadingWatch();
       }
     });
 
@@ -366,8 +492,9 @@ export default function Discover() {
       cancelled = true;
       appStateSubscription.remove();
       stopLocationWatch();
+      stopHeadingWatch();
     };
-  }, [preferences.location_enabled, translate]);
+  }, [maybeRotateCameraToHeading, preferences.location_enabled, setSmoothedHeading, translate]);
 
   const centerOnUser = useCallback(async () => {
     let targetLocation = location;
@@ -382,16 +509,25 @@ export default function Discover() {
     setSelectedSearchResult(null);
     isFollowingRef.current = true;
     setIsFollowing(true);
+    const heading = isHeadingUpEnabledRef.current ? headingRef.current ?? targetLocation.heading : undefined;
     cameraRef.current?.setCamera({
       centerCoordinate: [targetLocation.longitude, targetLocation.latitude],
       zoomLevel: 16,
+      heading,
       animationDuration: 650,
       animationMode: "easeTo",
     });
+    if (typeof heading === "number" && Number.isFinite(heading)) {
+      cameraHeadingRef.current = heading;
+    }
     hasCenteredOnUserRef.current = true;
   }, [location]);
 
   const orientNorth = useCallback(() => {
+    isHeadingUpEnabledRef.current = false;
+    setIsHeadingUpEnabled(false);
+    cameraHeadingRef.current = 0;
+    lastCameraHeadingUpdateRef.current = Date.now();
     cameraRef.current?.setCamera({
       heading: 0,
       animationDuration: 350,
@@ -400,13 +536,41 @@ export default function Discover() {
     setMapHeading(0);
   }, []);
 
+  const toggleHeadingUp = useCallback(() => {
+    const nextEnabled = !isHeadingUpEnabledRef.current;
+    isHeadingUpEnabledRef.current = nextEnabled;
+    setIsHeadingUpEnabled(nextEnabled);
+    if (!nextEnabled) return;
+
+    const heading = headingRef.current ?? userHeading;
+    const currentLocation = locationRef.current;
+    if (currentLocation) {
+      isFollowingRef.current = true;
+      setIsFollowing(true);
+    }
+
+    cameraHeadingRef.current = heading ?? null;
+    lastCameraHeadingUpdateRef.current = Date.now();
+    cameraRef.current?.setCamera({
+      ...(currentLocation
+        ? {
+            centerCoordinate: [currentLocation.longitude, currentLocation.latitude],
+            zoomLevel: 16,
+          }
+        : {}),
+      heading: heading ?? mapHeading,
+      animationDuration: 350,
+      animationMode: "easeTo",
+    });
+  }, [mapHeading, userHeading]);
+
   useEffect(() => {
     if (!mapReady || !location || hasCenteredOnUserRef.current || selectedSearchResult) return;
 
     cameraRef.current?.setCamera({
       centerCoordinate: [location.longitude, location.latitude],
       zoomLevel: 16,
-      heading: 0,
+      heading: isHeadingUpEnabledRef.current ? headingRef.current ?? location.heading ?? 0 : 0,
       animationDuration: 1000,
       animationMode: "easeTo",
     });
@@ -573,7 +737,8 @@ export default function Discover() {
         style={{ flex: 1 }}
         onDidFinishLoadingMap={() => setMapReady(true)}
         onCameraChanged={(state) => {
-          setMapHeading(state.properties.heading);
+          const nextHeading = state.properties.heading;
+          setMapHeading(nextHeading);
           if (state.gestures.isGestureActive && isFollowingRef.current) {
             isFollowingRef.current = false;
             setIsFollowing(false);
@@ -689,16 +854,7 @@ export default function Discover() {
             style={{
               iconImage: ["get", "icon"],
               iconAllowOverlap: true,
-              iconSize: [
-                "interpolate",
-                ["linear"],
-                ["zoom"],
-                5, 0.005,
-                10, 0.03,
-                15, 0.02,
-                18, 0.05,
-                20, 0.07  
-              ]
+              iconSize: 0.025,
             }}
           />
         </Mapbox.ShapeSource>
@@ -748,10 +904,12 @@ export default function Discover() {
 
       <MapControlButtons
         isFollowing={isFollowing}
+        isHeadingUpEnabled={isHeadingUpEnabled}
         isNorthUp={isNorthUp}
         normalizedHeading={normalizedHeading}
         hasRoute={!!routeGeoJSON}
         onCenterPress={centerOnUser}
+        onHeadingUpPress={toggleHeadingUp}
         onNorthPress={orientNorth}
       />
 

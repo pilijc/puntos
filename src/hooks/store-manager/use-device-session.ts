@@ -95,13 +95,17 @@ export function useDeviceSession(userId?: string) {
         }
     }, [setActiveSessions, setServerTimeMs]);
 
-    const validateHomeRouteSession = useCallback(async (homeRoute?: string) => {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return true;
+    const validateHomeRouteSession = useCallback(async (homeRoute?: string, userIdOverride?: string) => {
+        let userId = userIdOverride;
+        if (!userId) {
+            const { data: { session } } = await supabase.auth.getSession();
+            userId = session?.user?.id;
+        }
+        if (!userId) return false;
 
         setIsCheckingLimit(true);
         try {
-            const sessionCheck = await registerDeviceSessionForRoute(user.id, homeRoute);
+            const sessionCheck = await registerDeviceSessionForRoute(userId, homeRoute);
             if (sessionCheck.allowed) {
                 clearBlockedSessions();
                 return true;

@@ -43,6 +43,7 @@ export interface DeviceSessionCheckResult {
 type RegisterDeviceSessionRpcResult = {
     allowed?: boolean;
     activeSessions?: DeviceSession[];
+    active_sessions?: DeviceSession[];
 };
 
 // --------------------------------------------------------------------------
@@ -166,14 +167,19 @@ function isMissingRegisterRpcError(error: { code?: string; message?: string } | 
 }
 
 function normalizeRegisterResult(data: unknown): DeviceSessionCheckResult {
-    const result = data as RegisterDeviceSessionRpcResult | null;
+    const result =
+        typeof data === "string"
+            ? (JSON.parse(data) as RegisterDeviceSessionRpcResult)
+            : (data as RegisterDeviceSessionRpcResult | null);
+    const activeSessions = result?.activeSessions ?? result?.active_sessions;
+
     return {
         allowed: result?.allowed === true,
         // The RPC returns the existing active sessions as a JSON array using the
         // same snake_case column names as the device session tables, which matches
         // the DeviceSession interface directly. If the RPC is missing or returns
         // null, we default to an empty array (the fallback path handles this).
-        activeSessions: Array.isArray(result?.activeSessions) ? result.activeSessions : [],
+        activeSessions: Array.isArray(activeSessions) ? activeSessions : [],
     };
 }
 

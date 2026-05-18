@@ -21,6 +21,7 @@ import { useStamps } from "@/hooks/use-stamps";
 import { useStreaks } from "@/hooks/use-streaks";
 import { registerDeviceSessionForRoute } from "@/services/shared/device-session-route-service";
 import { markIntentionalSignOut } from "@/lib/intentional-signout";
+import { isLoginDeviceSessionFlowActive } from "@/lib/login-device-session-flow";
 import { useTranslation } from "react-i18next";
 import { QueryProvider } from "@/providers/query-provider";
 
@@ -149,6 +150,8 @@ export default function Layout() {
           await checkIfAccountDeletedService(userId);
           await checkIfAccountBlockedService(userId);
           const nextRoute = getWebAdjustedHomeRoute(await getHomeRouteForUserId(userId));
+
+          if (isLoginDeviceSessionFlowActive()) return;
 
           try {
             const sessionCheck = await registerDeviceSessionForRoute(userId, nextRoute);

@@ -220,6 +220,7 @@ export async function loginService(email: string, password: string) {
           
            return {
               success: false,
+              userId,
               homeRoute: null,
               message:
                 "You are not assigned to any store. Please contact your administrator.",
@@ -237,6 +238,7 @@ export async function loginService(email: string, password: string) {
 
     const homeRoute = userId ? getWebAdjustedHomeRoute(await getHomeRouteForUserId(userId)) : null;
     return { success: true,
+             userId,
              homeRoute,
     }; 
   } catch (error: any) {
