@@ -112,7 +112,7 @@ export default function ViewReward() {
   };
 
   return (
-    <SafeAreaView edges={["top"]} className="flex-1 bg-backgroundMuted dark:bg-neutral-900">
+    <SafeAreaView edges={["top"]} className="flex-1 bg-backgroundMuted dark:bg-darkBackgroundMuted">
       <Modal
         visible={!!modal}
         onClose={() => setModal(null)}
@@ -151,16 +151,16 @@ export default function ViewReward() {
             {loading ? (
               <View className="items-center justify-center py-20">
                 <ActivityIndicator size="large" color="#FF6600" />
-                <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500 mt-3">{translate("storeManager.rewardView.loading")}</Text>
+                <Text className="text-xs font-poppins text-slate-400 dark:text-darkTextSecondary mt-3">{translate("storeManager.rewardView.loading")}</Text>
               </View>
             ) : !reward ? (
-              <View className="mx-4 bg-white dark:bg-neutral-800 rounded-xl border border-slate-100 dark:border-neutral-700 px-4 py-14 items-center gap-y-2">
+              <View className="mx-4 bg-white dark:bg-darkBackgroundCard rounded-xl border border-slate-100 dark:border-darkBorder px-4 py-14 items-center gap-y-2">
                 <Gift size={36} color="#CBD5E1" />
-                <Text className="text-sm font-poppins-semibold text-slate-400 dark:text-slate-500">{translate("storeManager.rewardView.notFoundTitle")}</Text>
+                <Text className="text-sm font-poppins-semibold text-slate-400 dark:text-darkTextSecondary">{translate("storeManager.rewardView.notFoundTitle")}</Text>
               </View>
             ) : (
-              <View className="mx-4 bg-white dark:bg-neutral-800 rounded-xl border border-slate-100 dark:border-neutral-700 p-4 gap-y-4">
-                <View className="rounded-xl overflow-hidden bg-slate-100 dark:bg-neutral-700">
+              <View className="mx-4 bg-white dark:bg-darkBackgroundCard rounded-xl border border-slate-100 dark:border-darkBorder p-4 gap-y-4">
+                <View className="rounded-xl overflow-hidden bg-slate-100 dark:bg-darkBackgroundCard">
                   {reward.image_url ? (
                     <Image source={{ uri: reward.image_url }} style={{ width: "100%", height: 200 }} contentFit="cover" />
                   ) : (
@@ -171,20 +171,20 @@ export default function ViewReward() {
                 </View>
 
                 <View>
-                  <Text className="text-md font-poppins-bold text-slate-800 dark:text-slate-100">{reward.title}</Text>
-                  <Text className="text-sm font-poppins text-slate-700 dark:text-slate-200">{reward.description || "—"}</Text>
+                  <Text className="text-md font-poppins-bold text-slate-800 dark:text-darkTextPrimary">{reward.title}</Text>
+                  <Text className="text-sm font-poppins text-slate-700 dark:text-darkTextPrimary">{reward.description || "—"}</Text>
                 </View>
 
-                <View className="flex-row border-t border-slate-100 dark:border-neutral-700 pt-2 gap-y-2">
-                  <View className="flex-1 border-r border-slate-100 dark:border-neutral-700 pr-3">
-                    <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">{translate("storeManager.rewardView.pointsCost")}</Text>
+                <View className="flex-row border-t border-slate-100 dark:border-darkBorder pt-2 gap-y-2">
+                  <View className="flex-1 border-r border-slate-100 dark:border-darkBorder pr-3">
+                    <Text className="text-xs font-poppins text-slate-400 dark:text-darkTextSecondary">{translate("storeManager.rewardView.pointsCost")}</Text>
                     <View className="flex-row items-center gap-x-1 mt-0.5">
                       <Text className="text-sm font-poppins-semibold text-textPrimary">{translate("storeManager.reward.pts", { points: formatPoints(reward.points_cost) })}</Text>
                     </View>
                   </View>
                   <View className="flex-1 pl-3">
-                    <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">{translate("storeManager.rewardView.stock")}</Text>
-                    <Text className="text-sm font-poppins-semibold text-slate-800 dark:text-slate-100 mt-0.5">
+                    <Text className="text-xs font-poppins text-slate-400 dark:text-darkTextSecondary">{translate("storeManager.rewardView.stock")}</Text>
+                    <Text className="text-sm font-poppins-semibold text-slate-800 dark:text-darkTextPrimary mt-0.5">
                       {reward.stock > 0 ? translate("storeManager.reward.stockLeft", { count: reward.stock }) : translate("storeManager.reward.outOfStock")}
                     </Text>
                   </View>

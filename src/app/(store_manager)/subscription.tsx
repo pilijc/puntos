@@ -243,8 +243,8 @@ export default function SubscriptionScreen() {
 						text: "text-yellow-700 dark:text-yellow-300",
 					  },
 					  default: {
-						container: "bg-gray-100 dark:bg-gray-800",
-						text: "text-gray-700 dark:text-gray-300",
+						container: "bg-gray-100 dark:bg-darkBackgroundCard",
+						text: "text-gray-700 dark:text-darkTextSoft",
 					  },
 					};
 				  
@@ -376,7 +376,7 @@ export default function SubscriptionScreen() {
 	return (
 		<SafeAreaView
 			edges={["top", "left", "right"]}
-			className="flex-1 bg-backgroundMuted dark:bg-neutral-900"
+			className="flex-1 bg-backgroundMuted dark:bg-darkBackgroundMuted"
 		>
 			<Modal
 				visible={!!modal}
@@ -504,9 +504,9 @@ export default function SubscriptionScreen() {
 						</View>
 					) : null}
 
-					<View className="bg-white dark:bg-darkBackgroundCard rounded-xl border border-slate-100 dark:border-neutral-800 p-4">
+					<View className="rounded-xl border border-slate-100 dark:border-darkBorder p-4">
 							<View className="flex-row items-center gap-2 mb-2">
-								<Text className="text-sm font-poppins-semibold text-slate-800 dark:text-slate-100">
+								<Text className="text-sm font-poppins-semibold text-slate-800 dark:text-darkTextPrimary">
 									{translate("storeManager.subscription.billing.recentBilling.title")}
 								</Text>
 							</View>
@@ -528,7 +528,7 @@ export default function SubscriptionScreen() {
 										emptyText={translate("storeManager.subscription.billing.invoices.empty")}
 									/>
 									<View className="mt-3 items-center">
-										<Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">
+										<Text className="text-xs font-poppins text-slate-400 dark:text-darkTextSecondary">
 											{translate("storeManager.subscription.billing.invoices.end")}
 										</Text>
 									</View>

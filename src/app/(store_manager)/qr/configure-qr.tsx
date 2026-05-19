@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { KeyboardAvoidingView, Platform, ScrollView, useColorScheme } from "react-native";
-import { View, Text, TouchableOpacity } from "@/tw";
+import { View, Text, TouchableOpacity, SafeAreaView } from "@/tw";
 import { Check } from "lucide-react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { useQueryClient } from "@tanstack/react-query";
@@ -277,11 +277,11 @@ export default function ConfigureStreaks() {
 	};
 
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1 }}
-      className="bg-backgroundMuted dark:bg-neutral-900"
-      behavior={Platform.OS === "android" ? "height" : "padding"}
-    >
+    <SafeAreaView edges={["top", "left", "right"]} className="flex-1 bg-backgroundMuted dark:bg-[#111921]">
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "android" ? "height" : "padding"}
+      >
       <Modal
         visible={!!modal}
         onClose={() => setModal(null)}
@@ -309,7 +309,7 @@ export default function ConfigureStreaks() {
         }}
       >
         <View
-          className="bg-white rounded-xl p-4 flex-col gap-y-5"
+          className="bg-white dark:bg-darkBackgroundCard border border-slate-100 dark:border-darkBorder rounded-xl p-4 flex-col gap-y-5"
           style={Platform.OS === "web" ? { width: "100%", maxWidth: WEB_MAX_WIDTH } : undefined}
         >
           <View>
@@ -321,7 +321,7 @@ export default function ConfigureStreaks() {
             </Text>
           </View>
         <View className="gap-y-2">
-          <Text className="text-sm font-poppins-semibold text-slate-700 dark:text-slate-300">
+          <Text className="text-sm font-poppins-semibold text-slate-700 dark:text-darkTextSoft">
             {translate("storeManager.qrConfigure.pointsType")}
           </Text>
           <View className="flex-row gap-x-2">
@@ -351,14 +351,14 @@ export default function ConfigureStreaks() {
                       maxPointsPerTxnErrorMessage: "",
                     });
                   }}
-                  className={`flex-1 rounded-xl border p-3 gap-y-1 bg-white dark:bg-slate-900 ${
+                  className={`flex-1 rounded-xl border p-3 gap-y-1 bg-white dark:bg-darkBackgroundMuted ${
                     selected
                       ? "border-primary"
-                      : "border-slate-200 dark:border-slate-700"
+                      : "border-slate-200 dark:border-darkBorder"
                   }`}
                 >
                   <View className="flex-row items-center justify-between">
-                    <View className={`w-4 h-4 rounded-full border-2 items-center justify-center self-center ${selected ? "border-primary bg-primary" : "border-slate-300 dark:border-slate-600"}`}>
+                    <View className={`w-4 h-4 rounded-full border-2 items-center justify-center self-center ${selected ? "border-primary bg-primary" : "border-slate-300 dark:border-darkBorder"}`}>
                       {selected && <Check size={9} color="#fff" />}
                     </View>
                   </View>
@@ -554,6 +554,7 @@ export default function ConfigureStreaks() {
         </View>
         </View>
       </ScrollView>
-    </KeyboardAvoidingView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }

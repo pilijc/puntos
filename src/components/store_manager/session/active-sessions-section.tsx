@@ -29,9 +29,9 @@ export function ActiveSessionSection() {
     }, [loadData]);
 
     return (
-        <View className="overflow-hidden bg-white dark:bg-darkBackground rounded-xl border border-slate-100 dark:border-slate-800 w-full mb-4">
+        <View className="overflow-hidden bg-white dark:bg-darkBackground rounded-xl border border-slate-100 dark:border-darkBorder w-full mb-4">
             {/* header row - matching settings item style */}
-            <View className="px-2.5 py-3 flex-row items-center border-b border-slate-50 dark:border-slate-800/50">
+            <View className="px-2.5 py-3 flex-row items-center border-b border-slate-50 dark:border-darkBorder">
                 <View className="h-8 w-8 -mt-0.5 rounded-lg items-center justify-center">
                     <Activity size={15} color="#ff6600" className="dark:text-white" />
                 </View>
@@ -67,7 +67,7 @@ export function ActiveSessionSection() {
                     </Text>
                 ): (
                     activeSessions.map((session, index) => (
-                        <View key={session.id} className={index > 0 ? "border-t border-border/10 dark:border-borderDark/10 pt-4 mt-4" : ""}>
+                        <View key={session.id} className={index > 0 ? "border-t border-border/10 dark:border-darkBorder pt-4 mt-4" : ""}>
                             <DeviceSessionCard session={session} />
                         </View>
                     ))

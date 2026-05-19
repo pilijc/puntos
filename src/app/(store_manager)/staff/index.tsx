@@ -100,7 +100,7 @@ export default function ViewStaff() {
   };
 
   return (
-    <SafeAreaView edges={["top"]} className="flex-1 bg-backgroundMuted dark:bg-neutral-900">
+    <SafeAreaView edges={["top"]} className="flex-1 bg-backgroundMuted dark:bg-darkBackgroundMuted">
       <Modal
         visible={!!modal}
         onClose={() => setModal(null)}
@@ -135,15 +135,15 @@ export default function ViewStaff() {
       >
         <View className={Platform.OS === "web" ? "items-center" : ""} style={Platform.OS === "web" ? { width: "100%" } : undefined}>
           <View style={Platform.OS === "web" ? { width: "100%", maxWidth: WEB_MAX_WIDTH } : undefined}>
-            <View className="mx-4 mt-2 mb-4 flex-row items-center bg-white dark:bg-neutral-800 rounded-xl border border-slate-100 dark:border-neutral-700 px-4 py-3 gap-x-3">
+            <View className="mx-4 mt-2 mb-4 flex-row items-center bg-white dark:bg-darkBackgroundCard rounded-xl border border-slate-100 dark:border-darkBorder px-4 py-3 gap-x-3">
               <View className="w-10 h-10 items-center justify-center">
                 <UsersRound size={20} color="#FF6600" />
               </View>
               <View className="flex-1">
-                <Text className="text-sm font-poppins-bold text-slate-800 dark:text-slate-100">
+                <Text className="text-sm font-poppins-bold text-slate-800 dark:text-darkTextPrimary">
                   {loading ? "—" : translate("storeManager.staff.memberCount", { count: staff.length })}
                 </Text>
-                <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">{translate("storeManager.staff.subtitle")}</Text>
+                <Text className="text-xs font-poppins text-slate-400 dark:text-darkTextSecondary">{translate("storeManager.staff.subtitle")}</Text>
               </View>
               {staff.length > 0 && (
                 <TouchableOpacity
@@ -165,10 +165,10 @@ export default function ViewStaff() {
             {loading ? (
               <StaffSkeleton />
             ) : staff.length === 0 ? (
-              <View className="mx-4 bg-white dark:bg-neutral-800 rounded-xl border border-slate-100 dark:border-neutral-700 px-4 py-14 items-center gap-y-2">
+              <View className="mx-4 bg-white dark:bg-darkBackgroundCard rounded-xl border border-slate-100 dark:border-darkBorder px-4 py-14 items-center gap-y-2">
                 <UserRoundX size={36} color="#CBD5E1" />
-                <Text className="text-sm font-poppins-semibold text-slate-400 dark:text-slate-500">{translate("storeManager.staff.emptyTitle")}</Text>
-                <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500 text-center px-6">
+                <Text className="text-sm font-poppins-semibold text-slate-400 dark:text-darkTextSecondary">{translate("storeManager.staff.emptyTitle")}</Text>
+                <Text className="text-xs font-poppins text-slate-400 dark:text-darkTextSecondary text-center px-6">
                   {translate("storeManager.staff.emptyBody")}
                 </Text>
                 <TouchableOpacity
@@ -185,7 +185,7 @@ export default function ViewStaff() {
                 </TouchableOpacity>
               </View>
             ) : (
-              <View className="mx-4 bg-white dark:bg-neutral-800 rounded-xl overflow-hidden">
+              <View className="mx-4 bg-white dark:bg-darkBackgroundCard rounded-xl border border-slate-100 dark:border-darkBorder overflow-hidden">
                 {staff.map((member, index) => {
                   const user = member.user as unknown as { id: string; name: string | null; email: string } | null;
                   const isLast = index === staff.length - 1;
@@ -197,10 +197,10 @@ export default function ViewStaff() {
                         </View>
 
                         <View className="flex-1">
-                          <Text className="text-sm font-poppins-semibold text-slate-800 dark:text-slate-100 leading-5">
+                          <Text className="text-sm font-poppins-semibold text-slate-800 dark:text-darkTextPrimary leading-5">
                             {user?.name ?? "—"}
                           </Text>
-                          <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">{user?.email ?? "—"}</Text>
+                          <Text className="text-xs font-poppins text-slate-400 dark:text-darkTextSecondary">{user?.email ?? "—"}</Text>
                         </View>
 
                         <View className="flex-row items-center gap-x-1">
@@ -212,7 +212,7 @@ export default function ViewStaff() {
                                 params: { storeId, staffId: member.id },
                               })
                             }
-                            className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-neutral-700 items-center justify-center"
+                            className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-darkBackgroundMuted items-center justify-center"
                           >
                             <Pencil size={12} color={isDark ? "#94A3B8" : "#64748B"} />
                           </TouchableOpacity>
@@ -227,7 +227,7 @@ export default function ViewStaff() {
                         </View>
                       </View>
 
-                      {!isLast && <View className="mx-4 h-px bg-slate-100 dark:bg-neutral-700" />}
+                      {!isLast && <View className="mx-4 h-px bg-slate-100 dark:bg-darkBackgroundMuted" />}
                     </View>
                   );
                 })}

@@ -50,7 +50,7 @@ export default function ViewStamp() {
   const { canEdit, loading: permLoading, expiresAtIso } = useStorePremiumCampaignEdit(storeId);
   const campaignsLocked = !permLoading && !canEdit;
 
-  const { data: stampsData, isPending: stampsPending, refetch: refetchStamps } = useStampProgramQuery(storeId);
+  const { data: stampsData, isPending: stampsPending, refetch: refetchStamps } = useStampsByStoreQuery(storeId);
   const { data: rewardsData, isPending: rewardsPending, refetch: refetchRewards } = useRewardsByStoreQuery(storeId);
 
   useEffect(() => {
@@ -200,9 +200,9 @@ export default function ViewStamp() {
       ) : null}
 
       {Platform.OS === "web" ? (
-        <View className="bg-backgroundMuted dark:bg-slate-950 pt-4 items-center">
+        <View className="bg-backgroundMuted dark:bg-darkBackground pt-4 items-center">
           <View style={{ width: "100%", maxWidth: WEB_MAX_WIDTH, paddingHorizontal: 16 }}>
-            <View className="w-full bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-xl overflow-hidden flex-row flex-wrap p-1 gap-1">
+            <View className="w-full bg-white dark:bg-darkBackgroundMuted border border-slate-100 dark:border-darkBorder rounded-xl overflow-hidden flex-row flex-wrap p-1 gap-1">
             {Tabs.map((tab) => {
                 const active = activeTab === tab.key;
                 const count =
@@ -225,15 +225,15 @@ export default function ViewStamp() {
                     className={
                       active
                         ? "min-w-0 text-xs font-poppins-bold text-white"
-                        : "min-w-0 text-xs font-poppins-medium text-slate-400 dark:text-slate-500"
+                        : "min-w-0 text-xs font-poppins-medium text-slate-400 dark:text-darkTextSecondary"
                     }
                     numberOfLines={1}
                   >
                     {translate(`storeManager.stamp.tabs.${tab.key}`)}
                   </Text>
                   {count > 0 && (
-                    <View className={`rounded-full min-w-[18px] items-center px-1.5 ${active ? "bg-white/20" : "bg-slate-100 dark:bg-slate-800"}`}>
-                      <Text className={`text-[10px] font-poppins-semibold ${active ? "text-white" : "text-slate-500 dark:text-slate-400"}`}>{count}</Text>
+                    <View className={`rounded-full min-w-[18px] items-center px-1.5 ${active ? "bg-white/20" : "bg-slate-100 dark:bg-darkBackgroundCard"}`}>
+                      <Text className={`text-[10px] font-poppins-semibold ${active ? "text-white" : "text-slate-500 dark:text-darkTextMuted"}`}>{count}</Text>
                     </View>
                   )}
                 </TouchableOpacity>
@@ -243,8 +243,8 @@ export default function ViewStamp() {
           </View>
         </View>
       ) : (
-        <View className="border-b border-slate-100 dark:border-slate-800 px-4 py-3">
-          <View className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-xl overflow-hidden flex-row p-1 px-4">
+        <View className="border-b border-slate-100 dark:border-darkBorder px-4 py-3">
+          <View className="bg-white dark:bg-darkBackgroundMuted border border-slate-100 dark:border-darkBorder rounded-xl overflow-hidden flex-row p-1 px-4">
             {Tabs.map((tab) => {
               const active = activeTab === tab.key;
               const count =
@@ -255,7 +255,7 @@ export default function ViewStamp() {
                   key={tab.key}
                   className={[
                     "flex-1 py-2 items-center flex-row justify-center gap-1.5 rounded-xl",
-                    active ? "bg-primary" : "bg-white dark:bg-slate-900",
+                    active ? "bg-primary" : "bg-white dark:bg-darkBackgroundMuted",
                   ]
                     .filter(Boolean)
                     .join(" ")}
@@ -266,14 +266,14 @@ export default function ViewStamp() {
                     className={
                       active
                         ? "text-xs font-poppins-bold text-white"
-                        : "text-xs font-poppins-medium text-slate-400 dark:text-slate-500"
+                        : "text-xs font-poppins-medium text-slate-400 dark:text-darkTextSecondary"
                     }
                   >
                     {translate(`storeManager.stamp.tabs.${tab.key}`)}
                   </Text>
                   {count > 0 && (
                     <View className={`rounded-full min-w-[18px] items-center px-1.5 ${active ? "bg-white/20" : ""}`}>
-                      <Text className={`text-[9px] font-poppins-bold ${active ? "text-white" : "text-neutral-500 dark:text-neutral-400"}`}>
+                      <Text className={`text-[9px] font-poppins-bold ${active ? "text-white" : "text-neutral-500 dark:text-darkTextMuted"}`}>
                         {count}
                       </Text>
                     </View>
@@ -307,14 +307,14 @@ export default function ViewStamp() {
               contentFit="contain"
             />
             <View className="items-center justify-center gap-y-1">
-              <Text className="text-sm font-poppins-semibold text-slate-600 dark:text-slate-300 text-center">
+              <Text className="text-sm font-poppins-semibold text-slate-600 dark:text-darkTextSoft text-center">
                 {activeTab === "draft"
                   ? translate("storeManager.stamp.emptyDraftTitle")
                   : activeTab === "active"
                     ? translate("storeManager.stamp.emptyActiveTitle")
                     : translate("storeManager.stamp.emptyEndedTitle")}
               </Text>
-              <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500 text-center">
+              <Text className="text-xs font-poppins text-slate-400 dark:text-darkTextSecondary text-center">
                 {activeTab === "active"
                   ? translate("storeManager.stamp.emptyActiveBody")
                   : activeTab === "draft"

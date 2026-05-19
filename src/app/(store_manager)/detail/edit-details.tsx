@@ -62,9 +62,9 @@ function WebTimePicker({
         <TouchableOpacity
           onPress={() => { setShowH(!showH); setShowM(false); }}
           activeOpacity={0.8}
-          className="flex-row items-center justify-between rounded-xl border border-slate-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 px-3 h-[42px]"
+          className="flex-row items-center justify-between rounded-xl border border-slate-200 dark:border-darkBorder bg-white dark:bg-darkBackgroundMuted px-3 h-[42px]"
         >
-          <Text className="font-poppins text-slate-900 dark:text-slate-100">{currentH}</Text>
+          <Text className="font-poppins text-slate-900 dark:text-darkTextPrimary">{currentH}</Text>
           <MaterialIcons name={showH ? "expand-less" : "expand-more"} size={16} color="#94A3B8" />
         </TouchableOpacity>
         {showH && (
@@ -94,9 +94,9 @@ function WebTimePicker({
         <TouchableOpacity
           onPress={() => { setShowM(!showM); setShowH(false); }}
           activeOpacity={0.8}
-          className="flex-row items-center justify-between rounded-xl border border-slate-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 px-3 h-[42px]"
+          className="flex-row items-center justify-between rounded-xl border border-slate-200 dark:border-darkBorder bg-white dark:bg-darkBackgroundMuted px-3 h-[42px]"
         >
-          <Text className="font-poppins text-slate-900 dark:text-slate-100">{currentM}</Text>
+          <Text className="font-poppins text-slate-900 dark:text-darkTextPrimary">{currentM}</Text>
           <MaterialIcons name={showM ? "expand-less" : "expand-more"} size={16} color="#94A3B8" />
         </TouchableOpacity>
         {showM && (
@@ -332,14 +332,14 @@ export default function EditDetails() {
 
   if (loadingInitial) {
     return (
-      <View className="flex-1 bg-backgroundMuted dark:bg-backgroundMuted items-center justify-center">
+      <View className="flex-1 bg-backgroundMuted dark:bg-darkBackgroundMuted items-center justify-center">
         <ActivityIndicator size="large" color="#FF6600" />
       </View>
     );
   }
 
   return (
-    <SafeAreaView edges={["top", "left", "right"]} className="flex-1 bg-backgroundMuted dark:bg-backgroundMuted">
+    <SafeAreaView edges={["top", "left", "right"]} className="flex-1 bg-backgroundMuted dark:bg-darkBackgroundMuted">
       <Modal
         visible={!!modal}
         onClose={() => setModal(null)}
@@ -368,23 +368,23 @@ export default function EditDetails() {
         }}
       >
         <View
-          className="bg-white dark:bg-neutral-800 rounded-xl border border-slate-200 dark:border-neutral-700"
+          className="bg-white dark:bg-darkBackgroundCard rounded-xl border border-slate-200 dark:border-darkBorder"
           style={isWeb ? { width: "100%", maxWidth: WEB_MAX_WIDTH } : undefined}
         >
 
           <View className="m-4 rounded-xl px-3 pt-2 pb-3 gap-y-3">
-            <Text className="text-base font-poppins-semibold text-textPrimary dark:text-textPrimary">
+            <Text className="text-base font-poppins-semibold text-textPrimary dark:text-darkTextPrimary">
               {translate("storeManager.detailEdit.mediaBrand", "Media & Brand")}
             </Text>
 
-            <Text className="text-sm font-poppins-semibold text-textSecondary dark:text-textSecondary">
+            <Text className="text-sm font-poppins-semibold text-textSecondary dark:text-darkTextSecondary">
               {translate("label.storeLogo")}
             </Text>
             <View className="flex-row items-center gap-x-3">
               <TouchableOpacity
                 onPress={() => pickImage("logo")}
                 activeOpacity={0.85}
-                className="relative overflow-hidden rounded-xl border-2 border-dashed border-slate-300 dark:border-neutral-600 bg-slate-50 dark:bg-neutral-900"
+                className="relative overflow-hidden rounded-xl border-2 border-dashed border-slate-300 dark:border-darkBorder bg-slate-50 dark:bg-darkBackgroundMuted"
                 style={{ width: 80, height: 80 }}
               >
                 {logo ? (
@@ -407,7 +407,7 @@ export default function EditDetails() {
               </TouchableOpacity>
             </View>
 
-            <Text className="text-sm font-poppins-semibold text-textSecondary dark:text-textSecondary">
+            <Text className="text-sm font-poppins-semibold text-textSecondary dark:text-darkTextSecondary">
               {translate("storeManager.detailEdit.storePictures")}
             </Text>
             <View
@@ -431,7 +431,7 @@ export default function EditDetails() {
                     }
                   >
                     {uri ? (
-                      <View className="flex-1 rounded-xl overflow-hidden border border-slate-200 dark:border-neutral-700 relative">
+                      <View className="flex-1 rounded-xl overflow-hidden border border-slate-200 dark:border-darkBorder relative">
                         <Image
                           source={{ uri }}
                           style={
@@ -463,7 +463,7 @@ export default function EditDetails() {
                     ) : (
                       <TouchableOpacity
                         onPress={() => pickImage("picture", i)}
-                        className="flex-1 rounded-xl border-2 border-dashed border-slate-300 dark:border-neutral-600 bg-slate-50 dark:bg-neutral-900 items-center justify-center min-h-[60px]"
+                        className="flex-1 rounded-xl border-2 border-dashed border-slate-300 dark:border-darkBorder bg-slate-50 dark:bg-darkBackgroundMuted items-center justify-center min-h-[60px]"
                         activeOpacity={0.8}
                         style={
                           isWeb
@@ -483,7 +483,7 @@ export default function EditDetails() {
           </View>
 
           <View className="mx-4 rounded-xl px-3 pt-2 pb-3 gap-y-4">
-            <Text className="text-base font-poppins-semibold text-textPrimary dark:text-textPrimary">
+            <Text className="text-base font-poppins-semibold text-textPrimary dark:text-darkTextPrimary">
               {translate("storeManager.detailEdit.storeInformation", "Store Information")}
             </Text>
 
@@ -496,7 +496,7 @@ export default function EditDetails() {
             />
 
             <View className="gap-y-2">
-              <Text className="text-sm font-poppins-semibold text-textSecondary dark:text-textSecondary mb-1.5">
+              <Text className="text-sm font-poppins-semibold text-textSecondary dark:text-darkTextSecondary mb-1.5">
                 {translate("label.storeType")}
               </Text>
               <View className="flex-row flex-wrap gap-2">
@@ -510,12 +510,12 @@ export default function EditDetails() {
                       className={`px-3.5 py-1.5 rounded-full bg-white ${
                         selected
                           ? "border border-primary"
-                          : "border border-slate-200 dark:border-slate-700"
+                          : "border border-slate-200 dark:border-darkBorder"
                       }`}
                     >
                       <Text
                         className={`text-xs font-poppins-semibold ${
-                          selected ? "text-primary" : "text-textSecondary dark:text-textSecondary"
+                          selected ? "text-primary" : "text-textSecondary dark:text-darkTextSecondary"
                         }`}
                       >
                         {translate(`storeManager.storeTypes.${opt.value}`)}
@@ -544,13 +544,13 @@ export default function EditDetails() {
           </View>
 
           <View className="mx-4 rounded-xl px-3 pt-2 pb-3 gap-y-4" style={{ zIndex: 10 }}>
-            <Text className="text-base font-poppins-semibold text-textPrimary dark:text-textPrimary">
+            <Text className="text-base font-poppins-semibold text-textPrimary dark:text-darkTextPrimary">
               {translate("storeManager.detailEdit.operatingHours", "Operating Hours")}
             </Text>
 
             <View className="flex-row gap-x-3">
               <View className="flex-1" style={{ zIndex: 20 }}>
-                <Text className="text-sm font-poppins-semibold text-textSecondary dark:text-textSecondary mb-1.5">
+                <Text className="text-sm font-poppins-semibold text-textSecondary dark:text-darkTextSecondary mb-1.5">
                   {translate("storeManager.detailEdit.openingTime")}
                 </Text>
                 {isWeb ? (
@@ -559,15 +559,15 @@ export default function EditDetails() {
                   <TouchableOpacity
                     onPress={() => setShowOpenPicker(true)}
                     activeOpacity={0.8}
-                    className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 justify-center h-[45px]"
+                    className="w-full rounded-xl border border-slate-200 dark:border-darkBorder bg-white dark:bg-darkBackgroundMuted px-4 justify-center h-[45px]"
                   >
-                    <Text className="font-poppins text-slate-900 dark:text-slate-100">{storeOpen || "09:00"}</Text>
+                    <Text className="font-poppins text-slate-900 dark:text-darkTextPrimary">{storeOpen || "09:00"}</Text>
                   </TouchableOpacity>
                 )}
               </View>
 
               <View className="flex-1" style={{ zIndex: 10 }}>
-                <Text className="text-sm font-poppins-semibold text-textSecondary dark:text-textSecondary mb-1.5">
+                <Text className="text-sm font-poppins-semibold text-textSecondary dark:text-darkTextSecondary mb-1.5">
                   {translate("storeManager.detailEdit.closingTime")}
                 </Text>
                 {isWeb ? (
@@ -576,9 +576,9 @@ export default function EditDetails() {
                   <TouchableOpacity
                     onPress={() => setShowClosePicker(true)}
                     activeOpacity={0.8}
-                    className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 justify-center h-[45px]"
+                    className="w-full rounded-xl border border-slate-200 dark:border-darkBorder bg-white dark:bg-darkBackgroundMuted px-4 justify-center h-[45px]"
                   >
-                    <Text className="font-poppins text-slate-900 dark:text-slate-100">{storeClose || "21:00"}</Text>
+                    <Text className="font-poppins text-slate-900 dark:text-darkTextPrimary">{storeClose || "21:00"}</Text>
                   </TouchableOpacity>
                 )}
               </View>
@@ -602,7 +602,7 @@ export default function EditDetails() {
 
           <View className="mx-4 rounded-xl overflow-hidden gap-y-4">
             <View className="px-3 pt-2 flex-row items-center justify-between">
-              <Text className="text-base font-poppins-semibold text-textPrimary dark:text-textPrimary">
+              <Text className="text-base font-poppins-semibold text-textPrimary dark:text-darkTextPrimary">
                 {translate("label.location")}
               </Text>
               {!isWeb && (
@@ -612,7 +612,7 @@ export default function EditDetails() {
                   activeOpacity={0.8}
                 >
                   <MaterialIcons name="my-location" size={14} color="#FF6600" />
-                  <Text className="text-xs font-poppins-semibold text-textPrimary dark:text-textPrimary">
+                  <Text className="text-xs font-poppins-semibold text-textPrimary dark:text-darkTextPrimary">
                     {translate("storeManager.detailEdit.useCurrent")}
                   </Text>
                 </TouchableOpacity>
@@ -671,9 +671,9 @@ export default function EditDetails() {
                   </View>
                 </>
               ) : (
-                <View className="flex-1 h-full bg-slate-50 dark:bg-neutral-800 items-center justify-center gap-y-1 px-4">
+                <View className="flex-1 h-full bg-slate-50 dark:bg-darkBackgroundCard items-center justify-center gap-y-1 px-4">
                   <MaterialIcons name="map" size={28} color={isDark ? "#525252" : "#CBD5E1"} />
-                  <Text className="text-xs font-poppins text-center text-slate-400 dark:text-slate-500">
+                  <Text className="text-xs font-poppins text-center text-slate-400 dark:text-darkTextSecondary">
                     {translate("storeManager.detailEdit.mapFallbackMessage")}
                   </Text>
                 </View>
@@ -693,7 +693,7 @@ export default function EditDetails() {
               {/* Delivery radius — slider on both web and mobile */}
               <View className="gap-y-2">
                 <View className="flex-row justify-between items-center">
-                  <Text className="text-sm font-poppins-semibold text-textSecondary dark:text-textSecondary">
+                  <Text className="text-sm font-poppins-semibold text-textSecondary dark:text-darkTextSecondary">
                     {translate("storeManager.detailEdit.storeRadius")}
                   </Text>
                   <Text className="text-sm font-poppins-bold text-primary">
@@ -720,18 +720,18 @@ export default function EditDetails() {
 
           {/* ── Compliance ────────────────────────────────── */}
           <View className="m-4 rounded-xl px-3 pt-2 pb-3 gap-y-3">
-            <Text className="text-base font-poppins-semibold text-textPrimary dark:text-textPrimary">
+            <Text className="text-base font-poppins-semibold text-textPrimary dark:text-darkTextPrimary">
               {translate("storeManager.detailEdit.compliance", "Compliance")}
             </Text>
 
-            <Text className="text-sm font-poppins-semibold text-textSecondary dark:text-textSecondary">
+            <Text className="text-sm font-poppins-semibold text-textSecondary dark:text-darkTextSecondary">
               {translate("label.businessDocument")}
             </Text>
             <TouchableOpacity
               onPress={() => { if (!businessDoc) pickImage("business_document"); }}
               disabled={!!businessDoc}
               activeOpacity={0.85}
-              className="w-full rounded-xl border-2 border-dashed border-slate-300 dark:border-neutral-600 bg-slate-50 dark:bg-neutral-900 overflow-hidden items-center justify-center"
+              className="w-full rounded-xl border-2 border-dashed border-slate-300 dark:border-darkBorder bg-slate-50 dark:bg-darkBackgroundMuted overflow-hidden items-center justify-center"
               style={{ height: 160 }}
             >
               {businessDoc ? (
@@ -790,7 +790,7 @@ export default function EditDetails() {
         {!isWeb && showOpenPicker && Platform.OS !== "android" && (
           <RNModal visible transparent animationType="slide">
             <TouchableOpacity className="flex-1 bg-black/40 justify-end" activeOpacity={1} onPress={() => setShowOpenPicker(false)}>
-              <TouchableOpacity activeOpacity={1} onPress={(e) => e.stopPropagation()} className="bg-white dark:bg-slate-800 rounded-t-2xl pb-8 pt-2">
+              <TouchableOpacity activeOpacity={1} onPress={(e) => e.stopPropagation()} className="bg-white dark:bg-darkBackgroundCard rounded-t-2xl pb-8 pt-2">
                 <DateTimePicker value={timeStringToDate(storeOpen || "09:00", 9, 0)} mode="time" onChange={(_, d) => { if (d) setStoreOpen(dateToTimeString(d)); }} />
                 <View className="px-4">
                   <Button label={translate("storeManager.detailEdit.done")} onPress={() => setShowOpenPicker(false)} variant="primary" fullWidth />
@@ -802,7 +802,7 @@ export default function EditDetails() {
         {!isWeb && showClosePicker && Platform.OS !== "android" && (
           <RNModal visible transparent animationType="slide">
             <TouchableOpacity className="flex-1 bg-black/40 justify-end" activeOpacity={1} onPress={() => setShowClosePicker(false)}>
-              <TouchableOpacity activeOpacity={1} onPress={(e) => e.stopPropagation()} className="bg-white dark:bg-slate-800 rounded-t-2xl pb-8 pt-2">
+              <TouchableOpacity activeOpacity={1} onPress={(e) => e.stopPropagation()} className="bg-white dark:bg-darkBackgroundCard rounded-t-2xl pb-8 pt-2">
                 <DateTimePicker value={timeStringToDate(storeClose || "21:00", 21, 0)} mode="time" onChange={(_, d) => { if (d) setStoreClose(dateToTimeString(d)); }} />
                 <View className="px-4">
                   <Button label={translate("storeManager.detailEdit.done")} onPress={() => setShowClosePicker(false)} variant="primary" fullWidth />

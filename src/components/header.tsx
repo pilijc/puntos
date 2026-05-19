@@ -41,7 +41,7 @@ export function AppHeader({
             activeOpacity={0.7}
             onPress={onBackPress}
           >
-            <ChevronLeft size={20} color={isDark ? "#F1F5F9" : "#0F172A"} />
+            <ChevronLeft size={20} className="text-slate-900 dark:text-slate-100" />
           </TouchableOpacity>
         ) : (
           <View className="w-10 h-10" />

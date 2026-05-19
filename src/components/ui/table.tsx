@@ -49,14 +49,14 @@ export function Table<Row>(props: {
           className={
             variant === "divider"
               ? ""
-              : "border border-slate-200 dark:border-neutral-800 rounded-xl overflow-hidden"
+              : "border border-slate-200 dark:border-darkBorder rounded-xl overflow-hidden"
           }
         >
           <View
             className={
               variant === "divider"
-                ? "flex-row border-b border-slate-200 dark:border-neutral-800"
-                : "flex-row border-b border-slate-200 dark:border-neutral-800"
+                ? "flex-row border-b border-slate-200 dark:border-darkBorder"
+                : "flex-row border-b border-slate-200 dark:border-darkBorder"
             }
           >
             {columns.map((col) => (
@@ -88,7 +88,7 @@ export function Table<Row>(props: {
               const expanded = isRowExpanded ? isRowExpanded(row, idx) : false;
               const rowPressDisabled = isRowPressDisabled ? isRowPressDisabled(row, idx) : false;
               const rowDivider =
-                isLast ? "" : "border-b border-slate-200 dark:border-neutral-800";
+                isLast ? "" : "border-b border-slate-200 dark:border-darkBorder";
               return (
                 <View key={rowKey(row, idx)} className={rowDivider}>
                   <Pressable
@@ -125,7 +125,7 @@ export function Table<Row>(props: {
                     <View
                       className={
                         variant !== "divider" && !hideExpandedTopBorder
-                          ? "border-t border-slate-200 dark:border-neutral-800 font-poppins"
+                          ? "border-t border-slate-200 dark:border-darkBorder font-poppins"
                           : ""
                       }
                     >

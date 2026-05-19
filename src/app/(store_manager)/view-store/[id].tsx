@@ -199,7 +199,7 @@ export default function ViewStore() {
         <View className="items-center">
           <View className="w-full px-4 items-center">
             <View
-              className="bg-white dark:bg-neutral-800 border border-slate-100 dark:border-neutral-700 rounded-xl"
+              className="border border-slate-100 dark:border-darkBorder rounded-xl"
               style={isWeb ? { width: "100%", maxWidth: 860 } : { width: "100%" }}
             >
               <View className="w-full h-40 rounded-xl overflow-hidden">
@@ -265,7 +265,7 @@ export default function ViewStore() {
         {Platform.OS === "web" ? (
           <View className="px-4 py-3 items-center">
             <View
-              className="w-full bg-white dark:bg-neutral-800 border border-slate-100 dark:border-neutral-700 rounded-xl p-3"
+              className="w-full border border-slate-100 dark:border-darkBorder rounded-xl p-3"
               style={{ maxWidth: 860 }}
             >
               <View className="flex-row flex-wrap gap-y-2 justify-between">
@@ -275,15 +275,15 @@ export default function ViewStore() {
                     activeOpacity={0.85}
                     onPress={() => router.push({ pathname: item.route, params: { storeId } })}
                     style={{ width: "32.5%" }}
-                    className="bg-white dark:bg-neutral-800 border border-slate-100 dark:border-neutral-700 rounded-xl p-3"
+                    className="bg-white dark:bg-darkBackgroundCard border border-slate-100 dark:border-darkBorder rounded-xl p-3"
                   >
                     <View className="w-9 h-9 rounded-lg items-center justify-center mb-1 -ml-1">
                       {item.icon}
                     </View>
-                    <Text className="text-[11px] font-poppins-semibold text-slate-800 dark:text-slate-100 leading-4">
+                    <Text className="text-[11px] font-poppins-semibold text-slate-800 dark:text-darkTextPrimary leading-4">
                       {item.label}
                     </Text>
-                    <Text className="text-[9px] font-poppins text-slate-400 dark:text-slate-500 mt-0.5">
+                    <Text className="text-[9px] font-poppins text-slate-400 dark:text-darkTextSecondary mt-0.5">
                       {item.description}
                     </Text>
                   </TouchableOpacity>
@@ -300,15 +300,15 @@ export default function ViewStore() {
                   activeOpacity={0.85}
                   onPress={() => router.push({ pathname: item.route, params: { storeId } })}
                   style={{ width: "32.5%" }}
-                  className="bg-white dark:bg-neutral-800 border border-slate-100 dark:border-neutral-700 rounded-xl p-3"
+                  className="bg-white dark:bg-darkBackgroundCard border border-slate-100 dark:border-darkBorder rounded-xl p-3"
                 >
                   <View className="w-9 h-9 rounded-lg items-center justify-center mb-1 -ml-1">
                     {item.icon}
                   </View>
-                  <Text className="text-[11px] font-poppins-semibold text-slate-800 dark:text-slate-100 leading-4">
+                  <Text className="text-[11px] font-poppins-semibold text-slate-800 dark:text-darkTextPrimary leading-4">
                     {item.label}
                   </Text>
-                  <Text className="text-[9px] font-poppins text-slate-400 dark:text-slate-500 mt-0.5">
+                  <Text className="text-[9px] font-poppins text-slate-400 dark:text-darkTextSecondary mt-0.5">
                     {item.description}
                   </Text>
                 </TouchableOpacity>
@@ -321,7 +321,7 @@ export default function ViewStore() {
           <View className="px-4 items-center">
             <View style={{ width: "100%", maxWidth: 860 }}>
               <View className="flex-row items-center justify-between mb-3">
-                <Text className="text-sm font-poppins-bold text-textSecondary dark:text-textSecondary ml-1">
+                <Text className="text-sm font-poppins-bold text-textSecondary dark:text-darkTextSecondary ml-1">
                   {translate("storeManager.viewStore.recentTransactions")}
                 </Text>
                 <TouchableOpacity
@@ -337,23 +337,23 @@ export default function ViewStore() {
               </View>
 
               {txLoading ? (
-                <View className="bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 px-4 py-8 items-center">
+                <View className="rounded-xl border border-slate-100 dark:border-darkBorder px-4 py-8 items-center">
                   <Loader2 className="animate-spin" size={28} color="#CBD5E1" />
                 </View>
               ) : recentTxs.length === 0 ? (
-                <View className="bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 px-4 py-10 items-center gap-y-2">
+                <View className="rounded-xl border border-slate-100 dark:border-darkBorder px-4 py-10 items-center gap-y-2">
                   <ReceiptText size={32} color="#CBD5E1" />
-                  <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">
+                  <Text className="text-xs font-poppins text-slate-400 dark:text-darkTextSecondary">
                     {translate("storeManager.viewStore.noTransactionsYet")}
                   </Text>
                 </View>
               ) : (
-                <View className="bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 overflow-hidden">
+                <View className="bg-white dark:bg-darkBackgroundCard rounded-xl border border-slate-100 dark:border-darkBorder overflow-hidden">
                   {recentTxs.map((tx, idx) => (
                     <View
                       key={tx.id}
                       className={`flex-row items-center px-4 py-3 gap-x-3 ${
-                        idx < recentTxs.length - 1 ? "border-b border-slate-100 dark:border-slate-800" : ""
+                        idx < recentTxs.length - 1 ? "border-b border-slate-100 dark:border-darkBackgroundMuted" : ""
                       }`}
                     >
                       {tx.userAvatar ? (
@@ -363,24 +363,24 @@ export default function ViewStore() {
                           contentFit="cover"
                         />
                       ) : (
-                        <View className="w-9 h-9 rounded-full bg-slate-200 dark:bg-slate-700 items-center justify-center">
-                          <Text className="text-xs font-poppins-bold text-slate-600 dark:text-slate-300">
+                        <View className="w-9 h-9 rounded-full bg-slate-200 dark:bg-darkBackgroundCard items-center justify-center">
+                          <Text className="text-xs font-poppins-bold text-slate-600 dark:text-darkTextSoft">
                             {(tx.userName || "?").charAt(0).toUpperCase()}
                           </Text>
                         </View>
                       )}
                       <View className="flex-1 min-w-0">
                         <View className="flex-row items-center justify-between gap-x-2">
-                          <Text className="text-sm font-poppins-semibold text-slate-900 dark:text-slate-100" numberOfLines={1}>
+                          <Text className="text-sm font-poppins-semibold text-slate-900 dark:text-darkTextPrimary" numberOfLines={1}>
                             {tx.userName}
                           </Text>
                           <Text className="text-xs font-poppins-semibold text-primary shrink-0">{tx.detail}</Text>
                         </View>
                         <View className="flex-row items-center justify-between mt-0.5">
-                          <Text className="text-[10px] font-poppins text-slate-400 dark:text-slate-500">
+                          <Text className="text-[10px] font-poppins text-slate-400 dark:text-darkTextSecondary">
                             {type_badge[tx.type]}
                           </Text>
-                          <Text className="text-[10px] font-poppins text-slate-400 dark:text-slate-500">
+                          <Text className="text-[10px] font-poppins text-slate-400 dark:text-darkTextSecondary">
                             {formatTxDateTime(tx.date)}
                           </Text>
                         </View>
@@ -394,7 +394,7 @@ export default function ViewStore() {
         ) : (
           <View className="px-4">
             <View className="flex-row items-center justify-between mb-3">
-              <Text className="text-sm font-poppins-bold text-textSecondary dark:text-textSecondary ml-1">
+              <Text className="text-sm font-poppins-bold text-textSecondary dark:text-darkTextSecondary ml-1">
                 {translate("storeManager.viewStore.recentTransactions")}
               </Text>
               <TouchableOpacity
@@ -410,23 +410,23 @@ export default function ViewStore() {
             </View>
 
             {txLoading ? (
-              <View className="bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 px-4 py-8 items-center">
+              <View className="rounded-xl border border-slate-100 dark:border-darkBorder px-4 py-8 items-center">
                 <Loader2 className="animate-spin" size={28} color="#CBD5E1" />
               </View>
             ) : recentTxs.length === 0 ? (
-              <View className="bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 px-4 py-10 items-center gap-y-2">
+              <View className="rounded-xl border border-slate-100 dark:border-darkBorder px-4 py-10 items-center gap-y-2">
                 <ReceiptText size={32} color="#CBD5E1" />
-                <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">
+                <Text className="text-xs font-poppins text-slate-400 dark:text-darkTextSecondary">
                   {translate("storeManager.viewStore.noTransactionsYet")}
                 </Text>
               </View>
             ) : (
-              <View className="bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 overflow-hidden">
+              <View className="bg-white dark:bg-darkBackgroundCard rounded-xl border border-slate-100 dark:border-darkBorder overflow-hidden">
                 {recentTxs.map((tx, idx) => (
                   <View
                     key={tx.id}
                     className={`flex-row items-center px-4 py-3 gap-x-3 ${
-                      idx < recentTxs.length - 1 ? "border-b border-slate-100 dark:border-slate-800" : ""
+                      idx < recentTxs.length - 1 ? "border-b border-slate-100 dark:border-darkBackgroundMuted" : ""
                     }`}
                   >
                     {tx.userAvatar ? (
@@ -436,24 +436,24 @@ export default function ViewStore() {
                         contentFit="cover"
                       />
                     ) : (
-                      <View className="w-9 h-9 rounded-full bg-slate-200 dark:bg-slate-700 items-center justify-center">
-                        <Text className="text-xs font-poppins-bold text-slate-600 dark:text-slate-300">
+                      <View className="w-9 h-9 rounded-full bg-slate-200 dark:bg-darkBackgroundCard items-center justify-center">
+                        <Text className="text-xs font-poppins-bold text-slate-600 dark:text-darkTextSoft">
                           {(tx.userName || "?").charAt(0).toUpperCase()}
                         </Text>
                       </View>
                     )}
                     <View className="flex-1 min-w-0">
                       <View className="flex-row items-center justify-between gap-x-2">
-                        <Text className="text-sm font-poppins-semibold text-slate-900 dark:text-slate-100" numberOfLines={1}>
+                        <Text className="text-sm font-poppins-semibold text-slate-900 dark:text-darkTextPrimary" numberOfLines={1}>
                           {tx.userName}
                         </Text>
                         <Text className="text-xs font-poppins-semibold text-primary shrink-0">{tx.detail}</Text>
                       </View>
                       <View className="flex-row items-center justify-between mt-0.5">
-                        <Text className="text-[10px] font-poppins text-slate-400 dark:text-slate-500">
+                        <Text className="text-[10px] font-poppins text-slate-400 dark:text-darkTextSecondary">
                           {type_badge[tx.type]}
                         </Text>
-                        <Text className="text-[10px] font-poppins text-slate-400 dark:text-slate-500">
+                        <Text className="text-[10px] font-poppins text-slate-400 dark:text-darkTextSecondary">
                           {formatTxDateTime(tx.date)}
                         </Text>
                       </View>

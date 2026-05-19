@@ -228,7 +228,7 @@ export default function TransactionsScreen() {
       const starred = isStarred(id);
       const canStar = canStarStore(id);
       return (
-        <View className="flex-row items-center border-b border-slate-100 dark:border-neutral-800">
+        <View className="flex-row items-center border-b border-slate-100 dark:border-darkBorder">
           <TouchableOpacity
             onPress={() => {
               selectingStoreFromResultsRef.current = true;
@@ -304,7 +304,7 @@ export default function TransactionsScreen() {
         <View className={isWeb ? "w-full max-w-4xl self-center" : ""}>
             <View
               className={[
-                "flex-row items-center px-4 py-3 bg-background dark:bg-darkBackground border-l border-r border-b border-slate-100 dark:border-[#262626]",
+                "flex-row items-center px-4 py-3 bg-background dark:bg-darkBackground border-l border-r border-b border-slate-100 dark:border-darkBorder",
                 !isWeb && "mx-4",
                 isFirst && "border-t rounded-tl-[12px] rounded-tr-[12px]",
                 isLast && "rounded-bl-[12px] rounded-br-[12px]",
@@ -460,13 +460,13 @@ export default function TransactionsScreen() {
                           includeFontPadding: false,
                         },
                       ]}
-                      className="px-3 text-sm font-poppins text-slate-900 dark:text-slate-100"
+                      className="px-3 text-sm font-poppins text-slate-900 dark:text-darkTextPrimary"
                     />
                   </RNView>
 
                   {showSearchResults ? (
                     <View
-                      className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg shadow-black/15 dark:border-[#2a2a2a] dark:bg-[#1c1c1c] dark:shadow-black/40"
+                      className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg shadow-black/15 dark:border-darkBorder dark:bg-darkBackgroundCard dark:shadow-black/40"
                       style={{
                         position: "absolute",
                         top: "100%",
@@ -508,7 +508,7 @@ export default function TransactionsScreen() {
               ) : (
                 <View className="min-w-0 flex-1 basis-0 justify-center overflow-hidden rounded-xl border border-neutral-100 bg-white px-3 py-2.5 dark:border-darkBorder dark:bg-darkBackground">
                   <Text
-                    className="text-xs font-poppins-semibold text-slate-800 dark:text-slate-100"
+                    className="text-xs font-poppins-semibold text-slate-800 dark:text-darkTextPrimary"
                     numberOfLines={1}
                   >
                     {selectedStore?.name ?? "—"}
@@ -576,7 +576,7 @@ export default function TransactionsScreen() {
                       className={`flex-row items-center rounded-full ${
                         active
                           ? "border border-primary bg-primary"
-                          : "border border-transparent bg-white dark:border-neutral-600 dark:bg-neutral-800"
+                          : "border border-transparent bg-white dark:border-darkBorder dark:bg-darkBackgroundCard"
                       }`}
                     >
                       <TouchableOpacity
@@ -595,7 +595,7 @@ export default function TransactionsScreen() {
                           className={`max-w-[140px] text-xs font-poppins-semibold ${
                             active
                               ? "text-white"
-                              : "text-slate-700 dark:text-slate-200"
+                              : "text-slate-700 dark:text-darkTextPrimary"
                           }`}
                           numberOfLines={1}
                         >
@@ -705,7 +705,7 @@ export default function TransactionsScreen() {
         <Pressable className="absolute inset-0" onPress={() => setFunnelOpen(false)} />
 
         <View
-          className="absolute z-50 w-[140px] overflow-hidden rounded-[10px] border border-slate-200 bg-white shadow-md shadow-black/10 dark:border-[#2a2a2a] dark:bg-[#1c1c1c] dark:shadow-lg dark:shadow-black/35"
+          className="absolute z-50 w-[140px] overflow-hidden rounded-[10px] border border-slate-200 bg-white shadow-md shadow-black/10 dark:border-darkBorder dark:bg-darkBackgroundCard dark:shadow-lg dark:shadow-black/35"
           style={{
             top: funnelAnchor.top,
             left: Math.min(
@@ -726,11 +726,11 @@ export default function TransactionsScreen() {
                   setFunnelOpen(false);
                 }}
                 activeOpacity={0.7}
-                className={`flex-row items-center justify-between px-3 py-2 ${!isLast ? "border-b border-slate-100 dark:border-neutral-800" : ""}`}
+                className={`flex-row items-center justify-between px-3 py-2 ${!isLast ? "border-b border-slate-100 dark:border-darkBorder" : ""}`}
               >
                 <Text
                   className={
-                    ["text-[10px]", isActive ? "font-poppins-semibold text-primary" : "font-poppins text-neutral-500 dark:text-neutral-400"].join(" ")}
+                    ["text-[10px]", isActive ? "font-poppins-semibold text-primary" : "font-poppins text-neutral-500 dark:text-darkTextMuted"].join(" ")}
                 >
                   {opt.label}
                 </Text>

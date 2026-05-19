@@ -127,10 +127,10 @@ export default function ChatSupportScreen() {
   return (
     <SafeAreaView
       edges={["top", "left", "right"]}
-      className="flex-1 bg-backgroundMuted dark:bg-neutral-900"
+      className="flex-1 bg-backgroundMuted dark:bg-darkBackgroundMuted"
     >
       {/* Header */}
-      <View className="bg-white dark:bg-darkBackground border-b border-neutral-100 dark:border-neutral-800 pl-6 pr-4 py-3 flex-row items-center">
+      <View className="bg-white dark:bg-darkBackground border-b border-neutral-100 dark:border-darkBorder pl-6 pr-4 py-3 flex-row items-center">
         <TouchableOpacity
           onPress={handleBack}
           className="p-2 -ml-2 rounded-full active:bg-neutral-100 dark:active:bg-neutral-800"
@@ -138,7 +138,7 @@ export default function ChatSupportScreen() {
           <ArrowLeft size={22} color="#1e293b" />
         </TouchableOpacity>
 
-        <View className="w-10 h-10 ml-4 mr-3 rounded-full bg-slate-100 dark:bg-neutral-800 items-center justify-center">
+        <View className="w-10 h-10 ml-4 mr-3 rounded-full bg-slate-100 dark:bg-darkBackgroundCard items-center justify-center">
           <Headset size={20} color="#64748b" />
         </View>
 

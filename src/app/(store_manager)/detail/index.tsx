@@ -66,7 +66,7 @@ export default function DetailIndex() {
   };
 
   return (
-    <SafeAreaView edges={["top"]} className="flex-1 bg-backgroundMuted dark:bg-neutral-900">
+    <SafeAreaView edges={["top"]} className="flex-1 bg-backgroundMuted dark:bg-darkBackgroundMuted">
       <AppHeader
         title={detail?.name || translate("storeManager.viewStore.fallbackTitle")}
         description={detail?.address || translate("storeManager.detail.headerDefaultDescription")}
@@ -109,7 +109,7 @@ export default function DetailIndex() {
               style={Platform.OS === "web" ? { width: "100%", maxWidth: 860 } : undefined}
             >
 
-              <View className="bg-white dark:bg-neutral-800 rounded-xl border border-slate-100 dark:border-neutral-700">
+              <View className="bg-white dark:bg-darkBackgroundCard rounded-xl border border-slate-100 dark:border-darkBorder">
                 <View
                   className="rounded-t-xl overflow-hidden"
                   style={{ height: 160 }}
@@ -139,7 +139,7 @@ export default function DetailIndex() {
                         />
                       ))
                     ) : (
-                      <View style={{ width: bannerWidth || 320, height: 160 }} className="bg-slate-100 dark:bg-neutral-700" />
+                      <View style={{ width: bannerWidth || 320, height: 160 }} className="bg-slate-100 dark:bg-darkBackgroundCard" />
                     )}
                   </RNScrollView>
 
@@ -176,7 +176,7 @@ export default function DetailIndex() {
                   style={{ marginTop: -28 }}
                 >
                   <View
-                    className="rounded-full overflow-hidden bg-white dark:bg-neutral-800"
+                    className="rounded-full overflow-hidden bg-white dark:bg-darkBackgroundCard"
                     style={{
                       width: 100,
                       height: 100,
@@ -200,7 +200,7 @@ export default function DetailIndex() {
 
                   <View className="flex-1 ml-3 pb-1 pt-10">
                     <View className="flex-row items-center flex-wrap gap-x-2">
-                      <Text className="text-base font-poppins-bold text-slate-800 dark:text-slate-100">
+                      <Text className="text-base font-poppins-bold text-slate-800 dark:text-darkTextPrimary">
                         {detail?.name || translate("storeManager.detail.unnamedStore")}
                       </Text>
                       <View className={`flex-row items-center gap-x-1 px-2 py-0.5 rounded-full ${statusCfg.bg}`}>
@@ -210,25 +210,25 @@ export default function DetailIndex() {
                     </View>
 
                     <View className="flex-row items-center flex-wrap mt-0.5 gap-x-1">
-                      <Text className="text-xs font-poppins text-textSecondary dark:text-slate-500">{storeTypeLabel}</Text>
+                      <Text className="text-xs font-poppins text-textSecondary dark:text-darkTextSecondary">{storeTypeLabel}</Text>
                       {(detail?.phone || detail?.registration_number) && (
                         <View className="w-1 h-4 justify-center items-center mx-2">
-                          <View className="w-px h-full bg-slate-300 dark:bg-slate-600 opacity-60" />
+                          <View className="w-px h-full bg-slate-300 dark:bg-darkBackgroundCard opacity-60" />
                         </View>
                       )}
                       {detail?.phone && (
                         <>
-                          <Text className="text-xs font-poppins text-textSecondary dark:text-slate-500">{detail.phone}</Text>
+                          <Text className="text-xs font-poppins text-textSecondary dark:text-darkTextSecondary">{detail.phone}</Text>
                         </>
                       )}
                       {detail?.phone && detail?.registration_number && (
                         <View className="w-1 h-4 justify-center items-center mx-2">
-                          <View className="w-px h-full bg-slate-300 dark:bg-slate-600 opacity-60" />
+                          <View className="w-px h-full bg-slate-300 dark:bg-darkBackgroundCard opacity-60" />
                         </View>
                       )}
                       {detail?.registration_number && (
                         <>
-                          <Text className="text-xs font-poppins text-textSecondary dark:text-slate-500">{detail.registration_number}</Text>
+                          <Text className="text-xs font-poppins text-textSecondary dark:text-darkTextSecondary">{detail.registration_number}</Text>
                         </>
                       )}
                     </View>
@@ -238,15 +238,15 @@ export default function DetailIndex() {
                       <View className="flex-row items-center flex-wrap mt-0.5 gap-x-2">
                         <View className="flex-row items-center flex-wrap">
                           {detail?.store_open && (
-                            <Text className="text-xs font-poppins text-textSecondary dark:text-slate-500">
+                            <Text className="text-xs font-poppins text-textSecondary dark:text-darkTextSecondary">
                               {detail.store_open ? formatTime(detail.store_open) : notSet}
                             </Text>
                           )}
                           {detail?.store_open && detail?.store_close && (
-                            <Text className="mx-1 text-xs font-poppins text-textSecondary dark:text-slate-500">-</Text>
+                            <Text className="mx-1 text-xs font-poppins text-textSecondary dark:text-darkTextSecondary">-</Text>
                           )}
                           {detail?.store_close && (
-                            <Text className="text-xs font-poppins text-textSecondary dark:text-slate-500">
+                            <Text className="text-xs font-poppins text-textSecondary dark:text-darkTextSecondary">
                               {detail.store_close ? formatTime(detail.store_close) : notSet}
                             </Text>
                           )}
@@ -254,12 +254,12 @@ export default function DetailIndex() {
 
                         {(detail?.store_open || detail?.store_close) && detail?.store_days && (
                           <View className="w-1 h-4 justify-center items-center">
-                            <View className="w-px h-full bg-slate-300 dark:bg-slate-600 opacity-60" />
+                            <View className="w-px h-full bg-slate-300 dark:bg-darkBackgroundCard opacity-60" />
                           </View>
                         )}
 
                         {detail?.store_days && (
-                          <Text className="text-xs font-poppins text-textSecondary dark:text-slate-500">
+                          <Text className="text-xs font-poppins text-textSecondary dark:text-darkTextSecondary">
                             {detail.store_days
                               .map((day: string) =>
                                 ({
@@ -291,22 +291,22 @@ export default function DetailIndex() {
                         paddingRight: Platform.OS === "web" ? 24 : 16
                       }}
                     >
-                      <Text className="text-xs font-poppins-semibold text-textSecondary dark:text-textSecondary mb-1">
+                      <Text className="text-xs font-poppins-semibold text-textSecondary dark:text-darkTextSecondary mb-1">
                         {translate("label.businessDocument")}
                       </Text>
                       <TouchableOpacity
                         activeOpacity={0.75}
                         onPress={() => setDocPreviewVisible(true)}
-                        className="flex-row items-center gap-x-3 border border-slate-100 dark:border-neutral-700 rounded-xl px-3 py-2.5"
+                        className="flex-row items-center gap-x-3 border border-slate-100 dark:border-darkBorder rounded-xl px-3 py-2.5"
                       >
                         <View className="w-10 h-10 rounded-xl bg-primary/10 dark:bg-primary/10 items-center justify-center">
                           <File size={18} color="#FF6600" />
                         </View>
                         <View className="flex-1">
-                          <Text className="text-xs font-poppins-semibold text-textPrimary dark:text-slate-100" numberOfLines={1}>
+                          <Text className="text-xs font-poppins-semibold text-textPrimary dark:text-darkTextPrimary" numberOfLines={1}>
                             {detail.business_document_image.split("/").pop() ?? translate("label.businessDocument")}
                           </Text>
-                          <Text className="text-[10px] font-poppins text-textMuted dark:text-slate-500 mt-0.5">
+                          <Text className="text-[10px] font-poppins text-textMuted dark:text-darkTextSecondary mt-0.5">
                             {translate("label.tapToView", "Tap to view")}
                           </Text>
                         </View>
@@ -331,13 +331,13 @@ export default function DetailIndex() {
                 )}
 
                 <View className="px-6 py-3 gap-y-2">
-                  <Text className="text-xs font-poppins-semibold text-textSecondary dark:text-textSecondary mb-1">
+                  <Text className="text-xs font-poppins-semibold text-textSecondary dark:text-darkTextSecondary mb-1">
                     {translate("label.location")}
                   </Text>
                   {detail?.address && (
                     <View className="flex-row items-start gap-x-1">
                       <MapPin size={12} color={isDark ? "#A3A3A3" : "#475569"} style={{ marginTop: 1 }} />
-                      <Text className="text-xs font-poppins-semibold text-textSecondary dark:text-slate-400 flex-1">
+                      <Text className="text-xs font-poppins-semibold text-textSecondary dark:text-darkTextMuted flex-1">
                         {detail.address}
                       </Text>
                     </View>
@@ -398,17 +398,17 @@ export default function DetailIndex() {
                         )}
                       </MapView>
                     ) : (
-                      <View className="flex-1 bg-slate-50 dark:bg-neutral-700 items-center justify-center gap-y-1">
+                      <View className="flex-1 bg-slate-50 dark:bg-darkBackgroundCard items-center justify-center gap-y-1">
                         <MapPin size={24} color={isDark ? "#525252" : "#CBD5E1"} />
-                        <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">
+                        <Text className="text-xs font-poppins text-slate-400 dark:text-darkTextSecondary">
                           {translate("storeManager.detail.mapOnlyAndroidWeb")}
                         </Text>
                       </View>
                     )
                   ) : (
-                    <View className="flex-1 bg-slate-50 dark:bg-neutral-700 items-center justify-center gap-y-1">
+                    <View className="flex-1 bg-slate-50 dark:bg-darkBackgroundCard items-center justify-center gap-y-1">
                       <MapPinOff size={24} color={isDark ? "#525252" : "#CBD5E1"} />
-                      <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">
+                      <Text className="text-xs font-poppins text-slate-400 dark:text-darkTextSecondary">
                         {translate("storeManager.detail.noLocationSet")}
                       </Text>
                     </View>

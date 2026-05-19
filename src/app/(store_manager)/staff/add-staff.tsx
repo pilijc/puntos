@@ -136,7 +136,7 @@ export default function AddStaff() {
   };
 
   return (
-    <SafeAreaView edges={["top"]} className="flex-1 bg-backgroundMuted dark:bg-neutral-900">
+    <SafeAreaView edges={["top"]} className="flex-1 bg-backgroundMuted dark:bg-darkBackgroundMuted">
       <Modal
         visible={!!modal}
         onClose={() => setModal(null)}
@@ -180,7 +180,7 @@ export default function AddStaff() {
             style={Platform.OS === "web" ? { width: "100%" } : undefined}
           >
             <View style={Platform.OS === "web" ? { width: "100%", maxWidth: WEB_MAX_WIDTH } : undefined}>
-              <View className="mx-4 mt-2 mb-4 gap-y-4 rounded-xl border border-slate-100 bg-white p-4 dark:border-neutral-700 dark:bg-neutral-800">
+              <View className="mx-4 mt-2 mb-4 gap-y-4 rounded-xl border border-slate-100 bg-white p-4 dark:border-darkBorder dark:bg-darkBackgroundCard">
                 <View>
                   <Text className="text-sm font-poppins-bold text-textPrimary dark:text-darkTextPrimary">
                     {isEditMode ? translate("storeManager.staffForm.profileSectionEdit") : translate("storeManager.staffForm.profileSectionAdd")}
@@ -244,7 +244,7 @@ export default function AddStaff() {
                   <View className="gap-y-2">
                     <View className="flex-row items-center justify-between gap-x-0.5">
                       <View className="flex-row items-center gap-x-0.5">
-                        <Text className="text-sm font-poppins-semibold text-slate-700 dark:text-slate-300">
+                        <Text className="text-sm font-poppins-semibold text-slate-700 dark:text-darkTextSoft">
                           {translate("storeManager.staffForm.password")}
                         </Text>
                         <Text className="text-xs font-poppins-bold text-red-500">*</Text>
@@ -256,7 +256,7 @@ export default function AddStaff() {
                       </TouchableOpacity>
                     </View>
                     <TextInput
-                      className="w-full rounded-xl border border-slate-200 bg-white px-4 pr-12 text-base font-poppins text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                      className="w-full rounded-xl border border-slate-200 bg-white px-4 pr-12 text-base font-poppins text-slate-900 dark:border-darkBorder dark:bg-darkBackgroundMuted dark:text-darkTextPrimary"
                       style={{
                         height: 45,
                         lineHeight: 20,
@@ -335,40 +335,40 @@ export default function AddStaff() {
           className="absolute inset-0 items-center justify-center bg-black/40 px-6"
           pointerEvents="box-none"
         >
-          <View className="w-full max-w-sm rounded-xl border border-slate-200 bg-white p-5 shadow-2xl dark:border-slate-700 dark:bg-slate-900">
-            <Text className="mb-2 text-base font-poppins-bold text-slate-900 dark:text-slate-100">
+          <View className="w-full max-w-sm rounded-xl border border-slate-200 bg-white p-5 shadow-2xl dark:border-darkBorder dark:bg-darkBackgroundMuted">
+            <Text className="mb-2 text-base font-poppins-bold text-slate-900 dark:text-darkTextPrimary">
               {isEditMode ? translate("storeManager.staffForm.confirmEditTitle") : translate("storeManager.staffForm.confirmAddTitle")}
             </Text>
 
-            <Text className="mb-4 text-sm font-poppins text-slate-500 dark:text-slate-400">
+            <Text className="mb-4 text-sm font-poppins text-slate-500 dark:text-darkTextMuted">
               {isEditMode
                 ? translate("storeManager.staffForm.confirmEditBody")
                 : translate("storeManager.staffForm.confirmAddBody")}
             </Text>
 
             <View className="mb-3 gap-y-1.5">
-              <Text className="text-xs font-poppins text-slate-500 dark:text-slate-400">{translate("storeManager.staffForm.email")}</Text>
-              <View className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 dark:border-slate-700 dark:bg-slate-800">
-                <Text className="text-sm font-poppins-bold text-slate-900 dark:text-slate-100">{email}</Text>
+              <Text className="text-xs font-poppins text-slate-500 dark:text-darkTextMuted">{translate("storeManager.staffForm.email")}</Text>
+              <View className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 dark:border-darkBorder dark:bg-darkBackgroundCard">
+                <Text className="text-sm font-poppins-bold text-slate-900 dark:text-darkTextPrimary">{email}</Text>
               </View>
             </View>
 
             {!isEditMode && (
               <View className="mb-4 gap-y-1.5">
-                <Text className="text-xs font-poppins text-slate-500 dark:text-slate-400">{translate("storeManager.staffForm.tempPassword")}</Text>
-                <View className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 dark:border-slate-700 dark:bg-slate-800">
-                  <Text className="text-sm font-poppins-bold text-slate-900 dark:text-slate-100">{password}</Text>
+                <Text className="text-xs font-poppins text-slate-500 dark:text-darkTextMuted">{translate("storeManager.staffForm.tempPassword")}</Text>
+                <View className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 dark:border-darkBorder dark:bg-darkBackgroundCard">
+                  <Text className="text-sm font-poppins-bold text-slate-900 dark:text-darkTextPrimary">{password}</Text>
                 </View>
               </View>
             )}
 
             <View className="mt-2 flex-row gap-x-2">
               <TouchableOpacity
-                className="h-11 flex-1 items-center justify-center rounded-xl border border-slate-200 dark:border-slate-600"
+                className="h-11 flex-1 items-center justify-center rounded-xl border border-slate-200 dark:border-darkBorder"
                 activeOpacity={0.8}
                 onPress={() => setShowConfirm(false)}
               >
-                <Text className="text-xs font-poppins-semibold text-slate-600 dark:text-slate-200">{translate("label.cancel")}</Text>
+                <Text className="text-xs font-poppins-semibold text-slate-600 dark:text-darkTextPrimary">{translate("label.cancel")}</Text>
               </TouchableOpacity>
 
               <TouchableOpacity

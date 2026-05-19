@@ -36,8 +36,8 @@ export function StampCard({
   const PAGE_SIZE = 5;
 
   return (
-    <View className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl overflow-hidden">
-      <View className="flex-row items-center justify-between px-4 pt-4 pb-3 border-b border-slate-100 dark:border-slate-800">
+    <View className="bg-white dark:bg-darkBackgroundCard border border-slate-100 dark:border-darkBorder rounded-2xl overflow-hidden">
+      <View className="flex-row items-center justify-between px-4 pt-4 pb-3 border-b border-slate-100 dark:border-darkBackgroundMuted">
         <View className="flex-row items-center gap-x-2">
           <StampIcon size={16} color="#94A3B8" />
           <Text className="text-sm font-poppins-bold text-textPrimary">{translate("storeManager.stamp.title")}</Text>
@@ -49,7 +49,7 @@ export function StampCard({
       </View>
 
       {stamp.created_at && (
-        <View className="flex-row items-center justify-between px-4 py-2.5 border-b border-slate-100 dark:border-slate-800">
+        <View className="flex-row items-center justify-between px-4 py-2.5 border-b border-slate-100 dark:border-darkBackgroundMuted">
           <Text className="text-xs font-poppins text-textMuted">{translate("storeManager.stamp.labelStarted")}</Text>
           <Text className="text-xs font-poppins-semibold text-textSecondary">
             {formatDate(stamp.created_at)}
@@ -58,7 +58,7 @@ export function StampCard({
       )}
 
       {status !== "active" && stamp.ended_at && (
-        <View className="flex-row items-center justify-between px-4 py-2.5 border-b border-slate-100 dark:border-slate-800">
+        <View className="flex-row items-center justify-between px-4 py-2.5 border-b border-slate-100 dark:border-darkBackgroundMuted">
           <Text className="text-xs font-poppins text-textMuted">{translate("storeManager.stamp.labelEndedOn")}</Text>
           <Text className="text-xs font-poppins-semibold text-textSecondary">
             {formatDate(stamp.ended_at)}
@@ -66,12 +66,12 @@ export function StampCard({
         </View>
       )}
 
-      <View className="flex-row items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-slate-800">
+      <View className="flex-row items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-darkBackgroundMuted">
         <Text className="text-xs font-poppins text-textMuted">{translate("storeManager.stamp.stampsRequired")}</Text>
         <Text className="text-xs font-poppins-bold text-textSecondary">{stamp.total_stamps}</Text>
       </View>
 
-      <View className="flex-row items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-slate-800">
+      <View className="flex-row items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-darkBackgroundMuted">
         <Text className="text-xs font-poppins text-textMuted">{translate("storeManager.stamp.expiration")}</Text>
         <Text className="text-xs font-poppins-semibold text-textSecondary">
           {stamp.expiration_mode === "none"
@@ -80,7 +80,7 @@ export function StampCard({
         </Text>
       </View>
 
-      <View className="flex-row items-center gap-x-3 px-4 py-3 border-b border-slate-100 dark:border-slate-800">
+      <View className="flex-row items-center gap-x-3 px-4 py-3 border-b border-slate-100 dark:border-darkBackgroundMuted">
         {reward?.image_url ? (
           <Image source={{ uri: reward.image_url }} style={{ width: 40, height: 40, borderRadius: 10 }} contentFit="cover" />
         ) : null}
@@ -133,7 +133,7 @@ export function StampCard({
           </TouchableOpacity>
 
           {c.collectorsOpen && (
-            <View className="border-t border-slate-100 dark:border-slate-800">
+            <View className="border-t border-slate-100 dark:border-darkBackgroundMuted">
               {c.collectorsLoading ? (
                 <View className="py-8 items-center">
                   <ActivityIndicator size="small" color="#FF6600" />
@@ -155,7 +155,7 @@ export function StampCard({
                       .toUpperCase();
                     const cardExpired = item.card_expires_at ? new Date() >= new Date(item.card_expires_at) : false;
                     return (
-                      <View key={item.user_id} className="border-b border-slate-100 dark:border-slate-800 px-4 py-3 gap-y-1.5">
+                      <View key={item.user_id} className="border-b border-slate-100 dark:border-darkBackgroundMuted px-4 py-3 gap-y-1.5">
                         <View className="flex-row items-center gap-x-1.5">
                           {item.users?.avatar_url ? (
                             <Image
@@ -229,7 +229,7 @@ export function StampCard({
                         }
                       }}
                       disabled={c.loadingMore}
-                      className="py-3 items-center flex-row justify-center gap-x-2 border-t border-slate-100 dark:border-slate-800"
+                      className="py-3 items-center flex-row justify-center gap-x-2 border-t border-slate-100 dark:border-darkBackgroundMuted"
                     >
                       {c.loadingMore ? (
                         <ActivityIndicator size="small" color="#FF6600" />
@@ -247,7 +247,7 @@ export function StampCard({
                   )}
 
                   {!hasMore && c.collectors.length > 0 && (
-                    <View className="py-2.5 items-center border-t border-slate-100 dark:border-slate-800">
+                    <View className="py-2.5 items-center border-t border-slate-100 dark:border-darkBackgroundMuted">
                       <Text className="text-xs font-poppins text-textMuted">
                         {translate("storeManager.stamp.allCollectorsShown", { count: c.collectorsCount })}
                       </Text>
@@ -328,7 +328,7 @@ export function StampCard({
       )}
 
       {status === "active" && activeTab === "active" && !readonlyCampaigns && (
-        <View className="px-4 pb-4 pt-2 border-t border-slate-100 dark:border-slate-800">
+        <View className="px-4 pb-4 pt-2 border-t border-slate-100 dark:border-darkBackgroundMuted">
           <TouchableOpacity
             activeOpacity={0.8}
             disabled={endingId === stamp.id}

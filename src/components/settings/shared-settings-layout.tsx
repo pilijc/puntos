@@ -76,22 +76,22 @@ export const SharedSettingsLayout = ({
 
                         {banner}
 
-                        <View className="overflow-hidden bg-white dark:bg-darkBackground rounded-xl border border-slate-100 dark:border-slate-800">
+                        <View className="overflow-hidden bg-white dark:bg-darkBackground rounded-xl border border-slate-100 dark:border-darkBorder">
                             <SecurityCard
                                 disabled={securityDisabled}
                                 warning={securityWarning}
                             />
-                            <View className="h-px bg-slate-100 dark:bg-slate-800" />
+                            <View className="h-px bg-slate-100 dark:bg-darkBorder" />
                             <LanguageCard />
-                            <View className="h-px bg-slate-100 dark:bg-slate-800" />
+                            <View className="h-px bg-slate-100 dark:bg-darkBorder" />
                             <AppearanceCard />
                             {copyrightRole === "Store Manager" ? (
                               <>
-                                <View className="h-px bg-slate-100 dark:bg-slate-800" />
+                                <View className="h-px bg-slate-100 dark:bg-darkBorder" />
                                 <SubscriptionCard />
-                                <View className="h-px bg-slate-100 dark:bg-slate-800" />
+                                <View className="h-px bg-slate-100 dark:bg-darkBorder" />
                                 <ChatSupportCard />
-                                <View className="h-px bg-slate-100 dark:bg-slate-800" />
+                                <View className="h-px bg-slate-100 dark:bg-darkBorder" />
                               </>
                             ) : null}
                         </View>
