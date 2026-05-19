@@ -15,6 +15,7 @@ import { View, Text, TouchableOpacity } from "@/tw";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { Button } from "@/components/button";
 import { BlurView } from "expo-blur";
+import type { DimensionValue } from "react-native";
 
 type ButtonVariant = "primary" | "success" | "danger" | "secondary" | "ghost";
 
@@ -37,6 +38,7 @@ export interface ModalProps {
   dismissOnBackdrop?: boolean;
   showCloseButton?: boolean;
   timer?: number;
+  width?: DimensionValue;
 }
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
@@ -52,6 +54,7 @@ export function Modal({
   dismissOnBackdrop = true,
   showCloseButton = true,
   timer,
+  width,
 }: ModalProps) {
   const nativeColorScheme = useColorScheme();
   const { theme } = useAppearanceStore();
@@ -93,7 +96,8 @@ export function Modal({
           style={[
             styles.card,
             {
-              width: MODAL_WIDTH,
+              width: width ?? MODAL_WIDTH,
+              maxWidth: SCREEN_WIDTH - 32,
               backgroundColor: isDark ? "#404040" : "#ffffff",
               borderColor: isDark ? "#1e293b" : "#e2e8f0",
             },
