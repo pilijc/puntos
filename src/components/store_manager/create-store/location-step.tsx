@@ -1,13 +1,13 @@
 import React from "react";
-import { Platform } from "react-native";
-import { View, Text, TouchableOpacity } from "@/tw";
-import Slider from "@react-native-community/slider";
-import Mapbox, { MapView, Camera, PointAnnotation } from "@rnmapbox/maps";
 import * as turf from "@turf/turf";
+import { Platform } from "react-native";
 import { MapPin } from "lucide-react-native";
+import Slider from "@react-native-community/slider";
+import { View, Text, TouchableOpacity } from "@/tw";
 import { TextField } from "@/components/text-field";
-import { WebMapboxPicker } from "@/components/map/web-mapbox-picker";
 import { shouldUseInteractiveMapbox } from "@/utils/mapbox-platform";
+import { WebMapboxPicker } from "@/components/map/web-mapbox-picker";
+import Mapbox, { MapView, Camera, PointAnnotation } from "@rnmapbox/maps";
 
 type LocationStepProps = {
   address: string;
@@ -93,7 +93,9 @@ export function LocationStep({
                   height={400}
                   markerColor="#FF6600"
                   radiusMeters={hasPin ? radius || 50 : null}
-                  onChange={({ latitude: lat, longitude: lng }) => setPin(lat, lng)}
+                  onChange={({ latitude: lat, longitude: lng }) =>
+                    setPin(lat, lng)
+                  }
                   onUnavailable={onWebMapUnavailable}
                 />
                 {!shouldUseInteractiveMapbox() && (
@@ -128,7 +130,9 @@ export function LocationStep({
               >
                 <Camera
                   zoomLevel={hasPin ? 15 : 18}
-                  centerCoordinate={hasPin ? [parsedLng, parsedLat] : [123.8854, 10.3157]}
+                  centerCoordinate={
+                    hasPin ? [parsedLng, parsedLat] : [123.8854, 10.3157]
+                  }
                 />
                 {hasPin && (
                   <PointAnnotation
@@ -139,7 +143,10 @@ export function LocationStep({
                   </PointAnnotation>
                 )}
                 {radiusCircleFeature && (
-                  <Mapbox.ShapeSource id="storeRadius" shape={radiusCircleFeature}>
+                  <Mapbox.ShapeSource
+                    id="storeRadius"
+                    shape={radiusCircleFeature}
+                  >
                     <Mapbox.FillLayer
                       id="storeRadiusFill"
                       style={{
@@ -203,7 +210,9 @@ export function LocationStep({
               )}
             </View>
             <TextField
-              placeholder={translate("storeManager.createStore.timezonePlaceholder")}
+              placeholder={translate(
+                "storeManager.createStore.timezonePlaceholder",
+              )}
               value={timezone}
               onChangeText={setTimezone}
               sanitize={(v) => v}

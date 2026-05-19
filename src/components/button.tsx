@@ -60,8 +60,8 @@ const config: Record<
     spinnerColor: "#EF4444"
   },
   secondary: {
-    container: "bg-slate-100 dark:bg-slate-800",
-    text: "text-textPrimary dark:text-slate-400",
+    container: "bg-slate-100 dark:bg-darkBackgroundMuted",
+    text: "text-textPrimary dark:text-darkTextPrimary",
     iconColor: "#94A3B8",
     spinnerColor: "#94A3B8"
   },

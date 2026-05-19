@@ -1,24 +1,27 @@
+import { Image } from "expo-image";
+import { Button } from "@/components/button";
+import { useTranslation } from "react-i18next";
+import { AppHeader } from "@/components/header";
+import * as ImagePicker from "expo-image-picker";
 import React, { useEffect, useState } from "react";
+import { TextField } from "@/components/text-field";
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { Modal, type ModalButton } from "@/components/modal";
+import { useRouter, useLocalSearchParams } from "expo-router";
+import { useRewardStore } from "@/store/store-manager/reward-store";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { View, Text, TouchableOpacity, TextInput, SafeAreaView } from "@/tw";
+import { useStorePremiumCampaignEdit } from "@/hooks/store-manager/use-store-premium-campaign-edit";
+import {
+  getRewardById,
+  upsertReward,
+  uploadRewardImage,
+} from "@/services/store-manager/reward-service";
 import {
   ActivityIndicator,
-  KeyboardAvoidingView,
   Platform,
   ScrollView,
 } from "react-native";
-import { View, Text, TouchableOpacity, TextInput, SafeAreaView } from "@/tw";
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { useRouter, useLocalSearchParams } from "expo-router";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import * as ImagePicker from "expo-image-picker";
-import { Image } from "expo-image";
-import { useRewardStore } from "@/store/store-manager/reward-store";
-import { getRewardById, upsertReward, uploadRewardImage } from "@/services/store-manager/reward-service";
-import { Button } from "@/components/button";
-import { Modal, type ModalButton } from "@/components/modal";
-import { AppHeader } from "@/components/header";
-import { TextField } from "@/components/text-field";
-import { useTranslation } from "react-i18next";
-import { useStorePremiumCampaignEdit } from "@/hooks/store-manager/use-store-premium-campaign-edit";
 
 const WEB_MAX_WIDTH = 896;
 
@@ -228,14 +231,14 @@ export default function Rewards() {
         }}
       >
         <View
-          className="bg-white dark:bg-neutral-800 rounded-xl p-4 gap-y-4"
+          className="bg-white dark:bg-darkBackgroundCard rounded-xl p-4 gap-y-4"
           style={Platform.OS === "web" ? { width: "100%", maxWidth: WEB_MAX_WIDTH } : undefined}
         >
           <View>
             <Text className="text-md font-poppins-semibold text-slate-900 dark:text-white">
               {translate("storeManager.rewardForm.rewardDetails")}
             </Text>
-            <Text className="text-sm font-poppins text-slate-500 dark:text-slate-400">
+            <Text className="text-sm font-poppins text-slate-500 dark:text-darkTextMuted">
               {translate("storeManager.rewardForm.rewardDetailsBody")}
             </Text>
           </View>
@@ -291,12 +294,12 @@ export default function Rewards() {
 
           <View className="gap-y-2">
             <View className="flex-row items-center gap-x-0.5">
-              <Text className="text-sm font-poppins-semibold text-slate-700 dark:text-slate-300">
+              <Text className="text-sm font-poppins-semibold text-slate-700 dark:text-darkTextSoft">
                 {translate("storeManager.rewardForm.description")}
               </Text>
             </View>
             <TextInput
-              className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 text-base font-poppins text-slate-900 dark:text-slate-100 pr-12"
+              className="w-full rounded-xl border border-slate-200 dark:border-darkBorder bg-white dark:bg-darkBackgroundMuted px-4 text-base font-poppins text-slate-900 dark:text-darkTextPrimary pr-12"
               placeholder={translate("storeManager.rewardForm.descriptionPlaceholder")}
               placeholderTextColor="#94A3B8"
               multiline
@@ -309,7 +312,7 @@ export default function Rewards() {
 
           <View className="gap-y-2">
             <View className="flex-row items-center gap-x-0.5">
-              <Text className="text-sm font-poppins-semibold text-slate-700 dark:text-slate-300">
+              <Text className="text-sm font-poppins-semibold text-slate-700 dark:text-darkTextSoft">
                 {translate("storeManager.rewardForm.rewardImage")}
               </Text>
               <Text className="text-xs font-poppins-bold text-red-500">*</Text>
@@ -318,12 +321,12 @@ export default function Rewards() {
               onPress={pickImage}
               activeOpacity={0.7}
               disabled={isUploadingImage}
-              className={`w-full h-55 rounded-xl border border-dashed bg-white dark:bg-slate-900 items-center justify-center gap-y-1 ${imageError ? "border-red-500 dark:border-red-500" : "border-slate-300 dark:border-slate-700"}`}
+              className={`w-full h-55 rounded-xl border border-dashed bg-white dark:bg-darkBackgroundMuted items-center justify-center gap-y-1 ${imageError ? "border-red-500 dark:border-red-500" : "border-slate-300 dark:border-darkBorder"}`}
             >
               {isUploadingImage ? (
                 <>
                   <ActivityIndicator size="large" color="#94A3B8" />
-                  <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500 mt-2">
+                  <Text className="text-xs font-poppins text-slate-400 dark:text-darkTextSecondary mt-2">
                     {translate("storeManager.rewardForm.uploadingImage")}
                   </Text>
                 </>
@@ -336,7 +339,7 @@ export default function Rewards() {
               ) : (
                 <>
                   <MaterialIcons name="image" size={32} color="#94A3B8" />
-                  <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500 mt-1">
+                  <Text className="text-xs font-poppins text-slate-400 dark:text-darkTextSecondary mt-1">
                     {translate("storeManager.rewardForm.uploadPhotoHint")}
                   </Text>
                 </>

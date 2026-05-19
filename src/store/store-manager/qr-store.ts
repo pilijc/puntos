@@ -1,7 +1,7 @@
-import { QRPurchaseStore } from "@/type/store-manager/qr.purchase";
 import { create } from "zustand";
 import type { ModalButton } from "@/components/modal";
 import { getQRConfig } from "@/services/store-manager/qr-service";
+import { QRPurchaseStore } from "@/type/store-manager/qr.purchase";
 
 type QRConfig = Awaited<ReturnType<typeof getQRConfig>>;
 

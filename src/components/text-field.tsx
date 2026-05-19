@@ -42,18 +42,18 @@ export function TextField({
   return (
     <View className="gap-y-1.5">
       {!!label && (
-        <Text className="text-sm font-poppins text-slate-700 dark:text-slate-300">
+        <Text className="text-sm font-poppins text-slate-700 dark:text-darkTextSoft">
           {label} {required && <Text className="text-sm font-poppins text-red-500 dark:text-red-400 -mt-1">*</Text>}
         </Text>
       )}
       {hint && (
-        <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500 -mt-1">
+        <Text className="text-xs font-poppins text-slate-400 dark:text-darkTextSecondary -mt-1">
           {hint}
         </Text>
       )}
       <View className="relative justify-center">
         <TextInput
-          className={`w-full rounded-xl border bg-white dark:bg-slate-900 px-4 text-base font-poppins text-slate-900 dark:text-slate-100 ${error ? "border-red-500 dark:border-red-500" : "border-slate-200 dark:border-slate-700"} ${hasRight ? "pr-11" : "pr-4"
+          className={`w-full rounded-xl border bg-white dark:bg-darkBackgroundMuted px-4 text-base font-poppins text-slate-900 dark:text-darkTextPrimary ${error ? "border-red-500 dark:border-red-500" : "border-slate-200 dark:border-darkBorder"} ${hasRight ? "pr-11" : "pr-4"
             }`}
           placeholder={placeholder}
           placeholderTextColor="#94A3B8"

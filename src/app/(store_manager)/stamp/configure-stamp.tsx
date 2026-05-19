@@ -1,25 +1,25 @@
-import React, { useCallback, useEffect, useState } from "react";
-import {
-  ActivityIndicator,
-  Platform,
-  ScrollView,
-} from "react-native";
-import { View, Text, TouchableOpacity, SafeAreaView } from "@/tw";
-import { useRouter, useLocalSearchParams, useFocusEffect } from "expo-router";
 import { Image } from "expo-image";
-import { useStampConfigureViewStore, useStampStore } from "@/store/store-manager/stamp-store";
-import { createStamp, getStampProgramById, updateStampProgram } from "@/services/store-manager/stamp-service";
-import { getRewardById, getRewardsByStoreIdPage } from "@/services/store-manager/reward-service";
-import { EXPIRATION_OPTIONS } from "@/type/store-manager/stamp";
-import type { Reward } from "@/type/store-manager/reward";
-import { AppHeader } from "@/components/header";
-import { Button } from "@/components/button";
 import { Modal } from "@/components/modal";
-import { RewardPickerModal } from "@/components/store_manager/stamp/reward-picker-modal";
-import { Gift, Check, ChevronRight } from "lucide-react-native";
-import { TextField } from "@/components/text-field";
+import { Button } from "@/components/button";
 import { useTranslation } from "react-i18next";
+import { AppHeader } from "@/components/header";
+import { TextField } from "@/components/text-field";
+import type { Reward } from "@/type/store-manager/reward";
+import { EXPIRATION_OPTIONS } from "@/type/store-manager/stamp";
+import { Gift, Check, ChevronRight } from "lucide-react-native";
+import React, { useCallback, useEffect, useState } from "react";
+import { View, Text, TouchableOpacity, SafeAreaView } from "@/tw";
+import { ActivityIndicator, Platform, ScrollView } from "react-native";
+import { useRouter, useLocalSearchParams, useFocusEffect } from "expo-router";
+import { RewardPickerModal } from "@/components/store_manager/stamp/reward-picker-modal";
+import { useStampConfigureViewStore, useStampStore } from "@/store/store-manager/stamp-store";
+import { getRewardById, getRewardsByStoreIdPage } from "@/services/store-manager/reward-service";
 import { useStorePremiumCampaignEdit } from "@/hooks/store-manager/use-store-premium-campaign-edit";
+import {
+  createStamp,
+  getStampProgramById,
+  updateStampProgram,
+} from "@/services/store-manager/stamp-service";
 
 export default function ConfigureStamp() {
   const { t: translate } = useTranslation();
@@ -253,7 +253,7 @@ export default function ConfigureStamp() {
         }}
       >
         <View style={{ width: "100%", maxWidth: isWeb ? 896 : undefined }} className="w-full">
-          <View className="bg-white dark:bg-slate-900 rounded-xl p-4 gap-y-4">
+          <View className="bg-white dark:bg-darkBackgroundMuted rounded-xl p-4 gap-y-4">
             <View className="gap-y-4">
               <View className="gap-y-1">
                 <Text className="text-base font-poppins-bold text-textPrimary dark:text-darkTextPrimary">
@@ -313,7 +313,7 @@ export default function ConfigureStamp() {
             <View className="gap-y-1.5">
               <View className="flex-row items-center justify-between">
                 <View className="flex-row items-center gap-x-1">
-                  <Text className="text-sm font-poppins-semibold text-slate-700 dark:text-slate-300">
+                  <Text className="text-sm font-poppins-semibold text-slate-700 dark:text-darkTextSoft">
                     {translate("storeManager.stampConfigure.reward")}
                   </Text>
                   <Text className="text-sm font-poppins text-red-500 dark:text-red-400 ">*</Text>
@@ -335,18 +335,18 @@ export default function ConfigureStamp() {
               </View>
               {!storeHasRewards ? (
                 <View
-                  className={`rounded-xl border border-dashed bg-slate-50 dark:bg-slate-900 px-4 py-5 items-center gap-y-3 ${
+                  className={`rounded-xl border border-dashed bg-slate-50 dark:bg-darkBackgroundMuted px-4 py-5 items-center gap-y-3 ${
                     rewardError
                       ? "border-red-500 dark:border-red-500"
-                      : "border-slate-300 dark:border-slate-700"
+                      : "border-slate-300 dark:border-darkBorder"
                   }`}
                 >
                   <Gift size={26} color="#94A3B8" />
                   <View className="items-center gap-y-1">
-                    <Text className="text-sm font-poppins-semibold text-slate-600 dark:text-slate-400">
+                    <Text className="text-sm font-poppins-semibold text-slate-600 dark:text-darkTextMuted">
                       {translate("storeManager.stampConfigure.noRewardsTitle")}
                     </Text>
-                    <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500 text-center">
+                    <Text className="text-xs font-poppins text-slate-400 dark:text-darkTextSecondary text-center">
                       {translate("storeManager.stampConfigure.noRewardsBody")}
                     </Text>
                   </View>
@@ -364,10 +364,10 @@ export default function ConfigureStamp() {
                 <TouchableOpacity
                   activeOpacity={0.85}
                   onPress={() => setRewardPickerOpen(true)}
-                  className={`flex-row items-center gap-x-3 rounded-xl border bg-white dark:bg-slate-900 px-4 py-3 ${
+                  className={`flex-row items-center gap-x-3 rounded-xl border bg-white dark:bg-darkBackgroundMuted px-4 py-3 ${
                     rewardError
                       ? "border-red-500 dark:border-red-500"
-                      : "border-slate-200 dark:border-slate-700"
+                      : "border-slate-200 dark:border-darkBorder"
                   }`}
                 >
                   {selectedReward?.image_url ? (
@@ -382,10 +382,10 @@ export default function ConfigureStamp() {
                     </View>
                   )}
                   <View className="flex-1">
-                    <Text className="text-sm font-poppins-semibold text-slate-900 dark:text-slate-100">
+                    <Text className="text-sm font-poppins-semibold text-slate-900 dark:text-darkTextPrimary">
                       {selectedReward?.title ?? (reward_id ? translate("storeManager.stampConfigure.loadingReward") : translate("storeManager.stampConfigure.chooseReward"))}
                     </Text>
-                    <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500 mt-0.5">
+                    <Text className="text-xs font-poppins text-slate-400 dark:text-darkTextSecondary mt-0.5">
                       {selectedReward ? translate("storeManager.reward.pts", { points: selectedReward.points_cost }) : translate("storeManager.stampConfigure.opensList")}
                     </Text>
                   </View>
@@ -403,12 +403,12 @@ export default function ConfigureStamp() {
           <View className="gap-y-3">
             <View className="gap-y-1">
               <View className="flex-row items-center gap-x-1">
-                <Text className="text-sm font-poppins-semibold text-slate-700 dark:text-slate-300">
+                <Text className="text-sm font-poppins-semibold text-slate-700 dark:text-darkTextSoft">
                   {translate("storeManager.stampConfigure.expirationMode")}
                 </Text>
                 <Text className="text-sm font-poppins text-red-500 dark:text-red-400 ">*</Text>
               </View>
-              <Text className="text-xs font-poppins text-slate-500 dark:text-slate-400">
+              <Text className="text-xs font-poppins text-slate-500 dark:text-darkTextMuted">
                 {translate("storeManager.stampConfigure.expirationModeHint")}
               </Text>
             </View>
@@ -423,10 +423,10 @@ export default function ConfigureStamp() {
                     setExpirationMode(opt.key);
                     if (opt.key !== "card") setExpirationDaysError(false);
                   }}
-                  className={`rounded-xl border px-4 py-2 gap-y-1 bg-white dark:bg-slate-900 ${
+                  className={`rounded-xl border px-4 py-2 gap-y-1 bg-white dark:bg-darkBackgroundMuted ${
                     selected
                       ? "border-primary"
-                      : "border-slate-200 dark:border-slate-700"
+                      : "border-slate-200 dark:border-darkBorder"
                   }`}
                 >
                   <View className="flex-row items-center justify-between">
@@ -442,7 +442,7 @@ export default function ConfigureStamp() {
                     </View>
                     <View
                       className={`w-5 h-5 rounded-full border-2 items-center justify-center self-center ${
-                        selected ? "border-primary bg-primary" : "border-slate-300 dark:border-slate-600"
+                        selected ? "border-primary bg-primary" : "border-slate-300 dark:border-darkBorder"
                       }`}
                     >
                       {selected && <Check size={12} color="#FFFFFF" />}
