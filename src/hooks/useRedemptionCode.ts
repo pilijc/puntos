@@ -1,19 +1,38 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { supabase } from "@/supabase/supabase";
 import {
-  generateRedemptionCode,
+  generateRedemptionCodeWithRateLimit,
   listenToRedemptionStatus,
   cancelRedemptionCode,
 } from "@/services/user/rewards-redemption";
 import { RedemptionCode, RedemptionUpdate } from "@/type/user/reward-redemption";
 
-export type RedemptionStatus = "loading" | "active" | "redeemed" | "cancelled" | "expired" | "error";
+export type RedemptionStatus = "loading" | "active" | "redeemed" | "cancelled" | "expired" | "error" | "rate_limited";
+
+const LOCAL_COOLDOWN_SECONDS = 3;
+const GENERATION_TIMEOUT_MS = 10000;
+const localRedemptionLocks = new Map<string, number>();
+
+function withGenerationTimeout<T>(promise: Promise<T>): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timeout = setTimeout(() => {
+      reject(new Error("Redemption code generation timed out"));
+    }, GENERATION_TIMEOUT_MS);
+
+    promise
+      .then(resolve)
+      .catch(reject)
+      .finally(() => clearTimeout(timeout));
+  });
+}
 
 interface UseRedemptionCodeResult {
   redemptionCode: RedemptionCode | null;
   status: RedemptionStatus;
   errorMessage: string | null;
   timeRemaining: number;
+  rateLimitType: "cooldown" | "rate_limit" | null;
+  rateLimitTimeRemaining: number;
   generateCode: () => Promise<void>;
   cancelCode: () => Promise<void>;
   resetCode: () => void;
@@ -27,6 +46,9 @@ export function useRedemptionCode(
   const [status, setStatus] = useState<RedemptionStatus>("loading");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [timeRemaining, setTimeRemaining] = useState<number>(0);
+  const [rateLimitType, setRateLimitType] = useState<"cooldown" | "rate_limit" | null>(null);
+  const [rateLimitTimeRemaining, setRateLimitTimeRemaining] = useState<number>(0);
+  const rateLimitTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const channelRef = useRef<any | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
@@ -35,6 +57,13 @@ export function useRedemptionCode(
     if (timerRef.current) {
       clearInterval(timerRef.current);
       timerRef.current = null;
+    }
+  }, []);
+
+  const clearRateLimitTimer = useCallback(() => {
+    if (rateLimitTimerRef.current) {
+      clearInterval(rateLimitTimerRef.current);
+      rateLimitTimerRef.current = null;
     }
   }, []);
 
@@ -71,51 +100,119 @@ export function useRedemptionCode(
         return;
       }
 
-      const result = await generateRedemptionCode(user.id, rewardId, storeId);
+      const localLockKey = `${user.id}:${storeId}:${rewardId}`;
+      const localLockExpiresAt = localRedemptionLocks.get(localLockKey) ?? 0;
+      const now = Date.now();
+
+      if (localLockExpiresAt > now) {
+        const retryAfter = Math.max(1, Math.ceil((localLockExpiresAt - now) / 1000));
+        setStatus("rate_limited");
+        setRateLimitType("cooldown");
+        setRateLimitTimeRemaining(retryAfter);
+        setErrorMessage("Please wait a moment before generating another code.");
+        startRateLimitTimer(retryAfter);
+        return;
+      }
+
+      localRedemptionLocks.set(localLockKey, now + LOCAL_COOLDOWN_SECONDS * 1000);
+
+      const result = await withGenerationTimeout(
+        generateRedemptionCodeWithRateLimit(user.id, rewardId, storeId)
+      );
 
       if (result.success && result.code) {
         setRedemptionCode(result.code);
         setStatus("active");
       } else {
-        setStatus("error");
-        setErrorMessage(result.message || "Failed to generate code");
+        const message = result.message || "Failed to generate code";
+        if (result.rateLimitType) {
+          const retryAfter = result.retryAfter ?? (result.rateLimitType === "cooldown" ? 3 : 60);
+          localRedemptionLocks.set(localLockKey, Date.now() + retryAfter * 1000);
+          setStatus("rate_limited");
+          setRateLimitType(result.rateLimitType);
+          setRateLimitTimeRemaining(retryAfter);
+          setErrorMessage(message);
+          startRateLimitTimer(retryAfter);
+        } else if (message.includes("Please wait a moment before generating another code")) {
+          setStatus("rate_limited");
+          setRateLimitType("cooldown");
+          setRateLimitTimeRemaining(3);
+          setErrorMessage(message);
+          startRateLimitTimer(3);
+        } else if (message.includes("Too many requests")) {
+          setStatus("rate_limited");
+          setRateLimitType("rate_limit");
+          setRateLimitTimeRemaining(60);
+          setErrorMessage(message);
+          startRateLimitTimer(60);
+        } else {
+          setStatus("error");
+          setErrorMessage(message);
+        }
       }
     } catch (error) {
       console.error("Error generating redemption code:", error);
       setStatus("error");
-      setErrorMessage("An error occurred while generating code");
+      setErrorMessage(
+        error instanceof Error && error.message.includes("timed out")
+          ? "Generating the code took too long. Please try again."
+          : "An error occurred while generating code"
+      );
     }
   }, [rewardId, storeId]);
+
+  const startRateLimitTimer = useCallback((seconds: number) => {
+    clearRateLimitTimer();
+    setRateLimitTimeRemaining(seconds);
+    
+    rateLimitTimerRef.current = setInterval(() => {
+      setRateLimitTimeRemaining((prev) => {
+        if (prev <= 1) {
+          clearRateLimitTimer();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  }, [clearRateLimitTimer]);
 
   // Cancel redemption code
   const cancelCode = useCallback(async () => {
     if (!redemptionCode) return;
 
-    try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+    const codeToCancel = redemptionCode;
 
-      if (user?.id) {
-        await cancelRedemptionCode(redemptionCode.id, user.id);
-        clearTimer();
-        clearSubscription();
-        setStatus("cancelled");
+    clearTimer();
+    clearSubscription();
+    setStatus("cancelled");
+    setErrorMessage(null);
+
+    try {
+      const result = await cancelRedemptionCode(codeToCancel.id, codeToCancel.user_id);
+
+      if (!result.success) {
+        setStatus("active");
+        setErrorMessage(result.message);
       }
     } catch (error) {
       console.error("Error cancelling redemption code:", error);
+      setStatus("active");
+      setErrorMessage("An error occurred while cancelling code");
     }
   }, [redemptionCode, clearTimer, clearSubscription]);
 
   // Reset code state - call when drawer closes
   const resetCode = useCallback(() => {
     clearTimer();
+    clearRateLimitTimer();
     clearSubscription();
     setRedemptionCode(null);
     setStatus("loading");
     setErrorMessage(null);
     setTimeRemaining(0);
-  }, [clearTimer, clearSubscription]);
+    setRateLimitType(null);
+    setRateLimitTimeRemaining(0);
+  }, [clearTimer, clearRateLimitTimer, clearSubscription]);
 
   // Listen to redemption status if be change
   useEffect(() => {
@@ -161,15 +258,18 @@ export function useRedemptionCode(
   useEffect(() => {
     return () => {
       clearTimer();
+      clearRateLimitTimer();
       clearSubscription();
     };
-  }, [clearTimer, clearSubscription]);
+  }, [clearTimer, clearRateLimitTimer, clearSubscription]);
 
   return {
     redemptionCode,
     status,
     errorMessage,
     timeRemaining,
+    rateLimitType,
+    rateLimitTimeRemaining,
     generateCode,
     cancelCode,
     resetCode,

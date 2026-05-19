@@ -169,7 +169,12 @@
   "redemption": {
     "title": "Scan to redeem",
     "titleRedeemed": "Reward Redeemed",
-    "generating": "Generating...",
+    "generating": "Generating code...",
+    "limitReached": "Limit reached",
+    "limitMessage": "You have generated too many codes. Please wait before trying again.",
+    "tryAgainIn": "Try again in {{count}}s",
+    "generateFailed": "Could not generate code",
+    "generateFailedMessage": "Generating the code took too long. Please try again.",
     "expired": "EXPIRED",
     "codeExpired": "Code Expired",
     "redeemed": "Redeemed!",

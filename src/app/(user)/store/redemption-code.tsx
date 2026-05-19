@@ -50,6 +50,41 @@ function ErrorState({ message }: { message: string | null }) {
   );
 }
 
+function RateLimitedState({ 
+  message, 
+  rateLimitType, 
+  timeRemaining 
+}: { 
+  message: string | null; 
+  rateLimitType: "cooldown" | "rate_limit" | null;
+  timeRemaining: number;
+}) {
+  const isCooldown = rateLimitType === "cooldown";
+  const title = isCooldown ? "Please wait" : "Too many requests";
+  const subtitle = isCooldown 
+    ? `Retrying in ${timeRemaining} seconds...`
+    : `Try again in ${timeRemaining} seconds`;
+
+  return (
+    <View className="flex-1 bg-white dark:bg-darkBackground items-center justify-center px-6">
+      <View className="w-20 h-20 bg-orange-100 dark:bg-orange-900/20 rounded-full items-center justify-center mb-4">
+        <Clock size={40} color="#FF6600" />
+      </View>
+      <Text className="text-orange-600 font-poppins-bold text-xl mb-2">
+        {title}
+      </Text>
+      <Text className="text-neutral-600 dark:text-neutral-400 text-center text-sm mb-4">
+        {message}
+      </Text>
+      <View className="bg-orange-50 dark:bg-orange-900/10 rounded-2xl px-6 py-4">
+        <Text className="text-orange-600 font-poppins-semibold text-lg">
+          {subtitle}
+        </Text>
+      </View>
+    </View>
+  );
+}
+
 function SuccessState() {
   return (
     <View className="flex-1 bg-white dark:bg-darkBackground items-center justify-center">
@@ -246,6 +281,8 @@ export default function RedemptionCodeScreen() {
     status,
     errorMessage,
     timeRemaining,
+    rateLimitType,
+    rateLimitTimeRemaining,
     generateCode,
     cancelCode,
   } = useRedemptionCode(rewardId, storeId);
@@ -273,6 +310,13 @@ export default function RedemptionCodeScreen() {
 
   // Render states
   if (status === "loading") return <LoadingState />;
+  if (status === "rate_limited") return (
+    <RateLimitedState 
+      message={errorMessage} 
+      rateLimitType={rateLimitType} 
+      timeRemaining={rateLimitTimeRemaining}
+    />
+  );
   if (status === "error") return <ErrorState message={errorMessage} />;
   if (status === "redeemed") return <SuccessState />;
   if (status === "cancelled" || status === "expired") return <CancelledState />;

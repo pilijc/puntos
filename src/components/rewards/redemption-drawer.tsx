@@ -12,7 +12,7 @@ import {
 } from "react-native";
 import { View, Text, TouchableOpacity, Image } from "@/tw";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { X, Store } from "lucide-react-native";
+import { X, Store, Clock, CircleAlert } from "lucide-react-native";
 import QRCode from "react-native-qrcode-svg";
 import { Modal } from "@/components/modal";
 import { Button } from "@/components/button";
@@ -30,7 +30,10 @@ interface RedemptionDrawerProps {
   rewardImage?: string;
   redemptionCode?: { code: string; expires_at: string };
   timeRemaining?: number;
-  status?: "loading" | "active" | "redeemed" | "cancelled" | "expired" | "error";
+  status?: "loading" | "active" | "redeemed" | "cancelled" | "expired" | "error" | "rate_limited";
+  errorMessage?: string | null;
+  rateLimitType?: "cooldown" | "rate_limit" | null;
+  rateLimitTimeRemaining?: number;
   onClose: () => void;
   onCancel?: () => void;
 }
@@ -49,6 +52,9 @@ export function RedemptionDrawer({
   redemptionCode,
   timeRemaining = 0,
   status,
+  errorMessage,
+  rateLimitType,
+  rateLimitTimeRemaining,
   onClose,
   onCancel,
 }: RedemptionDrawerProps) {
@@ -60,8 +66,14 @@ export function RedemptionDrawer({
   const backdropOpacity = useRef(new Animated.Value(0)).current;
 
   const isExpiringSoon = (timeRemaining || 0) < 60;
+  const isGenerating = status === "loading";
+  const isRateLimited = status === "rate_limited";
+  const isError = status === "error";
+  const canDismiss = !isGenerating;
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showRateLimitModal, setShowRateLimitModal] = useState(false);
+  const statusRef = useRef(status);
 
   // Maintain internal visibility to allow closing animation before unmounting via Modal
   const [internalVisible, setInternalVisible] = useState(visible);
@@ -95,12 +107,24 @@ export function RedemptionDrawer({
   );
 
   const handleSwipeClose = useCallback(() => {
-    if (status === "cancelled" || status === "redeemed") {
+    const currentStatus = statusRef.current;
+
+    if (currentStatus === "loading") {
+      Animated.spring(translateY, {
+        toValue: 0,
+        damping: 20,
+        stiffness: 120,
+        useNativeDriver: true,
+      }).start();
+      return;
+    }
+
+    if (currentStatus === "cancelled" || currentStatus === "redeemed" || currentStatus === "rate_limited" || currentStatus === "error") {
       closeSheet();
     } else {
       setShowConfirmModal(true);
     }
-  }, [status, closeSheet]);
+  }, [translateY, closeSheet]);
 
   const panResponder = useRef(
     PanResponder.create({
@@ -134,9 +158,9 @@ export function RedemptionDrawer({
     }).start();
   };
 
-  const handleConfirmCancel = async () => {
+  const handleConfirmCancel = () => {
     setShowConfirmModal(false);
-    if (onCancel) await onCancel();
+    onCancel?.();
     setShowSuccessModal(true);
   };
 
@@ -144,6 +168,16 @@ export function RedemptionDrawer({
     setShowSuccessModal(false);
     closeSheet();
   };
+
+  const requestClose = useCallback(() => {
+    if (!canDismiss) return;
+
+    if (status === "cancelled" || status === "redeemed" || isRateLimited || isError) {
+      closeSheet();
+    } else {
+      setShowConfirmModal(true);
+    }
+  }, [canDismiss, status, isRateLimited, isError, closeSheet]);
 
   useEffect(() => {
     if (visible && !isWeb) {
@@ -170,6 +204,16 @@ export function RedemptionDrawer({
     }
   }, [visible]);
 
+  useEffect(() => {
+    statusRef.current = status;
+  }, [status]);
+
+  useEffect(() => {
+    if (isRateLimited) {
+      setShowRateLimitModal(true);
+    }
+  }, [isRateLimited]);
+
   if (!visible) return null;
 
   const formattedCode = redemptionCode?.code?.replace(/-/g, " ") || "";
@@ -180,11 +224,7 @@ export function RedemptionDrawer({
       transparent
       animationType="none"
       statusBarTranslucent
-      onRequestClose={() =>
-        status === "cancelled" || status === "redeemed"
-          ? closeSheet()
-          : setShowConfirmModal(true)
-      }
+      onRequestClose={requestClose}
     >
       <View className="flex-1" style={{ justifyContent: "flex-end" }}>
 
@@ -196,11 +236,8 @@ export function RedemptionDrawer({
           <TouchableOpacity
             style={StyleSheet.absoluteFillObject}
             activeOpacity={1}
-            onPress={() =>
-              status === "cancelled" || status === "redeemed"
-                ? closeSheet()
-                : setShowConfirmModal(true)
-            }
+            disabled={!canDismiss}
+            onPress={requestClose}
           />
         </Animated.View>
 
@@ -221,12 +258,10 @@ export function RedemptionDrawer({
                   </Text>
 
                   <TouchableOpacity
-                    onPress={() =>
-                      status === "cancelled" || status === "redeemed"
-                        ? closeSheet()
-                        : setShowConfirmModal(true)
-                    }
+                    onPress={requestClose}
+                    disabled={!canDismiss}
                     className="absolute right-6 top-3 p-1"
+                    style={{ opacity: canDismiss ? 1 : 0.35 }}
                   >
                     <X size={24} color={isDark ? "#fff" : "#1F2937"} />
                   </TouchableOpacity>
@@ -247,7 +282,15 @@ export function RedemptionDrawer({
                               {translate("user.rewards.redemption.generating")}
                             </Text>
                           </>
-                        ): status === "expired" || timeRemaining === 0 ? (
+                        ) : status === "rate_limited" ? (
+                          <View className="w-[140px] h-[140px] items-center justify-center bg-orange-50 dark:bg-orange-900/20 rounded-lg px-3">
+                            <Clock size={48} color="#FF6600" />
+                          </View>
+                        ) : isError ? (
+                          <View className="w-[140px] h-[140px] items-center justify-center bg-red-50 dark:bg-red-900/20 rounded-lg px-3">
+                            <CircleAlert size={48} color="#EF4444" />
+                          </View>
+                        ) : status === "expired" || timeRemaining === 0 ? (
                           <View className="w-[140px] h-[140px] items-center justify-center bg-gray-100 dark:bg-gray-800 rounded-lg">
                             <Text className="text-red-500 text-sm font-poppins-bold text-center px-4"> 
                               {translate("user.rewards.redemption.codeExpired")}
@@ -258,29 +301,53 @@ export function RedemptionDrawer({
                         )}
                       </View>
 
-                      <Text className="text-2xl font-poppins-bold tracking-[0.15em] text-neutral-900 dark:text-white">
-                        {status === "loading" ? "..." : status === "expired" || timeRemaining === 0 ? translate("user.rewards.redemption.expired") : formattedCode}
-                      </Text>
+                      {status !== "loading" && !isRateLimited && !isError && (
+                        <Text className="text-2xl font-poppins-bold tracking-[0.15em] text-neutral-900 dark:text-white">
+                          {status === "expired" || timeRemaining === 0
+                            ? translate("user.rewards.redemption.expired")
+                            : formattedCode}
+                        </Text>
+                      )}
 
                       {/* Expired overlay */}
-                      {status !== "loading" && (status === "expired" || timeRemaining === 0) && (
+                      {status !== "loading" && !isRateLimited && !isError && (status === "expired" || timeRemaining === 0) && (
                         <View className="absolute inset-0 bg-black/50 rounded-xl items-center justify-center">
                           <X size={32} color="#EF4444" />
                         </View>
                       )}
                     </View>
 
-                    {status !== "loading" && (
+                    {status !== "loading" && !isRateLimited && (
                       <Text className="text-[11px] text-neutral-500 dark:text-neutral-400 font-poppins mt-1">{translate("user.rewards.redemption.timeLeft")}</Text>
                     )}
 
-                    {status !== "loading" && (
-                      <Text className={`text-2xl font-poppins-bold mt-1 ${isExpiringSoon ? "text-red-500" : "text-neutral-900 dark:text-white"}`}>
+                    {isRateLimited && (
+                      <Text className="text-base text-orange-600 dark:text-orange-400 font-poppins-bold mt-1">
+                        {translate("user.rewards.redemption.limitReached")}
+                      </Text>
+                    )}
+
+                    {isRateLimited && (
+                      <Text className="text-xs text-neutral-500 dark:text-neutral-400 font-poppins text-center mt-1 px-6">
+                        {errorMessage || translate("user.rewards.redemption.limitMessage")}
+                      </Text>
+                    )}
+
+                    {isError && (
+                      <Text className="text-xs text-neutral-500 dark:text-neutral-400 font-poppins text-center mt-1 px-6">
+                        {errorMessage || translate("user.rewards.redemption.generateFailedMessage")}
+                      </Text>
+                    )}
+
+                    {status !== "loading" && !isError && (
+                      <Text className={`text-2xl font-poppins-bold mt-1 ${status === "rate_limited" ? "text-orange-600" : isExpiringSoon ? "text-red-500" : "text-neutral-900 dark:text-white"}`}>
                         {status === "redeemed"
                           ? translate("user.rewards.redemption.redeemed")
-                          : status === "expired" || timeRemaining === 0
-                            ? "0:00"
-                            : formatTime(timeRemaining)}
+                          : isRateLimited
+                            ? translate("user.rewards.redemption.tryAgainIn", { count: rateLimitTimeRemaining ?? 0 })
+                            : status === "expired" || timeRemaining === 0
+                              ? "0:00"
+                              : formatTime(timeRemaining)}
                       </Text>
                     )}
                   </View>
@@ -365,6 +432,16 @@ export function RedemptionDrawer({
           message={translate("user.rewards.redemption.cancelledMessage")}
           buttons={[
             { label: translate("user.rewards.redemption.gotIt"), onPress: handleSuccessClose, variant: "primary" },
+          ]}
+        />
+
+        <Modal
+          visible={showRateLimitModal}
+          onClose={() => setShowRateLimitModal(false)}
+          title={translate("user.rewards.redemption.limitReached")}
+          message={translate("user.rewards.redemption.tryAgainIn", { count: rateLimitTimeRemaining ?? 0 })}
+          buttons={[
+            { label: translate("user.rewards.redemption.gotIt"), onPress: () => setShowRateLimitModal(false), variant: "primary" },
           ]}
         />
       </View>
