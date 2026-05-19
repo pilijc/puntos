@@ -1,9 +1,11 @@
 import { useCallback, useEffect } from "react";
 import { AppState, AppStateStatus } from "react-native";
 import { supabase } from "@/supabase/supabase";
-import { checkDeviceSessionLimitService, deactivateCurrentDeviceSessionService, upsertDeviceSessionService, refreshDeviceHeartbeatService, getActiveDeviceSessionsService } from "@/services/store-manager/device-session-service";
+import { deactivateCurrentDeviceSessionService, refreshDeviceHeartbeatService, getActiveDeviceSessionsService } from "@/services/store-manager/device-session-service";
+import { getDeviceSessionLimitForRole, getDeviceSessionLimitForRoute, registerDeviceSessionForRole, registerDeviceSessionForRoute } from "@/services/shared/device-session-route-service";
 import { useDeviceSessionStore } from "@/store/store-manager/device-session-store";
 import { ManagerDeviceSession } from "@/type/store-manager/device-session";
+import type { SessionRole } from "@/config/session-limits";
 
 export function useDeviceSession(userId?: string) {
     const {
@@ -33,9 +35,9 @@ export function useDeviceSession(userId?: string) {
         };
         const sub = AppState.addEventListener("change", handler);
 
-        // 2. pulse continuously every 5 minutes while the app is actively open
-        // this prevents the 15-min timeout from incorrectly killing an active user's session
-        const intervalId = setInterval(pulseHeartbeat, 5 * 60 * 1000);
+        // 2. pulse continuously every 1 minute while the app is actively open
+        // this prevents the 10-min timeout from incorrectly killing an active user's session
+        const intervalId = setInterval(pulseHeartbeat, 1 * 60 * 1000);
 
         return () => {
             sub.remove();
@@ -47,21 +49,26 @@ export function useDeviceSession(userId?: string) {
         async (
             uid: string,
             locationLabel?: string,
+            role: SessionRole = "manager",
         ): Promise<{
             allowed: boolean;
             activeSessions: ManagerDeviceSession[];
+            maxSessions: number | null;
         }> => {
             setIsCheckingLimit(true);
             try {
-                const result = await checkDeviceSessionLimitService(uid);
+                const result = await registerDeviceSessionForRole(role, uid, locationLabel);
 
                 if (result.allowed) {
-                    await upsertDeviceSessionService(uid, locationLabel);
                     clearBlockedSessions();
-                    return { allowed: true, activeSessions: [] };
+                    return { allowed: true, activeSessions: [], maxSessions: null };
                 } else {
                     setBlockedSessions(result.activeSessions);
-                    return { allowed: false, activeSessions: result.activeSessions };
+                    return {
+                        allowed: false,
+                        activeSessions: result.activeSessions,
+                        maxSessions: getDeviceSessionLimitForRole(role),
+                    };
                 }
             } finally {
                 setIsCheckingLimit(false);
@@ -88,16 +95,28 @@ export function useDeviceSession(userId?: string) {
         }
     }, [setActiveSessions, setServerTimeMs]);
 
-    const validateHomeRouteSession = useCallback(async (homeRoute?: string) => {
-        if (homeRoute && (homeRoute === "/(store_manager)" || homeRoute.startsWith("/(store_manager)"))) {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (user) {
-                const sessionCheck = await checkAndRegisterSession(user.id);
-                return sessionCheck.allowed;
-            }
+    const validateHomeRouteSession = useCallback(async (homeRoute?: string, userIdOverride?: string) => {
+        let userId = userIdOverride;
+        if (!userId) {
+            const { data: { session } } = await supabase.auth.getSession();
+            userId = session?.user?.id;
         }
-        return true;
-    }, [checkAndRegisterSession]);
+        if (!userId) return false;
+
+        setIsCheckingLimit(true);
+        try {
+            const sessionCheck = await registerDeviceSessionForRoute(userId, homeRoute);
+            if (sessionCheck.allowed) {
+                clearBlockedSessions();
+                return true;
+            }
+
+            setBlockedSessions(sessionCheck.activeSessions);
+            return false;
+        } finally {
+            setIsCheckingLimit(false);
+        }
+    }, [clearBlockedSessions, setBlockedSessions, setIsCheckingLimit]);
 
     return {
         blockedSessions,
@@ -105,6 +124,7 @@ export function useDeviceSession(userId?: string) {
         isCheckingLimit,
         checkAndRegisterSession,
         validateHomeRouteSession,
+        getDeviceSessionLimitForRoute,
         signOutCurrentDevice,
         fetchActiveSessions,
     };

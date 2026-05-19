@@ -61,5 +61,23 @@
   "doneBadge": "DONE",
   "daysEarned": "{{count}} days earned",
   "pointsShort": "{{points}} pts",
-  "error": "Error"
+  "error": "Error",
+  "errors": {
+    "generic": "Something went wrong. Please try again.",
+    "upcomingNeedsStart": "Set a start date and time for this program, then try publishing again.",
+    "upcomingNeedsStartTitle": "Start date needed",
+    "startInPast": "The scheduled start is already in the past. Edit the program and pick a date and time that's still ahead.",
+    "startInPastTitle": "Update the start time",
+    "duplicateUpcoming": "You already have an upcoming streak for this store. End or activate it before adding another.",
+    "duplicateUpcomingTitle": "One upcoming program at a time",
+    "duplicateActive": "Another streak is still active. End it first, or schedule this one to start later.",
+    "duplicateActiveTitle": "Active program in the way",
+    "notFound": "This streak program could not be found.",
+    "premiumRequired": "Upgrade your plan to create or edit streak programs.",
+    "premiumRequiredTitle": "Plan upgrade needed",
+    "onlyDraftPublish": "Only draft programs can be published. This one is already live or scheduled.",
+    "onlyDraftPublishTitle": "Can't publish this one",
+    "onlyUpcomingActivate": "Only upcoming programs can be activated this way.",
+    "onlyUpcomingActivateTitle": "Can't activate yet"
+  }
 }

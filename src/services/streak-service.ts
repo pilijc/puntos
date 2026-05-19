@@ -162,6 +162,7 @@ export interface UserStreak {
   status: "in_progress" | "completed" | "ended" | null;
   store_streak_id: number | null;
   store_streaks?: UserStreakProgram | null;
+  streak_events?: { earned_date: string }[];
   stores?: {
     name: string;
     logo?: string;
@@ -176,7 +177,9 @@ export interface UserStreak {
 }
 
 const USER_STREAK_SELECT = `
-  *,
+  id, user_id, store_id, streak_days, last_activity_date,
+  total_earned_days, points_earned, completion_bonus_awarded,
+  completed_at, status, store_streak_id,
   store_streaks (
     id,
     title,
@@ -192,6 +195,9 @@ const USER_STREAK_SELECT = `
     start_at,
     end_date
   ),
+  streak_events (
+    earned_date
+  ).order(earned_date.desc).limit(90),
   stores (
     name,
     logo,
@@ -249,6 +255,8 @@ function buildVirtualUserStreak(
 
 export async function getUserStreaks(userId: string): Promise<UserStreak[]> {
   try {
+    console.log("[getUserStreaks] 🔍 Starting fetch for userId:", userId);
+    
     const { data, error } = await supabase
       .from("user_streaks")
       .select(USER_STREAK_SELECT)
@@ -257,9 +265,60 @@ export async function getUserStreaks(userId: string): Promise<UserStreak[]> {
       .order("streak_days", { ascending: false });
 
     if (error) {
-      console.error("Error fetching user streaks:", error.message);
+      console.error("[getUserStreaks] ❌ Supabase error:", error.message);
       return [];
     }
+
+    console.log("[getUserStreaks] ✅ Raw data received:", {
+      count: data?.length ?? 0,
+      fullRecords: data?.map(s => ({
+        id: s.id,
+        store_id: s.store_id,
+        streak_days: s.streak_days,
+        status: s.status,
+        store_streaks_status: s.store_streaks?.status,
+        store_name: s.stores?.name,
+        store_active: s.stores?.is_active,
+        stores_full: JSON.stringify(s.stores),
+      })) ?? [],
+    });
+
+    // ⚠️ RLS issue: stores relationship comes back as undefined even with RLS policy
+    // Workaround: fetch stores data SEPARATELY by store_id
+    console.log("[getUserStreaks] 🔧 Fetching stores separately due to RLS relationship issue");
+    
+    const storeIds = (data ?? []).map(s => s.store_id);
+    const { data: storesData, error: storesError } = await supabase
+      .from("stores")
+      .select("id, name, logo, address, status, is_active, location, radius")
+      .in("id", storeIds);
+
+    if (storesError) {
+      console.error("[getUserStreaks] ⚠️ Error fetching stores separately:", storesError.message);
+    } else {
+      console.log("[getUserStreaks] ✅ Fetched stores separately:", storesData?.length);
+    }
+
+    // Create a map of stores by id
+    const storesMap = new Map(
+      (storesData ?? []).map(s => [s.id, s])
+    );
+
+    // Merge stores data back into streaks
+    const enrichedData = (data ?? []).map(streak => ({
+      ...streak,
+      stores: storesMap.get(streak.store_id) ?? null,
+    }));
+
+    console.log("[getUserStreaks] 📊 After enriching with stores:", {
+      count: enrichedData.length,
+      records: enrichedData.map(s => ({
+        id: s.id,
+        store_id: s.store_id,
+        store_name: s.stores?.name,
+        store_active: s.stores?.is_active,
+      })),
+    });
 
     // Filter criteria:
     // 1. Store must be active (existing logic)
@@ -268,22 +327,46 @@ export async function getUserStreaks(userId: string): Promise<UserStreak[]> {
     //    progress when a new program (Program B) has just started.
     //    Exception: keep completed records regardless of program status so that
     //    completion bonuses remain claimable and audit history is preserved.
-    const validStreaks = (data as unknown as UserStreak[]).filter((streak) => {
-      if (!isValidStreakStore(streak)) return false;
+    const validStreaks = (enrichedData as unknown as UserStreak[]).filter((streak) => {
+      const storeValid = isValidStreakStore(streak);
       const programStatus = streak.store_streaks?.status;
-      // Keep if: program is still active OR the user already completed this streak
       const isActiveProgram = programStatus === "active";
       const isUserCompleted = streak.status === "completed";
-      return isActiveProgram || isUserCompleted;
+      const passes = storeValid && (isActiveProgram || isUserCompleted);
+      
+      console.log(`[getUserStreaks] 🔎 Filter check - Store: ${streak.stores?.name ?? "NULL"}`, {
+        storeValid,
+        programStatus,
+        isActiveProgram,
+        isUserCompleted,
+        passes,
+        stores_exists: !!streak.stores,
+        stores_status: streak.stores?.status,
+        stores_is_active: streak.stores?.is_active,
+      });
+      
+      return passes;
+    });
+
+    console.log("[getUserStreaks] 📋 After filtering:", {
+      validCount: validStreaks.length,
+      filtered: validStreaks.map(s => ({
+        id: s.id,
+        store_name: s.stores?.name,
+        status: s.status,
+      })),
     });
 
     // Map PostGIS location into legacy coordinate props expected by the UI.
-    return validStreaks.map(streak => ({
+    const result = validStreaks.map(streak => ({
       ...streak,
       stores: streak.stores ? withPostGISCoordinates(streak.stores) : undefined
     } as UserStreak));
+
+    console.log("[getUserStreaks] ✨ Final result:", result.length, "streaks returned");
+    return result;
   } catch (error) {
-    console.error("Exception fetching user streaks:", error);
+    console.error("[getUserStreaks] 💥 Exception:", error);
     return [];
   }
 }
@@ -293,21 +376,53 @@ export async function getUserStreakByStore(
   userId: string,
   storeId: number,
 ): Promise<UserStreak | null> {
+  if (!storeId || isNaN(storeId)) return null;
   try {
-    const [{ data: streakRows, error: streakError }, { data: store, error: storeError }] =
-      await Promise.all([
-        supabase
-          .from("user_streaks")
-          .select(USER_STREAK_SELECT)
-          .eq("user_id", userId)
-          .eq("store_id", storeId)
-          .order("updated_at", { ascending: false }),
-        supabase
-          .from("stores")
-          .select("id, name, logo, address, status, is_active, location, radius")
-          .eq("id", storeId)
-          .maybeSingle(),
-      ]);
+    // Fire ALL 4 queries in parallel — avoids the sequential waterfall where
+    // store_feature + store_streaks only start after user_streaks finishes.
+    const [
+      { data: streakRows, error: streakError },
+      { data: store, error: storeError },
+      { data: featureRow, error: featureError },
+      { data: programRow, error: programError },
+    ] = await Promise.all([
+      supabase
+        .from("user_streaks")
+        .select(USER_STREAK_SELECT)
+        .eq("user_id", userId)
+        .eq("store_id", storeId)
+        .order("updated_at", { ascending: false }),
+      supabase
+        .from("stores")
+        .select("id, name, logo, address, status, is_active, location, radius")
+        .eq("id", storeId)
+        .maybeSingle(),
+      supabase
+        .from("store_feature")
+        .select("streak_enabled")
+        .eq("store_id", storeId)
+        .maybeSingle(),
+      supabase
+        .from("store_streaks")
+        .select(`
+          id,
+          title,
+          streak_length,
+          max_days_cap,
+          fixed_points_per_day,
+          points_mode,
+          starting_points,
+          increment_value,
+          completion_bonus_points,
+          reward_description,
+          status,
+          start_at,
+          end_date
+        `)
+        .eq("store_id", storeId)
+        .eq("status", "active")
+        .maybeSingle(),
+    ]);
 
     if (streakError) throw new Error(streakError.message);
     if (storeError) throw new Error(storeError.message);
@@ -338,38 +453,10 @@ export async function getUserStreakByStore(
       } as UserStreak;
     }
 
+    // No existing streak row — use the eagerly-fetched store_feature + store_streaks results
     if (!store || store.status !== "active" || !store.is_active) {
       return null;
     }
-
-    const [{ data: featureRow, error: featureError }, { data: programRow, error: programError }] =
-      await Promise.all([
-        supabase
-          .from("store_feature")
-          .select("streak_enabled")
-          .eq("store_id", storeId)
-          .maybeSingle(),
-        supabase
-          .from("store_streaks")
-          .select(`
-            id,
-            title,
-            streak_length,
-            max_days_cap,
-            fixed_points_per_day,
-            points_mode,
-            starting_points,
-            increment_value,
-            completion_bonus_points,
-            reward_description,
-            status,
-            start_at,
-            end_date
-          `)
-          .eq("store_id", storeId)
-          .eq("status", "active")
-          .maybeSingle(),
-      ]);
 
     if (featureError) throw new Error(featureError.message);
     if (programError) throw new Error(programError.message);

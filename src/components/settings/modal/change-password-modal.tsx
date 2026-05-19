@@ -1,12 +1,12 @@
 import React, { useState, useMemo } from "react";
 import { KeyboardAvoidingView, useColorScheme } from "react-native";
 import { View, Text } from "@/tw";
-import { supabase } from "@/supabase/supabase";
 import { Modal, type ModalButton } from "@/components/modal";
 import { TextField } from "@/components/text-field";
 import { useTranslation } from "react-i18next";
 import { CheckCircle2, Circle } from "lucide-react-native";
 import { usePasswordValidation } from "@/hooks/use-password-validation";
+import { useChangePasswordMutation } from "@/hooks/user/rq";
 
 interface Props {
     visible: boolean;
@@ -20,12 +20,13 @@ export default function ChangePasswordModal({ visible, onClose }: Props) {
     const [currentPassword, setCurrentPassword] = useState("");
     const [newPassword, setNewPassword] = useState("");
     const [repeatNewPassword, setRepeatNewPassword] = useState("");
-    const [loading, setLoading] = useState(false);
     const [feedbackModal, setFeedbackModal] = useState<{
         title: string;
         message: string;
         buttons: ModalButton[];
     } | null>(null);
+    const changePasswordMutation = useChangePasswordMutation();
+    const loading = changePasswordMutation.isPending;
 
     const { requirements, allMet } = usePasswordValidation(newPassword);
 
@@ -66,19 +67,8 @@ export default function ChangePasswordModal({ visible, onClose }: Props) {
             return;
         }
 
-        setLoading(true);
         try {
-            const { data: { user }, error: userError } = await supabase.auth.getUser();
-            if (userError || !user?.email) throw new Error("Could not find authenticated user");
-
-            const { error: signInError } = await supabase.auth.signInWithPassword({
-                email: user.email,
-                password: currentPassword,
-            });
-            if (signInError) throw new Error(translate("settings.account.security.changePassword.error.incorrect"));
-
-            const { error: updateError } = await supabase.auth.updateUser({ password: newPassword });
-            if (updateError) throw updateError;
+            await changePasswordMutation.mutateAsync({ currentPassword, newPassword });
 
             setFeedbackModal({
                 title: translate("label.confirm"),
@@ -92,10 +82,11 @@ export default function ChangePasswordModal({ visible, onClose }: Props) {
                 }]
             });
         } catch (error: any) {
-            const errorMessage = error instanceof Error ? error.message : String(error);
+            const rawMessage = error instanceof Error ? error.message : String(error);
+            const errorMessage = rawMessage === "INCORRECT_CURRENT_PASSWORD"
+                ? translate("settings.account.security.changePassword.error.incorrect")
+                : rawMessage;
             errorAlert(errorMessage || translate("settings.account.security.changePassword.error.failed"));
-        } finally {
-            setLoading(false);
         }
     };
 

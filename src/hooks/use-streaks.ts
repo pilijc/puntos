@@ -1,45 +1,64 @@
-import { useState, useCallback, useEffect } from "react";
+import { create } from "zustand";
 import { getUserStreaks, UserStreak } from "@/services/streak-service";
-import { useAuthStore } from "@/store/auth-store";
 import { supabase } from "@/supabase/supabase";
 
-export function useStreaks() {
-  const [streaks, setStreaks] = useState<UserStreak[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
+interface StreaksState {
+  streaks: UserStreak[];
+  isLoading: boolean;
+  error: Error | null;
+  hasFetchedOnce: boolean;
+  fetchStreaks: () => Promise<void>;
+  refetch: () => Promise<void>; 
+}
 
-  const { sessionToken } = useAuthStore(); // Check session
+export const useStreaks = create<StreaksState>((set, get) => ({
+  streaks: [],
+  isLoading: false,
+  error: null,
+  hasFetchedOnce: false,
 
-  const fetchStreaks = useCallback(async () => {
+  fetchStreaks: async () => {
+    console.log("[useStreaks] 🚀 Starting fetchStreaks, hasFetchedOnce:", get().hasFetchedOnce);
+    
+    // Only set loading true if it's the very first fetch, to prevent UI flashes on background refetches
+    if (!get().hasFetchedOnce) {
+      set({ isLoading: true, error: null });
+      console.log("[useStreaks] 🔄 First fetch - showing loading state");
+    } else {
+      set({ error: null });
+      console.log("[useStreaks] 🔄 Background refetch - silent mode");
+    }
+
     try {
-      setIsLoading(true);
-      setError(null);
-
-      const { data: { user } } = await supabase.auth.getUser();
+      // getSession() uses the locally cached token — no network round-trip.
+      const { data: { session } } = await supabase.auth.getSession();
+      const user = session?.user;
       if (!user?.id) {
-        setIsLoading(false);
-        setStreaks([]);
+        console.warn("[useStreaks] ⚠️ No user found in session");
+        set({ streaks: [], isLoading: false, hasFetchedOnce: true });
         return;
       }
 
+      console.log("[useStreaks] 👤 Fetching streaks for user:", user.id);
       const data = await getUserStreaks(user.id);
-      setStreaks(data);
+      console.log("[useStreaks] 📊 Streaks fetched successfully:", {
+        count: data.length,
+        streaks: data.map(s => ({
+          id: s.id,
+          store_name: s.stores?.name,
+          streak_days: s.streak_days,
+          status: s.status,
+        })),
+      });
+      set({ streaks: data, isLoading: false, hasFetchedOnce: true });
     } catch (e: any) {
-      setError(e);
-    } finally {
-      setIsLoading(false);
+      console.error("[useStreaks] 💥 Error fetching streaks:", e);
+      set({ error: e, isLoading: false, hasFetchedOnce: true });
     }
-  }, [sessionToken]);
+  },
 
-  // Initial fetch
-  useEffect(() => {
-    fetchStreaks();
-  }, [fetchStreaks]);
-
-  return {
-    streaks,
-    isLoading,
-    error,
-    refetch: fetchStreaks,
-  };
-}
+  refetch: async () => {
+    console.log("[useStreaks] 🔃 Refetch called");
+    await get().fetchStreaks();
+  },
+}));

@@ -24,17 +24,13 @@ interface UserStoreListItemProps {
     isNearby: boolean;
     logo?: string | null;
     isJoined?: boolean;
-    /** false = store has no active stamp program */
     stampEnabled?: boolean;
-    /** true = store has an active streak program (user may not have started) */
     streakProgramActive?: boolean;
-    /** null only when streakProgramActive is false */
     streakDays?: number | null;
     streakTarget?: number | null;
   };
   index: number;
   sectionDelay?: number;
-  /** When true the progress section starts expanded (e.g. ≤ 2 nearby stores) */
   defaultExpanded?: boolean;
 }
 
@@ -57,10 +53,8 @@ export default function UserStoreListItem({
     ? (streakDays / Math.max(streakTarget, 1)) * 100
     : 0;
 
-  // Hide chevron entirely when neither feature is active
   const hasAnyProgress = !!(store.stampEnabled !== false || hasStreak);
 
-  // Press scale
   const scale = useSharedValue(1);
   const animatedScaleStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
@@ -79,7 +73,6 @@ export default function UserStoreListItem({
         className="bg-white dark:bg-darkBackgroundCard rounded-3xl p-4 border border-neutral-100 dark:border-darkBorder shadow-sm shadow-neutral-100 dark:shadow-none overflow-hidden"
       >
         <View className="flex-row items-center">
-          {/* Main tappable area → store detail */}
           <Pressable
             onPress={() => router.push(`/store/${store.id}`)}
             onPressIn={handlePressIn}
@@ -122,7 +115,6 @@ export default function UserStoreListItem({
             </View>
           </Pressable>
 
-          {/* Chevron toggle — hidden when both stamp & streak are inactive */}
           {hasAnyProgress && (
             <TouchableOpacity
               onPress={() => setIsExpanded(!isExpanded)}
@@ -138,14 +130,12 @@ export default function UserStoreListItem({
           )}
         </View>
 
-        {/* ── Progress Section — only rendered when at least one feature is active ── */}
         {hasAnyProgress && isExpanded && (
           <AnimatedView
             entering={FadeIn.duration(180)}
             exiting={FadeOut.duration(150)}
             className="mt-4 pt-3 border-t border-neutral-100 dark:border-darkBorder gap-y-3"
           >
-            {/* Streak progress — only shown when store has an active streak program */}
             {hasStreak ? (
               <View>
                 <View className="flex-row items-center justify-between mb-1.5">
@@ -167,7 +157,6 @@ export default function UserStoreListItem({
                 </View>
               </View>
             ) : (
-              // Placeholder row when store has no streak program
               <View className="flex-row items-center gap-x-1 opacity-40">
                 <Flame size={13} color="#9CA3AF" />
                 <Text className="text-[10px] font-poppins-medium text-neutral-400 dark:text-neutral-500">
@@ -176,7 +165,6 @@ export default function UserStoreListItem({
               </View>
             )}
 
-            {/* Stamp progress */}
             {store.stampEnabled !== false ? (
               <View>
                 <View className="flex-row items-center justify-between mb-1.5">

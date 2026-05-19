@@ -42,7 +42,8 @@ const rewardSortOptions = [
 export default function StoreOverviewDetail() {
   const { t: translate } = useTranslation();
   const params = useLocalSearchParams<{ storeId?: string }>();
-  const storeId = params.storeId;
+  const rawStoreId = params.storeId;
+  const storeId = Array.isArray(rawStoreId) ? rawStoreId[0] : rawStoreId;
 
   const {
     rewardSort,
@@ -97,18 +98,17 @@ export default function StoreOverviewDetail() {
 
   const isStoreCached = storeId ? fetchedStoreIds.includes(Number(storeId)) : false;
 
-  // Immediately capture the first mounting frame without waiting for useEffect cycles
-  const [isInitialLoading, setIsInitialLoading] = useState(!isStoreCached);
-
   useEffect(() => {
-    if (!isStoreCached) {
-      setIsInitialLoading(true);
-      const timer = setTimeout(() => setIsInitialLoading(false), 500);
-      return () => clearTimeout(timer);
-    } else {
-      setIsInitialLoading(false);
-    }
-  }, [storeId, isStoreCached]);
+    console.log("[StoreDetail] Skeleton state check:", {
+      isSwitchingStore,
+      isLoadingRewardsFeatures,
+      isRefreshingLocal,
+      storeId,
+      hasDisplayStreaks: displayStreaks.length > 0,
+      hasDisplayStamps: displayStamps.length > 0,
+      upcomingStreak: !!upcomingStreak
+    });
+  }, [isSwitchingStore, isLoadingRewardsFeatures, isRefreshingLocal, storeId, displayStreaks.length, displayStamps.length, !!upcomingStreak]);
 
   const [isRefreshingLocal, setIsRefreshingLocal] = useState(false);
 
@@ -188,6 +188,8 @@ export default function StoreOverviewDetail() {
       backgroundClassName="bg-backgroundMuted dark:bg-darkBackground"
       contentContainerClassName="gap-y-6"
       contentGap={24}
+      edges={["top", "left", "right"]}
+      topPadding={0}
       onTouchStart={handleCarouselInteraction}
       refreshControl={
         <RefreshControl
@@ -201,6 +203,7 @@ export default function StoreOverviewDetail() {
       <View className="flex-row items-center justify-between gap-x-4 mb-[-12px] z-50 px-2">
         <TouchableOpacity
           onPress={() => router.back()}
+          hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
           className="p-1 -ml-1 bg-black/30 rounded-full"
         >
           <ChevronLeft
@@ -349,8 +352,9 @@ export default function StoreOverviewDetail() {
       </View>
 
       <View>
-        {(isSwitchingStore || isInitialLoading || isLoadingRewardsFeatures) ? (
-          // Skeleton shimmer while switching stores
+        {(isSwitchingStore || (isLoadingRewardsFeatures && !isStoreCached)) ? (
+          // Skeleton shimmer while switching stores OR loading a new store from scratch.
+          // We DO NOT show the skeleton during background refreshes of already cached stores.
           <ProgramSkeleton />
         ) : (
           <>

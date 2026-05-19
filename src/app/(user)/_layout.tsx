@@ -1,13 +1,15 @@
 import { Tabs, Redirect } from 'expo-router';
 import React, { useEffect } from 'react';
-import { useColorScheme, Platform } from 'react-native';
+import { useColorScheme, Platform, AppState } from 'react-native';
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 import { Compass, Store, History, Settings } from 'lucide-react-native';
 import { useProfile } from '@/hooks/user/use-profile';
 import { useLocationSync } from '@/hooks/user/use-location-sync';
-import { getMutedStores } from '@/services/user/mute-service';
 import { useStoreStore } from '@/store/user/store-store';
+import { refreshUserDeviceHeartbeatService } from '@/services/user/device-session-service';
+import { useMutedStoresQuery } from '@/hooks/user/rq';
+
 
 function UserTabs() {
   const colorScheme = useColorScheme();
@@ -17,29 +19,58 @@ function UserTabs() {
   const { user, preferences } = useProfile();
   useLocationSync(user?.id, preferences?.location_enabled ?? false);
   const { setMutedStoreIds, setMutedStoresHydrated } = useStoreStore();
+  const mutedStoresQuery = useMutedStoresQuery(user?.id);
 
   useEffect(() => {
-    let isActive = true;
     if (user?.id) {
       setMutedStoresHydrated(false);
-      getMutedStores()
-        .then((ids) => {
-          if (isActive) {
-            setMutedStoreIds(ids);
-            setMutedStoresHydrated(true);
-          }
-        })
-        .catch((err) => {
-          console.error("[Mute] fetch failed:", err);
-          if (isActive) setMutedStoresHydrated(true);
-        });
+    } else {
+      setMutedStoreIds([]);
+      setMutedStoresHydrated(false);
+    }
+  }, [user?.id, setMutedStoreIds, setMutedStoresHydrated]);
+
+  useEffect(() => {
+    if (!user?.id) return;
+
+    if (mutedStoresQuery.data) {
+      setMutedStoreIds(mutedStoresQuery.data);
+      setMutedStoresHydrated(true);
+    } else if (mutedStoresQuery.isError) {
+      console.error("[Mute] fetch failed:", mutedStoresQuery.error);
+      setMutedStoresHydrated(true);
     } else {
       setMutedStoresHydrated(false);
     }
+  }, [
+    user?.id,
+    mutedStoresQuery.data,
+    mutedStoresQuery.error,
+    mutedStoresQuery.isError,
+    setMutedStoreIds,
+    setMutedStoresHydrated,
+  ]);
+
+  // Keep the user's device session alive while they are actively using the app
+  useEffect(() => {
+    if (!user?.id) return;
+    const userId = user.id;
+
+    const pulse = () => { refreshUserDeviceHeartbeatService(userId).catch(() => {}); };
+
+    // ping when app comes back to foreground
+    const appStateSub = AppState.addEventListener('change', (state) => {
+      if (state === 'active') pulse();
+    });
+    // also ping every 1 minute while app is open
+    const intervalId = setInterval(pulse, 1 * 60 * 1000);
+
     return () => {
-      isActive = false;
+      appStateSub.remove();
+      clearInterval(intervalId);
     };
   }, [user?.id]);
+
 
   return (
     <Tabs

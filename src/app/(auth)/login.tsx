@@ -8,6 +8,10 @@ import { useTranslation, Trans } from "react-i18next";
 import { Modal, type ModalButton } from "@/components/modal";
 import { supabase } from "@/supabase/supabase";
 import { markIntentionalSignOut } from "@/lib/intentional-signout";
+import {
+  beginLoginDeviceSessionFlow,
+  endLoginDeviceSessionFlow,
+} from "@/lib/login-device-session-flow";
 import TranslateButton from "@/components/ui/translate-button";
 import { AppHeader } from "@/components/header";
 import { TextField } from "@/components/text-field";
@@ -33,17 +37,27 @@ export default function Login() {
     buttons: ModalButton[];
   } | null>(null);
 
-  const { checkAndRegisterSession, blockedSessions, validateHomeRouteSession } = useDeviceSession();
+  const { blockedSessions, validateHomeRouteSession, getDeviceSessionLimitForRoute } = useDeviceSession();
   const [showDeviceLimitModal, setShowDeviceLimitModal] = useState(false);
+  const [blockedHomeRoute, setBlockedHomeRoute] = useState<string | null>(null);
+  const [blockedUserId, setBlockedUserId] = useState<string | null>(null);
+  const [blockedMaxSessions, setBlockedMaxSessions] = useState(1);
 
   const handleCheckAgain = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+    const userId =
+      blockedUserId ??
+      (await supabase.auth.getSession()).data.session?.user?.id ??
+      null;
+    if (!userId || !blockedHomeRoute) return;
 
-    const sessionCheck = await checkAndRegisterSession(user.id);
-    if (sessionCheck.allowed) {
+    const isAllowed = await validateHomeRouteSession(blockedHomeRoute, userId);
+    if (isAllowed) {
       setShowDeviceLimitModal(false);
-      router.replace("/(store_manager)");
+      setBlockedHomeRoute(null);
+      setBlockedUserId(null);
+      resetAuthForm();
+      endLoginDeviceSessionFlow();
+      router.replace(blockedHomeRoute as any);
     }
   };
 
@@ -80,9 +94,11 @@ export default function Login() {
     setErrors(emptyState);
 
     try {
+      beginLoginDeviceSessionFlow();
       setLoading(true);
       const data = await loginService(trimmedEmail, password);
       if (!data.success) {
+        endLoginDeviceSessionFlow();
         setModal({
           title: "You are not assigned to a store",
           message: data.message,
@@ -101,15 +117,27 @@ export default function Login() {
         return;
       }
 
-      const isAllowed = await validateHomeRouteSession(data.homeRoute);
+      const homeRoute = data.homeRoute ?? "/(user)";
+      const userId =
+        data.userId ??
+        (await supabase.auth.getSession()).data.session?.user?.id ??
+        null;
+      const isAllowed = await validateHomeRouteSession(homeRoute, userId ?? undefined);
       if (!isAllowed) {
+        setBlockedHomeRoute(homeRoute);
+        setBlockedUserId(userId);
+        const maxSessions = getDeviceSessionLimitForRoute(homeRoute);
+        setBlockedMaxSessions(maxSessions ?? 1);
         setShowDeviceLimitModal(true);
+        endLoginDeviceSessionFlow();
         return;
       }
       resetAuthForm();
       reset();
-      router.replace(data.homeRoute);
+      endLoginDeviceSessionFlow();
+      router.replace(homeRoute as any);
     } catch (error: any) {
+      endLoginDeviceSessionFlow();
       if (error?.name === "AccountBlockedError") {
         useAuthStore.getState().setRestricted(true);
         return;
@@ -129,17 +157,30 @@ export default function Login() {
 
   const handleSignInWithGoogle = async () => {
     try {
+      beginLoginDeviceSessionFlow();
       setLoadingGoogle(true);
       const data = await signInWithGoogleLoginService();
 
-      const isAllowed = await validateHomeRouteSession(data.homeRoute);
+      const homeRoute = data.homeRoute ?? "/(user)";
+      const userId =
+        data.user?.id ??
+        (await supabase.auth.getSession()).data.session?.user?.id ??
+        null;
+      const isAllowed = await validateHomeRouteSession(homeRoute, userId ?? undefined);
       if (!isAllowed) {
+        setBlockedHomeRoute(homeRoute);
+        setBlockedUserId(userId);
+        const maxSessions = getDeviceSessionLimitForRoute(homeRoute);
+        setBlockedMaxSessions(maxSessions ?? 1);
         setShowDeviceLimitModal(true);
+        endLoginDeviceSessionFlow();
         return;
       }
       resetAuthForm();
-      router.replace(data.homeRoute ?? "/(user)");
+      endLoginDeviceSessionFlow();
+      router.replace(homeRoute as any);
     } catch (error: any) {
+      endLoginDeviceSessionFlow();
       if (error?.name === "AccountBlockedError") {
         useAuthStore.getState().setRestricted(true);
         return;
@@ -253,11 +294,17 @@ export default function Login() {
       <DeviceLimitModal
         visible={showDeviceLimitModal}
         sessions={blockedSessions}
+        maxSessions={blockedMaxSessions}
         onCheckAgain={handleCheckAgain}
         onCancel={async () => {
           setShowDeviceLimitModal(false);
+          setBlockedUserId(null);
           markIntentionalSignOut();
-          await supabase.auth.signOut();
+          try {
+            await supabase.auth.signOut();
+          } finally {
+            endLoginDeviceSessionFlow();
+          }
         }}
       />
       <Modal

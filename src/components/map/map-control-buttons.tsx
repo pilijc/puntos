@@ -1,7 +1,7 @@
 import React from "react";
 import { View, TouchableOpacity } from "@/tw";
 import { useColorScheme } from "react-native";
-import { LocateFixed, Navigation2 } from "lucide-react-native";
+import { Compass, LocateFixed, Navigation2 } from "lucide-react-native";
 
 // ─── Center on User ──────────────────────────────────────────────────────────
 
@@ -54,9 +54,36 @@ export function AlignNorthButton({ isNorthUp, normalizedHeading, onPress }: Nort
         <Navigation2
           size={20}
           strokeWidth={2.35}
-          color={isNorthUp ? (isDark ? "#D1D5DB" : "#475569") : "#FB8500"}
+          color={isNorthUp ? "#FB8500" : isDark ? "#D1D5DB" : "#475569"}
         />
       </View>
+    </TouchableOpacity>
+  );
+}
+
+// ─── Heading Up ──────────────────────────────────────────────────────────────
+
+interface HeadingUpButtonProps {
+  enabled: boolean;
+  onPress: () => void;
+}
+
+export function HeadingUpButton({ enabled, onPress }: HeadingUpButtonProps) {
+  const isDark = useColorScheme() === "dark";
+
+  return (
+    <TouchableOpacity
+      accessibilityRole="button"
+      accessibilityLabel={enabled ? "Disable heading up" : "Enable heading up"}
+      activeOpacity={0.8}
+      onPress={onPress}
+      className="w-11 h-11 rounded-full items-center justify-center bg-white dark:bg-[#1C1C1E] border border-slate-200 dark:border-[#3A3A3C] shadow-md elevation-6"
+    >
+      <Compass
+        size={20}
+        strokeWidth={2.35}
+        color={enabled ? "#FB8500" : isDark ? "#D1D5DB" : "#475569"}
+      />
     </TouchableOpacity>
   );
 }
@@ -65,19 +92,23 @@ export function AlignNorthButton({ isNorthUp, normalizedHeading, onPress }: Nort
 
 interface MapControlButtonsProps {
   isFollowing: boolean;
+  isHeadingUpEnabled: boolean;
   isNorthUp: boolean;
   normalizedHeading: number;
   hasRoute: boolean;
   onCenterPress: () => void;
+  onHeadingUpPress: () => void;
   onNorthPress: () => void;
 }
 
 export function MapControlButtons({
   isFollowing,
+  isHeadingUpEnabled,
   isNorthUp,
   normalizedHeading,
   hasRoute,
   onCenterPress,
+  onHeadingUpPress,
   onNorthPress,
 }: MapControlButtonsProps) {
   return (
@@ -86,6 +117,7 @@ export function MapControlButtons({
       style={{ top: hasRoute ? 194 : 148 }}
     >
       <CenterOnUserButton isFollowing={isFollowing} onPress={onCenterPress} />
+      <HeadingUpButton enabled={isHeadingUpEnabled} onPress={onHeadingUpPress} />
       <AlignNorthButton
         isNorthUp={isNorthUp}
         normalizedHeading={normalizedHeading}

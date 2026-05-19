@@ -1,35 +1,29 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { Platform, ScrollView as RNScrollView, useWindowDimensions } from "react-native";
-import { useFocusEffect } from "expo-router";
 
-import { useManagerStoresStore } from "@/store/manager-stores-store";
 import { RecentTransaction, RetentionData, StampBucket, ActivityChartData } from "@/type/store-manager/metric";
 import { getLast7Labels, getWeekDateRange, getLast14Labels, get14DayDateRange } from "@/utils/date-helpers";
-import { useStoreDashboardBundleQuery } from "@/hooks/store-manager/rq";
+import { useManagerStoresQuery, useStoreDashboardBundleQuery } from "@/hooks/store-manager/rq";
 
 export function useStoreDashboard() {
     const { width, height } = useWindowDimensions();
     const isWeb = Platform.OS === "web" && width > 768 && height > 600;
     const metricScrollRef = useRef<RNScrollView>(null);
     
-    const {
-        stores,
-        isFetching: refreshing,
-        fetchStores: refresh,
-    } = useManagerStoresStore();
+    const storesQuery = useManagerStoresQuery();
+    const stores = storesQuery.data ?? [];
 
     const [selectedStoreId, setSelectedStoreId] = useState<number | null>(null);
     const [isDropdownVisible, setDropdownVisible] = useState(false);
 
-    useFocusEffect(
-        useCallback(() => {
-            const task = setTimeout(() => refresh(true), 0);
-            return () => clearTimeout(task);
-        }, [refresh]),
-    );
-
     useEffect(() => {
-        if (!selectedStoreId && stores.length > 0) {
+        if (stores.length === 0) {
+            if (selectedStoreId !== null) setSelectedStoreId(null);
+            return;
+        }
+
+        const selectedStoreStillAvailable = stores.some((store) => store.id === selectedStoreId);
+        if (!selectedStoreId || !selectedStoreStillAvailable) {
             setSelectedStoreId(stores[0].id);
         }
     }, [stores, selectedStoreId]);
@@ -58,8 +52,8 @@ export function useStoreDashboard() {
     const metricsLoading = bundleQuery.isPending;
 
     const handleRefresh = useCallback(async () => {
-        await Promise.all([refresh(true), bundleQuery.refetch()]);
-    }, [refresh, bundleQuery]);
+        await Promise.all([storesQuery.refetch(), bundleQuery.refetch()]);
+    }, [storesQuery, bundleQuery]);
 
     const dayLabels = useMemo(() => isWeb ? getLast14Labels() : getLast7Labels(), [isWeb]);
     const weekRange = useMemo(() => isWeb ? get14DayDateRange() : getWeekDateRange(), [isWeb]);
@@ -94,7 +88,7 @@ export function useStoreDashboard() {
         setSelectedStoreId,
         isDropdownVisible,
         setDropdownVisible,
-        refreshing,
+        refreshing: storesQuery.isFetching || bundleQuery.isRefetching,
         handleRefresh,
         activeUsers,
         todayTransactions,

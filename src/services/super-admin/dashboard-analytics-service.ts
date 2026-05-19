@@ -30,6 +30,7 @@ export interface DetailItem {
   subtitle: string;
   dateLabel: string;
   status: string;
+  imageUrl?: string;
 }
 
 export interface DetailList {
@@ -192,12 +193,17 @@ export function getDetailItems(items: DashboardRecord[], dateKeys: string[], pre
       item?.store_name ||
       item?.title ||
       (prefix === "User" ? "Unknown User" : `${prefix} ${idx + 1}`);
+    const imageUrl =
+      prefix === "User"
+        ? (item?.avatar as string | undefined)
+        : (item?.logo as string | undefined);
     return {
       key: `${prefix}-${idx}-${item?.id ?? idx}`,
       title: String(name),
       subtitle: `${dateLabel} • ${status}`,
       dateLabel,
       status,
+      imageUrl: imageUrl || undefined,
     };
   });
 

@@ -1,6 +1,6 @@
 import "react-native-url-polyfill/auto";
 import "react-native-gesture-handler";
-import "../global.css";
+import "../globalStyles";
 import "@/translation";
 import { Slot, useRouter, usePathname } from "expo-router";
 import { useFonts } from "expo-font";
@@ -18,10 +18,38 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { useAuthStore } from "@/store/auth-store";
 import { isOneSignalNativeAvailable } from "@/services/push-service";
 import { useStamps } from "@/hooks/use-stamps";
-import { checkDeviceSessionLimitService, upsertDeviceSessionService } from "@/services/store-manager/device-session-service";
+import { useStreaks } from "@/hooks/use-streaks";
+import { registerDeviceSessionForRoute } from "@/services/shared/device-session-route-service";
 import { markIntentionalSignOut } from "@/lib/intentional-signout";
+import { isLoginDeviceSessionFlowActive } from "@/lib/login-device-session-flow";
 import { useTranslation } from "react-i18next";
 import { QueryProvider } from "@/providers/query-provider";
+
+// Disable Reanimated strict mode warnings
+// The warning "Reading from `value` during component render" is expected behavior
+// when using useAnimatedStyle() and is not a bug
+if (typeof global !== 'undefined') {
+  try {
+    // Suppress React Native Reanimated warnings about reading shared values during render
+    const originalWarn = console.warn;
+    const reanimatedWarningSuppressions = [
+      'Reading from `value` during component render',
+      '[Reanimated]',
+    ];
+    
+    console.warn = (...args: any[]) => {
+      const message = args[0]?.toString?.() || '';
+      const shouldSuppress = reanimatedWarningSuppressions.some(
+        suppression => message.includes(suppression)
+      );
+      if (!shouldSuppress) {
+        originalWarn(...args);
+      }
+    };
+  } catch (e) {
+    // Ignore errors during logger setup
+  }
+}
 
 let OneSignal: typeof import("react-native-onesignal").OneSignal | null = null;
 
@@ -63,6 +91,7 @@ export default function Layout() {
   const sessionExpiredNotice = useAuthStore((s) => s.sessionExpiredNotice);
   const setSessionExpiredNotice = useAuthStore((s) => s.setSessionExpiredNotice);
   const fetchStamps = useStamps((s) => s.fetchStamps);
+  const fetchStreaks = useStreaks((s) => s.fetchStreaks);
 
   useEffect(() => {
     if (AppState.currentState === "active") {
@@ -116,25 +145,26 @@ export default function Layout() {
           const userId = session.user.id;
 
           fetchStamps();
+          fetchStreaks();
 
           await checkIfAccountDeletedService(userId);
           await checkIfAccountBlockedService(userId);
           const nextRoute = getWebAdjustedHomeRoute(await getHomeRouteForUserId(userId));
 
-          if (nextRoute === "/(store_manager)" || (typeof nextRoute === "string" && nextRoute.startsWith("/(store_manager)"))) {
-            try {
-              const sessionCheck = await checkDeviceSessionLimitService(userId);
-              if (sessionCheck.allowed) {
-                await upsertDeviceSessionService(userId);
-              } else {
-                markIntentionalSignOut();
-                await supabase.auth.signOut();
-                router.replace("/(auth)/login");
-                return;
-              }
-            } catch (deviceErr) {
-              console.warn("[DeviceSession] check failed during session restore:", deviceErr);
+          if (isLoginDeviceSessionFlowActive()) return;
+
+          try {
+            const sessionCheck = await registerDeviceSessionForRoute(userId, nextRoute);
+            if (!sessionCheck.allowed) {
+              markIntentionalSignOut();
+              await supabase.auth.signOut();
+              router.replace("/(auth)/login");
+              return;
             }
+          } catch (deviceErr) {
+            // Network / RPC failure — fail open so a transient error doesn't log the user out.
+            // The atomic RPC already falls back internally on missing-migration errors.
+            console.warn("[DeviceSession] check failed during session restore, proceeding:", deviceErr);
           }
 
           router.replace(nextRoute as any);
@@ -152,7 +182,7 @@ export default function Layout() {
     };
 
     restoreSessionAndRoute();
-  }, [fontsLoaded, router, fetchStamps]);
+  }, [fontsLoaded, router, fetchStamps, fetchStreaks]);
 
   useEffect(() => {
     const checkUserStatusOnNav = async () => {

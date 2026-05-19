@@ -37,8 +37,8 @@ export default function StoreScreenContainer({
         contentContainerStyle={[
           {
             paddingHorizontal: horizontalPadding,
-            paddingTop: Math.max(insets.top, topPadding),
-            paddingBottom: Math.max(insets.bottom, bottomPadding),
+            paddingTop: edges.includes('top') ? topPadding : Math.max(insets.top, topPadding),
+            paddingBottom: edges.includes('bottom') ? bottomPadding : Math.max(insets.bottom, bottomPadding),
             rowGap: contentGap,
           },
           contentContainerStyle,

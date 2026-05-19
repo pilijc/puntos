@@ -20,6 +20,7 @@ import {
 	useSuperAdminStores,
 	FILTERS,
 } from "@/hooks/super-admin/use-super-admin-stores";
+import { useIsDark } from "@/hooks/use-is-dark";
 
 // ── Screen ──────────────────────────────────────────────────────────────────
 const isWeb = Platform.OS === "web";
@@ -27,6 +28,7 @@ const WEB_TAB_PILL_STYLE = { flexGrow: 1, flexBasis: 120, minWidth: 0 };
 
 export default function SuperAdminStores() {
 	const { t: translate } = useTranslation();
+	const isDark = useIsDark();
 	const {
 		stores,
 		loading,
@@ -148,11 +150,20 @@ export default function SuperAdminStores() {
 	}
 
 	return (
-		<ScreenWrapper className="flex-1 bg-backgroundMuted dark:bg-darkBackground">
+		<ScreenWrapper
+			className="flex-1"
+			style={{ backgroundColor: isDark ? "#171717" : "#F3F4F6" }}
+		>
 
 			{/* ── Main Header (Uniform Style) ── */}
-			<View className="bg-white dark:bg-darkBackground border-b border-neutral-100 dark:border-darkBorder px-6 py-3">
-				<Text className="text-xl font-poppins-bold text-textPrimary dark:text-darkTextPrimary py-1">
+			<View
+				className="border-b border-neutral-100 dark:border-darkBorder px-6 py-3"
+				style={{ backgroundColor: isDark ? "#171717" : "#FFFFFF", borderBottomColor: isDark ? "#404040" : undefined }}
+			>
+				<Text
+					className="text-xl font-poppins-bold py-1"
+					style={{ color: isDark ? "#FFFFFF" : "#0F172A" }}
+				>
 					{translate("superAdmin.stores.title", { defaultValue: "Store Approvals" })}
 				</Text>
 			</View>
@@ -242,7 +253,7 @@ export default function SuperAdminStores() {
 			) : (
 				<>
 					{/* ── Filter tabs (Sub-Header) ── */}
-					<View style={{ backgroundColor: '#f8fafc', borderBottomWidth: 1, borderBottomColor: '#f1f5f9' }} className="dark:bg-darkBackground mb-0">
+					<View style={{ backgroundColor: isDark ? '#171717' : '#f8fafc', borderBottomWidth: 1, borderBottomColor: isDark ? '#404040' : '#f1f5f9' }} className="mb-0">
 						<ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 20, gap: 28, flexDirection: "row" }}>
 							{FILTERS.map((f) => {
 								const active = activeFilter === f;

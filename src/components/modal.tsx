@@ -9,6 +9,7 @@ import {
   StyleSheet,
   Platform,
 } from "react-native";
+import { useAppearanceStore } from "@/store/appearance-store";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { View, Text, TouchableOpacity } from "@/tw";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
@@ -52,7 +53,11 @@ export function Modal({
   showCloseButton = true,
   timer,
 }: ModalProps) {
-  const colorScheme = useColorScheme();
+  const nativeColorScheme = useColorScheme();
+  const { theme } = useAppearanceStore();
+  const colorScheme = Platform.OS === "web"
+    ? (theme === "system" ? nativeColorScheme : theme)
+    : nativeColorScheme;
   const isDark = colorScheme === "dark";
 
   React.useEffect(() => {
@@ -111,7 +116,7 @@ export function Modal({
                 <MaterialIcons
                   name="close"
                   size={18}
-                  color={isDark ? "#262626" : "#64748B"}
+                  color={isDark ? "#A3A3A3" : "#64748B"}
                 />
               </TouchableOpacity>
             )}

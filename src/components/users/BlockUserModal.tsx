@@ -9,7 +9,6 @@ import {
   NativeScrollEvent,
   Modal as RNModal,
   Pressable,
-  useColorScheme,
   View as RNView,
   StyleSheet,
 } from "react-native";
@@ -23,6 +22,7 @@ import { TYPO, COLORS, getBadge } from "@/type/super-admin/user";
 import { UserRecord } from "@/store/super-admin/user-store";
 import { useSuperAdminStoresStore } from "@/store/super-admin/super-admin-stores-store";
 import { useTranslation } from "react-i18next";
+import { useIsDark } from "@/hooks/use-is-dark";
 
 
 
@@ -294,8 +294,7 @@ export function BlockUserModal({
   const [cardWidth, setCardWidth] = useState(0);
   const scrollRef = useRef<GestureScrollView>(null);
   const { t: translate } = useTranslation();
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === "dark";
+  const isDark = useIsDark();
 
   const allAdminStores = useSuperAdminStoresStore(s => s.stores);
   const fetchAdminStores = useSuperAdminStoresStore(s => s.fetchStores);
@@ -375,7 +374,7 @@ export function BlockUserModal({
             right: 0,
             bottom: 0,
             width: 420,
-            backgroundColor: isDark ? "#1a1a1a" : "#f8fafc",
+            backgroundColor: isDark ? "#171717" : "#f8fafc",
             borderLeftWidth: 1,
             borderLeftColor: isDark ? "#333" : "#e2e8f0",
             shadowColor: "#000",
@@ -395,7 +394,7 @@ export function BlockUserModal({
               flexDirection: "row",
               alignItems: "center",
               justifyContent: "space-between",
-              backgroundColor: isDark ? "#1a1a1a" : "#ffffff",
+              backgroundColor: isDark ? "#171717" : "#ffffff",
             }}
           >
             <Text
@@ -426,7 +425,7 @@ export function BlockUserModal({
 
           {/* Drawer body — scrollable */}
           <ScrollView
-            style={{ flex: 1 }}
+            style={{ flex: 1, backgroundColor: isDark ? "#171717" : "#f8fafc" }}
             contentContainerStyle={{ padding: 20, paddingBottom: 120 }}
             showsVerticalScrollIndicator={true}
           >
@@ -457,7 +456,7 @@ export function BlockUserModal({
               left: 0,
               right: 0,
               padding: 20,
-              backgroundColor: isDark ? "#1a1a1a" : "#ffffff",
+              backgroundColor: isDark ? "#171717" : "#ffffff",
               borderTopWidth: 1,
               borderTopColor: isDark ? "#333" : "#e2e8f0",
               flexDirection: "row",

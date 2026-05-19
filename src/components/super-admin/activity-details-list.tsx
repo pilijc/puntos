@@ -1,7 +1,9 @@
 import React from "react";
 import { TouchableOpacity } from "react-native";
+import { Image } from "expo-image";
 import { Text, View } from "@/tw";
-import { Users, Store, RotateCcw } from "lucide-react-native";
+import { Users, User, RotateCcw } from "lucide-react-native";
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useTranslation } from "react-i18next";
 import { DetailItem } from "@/services/super-admin/dashboard-analytics-service";
 
@@ -53,7 +55,7 @@ export function ActivityDetailsList({
           <View className="py-10 items-center">
             {isUser
               ? <Users size={24} color="#CBD5E1" strokeWidth={1.5} />
-              : <Store size={24} color="#CBD5E1" strokeWidth={1.5} />
+              : <MaterialIcons name="storefront" size={24} color="#CBD5E1" />
             }
             <Text className="text-xs font-poppins text-slate-400 mt-2">
               {isUser
@@ -69,11 +71,22 @@ export function ActivityDetailsList({
                 key={item.key}
                 className={`flex-row items-center justify-between px-4 py-4 ${idx < list.length - 1 ? "border-b border-white dark:border-darkBorder/40" : ""}`}
               >
-                <View className={`w-9 h-9 rounded-full bg-white dark:bg-darkBackgroundCard items-center justify-center mr-3 shadow-sm border ${isUser ? "border-orange-50" : "border-blue-50"}`}>
-                  {isUser
-                    ? <Text className="text-xs font-poppins-bold text-orange-500">{item.title?.charAt(0)?.toUpperCase() ?? "?"}</Text>
-                    : <Store size={14} color="#3B82F6" strokeWidth={2} />
+                <View
+                  style={item.imageUrl
+                    ? { width: 36, height: 36, borderRadius: 8, overflow: "hidden" }
+                    : isUser
+                      ? { width: 36, height: 36, borderRadius: 8, backgroundColor: "#FF660015" }
+                      : { width: 36, height: 36, borderRadius: 8 }
                   }
+                  className={`items-center justify-center mr-3 border ${item.imageUrl ? "border-transparent" : isUser ? "border-primary/10" : "bg-slate-100 dark:bg-darkBackgroundCard border-transparent"}`}
+                >
+                  {item.imageUrl ? (
+                    <Image source={{ uri: item.imageUrl }} style={{ width: 36, height: 36 }} contentFit="cover" />
+                  ) : isUser ? (
+                    <User size={16} color="#FF6600" />
+                  ) : (
+                    <MaterialIcons name="storefront" size={18} color="#94A3B8" />
+                  )}
                 </View>
                 <View className="flex-1">
                   <Text className="text-sm font-poppins-bold text-slate-700 dark:text-darkTextPrimary">

@@ -54,6 +54,10 @@ export const useRewardsDataStore = create<RewardsDataState>((set, get) => ({
   setUpcomingStreakProgramMap: (upcomingStreakProgramMap) => set({ upcomingStreakProgramMap }),
 
   fetchRewardsData: async (nearbyStoreIds, displayStampStoreIds) => {
+    // Filter out NaN or invalid IDs before starting
+    nearbyStoreIds = (nearbyStoreIds ?? []).filter(id => typeof id === 'number' && !isNaN(id));
+    displayStampStoreIds = (displayStampStoreIds ?? []).filter(id => typeof id === 'number' && !isNaN(id));
+
     const { fetchedStoreIds } = get();
     // Stale-While-Revalidate constraint: only trigger hard skeleton if new stores haven't been fetched
     const fetchRequiresSkeletons = !nearbyStoreIds.every((id) => fetchedStoreIds.includes(id));
@@ -74,22 +78,73 @@ export const useRewardsDataStore = create<RewardsDataState>((set, get) => ({
 
     try {
       const allStreakStoreIds = Array.from(new Set([...nearbyStoreIds, ...displayStampStoreIds]));
-      const results = await Promise.all([
-        nearbyStoreIds.length > 0 ? getStoresWithEnabledActiveStampProgram(nearbyStoreIds) : Promise.resolve([]),
-        nearbyStoreIds.length > 0 ? supabase
-          .from("store_feature")
-          .select("store_id, stamp_enabled")
-          .in("store_id", nearbyStoreIds)
-          .then(({ data }) => 
-            (data || [])
-              .filter((row: any) => row.stamp_enabled === true)
-              .map((row: any) => Number(row.store_id))
-          ) : Promise.resolve([]),
-        getStoresWithEnabledStreaks(allStreakStoreIds),
-        displayStampStoreIds.length > 0 ? getActiveStampProgramRewards(displayStampStoreIds) : Promise.resolve([]),
-        getActiveStreakProgramsByStore(allStreakStoreIds),
-        getUpcomingStreakProgramsByStore(allStreakStoreIds),     // index 5
+      console.log('[fetchRewardsData] start', { nearbyStoreIds, displayStampStoreIds });
+
+      const p1 = nearbyStoreIds.length > 0
+        ? (console.log('[fetchRewardsData] getStoresWithEnabledActiveStampProgram start'), getStoresWithEnabledActiveStampProgram(nearbyStoreIds).then(res => { console.log('[fetchRewardsData] getStoresWithEnabledActiveStampProgram resolved'); return res; }))
+        : Promise.resolve([]);
+
+      const p2 = nearbyStoreIds.length > 0
+        ? (console.log('[fetchRewardsData] store_feature query start'), supabase
+            .from("store_feature")
+            .select("store_id, stamp_enabled")
+            .in("store_id", nearbyStoreIds)
+            .then(({ data }) => {
+              console.log('[fetchRewardsData] store_feature query resolved');
+              return (data || [])
+                .filter((row: any) => row.stamp_enabled === true)
+                .map((row: any) => Number(row.store_id));
+            }))
+        : Promise.resolve([]);
+
+      const p3 = (console.log('[fetchRewardsData] getStoresWithEnabledStreaks start'), getStoresWithEnabledStreaks(allStreakStoreIds).then(res => { console.log('[fetchRewardsData] getStoresWithEnabledStreaks resolved'); return res; }));
+
+      const p4 = displayStampStoreIds.length > 0
+        ? (console.log('[fetchRewardsData] getActiveStampProgramRewards start'), getActiveStampProgramRewards(displayStampStoreIds).then(res => { console.log('[fetchRewardsData] getActiveStampProgramRewards resolved'); return res; }))
+        : Promise.resolve([]);
+
+      const p5 = (console.log('[fetchRewardsData] getActiveStreakProgramsByStore start'), getActiveStreakProgramsByStore(allStreakStoreIds).then(res => { console.log('[fetchRewardsData] getActiveStreakProgramsByStore resolved'); return res; }));
+
+      const p6 = (console.log('[fetchRewardsData] getUpcomingStreakProgramsByStore start'), getUpcomingStreakProgramsByStore(allStreakStoreIds).then(res => { console.log('[fetchRewardsData] getUpcomingStreakProgramsByStore resolved'); return res; }));
+
+      // Wrap each promise with an individual timeout so a single slow query
+      // doesn't abort the whole set. We still collect partial results.
+      const wrapWithTimeout = async <T>(p: Promise<T>, name: string, ms = 15000) => {
+        const start = Date.now();
+        let timed = false;
+        const timeout = new Promise<never>((_, reject) => setTimeout(() => { timed = true; reject(new Error(`${name} timed out after ${ms}ms`)); }, ms));
+        try {
+          const v = await Promise.race([p, timeout]);
+          const dur = Date.now() - start;
+          console.log(`[fetchRewardsData] ${name} resolved in ${dur}ms`);
+          return { ok: true as const, value: v };
+        } catch (err) {
+          const dur = Date.now() - start;
+          console.warn(`[fetchRewardsData] ${name} failed after ${dur}ms:`, err);
+          return { ok: false as const, error: err };
+        }
+      };
+
+      const wrapped = await Promise.all([
+        wrapWithTimeout(p1, 'getStoresWithEnabledActiveStampProgram'),
+        wrapWithTimeout(p2, 'store_feature_query'),
+        wrapWithTimeout(p3, 'getStoresWithEnabledStreaks'),
+        wrapWithTimeout(p4, 'getActiveStampProgramRewards'),
+        wrapWithTimeout(p5, 'getActiveStreakProgramsByStore'),
+        wrapWithTimeout(p6, 'getUpcomingStreakProgramsByStore'),
       ]);
+      console.log('[fetchRewardsData] wrapped Promise.all completed');
+
+      // Convert wrapped results into the original results array shape, using
+      // empty fallbacks when a query failed or timed out.
+      const results = [
+        wrapped[0].ok ? wrapped[0].value : [],
+        wrapped[1].ok ? wrapped[1].value : [],
+        wrapped[2].ok ? wrapped[2].value : [],
+        wrapped[3].ok ? wrapped[3].value : [],
+        wrapped[4].ok ? wrapped[4].value : new Map(),
+        wrapped[5].ok ? wrapped[5].value : new Map(),
+      ];
 
       const newFetchedIds = Array.from(new Set([...fetchedStoreIds, ...nearbyStoreIds]));
 

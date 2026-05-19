@@ -14,7 +14,11 @@ import { AppHeader } from "@/components/header";
 import { useTranslation } from "react-i18next";
 import { useStorePremiumCampaignEdit } from "@/hooks/store-manager/use-store-premium-campaign-edit";
 import { formatDate } from "@/utils/store_manager/streak-utils";
-import { resolveStreakErrorI18nKey } from "@/services/store-manager/streak-user-messages";
+import {
+  isStreakNoticeMessageKey,
+  resolveStreakErrorI18nKey,
+  resolveStreakErrorTitleKey,
+} from "@/services/store-manager/streak-user-messages";
 import { useStreaksByStoreQuery } from "@/hooks/store-manager/rq";
 
 const WEB_MAX_WIDTH = 896;
@@ -22,7 +26,7 @@ const CONTENT_INSET = 16;
 const WEB_TAB_PILL_STYLE = { flexGrow: 1, flexBasis: 120, minWidth: 0 };
 
 export default function ViewStreak() {
-  const { t: translate } = useTranslation();
+  const { t: translate, i18n } = useTranslation();
   const PAGE_SIZE = 6;
   const router = useRouter();
   const colorScheme = useColorScheme();
@@ -49,23 +53,23 @@ export default function ViewStreak() {
   const { canEdit, loading: permLoading, expiresAtIso } = useStorePremiumCampaignEdit(storeId);
   const campaignsLocked = !permLoading && !canEdit;
 
-  const streaksQuery = useStreaksByStoreQuery(storeId);
+  const { refetch, data, isPending } = useStreaksByStoreQuery(storeId);
 
   useEffect(() => {
-    if (streaksQuery.data) {
-      setStreaks(streaksQuery.data);
+    if (data) {
+      setStreaks(data);
       setUpcomingVisible(PAGE_SIZE);
       setEndedVisible(PAGE_SIZE);
     }
-  }, [streaksQuery.data, setStreaks, setUpcomingVisible, setEndedVisible]);
+  }, [data, setStreaks, setUpcomingVisible, setEndedVisible]);
 
   useEffect(() => {
-    setLoading(streaksQuery.isPending);
-  }, [streaksQuery.isPending, setLoading]);
+    setLoading(isPending);
+  }, [isPending, setLoading]);
 
   const refetchStreaks = useCallback(() => {
-    void streaksQuery.refetch();
-  }, [streaksQuery]);
+    void refetch();
+  }, [refetch]);
 
   useFocusEffect(
     useCallback(() => {
@@ -86,8 +90,13 @@ export default function ViewStreak() {
     : activeTab === "upcoming" ? visibleUpcomingStreaks
     : visibleEndedStreaks;
 
-  const showError = (message: string) =>
-    setModal({ title: translate("storeManager.streak.error"), message, buttons: [{ label: translate("label.ok"), onPress: () => setModal(null) }] });
+  const streakErrorTitle = (messageKey: string | null) => {
+    if (!messageKey) return translate("storeManager.streak.error");
+    const titleKey = resolveStreakErrorTitleKey(messageKey);
+    if (i18n.exists(titleKey)) return translate(titleKey);
+    if (isStreakNoticeMessageKey(messageKey)) return translate("label.almostThere");
+    return translate("storeManager.streak.error");
+  };
 
   const showStreakError = (e: unknown) => {
     const key = resolveStreakErrorI18nKey(e);
@@ -97,7 +106,11 @@ export default function ViewStreak() {
       : raw.length > 0 && raw.length < 200
         ? raw
         : translate("storeManager.streak.errors.generic");
-    showError(message);
+    setModal({
+      title: streakErrorTitle(key),
+      message,
+      buttons: [{ label: translate("label.ok"), onPress: () => setModal(null) }],
+    });
   };
 
   const handlePublish = (streak: Streak) => {
