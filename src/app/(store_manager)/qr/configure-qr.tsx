@@ -1,19 +1,24 @@
-import React, { useEffect, useState } from "react";
-import { KeyboardAvoidingView, Platform, ScrollView, useColorScheme } from "react-native";
-import { View, Text, TouchableOpacity, SafeAreaView } from "@/tw";
-import { Check } from "lucide-react-native";
-import { useRouter, useLocalSearchParams } from "expo-router";
-import { useQueryClient } from "@tanstack/react-query";
-import { Button } from "@/components/button";
 import { Modal } from "@/components/modal";
-import { TextField } from "@/components/text-field";
-import { EarningType } from "@/type/store-manager/qr.purchase";
-import { useQRStore } from "@/store/store-manager/qr-store";
-import { createQRService } from "@/services/store-manager/qr-service";
-import { AppHeader } from "@/components/header";
+import { Check } from "lucide-react-native";
+import { Button } from "@/components/button";
 import { useTranslation } from "react-i18next";
+import { AppHeader } from "@/components/header";
+import React, { useEffect, useState } from "react";
+import { TextField } from "@/components/text-field";
+import { useQueryClient } from "@tanstack/react-query";
+import { useQRStore } from "@/store/store-manager/qr-store";
 import { useQRConfigQuery } from "@/hooks/store-manager/rq";
+import { useRouter, useLocalSearchParams } from "expo-router";
+import { EarningType } from "@/type/store-manager/qr.purchase";
+import { View, Text, TouchableOpacity, SafeAreaView } from "@/tw";
+import { createQRService } from "@/services/store-manager/qr-service";
 import { storeManagerKeys } from "@/hooks/store-manager/rq/query-keys";
+import {
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  useColorScheme,
+} from "react-native";
 
 const WEB_MAX_WIDTH = 896;
 
@@ -21,9 +26,13 @@ export default function ConfigureStreaks() {
   const { t: translate } = useTranslation();
   const queryClient = useQueryClient();
   const router = useRouter();
-  const { storeId, id } = useLocalSearchParams<{ storeId?: string; id?: string }>();
+  const { storeId, id } = useLocalSearchParams<{
+    storeId?: string;
+    id?: string;
+  }>();
   const storeIdParam = storeId ?? id;
-  const storeIdForDb = storeIdParam && storeIdParam !== "undefined" ? storeIdParam : null;
+  const storeIdForDb =
+    storeIdParam && storeIdParam !== "undefined" ? storeIdParam : null;
   const qrQuery = useQRConfigQuery(storeIdForDb ?? undefined);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [percentageInput, setPercentageInput] = useState("");
@@ -51,7 +60,7 @@ export default function ConfigureStreaks() {
     reset,
   } = useQRStore();
 
-	const validate = (): boolean => {
+  const validate = (): boolean => {
     let hasErrors = false;
     const nextErrors = {
       percentage: false,
@@ -72,17 +81,23 @@ export default function ConfigureStreaks() {
 
       if (!percentageInput || isNaN(pct) || pct <= 0) {
         nextErrors.percentage = true;
-        nextErrors.percentageErrorMessage = translate("storeManager.qrConfigure.validPercentage");
+        nextErrors.percentageErrorMessage = translate(
+          "storeManager.qrConfigure.validPercentage",
+        );
         hasErrors = true;
       } else if (pct > 100) {
         nextErrors.percentage = true;
-        nextErrors.percentageErrorMessage = translate("storeManager.qrConfigure.percentageOver100");
+        nextErrors.percentageErrorMessage = translate(
+          "storeManager.qrConfigure.percentageOver100",
+        );
         hasErrors = true;
       }
 
       if (!baseAmountInput || isNaN(base) || base < 0) {
         nextErrors.baseAmount = true;
-        nextErrors.baseAmountErrorMessage = translate("storeManager.qrConfigure.validBaseAmount");
+        nextErrors.baseAmountErrorMessage = translate(
+          "storeManager.qrConfigure.validBaseAmount",
+        );
         hasErrors = true;
       }
     } else {
@@ -90,15 +105,18 @@ export default function ConfigureStreaks() {
       const minSpend = parseFloat(minimumSpendInput);
 
       if (!fixedPointsInput || isNaN(pts) || pts <= 0) {
- 
         nextErrors.fixedPoints = true;
-        nextErrors.fixedPointsErrorMessage = translate("storeManager.qrConfigure.validFixedPoints");
+        nextErrors.fixedPointsErrorMessage = translate(
+          "storeManager.qrConfigure.validFixedPoints",
+        );
         hasErrors = true;
       }
 
       if (!minimumSpendInput || isNaN(minSpend) || minSpend < 0) {
         nextErrors.minimumSpend = true;
-        nextErrors.minimumSpendErrorMessage = translate("storeManager.qrConfigure.validMinimumSpend");
+        nextErrors.minimumSpendErrorMessage = translate(
+          "storeManager.qrConfigure.validMinimumSpend",
+        );
         hasErrors = true;
       }
 
@@ -106,11 +124,15 @@ export default function ConfigureStreaks() {
       if (!isNaN(maxTxn)) {
         if (maxTxn < 0) {
           nextErrors.maxPointsPerTxn = true;
-          nextErrors.maxPointsPerTxnErrorMessage = translate("storeManager.qrConfigure.validMaxPointsPerTxn");
+          nextErrors.maxPointsPerTxnErrorMessage = translate(
+            "storeManager.qrConfigure.validMaxPointsPerTxn",
+          );
           hasErrors = true;
         } else if (maxTxn > 0 && maxTxn < pts) {
           nextErrors.maxPointsPerTxn = true;
-          nextErrors.maxPointsPerTxnErrorMessage = translate("storeManager.qrConfigure.maxLowerThanFixed");
+          nextErrors.maxPointsPerTxnErrorMessage = translate(
+            "storeManager.qrConfigure.maxLowerThanFixed",
+          );
           hasErrors = true;
         }
       }
@@ -120,14 +142,16 @@ export default function ConfigureStreaks() {
       const maxTxn = parseFloat(maxPointsInput);
       if (isNaN(maxTxn) || maxTxn < 0) {
         nextErrors.maxPointsPerTxn = true;
-        nextErrors.maxPointsPerTxnErrorMessage = translate("storeManager.qrConfigure.validMaxPointsPerTxn");
+        nextErrors.maxPointsPerTxnErrorMessage = translate(
+          "storeManager.qrConfigure.validMaxPointsPerTxn",
+        );
         hasErrors = true;
       }
     }
 
     setErrors(nextErrors);
     return !hasErrors;
-	};
+  };
 
   const emptyFieldErrors = {
     percentage: false,
@@ -160,7 +184,13 @@ export default function ConfigureStreaks() {
       setModal({
         title: translate("store_manager.qrConfigure.loadErrorTitle"),
         message: translate("store_manager.qrConfigure.loadErrorMessage"),
-        buttons: [{ label: translate("label.ok"), onPress: () => setModal(null), variant: "secondary" }],
+        buttons: [
+          {
+            label: translate("label.ok"),
+            onPress: () => setModal(null),
+            variant: "secondary",
+          },
+        ],
       });
       return;
     }
@@ -211,34 +241,40 @@ export default function ConfigureStreaks() {
     translate,
   ]);
 
-	const handleSave = async () => {
-		if (isSubmitting) return;
+  const handleSave = async () => {
+    if (isSubmitting) return;
     if (!storeIdForDb) {
       setModal({
         title: translate("storeManager.qrConfigure.invalidStoreTitle"),
         message: translate("storeManager.qrConfigure.invalidStoreMessage"),
-        buttons: [{ label: translate("label.ok"), onPress: () => setModal(null), variant: "secondary" }],
+        buttons: [
+          {
+            label: translate("label.ok"),
+            onPress: () => setModal(null),
+            variant: "secondary",
+          },
+        ],
       });
       return;
     }
-		if (!validate()) return;
+    if (!validate()) return;
 
-		setIsSubmitting(true);
-		try {
+    setIsSubmitting(true);
+    try {
       await createQRService(storeIdForDb, {
         store_id: storeIdForDb,
-				percentage,
-				base_amount,
-				earning_type,
-				fixed_points,
-				minimum_spend,
-				max_points_per_txn,
-			});
+        percentage,
+        base_amount,
+        earning_type,
+        fixed_points,
+        minimum_spend,
+        max_points_per_txn,
+      });
 
       await queryClient.invalidateQueries({
         queryKey: storeManagerKeys.qrConfig(storeIdForDb),
       });
-      
+
       reset();
       setPercentageInput("");
       setBaseAmountInput("");
@@ -258,302 +294,362 @@ export default function ConfigureStreaks() {
         maxPointsPerTxn: false,
         maxPointsPerTxnErrorMessage: "",
       });
- 
-      
-			setModal({
-				title: translate("label.success"),
-				message: translate("storeManager.qrConfigure.successMessage"),
-        buttons: [{ label: translate("label.ok"), onPress: () => router.push({ pathname: "/(store_manager)/qr", params: { storeId: storeIdForDb } }), variant: "secondary" }],
-			});
-		} catch (error) {
-			setModal({
-				title: translate("label.error"),
-				message: (error as Error).message ?? translate("storeManager.qrConfigure.saveFailed"),
-				buttons: [{ label: translate("label.ok"), onPress: () => setModal(null), variant: "secondary" }],
-			});
-		} finally {
-			setIsSubmitting(false);
-		}
-	};
+
+      setModal({
+        title: translate("label.success"),
+        message: translate("storeManager.qrConfigure.successMessage"),
+        buttons: [
+          {
+            label: translate("label.ok"),
+            onPress: () =>
+              router.push({
+                pathname: "/(store_manager)/qr",
+                params: { storeId: storeIdForDb },
+              }),
+            variant: "secondary",
+          },
+        ],
+      });
+    } catch (error) {
+      setModal({
+        title: translate("label.error"),
+        message:
+          (error as Error).message ??
+          translate("storeManager.qrConfigure.saveFailed"),
+        buttons: [
+          {
+            label: translate("label.ok"),
+            onPress: () => setModal(null),
+            variant: "secondary",
+          },
+        ],
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
-    <SafeAreaView edges={["top", "left", "right"]} className="flex-1 bg-backgroundMuted dark:bg-[#111921]">
+    <SafeAreaView
+      edges={["top", "left", "right"]}
+      className="flex-1 bg-backgroundMuted dark:bg-[#111921]"
+    >
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === "android" ? "height" : "padding"}
       >
-      <Modal
-        visible={!!modal}
-        onClose={() => setModal(null)}
-        title={modal?.title ?? ""}
-        message={modal?.message}
-        buttons={modal?.buttons}
-      />
-      
-      <AppHeader
-        title={translate("storeManager.qrConfigure.title")}
-        onBackPress={() => {
-          router.push({ pathname: "/(store_manager)/qr", params: { storeId: storeIdParam } });
-        }}
-      />
+        <Modal
+          visible={!!modal}
+          onClose={() => setModal(null)}
+          title={modal?.title ?? ""}
+          message={modal?.message}
+          buttons={modal?.buttons}
+        />
 
-      <ScrollView
-        style={{ flex: 1 }}
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
-        contentContainerStyle={{
-          padding: 16,
-          paddingBottom: 32,
-          gap: 20,
-          ...(Platform.OS === "web" ? { width: "100%", alignItems: "center" } : null),
-        }}
-      >
-        <View
-          className="bg-white dark:bg-darkBackgroundCard border border-slate-100 dark:border-darkBorder rounded-xl p-4 flex-col gap-y-5"
-          style={Platform.OS === "web" ? { width: "100%", maxWidth: WEB_MAX_WIDTH } : undefined}
+        <AppHeader
+          title={translate("storeManager.qrConfigure.title")}
+          onBackPress={() => {
+            router.push({
+              pathname: "/(store_manager)/qr",
+              params: { storeId: storeIdParam },
+            });
+          }}
+        />
+
+        <ScrollView
+          style={{ flex: 1 }}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={{
+            padding: 16,
+            paddingBottom: 32,
+            gap: 20,
+            ...(Platform.OS === "web"
+              ? { width: "100%", alignItems: "center" }
+              : null),
+          }}
         >
-          <View>
-            <Text className="text-md font-poppins-bold text-textPrimary dark:text-darkTextPrimary">
-            {translate("storeManager.qrConfigure.heading")}
-            </Text>
-            <Text className="text-sm font-poppins text-textSecondary dark:text-darkTextSecondary">
-              {translate("storeManager.qrConfigure.subheading")}
-            </Text>
-          </View>
-        <View className="gap-y-2">
-          <Text className="text-sm font-poppins-semibold text-slate-700 dark:text-darkTextSoft">
-            {translate("storeManager.qrConfigure.pointsType")}
-          </Text>
-          <View className="flex-row gap-x-2">
-            {([
-              { key: "percentage" as EarningType, label: translate("storeManager.qrConfigure.percentageOptionTitle"), desc: translate("storeManager.qrConfigure.percentageOptionDesc") },
-              { key: "fixed" as EarningType, label: translate("label.fixed"), desc: translate("storeManager.qrConfigure.fixedOptionDesc") },
-            ] as const)
-              .map((opt) => {
-              const selected = earning_type === opt.key;
-              return (
-                <TouchableOpacity
-                  key={opt.key}
-                  activeOpacity={0.8}
-                  onPress={() => {
-                    setEarningType(opt.key);
-                    setErrors({
-                      ...errors,
-                      percentage: false,
-                      percentageErrorMessage: "",
-                      baseAmount: false,
-                      baseAmountErrorMessage: "",
-                      fixedPoints: false,
-                      fixedPointsErrorMessage: "",
-                      minimumSpend: false,
-                      minimumSpendErrorMessage: "",
-                      maxPointsPerTxn: false,
-                      maxPointsPerTxnErrorMessage: "",
-                    });
-                  }}
-                  className={`flex-1 rounded-xl border p-3 gap-y-1 bg-white dark:bg-darkBackgroundMuted ${
-                    selected
-                      ? "border-primary"
-                      : "border-slate-200 dark:border-darkBorder"
-                  }`}
-                >
-                  <View className="flex-row items-center justify-between">
-                    <View className={`w-4 h-4 rounded-full border-2 items-center justify-center self-center ${selected ? "border-primary bg-primary" : "border-slate-300 dark:border-darkBorder"}`}>
-                      {selected && <Check size={9} color="#fff" />}
-                    </View>
+          <View
+            className="bg-white dark:bg-darkBackgroundCard border border-slate-100 dark:border-darkBorder rounded-xl p-4 flex-col gap-y-5"
+            style={
+              Platform.OS === "web"
+                ? { width: "100%", maxWidth: WEB_MAX_WIDTH }
+                : undefined
+            }
+          >
+            <View>
+              <Text className="text-md font-poppins-bold text-textPrimary dark:text-darkTextPrimary">
+                {translate("storeManager.qrConfigure.heading")}
+              </Text>
+              <Text className="text-sm font-poppins text-textSecondary dark:text-darkTextSecondary">
+                {translate("storeManager.qrConfigure.subheading")}
+              </Text>
+            </View>
+            <View className="gap-y-2">
+              <Text className="text-sm font-poppins-semibold text-slate-700 dark:text-darkTextSoft">
+                {translate("storeManager.qrConfigure.pointsType")}
+              </Text>
+              <View className="flex-row gap-x-2">
+                {(
+                  [
+                    {
+                      key: "percentage" as EarningType,
+                      label: translate(
+                        "storeManager.qrConfigure.percentageOptionTitle",
+                      ),
+                      desc: translate(
+                        "storeManager.qrConfigure.percentageOptionDesc",
+                      ),
+                    },
+                    {
+                      key: "fixed" as EarningType,
+                      label: translate("label.fixed"),
+                      desc: translate(
+                        "storeManager.qrConfigure.fixedOptionDesc",
+                      ),
+                    },
+                  ] as const
+                ).map((opt) => {
+                  const selected = earning_type === opt.key;
+                  return (
+                    <TouchableOpacity
+                      key={opt.key}
+                      activeOpacity={0.8}
+                      onPress={() => {
+                        setEarningType(opt.key);
+                        setErrors({
+                          ...errors,
+                          percentage: false,
+                          percentageErrorMessage: "",
+                          baseAmount: false,
+                          baseAmountErrorMessage: "",
+                          fixedPoints: false,
+                          fixedPointsErrorMessage: "",
+                          minimumSpend: false,
+                          minimumSpendErrorMessage: "",
+                          maxPointsPerTxn: false,
+                          maxPointsPerTxnErrorMessage: "",
+                        });
+                      }}
+                      className={`flex-1 rounded-xl border p-3 gap-y-1 bg-white dark:bg-darkBackgroundMuted ${
+                        selected
+                          ? "border-primary"
+                          : "border-slate-200 dark:border-darkBorder"
+                      }`}
+                    >
+                      <View className="flex-row items-center justify-between">
+                        <View
+                          className={`w-4 h-4 rounded-full border-2 items-center justify-center self-center ${selected ? "border-primary bg-primary" : "border-slate-300 dark:border-darkBorder"}`}
+                        >
+                          {selected && <Check size={9} color="#fff" />}
+                        </View>
+                      </View>
+                      <Text
+                        className={`text-xs font-poppins-bold mt-1 ${selected ? "text-textSecondary dark:text-darkTextSecondary" : "text-textSecondary dark:text-darkTextSecondary"}`}
+                      >
+                        {opt.label}
+                      </Text>
+                      <Text className="text-[10px] font-poppins text-textMuted dark:text-darkTextMuted">
+                        {opt.desc}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            </View>
+
+            {earning_type === "percentage" && (
+              <View className="gap-y-3">
+                <View className="flex-row gap-x-3">
+                  <View className="flex-1">
+                    <TextField
+                      label={translate(
+                        "storeManager.qrConfigure.percentageLabel",
+                      )}
+                      placeholder={translate("label.eg10Placeholder")}
+                      keyboardType="decimal-pad"
+                      value={percentageInput}
+                      onChangeText={(v) => {
+                        setPercentageInput(v);
+                        setErrors({
+                          ...errors,
+                          percentage: false,
+                          percentageErrorMessage: "",
+                        });
+                        const parsed = parseFloat(v);
+                        if (!isNaN(parsed)) setPercentage(Math.max(0, parsed));
+                        else setPercentage(0);
+                      }}
+                      required
+                      error={errors.percentage}
+                    />
+                    {errors.percentage && (
+                      <Text className="text-xs font-poppins text-red-500 dark:text-red-400 mt-1">
+                        {errors.percentageErrorMessage}
+                      </Text>
+                    )}
                   </View>
-                  <Text className={`text-xs font-poppins-bold mt-1 ${selected ? "text-textSecondary dark:text-darkTextSecondary" : "text-textSecondary dark:text-darkTextSecondary"}`}>
-                    {opt.label}
-                  </Text>
-                  <Text className="text-[10px] font-poppins text-textMuted dark:text-darkTextMuted">
-                    {opt.desc}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-        </View>
+                  <View className="flex-1">
+                    <TextField
+                      label={translate("storeManager.qrConfigure.baseAmount")}
+                      placeholder={translate("label.eg10Placeholder")}
+                      keyboardType="decimal-pad"
+                      value={baseAmountInput}
+                      onChangeText={(v) => {
+                        setBaseAmountInput(v);
+                        setErrors({
+                          ...errors,
+                          baseAmount: false,
+                          baseAmountErrorMessage: "",
+                        });
+                        const parsed = parseFloat(v);
+                        if (!isNaN(parsed)) setBaseAmount(Math.max(0, parsed));
+                        else setBaseAmount(0);
+                      }}
+                      required
+                      error={errors.baseAmount}
+                    />
+                    {errors.baseAmount && (
+                      <Text className="text-xs font-poppins text-red-500 dark:text-red-400 mt-1">
+                        {errors.baseAmountErrorMessage}
+                      </Text>
+                    )}
+                  </View>
+                </View>
 
-        {earning_type === "percentage" && (
-          <View className="gap-y-3">
-            <View className="flex-row gap-x-3">
-              <View className="flex-1">
-                <TextField
-                  label={translate("storeManager.qrConfigure.percentageLabel")}
-                  placeholder={translate("label.eg10Placeholder")}
-                  keyboardType="decimal-pad"
-                  value={percentageInput}
-                  onChangeText={(v) => {
-                    setPercentageInput(v);
-                    setErrors({
-                      ...errors,
-                      percentage: false,
-                      percentageErrorMessage: "",
-                    });
-                    const parsed = parseFloat(v);
-                    if (!isNaN(parsed)) setPercentage(Math.max(0, parsed));
-                    else setPercentage(0);
-                  }}
-                  required
-                  error={errors.percentage}
-                />
-                {errors.percentage && (
-                  <Text className="text-xs font-poppins text-red-500 dark:text-red-400 mt-1">
-                    {errors.percentageErrorMessage}
+                <View className="bg-yellow-50 dark:bg-yellow-900/20 rounded-xl px-4 py-3">
+                  <Text className="text-xs font-poppins text-yellow-800 dark:text-yellow-200">
+                    {translate("storeManager.qrConfigure.percentageHint")}
                   </Text>
-                )}
+                </View>
               </View>
-              <View className="flex-1">
-                <TextField
-                  label={translate("storeManager.qrConfigure.baseAmount")}
-                  placeholder={translate("label.eg10Placeholder")}
-                  keyboardType="decimal-pad"
-                  value={baseAmountInput}
-                  onChangeText={(v) => {
-                    setBaseAmountInput(v);
-                    setErrors({
-                      ...errors,
-                      baseAmount: false,
-                      baseAmountErrorMessage: "",
-                    });
-                    const parsed = parseFloat(v);
-                    if (!isNaN(parsed)) setBaseAmount(Math.max(0, parsed));
-                    else setBaseAmount(0);
-                  }}
-                  required
-                  error={errors.baseAmount}
-                />
-                {errors.baseAmount && (
-                  <Text className="text-xs font-poppins text-red-500 dark:text-red-400 mt-1">
-                    {errors.baseAmountErrorMessage}
+            )}
+
+            {/* Fixed fields */}
+            {earning_type === "fixed" && (
+              <>
+                <View className="flex-row gap-x-3">
+                  <View className="flex-1">
+                    <TextField
+                      label={translate("storeManager.qrConfigure.fixedPoints")}
+                      placeholder={translate(
+                        "storeManager.qrConfigure.fixedPointsPlaceholder",
+                      )}
+                      keyboardType="decimal-pad"
+                      value={fixedPointsInput}
+                      onChangeText={(v) => {
+                        setFixedPointsInput(v);
+                        setErrors({
+                          ...errors,
+                          fixedPoints: false,
+                          fixedPointsErrorMessage: "",
+                        });
+                        const parsed = parseFloat(v);
+                        if (!isNaN(parsed)) setFixedPoints(Math.max(0, parsed));
+                        else setFixedPoints(0);
+                      }}
+                      required
+                      error={errors.fixedPoints}
+                    />
+                    {errors.fixedPoints && (
+                      <Text className="text-xs font-poppins text-red-500 dark:text-red-400 mt-1">
+                        {errors.fixedPointsErrorMessage}
+                      </Text>
+                    )}
+                  </View>
+                  <View className="flex-1">
+                    <TextField
+                      label={translate("storeManager.qrConfigure.minimumSpend")}
+                      placeholder={translate(
+                        "storeManager.qrConfigure.minimumSpendPlaceholder",
+                      )}
+                      keyboardType="decimal-pad"
+                      value={minimumSpendInput}
+                      onChangeText={(v) => {
+                        setMinimumSpendInput(v);
+                        setErrors({
+                          ...errors,
+                          minimumSpend: false,
+                          minimumSpendErrorMessage: "",
+                        });
+                        const parsed = parseFloat(v);
+                        if (!isNaN(parsed))
+                          setMinimumSpend(Math.max(0, parsed));
+                        else setMinimumSpend(0);
+                      }}
+                      required
+                      error={errors.minimumSpend}
+                    />
+                    {errors.minimumSpend && (
+                      <Text className="text-xs font-poppins text-red-500 dark:text-red-400 mt-1">
+                        {errors.minimumSpendErrorMessage}
+                      </Text>
+                    )}
+                  </View>
+                </View>
+
+                <View className="bg-yellow-50 dark:bg-yellow-900/20 rounded-xl px-4 py-3">
+                  <Text className="text-xs font-poppins text-yellow-800 dark:text-yellow-200">
+                    {translate("storeManager.qrConfigure.fixedHint")}
                   </Text>
+                </View>
+              </>
+            )}
+
+            {/* Max points per transaction — shared */}
+            <View className="gap-y-1.5">
+              <TextField
+                label={translate("storeManager.qrConfigure.maxPointsPerTxn")}
+                hint={translate("storeManager.qrConfigure.maxPointsHint")}
+                placeholder={translate(
+                  "storeManager.qrConfigure.maxPointsPlaceholder",
                 )}
-              </View>
+                keyboardType="decimal-pad"
+                value={maxPointsInput}
+                onChangeText={(v) => {
+                  setMaxPointsInput(v);
+                  setErrors({
+                    ...errors,
+                    maxPointsPerTxn: false,
+                    maxPointsPerTxnErrorMessage: "",
+                  });
+                  const parsed = parseFloat(v);
+                  if (!isNaN(parsed)) setMaxPointsPerTxn(Math.max(0, parsed));
+                  else setMaxPointsPerTxn(0);
+                }}
+                error={errors.maxPointsPerTxn}
+              />
+              {errors.maxPointsPerTxn && (
+                <Text className="text-xs font-poppins text-red-500 dark:text-red-400 mt-1">
+                  {errors.maxPointsPerTxnErrorMessage}
+                </Text>
+              )}
             </View>
 
-            <View className="bg-yellow-50 dark:bg-yellow-900/20 rounded-xl px-4 py-3">
-              <Text className="text-xs font-poppins text-yellow-800 dark:text-yellow-200">
-                {translate("storeManager.qrConfigure.percentageHint")}
-              </Text>
+            {/* Actions */}
+            <View className="gap-y-3">
+              <Button
+                label={translate("storeManager.qrConfigure.saveRules")}
+                onPress={handleSave}
+                disabled={isSubmitting}
+                loading={isSubmitting}
+                fullWidth={true}
+                variant="primary"
+              />
+              <Button
+                label={translate("label.cancel")}
+                onPress={() => {
+                  router.push({
+                    pathname: "/(store_manager)/qr",
+                    params: { storeId: storeIdParam },
+                  });
+                }}
+                fullWidth={true}
+                variant="secondary"
+              />
             </View>
           </View>
-        )}
-
-        {/* Fixed fields */}
-        {earning_type === "fixed" && (
-          <>
-						<View className="flex-row gap-x-3">
-							<View className="flex-1">
-								<TextField
-									label={translate("storeManager.qrConfigure.fixedPoints")}
-									placeholder={translate("storeManager.qrConfigure.fixedPointsPlaceholder")}
-									keyboardType="decimal-pad"
-									value={fixedPointsInput}
-									onChangeText={(v) => {
-										setFixedPointsInput(v);
-                    setErrors({
-                      ...errors,
-                      fixedPoints: false,
-                      fixedPointsErrorMessage: "",
-                    });
-										const parsed = parseFloat(v);
-										if (!isNaN(parsed)) setFixedPoints(Math.max(0, parsed));
-                    else setFixedPoints(0);
-									}}
-									required
-                  error={errors.fixedPoints}
-								/>
-                {errors.fixedPoints && (
-                  <Text className="text-xs font-poppins text-red-500 dark:text-red-400 mt-1">
-                    {errors.fixedPointsErrorMessage}
-                  </Text>
-                )}
-							</View>
-							<View className="flex-1">
-								<TextField
-									label={translate("storeManager.qrConfigure.minimumSpend")}
-									placeholder={translate("storeManager.qrConfigure.minimumSpendPlaceholder")}
-									keyboardType="decimal-pad"
-									value={minimumSpendInput}
-									onChangeText={(v) => {
-										setMinimumSpendInput(v);
-                    setErrors({
-                      ...errors,
-                      minimumSpend: false,
-                      minimumSpendErrorMessage: "",
-                    });
-										const parsed = parseFloat(v);
-										if (!isNaN(parsed)) setMinimumSpend(Math.max(0, parsed));
-                    else setMinimumSpend(0);
-									}}
-                  required
-                  error={errors.minimumSpend}
-								/>
-                {errors.minimumSpend && (
-                  <Text className="text-xs font-poppins text-red-500 dark:text-red-400 mt-1">
-                    {errors.minimumSpendErrorMessage}
-                  </Text>
-                )}
-							</View>
-						</View>
-
-            <View className="bg-yellow-50 dark:bg-yellow-900/20 rounded-xl px-4 py-3">
-              <Text className="text-xs font-poppins text-yellow-800 dark:text-yellow-200">
-                {translate("storeManager.qrConfigure.fixedHint")}
-              </Text>
-            </View>
-					</>
-        )}
-
-        {/* Max points per transaction — shared */}
-        <View className="gap-y-1.5">
-          <TextField
-            label={translate("storeManager.qrConfigure.maxPointsPerTxn")}
-            hint={translate("storeManager.qrConfigure.maxPointsHint")}
-            placeholder={translate("storeManager.qrConfigure.maxPointsPlaceholder")}
-            keyboardType="decimal-pad"
-            value={maxPointsInput}
-            onChangeText={(v) => {
-              setMaxPointsInput(v);
-              setErrors({
-                ...errors,
-                maxPointsPerTxn: false,
-                maxPointsPerTxnErrorMessage: "",
-              });
-              const parsed = parseFloat(v);
-              if (!isNaN(parsed)) setMaxPointsPerTxn(Math.max(0, parsed));
-              else setMaxPointsPerTxn(0);
-            }}
-            error={errors.maxPointsPerTxn}
-          />
-          {errors.maxPointsPerTxn && (
-            <Text className="text-xs font-poppins text-red-500 dark:text-red-400 mt-1">
-              {errors.maxPointsPerTxnErrorMessage}
-            </Text>
-          )}
-        </View>
-
-        {/* Actions */}
-        <View className="gap-y-3">
-          <Button
-            label={translate("storeManager.qrConfigure.saveRules")}
-            onPress={handleSave}
-            disabled={isSubmitting}
-            loading={isSubmitting}
-            fullWidth={true}
-            variant="primary"
-          />
-          <Button
-            label={translate("label.cancel")}
-            onPress={() => {
-              router.push({ pathname: "/(store_manager)/qr", params: { storeId: storeIdParam } });
-            }}
-            fullWidth={true}
-            variant="secondary"
-          />
-        </View>
-        </View>
-      </ScrollView>
+        </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );

@@ -1,24 +1,27 @@
+import { Image } from "expo-image";
+import { Button } from "@/components/button";
+import { useTranslation } from "react-i18next";
+import { AppHeader } from "@/components/header";
+import * as ImagePicker from "expo-image-picker";
 import React, { useEffect, useState } from "react";
+import { TextField } from "@/components/text-field";
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { Modal, type ModalButton } from "@/components/modal";
+import { useRouter, useLocalSearchParams } from "expo-router";
+import { useRewardStore } from "@/store/store-manager/reward-store";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { View, Text, TouchableOpacity, TextInput, SafeAreaView } from "@/tw";
+import { useStorePremiumCampaignEdit } from "@/hooks/store-manager/use-store-premium-campaign-edit";
+import {
+  getRewardById,
+  upsertReward,
+  uploadRewardImage,
+} from "@/services/store-manager/reward-service";
 import {
   ActivityIndicator,
-  KeyboardAvoidingView,
   Platform,
   ScrollView,
 } from "react-native";
-import { View, Text, TouchableOpacity, TextInput, SafeAreaView } from "@/tw";
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { useRouter, useLocalSearchParams } from "expo-router";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import * as ImagePicker from "expo-image-picker";
-import { Image } from "expo-image";
-import { useRewardStore } from "@/store/store-manager/reward-store";
-import { getRewardById, upsertReward, uploadRewardImage } from "@/services/store-manager/reward-service";
-import { Button } from "@/components/button";
-import { Modal, type ModalButton } from "@/components/modal";
-import { AppHeader } from "@/components/header";
-import { TextField } from "@/components/text-field";
-import { useTranslation } from "react-i18next";
-import { useStorePremiumCampaignEdit } from "@/hooks/store-manager/use-store-premium-campaign-edit";
 
 const WEB_MAX_WIDTH = 896;
 

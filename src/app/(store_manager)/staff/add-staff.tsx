@@ -1,20 +1,22 @@
 import React, { useEffect } from "react";
-import { KeyboardAvoidingView, Platform, ScrollView } from "react-native";
-import { View, Text, TouchableOpacity, TextInput, SafeAreaView } from "@/tw";
-import { useRouter, useLocalSearchParams } from "expo-router";
-import { useQueryClient } from "@tanstack/react-query";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Button } from "@/components/button";
 import { Modal } from "@/components/modal";
-import { createStoreStaff, updateStoreStaffMember } from "@/services/store-manager/staff-service";
-import { useStaffStore } from "@/store/store-manager/staff-store";
-import { generateRandomPassword } from "@/utils/store_manager/staff-utils";
-import { TextField } from "@/components/text-field";
-import { RefreshCcw } from "lucide-react-native";
-import { AppHeader } from "@/components/header";
+import { Button } from "@/components/button";
 import { useTranslation } from "react-i18next";
+import { AppHeader } from "@/components/header";
+import { RefreshCcw } from "lucide-react-native";
+import { TextField } from "@/components/text-field";
+import { useQueryClient } from "@tanstack/react-query";
+import { useRouter, useLocalSearchParams } from "expo-router";
+import { useStaffStore } from "@/store/store-manager/staff-store";
 import { useStoreStaffMemberQuery } from "@/hooks/store-manager/rq";
 import { storeManagerKeys } from "@/hooks/store-manager/rq/query-keys";
+import { KeyboardAvoidingView, Platform, ScrollView } from "react-native";
+import { generateRandomPassword } from "@/utils/store_manager/staff-utils";
+import { View, Text, TouchableOpacity, TextInput, SafeAreaView } from "@/tw";
+import {
+  createStoreStaff,
+  updateStoreStaffMember,
+} from "@/services/store-manager/staff-service";
 
 const WEB_MAX_WIDTH = 896;
 
@@ -22,10 +24,15 @@ export default function AddStaff() {
   const { t: translate } = useTranslation();
   const router = useRouter();
   const queryClient = useQueryClient();
-  const { storeId, staffId } = useLocalSearchParams<{ storeId: string; staffId?: string }>();
+  const { storeId, staffId } = useLocalSearchParams<{
+    storeId: string;
+    staffId?: string;
+  }>();
   const isEditMode = !!staffId;
   const isWeb = Platform.OS === "web";
-  const memberQuery = useStoreStaffMemberQuery(isEditMode ? staffId : undefined);
+  const memberQuery = useStoreStaffMemberQuery(
+    isEditMode ? staffId : undefined,
+  );
   const {
     name,
     email,
@@ -66,16 +73,35 @@ export default function AddStaff() {
       setModal({
         title: translate("storeManager.staffForm.loadErrorTitle"),
         message: translate("storeManager.staffForm.loadErrorMessage"),
-        buttons: [{ label: translate("label.ok"), onPress: () => setModal(null), variant: "secondary" }],
+        buttons: [
+          {
+            label: translate("label.ok"),
+            onPress: () => setModal(null),
+            variant: "secondary",
+          },
+        ],
       });
       return;
     }
     if (!memberQuery.data) return;
-    const user = memberQuery.data.user as { name?: string | null; email?: string | null } | null;
+    const user = memberQuery.data.user as {
+      name?: string | null;
+      email?: string | null;
+    } | null;
     setName(user?.name ?? "");
     setEmail(user?.email ?? "");
     setPassword("");
-  }, [isEditMode, staffId, memberQuery.isError, memberQuery.data, setName, setEmail, setPassword, setModal, translate]);
+  }, [
+    isEditMode,
+    staffId,
+    memberQuery.isError,
+    memberQuery.data,
+    setName,
+    setEmail,
+    setPassword,
+    setModal,
+    translate,
+  ]);
 
   const openConfirm = () => {
     const hasNameError = !trimmedName;
@@ -97,7 +123,9 @@ export default function AddStaff() {
       }
 
       setModal({
-        title: isEditMode ? translate("storeManager.staffForm.updatedTitle") : translate("storeManager.staffForm.addedTitle"),
+        title: isEditMode
+          ? translate("storeManager.staffForm.updatedTitle")
+          : translate("storeManager.staffForm.addedTitle"),
         message: isEditMode
           ? translate("storeManager.staffForm.updatedMessage")
           : translate("storeManager.staffForm.addedMessage"),
@@ -127,8 +155,16 @@ export default function AddStaff() {
     } catch (error) {
       setModal({
         title: translate("label.error"),
-        message: (error as Error).message ?? translate("storeManager.staffForm.saveError"),
-        buttons: [{ label: translate("label.ok"), onPress: () => setModal(null), variant: "secondary" }],
+        message:
+          (error as Error).message ??
+          translate("storeManager.staffForm.saveError"),
+        buttons: [
+          {
+            label: translate("label.ok"),
+            onPress: () => setModal(null),
+            variant: "secondary",
+          },
+        ],
       });
     } finally {
       setIsSubmitting(false);
@@ -136,7 +172,10 @@ export default function AddStaff() {
   };
 
   return (
-    <SafeAreaView edges={["top"]} className="flex-1 bg-backgroundMuted dark:bg-darkBackgroundMuted">
+    <SafeAreaView
+      edges={["top"]}
+      className="flex-1 bg-backgroundMuted dark:bg-darkBackgroundMuted"
+    >
       <Modal
         visible={!!modal}
         onClose={() => setModal(null)}
@@ -147,7 +186,11 @@ export default function AddStaff() {
       />
 
       <AppHeader
-        title={isEditMode ? translate("storeManager.staffForm.editTitle") : translate("storeManager.staffForm.addTitle")}
+        title={
+          isEditMode
+            ? translate("storeManager.staffForm.editTitle")
+            : translate("storeManager.staffForm.addTitle")
+        }
         description={
           isEditMode
             ? translate("storeManager.staffForm.editDescription")
@@ -179,11 +222,19 @@ export default function AddStaff() {
             className={Platform.OS === "web" ? "items-center" : ""}
             style={Platform.OS === "web" ? { width: "100%" } : undefined}
           >
-            <View style={Platform.OS === "web" ? { width: "100%", maxWidth: WEB_MAX_WIDTH } : undefined}>
+            <View
+              style={
+                Platform.OS === "web"
+                  ? { width: "100%", maxWidth: WEB_MAX_WIDTH }
+                  : undefined
+              }
+            >
               <View className="mx-4 mt-2 mb-4 gap-y-4 rounded-xl border border-slate-100 bg-white p-4 dark:border-darkBorder dark:bg-darkBackgroundCard">
                 <View>
                   <Text className="text-sm font-poppins-bold text-textPrimary dark:text-darkTextPrimary">
-                    {isEditMode ? translate("storeManager.staffForm.profileSectionEdit") : translate("storeManager.staffForm.profileSectionAdd")}
+                    {isEditMode
+                      ? translate("storeManager.staffForm.profileSectionEdit")
+                      : translate("storeManager.staffForm.profileSectionAdd")}
                   </Text>
                   <Text className="text-xs font-poppins text-textSecondary dark:text-darkTextSecondary">
                     {isEditMode
@@ -194,7 +245,9 @@ export default function AddStaff() {
 
                 {!isEditMode && (
                   <View className="rounded-xl bg-primary/5 p-4 dark:bg-primary-800">
-                    <Text className="text-sm font-poppins-semibold text-primary">{translate("storeManager.staffForm.loginInfoTitle")}</Text>
+                    <Text className="text-sm font-poppins-semibold text-primary">
+                      {translate("storeManager.staffForm.loginInfoTitle")}
+                    </Text>
                     <View className="mt-1 gap-y-1">
                       <Text className="text-xs font-poppins text-primary">
                         • {translate("storeManager.staffForm.loginBullet1")}
@@ -215,8 +268,13 @@ export default function AddStaff() {
                 <TextField
                   label={translate("storeManager.staffForm.fullName")}
                   value={name}
-                  onChangeText={(v) => { setName(v); if (v.trim()) setNameError(false); }}
-                  placeholder={translate("storeManager.staffForm.fullNamePlaceholder")}
+                  onChangeText={(v) => {
+                    setName(v);
+                    if (v.trim()) setNameError(false);
+                  }}
+                  placeholder={translate(
+                    "storeManager.staffForm.fullNamePlaceholder",
+                  )}
                   required={true}
                   error={nameError}
                 />
@@ -229,14 +287,21 @@ export default function AddStaff() {
                 <TextField
                   label={translate("storeManager.staffForm.email")}
                   value={email}
-                  onChangeText={(v) => { setEmail(v); if (/\S+@\S+\.\S+/.test(v.trim())) setEmailError(false); }}
-                  placeholder={translate("storeManager.staffForm.emailPlaceholder")}
+                  onChangeText={(v) => {
+                    setEmail(v);
+                    if (/\S+@\S+\.\S+/.test(v.trim())) setEmailError(false);
+                  }}
+                  placeholder={translate(
+                    "storeManager.staffForm.emailPlaceholder",
+                  )}
                   required={true}
                   error={emailError}
                 />
                 {emailError && (
                   <Text className="text-xs font-poppins text-red-500 dark:text-red-400 -mt-2">
-                    {trimmedEmail ? translate("storeManager.staffForm.invalidEmailMessage") : translate("storeManager.staffForm.emailRequiredInline")}
+                    {trimmedEmail
+                      ? translate("storeManager.staffForm.invalidEmailMessage")
+                      : translate("storeManager.staffForm.emailRequiredInline")}
                   </Text>
                 )}
 
@@ -247,9 +312,13 @@ export default function AddStaff() {
                         <Text className="text-sm font-poppins-semibold text-slate-700 dark:text-darkTextSoft">
                           {translate("storeManager.staffForm.password")}
                         </Text>
-                        <Text className="text-xs font-poppins-bold text-red-500">*</Text>
+                        <Text className="text-xs font-poppins-bold text-red-500">
+                          *
+                        </Text>
                       </View>
-                      <TouchableOpacity onPress={() => setPassword(generateRandomPassword(8))}>
+                      <TouchableOpacity
+                        onPress={() => setPassword(generateRandomPassword(8))}
+                      >
                         <Text className="text-sm font-poppins text-primary">
                           <RefreshCcw size={14} color="#FF6600" />
                         </Text>
@@ -267,7 +336,9 @@ export default function AddStaff() {
                         fontSize: 13,
                       }}
                       keyboardType="default"
-                      placeholder={translate("storeManager.staffForm.passwordPlaceholder")}
+                      placeholder={translate(
+                        "storeManager.staffForm.passwordPlaceholder",
+                      )}
                       placeholderTextColor="#94A3B8"
                       value={password}
                     />
@@ -290,7 +361,11 @@ export default function AddStaff() {
                         variant="secondary"
                       />
                       <Button
-                        label={isEditMode ? translate("storeManager.staffForm.saveChanges") : translate("storeManager.staffForm.confirm")}
+                        label={
+                          isEditMode
+                            ? translate("storeManager.staffForm.saveChanges")
+                            : translate("storeManager.staffForm.confirm")
+                        }
                         onPress={openConfirm}
                         disabled={isSubmitting}
                         loading={isSubmitting}
@@ -301,27 +376,31 @@ export default function AddStaff() {
                   ) : (
                     <View className="gap-y-3">
                       <Button
-                    label={isEditMode ? translate("storeManager.staffForm.saveChanges") : translate("storeManager.staffForm.confirm")}
-                    onPress={openConfirm}
-                    disabled={isSubmitting}
-                    loading={isSubmitting}
-                    fullWidth={true}
-                    variant="primary"
-                    keyboardDismiss={true}
-                  />
-                  <Button
-                    label={translate("label.cancel")}
-                    onPress={() => {
-                      router.push({
-                        pathname: "/(store_manager)/staff",
-                        params: { storeId },
-                      });
-                    }}
-                    disabled={isSubmitting}
-                    fullWidth={true}
-                    variant="secondary"
-                  />
-                  </View>
+                        label={
+                          isEditMode
+                            ? translate("storeManager.staffForm.saveChanges")
+                            : translate("storeManager.staffForm.confirm")
+                        }
+                        onPress={openConfirm}
+                        disabled={isSubmitting}
+                        loading={isSubmitting}
+                        fullWidth={true}
+                        variant="primary"
+                        keyboardDismiss={true}
+                      />
+                      <Button
+                        label={translate("label.cancel")}
+                        onPress={() => {
+                          router.push({
+                            pathname: "/(store_manager)/staff",
+                            params: { storeId },
+                          });
+                        }}
+                        disabled={isSubmitting}
+                        fullWidth={true}
+                        variant="secondary"
+                      />
+                    </View>
                   )}
                 </View>
               </View>
@@ -337,7 +416,9 @@ export default function AddStaff() {
         >
           <View className="w-full max-w-sm rounded-xl border border-slate-200 bg-white p-5 shadow-2xl dark:border-darkBorder dark:bg-darkBackgroundMuted">
             <Text className="mb-2 text-base font-poppins-bold text-slate-900 dark:text-darkTextPrimary">
-              {isEditMode ? translate("storeManager.staffForm.confirmEditTitle") : translate("storeManager.staffForm.confirmAddTitle")}
+              {isEditMode
+                ? translate("storeManager.staffForm.confirmEditTitle")
+                : translate("storeManager.staffForm.confirmAddTitle")}
             </Text>
 
             <Text className="mb-4 text-sm font-poppins text-slate-500 dark:text-darkTextMuted">
@@ -347,17 +428,25 @@ export default function AddStaff() {
             </Text>
 
             <View className="mb-3 gap-y-1.5">
-              <Text className="text-xs font-poppins text-slate-500 dark:text-darkTextMuted">{translate("storeManager.staffForm.email")}</Text>
+              <Text className="text-xs font-poppins text-slate-500 dark:text-darkTextMuted">
+                {translate("storeManager.staffForm.email")}
+              </Text>
               <View className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 dark:border-darkBorder dark:bg-darkBackgroundCard">
-                <Text className="text-sm font-poppins-bold text-slate-900 dark:text-darkTextPrimary">{email}</Text>
+                <Text className="text-sm font-poppins-bold text-slate-900 dark:text-darkTextPrimary">
+                  {email}
+                </Text>
               </View>
             </View>
 
             {!isEditMode && (
               <View className="mb-4 gap-y-1.5">
-                <Text className="text-xs font-poppins text-slate-500 dark:text-darkTextMuted">{translate("storeManager.staffForm.tempPassword")}</Text>
+                <Text className="text-xs font-poppins text-slate-500 dark:text-darkTextMuted">
+                  {translate("storeManager.staffForm.tempPassword")}
+                </Text>
                 <View className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 dark:border-darkBorder dark:bg-darkBackgroundCard">
-                  <Text className="text-sm font-poppins-bold text-slate-900 dark:text-darkTextPrimary">{password}</Text>
+                  <Text className="text-sm font-poppins-bold text-slate-900 dark:text-darkTextPrimary">
+                    {password}
+                  </Text>
                 </View>
               </View>
             )}
@@ -368,7 +457,9 @@ export default function AddStaff() {
                 activeOpacity={0.8}
                 onPress={() => setShowConfirm(false)}
               >
-                <Text className="text-xs font-poppins-semibold text-slate-600 dark:text-darkTextPrimary">{translate("label.cancel")}</Text>
+                <Text className="text-xs font-poppins-semibold text-slate-600 dark:text-darkTextPrimary">
+                  {translate("label.cancel")}
+                </Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -380,7 +471,9 @@ export default function AddStaff() {
                 }}
               >
                 <Text className="text-xs font-poppins-semibold text-white">
-                  {isEditMode ? translate("label.saveChanges") : translate("storeManager.staffForm.createStaff")}
+                  {isEditMode
+                    ? translate("label.saveChanges")
+                    : translate("storeManager.staffForm.createStaff")}
                 </Text>
               </TouchableOpacity>
             </View>

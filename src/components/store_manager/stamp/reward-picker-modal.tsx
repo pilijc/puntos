@@ -1,13 +1,20 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
-import { ActivityIndicator, FlatList, Modal, Platform, Pressable, useColorScheme } from "react-native";
-import { View, Text, TouchableOpacity } from "@/tw";
 import { Image } from "expo-image";
-import { Gift, X, Check } from "lucide-react-native";
 import { useRouter } from "expo-router";
-import { getRewardsByStoreIdPage } from "@/services/store-manager/reward-service";
+import { useTranslation } from "react-i18next";
+import { View, Text, TouchableOpacity } from "@/tw";
+import { Gift, X, Check } from "lucide-react-native";
 import type { Reward } from "@/type/store-manager/reward";
 import { RewardPickerModalProps } from "@/type/store-manager/stamp";
-import { useTranslation } from "react-i18next";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import { getRewardsByStoreIdPage } from "@/services/store-manager/reward-service";
+import {
+  ActivityIndicator,
+  FlatList,
+  Modal,
+  Platform,
+  Pressable,
+  useColorScheme,
+} from "react-native";
 
 export function RewardPickerModal({
   visible,
@@ -28,8 +35,8 @@ export function RewardPickerModal({
   const nextPageRef = useRef(0);
   const PAGE_SIZE = 15;
 
-  const mutedIconColor = isDark ? "#737373" : "#94A3B8"; 
-  const emptyIconColor = isDark ? "#737373" : "#94A3B8"; 
+  const mutedIconColor = isDark ? "#737373" : "#94A3B8";
+  const emptyIconColor = isDark ? "#737373" : "#94A3B8";
 
   const loadInitial = useCallback(async () => {
     if (!storeId) return;
@@ -72,29 +79,53 @@ export function RewardPickerModal({
   }, [storeId, loadingMore, hasMore]);
 
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+    <Modal
+      visible={visible}
+      transparent
+      animationType="slide"
+      onRequestClose={onClose}
+    >
       <View className="flex-1 justify-end">
-        <Pressable style={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: "rgba(0,0,0,0.5)",
-        }} onPress={onClose} />
+        <Pressable
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "rgba(0,0,0,0.5)",
+          }}
+          onPress={onClose}
+        />
         <View
-          style={{ maxHeight: "88%", paddingBottom: Platform.OS === "ios" ? 28 : 16 }}
-          className={isDark ? "rounded-t-2xl bg-darkBackgroundCard" : "rounded-t-2xl bg-white dark:bg-darkBackgroundCard"}
+          style={{
+            maxHeight: "88%",
+            paddingBottom: Platform.OS === "ios" ? 28 : 16,
+          }}
+          className={
+            isDark
+              ? "rounded-t-2xl bg-darkBackgroundCard"
+              : "rounded-t-2xl bg-white dark:bg-darkBackgroundCard"
+          }
         >
           <View className="flex-row items-center justify-between px-4 py-2">
-            <Text className="text-base font-poppins-bold text-textPrimary dark:text-darkTextPrimary">{translate("storeManager.stamp.rewardPicker.title")}</Text>
-            <TouchableOpacity onPress={onClose} activeOpacity={0.8} className="p-2" hitSlop={8 as any}>
+            <Text className="text-base font-poppins-bold text-textPrimary dark:text-darkTextPrimary">
+              {translate("storeManager.stamp.rewardPicker.title")}
+            </Text>
+            <TouchableOpacity
+              onPress={onClose}
+              activeOpacity={0.8}
+              className="p-2"
+              hitSlop={8 as any}
+            >
               <X size={22} color={mutedIconColor} />
             </TouchableOpacity>
           </View>
 
           <Text className="px-4 pb-2 text-xs font-poppins text-textMuted dark:text-darkTextMuted">
-            {translate("storeManager.stamp.rewardPicker.scrollHint", { pageSize: PAGE_SIZE })}
+            {translate("storeManager.stamp.rewardPicker.scrollHint", {
+              pageSize: PAGE_SIZE,
+            })}
           </Text>
 
           {loading ? (
@@ -114,11 +145,16 @@ export function RewardPickerModal({
                 activeOpacity={0.85}
                 onPress={() => {
                   onClose();
-                  router.push({ pathname: "/(store_manager)/reward", params: { storeId } });
+                  router.push({
+                    pathname: "/(store_manager)/reward",
+                    params: { storeId },
+                  });
                 }}
                 className="mt-4 bg-primary rounded-xl px-6 py-3"
               >
-                <Text className="text-white text-xs font-poppins-bold">{translate("storeManager.stamp.rewardPicker.createButton")}</Text>
+                <Text className="text-white text-xs font-poppins-bold">
+                  {translate("storeManager.stamp.rewardPicker.createButton")}
+                </Text>
               </TouchableOpacity>
             </View>
           ) : (
@@ -162,7 +198,10 @@ export function RewardPickerModal({
                         {item.title}
                       </Text>
                       <Text className="text-xs font-poppins text-textMuted dark:text-darkTextMuted">
-                        {item.points_cost} {translate("storeManager.stamp.rewardPicker.pointsSuffix")}
+                        {item.points_cost}{" "}
+                        {translate(
+                          "storeManager.stamp.rewardPicker.pointsSuffix",
+                        )}
                       </Text>
                     </View>
 
@@ -174,7 +213,10 @@ export function RewardPickerModal({
                   </TouchableOpacity>
                 );
               }}
-              contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 12 }}
+              contentContainerStyle={{
+                paddingHorizontal: 16,
+                paddingBottom: 12,
+              }}
               onEndReached={() => {
                 if (!loading && hasMore && !loadingMore) void loadMore();
               }}

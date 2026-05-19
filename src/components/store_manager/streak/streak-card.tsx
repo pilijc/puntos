@@ -1,18 +1,32 @@
 import React, { useState } from "react";
-import { useTranslation } from "react-i18next";
-import { ActivityIndicator } from "react-native";
-import { View, Text, TouchableOpacity } from "@/tw";
-import { Check, ChevronDown, Flame, Gift, Info, Pencil, Play, SendHorizonal, StopCircle, Trash2, Users } from "lucide-react-native";
-import { COLORS } from "@/type/super-admin/user";
-import { getParticipantsByProgramId, getParticipantsCountByProgramId } from "@/services/store-manager/streak-service";
-import { StreakCardProps, StreakParticipant } from "@/type/store-manager/streak";
-import { formatDate, formatDateTime } from "@/utils/store_manager/streak-utils";
 import { StatusBadge } from "./status-badge";
+import { ActivityIndicator } from "react-native";
+import { useTranslation } from "react-i18next";
+import { COLORS } from "@/type/super-admin/user";
 import { ParticipantRow } from "./participant-row";
+import { View, Text, TouchableOpacity } from "@/tw";
+import { formatDate, formatDateTime } from "@/utils/store_manager/streak-utils";
+import { StreakCardProps, StreakParticipant } from "@/type/store-manager/streak";
+import {
+  getParticipantsByProgramId,
+  getParticipantsCountByProgramId,
+} from "@/services/store-manager/streak-service";
+import {
+  Check,
+  ChevronDown,
+  Flame,
+  Gift,
+  Info,
+  Pencil,
+  Play,
+  SendHorizonal,
+  StopCircle,
+  Trash2,
+  Users,
+} from "lucide-react-native";
 
 export function StreakCard({
   streak,
-  isDark,
   readonlyCampaigns = false,
   onEdit,
   onPublish,
@@ -64,7 +78,11 @@ export function StreakCard({
     const nextPage = participantsPage + 1;
     setLoadingMore(true);
     try {
-      const more = await getParticipantsByProgramId(streak.id, nextPage, PAGE_SIZE);
+      const more = await getParticipantsByProgramId(
+        streak.id,
+        nextPage,
+        PAGE_SIZE,
+      );
       setParticipants((prev) => [...prev, ...more]);
       setParticipantsPage(nextPage);
     } catch {
@@ -73,7 +91,13 @@ export function StreakCard({
     }
   };
 
-  const isActingAny = !!(isEditing || isPublishing || isActivating || isEnding || isDeleting);
+  const isActingAny = !!(
+    isEditing ||
+    isPublishing ||
+    isActivating ||
+    isEnding ||
+    isDeleting
+  );
   const hasActions = !!(onEdit || onPublish || onActivate || onEnd || onDelete);
 
   return (
@@ -84,7 +108,8 @@ export function StreakCard({
             <Flame size={16} color="gray" />
           </View>
           <Text className="text-md font-poppins-bold text-slate-800 dark:text-slate-300 ">
-            {streak.title ?? translate("storeManager.streak.programFallbackTitle")}
+            {streak.title ??
+              translate("storeManager.streak.programFallbackTitle")}
           </Text>
         </View>
         <StatusBadge status={status} />
@@ -92,7 +117,9 @@ export function StreakCard({
 
       {streak.start_at && (
         <View className="flex-row items-center justify-between px-4 py-2.5 border-b border-slate-100 dark:border-darkBackgroundMuted">
-          <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">{translate("storeManager.streak.startsAt")}</Text>
+          <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">
+            {translate("storeManager.streak.startsAt")}
+          </Text>
           <Text className="text-xs font-poppins-semibold text-slate-600 dark:text-slate-300">
             {formatDateTime(streak.start_at)}
           </Text>
@@ -101,7 +128,9 @@ export function StreakCard({
 
       {streak.end_date && status !== "ended" && (
         <View className="flex-row items-center justify-between px-4 py-2.5 border-b border-slate-100 dark:border-darkBackgroundMuted">
-          <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">{translate("storeManager.streak.ends")}</Text>
+          <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">
+            {translate("storeManager.streak.ends")}
+          </Text>
           <Text className="text-xs font-poppins-semibold text-slate-600 dark:text-slate-300">
             {formatDate(streak.end_date)}
           </Text>
@@ -110,7 +139,9 @@ export function StreakCard({
 
       {status === "ended" && streak.ended_at && (
         <View className="flex-row items-center justify-between px-4 py-2.5 border-b border-slate-100 dark:border-darkBackgroundMuted">
-          <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">{translate("storeManager.streak.endedOn")}</Text>
+          <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">
+            {translate("storeManager.streak.endedOn")}
+          </Text>
           <Text className="text-xs font-poppins-semibold text-slate-600 dark:text-slate-300">
             {formatDate(streak.ended_at)}
           </Text>
@@ -119,7 +150,9 @@ export function StreakCard({
 
       {!streak.start_at && streak.created_at && (
         <View className="flex-row items-center justify-between px-4 py-2.5 border-b border-slate-100 dark:border-darkBackgroundMuted">
-          <Text className="text-xs font-poppins text-slate-400 dark:text-darkTextMuted">{translate("storeManager.streak.created")}</Text>
+          <Text className="text-xs font-poppins text-slate-400 dark:text-darkTextMuted">
+            {translate("storeManager.streak.created")}
+          </Text>
           <Text className="text-xs font-poppins-semibold text-slate-600 dark:text-darkTextSecondary">
             {formatDate(streak.created_at)}
           </Text>
@@ -128,26 +161,40 @@ export function StreakCard({
 
       {streak.streak_length != null && (
         <View className="flex-row items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-darkBackgroundMuted">
-          <Text className="text-xs font-poppins text-slate-400 dark:text-darkTextMuted">{translate("storeManager.streak.streakLength")}</Text>
-          <Text className="text-xs font-poppins-bold text-slate-600 dark:text-darkTextSecondary">{translate("storeManager.streak.daysCount", { count: streak.streak_length })}</Text>
+          <Text className="text-xs font-poppins text-slate-400 dark:text-darkTextMuted">
+            {translate("storeManager.streak.streakLength")}
+          </Text>
+          <Text className="text-xs font-poppins-bold text-slate-600 dark:text-darkTextSecondary">
+            {translate("storeManager.streak.daysCount", {
+              count: streak.streak_length,
+            })}
+          </Text>
         </View>
       )}
 
       {streak.max_days_cap != null && (
         <View className="flex-row items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-darkBackgroundMuted">
-          <Text className="text-xs font-poppins text-slate-400 dark:text-darkTextMuted">{translate("storeManager.streak.maxDaysCap")}</Text>
+          <Text className="text-xs font-poppins text-slate-400 dark:text-darkTextMuted">
+            {translate("storeManager.streak.maxDaysCap")}
+          </Text>
           <Text className="text-xs font-poppins-semibold text-slate-600 dark:text-darkTextSecondary">
-            {translate("storeManager.streak.daysCount", { count: streak.max_days_cap })}
+            {translate("storeManager.streak.daysCount", {
+              count: streak.max_days_cap,
+            })}
           </Text>
         </View>
       )}
 
       <View className="flex-row items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-darkBackgroundMuted">
-        <Text className="text-xs font-poppins text-slate-400 dark:text-darkTextMuted">{translate("label.points")}</Text>
+        <Text className="text-xs font-poppins text-slate-400 dark:text-darkTextMuted">
+          {translate("label.points")}
+        </Text>
         <View className="flex-row items-center gap-x-1">
           <Text className="text-xs font-poppins-semibold text-slate-600 dark:text-darkTextSecondary">
             {isFixed
-              ? translate("storeManager.streak.pointsPerDay", { points: streak.fixed_points_per_day ?? "—" })
+              ? translate("storeManager.streak.pointsPerDay", {
+                  points: streak.fixed_points_per_day ?? "—",
+                })
               : translate("storeManager.streak.pointsIncrementPerDay", {
                   points: streak.starting_points ?? "—",
                   increment: streak.increment_value ?? "—",
@@ -158,11 +205,15 @@ export function StreakCard({
 
       {(streak.completion_bonus_points ?? 0) > 0 && (
         <View className="flex-row items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-darkBackgroundMuted">
-          <Text className="text-xs font-poppins text-slate-400 dark:text-darkTextMuted">{translate("storeManager.streak.completionBonus")}</Text>
+          <Text className="text-xs font-poppins text-slate-400 dark:text-darkTextMuted">
+            {translate("storeManager.streak.completionBonus")}
+          </Text>
           <View className="flex-row items-center gap-x-1">
             <Gift size={14} color="#F59E0B" />
             <Text className="text-xs font-poppins-bold text-slate-800 dark:text-darkTextPrimary">
-              {translate("storeManager.streak.bonusPoints", { points: streak.completion_bonus_points })}
+              {translate("storeManager.streak.bonusPoints", {
+                points: streak.completion_bonus_points,
+              })}
             </Text>
           </View>
         </View>
@@ -170,7 +221,10 @@ export function StreakCard({
 
       {!!streak.reward_description && (
         <View className="flex-row items-center gap-x-3 px-4 py-3 border-b border-slate-100 dark:border-darkBackgroundMuted">
-          <Text className="text-xs font-poppins text-slate-600 dark:text-darkTextSecondary" numberOfLines={2}>
+          <Text
+            className="text-xs font-poppins text-slate-600 dark:text-darkTextSecondary"
+            numberOfLines={2}
+          >
             {streak.reward_description}
           </Text>
         </View>
@@ -203,35 +257,37 @@ export function StreakCard({
           <Check size={14} color="#10B981" />
           <Text className="text-xs font-poppins text-emerald-700 dark:text-emerald-400 flex-1">
             {streak.radius_meters
-              ? translate("storeManager.streak.activeBannerWithRadius", { radius: streak.radius_meters })
+              ? translate("storeManager.streak.activeBannerWithRadius", {
+                  radius: streak.radius_meters,
+                })
               : translate("storeManager.streak.activeBanner")}
           </Text>
         </View>
       )}
 
-      { (status === "active" || status === "ended")  && !readonlyCampaigns && (
+      {(status === "active" || status === "ended") && !readonlyCampaigns && (
         <TouchableOpacity
-        activeOpacity={0.7}
-        onPress={() => setParticipantsOpen((p) => !p)}
-        className="flex-row items-center justify-between px-4 py-3"
-      >
-        <View className="flex-row items-center gap-x-2">
-          <View className="w-8 h-8 rounded-lg items-center justify-center">
-            <Users size={16} color={COLORS.textMuted} />
-          </View>
-          <Text className="text-sm font-poppins-semibold text-slate-600 dark:text-darkTextSecondary">
-            {translate("storeManager.streak.participants")}
-          </Text>
-          {showParticipantsCount && (
-            <View className="px-2 py-0.5 min-w-[22px] items-center">
-              <Text className="text-xs font-poppins-bold text-slate-600 dark:text-darkTextSecondary">
-                {participantsCount}
-              </Text>
+          activeOpacity={0.7}
+          onPress={() => setParticipantsOpen((p) => !p)}
+          className="flex-row items-center justify-between px-4 py-3"
+        >
+          <View className="flex-row items-center gap-x-2">
+            <View className="w-8 h-8 rounded-lg items-center justify-center">
+              <Users size={16} color={COLORS.textMuted} />
             </View>
-          )}
-        </View>
-        <ChevronDown size={20} color={COLORS.textMuted} />
-      </TouchableOpacity>
+            <Text className="text-sm font-poppins-semibold text-slate-600 dark:text-darkTextSecondary">
+              {translate("storeManager.streak.participants")}
+            </Text>
+            {showParticipantsCount && (
+              <View className="px-2 py-0.5 min-w-[22px] items-center">
+                <Text className="text-xs font-poppins-bold text-slate-600 dark:text-darkTextSecondary">
+                  {participantsCount}
+                </Text>
+              </View>
+            )}
+          </View>
+          <ChevronDown size={20} color={COLORS.textMuted} />
+        </TouchableOpacity>
       )}
 
       {participantsOpen && (
@@ -271,7 +327,9 @@ export function StreakCard({
                       <ChevronDown size={16} color={COLORS.primary} />
                       <Text className="text-xs font-poppins-semibold text-primary">
                         {showParticipantsCount
-                          ? translate("storeManager.streak.loadMoreRemaining", { count: participantsCount - participants.length })
+                          ? translate("storeManager.streak.loadMoreRemaining", {
+                              count: participantsCount - participants.length,
+                            })
                           : translate("storeManager.streak.loadMore")}
                       </Text>
                     </>
@@ -283,7 +341,10 @@ export function StreakCard({
                 <View className="py-2.5 items-center border-t border-slate-100 dark:border-darkBackgroundMuted">
                   <Text className="text-[10px] font-poppins text-textMuted">
                     {showParticipantsCount
-                      ? translate("storeManager.streak.allParticipantsShownCount", { count: participantsCount })
+                      ? translate(
+                          "storeManager.streak.allParticipantsShownCount",
+                          { count: participantsCount },
+                        )
                       : translate("storeManager.streak.allParticipantsShown")}
                   </Text>
                 </View>

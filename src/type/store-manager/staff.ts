@@ -1,5 +1,5 @@
-import type { StoreStaffRow } from "@/services/store-manager/staff-service";
 import { ModalButton } from "@/components/modal";
+import type { StoreStaffRow } from "@/services/store-manager/staff-service";
 
 export type StaffMember = StoreStaffRow;
 

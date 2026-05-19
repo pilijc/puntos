@@ -1,17 +1,17 @@
-import React, { useCallback, useState } from "react";
-import { ActivityIndicator, RefreshControl, ScrollView, Platform } from "react-native";
-import { View, Text, SafeAreaView } from "@/tw";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Image } from "expo-image";
+import { Gift } from "lucide-react-native";
+import { Button } from "@/components/button";
+import { View, Text, SafeAreaView } from "@/tw";
+import { useTranslation } from "react-i18next";
+import { AppHeader } from "@/components/header";
+import { Reward } from "@/type/store-manager/reward";
+import React, { useCallback, useState } from "react";
+import { Modal, type ModalButton } from "@/components/modal";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
 import { deleteReward, getRewardById } from "@/services/store-manager/reward-service";
+import { ActivityIndicator, RefreshControl, ScrollView, Platform } from "react-native";
 import { isStoreRewardLinkedToStampProgram } from "@/services/store-manager/stamp-service";
-import { Reward } from "@/type/store-manager/reward";
-import { Modal, type ModalButton } from "@/components/modal";
-import { AppHeader } from "@/components/header";
-import { Button } from "@/components/button";
-import { Gift } from "lucide-react-native";
-import { useTranslation } from "react-i18next";
 import { useStorePremiumCampaignEdit } from "@/hooks/store-manager/use-store-premium-campaign-edit";
 
 const WEB_MAX_WIDTH = 896;

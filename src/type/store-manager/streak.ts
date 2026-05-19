@@ -1,8 +1,6 @@
-export type StreakStatus = "draft" | "upcoming" | "active" | "ended";
-
 export type PointsMode = "fixed" | "incremental";
-
 export type StreakTabKey = "active" | "upcoming" | "ended";
+export type StreakStatus = "draft" | "upcoming" | "active" | "ended";
 export type StreakActionType = "publish" | "activate" | "end" | "delete";
 
 export const StatusBadgeProps = {
@@ -88,7 +86,14 @@ export interface StreakState {
   modal: {
     title: string;
     message: string;
-    buttons: { label: string; onPress: () => void; variant?: "primary" | "success" | "danger" | "secondary" | "ghost"; loading?: boolean; disabled?: boolean; timer?: number }[];
+    buttons: {
+      label: string;
+      onPress: () => void;
+      variant?: "primary" | "success" | "danger" | "secondary" | "ghost";
+      loading?: boolean;
+      disabled?: boolean;
+      timer?: number;
+    }[];
     timer?: boolean;
   } | null;
   streakLengthError: boolean;
@@ -128,7 +133,14 @@ export interface StreakViewState {
   modal: {
     title: string;
     message: string;
-    buttons: { label: string; onPress: () => void; variant?: "primary" | "success" | "danger" | "secondary" | "ghost"; loading?: boolean; disabled?: boolean; timer?: number }[];
+    buttons: {
+      label: string;
+      onPress: () => void;
+      variant?: "primary" | "success" | "danger" | "secondary" | "ghost";
+      loading?: boolean;
+      disabled?: boolean;
+      timer?: number;
+    }[];
   } | null;
 
   setActiveTab: (value: StreakTabKey) => void;

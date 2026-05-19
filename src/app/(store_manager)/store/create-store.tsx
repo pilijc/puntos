@@ -1,36 +1,19 @@
-import React, { useState } from "react";
-import { View, SafeAreaView, ScrollView } from "@/tw";
-import { router } from "expo-router";
-import { Button } from "@/components/button";
-import * as ImagePicker from "expo-image-picker";
-import { Modal, type ModalButton } from "@/components/modal";
-import {
-  createStore,
-  updateStore,
-  uploadStoreImage,
-  StoreImageKind,
-  resolveStoreTimezone,
-} from "@/services/store-service";
-import { canOwnerCreateAnotherStore } from "@/services/store-manager/subscription-limits";
-import { supabase } from "@/supabase/supabase";
 import Mapbox from "@rnmapbox/maps";
-import { useColorScheme, Platform } from "react-native";
-import { useCreateStoreStore } from "@/store/store-manager/create-store-store";
-import {
-  aspect_ratios,
-  DEFAULT_STORE_CLOSE,
-  DEFAULT_STORE_OPEN,
-  type PickImageType,
-  STEPS,
-} from "@/type/store-manager/store";
+import { router } from "expo-router";
+import React, { useState } from "react";
 import * as Location from "expo-location";
-import { AppHeader } from "@/components/header";
+import { Button } from "@/components/button";
 import { useTranslation } from "react-i18next";
-import {
-  StoreStep,
-  BusinessStep,
-  LocationStep,
-} from "@/components/store_manager/create-store";
+import { AppHeader } from "@/components/header";
+import * as ImagePicker from "expo-image-picker";
+import { View, SafeAreaView, ScrollView } from "@/tw";
+import { useColorScheme, Platform } from "react-native";
+import { Modal, type ModalButton } from "@/components/modal";
+import { useCreateStoreStore } from "@/store/store-manager/create-store-store";
+import { checkStoreCreationLimit } from "@/services/store-manager/subscription-limits";
+import { StoreStep, BusinessStep, LocationStep } from "@/components/store_manager/create-store";
+import { createStore, updateStore, uploadStoreImage, StoreImageKind, resolveStoreTimezone } from "@/services/store-service";
+import { aspect_ratios, DEFAULT_STORE_CLOSE, DEFAULT_STORE_OPEN, type PickImageType, STEPS } from "@/type/store-manager/store";
 
 const WEB_MAX_WIDTH = 896;
 Mapbox.setAccessToken(process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN);
@@ -278,14 +261,12 @@ export default function CreateStore() {
   const submitCreateStore = async () => {
     try {
       setIsSubmitting(true);
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user?.id) {
-        showError(translate("storeManager.createStore.createFailed"));
-        return;
-      }
-
-      const guard = await canOwnerCreateAnotherStore(user.id);
+      const guard = await checkStoreCreationLimit();
       if (!guard.allowed) {
+        if (guard.reason === "NO_USER") {
+          showError(translate("storeManager.createStore.createFailed"));
+          return;
+        }
         setModal({
           title: "Upgrade required",
           message:
@@ -321,7 +302,7 @@ export default function CreateStore() {
         storeOpen: storeOpen.trim() || DEFAULT_STORE_OPEN,
         storeClose: storeClose.trim() || DEFAULT_STORE_CLOSE,
         storeDays: storeDays && storeDays.length > 0 ? storeDays : undefined,
-        ownerId: user.id,
+        ownerId: guard.ownerId!,
         radius,
       });
 

@@ -1,15 +1,24 @@
 import React from "react";
+import { Image } from "expo-image";
 import { useTranslation } from "react-i18next";
 import { ActivityIndicator } from "react-native";
-import { Image } from "expo-image";
 import { View, Text, TouchableOpacity } from "@/tw";
-import { getCollectorsByProgramId, getProgramStatus } from "@/services/store-manager/stamp-service";
-import {
-  emptyCollectorSlice, STATUS_BADGE, StampCardProps,
-} from "@/type/store-manager/stamp";
 import { formatDate } from "@/utils/store_manager/stamp-utils";
-import { ChevronUp, ChevronDown, OctagonMinus, Trash2, Pencil, SendHorizonal, Stamp as StampIcon } from "lucide-react-native";
-  
+import { emptyCollectorSlice, STATUS_BADGE, StampCardProps } from "@/type/store-manager/stamp";
+import {
+  getCollectorsByProgramId,
+  getProgramStatus,
+} from "@/services/store-manager/stamp-service";
+import {
+  ChevronUp,
+  ChevronDown,
+  OctagonMinus,
+  Trash2,
+  Pencil,
+  SendHorizonal,
+  Stamp as StampIcon,
+} from "lucide-react-native";
+
 export function StampCard({
   stamp,
   reward,

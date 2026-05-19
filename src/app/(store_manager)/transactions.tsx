@@ -1,4 +1,26 @@
+import { useTranslation } from "react-i18next";
+import type { StoreRow } from "@/services/store-service";
+import { formatTxTime } from "@/utils/store_manager/transaction";
+import { useTransactions } from "@/hooks/store-manager/transaction";
+import { TxType, ListItem } from "@/type/store-manager/transaction";
 import React, { useCallback, useMemo, useRef, useState } from "react";
+import { useStarredTxStores } from "@/hooks/store-manager/use-starred-tx-stores";
+import { QrCode, Stamp, Flame, Funnel, Check, Star, X } from "lucide-react-native";
+import {
+  View,
+  Text,
+  SafeAreaView,
+  FlatList,
+  ScrollView,
+  TextInput,
+  TouchableOpacity,
+  Pressable,
+  Image,
+} from "@/tw";
+import {
+  TransactionSkeleton,
+  StoresAndFunnelSkeleton,
+} from "@/components/skeleton/store_manager/transaction-skeleton";
 import {
   Modal,
   useColorScheme,
@@ -11,25 +33,6 @@ import {
   Keyboard,
   Alert,
 } from "react-native";
-import { TransactionSkeleton, StoresAndFunnelSkeleton } from "@/components/skeleton/store_manager/transaction-skeleton";
-import { QrCode, Stamp, Flame, Funnel, Check, Star, X } from "lucide-react-native";
-import { useTransactions } from "@/hooks/store-manager/transaction";
-import { useStarredTxStores } from "@/hooks/store-manager/use-starred-tx-stores";
-import { TxType, ListItem } from "@/type/store-manager/transaction";
-import type { StoreRow } from "@/services/store-service";
-import { formatTxTime } from "@/utils/store_manager/transaction";
-import { useTranslation } from "react-i18next";
-import {
-  View,
-  Text,
-  SafeAreaView,
-  FlatList,
-  ScrollView,
-  TextInput,
-  TouchableOpacity,
-  Pressable,
-  Image,
-} from "@/tw";
 
 const TYPE_META: Record<
   TxType,

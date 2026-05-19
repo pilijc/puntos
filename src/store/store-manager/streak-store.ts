@@ -1,5 +1,5 @@
-import { PointsMode, StreakState, StreakViewState } from "@/type/store-manager/streak";
 import { create } from "zustand";
+import { PointsMode, StreakState, StreakViewState } from "@/type/store-manager/streak";
 
 export const useStreakStore = create<StreakState>((set) => ({
   points_mode: "fixed",

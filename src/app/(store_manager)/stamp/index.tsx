@@ -1,9 +1,19 @@
-import React, { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, ScrollView, useColorScheme, Platform } from "react-native";
-import { View, Text, TouchableOpacity, SafeAreaView } from "@/tw";
-import { Modal } from "@/components/modal";
-import { useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
 import { Image } from "expo-image";
+import { Plus } from "lucide-react-native";
+import { Modal } from "@/components/modal";
+import { Button } from "@/components/button";
+import { useTranslation } from "react-i18next";
+import { AppHeader } from "@/components/header";
+import { formatDate } from "@/utils/store_manager/stamp-utils";
+import React, { useCallback, useEffect, useState } from "react";
+import { View, Text, TouchableOpacity, SafeAreaView } from "@/tw";
+import { useStampViewStore } from "@/store/store-manager/stamp-store";
+import { StampCard } from "@/components/store_manager/stamp/stamp-card";
+import { useRouter, useLocalSearchParams, useFocusEffect } from "expo-router";
+import { Tabs, CollectorSlice, emptyCollectorSlice } from "@/type/store-manager/stamp";
+import { ActivityIndicator, ScrollView, useColorScheme, Platform } from "react-native";
+import { useStampsByStoreQuery, useRewardsByStoreQuery } from "@/hooks/store-manager/rq";
+import { useStorePremiumCampaignEdit } from "@/hooks/store-manager/use-store-premium-campaign-edit";
 import {
   getCollectorsByProgramId,
   getCollectorsCountByProgramId,
@@ -11,16 +21,6 @@ import {
   activateStampProgram,
   deleteStampProgram,
 } from "@/services/store-manager/stamp-service";
-import { Tabs, CollectorSlice, emptyCollectorSlice } from "@/type/store-manager/stamp";
-import { Button } from "@/components/button";
-import { Plus } from "lucide-react-native";
-import { AppHeader } from "@/components/header";
-import { useStampViewStore } from "@/store/store-manager/stamp-store";
-import { StampCard } from "@/components/store_manager/stamp/stamp-card";
-import { useTranslation } from "react-i18next";
-import { useStorePremiumCampaignEdit } from "@/hooks/store-manager/use-store-premium-campaign-edit";
-import { formatDate } from "@/utils/store_manager/stamp-utils";
-import { useStampsByStoreQuery, useRewardsByStoreQuery } from "@/hooks/store-manager/rq";
 
 const WEB_MAX_WIDTH = 896;
 const WEB_TAB_PILL_STYLE = { flexGrow: 1, flexBasis: 120, minWidth: 0 };

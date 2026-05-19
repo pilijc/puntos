@@ -1,25 +1,25 @@
-import React, { useCallback, useEffect, useState } from "react";
-import {
-  ActivityIndicator,
-  Platform,
-  ScrollView,
-} from "react-native";
-import { View, Text, TouchableOpacity, SafeAreaView } from "@/tw";
-import { useRouter, useLocalSearchParams, useFocusEffect } from "expo-router";
 import { Image } from "expo-image";
-import { useStampConfigureViewStore, useStampStore } from "@/store/store-manager/stamp-store";
-import { createStamp, getStampProgramById, updateStampProgram } from "@/services/store-manager/stamp-service";
-import { getRewardById, getRewardsByStoreIdPage } from "@/services/store-manager/reward-service";
-import { EXPIRATION_OPTIONS } from "@/type/store-manager/stamp";
-import type { Reward } from "@/type/store-manager/reward";
-import { AppHeader } from "@/components/header";
-import { Button } from "@/components/button";
 import { Modal } from "@/components/modal";
-import { RewardPickerModal } from "@/components/store_manager/stamp/reward-picker-modal";
-import { Gift, Check, ChevronRight } from "lucide-react-native";
-import { TextField } from "@/components/text-field";
+import { Button } from "@/components/button";
 import { useTranslation } from "react-i18next";
+import { AppHeader } from "@/components/header";
+import { TextField } from "@/components/text-field";
+import type { Reward } from "@/type/store-manager/reward";
+import { EXPIRATION_OPTIONS } from "@/type/store-manager/stamp";
+import { Gift, Check, ChevronRight } from "lucide-react-native";
+import React, { useCallback, useEffect, useState } from "react";
+import { View, Text, TouchableOpacity, SafeAreaView } from "@/tw";
+import { ActivityIndicator, Platform, ScrollView } from "react-native";
+import { useRouter, useLocalSearchParams, useFocusEffect } from "expo-router";
+import { RewardPickerModal } from "@/components/store_manager/stamp/reward-picker-modal";
+import { useStampConfigureViewStore, useStampStore } from "@/store/store-manager/stamp-store";
+import { getRewardById, getRewardsByStoreIdPage } from "@/services/store-manager/reward-service";
 import { useStorePremiumCampaignEdit } from "@/hooks/store-manager/use-store-premium-campaign-edit";
+import {
+  createStamp,
+  getStampProgramById,
+  updateStampProgram,
+} from "@/services/store-manager/stamp-service";
 
 export default function ConfigureStamp() {
   const { t: translate } = useTranslation();

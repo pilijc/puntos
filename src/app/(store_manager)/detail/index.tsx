@@ -1,20 +1,32 @@
-import React, { useMemo, useRef, useState } from "react";
-import { RefreshControl, Platform, ScrollView as RNScrollView } from "react-native";
-import { View, Text, ScrollView, SafeAreaView, TouchableOpacity } from "@/tw";
-import { useRouter } from "expo-router";
 import { Image } from "expo-image";
-import Mapbox, { Camera, MapView, MarkerView } from "@rnmapbox/maps";
-import { formatTime } from "@/utils/store_manager/store-utils";
-import { useStoreDetail } from "@/hooks/store-manager/use-detail";
-import { DetailsSkeleton } from "@/components/skeleton/store_manager/details-skeleton";
-import { OptionsMenu } from "@/components/options";
-import { AppHeader } from "@/components/header";
+import { useRouter } from "expo-router";
 import { Modal } from "@/components/modal";
-import { shouldUseInteractiveMapbox } from "@/utils/mapbox-platform";
-import { Building2, ChevronLeft, ChevronRight, File, MapPin, MapPinOff, Pencil } from "lucide-react-native";
 import { useTranslation } from "react-i18next";
-import { store_types_options } from "@/type/store-manager/store";
+import { AppHeader } from "@/components/header";
+import { OptionsMenu } from "@/components/options";
+import React, { useMemo, useRef, useState } from "react";
 import { STATUS_CONFIG } from "@/type/store-manager/detail";
+import { formatTime } from "@/utils/store_manager/store-utils";
+import { store_types_options } from "@/type/store-manager/store";
+import { useStoreDetail } from "@/hooks/store-manager/use-detail";
+import { shouldUseInteractiveMapbox } from "@/utils/mapbox-platform";
+import Mapbox, { Camera, MapView, MarkerView } from "@rnmapbox/maps";
+import { View, Text, ScrollView, SafeAreaView, TouchableOpacity } from "@/tw";
+import { DetailsSkeleton } from "@/components/skeleton/store_manager/details-skeleton";
+import {
+  Building2,
+  ChevronLeft,
+  ChevronRight,
+  File,
+  MapPin,
+  MapPinOff,
+  Pencil,
+} from "lucide-react-native";
+import {
+  RefreshControl,
+  Platform,
+  ScrollView as RNScrollView,
+} from "react-native";
 
 function webContainerStyle(paddingTop = 16, paddingBottom = 48) {
   return {
@@ -39,7 +51,10 @@ export default function DetailIndex() {
     isDark,
   } = useStoreDetail();
 
-  const statusKey = detail?.status && detail.status in STATUS_CONFIG ? detail.status : "pending_review";
+  const statusKey =
+    detail?.status && detail.status in STATUS_CONFIG
+      ? detail.status
+      : "pending_review";
   const statusCfg = STATUS_CONFIG[statusKey] ?? STATUS_CONFIG.pending_review;
   const statusLabel = translate(`storeManager.detail.status.${statusKey}`);
 
@@ -62,14 +77,25 @@ export default function DetailIndex() {
     if (!bannerScrollRef.current || bannerWidth === 0) return;
     const clamped = Math.max(0, Math.min(idx, validPictures.length - 1));
     setBannerIndex(clamped);
-    bannerScrollRef.current.scrollTo({ x: clamped * bannerWidth, animated: true });
+    bannerScrollRef.current.scrollTo({
+      x: clamped * bannerWidth,
+      animated: true,
+    });
   };
 
   return (
-    <SafeAreaView edges={["top"]} className="flex-1 bg-backgroundMuted dark:bg-darkBackgroundMuted">
+    <SafeAreaView
+      edges={["top"]}
+      className="flex-1 bg-backgroundMuted dark:bg-darkBackgroundMuted"
+    >
       <AppHeader
-        title={detail?.name || translate("storeManager.viewStore.fallbackTitle")}
-        description={detail?.address || translate("storeManager.detail.headerDefaultDescription")}
+        title={
+          detail?.name || translate("storeManager.viewStore.fallbackTitle")
+        }
+        description={
+          detail?.address ||
+          translate("storeManager.detail.headerDefaultDescription")
+        }
         onBackPress={() => {
           router.push(`/(store_manager)/view-store/${storeId}`);
         }}
@@ -79,12 +105,21 @@ export default function DetailIndex() {
               {
                 label: translate("label.edit"),
                 icon: <Pencil size={14} color="text-primary" />,
-                onPress: () => router.push({ pathname: "/(store_manager)/detail/edit-details", params: { storeId } }),
+                onPress: () =>
+                  router.push({
+                    pathname: "/(store_manager)/detail/edit-details",
+                    params: { storeId },
+                  }),
               },
             ]}
           />
         }
-        onRightIconPress={() => router.push({ pathname: "/(store_manager)/detail/edit-details", params: { storeId } })}
+        onRightIconPress={() =>
+          router.push({
+            pathname: "/(store_manager)/detail/edit-details",
+            params: { storeId },
+          })
+        }
       />
 
       {loading ? (
@@ -103,12 +138,21 @@ export default function DetailIndex() {
             />
           }
         >
-          <View style={Platform.OS === "web" ? { alignItems: "center", paddingHorizontal: 16 } : undefined}>
+          <View
+            style={
+              Platform.OS === "web"
+                ? { alignItems: "center", paddingHorizontal: 16 }
+                : undefined
+            }
+          >
             <View
               className="gap-y-3"
-              style={Platform.OS === "web" ? { width: "100%", maxWidth: 860 } : undefined}
+              style={
+                Platform.OS === "web"
+                  ? { width: "100%", maxWidth: 860 }
+                  : undefined
+              }
             >
-
               <View className="bg-white dark:bg-darkBackgroundCard rounded-xl border border-slate-100 dark:border-darkBorder">
                 <View
                   className="rounded-t-xl overflow-hidden"
@@ -124,7 +168,11 @@ export default function DetailIndex() {
                     style={{ height: 160 }}
                     onMomentumScrollEnd={(e) => {
                       if (bannerWidth > 0) {
-                        setBannerIndex(Math.round(e.nativeEvent.contentOffset.x / bannerWidth));
+                        setBannerIndex(
+                          Math.round(
+                            e.nativeEvent.contentOffset.x / bannerWidth,
+                          ),
+                        );
                       }
                     }}
                   >
@@ -139,7 +187,10 @@ export default function DetailIndex() {
                         />
                       ))
                     ) : (
-                      <View style={{ width: bannerWidth || 320, height: 160 }} className="bg-slate-100 dark:bg-darkBackgroundCard" />
+                      <View
+                        style={{ width: bannerWidth || 320, height: 160 }}
+                        className="bg-slate-100 dark:bg-darkBackgroundCard"
+                      />
                     )}
                   </RNScrollView>
 
@@ -155,23 +206,27 @@ export default function DetailIndex() {
                     </TouchableOpacity>
                   )}
 
-                  {validPictures.length > 1 && bannerIndex < validPictures.length - 1 && (
-                    <TouchableOpacity
-                      onPress={() => scrollToIndex(bannerIndex + 1)}
-                      activeOpacity={0.8}
-                      className="absolute right-2 top-0 bottom-0 justify-center"
-                    >
-                      <View className="w-8 h-8 rounded-full bg-black/40 items-center justify-center">
-                        <ChevronRight size={18} color="#fff" />
-                      </View>
-                    </TouchableOpacity>
-                  )}
+                  {validPictures.length > 1 &&
+                    bannerIndex < validPictures.length - 1 && (
+                      <TouchableOpacity
+                        onPress={() => scrollToIndex(bannerIndex + 1)}
+                        activeOpacity={0.8}
+                        className="absolute right-2 top-0 bottom-0 justify-center"
+                      >
+                        <View className="w-8 h-8 rounded-full bg-black/40 items-center justify-center">
+                          <ChevronRight size={18} color="#fff" />
+                        </View>
+                      </TouchableOpacity>
+                    )}
                 </View>
-    
 
                 <View
                   className={`flex-row items-center ${
-                    Platform.OS === "web" ? "px-4" : Platform.OS === "android" ? "px-2" : ""
+                    Platform.OS === "web"
+                      ? "px-4"
+                      : Platform.OS === "android"
+                        ? "px-2"
+                        : ""
                   } pb-2`}
                   style={{ marginTop: -28 }}
                 >
@@ -201,16 +256,27 @@ export default function DetailIndex() {
                   <View className="flex-1 ml-3 pb-1 pt-10">
                     <View className="flex-row items-center flex-wrap gap-x-2">
                       <Text className="text-base font-poppins-bold text-slate-800 dark:text-darkTextPrimary">
-                        {detail?.name || translate("storeManager.detail.unnamedStore")}
+                        {detail?.name ||
+                          translate("storeManager.detail.unnamedStore")}
                       </Text>
-                      <View className={`flex-row items-center gap-x-1 px-2 py-0.5 rounded-full ${statusCfg.bg}`}>
-                        <View className={`w-1.5 h-1.5 rounded-full ${statusCfg.dot}`} />
-                        <Text className={`text-xs font-poppins-semibold ${statusCfg.text}`}>{statusLabel}</Text>
+                      <View
+                        className={`flex-row items-center gap-x-1 px-2 py-0.5 rounded-full ${statusCfg.bg}`}
+                      >
+                        <View
+                          className={`w-1.5 h-1.5 rounded-full ${statusCfg.dot}`}
+                        />
+                        <Text
+                          className={`text-xs font-poppins-semibold ${statusCfg.text}`}
+                        >
+                          {statusLabel}
+                        </Text>
                       </View>
                     </View>
 
                     <View className="flex-row items-center flex-wrap mt-0.5 gap-x-1">
-                      <Text className="text-xs font-poppins text-textSecondary dark:text-darkTextSecondary">{storeTypeLabel}</Text>
+                      <Text className="text-xs font-poppins text-textSecondary dark:text-darkTextSecondary">
+                        {storeTypeLabel}
+                      </Text>
                       {(detail?.phone || detail?.registration_number) && (
                         <View className="w-1 h-4 justify-center items-center mx-2">
                           <View className="w-px h-full bg-slate-300 dark:bg-darkBackgroundCard opacity-60" />
@@ -218,7 +284,9 @@ export default function DetailIndex() {
                       )}
                       {detail?.phone && (
                         <>
-                          <Text className="text-xs font-poppins text-textSecondary dark:text-darkTextSecondary">{detail.phone}</Text>
+                          <Text className="text-xs font-poppins text-textSecondary dark:text-darkTextSecondary">
+                            {detail.phone}
+                          </Text>
                         </>
                       )}
                       {detail?.phone && detail?.registration_number && (
@@ -228,59 +296,68 @@ export default function DetailIndex() {
                       )}
                       {detail?.registration_number && (
                         <>
-                          <Text className="text-xs font-poppins text-textSecondary dark:text-darkTextSecondary">{detail.registration_number}</Text>
+                          <Text className="text-xs font-poppins text-textSecondary dark:text-darkTextSecondary">
+                            {detail.registration_number}
+                          </Text>
                         </>
                       )}
                     </View>
-               
 
-                    {(detail?.store_open || detail?.store_close || detail?.store_days) && (
+                    {(detail?.store_open ||
+                      detail?.store_close ||
+                      detail?.store_days) && (
                       <View className="flex-row items-center flex-wrap mt-0.5 gap-x-2">
                         <View className="flex-row items-center flex-wrap">
                           {detail?.store_open && (
                             <Text className="text-xs font-poppins text-textSecondary dark:text-darkTextSecondary">
-                              {detail.store_open ? formatTime(detail.store_open) : notSet}
+                              {detail.store_open
+                                ? formatTime(detail.store_open)
+                                : notSet}
                             </Text>
                           )}
                           {detail?.store_open && detail?.store_close && (
-                            <Text className="mx-1 text-xs font-poppins text-textSecondary dark:text-darkTextSecondary">-</Text>
+                            <Text className="mx-1 text-xs font-poppins text-textSecondary dark:text-darkTextSecondary">
+                              -
+                            </Text>
                           )}
                           {detail?.store_close && (
                             <Text className="text-xs font-poppins text-textSecondary dark:text-darkTextSecondary">
-                              {detail.store_close ? formatTime(detail.store_close) : notSet}
+                              {detail.store_close
+                                ? formatTime(detail.store_close)
+                                : notSet}
                             </Text>
                           )}
                         </View>
 
-                        {(detail?.store_open || detail?.store_close) && detail?.store_days && (
-                          <View className="w-1 h-4 justify-center items-center">
-                            <View className="w-px h-full bg-slate-300 dark:bg-darkBackgroundCard opacity-60" />
-                          </View>
-                        )}
+                        {(detail?.store_open || detail?.store_close) &&
+                          detail?.store_days && (
+                            <View className="w-1 h-4 justify-center items-center">
+                              <View className="w-px h-full bg-slate-300 dark:bg-darkBackgroundCard opacity-60" />
+                            </View>
+                          )}
 
                         {detail?.store_days && (
                           <Text className="text-xs font-poppins text-textSecondary dark:text-darkTextSecondary">
                             {detail.store_days
-                              .map((day: string) =>
-                                ({
-                                  monday: "Mon",
-                                  tuesday: "Tue",
-                                  wednesday: "Wed",
-                                  thursday: "Thu",
-                                  friday: "Fri",
-                                  saturday: "Sat",
-                                  sunday: "Sun"
-                                }[day.toLowerCase()] ?? day)
+                              .map(
+                                (day: string) =>
+                                  ({
+                                    monday: "Mon",
+                                    tuesday: "Tue",
+                                    wednesday: "Wed",
+                                    thursday: "Thu",
+                                    friday: "Fri",
+                                    saturday: "Sat",
+                                    sunday: "Sun",
+                                  })[day.toLowerCase()] ?? day,
                               )
                               .join(", ")}
                           </Text>
                         )}
                       </View>
                     )}
-               
                   </View>
                 </View>
-           
 
                 {detail?.business_document_image && (
                   <>
@@ -288,7 +365,7 @@ export default function DetailIndex() {
                       className="py-3 gap-y-2"
                       style={{
                         paddingLeft: Platform.OS === "web" ? 24 : 16,
-                        paddingRight: Platform.OS === "web" ? 24 : 16
+                        paddingRight: Platform.OS === "web" ? 24 : 16,
                       }}
                     >
                       <Text className="text-xs font-poppins-semibold text-textSecondary dark:text-darkTextSecondary mb-1">
@@ -303,8 +380,12 @@ export default function DetailIndex() {
                           <File size={18} color="#FF6600" />
                         </View>
                         <View className="flex-1">
-                          <Text className="text-xs font-poppins-semibold text-textPrimary dark:text-darkTextPrimary" numberOfLines={1}>
-                            {detail.business_document_image.split("/").pop() ?? translate("label.businessDocument")}
+                          <Text
+                            className="text-xs font-poppins-semibold text-textPrimary dark:text-darkTextPrimary"
+                            numberOfLines={1}
+                          >
+                            {detail.business_document_image.split("/").pop() ??
+                              translate("label.businessDocument")}
                           </Text>
                           <Text className="text-[10px] font-poppins text-textMuted dark:text-darkTextSecondary mt-0.5">
                             {translate("label.tapToView", "Tap to view")}
@@ -322,7 +403,11 @@ export default function DetailIndex() {
                     >
                       <Image
                         source={{ uri: detail.business_document_image }}
-                        style={{ width: "100%", aspectRatio: 3 / 4, borderRadius: 8 }}
+                        style={{
+                          width: "100%",
+                          aspectRatio: 3 / 4,
+                          borderRadius: 8,
+                        }}
                         contentFit="contain"
                         transition={200}
                       />
@@ -336,7 +421,11 @@ export default function DetailIndex() {
                   </Text>
                   {detail?.address && (
                     <View className="flex-row items-start gap-x-1">
-                      <MapPin size={12} color={isDark ? "#A3A3A3" : "#475569"} style={{ marginTop: 1 }} />
+                      <MapPin
+                        size={12}
+                        color={isDark ? "#A3A3A3" : "#475569"}
+                        style={{ marginTop: 1 }}
+                      />
                       <Text className="text-xs font-poppins-semibold text-textSecondary dark:text-darkTextMuted flex-1">
                         {detail.address}
                       </Text>
@@ -352,7 +441,11 @@ export default function DetailIndex() {
                     shouldUseInteractiveMapbox() ? (
                       <MapView
                         style={{ width: "100%", height: 180 }}
-                        styleURL={isDark ? "mapbox://styles/mapbox/navigation-night-v1" : "mapbox://styles/mapbox/streets-v12"}
+                        styleURL={
+                          isDark
+                            ? "mapbox://styles/mapbox/navigation-night-v1"
+                            : "mapbox://styles/mapbox/streets-v12"
+                        }
                         scrollEnabled={false}
                         zoomEnabled={false}
                         rotateEnabled={false}
@@ -361,13 +454,19 @@ export default function DetailIndex() {
                         logoEnabled={false}
                       >
                         <Camera
-                          centerCoordinate={[Number(detail!.longitude), Number(detail!.latitude)]}
+                          centerCoordinate={[
+                            Number(detail!.longitude),
+                            Number(detail!.latitude),
+                          ]}
                           zoomLevel={15}
                           animationMode="none"
                         />
                         {Platform.OS === "web" ? (
                           <MarkerView
-                            coordinate={[Number(detail!.longitude), Number(detail!.latitude)]}
+                            coordinate={[
+                              Number(detail!.longitude),
+                              Number(detail!.latitude),
+                            ]}
                             anchor={{ x: 0.5, y: 1 }}
                           >
                             <View className="items-center justify-end">
@@ -380,18 +479,32 @@ export default function DetailIndex() {
                           </MarkerView>
                         ) : (
                           <>
-                            <Mapbox.Images images={{ default: require("../../../assets/images/markers/default.png") }} />
+                            <Mapbox.Images
+                              images={{
+                                default: require("../../../assets/images/markers/default.png"),
+                              }}
+                            />
                             <Mapbox.ShapeSource
                               id="storePin"
                               shape={{
                                 type: "Feature",
-                                geometry: { type: "Point", coordinates: [Number(detail!.longitude), Number(detail!.latitude)] },
+                                geometry: {
+                                  type: "Point",
+                                  coordinates: [
+                                    Number(detail!.longitude),
+                                    Number(detail!.latitude),
+                                  ],
+                                },
                                 properties: { icon: "default" },
                               }}
                             >
                               <Mapbox.SymbolLayer
                                 id="storePinLayer"
-                                style={{ iconImage: ["get", "icon"], iconAllowOverlap: true, iconSize: 0.015 }}
+                                style={{
+                                  iconImage: ["get", "icon"],
+                                  iconAllowOverlap: true,
+                                  iconSize: 0.015,
+                                }}
                               />
                             </Mapbox.ShapeSource>
                           </>
@@ -399,7 +512,10 @@ export default function DetailIndex() {
                       </MapView>
                     ) : (
                       <View className="flex-1 bg-slate-50 dark:bg-darkBackgroundCard items-center justify-center gap-y-1">
-                        <MapPin size={24} color={isDark ? "#525252" : "#CBD5E1"} />
+                        <MapPin
+                          size={24}
+                          color={isDark ? "#525252" : "#CBD5E1"}
+                        />
                         <Text className="text-xs font-poppins text-slate-400 dark:text-darkTextSecondary">
                           {translate("storeManager.detail.mapOnlyAndroidWeb")}
                         </Text>
@@ -407,16 +523,17 @@ export default function DetailIndex() {
                     )
                   ) : (
                     <View className="flex-1 bg-slate-50 dark:bg-darkBackgroundCard items-center justify-center gap-y-1">
-                      <MapPinOff size={24} color={isDark ? "#525252" : "#CBD5E1"} />
+                      <MapPinOff
+                        size={24}
+                        color={isDark ? "#525252" : "#CBD5E1"}
+                      />
                       <Text className="text-xs font-poppins text-slate-400 dark:text-darkTextSecondary">
                         {translate("storeManager.detail.noLocationSet")}
                       </Text>
                     </View>
                   )}
                 </View>
-
               </View>
-
             </View>
           </View>
         </ScrollView>

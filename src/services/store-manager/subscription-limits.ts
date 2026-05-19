@@ -1,8 +1,5 @@
 import { supabase } from "@/supabase/supabase";
 
-/**
- * Count stores owned by this user that count toward the Basic limit (pending review + active).
- */
 export async function countOwnerStoreSlotsUsed(ownerId: string): Promise<number> {
   const { count, error } = await supabase
     .from("stores")
@@ -23,9 +20,6 @@ function planSlugForSubscription(
   return row?.slug ? String(row.slug).toLowerCase() : null;
 }
 
-/**
- * Paid tier = payment completed and plan is not Basic (e.g. pro / premium).
- */
 export function isPaidUnlimitedPlan(
   managerRow: { subscription_id?: number | null; payment_status?: string | null } | null,
   plans: Array<{ id: number; slug?: string | null }>,
@@ -36,9 +30,6 @@ export function isPaidUnlimitedPlan(
   return slug !== "basic";
 }
 
-/**
- * Whether this owner may create another store (Basic = 1 slot; paid unlimited = no cap).
- */
 export async function canOwnerCreateAnotherStore(ownerId: string): Promise<{
   allowed: boolean;
   reason?: "LIMIT_REACHED";
@@ -69,3 +60,22 @@ export async function canOwnerCreateAnotherStore(ownerId: string): Promise<{
 
   return { allowed: true };
 }
+
+export async function checkStoreCreationLimit(): Promise<{
+  allowed: boolean;
+  reason?: "LIMIT_REACHED" | "NO_USER";
+  ownerId?: string;
+}> {
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user?.id) {
+    return { allowed: false, reason: "NO_USER" };
+  }
+
+  const guard = await canOwnerCreateAnotherStore(user.id);
+  return {
+    ...guard,
+    ownerId: user.id,
+  };
+}
+

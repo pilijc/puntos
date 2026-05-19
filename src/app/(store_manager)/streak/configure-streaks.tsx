@@ -1,27 +1,32 @@
-import React, { createElement as domEl, useEffect, useMemo, useRef } from "react";
-import { Platform, ScrollView, useColorScheme } from "react-native";
-import { View, Text, TouchableOpacity, TextInput, SafeAreaView } from "@/tw";
-import DateTimePicker from "@react-native-community/datetimepicker";
-import { useRouter, useLocalSearchParams, useFocusEffect } from "expo-router";
-import { useStreakStore } from "@/store/store-manager/streak-store";
-import { createStreak, getAllStreaksByStoreId, getStreakProgramById, updateStreakProgram } from "@/services/store-manager/streak-service";
-import { PointsMode, Streak } from "@/type/store-manager/streak";
-import { Button } from "@/components/button";
 import { Modal } from "@/components/modal";
-import { Coins, TrendingUp, Check, Info, ChevronDown } from "lucide-react-native";
+import { Toggle } from "@/components/toggle";
+import { Button } from "@/components/button";
+import { useTranslation } from "react-i18next";
 import { AppHeader } from "@/components/header";
 import { TextField } from "@/components/text-field";
-import { Toggle } from "@/components/toggle";
+import { PointsMode } from "@/type/store-manager/streak";
+import DateTimePicker from "@react-native-community/datetimepicker";
+import { useStreakStore } from "@/store/store-manager/streak-store";
+import { Platform, ScrollView, useColorScheme } from "react-native";
+import { useRouter, useLocalSearchParams, useFocusEffect } from "expo-router";
+import { View, Text, TouchableOpacity, TextInput, SafeAreaView } from "@/tw";
+import React, { createElement as domEl, useEffect, useMemo, useRef } from "react";
+import { Coins, TrendingUp, Check, Info, ChevronDown } from "lucide-react-native";
+import { useStorePremiumCampaignEdit } from "@/hooks/store-manager/use-store-premium-campaign-edit";
 import { formatDateTime, computeMinStartAtFromActiveProgram } from "@/utils/store_manager/streak-utils";
+import { WebStreakActivationCalendar } from "@/components/store_manager/streak/web-streak-activation-calendar";
+import {
+  createStreak,
+  getAllStreaksByStoreId,
+  getStreakProgramById,
+  updateStreakProgram,
+} from "@/services/store-manager/streak-service";
 import {
   isStreakConfigureInlineMessageKey,
   isStreakNoticeMessageKey,
   resolveStreakErrorI18nKey,
   resolveStreakErrorTitleKey,
 } from "@/services/store-manager/streak-user-messages";
-import { useTranslation } from "react-i18next";
-import { useStorePremiumCampaignEdit } from "@/hooks/store-manager/use-store-premium-campaign-edit";
-import { WebStreakActivationCalendar } from "@/components/store_manager/streak/web-streak-activation-calendar";
 
 const MS_24H = 24 * 60 * 60 * 1000;
 

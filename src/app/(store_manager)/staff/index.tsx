@@ -1,19 +1,19 @@
-import React, { useCallback, useEffect, useState } from "react";
-import { RefreshControl, useColorScheme, Platform } from "react-native";
-import { View, Text, TouchableOpacity, ScrollView, SafeAreaView } from "@/tw";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
-import { useQueryClient } from "@tanstack/react-query";
-import { deleteStoreStaff } from "@/services/store-manager/staff-service";
 import { Modal } from "@/components/modal";
-import { useStaffStore } from "@/store/store-manager/staff-store";
-import { UsersRound, Pencil, Trash, UserRoundX, Plus } from "lucide-react-native";
-import StaffSkeleton from "@/components/skeleton/store_manager/staff-skeleton";
-import { getInitials } from "@/utils/store_manager/staff-utils";
-import { AppHeader } from "@/components/header";
 import { useTranslation } from "react-i18next";
+import { AppHeader } from "@/components/header";
+import { useQueryClient } from "@tanstack/react-query";
 import { useStoreStaffQuery } from "@/hooks/store-manager/rq";
+import React, { useCallback, useEffect, useState } from "react";
+import { getInitials } from "@/utils/store_manager/staff-utils";
+import { useStaffStore } from "@/store/store-manager/staff-store";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { RefreshControl, useColorScheme, Platform } from "react-native";
 import { storeManagerKeys } from "@/hooks/store-manager/rq/query-keys";
+import { deleteStoreStaff } from "@/services/store-manager/staff-service";
+import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
+import { View, Text, TouchableOpacity, ScrollView, SafeAreaView } from "@/tw";
+import StaffSkeleton from "@/components/skeleton/store_manager/staff-skeleton";
+import { UsersRound, Pencil, Trash, UserRoundX, Plus } from "lucide-react-native";
 
 const WEB_MAX_WIDTH = 896;
 

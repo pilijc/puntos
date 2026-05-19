@@ -1,17 +1,17 @@
-import React, { useCallback, useEffect, useState } from "react";
-import { useFocusEffect } from "expo-router";
-import { RefreshControl, ActivityIndicator, Platform } from "react-native";
-import { View, Text, TouchableOpacity, ScrollView, SafeAreaView } from "@/tw";
-import { useLocalSearchParams, useRouter } from "expo-router";
 import { Image } from "expo-image";
-import { useRewardsByStoreQuery } from "@/hooks/store-manager/rq";
+import { useFocusEffect } from "expo-router";
+import { useTranslation } from "react-i18next";
+import { AppHeader } from "@/components/header";
 import { Reward } from "@/type/store-manager/reward";
 import { Modal, type ModalButton } from "@/components/modal";
-import { AppHeader } from "@/components/header";
 import { Plus, CircleStar, Gift } from "lucide-react-native";
-import { useTranslation } from "react-i18next";
-import { useStorePremiumCampaignEdit } from "@/hooks/store-manager/use-store-premium-campaign-edit";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import { formatDate } from "@/utils/store_manager/stamp-utils";
+import React, { useCallback, useEffect, useState } from "react";
+import { useRewardsByStoreQuery } from "@/hooks/store-manager/rq";
+import { RefreshControl, ActivityIndicator, Platform } from "react-native";
+import { View, Text, TouchableOpacity, ScrollView, SafeAreaView } from "@/tw";
+import { useStorePremiumCampaignEdit } from "@/hooks/store-manager/use-store-premium-campaign-edit";
 
 const WEB_MAX_WIDTH = 896;
 
