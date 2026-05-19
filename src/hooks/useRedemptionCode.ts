@@ -72,7 +72,7 @@ export function useRedemptionCode(
       try {
         channelRef.current.unsubscribe();
       } catch (error) {
-        console.error('Error unsubscribing from channel:', error);
+        console.log('Error unsubscribing from channel:', error);
       }
     }
     channelRef.current = null;
@@ -151,7 +151,7 @@ export function useRedemptionCode(
         }
       }
     } catch (error) {
-      console.error("Error generating redemption code:", error);
+      console.log("Error generating redemption code:", error);
       setStatus("error");
       setErrorMessage(
         error instanceof Error && error.message.includes("timed out")
@@ -182,21 +182,20 @@ export function useRedemptionCode(
 
     const codeToCancel = redemptionCode;
 
-    clearTimer();
-    clearSubscription();
-    setStatus("cancelled");
-    setErrorMessage(null);
-
     try {
       const result = await cancelRedemptionCode(codeToCancel.id, codeToCancel.user_id);
 
       if (!result.success) {
-        setStatus("active");
         setErrorMessage(result.message);
+        return;
       }
+
+      clearTimer();
+      clearSubscription();
+      setStatus("cancelled");
+      setErrorMessage(null);
     } catch (error) {
-      console.error("Error cancelling redemption code:", error);
-      setStatus("active");
+      console.log("Error cancelling redemption code:", error);
       setErrorMessage("An error occurred while cancelling code");
     }
   }, [redemptionCode, clearTimer, clearSubscription]);

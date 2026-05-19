@@ -132,9 +132,9 @@ export default function ClaimRewardsScreen() {
 
   // Active codes reserve points, while cancelled/expired codes release them.
   useEffect(() => {
-    if (status === "active" || status === "cancelled" || status === "expired") {
+    if (status === "active") {
       refreshPoints();
-    } else if (status === "redeemed") {
+    } else if (status === "redeemed" || status === "cancelled" || status === "expired") {
       refreshRewardsAndPoints();
     }
   }, [status, redemptionCode?.id, refreshPoints, refreshRewardsAndPoints]);
