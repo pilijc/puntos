@@ -59,6 +59,16 @@ export default function SuperAdminStores() {
 		hasProSubscription,
 	} = useSuperAdminStores();
 
+	const [lastErrorModal, setLastErrorModal] = React.useState<typeof errorModal>(null);
+	React.useEffect(() => {
+		if (errorModal) setLastErrorModal(errorModal);
+	}, [errorModal]);
+
+	const [lastConfirmModal, setLastConfirmModal] = React.useState<typeof confirmModal>(null);
+	React.useEffect(() => {
+		if (confirmModal) setLastConfirmModal(confirmModal);
+	}, [confirmModal]);
+
 	const statusCounts = React.useMemo(() => {
 		const counts: Record<string, number> = { All: stores.length };
 
@@ -351,13 +361,13 @@ export default function SuperAdminStores() {
 			<Modal
 				visible={!!errorModal}
 				onClose={dismissErrorModal}
-				title={errorModal?.title ?? (errorModal?.type === "success" ? translate("label.success") : translate("label.error"))}
-				message={errorModal?.message ?? ""}
+				title={lastErrorModal?.title ?? (lastErrorModal?.type === "success" ? translate("label.success") : translate("label.error"))}
+				message={lastErrorModal?.message ?? ""}
 				buttons={[
 					{
 						label: translate("label.ok"),
 						onPress: dismissErrorModal,
-						variant: errorModal?.type === "success" ? "success" : "primary",
+						variant: lastErrorModal?.type === "success" ? "success" : "primary",
 					},
 				]}
 				showCloseButton={false}
@@ -368,18 +378,18 @@ export default function SuperAdminStores() {
 			<Modal
 				visible={!!confirmModal}
 				onClose={() => setConfirmModal(null)}
-				title={confirmModal?.title ?? ""}
-				message={confirmModal?.message ?? ""}
+				title={lastConfirmModal?.title ?? ""}
+				message={lastConfirmModal?.message ?? ""}
 				buttons={[
-					!confirmModal?.hideCancel && {
+					!lastConfirmModal?.hideCancel && {
 						label: translate("label.cancel"),
 						onPress: () => setConfirmModal(null),
 						variant: "secondary",
 					},
 					{
-						label: confirmModal?.label ?? translate("label.confirm"),
-						onPress: confirmModal?.onConfirm ?? (() => { }),
-						variant: confirmModal?.variant ?? "primary",
+						label: lastConfirmModal?.label ?? translate("label.confirm"),
+						onPress: lastConfirmModal?.onConfirm ?? (() => { }),
+						variant: lastConfirmModal?.variant ?? "primary",
 					},
 				].filter(Boolean) as any}
 				showCloseButton={false}

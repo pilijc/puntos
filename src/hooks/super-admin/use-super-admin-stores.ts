@@ -106,28 +106,22 @@ export function useSuperAdminStores() {
       return;
     }
 
-    setConfirmModal({
-      title: translate("super_admin.stores.modal.approveTitle"),
-      message: translate("super_admin.stores.modal.approveMessage", { name: store.name }),
-      label: translate("super_admin.stores.modal.approveAction"),
-      variant: "primary",
-      onConfirm: async () => {
-        setConfirmModal(null);
+    const executeApprove = async () => {
+      const success = await approveStore(store);
+      if (success) {
+        setPreviewStore(null);
+        setSelectedStore(null);
+        useSuperAdminStoresStore.setState({
+          errorModal: {
+            title: translate("super_admin.stores.modal.successTitle"),
+            message: translate("super_admin.stores.modal.successMessage", { name: store.name }),
+            type: "success",
+          },
+        });
+      }
+    };
 
-        const success = await approveStore(store);
-        if (success) {
-          setPreviewStore(null);
-          setSelectedStore(null);
-          useSuperAdminStoresStore.setState({
-            errorModal: {
-              title: translate("super_admin.stores.modal.successTitle"),
-              message: translate("super_admin.stores.modal.successMessage", { name: store.name }),
-              type: "success",
-            },
-          });
-        }
-      },
-    });
+    void executeApprove();
   };
 
   const handleReject = (store: AdminStoreRow) => {
