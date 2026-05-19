@@ -16,7 +16,7 @@ const localRedemptionLocks = new Map<string, number>();
 function withGenerationTimeout<T>(promise: Promise<T>): Promise<T> {
   return new Promise((resolve, reject) => {
     const timeout = setTimeout(() => {
-      reject(new Error("Redemption code generation timed out"));
+      reject(new console.log("Redemption code generation timed out"));
     }, GENERATION_TIMEOUT_MS);
 
     promise
