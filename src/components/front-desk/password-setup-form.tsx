@@ -57,24 +57,26 @@ export default function PasswordSetupForm({
       />
 
       {/* Confirm Password */}
-      <PasswordInputField
-        label={translate("frontdesk.password.confirmPassword")}
-        value={state.confirmPassword}
-        onChangeText={(value) => updateState({ 
-          confirmPassword: value, 
-          errors: { ...state.errors, confirmPassword: undefined } 
-        })}
-        placeholder={translate("frontdesk.password.confirmPasswordPlaceholder")}
-        showPassword={state.showConfirmPassword}
-        onTogglePassword={() => updateState({ showConfirmPassword: !state.showConfirmPassword })}
-        error={state.errors.confirmPassword}
-      />
-
+      <View className="pt-2"> 
+          <PasswordInputField
+            label={translate("frontdesk.password.confirmPassword")}
+            value={state.confirmPassword}
+            onChangeText={(value) => updateState({ 
+              confirmPassword: value, 
+              errors: { ...state.errors, confirmPassword: undefined } 
+            })}
+            placeholder={translate("frontdesk.password.confirmPasswordPlaceholder")}
+            showPassword={state.showConfirmPassword}
+            onTogglePassword={() => updateState({ showConfirmPassword: !state.showConfirmPassword })}
+            error={state.errors.confirmPassword}
+          />
+      </View>
       {/* Password Requirements */}
-      <PasswordRequirements />
-
+      <View className="pt-6">
+        <PasswordRequirements />
+        </View>
       {/* Submit Button */}
-      <View className="mt-8 mb-8">
+      <View className="pt-8">
         <Button
           label={isInitialSetup ? translate("frontdesk.password.setButton") : translate("frontdesk.password.updateButton")}
           onPress={onSubmit}
