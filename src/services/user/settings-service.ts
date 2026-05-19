@@ -1,3 +1,4 @@
+import { Platform } from "react-native";
 import { supabase } from "@/supabase/supabase";
 import { markIntentionalSignOut } from "@/lib/intentional-signout";
 import { UserProfile, UserPreferences } from "@/type/settings";
@@ -76,17 +77,31 @@ export async function updateUserProfileService(userId: string, updates: Partial<
 export async function uploadUserAvatarService(userId: string, uri: string): Promise<string | null> {
     if (uri.startsWith('http')) return uri;
 
-    const fileExt = uri.split('.').pop()?.toLowerCase() || 'jpeg';
-    const fileName = `${userId}_${Date.now()}.${fileExt}`;
-    const filePath = `profile-pictures/${fileName}`;
-    const fileType = `image/${fileExt === 'jpg' ? 'jpeg' : fileExt}`;
+    const timestamp = Date.now();
+    let uploadPayload: Blob | FormData;
+    let filePath: string;
+    let fileType: string;
 
-    const formData = new FormData();
-    formData.append('file', { uri, name: fileName, type: fileType } as any);
+    if (Platform.OS === 'web') {
+        const response = await fetch(uri);
+        const blob = await response.blob();
+        fileType = blob.type || 'image/jpeg';
+        const ext = fileType.split('/')[1] || 'jpeg';
+        filePath = `profile-pictures/${userId}_${timestamp}.${ext}`;
+        uploadPayload = blob;
+    } else {
+        const fileExt = uri.split('.').pop()?.toLowerCase() || 'jpeg';
+        fileType = `image/${fileExt === 'jpg' ? 'jpeg' : fileExt}`;
+        const fileName = `${userId}_${timestamp}.${fileExt}`;
+        filePath = `profile-pictures/${fileName}`;
+        const formData = new FormData();
+        formData.append('file', { uri, name: fileName, type: fileType } as any);
+        uploadPayload = formData;
+    }
 
     const { error: uploadError } = await supabase.storage
         .from('puntos-public')
-        .upload(filePath, formData, { contentType: fileType, upsert: true });
+        .upload(filePath, uploadPayload, { contentType: fileType, upsert: true });
 
     if (uploadError) throw uploadError;
 
