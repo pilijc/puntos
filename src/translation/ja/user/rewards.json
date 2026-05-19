@@ -175,7 +175,12 @@
   "redemption": {
     "title": "スキャンして交換",
     "titleRedeemed": "交換済み",
-    "generating": "生成中...",
+    "generating": "コードを生成中...",
+    "limitReached": "上限に達しました",
+    "limitMessage": "コードの生成回数が多すぎます。しばらく待ってからもう一度お試しください。",
+    "tryAgainIn": "{{count}}秒後に再試行できます",
+    "generateFailed": "コードを生成できませんでした",
+    "generateFailedMessage": "コードの生成に時間がかかりすぎました。もう一度お試しください。",
     "expired": "期限切れ",
     "codeExpired": "コードの期限が切れました",
     "redeemed": "交換しました！",

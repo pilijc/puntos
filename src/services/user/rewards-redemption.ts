@@ -7,6 +7,12 @@ import {
 } from "@/type/user/reward-redemption";
 import { getUserAvailablePoints } from "@/services/user/points-service";
 
+const EXPO_PUBLIC_API_URL = process.env.EXPO_PUBLIC_API_URL;
+
+if (!EXPO_PUBLIC_API_URL) {
+  throw new Error("EXPO_PUBLIC_API_URL environment is null or not set");
+}
+
 const REDEMPTION_CODE_PREFIX = "RWD";
 const CODE_LENGTH = 6;
 const EXPIRY_MINUTES = 10;
@@ -291,5 +297,67 @@ export function listenToUserRedemptions(
         onNewRedemption(newRedemption);
       }
     )
-   
+}
+
+export async function generateRedemptionCodeWithRateLimit(
+  userId: string,
+  rewardId: string,
+  storeId: string
+): Promise<GenerateCodeResult> {
+  try {
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    if (sessionError || !session) {
+      return { success: false, message: "User not authenticated" };
+    }
+
+    //Check rate limit via Edge Function
+    const edgeFunctionUrl = `${EXPO_PUBLIC_API_URL}/functions/v1/clever-processor`;
+
+    const rateLimitResponse = await fetch(edgeFunctionUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${session.access_token}`,
+      },
+      body: JSON.stringify({
+        user_id: userId,
+        reward_id: rewardId,
+        store_id: storeId,
+      }),
+    });
+
+    const rateLimitData = await rateLimitResponse.json().catch(() => ({}));
+
+    if (rateLimitResponse.status === 429) {
+      const message =
+        rateLimitData.error || "Too many requests. Please wait a moment.";
+      const rateLimitType =
+        rateLimitData.type === "cooldown" || message.includes("generating another code")
+          ? "cooldown"
+          : "rate_limit";
+      const retryAfter =
+        typeof rateLimitData.retry_after === "number"
+          ? rateLimitData.retry_after
+          : rateLimitType === "cooldown"
+            ? 3
+            : 60;
+
+      return {
+        success: false,
+        message,
+        rateLimitType,
+        retryAfter,
+      };
+    }
+
+    if (!rateLimitResponse.ok) {
+      return { success: false, message: rateLimitData.error || "Rate limit check failed" };
+    }
+
+    //If rate limit passed, call the existing service
+    return await generateRedemptionCode(userId, rewardId, storeId);
+  } catch (error) {
+    console.error("Error calling rate-limited redemption code generation:", error);
+    return { success: false, message: "An error occurred" };
+  }
 }

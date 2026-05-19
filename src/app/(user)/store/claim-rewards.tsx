@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { ScrollView, TouchableOpacity, View as RNView, useColorScheme, Dimensions } from "react-native";
 import { View, Text, Image } from "@/tw";
 import { ChevronLeft, Gift, Gem, Star, Lock, Trophy, Sparkles, CheckCircle2 } from "lucide-react-native";
-import { useRouter, useLocalSearchParams } from "expo-router";
+import { useFocusEffect, useRouter, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated";
 import Carousel from "react-native-reanimated-carousel";
@@ -34,6 +34,7 @@ export default function ClaimRewardsScreen() {
   const [userId, setUserId] = useState<string | null>(null);
   const [drawerVisible, setDrawerVisible] = useState(false);
   const [selectedReward, setSelectedReward] = useState<Reward | null>(null);
+  const [cooldownRewards, setCooldownRewards] = useState<Set<string>>(new Set());
   const router = useRouter();
   const redemptionChannelRef = useRef<any | null>(null);
   const insets = useSafeAreaInsets();
@@ -73,6 +74,9 @@ export default function ClaimRewardsScreen() {
     redemptionCode,
     status,
     timeRemaining,
+    rateLimitType,
+    rateLimitTimeRemaining,
+    errorMessage,
     generateCode,
     cancelCode,
     resetCode,
@@ -82,26 +86,62 @@ export default function ClaimRewardsScreen() {
   );
 
   const handleClaimReward = useCallback(async (reward: Reward) => {
+    if (cooldownRewards.has(reward.id.toString())) {
+      return; // Prevent claiming if in cooldown
+    }
     setSelectedReward(reward);
     setDrawerVisible(true);
-  }, []);
+  }, [cooldownRewards]);
+
+  const isGeneratingRedemption = drawerVisible && status === "loading";
+
+  const isRewardClaimDisabled = useCallback((reward: Reward) => {
+    return isGeneratingRedemption || cooldownRewards.has(reward.id.toString());
+  }, [cooldownRewards, isGeneratingRedemption]);
+
+  const refreshRewardsAndPoints = useCallback(async () => {
+    if (!userId || !storeId) return;
+
+    const [storeRewards, points] = await Promise.all([
+      getRewards({ storeId: storeId as string, limit: 20 }),
+      getUserAvailablePoints(userId, storeId),
+    ]);
+
+    setRewards(storeRewards);
+    setUserPoints(points);
+  }, [userId, storeId]);
+
+  const refreshPoints = useCallback(async () => {
+    if (!userId || !storeId) return;
+
+    const points = await getUserAvailablePoints(userId, storeId);
+    setUserPoints(points);
+  }, [userId, storeId]);
+
+  useFocusEffect(
+    useCallback(() => {
+      refreshRewardsAndPoints();
+    }, [refreshRewardsAndPoints])
+  );
 
   useEffect(() => {
-    if (selectedReward && drawerVisible && (status === "loading" || !redemptionCode)) {
+    if (selectedReward && drawerVisible && status === "loading" && !redemptionCode) {
       generateCode();
     }
   }, [selectedReward, drawerVisible, redemptionCode, status, generateCode]);
 
-  // Refresh points when redemption is completed
+  // Active codes reserve points, while cancelled/expired codes release them.
   useEffect(() => {
-    if (status === "redeemed" && userId && storeId) {
-      getUserAvailablePoints(userId, storeId).then(setUserPoints);
+    if (status === "active") {
+      refreshPoints();
+    } else if (status === "redeemed" || status === "cancelled" || status === "expired") {
+      refreshRewardsAndPoints();
     }
-  }, [status, userId, storeId]);
+  }, [status, redemptionCode?.id, refreshPoints, refreshRewardsAndPoints]);
 
   // Cancel redemption
-  const handleCancelRedemption = useCallback(async () => {
-    await cancelCode();
+  const handleCancelRedemption = useCallback(() => {
+    cancelCode();
   }, [cancelCode]);
 
   // Close drawer and reset
@@ -109,21 +149,28 @@ export default function ClaimRewardsScreen() {
     setDrawerVisible(false);
      resetCode();
      
-     // Refresh rewards and points after closing drawer  
-     if (status === "redeemed" && userId && storeId) {
-       Promise.all([
-         getRewards({ storeId: storeId as string, limit: 20 }),
-         getUserAvailablePoints(userId, storeId),
-       ]).then(([storeRewards, points]) => {
-         setRewards(storeRewards);
-         setUserPoints(points);
-       });
+     // Add to cooldown set if rate limited
+     if (status === "rate_limited" && selectedReward) {
+       setCooldownRewards(prev => new Set(prev).add(selectedReward.id.toString()));
+       // Remove from cooldown after time expires
+       setTimeout(() => {
+         setCooldownRewards(prev => {
+           const newSet = new Set(prev);
+           newSet.delete(selectedReward.id.toString());
+           return newSet;
+         });
+       }, rateLimitTimeRemaining * 1000);
+     }
+     
+     // Refresh rewards and points after closing drawer
+     if (status === "redeemed" || status === "cancelled" || status === "expired") {
+       refreshRewardsAndPoints();
      }
      
      setTimeout(() => {
       setSelectedReward(null);
     }, 300);
-  }, [resetCode, status, userId, storeId]);
+  }, [resetCode, status, selectedReward, rateLimitTimeRemaining, refreshRewardsAndPoints]);
 
   useEffect(() => {
     if (!userId || !storeId) return;
@@ -429,15 +476,23 @@ export default function ClaimRewardsScreen() {
                     </RNView>
                     <TouchableOpacity
                       onPress={() => handleClaimReward(item)}
+                      disabled={isRewardClaimDisabled(item)}
                       style={{
                         flexDirection: "row", alignItems: "center", gap: 4,
-                        backgroundColor: "#FF6600",
+                        backgroundColor: isRewardClaimDisabled(item) ? "#D1D5DB" : "#FF6600",
                         paddingHorizontal: 14, paddingVertical: 7,
                         borderRadius: 99,
+                        opacity: isRewardClaimDisabled(item) ? 0.6 : 1,
                       }}
                     >
-                      <CheckCircle2 size={12} color="#FFFFFF" />
-                      <Text className="text-white font-poppins-bold text-[11px]">{translate("user.rewards.streakDetail.claimBtn")}</Text>
+                      <CheckCircle2 size={12} color={isRewardClaimDisabled(item) ? "#6B7280" : "#FFFFFF"} />
+                      <Text className={isRewardClaimDisabled(item) ? "text-neutral-500 font-poppins-bold text-[11px]" : "text-white font-poppins-bold text-[11px]"}>
+                        {isGeneratingRedemption
+                          ? translate("user.rewards.redemption.generating")
+                          : cooldownRewards.has(item.id.toString())
+                            ? "Wait"
+                            : translate("user.rewards.streakDetail.claimBtn")}
+                      </Text>
                     </TouchableOpacity>
                   </RNView>
                 </RNView>
@@ -547,6 +602,9 @@ export default function ClaimRewardsScreen() {
         redemptionCode={redemptionCode ?? undefined}
         timeRemaining={timeRemaining}
         status={status}
+        errorMessage={errorMessage}
+        rateLimitType={rateLimitType}
+        rateLimitTimeRemaining={rateLimitTimeRemaining}
         onClose={handleCloseDrawer}
         onCancel={handleCancelRedemption}
       />

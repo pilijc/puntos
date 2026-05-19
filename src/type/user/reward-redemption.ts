@@ -20,6 +20,8 @@ export interface GenerateCodeResult {
     success: boolean;
     code?: RedemptionCode;
     message?: string;
+    rateLimitType?: "cooldown" | "rate_limit";
+    retryAfter?: number;
 }
 
 export interface RedemptionUpdate {
