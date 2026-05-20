@@ -483,7 +483,7 @@ export default function EditDetails() {
           },
         ],
       });
-    } catch (err: any) {
+    } catch (err) {
       showError(
         err?.message ?? translate("storeManager.detailEdit.saveFailed"),
       );
@@ -855,7 +855,7 @@ export default function EditDetails() {
                         : "mapbox://styles/mapbox/streets-v12"
                     }
                     onPress={(e) => {
-                      const coords = (e as any)?.geometry?.coordinates as
+                      const coords = e.geometry.coordinates as
                         | [number, number]
                         | undefined;
                       if (!coords) return;

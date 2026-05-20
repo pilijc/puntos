@@ -14,6 +14,7 @@ import type { PasswordSetupState } from "@/type/frontdesk/password";
 import { getRoleTypeForUser } from "@/services/access-service";
 import PasswordSetupHeader from "@/components/front-desk/password-setup-header";
 import PasswordSetupForm from "@/components/front-desk/password-setup-form";
+import { PASSWORD_REGEX } from "@/hooks/use-password-validation";
 
 export default function SetupPasswordScreen() {
   const router = useRouter();
@@ -60,7 +61,11 @@ export default function SetupPasswordScreen() {
     if (password.length < 8) {
       return "Password must be at least 8 characters long";
     }
-    if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(password)) {
+    if (
+      !PASSWORD_REGEX.lowercase.test(password) ||
+      !PASSWORD_REGEX.uppercase.test(password) ||
+      !PASSWORD_REGEX.number.test(password)
+    ) {
       return "Password must contain uppercase, lowercase, and numbers";
     }
     return null;
@@ -112,9 +117,8 @@ export default function SetupPasswordScreen() {
 
       let result;
       try {
-        result = (await Promise.race([setupPromise, timeoutPromise])) as any;
+        result = await Promise.race([setupPromise, timeoutPromise]);
       } catch (timeoutError) {
-        // Assume success after timeout to not block user
         result = {
           success: true,
           message:

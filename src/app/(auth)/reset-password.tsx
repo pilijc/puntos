@@ -60,7 +60,7 @@ export default function ResetPassword() {
         translate("onboarding.resetPassword.success.passwordUpdatedDetail")
       );
       router.replace("/login");
-    } catch (error: any) {
+    } catch (error) {
       const message =
         error?.msg ??
         (typeof error?.message === "string"
