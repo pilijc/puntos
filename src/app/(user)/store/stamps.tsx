@@ -24,6 +24,7 @@ import {
 } from "lucide-react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { StampDetailSkeleton } from "@/components/skeleton/user/stamp-detail-skeleton";
+import { useIsDark } from "@/hooks/use-is-dark";
 
 // ─── Single Punch Card ────────────────────────────────────────────────────────
 function StampCard({
@@ -121,7 +122,7 @@ function StampCard({
           <Text className="font-poppins-bold text-neutral-900 dark:text-white text-base" numberOfLines={1}>
             {storeName}
           </Text>
-          <Text className="text-[11px] font-poppins text-neutral-500 line-clamp-1" numberOfLines={1}>
+          <Text className="text-[11px] font-poppins text-neutral-500 dark:text-neutral-400 line-clamp-1" numberOfLines={1}>
             {storeAddress || translate("user.activity.stampLog.rewardProgram")}
           </Text>
         </View>
@@ -285,6 +286,7 @@ export default function StampLogScreen() {
   const { t: translate } = useTranslation();
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const isDark = useIsDark();
 
   const params = useLocalSearchParams<{ storeId?: string }>();
   const rawStoreId = params.storeId;
@@ -418,13 +420,13 @@ export default function StampLogScreen() {
             onPress={() => router.back()}
             className="w-9 h-9 rounded-full bg-neutral-100 dark:bg-darkBackgroundCard items-center justify-center"
           >
-            <ChevronLeft size={20} color="#171717" className="dark:text-white" />
+            <ChevronLeft size={20} color={isDark ? "#ffffff" : "#171717"} />
           </TouchableOpacity>
           <View className="flex-1">
             <Text className="text-base font-poppins-bold text-neutral-900 dark:text-white tracking-[0.2px]" numberOfLines={1}>
               {parsedStoreId ? `${displayStoreName} ${translate("user.activity.stampLog.stampsSuffix")}` : translate("user.rewards.stampLog")}
             </Text>
-            <Text className="text-[11px] font-poppins text-neutral-500">
+            <Text className="text-[11px] font-poppins text-neutral-500 dark:text-neutral-400">
               {translate("user.activity.stampLog.loyaltyProgress")}
             </Text>
           </View>
@@ -461,7 +463,7 @@ export default function StampLogScreen() {
             )}
 
             {/* How to Earn Banner Text */}
-            <Text className="text-[11px] font-poppins text-neutral-500 text-center mt-3 mb-6 px-4">
+            <Text className="text-[11px] font-poppins text-neutral-500 dark:text-neutral-400 text-center mt-3 mb-6 px-4">
               {translate("user.activity.stampLog.earnInfo")}
             </Text>
           </View>
@@ -470,7 +472,7 @@ export default function StampLogScreen() {
         {/* ─── Vertical Timeline Stamp History ─── */}
         <View className="mb-8">
           <View className="flex-row items-center gap-x-2 mb-4 px-1">
-            <History size={16} color="#475569" className="dark:text-neutral-400" />
+            <History size={16} color={isDark ? "#a3a3a3" : "#475569"} />
             <Text className="text-sm font-poppins-bold text-neutral-800 dark:text-neutral-200">
               {translate("user.activity.stampLog.stampHistory")}
             </Text>

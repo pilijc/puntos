@@ -8,9 +8,9 @@ import { LocationCard } from "@/components/settings/card/location-card";
 
 export default function UserSettings() {
   const extraCards = (
-    <View className="overflow-hidden bg-background dark:bg-darkBackgroundCard rounded-xl">
+    <View className="overflow-hidden bg-white dark:bg-darkBackgroundCard rounded-xl border border-slate-100 dark:border-darkBorder">
       <NotificationCard />
-      <View className="h-[1px]" />
+      <View className="h-px bg-slate-100 dark:bg-darkBorder" />
       <LocationCard />
     </View>
   );

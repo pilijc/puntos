@@ -26,6 +26,7 @@ import {
   Clock,
 } from "lucide-react-native";
 import { StreakDetailSkeleton } from "@/components/skeleton/user/streak-detail-skeleton";
+import { useIsDark } from "@/hooks/use-is-dark";
 
 const getOrdinalSuffix = (n: number) => {
   const s = ["th", "st", "nd", "rd"];
@@ -61,6 +62,7 @@ function ProgressRing({
   }, [animatedValue, progress]);
 
   const isComplete = progress >= 1;
+  const isDark = useIsDark();
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
 
@@ -79,7 +81,7 @@ function ProgressRing({
           cx={center}
           cy={center}
           r={radius}
-          stroke="#f3f4f6"
+          stroke={isDark ? "#262626" : "#f3f4f6"}
           strokeWidth={strokeWidth}
           fill="none"
         />
@@ -140,6 +142,7 @@ function RecentActivityCalendar({
   endDate?: string | null;
 }) {
   const { t: translate } = useTranslation();
+  const isDark = useIsDark();
   const [expanded, setExpanded] = React.useState(false);
   const scrollRef = React.useRef<any>(null);
   const STRIP_DAYS = 90;
@@ -188,10 +191,10 @@ function RecentActivityCalendar({
     const bgColor = earned
       ? "#FF6600"
       : isEndMarker
-        ? "#FFF7ED"
+        ? (isDark ? "rgba(255, 102, 0, 0.15)" : "#FFF7ED")
         : isToday && !earned
-          ? "#FFF7ED"
-          : "#f3f4f6";
+          ? (isDark ? "rgba(255, 102, 0, 0.15)" : "#FFF7ED")
+          : (isDark ? "#262626" : "#f3f4f6");
     const borderWidth = isEndMarker || (isToday && !earned) ? 1.5 : 0;
     const borderStyle = isEndMarker ? ("dashed" as const) : ("solid" as const);
     return (
@@ -215,7 +218,7 @@ function RecentActivityCalendar({
         ) : isEndMarker ? (
           <Text style={{ fontSize: 8, color: "#FF6600", fontWeight: "700" }}>{translate("user.rewards.streakDetail.endMarker")}</Text>
         ) : (
-          <Text style={{ fontSize: 9, color: isToday ? "#FF6600" : "#9ca3af", fontWeight: "600" }}>
+          <Text style={{ fontSize: 9, color: isToday ? "#FF6600" : (isDark ? "#a3a3a3" : "#9ca3af"), fontWeight: "600" }}>
             {day}
           </Text>
         )}
@@ -295,18 +298,18 @@ function RecentActivityCalendar({
         <Text className="text-[10px] text-neutral-400 font-poppins">{translate("user.rewards.streakDetail.earned")}</Text>
       </View>
       <View className="flex-row items-center gap-x-1">
-        <RNView style={{ width: 12, height: 12, borderRadius: 3, backgroundColor: "#FFF7ED", borderWidth: 1.5, borderColor: "#FF6600" }} />
+        <RNView style={{ width: 12, height: 12, borderRadius: 3, backgroundColor: isDark ? "rgba(255, 102, 0, 0.15)" : "#FFF7ED", borderWidth: 1.5, borderColor: "#FF6600" }} />
         <Text className="text-[10px] text-neutral-400 font-poppins">{translate("user.rewards.streakDetail.today")}</Text>
       </View>
       <View className="flex-row items-center gap-x-1">
-        <RNView style={{ width: 12, height: 12, borderRadius: 3, backgroundColor: "#f3f4f6" }} />
+        <RNView style={{ width: 12, height: 12, borderRadius: 3, backgroundColor: isDark ? "#262626" : "#f3f4f6" }} />
         <Text className="text-[10px] text-neutral-400 font-poppins">{translate("user.rewards.streakDetail.missed")}</Text>
       </View>
       {showEnd && endDate && !endDateIsPast && (
         <View className="flex-row items-center gap-x-1">
           <RNView style={{
             width: 12, height: 12, borderRadius: 3,
-            backgroundColor: "#FFF7ED",
+            backgroundColor: isDark ? "rgba(255, 102, 0, 0.15)" : "#FFF7ED",
             borderWidth: 1.5, borderColor: "#FF6600", borderStyle: "dashed",
           }} />
           <Text className="text-[10px] text-neutral-400 font-poppins">{translate("user.rewards.streakDetail.endMarker")}</Text>
@@ -345,7 +348,7 @@ function RecentActivityCalendar({
                       margin: 2,
                       alignItems: "center",
                       justifyContent: "center",
-                      backgroundColor: cell.earned ? "#FF6600" : cell.isToday && !cell.earned ? "#FFF7ED" : "#f3f4f6",
+                      backgroundColor: cell.earned ? "#FF6600" : cell.isToday && !cell.earned ? (isDark ? "rgba(255, 102, 0, 0.15)" : "#FFF7ED") : (isDark ? "#262626" : "#f3f4f6"),
                       borderWidth: cell.isToday && !cell.earned ? 1.5 : 0,
                       borderColor: "#FF6600",
                       opacity: cell.isFuture ? 0.4 : 1,
@@ -354,7 +357,7 @@ function RecentActivityCalendar({
                     {cell.earned ? (
                       <Flame size={10} color="#FFFFFF" />
                     ) : (
-                      <Text className={`text-[8px] font-poppins-medium ${cell.isToday ? "text-primary" : "text-neutral-300"}`}>
+                      <Text className={`text-[8px] font-poppins-medium ${cell.isToday ? "text-primary" : "text-neutral-300 dark:text-neutral-600"}`}>
                         {cell.day}
                       </Text>
                     )}
@@ -617,7 +620,7 @@ export default function StoreStreakDetail() {
                 {storeName}
               </Text>
               {program?.title && (
-                <Text className="font-poppins text-neutral-500 text-xs mt-0.5" numberOfLines={1}>
+                <Text className="font-poppins text-neutral-500 dark:text-neutral-400 text-xs mt-0.5" numberOfLines={1}>
                   {program.title}
                 </Text>
               )}
@@ -766,7 +769,7 @@ export default function StoreStreakDetail() {
                       ? translate("user.rewards.streakDetail.oneMoreVisit")
                       : translate("user.rewards.streakDetail.moreVisitsParam", { count: daysLeft })}
                   </Text>
-                  <Text className="text-[11px] font-poppins text-neutral-500 mt-0.5">
+                  <Text className="text-[11px] font-poppins text-neutral-500 dark:text-neutral-400 mt-0.5">
                     {translate("user.rewards.streakDetail.comeWithinRange", { name: storeName })}
                   </Text>
                 </View>

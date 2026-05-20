@@ -54,7 +54,7 @@ export default function HistoryRow({
       {isPositive ? (
         <View className="flex-row items-center justify-between">
           <View className="flex-1">
-            <Text className="text-base font-poppins-semibold">
+            <Text className="text-base font-poppins-semibold text-textPrimary dark:text-darkTextPrimary">
               {translate(displayTitle)}
             </Text>
             <Text className="text-sm font-poppins text-neutral-500 dark:text-neutral-400">
@@ -82,7 +82,7 @@ export default function HistoryRow({
             <View className="flex-row items-center justify-between">
               <Text
                 numberOfLines={1}
-                className="text-base font-poppins-semibold  flex-1 -mt-6"
+                className="text-base font-poppins-semibold text-textPrimary dark:text-darkTextPrimary flex-1 -mt-6"
               >
                 {translate(displayTitle)}
               </Text>

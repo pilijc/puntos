@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { ActivityIndicator, useColorScheme, Vibration } from 'react-native';
+import { ActivityIndicator, Vibration } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { View, Text, TouchableOpacity, SafeAreaView } from '@/tw';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
+import { useIsDark } from '@/hooks/use-is-dark';
 import BottomSheet, { BottomSheetView, BottomSheetBackdrop } from '@gorhom/bottom-sheet';
 import type { BottomSheetBackdropProps } from '@gorhom/bottom-sheet';
 import QRCode from 'react-native-qrcode-svg';
@@ -22,8 +23,7 @@ export default function Qr() {
   const router = useRouter();
   const { from } = useLocalSearchParams<{ from?: string }>();
   const insets = useSafeAreaInsets();
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
+  const isDark = useIsDark();
 
   const [qrValue, setQrValue] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);

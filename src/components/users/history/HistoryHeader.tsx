@@ -23,7 +23,7 @@ export default function HistoryHeader({
 
   return (
     <View className="space-y-4">
-      <View className="bg-white dark:bg-darkBackground border-b border-neutral-100 dark:border-darkBorder px-6 py-3 flex-row justify-between items-center">
+      <View className="bg-white dark:bg-darkBackgroundMuted border-b border-neutral-100 dark:border-darkBorder px-6 py-3 flex-row justify-between items-center">
           <Text className="text-xl font-poppins-bold text-textPrimary dark:text-darkTextPrimary py-1">
               History
           </Text>
@@ -46,7 +46,7 @@ export default function HistoryHeader({
           <Text className="text-sm font-poppins-semibold text-emerald-900 dark:text-emerald-100">
             Points Earned
           </Text>
-          <Text className="text-xs font-poppins text-textSecondary mt-1">
+          <Text className="text-xs font-poppins text-textSecondary dark:text-darkTextSecondary mt-1">
             From purchases & vouchers
           </Text>
         </View>
@@ -66,7 +66,7 @@ export default function HistoryHeader({
           <Text className="text-sm font-poppins-semibold text-orange-900 dark:text-orange-100">
             Points Spent
           </Text>
-          <Text className="text-xs font-poppins text-textSecondary mt-1">
+          <Text className="text-xs font-poppins text-textSecondary dark:text-darkTextSecondary mt-1">
             On rewards & redemptions
           </Text>
         </View>
@@ -83,7 +83,7 @@ export default function HistoryHeader({
               className={`px-3 py-1 rounded-full transition-all duration-200 ${
                 isActive
                   ? "bg-primary scale-[1.05]"
-                  : "bg-white dark:bg-darkBackgroundCard border border-neutral-200 dark:border-neutral-600"
+                  : "bg-white dark:bg-darkBackgroundCard border border-neutral-200 dark:border-darkBorder"
               }`}
             >
               <Text

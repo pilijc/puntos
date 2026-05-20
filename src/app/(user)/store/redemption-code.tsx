@@ -10,6 +10,7 @@ import { getQRCodeData } from "@/services/user/rewards-redemption";
 import { useRedemptionCode } from "@/hooks/useRedemptionCode";
 import { RedemptionQRSkeleton } from "@/components/skeleton/user/redemption-qr-skeleton";
 import { useTranslation } from "react-i18next";
+import { useIsDark } from "@/hooks/use-is-dark";
 
 const REDIRECT_DELAY = {
   REDEEMED: 2000,
@@ -105,6 +106,7 @@ function ActiveState({
   insets,
 }: ActiveStateProps) {
   const { t: translate } = useTranslation();
+  const isDark = useIsDark();
   const isExpiringSoon = timeRemaining < 60;
 
   // Format code like "M 813 161"
@@ -114,7 +116,7 @@ function ActiveState({
     .replace(/(\d{3})(\d{3})/, "$1 $2");
 
   return (
-    <View className="flex-1 bg-white">
+    <View className="flex-1 bg-white dark:bg-darkBackground">
       {/* Yellow Header Section */}
       <View className="bg-yellow-400 rounded-b-3xl" style={{ paddingTop: insets.top }}>
         {/* Header with close button */}
@@ -132,7 +134,7 @@ function ActiveState({
 
         {/* QR Code Card */}
         <View className="mx-4 mb-6">
-          <View className="bg-neutral-100 rounded-2xl p-6 items-center">
+          <View className="bg-neutral-100 dark:bg-neutral-800 rounded-2xl p-6 items-center">
             <View className="bg-white rounded-xl p-4 mb-4">
               <QRCode
                 value={getQRCodeData(redemptionCode.code)}
@@ -141,7 +143,7 @@ function ActiveState({
                 backgroundColor="#fff"
               />
             </View>
-            <Text className="text-2xl font-poppins-bold text-neutral-900 tracking-wide">
+            <Text className="text-2xl font-poppins-bold text-neutral-900 dark:text-white tracking-wide">
               {formattedCode}
             </Text>
           </View>
@@ -163,13 +165,13 @@ function ActiveState({
 
         {/* Reward Card */}
         <View className="mx-4 mb-6">
-          <View className="bg-white rounded-2xl p-4 flex-row items-center shadow-sm">
+          <View className="bg-white dark:bg-neutral-800 rounded-2xl p-4 flex-row items-center shadow-sm">
             <View className="flex-1 pr-4">
-              <Text className="text-base font-poppins-semibold text-neutral-900 leading-snug">
+              <Text className="text-base font-poppins-semibold text-neutral-900 dark:text-white leading-snug">
                 {rewardTitle}
               </Text>
               {rewardDescription && (
-                <Text className="text-sm text-neutral-500 mt-1">
+                <Text className="text-sm text-neutral-500 dark:text-neutral-400 mt-1">
                   {rewardDescription}
                 </Text>
               )}
@@ -181,7 +183,7 @@ function ActiveState({
                 resizeMode="cover"
               />
             ) : (
-              <View className="w-20 h-20 rounded-xl bg-yellow-100 items-center justify-center">
+              <View className="w-20 h-20 rounded-xl bg-yellow-100 dark:bg-yellow-900/30 items-center justify-center">
                 <Text className="text-2xl">🎁</Text>
               </View>
             )}
@@ -190,18 +192,18 @@ function ActiveState({
       </View>
 
       {/* Instructions Section */}
-      <View className="flex-1 bg-white px-4 pt-6" style={{ paddingBottom: insets.bottom + 20 }}>
-        <View className="bg-neutral-100 rounded-2xl p-5 space-y-5">
+      <View className="flex-1 bg-white dark:bg-darkBackground px-4 pt-6" style={{ paddingBottom: insets.bottom + 20 }}>
+        <View className="bg-neutral-100 dark:bg-darkBackgroundCard rounded-2xl p-5 space-y-5">
           {/* In the restaurant */}
           <View className="flex-row items-start">
-            <View className="w-10 h-10 bg-white rounded-lg items-center justify-center mr-4">
-              <Store size={20} color="#1f2937" />
+            <View className="w-10 h-10 bg-white dark:bg-neutral-800 rounded-lg items-center justify-center mr-4">
+              <Store size={20} color={isDark ? "#ffffff" : "#1f2937"} />
             </View>
             <View className="flex-1">
-              <Text className="text-base font-poppins-semibold text-neutral-900 mb-1">
+              <Text className="text-base font-poppins-semibold text-neutral-900 dark:text-darkTextPrimary mb-1">
                 {translate("user.rewards.redemption.inRestaurant", "In the restaurant")}
               </Text>
-              <Text className="text-sm text-neutral-600 leading-relaxed">
+              <Text className="text-sm text-neutral-600 dark:text-darkTextSecondary leading-relaxed">
                 {translate("user.rewards.redemption.restaurantInstructions", "Scan the code in the ordering kiosk or present the code to staff at the front counter.")}
               </Text>
             </View>
@@ -209,14 +211,14 @@ function ActiveState({
 
           {/* DriveThru */}
           <View className="flex-row items-start">
-            <View className="w-10 h-10 bg-neutral-800 rounded-lg items-center justify-center mr-4">
+            <View className="w-10 h-10 bg-neutral-800 dark:bg-neutral-700 rounded-lg items-center justify-center mr-4">
               <Speaker size={20} color="#fbbf24" />
             </View>
             <View className="flex-1">
-              <Text className="text-base font-poppins-semibold text-neutral-900 mb-1">
+              <Text className="text-base font-poppins-semibold text-neutral-900 dark:text-darkTextPrimary mb-1">
                 {translate("user.rewards.redemption.driveThru", "DriveThru")}
               </Text>
-              <Text className="text-sm text-neutral-600 leading-relaxed">
+              <Text className="text-sm text-neutral-600 dark:text-darkTextSecondary leading-relaxed">
                 {translate("user.rewards.redemption.driveThruInstructions", "Tell us about the code at the speaker.")}
               </Text>
             </View>

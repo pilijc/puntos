@@ -42,7 +42,7 @@ export function SubscriptionCard() {
   );
 
   return (
-    <View className="bg-white dark:bg-darkBackground px-2.5 py-3 overflow-hidden">
+    <View className="bg-white dark:bg-darkBackgroundCard px-2.5 py-3 overflow-hidden">
       <TouchableOpacity
         onPress={() => router.push("/(store_manager)/subscription")}
         className="flex-row items-center"

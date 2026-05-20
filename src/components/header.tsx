@@ -1,8 +1,8 @@
 import React from "react";
-import { useColorScheme } from "react-native";
 import { View, Text, TouchableOpacity } from "@/tw";
 import { ChevronLeft } from "lucide-react-native";
 import { Platform } from "react-native";
+import { useIsDark } from "@/hooks/use-is-dark";
 
 type AppHeaderProps = {
   title: string;
@@ -24,12 +24,12 @@ export function AppHeader({
   rightIcon,
   onRightIconPress,
   paddingTop = 0,
-  className = "bg-white dark:bg-darkBackground ",
+  className = "bg-white dark:bg-darkBackgroundMuted border-b border-neutral-100 dark:border-darkBorder",
   textAlign = "center",
   titleSize = "base",
   fullLeft = false,
 }: AppHeaderProps) {
-  const isDark = useColorScheme() === "dark";
+  const isDark = useIsDark();
   const isWeb = Platform.OS === "web";
 
   return (

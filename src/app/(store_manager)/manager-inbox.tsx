@@ -1,11 +1,6 @@
 import React, { useCallback, useEffect, useState } from "react";
-import {
-  ActivityIndicator,
-  Image,
-  ScrollView,
-  TouchableOpacity,
-} from "react-native";
-import { View, Text, SafeAreaView } from "@/tw";
+import { ActivityIndicator } from "react-native";
+import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, Image } from "@/tw";
 import { useRouter } from "expo-router";
 import { ArrowLeft, Headset, MessageSquare, Store } from "lucide-react-native";
 import { supabase } from "@/supabase/supabase";
@@ -13,6 +8,7 @@ import { useManagerStoresStore } from "@/store/manager-stores-store";
 import { useSupportChatStore } from "@/store/support-chat-store";
 import { SupportConversation } from "@/type/support-chat";
 import { useTranslation } from "react-i18next";
+import { useIsDark } from "@/hooks/use-is-dark";
 
 function formatTime(value: string | null, translate: any) {
   if (!value) return "";
@@ -29,6 +25,7 @@ function formatTime(value: string | null, translate: any) {
 export default function ManagerInbox() {
   const { t: translate } = useTranslation();
   const router = useRouter();
+  const isDark = useIsDark();
   const { stores, loading: storesLoading, fetchStores } = useManagerStoresStore();
   
   // Use global support chat store for real-time consistency
@@ -72,48 +69,31 @@ export default function ManagerInbox() {
   return (
     <SafeAreaView
       edges={["top", "left", "right"]}
-      style={{ flex: 1, backgroundColor: "#FFFFFF" }}
+      className="flex-1 bg-white dark:bg-darkBackground"
     >
       {/* Header */}
       <View
-        style={{
-          backgroundColor: "#FFFFFF",
-          borderBottomWidth: 1,
-          borderBottomColor: "#F1F5F9",
-          paddingLeft: 24,
-          paddingRight: 16,
-          paddingTop: 12,
-          paddingBottom: 12,
-          flexDirection: "row",
-          alignItems: "center",
-        }}
+        className="bg-white dark:bg-darkBackground border-b border-neutral-100 dark:border-darkBorder pl-6 pr-4 py-3 flex-row items-center"
       >
         <TouchableOpacity
           onPress={() => router.back()}
-          style={{ padding: 8, marginLeft: -8, marginRight: 8, borderRadius: 20 }}
+          className="p-2 -ml-2 rounded-full active:bg-neutral-100 dark:active:bg-neutral-800"
         >
-          <ArrowLeft size={22} color="#1e293b" />
+          <ArrowLeft size={22} color={isDark ? "#FFFFFF" : "#1e293b"} />
         </TouchableOpacity>
 
-        <View style={{ flex: 1, flexDirection: "row", alignItems: "center", gap: 8 }}>
+        <View className="flex-1 flex-row items-center gap-x-2">
           <Headset size={18} color="#FF6600" />
-          <Text style={{ fontSize: 20, fontFamily: "Poppins-Bold", color: "#0F172A" }}>
+          <Text className="text-lg font-poppins-bold text-textPrimary dark:text-darkTextPrimary">
             {translate("storeManager.chat.inbox.title", "Support")}
           </Text>
         </View>
 
         {totalUnread > 0 && (
           <View
-            style={{
-              backgroundColor: "#EF4444",
-              borderRadius: 10,
-              paddingHorizontal: 8,
-              paddingVertical: 2,
-              minWidth: 22,
-              alignItems: "center",
-            }}
+            className="bg-danger rounded-full px-2 py-0.5 min-w-[22px] items-center justify-center"
           >
-            <Text style={{ fontSize: 11, fontFamily: "Poppins-Bold", color: "#fff" }}>
+            <Text className="text-[11px] font-poppins-bold text-white">
               {totalUnread > 99 ? "99+" : totalUnread}
             </Text>
           </View>
@@ -121,73 +101,43 @@ export default function ManagerInbox() {
       </View>
 
       {/* Subtitle */}
-      <View style={{ paddingHorizontal: 24, paddingTop: 12, paddingBottom: 4 }}>
-        <Text style={{ fontSize: 12, fontFamily: "Poppins-Regular", color: "#94A3B8" }}>
+      <View className="px-6 pt-3 pb-1">
+        <Text className="text-xs font-poppins text-textMuted dark:text-darkTextMuted">
           {translate("storeManager.chat.inbox.subtitle", "Select a store to chat with Super Admin")}
         </Text>
       </View>
 
       <ScrollView
-        style={{ flex: 1, backgroundColor: "#F8FAFC" }}
+        className="flex-1 bg-backgroundMuted dark:bg-darkBackgroundMuted"
         showsVerticalScrollIndicator={false}
       >
         {isLoading ? (
-          <View style={{ alignItems: "center", justifyContent: "center", paddingTop: 80 }}>
+          <View className="items-center justify-center pt-20">
             <ActivityIndicator color="#FF6600" />
             <Text
-              style={{
-                marginTop: 12,
-                fontSize: 13,
-                fontFamily: "Poppins-Medium",
-                color: "#94A3B8",
-              }}
+              className="mt-3 text-xs font-poppins-medium text-textMuted dark:text-darkTextMuted"
             >
               {translate("storeManager.chat.inbox.loading", "Loading...")}
             </Text>
           </View>
         ) : stores.length === 0 ? (
           <View
-            style={{
-              alignItems: "center",
-              justifyContent: "center",
-              paddingTop: 80,
-              paddingHorizontal: 32,
-            }}
+            className="items-center justify-center pt-20 px-8"
           >
             <View
-              style={{
-                width: 56,
-                height: 56,
-                borderRadius: 28,
-                backgroundColor: "#F1F5F9",
-                alignItems: "center",
-                justifyContent: "center",
-                marginBottom: 12,
-              }}
+              className="w-14 h-14 rounded-full bg-neutral-100 dark:bg-darkBackgroundCard items-center justify-center mb-3"
             >
-              <MessageSquare size={24} color="#CBD5E1" />
+              <MessageSquare size={24} color={isDark ? "#737373" : "#CBD5E1"} />
             </View>
             <Text
-              style={{
-                fontSize: 13,
-                fontFamily: "Poppins-Medium",
-                color: "#94A3B8",
-                textAlign: "center",
-              }}
+              className="text-xs font-poppins-medium text-textMuted dark:text-darkTextMuted text-center"
             >
               {translate("storeManager.chat.inbox.noStores", "No stores found")}
             </Text>
           </View>
         ) : (
           <View
-            style={{
-              margin: 12,
-              backgroundColor: "#FFFFFF",
-              borderRadius: 16,
-              borderWidth: 1,
-              borderColor: "#F1F5F9",
-              overflow: "hidden",
-            }}
+            className="m-3 bg-white dark:bg-darkBackgroundCard rounded-2xl border border-neutral-100 dark:border-darkBorder overflow-hidden"
           >
             {stores.map((store, idx) => {
               const conv = getConvForStore(store.id);
@@ -204,76 +154,41 @@ export default function ManagerInbox() {
                     )
                   }
                   activeOpacity={0.7}
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    paddingHorizontal: 16,
-                    paddingVertical: 14,
-                    borderBottomWidth: idx < stores.length - 1 ? 1 : 0,
-                    borderBottomColor: "#F8FAFC",
-                    backgroundColor: "#FFFFFF",
-                  }}
+                  className={`flex-row items-center px-4 py-3.5 bg-white dark:bg-darkBackgroundCard ${
+                    idx < stores.length - 1 ? "border-b border-backgroundMuted dark:border-darkBorder" : ""
+                  }`}
                 >
                   {/* Store logo / fallback */}
                   {store.logo ? (
                     <Image
                       source={{ uri: store.logo }}
-                      style={{
-                        width: 44,
-                        height: 44,
-                        borderRadius: 22,
-                        marginRight: 12,
-                        flexShrink: 0,
-                        backgroundColor: "#F1F5F9",
-                      }}
+                      className="w-11 h-11 rounded-full mr-3 bg-slate-100 dark:bg-darkBackground"
                       resizeMode="cover"
                     />
                   ) : (
                     <View
-                      style={{
-                        width: 44,
-                        height: 44,
-                        borderRadius: 22,
-                        backgroundColor: "#FDE8D8",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        marginRight: 12,
-                        flexShrink: 0,
-                      }}
+                      className="w-11 h-11 rounded-full bg-orange-50 dark:bg-orange-950/20 items-center justify-center mr-3"
                     >
                       <Store size={20} color="#C2440C" />
                     </View>
                   )}
 
                   {/* Text content */}
-                  <View style={{ flex: 1 }}>
+                  <View className="flex-1">
                     <View
-                      style={{
-                        flexDirection: "row",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        marginBottom: 2,
-                      }}
+                      className="flex-row justify-between items-center mb-0.5"
                     >
                       <Text
                         numberOfLines={1}
-                        style={{
-                          fontSize: 14,
-                          fontFamily: unread > 0 ? "Poppins-SemiBold" : "Poppins-Medium",
-                          color: "#0F172A",
-                          flex: 1,
-                          paddingRight: 8,
-                        }}
+                        className={`text-sm flex-1 pr-2 ${
+                          unread > 0 ? "font-poppins-semibold text-textPrimary dark:text-darkTextPrimary" : "font-poppins-medium text-textPrimary dark:text-darkTextPrimary"
+                        }`}
                       >
                         {store.name}
                       </Text>
                       {lastTime ? (
                         <Text
-                          style={{
-                            fontSize: 11,
-                            fontFamily: "Poppins-Regular",
-                            color: "#94A3B8",
-                          }}
+                          className="text-[11px] font-poppins text-textMuted dark:text-darkTextMuted"
                         >
                           {formatTime(lastTime, translate)}
                         </Text>
@@ -281,38 +196,22 @@ export default function ManagerInbox() {
                     </View>
 
                     <View
-                      style={{
-                        flexDirection: "row",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                      }}
+                      className="flex-row justify-between items-center"
                     >
                       <Text
                         numberOfLines={1}
-                        style={{
-                          fontSize: 12,
-                          fontFamily: unread > 0 ? "Poppins-Medium" : "Poppins-Regular",
-                          color: unread > 0 ? "#334155" : "#94A3B8",
-                          flex: 1,
-                          paddingRight: 8,
-                        }}
+                        className={`text-xs flex-1 pr-2 ${
+                          unread > 0 ? "font-poppins-medium text-textSecondary dark:text-darkTextSecondary" : "font-poppins text-textMuted dark:text-darkTextMuted"
+                        }`}
                       >
                         {lastMsg ?? translate("storeManager.chat.inbox.tapToStart", "Tap to start a conversation")}
                       </Text>
                       {unread > 0 ? (
                         <View
-                          style={{
-                            minWidth: 20,
-                            height: 20,
-                            borderRadius: 10,
-                            backgroundColor: "#EF4444",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            paddingHorizontal: 4,
-                          }}
+                          className="min-w-[20px] h-5 rounded-full bg-danger items-center justify-center px-1"
                         >
                           <Text
-                            style={{ fontSize: 10, fontFamily: "Poppins-Bold", color: "#fff" }}
+                            className="text-[10px] font-poppins-bold text-white"
                           >
                             {unread}
                           </Text>

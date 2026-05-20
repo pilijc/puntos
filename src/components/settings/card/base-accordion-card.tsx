@@ -21,7 +21,7 @@ export const BaseAccordionCard = ({ title, description, icon, children }: BaseAc
     };
 
     return (
-        <View className="bg-background dark:bg-darkBackgroundCard p-3 overflow-hidden">
+        <View className="bg-white dark:bg-darkBackgroundCard p-3 overflow-hidden">
             <TouchableOpacity
                 onPress={toggleOpen}
                 className="flex-row items-center"
