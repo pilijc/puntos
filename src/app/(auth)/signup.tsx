@@ -4,15 +4,30 @@ import {
   SafeAreaView,
   TouchableOpacity,
   ScrollView,
-  Image
+  Image,
 } from "@/tw";
 import React, { useState, useRef, useMemo } from "react";
-import { KeyboardAvoidingView, Alert, ActivityIndicator, Platform, useWindowDimensions } from "react-native";
+import {
+  KeyboardAvoidingView,
+  Alert,
+  ActivityIndicator,
+  Platform,
+  useWindowDimensions,
+} from "react-native";
 import { router } from "expo-router";
 import { useAuthStore } from "../../store/auth-store";
-import signUpService, { GoogleSignInCancelledError } from "../../services/auth-service";
+import signUpService, {
+  GoogleSignInCancelledError,
+} from "../../services/auth-service";
 import { signUpWithGoogleService, isEmailTaken } from "@/services/auth-service";
-import { NameStep, EmailStep, PasswordStep, TermsStep, RoleStep, StepHeader } from "../../components/stepper";
+import {
+  NameStep,
+  EmailStep,
+  PasswordStep,
+  TermsStep,
+  RoleStep,
+  StepHeader,
+} from "../../components/stepper";
 import { useTranslation } from "react-i18next";
 import TranslateButton from "@/components/ui/translate-button";
 import { AppHeader } from "@/components/header";
@@ -48,18 +63,19 @@ export default function SignUp() {
     reset,
     resetAuthForm,
   } = useAuthStore();
+  const { allMet: isPasswordStrong } = usePasswordValidation(password);
   const [modal, setModal] = useState<{
     title: string;
     message: string;
     buttons: ModalButton[];
   } | null>(null);
   const [errors, setErrors] = useState({
-    name: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
-    role: '',
-    terms: '',
+    name: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+    role: "",
+    terms: "",
   });
 
   const validateStep = async (): Promise<boolean> => {
@@ -76,7 +92,7 @@ export default function SignUp() {
         setErrors(newErrors);
         return false;
       }
-      newErrors.name = '';
+      newErrors.name = "";
     }
 
     if (currentStep === 2) {
@@ -102,22 +118,17 @@ export default function SignUp() {
         return false;
       }
 
-      newErrors.email = '';
+      newErrors.email = "";
     }
 
     if (currentStep === 3) {
       if (!password) {
-        newErrors.password = translate("onboarding.signup.error.passwordRequired");
+        newErrors.password = translate(
+          "onboarding.signup.error.passwordRequired",
+        );
         setErrors(newErrors);
         return false;
       }
-
-      const isPasswordStrong =
-        password.length >= 8 &&
-        /[A-Z]/.test(password) &&
-        /[a-z]/.test(password) &&
-        /[0-9]/.test(password) &&
-        /[@#$%^&+=!]/.test(password);
 
       if (!isPasswordStrong) {
         newErrors.password = translate("onboarding.signup.error.passwordLimit");
@@ -126,17 +137,21 @@ export default function SignUp() {
       }
 
       if (!confirmPassword) {
-        newErrors.confirmPassword = translate("onboarding.signup.error.passwordConfirm");
+        newErrors.confirmPassword = translate(
+          "onboarding.signup.error.passwordConfirm",
+        );
         setErrors(newErrors);
         return false;
       }
       if (password !== confirmPassword) {
-        newErrors.confirmPassword = translate("onboarding.signup.error.passwordMatch");
+        newErrors.confirmPassword = translate(
+          "onboarding.signup.error.passwordMatch",
+        );
         setErrors(newErrors);
         return false;
       }
-      newErrors.password = '';
-      newErrors.confirmPassword = '';
+      newErrors.password = "";
+      newErrors.confirmPassword = "";
     }
 
     if (currentStep === 4) {
@@ -145,14 +160,12 @@ export default function SignUp() {
         setErrors(newErrors);
         return false;
       }
-      newErrors.terms = '';
+      newErrors.terms = "";
     }
 
     setErrors(newErrors);
     return true;
   };
-
-  const { allMet: isPasswordStrong } = usePasswordValidation(password);
 
   const handleNext = async () => {
     if (currentStep === 0) {
@@ -166,7 +179,7 @@ export default function SignUp() {
     if (currentStep < totalSteps) {
       setCurrentStep(currentStep + 1);
     } else {
-      if (role === 'manager') {
+      if (role === "manager") {
         handleStoreManagerSignup();
       } else {
         handleSignup();
@@ -197,22 +210,28 @@ export default function SignUp() {
       setLoading(true);
       const data = await signUpService(email, password, name, role);
       setAcceptedTerms(false);
-      setRole('user');
+      setRole("user");
       setCurrentStep(1);
 
       setModal({
         title: translate("onboarding.login.welcome"),
         message: translate("onboarding.signup.success"),
         buttons: [
-          { label: "OK", variant: "primary", onPress: () => router.replace(data.homeRoute ?? "/(user)") },
+          {
+            label: "OK",
+            variant: "primary",
+            onPress: () => router.replace(data.homeRoute ?? "/(user)"),
+          },
         ],
       });
       resetAuthForm();
       router.replace(data.homeRoute ?? "/(user)");
     } catch (error: any) {
-      if (error?.message?.includes("already registered") ||
+      if (
+        error?.message?.includes("already registered") ||
         error?.message?.includes("User already registered") ||
-        error?.message?.includes("user_already_registered")) {
+        error?.message?.includes("user_already_registered")
+      ) {
         setErrors((prev) => ({
           ...prev,
           email: translate("onboarding.signup.error.emailRegistered"),
@@ -221,22 +240,38 @@ export default function SignUp() {
           title: translate("onboarding.signup.error.failed"),
           message: translate("onboarding.signup.error.emailRegistered"),
           buttons: [
-            { label: "OK", variant: "primary", onPress: () => setCurrentStep(2) },
-            { label: "Try Different Email", variant: "secondary", onPress: () => setCurrentStep(2) },
-            { label: "Go to Login", variant: "secondary", onPress: () => router.replace("/(auth)/login") },
+            {
+              label: "OK",
+              variant: "primary",
+              onPress: () => setCurrentStep(2),
+            },
+            {
+              label: "Try Different Email",
+              variant: "secondary",
+              onPress: () => setCurrentStep(2),
+            },
+            {
+              label: "Go to Login",
+              variant: "secondary",
+              onPress: () => router.replace("/(auth)/login"),
+            },
           ],
         });
       } else {
         if (error.name === "AccountBlockedError") {
-        const { useAuthStore } = require("@/store/auth-store");
-        useAuthStore.getState().setRestricted(true);
-        return;
-      }
-      setErrors((prev) => ({
-        ...prev,
-        password: error?.message ?? translate("onboarding.signup.error.failed"),
-      }));
-      Alert.alert(translate("onboarding.signup.error.failed"), error?.message ?? translate("onboarding.signup.error.failed"));
+          const { useAuthStore } = require("@/store/auth-store");
+          useAuthStore.getState().setRestricted(true);
+          return;
+        }
+        setErrors((prev) => ({
+          ...prev,
+          password:
+            error?.message ?? translate("onboarding.signup.error.failed"),
+        }));
+        Alert.alert(
+          translate("onboarding.signup.error.failed"),
+          error?.message ?? translate("onboarding.signup.error.failed"),
+        );
       }
       setLoading(false);
       isSigningUp.current = false;
@@ -256,21 +291,27 @@ export default function SignUp() {
       const data = await signUpService(email, password, name, role);
       reset();
       setAcceptedTerms(false);
-      setRole('user');
+      setRole("user");
       setCurrentStep(1);
 
       setModal({
         title: translate("onboarding.login.welcome"),
         message: translate("onboarding.signup.successManager"),
         buttons: [
-          { label: "OK", variant: "primary", onPress: () => router.replace(data.homeRoute ?? "/(store_manager)") },
+          {
+            label: "OK",
+            variant: "primary",
+            onPress: () => router.replace(data.homeRoute ?? "/(store_manager)"),
+          },
         ],
       });
       router.replace(data.homeRoute ?? "/(store_manager)");
     } catch (error: any) {
-      if (error?.message?.includes("already registered") ||
+      if (
+        error?.message?.includes("already registered") ||
         error?.message?.includes("User already registered") ||
-        error?.message?.includes("user_already_registered")) {
+        error?.message?.includes("user_already_registered")
+      ) {
         setErrors((prev) => ({
           ...prev,
           email: translate("onboarding.signup.error.emailRegistered"),
@@ -279,28 +320,48 @@ export default function SignUp() {
           title: translate("onboarding.signup.error.failedManager"),
           message: translate("onboarding.signup.error.emailRegistered"),
           buttons: [
-            { label: "OK", variant: "primary", onPress: () => setCurrentStep(2) },
-            { label: "Try Different Email", variant: "secondary", onPress: () => setCurrentStep(2) },
-            { label: "Go to Login", variant: "secondary", onPress: () => router.replace("/(auth)/login") },
+            {
+              label: "OK",
+              variant: "primary",
+              onPress: () => setCurrentStep(2),
+            },
+            {
+              label: "Try Different Email",
+              variant: "secondary",
+              onPress: () => setCurrentStep(2),
+            },
+            {
+              label: "Go to Login",
+              variant: "secondary",
+              onPress: () => router.replace("/(auth)/login"),
+            },
           ],
         });
       } else {
         if (error.name === "AccountBlockedError") {
-        const { useAuthStore } = require("@/store/auth-store");
-        useAuthStore.getState().setRestricted(true);
-        return;
-      }
-      setErrors((prev) => ({
-        ...prev,
-        password: error?.message ?? translate("onboarding.signup.error.failedManager"),
-      }));
-      setModal({
-        title: translate("onboarding.signup.error.failedManager"),
-        message: error?.message ?? translate("onboarding.signup.error.failedManager"),
-        buttons: [
-          { label: "OK", variant: "primary", onPress: () => setCurrentStep(2) },
-        ],
-      });
+          const { useAuthStore } = require("@/store/auth-store");
+          useAuthStore.getState().setRestricted(true);
+          return;
+        }
+        setErrors((prev) => ({
+          ...prev,
+          password:
+            error?.message ??
+            translate("onboarding.signup.error.failedManager"),
+        }));
+        setModal({
+          title: translate("onboarding.signup.error.failedManager"),
+          message:
+            error?.message ??
+            translate("onboarding.signup.error.failedManager"),
+          buttons: [
+            {
+              label: "OK",
+              variant: "primary",
+              onPress: () => setCurrentStep(2),
+            },
+          ],
+        });
       }
       setLoading(false);
       isSigningUp.current = false;
@@ -312,13 +373,19 @@ export default function SignUp() {
     try {
       setLoadingGoogle(true);
       const data = await signUpWithGoogleService();
-      if (!data) { return; }
+      if (!data) {
+        return;
+      }
 
       setModal({
         title: translate("onboarding.login.welcome"),
         message: translate("onboarding.signup.success"),
         buttons: [
-          { label: "OK", variant: "primary", onPress: () => router.replace(data.homeRoute ?? "/(user)") },
+          {
+            label: "OK",
+            variant: "primary",
+            onPress: () => router.replace(data.homeRoute ?? "/(user)"),
+          },
         ],
       });
       router.replace(data.homeRoute ?? "/(user)");
@@ -330,12 +397,17 @@ export default function SignUp() {
       }
       setLoadingGoogle(false);
       reset();
-      const message = error?.msg ?? error?.message ?? translate("label.somethingWentWrong");
+      const message =
+        error?.msg ?? error?.message ?? translate("label.somethingWentWrong");
       setModal({
         title: translate("onboarding.signup.error.googleFailed"),
         message,
         buttons: [
-          { label: "OK", variant: "primary", onPress: () => router.replace("/(auth)/login") },
+          {
+            label: "OK",
+            variant: "primary",
+            onPress: () => router.replace("/(auth)/login"),
+          },
         ],
       });
     } finally {
@@ -344,7 +416,13 @@ export default function SignUp() {
   };
 
   return (
-    <SafeAreaView className={isWeb ? "flex-1 bg-slate-50 dark:bg-darkBackground" : "flex-1 bg-white dark:bg-darkBackground"}>
+    <SafeAreaView
+      className={
+        isWeb
+          ? "flex-1 bg-slate-50 dark:bg-darkBackground"
+          : "flex-1 bg-white dark:bg-darkBackground"
+      }
+    >
       <Modal
         visible={!!modal}
         onClose={() => setModal(null)}
@@ -360,8 +438,17 @@ export default function SignUp() {
       {isWeb ? (
         <View className="flex-1 items-center justify-center p-4">
           <View className="w-full max-w-4xl border border-slate-100 dark:border-neutral-700 rounded-xl bg-white dark:bg-darkBackground overflow-hidden">
-            <View style={{ flexDirection: isWideWeb ? "row" : "column" }} className="w-full">
-              <View className={isWideWeb ? "w-1/2 border-r border-slate-100 dark:border-neutral-700" : "border-b border-slate-100 dark:border-neutral-700"}>
+            <View
+              style={{ flexDirection: isWideWeb ? "row" : "column" }}
+              className="w-full"
+            >
+              <View
+                className={
+                  isWideWeb
+                    ? "w-1/2 border-r border-slate-100 dark:border-neutral-700"
+                    : "border-b border-slate-100 dark:border-neutral-700"
+                }
+              >
                 <Image
                   source={require("../../assets/images/welcome-web.png")}
                   className="w-full h-full min-h-[220px]"
@@ -380,15 +467,27 @@ export default function SignUp() {
                     <View className="w-full gap-y-4">
                       <View>
                         {currentStep === 0 ? (
-                          <RoleStep value={role} onChange={setRole} error={errors.role} />
+                          <RoleStep
+                            value={role}
+                            onChange={setRole}
+                            error={errors.role}
+                          />
                         ) : (
                           <>
                             <StepHeader currentStep={currentStep} />
                             {currentStep === 1 && (
-                              <NameStep value={name} onChange={setName} error={errors.name} />
+                              <NameStep
+                                value={name}
+                                onChange={setName}
+                                error={errors.name}
+                              />
                             )}
                             {currentStep === 2 && (
-                              <EmailStep value={email} onChange={setEmail} error={errors.email} />
+                              <EmailStep
+                                value={email}
+                                onChange={setEmail}
+                                error={errors.email}
+                              />
                             )}
                             {currentStep === 3 && (
                               <PasswordStep
@@ -400,15 +499,21 @@ export default function SignUp() {
                                 showConfirmPassword={showConfirmPassword}
                                 onPasswordChange={setPassword}
                                 onConfirmPasswordChange={setConfirmPassword}
-                                onTogglePassword={() => setShowPassword(!showPassword)}
-                                onToggleConfirmPassword={() => setShowConfirmPassword(!showConfirmPassword)}
+                                onTogglePassword={() =>
+                                  setShowPassword(!showPassword)
+                                }
+                                onToggleConfirmPassword={() =>
+                                  setShowConfirmPassword(!showConfirmPassword)
+                                }
                                 errors={errors}
                               />
                             )}
                             {currentStep === 4 && (
                               <TermsStep
                                 accepted={acceptedTerms}
-                                onToggle={() => setAcceptedTerms(!acceptedTerms)}
+                                onToggle={() =>
+                                  setAcceptedTerms(!acceptedTerms)
+                                }
                                 error={errors.terms}
                               />
                             )}
@@ -418,9 +523,20 @@ export default function SignUp() {
 
                       <View className="gap-y-2 w-full">
                         <Button
-                          label={loading ? translate("onboarding.signup.creating") : (currentStep === totalSteps ? translate("onboarding.signup.button") : translate("onboarding.signup.continue"))}
+                          label={
+                            loading
+                              ? translate("onboarding.signup.creating")
+                              : currentStep === totalSteps
+                                ? translate("onboarding.signup.button")
+                                : translate("onboarding.signup.continue")
+                          }
                           onPress={handleNext}
-                          disabled={loading || (currentStep === 3 && (!isPasswordStrong || !confirmPassword)) || (currentStep === 4 && !acceptedTerms)}
+                          disabled={
+                            loading ||
+                            (currentStep === 3 &&
+                              (!isPasswordStrong || !confirmPassword)) ||
+                            (currentStep === 4 && !acceptedTerms)
+                          }
                           loading={loading}
                           fullWidth={true}
                           authButton={true}
@@ -435,7 +551,7 @@ export default function SignUp() {
                             authButton={true}
                           />
                         ) : null}
-                        
+
                         {currentStep <= 1 && !isWeb && (
                           <>
                             <View className="flex-row items-center gap-x-4">
@@ -458,13 +574,14 @@ export default function SignUp() {
                             />
                           </>
                         )}
-                  
 
                         <View className="flex-row justify-center">
                           <Text className="font-poppins text-neutral-600 dark:text-darkTextSecondary text-sm">
                             {translate("onboarding.signup.alreadyHaveAccount")}
                           </Text>
-                          <TouchableOpacity onPress={() => router.replace("/login")}>
+                          <TouchableOpacity
+                            onPress={() => router.replace("/login")}
+                          >
                             <Text className="ml-1 font-poppins-semibold text-primary text-sm">
                               {translate("onboarding.signup.login")}
                             </Text>
@@ -491,15 +608,27 @@ export default function SignUp() {
               <View className="flex-1 gap-y-4">
                 <View>
                   {currentStep === 0 ? (
-                    <RoleStep value={role} onChange={setRole} error={errors.role} />
+                    <RoleStep
+                      value={role}
+                      onChange={setRole}
+                      error={errors.role}
+                    />
                   ) : (
                     <>
                       <StepHeader currentStep={currentStep} />
                       {currentStep === 1 && (
-                        <NameStep value={name} onChange={setName} error={errors.name} />
+                        <NameStep
+                          value={name}
+                          onChange={setName}
+                          error={errors.name}
+                        />
                       )}
                       {currentStep === 2 && (
-                        <EmailStep value={email} onChange={setEmail} error={errors.email} />
+                        <EmailStep
+                          value={email}
+                          onChange={setEmail}
+                          error={errors.email}
+                        />
                       )}
                       {currentStep === 3 && (
                         <PasswordStep
@@ -511,8 +640,12 @@ export default function SignUp() {
                           showConfirmPassword={showConfirmPassword}
                           onPasswordChange={setPassword}
                           onConfirmPasswordChange={setConfirmPassword}
-                          onTogglePassword={() => setShowPassword(!showPassword)}
-                          onToggleConfirmPassword={() => setShowConfirmPassword(!showConfirmPassword)}
+                          onTogglePassword={() =>
+                            setShowPassword(!showPassword)
+                          }
+                          onToggleConfirmPassword={() =>
+                            setShowConfirmPassword(!showConfirmPassword)
+                          }
                           errors={errors}
                         />
                       )}
@@ -529,14 +662,25 @@ export default function SignUp() {
 
                 <View className="gap-y-4 w-full">
                   <Button
-                    label={loading ? translate("onboarding.signup.creating") : (currentStep === totalSteps ? translate("onboarding.signup.button") : translate("onboarding.signup.continue"))}
+                    label={
+                      loading
+                        ? translate("onboarding.signup.creating")
+                        : currentStep === totalSteps
+                          ? translate("onboarding.signup.button")
+                          : translate("onboarding.signup.continue")
+                    }
                     onPress={handleNext}
-                    disabled={loading || (currentStep === 3 && (!isPasswordStrong || !confirmPassword)) || (currentStep === 4 && !acceptedTerms)}
+                    disabled={
+                      loading ||
+                      (currentStep === 3 &&
+                        (!isPasswordStrong || !confirmPassword)) ||
+                      (currentStep === 4 && !acceptedTerms)
+                    }
                     loading={loading}
                     fullWidth={true}
                     authButton={true}
                   />
-                  
+
                   {currentStep <= 1 && !isWeb && (
                     <>
                       <View className="flex-row items-center gap-x-4">
@@ -559,7 +703,6 @@ export default function SignUp() {
                       />
                     </>
                   )}
-            
 
                   <View className="flex-row justify-center">
                     <Text className="font-poppins text-neutral-600 dark:text-darkTextSecondary text-sm">

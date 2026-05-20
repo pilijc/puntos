@@ -183,6 +183,30 @@ export function PasswordStep({
           />
         </View>
 
+        <View className="mt-1 mb-2 gap-y-2">
+          <TextField
+            label={translate("onboarding.signup.stepper.label.confirmPassword")}
+            value={confirmPassword}
+            onChangeText={onConfirmPasswordChange}
+            placeholder={translate("onboarding.signup.stepper.placeholder.confirmPassword")}
+            secureTextEntry={!showConfirmPassword}
+
+            rightAccessory={
+              <TouchableOpacity
+                onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                className="ml-[-32px] p-2"
+                activeOpacity={0.7}
+              >
+                {showConfirmPassword ? (
+                  <LucideEye color="#9ca3af" size={16} />
+                ) : (
+                  <LucideEyeOff color="#9ca3af" size={16} />
+                )}
+              </TouchableOpacity>
+            }
+          />
+        </View>
+
         {/* Password Requirements */}
         <View className="bg-neutral-50 dark:bg-darkBackgroundMuted/50 p-3 rounded-xl border border-neutral-100 dark:border-darkBorder/50 my-1">
           <Text className="text-[12px] font-poppins-semibold text-neutral-700 dark:text-darkTextPrimary mb-1.5">
@@ -207,30 +231,6 @@ export function PasswordStep({
           <RequirementItem
             label={translate("onboarding.signup.error.requirements.special")}
             met={requirements.hasSpecial}
-          />
-        </View>
-
-        <View className="mt-1 mb-2 gap-y-2">
-          <TextField
-            label={translate("onboarding.signup.stepper.label.confirmPassword")}
-            value={confirmPassword}
-            onChangeText={onConfirmPasswordChange}
-            placeholder={translate("onboarding.signup.stepper.placeholder.confirmPassword")}
-            secureTextEntry={!showConfirmPassword}
-
-            rightAccessory={
-              <TouchableOpacity
-                onPress={() => setShowConfirmPassword(!showConfirmPassword)}
-                className="ml-[-32px] p-2"
-                activeOpacity={0.7}
-              >
-                {showConfirmPassword ? (
-                  <LucideEye color="#9ca3af" size={16} />
-                ) : (
-                  <LucideEyeOff color="#9ca3af" size={16} />
-                )}
-              </TouchableOpacity>
-            }
           />
         </View>
       </View>

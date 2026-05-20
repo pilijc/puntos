@@ -239,9 +239,7 @@ export async function refreshDeviceHeartbeat(
         .eq("device_id", deviceId)
         .eq("is_active", true);
 
-    if (error) {
-        console.warn(`[DeviceSession:${config.table}] heartbeat failed:`, error.message);
-    }
+
 }
 
 /** Mark stale sessions inactive in the background and return only the live ones. */
@@ -269,8 +267,8 @@ function filterStaleAndCleanup(
             .update({ is_active: false })
             .eq("user_id", userId)
             .in("device_id", staleIds)
-            .then(({ error }) => {
-                if (error) console.warn(`[DeviceSession:${config.table}] stale cleanup failed:`, error.message);
+            .then(undefined, () => {
+                // Ignore background eviction failure
             });
     }
 
@@ -332,9 +330,7 @@ export async function deactivateCurrentDeviceSession(
         .eq("user_id", userId)
         .eq("device_id", deviceId);
 
-    if (error) {
-        console.warn(`[DeviceSession:${config.table}] deactivate failed:`, error.message);
-    }
+
 }
 
 /** Mark THIS device inactive regardless of user_id (used during sign-out when userId may be unknown). */
@@ -347,9 +343,7 @@ export async function forceDeactivateCurrentDevice(config: RoleSessionConfig): P
         .eq("device_id", deviceId)
         .eq("is_active", true);
 
-    if (error) {
-        console.warn(`[DeviceSession:${config.table}] force deactivate failed:`, error.message);
-    }
+
 }
 
 /** Fetch all currently active sessions for this user (used by settings / profile UIs). */

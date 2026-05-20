@@ -1,27 +1,32 @@
-import React, { createElement as domEl, useEffect, useMemo, useRef } from "react";
-import { Platform, ScrollView, useColorScheme } from "react-native";
-import { View, Text, TouchableOpacity, TextInput, SafeAreaView } from "@/tw";
-import DateTimePicker from "@react-native-community/datetimepicker";
-import { useRouter, useLocalSearchParams, useFocusEffect } from "expo-router";
-import { useStreakStore } from "@/store/store-manager/streak-store";
-import { createStreak, getAllStreaksByStoreId, getStreakProgramById, updateStreakProgram } from "@/services/store-manager/streak-service";
-import { PointsMode, Streak } from "@/type/store-manager/streak";
-import { Button } from "@/components/button";
 import { Modal } from "@/components/modal";
-import { Coins, TrendingUp, Check, Info, ChevronDown } from "lucide-react-native";
+import { Toggle } from "@/components/toggle";
+import { Button } from "@/components/button";
+import { useTranslation } from "react-i18next";
 import { AppHeader } from "@/components/header";
 import { TextField } from "@/components/text-field";
-import { Toggle } from "@/components/toggle";
+import { PointsMode } from "@/type/store-manager/streak";
+import DateTimePicker from "@react-native-community/datetimepicker";
+import { useStreakStore } from "@/store/store-manager/streak-store";
+import { Platform, ScrollView, useColorScheme } from "react-native";
+import { useRouter, useLocalSearchParams, useFocusEffect } from "expo-router";
+import { View, Text, TouchableOpacity, TextInput, SafeAreaView } from "@/tw";
+import React, { createElement as domEl, useEffect, useMemo, useRef } from "react";
+import { Coins, TrendingUp, Check, Info, ChevronDown } from "lucide-react-native";
+import { useStorePremiumCampaignEdit } from "@/hooks/store-manager/use-store-premium-campaign-edit";
 import { formatDateTime, computeMinStartAtFromActiveProgram } from "@/utils/store_manager/streak-utils";
+import { WebStreakActivationCalendar } from "@/components/store_manager/streak/web-streak-activation-calendar";
+import {
+  createStreak,
+  getAllStreaksByStoreId,
+  getStreakProgramById,
+  updateStreakProgram,
+} from "@/services/store-manager/streak-service";
 import {
   isStreakConfigureInlineMessageKey,
   isStreakNoticeMessageKey,
   resolveStreakErrorI18nKey,
   resolveStreakErrorTitleKey,
 } from "@/services/store-manager/streak-user-messages";
-import { useTranslation } from "react-i18next";
-import { useStorePremiumCampaignEdit } from "@/hooks/store-manager/use-store-premium-campaign-edit";
-import { WebStreakActivationCalendar } from "@/components/store_manager/streak/web-streak-activation-calendar";
 
 const MS_24H = 24 * 60 * 60 * 1000;
 
@@ -106,10 +111,10 @@ export default function ConfigureStreaks() {
         borderRadius: 12,
         borderWidth: 1,
         borderStyle: "solid",
-        borderColor: isDarkScheme ? "#334155" : "#e2e8f0",
+        borderColor: isDarkScheme ? "#525252" : "#e2e8f0",
         fontSize: 14,
         fontFamily: "Poppins-Medium",
-        backgroundColor: isDarkScheme ? "#0f172a" : "#ffffff",
+        backgroundColor: isDarkScheme ? "#404040" : "#ffffff",
         color: isDarkScheme ? "#f1f5f9" : "#0f172a",
         WebkitAppearance: "none",
         MozAppearance: "none",
@@ -423,7 +428,7 @@ export default function ConfigureStreaks() {
             style={{ width: "100%", maxWidth: isWeb ? 896 : undefined }}
             className="w-full"
           >
-            <View className="bg-white dark:bg-slate-900 rounded-xl p-4 gap-y-4">
+            <View className="bg-white dark:bg-darkBackgroundMuted rounded-xl p-4 gap-y-4">
             <View>
               <Text className="text-md font-poppins-bold text-textPrimary dark:text-darkTextPrimary">
                 {translate("storeManager.streakConfigure.howEarningWorks")}
@@ -435,7 +440,7 @@ export default function ConfigureStreaks() {
 
           {/* Points mode toggle */}
           <View className="gap-y-2">
-            <Text className="text-sm font-poppins-semibold text-slate-700 dark:text-slate-300">
+            <Text className="text-sm font-poppins-semibold text-slate-700 dark:text-darkTextSoft">
               {translate("storeManager.streakConfigure.pointsType")}
             </Text>
             <View className="flex-row gap-x-2">
@@ -449,14 +454,14 @@ export default function ConfigureStreaks() {
                     key={opt.key}
                     activeOpacity={0.8}
                     onPress={() => setPointsMode(opt.key)}
-                    className={`flex-1 rounded-xl border p-3 gap-y-1 bg-white ${
+                    className={`flex-1 rounded-xl border p-3 gap-y-1 bg-white dark:bg-darkBackgroundCard ${
                       selected
                         ? "border border-primary"
-                        : "border-slate-200 dark:border-slate-700"
+                        : "border-slate-200 dark:border-darkBorder"
                     }`}
                   >
                     <View className="flex-row items-center justify-between">
-                      <View className={`w-4 h-4 rounded-full border items-center justify-center ${selected ? "border-primary bg-primary" : "border-slate-300 dark:border-slate-600"}`}>
+                      <View className={`w-4 h-4 rounded-full border items-center justify-center ${selected ? "border-primary bg-primary" : "border-slate-300 dark:border-darkBorder"}`}>
                         {selected && <Check size={9} color="#fff" />}
                       </View>
                     </View>
@@ -582,11 +587,11 @@ export default function ConfigureStreaks() {
 
           {/* Reward description */}
           <View className="gap-y-2">
-            <Text className="text-sm font-poppins-semibold text-slate-700 dark:text-slate-300">
+            <Text className="text-sm font-poppins-semibold text-slate-700 dark:text-darkTextSoft">
               {translate("storeManager.streakConfigure.rewardDescription")}
             </Text>
             <TextInput
-              className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-4 text-base font-poppins text-slate-900 dark:text-slate-100"
+              className="w-full rounded-xl border border-slate-200 dark:border-darkBorder bg-white dark:bg-darkBackgroundMuted px-4 py-4 text-base font-poppins text-slate-900 dark:text-darkTextPrimary"
               placeholder={translate("storeManager.streakConfigure.rewardDescriptionPlaceholder")}
               placeholderTextColor="#94A3B8"
               multiline
@@ -601,10 +606,10 @@ export default function ConfigureStreaks() {
           <View className="gap-y-2">
             <View className="flex-row items-center justify-between gap-x-3">
               <View className="flex-1">
-                <Text className="text-sm font-poppins-semibold text-slate-700 dark:text-slate-300">
+                <Text className="text-sm font-poppins-semibold text-slate-700 dark:text-darkTextSoft">
                   {translate("storeManager.streakConfigure.activationSchedule")}
                 </Text>
-                <Text className="text-xs font-poppins text-slate-500 dark:text-slate-400 mt-0.5">
+                <Text className="text-xs font-poppins text-slate-500 dark:text-darkTextMuted mt-0.5">
                   {translate("storeManager.streakConfigure.activationScheduleHint")}
                 </Text>
               </View>
@@ -625,7 +630,7 @@ export default function ConfigureStreaks() {
                 {isWeb ? (
                   <View className="gap-y-3">
                     <View className="gap-y-1">
-                      <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">
+                      <Text className="text-xs font-poppins text-slate-400 dark:text-darkTextSecondary">
                         {translate("storeManager.streakConfigure.date")}
                       </Text>
                       <WebStreakActivationCalendar
@@ -644,7 +649,7 @@ export default function ConfigureStreaks() {
                       />
                     </View>
                     <View className="gap-y-1">
-                      <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">
+                      <Text className="text-xs font-poppins text-slate-400 dark:text-darkTextSecondary">
                         {translate("storeManager.streakConfigure.time")}
                       </Text>
                       <View className="flex-row gap-x-2">
@@ -736,12 +741,12 @@ export default function ConfigureStreaks() {
                           setShowStartTimePicker(false);
                           setShowStartDatePicker(true);
                         }}
-                        className="flex-1 rounded-xl border border-slate-200 dark:border-slate-700 px-3 py-3"
+                        className="flex-1 rounded-xl border border-slate-200 dark:border-darkBorder bg-white dark:bg-darkBackgroundCard px-3 py-3"
                       >
-                        <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">
+                        <Text className="text-xs font-poppins text-slate-400 dark:text-darkTextSecondary">
                           {translate("storeManager.streakConfigure.date")}
                         </Text>
-                        <Text className="text-sm font-poppins-semibold text-slate-900 dark:text-slate-100 mt-0.5">
+                        <Text className="text-sm font-poppins-semibold text-slate-900 dark:text-darkTextPrimary mt-0.5">
                           {activationDateText}
                         </Text>
                       </TouchableOpacity>
@@ -751,12 +756,12 @@ export default function ConfigureStreaks() {
                           setShowStartDatePicker(false);
                           setShowStartTimePicker(true);
                         }}
-                        className="flex-1 rounded-xl border border-slate-200 dark:border-slate-700 px-3 py-3"
+                        className="flex-1 rounded-xl border border-slate-200 dark:border-darkBorder bg-white dark:bg-darkBackgroundCard px-3 py-3"
                       >
-                        <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">
+                        <Text className="text-xs font-poppins text-slate-400 dark:text-darkTextSecondary">
                           {translate("storeManager.streakConfigure.time")}
                         </Text>
-                        <Text className="text-sm font-poppins-semibold text-slate-900 dark:text-slate-100 mt-0.5">
+                        <Text className="text-sm font-poppins-semibold text-slate-900 dark:text-darkTextPrimary mt-0.5">
                           {activationTimeText}
                         </Text>
                       </TouchableOpacity>

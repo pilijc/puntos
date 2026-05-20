@@ -1,10 +1,13 @@
+import i18n from "i18next";
+
 export function get14DayDateRange(): string {
     const end = new Date();
     const start = new Date();
     start.setDate(end.getDate() - 13);
 
+    const locale = i18n.language === "ja" ? "ja-JP" : "en-US";
     const fmt = (d: Date) => 
-        d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+        d.toLocaleDateString(locale, { month: "short", day: "numeric" });
         
     return `${fmt(start)} — ${fmt(end)}`;
 }
@@ -14,20 +17,22 @@ export function getWeekDateRange(): string {
     const start = new Date();
     start.setDate(end.getDate() - 6);
 
+    const locale = i18n.language === "ja" ? "ja-JP" : "en-US";
     const fmt = (d: Date) => 
-        d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+        d.toLocaleDateString(locale, { month: "short", day: "numeric" });
         
     return `${fmt(start)} — ${fmt(end)}`;
 }
 
 export function getLast14Labels(): string[] {
     const labels = [];
+    const locale = i18n.language === "ja" ? "ja-JP" : "en-US";
     
     for (let i = 13; i >= 0; i--) {
         const d = new Date();
         d.setDate(d.getDate() - i);
         labels.push(
-            d.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+            d.toLocaleDateString(locale, { month: "short", day: "numeric" }),
         );
     }
     return labels;
@@ -35,12 +40,13 @@ export function getLast14Labels(): string[] {
 
 export function getLast7Labels(): string[] {
     const labels = [];
+    const locale = i18n.language === "ja" ? "ja-JP" : "en-US";
     
     for (let i = 6; i >= 0; i--) {
         const d = new Date();
         d.setDate(d.getDate() - i);
         labels.push(
-            d.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+            d.toLocaleDateString(locale, { month: "short", day: "numeric" }),
         );
     }
     return labels;

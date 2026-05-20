@@ -1,11 +1,14 @@
 import { supabase } from "@/supabase/supabase";
 import { Streak, StreakParticipant } from "@/type/store-manager/streak";
 import {
+  computeEndDateFromStartIso, 
+  computeMinStartAtFromActiveProgram 
+} from "@/utils/store_manager/streak-utils";
+import {
   assertStoreOwnerCanManagePremiumCampaigns,
   getStoreOwnerId,
   ownerCanManagePremiumCampaigns,
 } from "@/services/store-manager/premium-campaign-gate";
-import { computeEndDateFromStartIso, computeMinStartAtFromActiveProgram } from "@/utils/store_manager/streak-utils";
 
 async function syncAutoActivateStreaks(storeId: string): Promise<void> {
   const ownerId = await getStoreOwnerId(storeId);

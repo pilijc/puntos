@@ -4,7 +4,7 @@
   "heroHighlight": "reward programs",
   "heroSub": "The all-in-one platform to launch, manage, and scale your business loyalty programs in minutes. Build lasting relationships with data-driven insights.",
   "getStarted": "Get Started",
-  "signIn": "Get App",
+  "signIn": "Log in",
   "nav": {
     "overview": "Overview",
     "features": "Features",
@@ -76,7 +76,10 @@
   "linkSecurity": "Security",
   "linkAbout": "About",
   "linkCareers": "Careers",
-  "linkPrivacy": "Privacy",
-  "linkTerms": "Terms",
-  "copyright": "© 2026 Puntos. All rights reserved."
+  "linkPrivacy": "Privacy Policy",
+  "linkTerms": "Terms & Conditions",
+  "copyright": "© 2026 Puntos. All rights reserved.",
+  "privacyPolicyText": "Last Updated: May 19, 2026\n\nYour privacy matters to us. This Privacy Policy explains how Puntos collects and uses your information.\n\n1. Information We Collect\n\nWe may collect:\n• Name, email, and contact details\n• Loyalty points and transaction history\n• Device and app usage information\n\n2. How We Use Your Information\n\nWe use your data to:\n• Provide and improve the app\n• Manage rewards and transactions\n• Prevent fraud and security issues\n• Send important updates and support messages\n\n3. Sharing of Information\n\nWe do not sell your personal data. We may share limited information with:\n• Participating merchants\n• Service providers and analytics tools\n• Authorities when required by law\n\n4. Data Security\n\nWe use reasonable security measures to protect your information, but no system is completely secure.\n\n5. Your Rights\n\nYou may request to:\n• Access your information\n• Correct inaccurate data\n• Request account or data deletion\n\n6. Policy Updates\n\nWe may update this Privacy Policy from time to time. Continued use of the app means you accept the updated policy.",
+  "termsConditionsText": "Last Updated: May 19, 2026\n\nWelcome to Puntos Loyalty Reward App. By using our app, you agree to these Terms and our Privacy Policy.\n\n1. Account Use\n• You must provide accurate information.\n• Keep your account and password secure.\n• You are responsible for activities under your account.\n\n2. Rewards and Points\n• Points can be earned and redeemed through participating merchants.\n• Points may expire depending on merchant rules.\n• Fraud, abuse, or suspicious activity may lead to account suspension or point removal.\n\n3. Acceptable Use\n\nYou agree not to:\n• Use the app illegally or fraudulently\n• Abuse rewards or promotions\n• Attempt to hack or disrupt the service\n• Use fake accounts or false information\n\n4. Service Availability\n\nWe may update, change, or temporarily stop parts of the app for maintenance or improvements at any time.\n\n5. Account Suspension\n\nWe may suspend or terminate accounts that violate these Terms or misuse the platform.\n\n6. Changes to Terms\n\nThese Terms may be updated from time to time. Continued use of the app means you accept the updated Terms.",
+  "documentUpdating": "This document is currently being updated. Please check back later."
 }

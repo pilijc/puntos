@@ -19,7 +19,7 @@ export const UserProfileCard = ({ profile, user, onPress, loading = false }: Use
         <TouchableOpacity
             onPress={loading ? undefined : onPress}
             disabled={loading}
-            className="bg-white dark:bg-darkBackground rounded-xl px-3 py-3 active:bg-slate-50 dark:active:bg-darkBackgroundCard"
+            className="bg-white dark:bg-darkBackground rounded-xl border border-slate-100 dark:border-darkBorder px-3 py-3 active:bg-slate-50 dark:active:bg-darkBackgroundCard"
         >
             <View className="flex-row items-center">
                 {/* Avatar */}

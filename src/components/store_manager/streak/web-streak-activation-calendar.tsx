@@ -119,9 +119,9 @@ export function WebStreakActivationCalendar({
   }, []);
 
   const accent = "#FF6600";
-  const borderMuted = isDark ? "#334155" : "#e2e8f0";
+  const borderMuted = isDark ? "#525252" : "#e2e8f0";
   const textMuted = isDark ? "#94a3b8" : "#64748b";
-  const cellBg = isDark ? "#1e293b" : "#ffffff";
+  const cellBg = isDark ? "#404040" : "#ffffff";
 
   const cells: ({ day: number; key: string; disabled: boolean } | null)[] = [];
   for (let i = 0; i < leadingEmpty; i++) cells.push(null);

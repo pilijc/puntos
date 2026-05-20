@@ -60,12 +60,12 @@ export default function ResetPassword() {
         translate("onboarding.resetPassword.success.passwordUpdatedDetail")
       );
       router.replace("/login");
-    } catch (error: any) {
+    } catch (error) {
+      const err = error as { message?: string; msg?: string } | null;
       const message =
-        error?.msg ??
-        (typeof error?.message === "string"
-          ? error.message
-          : translate("label.somethingWentWrong"));
+        err?.msg ??
+        err?.message ??
+        translate("label.somethingWentWrong");
       Alert.alert(translate("onboarding.resetPassword.error.resetFailed"), message);
     } finally {
       setLoading(false);
@@ -132,6 +132,21 @@ export default function ResetPassword() {
                 />
               </View>
 
+              <View>
+                <Text className="mb-2 text-sm font-poppins-medium text-neutral-700 dark:text-darkTextSecondary">
+                  {translate("onboarding.resetPassword.label.confirmPassword")}
+                </Text>
+                <TextInput
+                  placeholder={translate("onboarding.resetPassword.input.confirmPassword")}
+                  placeholderTextColor="#9CA3AF"
+                  secureTextEntry
+                  autoCapitalize="none"
+                  className="border border-neutral-300 dark:border-darkBorder rounded-xl px-4 py-4 font-poppins text-neutral-900 dark:text-darkTextPrimary bg-white dark:bg-darkBackgroundMuted"
+                  value={confirmPassword}
+                  onChangeText={setConfirmPassword}
+                />
+              </View>
+
               {/* Password Requirements */}
               <View className="bg-neutral-50 dark:bg-darkBackgroundMuted/50 p-4 rounded-xl border border-neutral-100 dark:border-darkBorder/50">
                 <Text className="text-sm font-poppins-semibold text-neutral-700 dark:text-darkTextPrimary mb-2">
@@ -156,21 +171,6 @@ export default function ResetPassword() {
                 <RequirementItem
                   label={translate("onboarding.resetPassword.requirements.special")}
                   met={requirements.hasSpecial}
-                />
-              </View>
-
-              <View>
-                <Text className="mb-2 text-sm font-poppins-medium text-neutral-700 dark:text-darkTextSecondary">
-                  {translate("onboarding.resetPassword.label.confirmPassword")}
-                </Text>
-                <TextInput
-                  placeholder={translate("onboarding.resetPassword.input.confirmPassword")}
-                  placeholderTextColor="#9CA3AF"
-                  secureTextEntry
-                  autoCapitalize="none"
-                  className="border border-neutral-300 dark:border-darkBorder rounded-xl px-4 py-4 font-poppins text-neutral-900 dark:text-darkTextPrimary bg-white dark:bg-darkBackgroundMuted"
-                  value={confirmPassword}
-                  onChangeText={setConfirmPassword}
                 />
               </View>
             </View>

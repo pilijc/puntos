@@ -22,13 +22,14 @@ import { lockExtraOwnerStores } from "@/services/store-service";
 import { Modal } from "@/components/modal";
 import { refreshDeviceHeartbeatService } from "@/services/store-manager/device-session-service";
 import { SESSION_TIMEOUT_MS } from "@/type/store-manager/device-session";
+import { useAppearanceStore } from "@/store/appearance-store";
 
 const WEB_SIDEBAR_WIDTH = 260;
 const WEB_SIDEBAR_COLLAPSED_WIDTH = 76;
 const WEB_SIDEBAR_INSET_X = 16;
 const WEB_TAB_ICON_SIZE = 18;
 const WEB_TAB_ACTIVE_BG_LIGHT = "#F3F4F6";
-const WEB_TAB_ACTIVE_BG_DARK = "#431407";
+const WEB_TAB_ACTIVE_BG_DARK = "rgba(255, 102, 0, 0.1)";
 const WEB_SIDEBAR_BORDER_LIGHT = "#F1F5F9";
 const WEB_SIDEBAR_BORDER_DARK = "#404040";
 const TAB_ACCENT = "#FF6600";
@@ -388,7 +389,11 @@ function WebStoreManagerSidebarTabBar({
 
 export default function StoreManagerLayout() {
     const { t: translate } = useTranslation();
-    const colorScheme = useColorScheme();
+    const nativeColorScheme = useColorScheme();
+    const { theme } = useAppearanceStore();
+    const colorScheme = Platform.OS === 'web'
+        ? (theme === 'system' ? nativeColorScheme : theme)
+        : nativeColorScheme;
     const isDark = colorScheme === "dark";
     const router = useRouter();
     const insets = useSafeAreaInsets();

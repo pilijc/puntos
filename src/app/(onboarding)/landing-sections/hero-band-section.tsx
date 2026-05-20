@@ -74,10 +74,10 @@ export function LandingHeroBandSection({
               onNavigate={scrollNavTo}
             />
           </View>
-          <View className="flex-row items-center gap-3">
+          <View className="flex-row items-center gap-2">
             <Button
-              label={t("onboarding.landing.signIn")}
-              onPress={goLogin}
+              label={t("onboarding.landing.getStarted")}
+              onPress={goWelcome}
               variant="primary"
               roundedFull={true}
               fitContent={true}
@@ -103,17 +103,6 @@ export function LandingHeroBandSection({
             <Text className="max-w-xl font-poppins text-sm leading-relaxed text-textSecondary dark:text-darkTextSecondary md:text-base">
               {t("onboarding.landing.heroSub")}
             </Text>
-            <View className="flex-row flex-wrap gap-3">
-              <TouchableOpacity
-                onPress={goWelcome}
-                className="rounded-full bg-primary px-6 py-3"
-                accessibilityRole="button"
-              >
-                <Text className="font-poppins-semibold text-base text-white">
-                  {t("onboarding.landing.getStarted")}
-                </Text>
-              </TouchableOpacity>
-            </View>
           </View>
           <View className="flex-1 items-center justify-center">
             <View className="w-full max-w-2xl overflow-hidden rounded-2xl p-6">

@@ -1,16 +1,16 @@
 import React from "react";
-import { Platform } from "react-native";
-import { View, Text, TouchableOpacity } from "@/tw";
 import { Image } from "expo-image";
-import { CalendarDays, CircleX, FileText } from "lucide-react-native";
+import { Platform } from "react-native";
+import { TimeDropdown } from "./time-dropdown";
+import { View, Text, TouchableOpacity } from "@/tw";
 import { TextField } from "@/components/text-field";
+import { DaysBadgeSelector } from "./days-badge-selector";
+import { CalendarDays, CircleX, FileText } from "lucide-react-native";
 import {
   DEFAULT_STORE_CLOSE,
   DEFAULT_STORE_OPEN,
   type PickImageType,
 } from "@/type/store-manager/store";
-import { TimeDropdown } from "./time-dropdown";
-import { DaysBadgeSelector } from "./days-badge-selector";
 
 type BusinessStepProps = {
   phone: string;
@@ -26,7 +26,10 @@ type BusinessStepProps = {
   storeDays: string[];
   toggleStoreDay: (day: string) => void;
   isUploadingImage: boolean;
-  pickImage: (type: PickImageType, pictureIndex?: number) => void | Promise<void>;
+  pickImage: (
+    type: PickImageType,
+    pictureIndex?: number,
+  ) => void | Promise<void>;
   isDark: boolean;
   translate: (key: string, options?: Record<string, unknown>) => string;
 };
@@ -74,7 +77,9 @@ export function BusinessStep({
         <TextField
           label={translate("storeManager.createStore.registrationNumber")}
           required
-          placeholder={translate("storeManager.detailEdit.registrationPlaceholder")}
+          placeholder={translate(
+            "storeManager.detailEdit.registrationPlaceholder",
+          )}
           value={registrationNumber}
           onChangeText={setRegistrationNumber}
           sanitize={(v) => v}

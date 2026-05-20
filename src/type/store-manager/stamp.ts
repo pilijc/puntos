@@ -1,5 +1,5 @@
-import { Reward } from "@/type/store-manager/reward";
 import { Dispatch, SetStateAction } from "react";
+import { Reward } from "@/type/store-manager/reward";
 
 export type ExpirationMode = "none" | "card";
 

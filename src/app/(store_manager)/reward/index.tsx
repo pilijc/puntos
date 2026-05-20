@@ -1,17 +1,17 @@
-import React, { useCallback, useEffect, useState } from "react";
-import { useFocusEffect } from "expo-router";
-import { RefreshControl, ActivityIndicator, Platform } from "react-native";
-import { View, Text, TouchableOpacity, ScrollView, SafeAreaView } from "@/tw";
-import { useLocalSearchParams, useRouter } from "expo-router";
 import { Image } from "expo-image";
-import { useRewardsByStoreQuery } from "@/hooks/store-manager/rq";
+import { useFocusEffect } from "expo-router";
+import { useTranslation } from "react-i18next";
+import { AppHeader } from "@/components/header";
 import { Reward } from "@/type/store-manager/reward";
 import { Modal, type ModalButton } from "@/components/modal";
-import { AppHeader } from "@/components/header";
 import { Plus, CircleStar, Gift } from "lucide-react-native";
-import { useTranslation } from "react-i18next";
-import { useStorePremiumCampaignEdit } from "@/hooks/store-manager/use-store-premium-campaign-edit";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import { formatDate } from "@/utils/store_manager/stamp-utils";
+import React, { useCallback, useEffect, useState } from "react";
+import { useRewardsByStoreQuery } from "@/hooks/store-manager/rq";
+import { RefreshControl, ActivityIndicator, Platform } from "react-native";
+import { View, Text, TouchableOpacity, ScrollView, SafeAreaView } from "@/tw";
+import { useStorePremiumCampaignEdit } from "@/hooks/store-manager/use-store-premium-campaign-edit";
 
 const WEB_MAX_WIDTH = 896;
 
@@ -62,7 +62,7 @@ export default function RewardIndex() {
     pts >= 1000 ? `${(pts / 1000).toFixed(pts % 1000 === 0 ? 0 : 1)}k` : `${pts}`;
 
   return (
-    <SafeAreaView edges={["top"]} className="flex-1 bg-backgroundMuted dark:bg-neutral-900">
+    <SafeAreaView edges={["top"]} className="flex-1 bg-backgroundMuted dark:bg-darkBackgroundMuted">
       <Modal
         visible={!!modal}
         onClose={() => setModal(null)}
@@ -110,15 +110,15 @@ export default function RewardIndex() {
       >
         <View className={Platform.OS === "web" ? "items-center" : ""} style={Platform.OS === "web" ? { width: "100%" } : undefined}>
           <View style={Platform.OS === "web" ? { width: "100%", maxWidth: WEB_MAX_WIDTH } : undefined}>
-            <View className="mx-4 mb-4 flex-row items-center bg-white dark:bg-neutral-800 rounded-xl px-4 py-3 gap-x-3">
+            <View className="mx-4 mb-4 flex-row items-center bg-white dark:bg-darkBackgroundCard rounded-xl px-4 py-3 gap-x-3">
               <View className="w-10 h-10 rounded-xl items-center justify-center">
                 <Gift size={20} color="#FF6600" />
               </View>
               <View className="flex-1">
-                <Text className="text-sm font-poppins-bold text-slate-800 dark:text-slate-100">
+                <Text className="text-sm font-poppins-bold text-slate-800 dark:text-darkTextPrimary">
                   {loading ? "—" : translate("storeManager.reward.rewardCount", { count: rewards.length })}
                 </Text>
-                <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500">
+                <Text className="text-xs font-poppins text-slate-400 dark:text-darkTextSecondary">
                   {translate("storeManager.reward.subtitle")}
                 </Text>
               </View>
@@ -133,7 +133,7 @@ export default function RewardIndex() {
                 className="flex-row items-center gap-x-1"
                 activeOpacity={campaignsLocked ? 1 : 0.7}
               >
-                <Text className={`text-xs font-poppins-semibold ${campaignsLocked ? "text-slate-400 dark:text-slate-500" : "text-primary"}`}>{translate("label.add")}</Text>
+                <Text className={`text-xs font-poppins-semibold ${campaignsLocked ? "text-slate-400 dark:text-darkTextSecondary" : "text-primary"}`}>{translate("label.add")}</Text>
                 <Plus size={14} color={campaignsLocked ? "#CBD5E1" : "#FF6600"} strokeWidth={3} style={{ marginTop: -1.5 }}/>
               </TouchableOpacity>
             </View>
@@ -141,13 +141,13 @@ export default function RewardIndex() {
             {loading ? (
               <View className="items-center justify-center py-20">
                 <ActivityIndicator size="large" color="#FF6600" />
-                <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500 mt-3">{translate("storeManager.reward.loading")}</Text>
+                <Text className="text-xs font-poppins text-slate-400 dark:text-darkTextSecondary mt-3">{translate("storeManager.reward.loading")}</Text>
               </View>
             ) : rewards.length === 0 ? (
-              <View className="mx-4 bg-white dark:bg-neutral-800 rounded-xl border border-slate-100 dark:border-neutral-700 px-4 py-14 items-center gap-y-2">
+              <View className="mx-4 bg-white dark:bg-darkBackgroundCard rounded-xl border border-slate-100 dark:border-darkBorder px-4 py-14 items-center gap-y-2">
                 <Gift size={36} color="#CBD5E1" />
-                <Text className="text-sm font-poppins-semibold text-slate-400 dark:text-slate-500">{translate("storeManager.reward.emptyTitle")}</Text>
-                <Text className="text-xs font-poppins text-slate-400 dark:text-slate-500 text-center px-8">
+                <Text className="text-sm font-poppins-semibold text-slate-400 dark:text-darkTextSecondary">{translate("storeManager.reward.emptyTitle")}</Text>
+                <Text className="text-xs font-poppins text-slate-400 dark:text-darkTextSecondary text-center px-8">
                   {translate("storeManager.reward.emptyBody")}
                 </Text>
                 <TouchableOpacity
@@ -158,10 +158,10 @@ export default function RewardIndex() {
                       params: { storeId },
                     })
                   }
-                  className={`mt-3 px-6 py-2.5 rounded-xl ${campaignsLocked ? "bg-slate-200 dark:bg-slate-700" : "bg-primary"}`}
+                  className={`mt-3 px-6 py-2.5 rounded-xl ${campaignsLocked ? "bg-slate-200 dark:bg-darkBackgroundCard" : "bg-primary"}`}
                   activeOpacity={campaignsLocked ? 1 : 0.85}
                 >
-                  <Text className={`text-xs font-poppins-semibold ${campaignsLocked ? "text-slate-500 dark:text-slate-400" : "text-white"}`}>{translate("storeManager.reward.addFirst")}</Text>
+                  <Text className={`text-xs font-poppins-semibold ${campaignsLocked ? "text-slate-500 dark:text-darkTextMuted" : "text-white"}`}>{translate("storeManager.reward.addFirst")}</Text>
                 </TouchableOpacity>
               </View>
             ) : (
@@ -177,16 +177,16 @@ export default function RewardIndex() {
                         params: { storeId, rewardId: String(reward.id) },
                       });
                     }}
-                    className="bg-white dark:bg-neutral-800 rounded-xl flex-row items-stretch p-3 gap-2.5"
+                    className="bg-white dark:bg-darkBackgroundCard rounded-xl border border-slate-100 dark:border-darkBorder flex-row items-stretch p-3 gap-2.5"
                   >
                     <View
-                      className="self-start rounded-lg overflow-hidden bg-white dark:bg-neutral-700 border border-slate-100 dark:border-neutral-600 shrink-0"
+                      className="self-start rounded-lg overflow-hidden bg-white dark:bg-darkBackgroundCard border border-slate-100 dark:border-darkBorder shrink-0"
                       style={{ width: 60, height: 60 }}
                     >
                       {reward.image_url ? (
                         <Image source={{ uri: reward.image_url }} style={{ width: 60, height: 60 }} contentFit="cover" />
                       ) : (
-                        <View className="w-full h-full bg-slate-50 dark:bg-neutral-600 items-center justify-center">
+                        <View className="w-full h-full bg-slate-50 dark:bg-darkBackgroundCard items-center justify-center">
                           <Gift size={24} color="#CBD5E1" />
                         </View>
                       )}
@@ -195,14 +195,14 @@ export default function RewardIndex() {
                     <View className="min-h-[60px] flex-1 flex-row gap-2 min-w-0">
                       <View className="min-w-0 flex-1">
                         <Text
-                          className="text-sm font-poppins-semibold text-slate-800 dark:text-slate-100 leading-5"
+                          className="text-sm font-poppins-semibold text-slate-800 dark:text-darkTextPrimary leading-5"
                           numberOfLines={1}
                         >
                           {reward.title}
                         </Text>
                         {!!reward.description && (
                           <Text
-                            className="mt-0.5 text-xs font-poppins text-slate-400 dark:text-slate-500"
+                            className="mt-0.5 text-xs font-poppins text-slate-400 dark:text-darkTextSecondary"
                             numberOfLines={2}
                           >
                             {reward.description}
@@ -219,7 +219,7 @@ export default function RewardIndex() {
                             })}
                           </Text>
                         </View>
-                        <Text className="text-right text-xs font-poppins text-textMuted dark:text-textMuted">
+                        <Text className="text-right text-xs font-poppins text-textMuted dark:text-darkTextMuted">
                           {reward.stock > 0
                             ? translate("store_manager.reward.stockLeft", { count: reward.stock })
                             : translate("store_manager.reward.outOfStock")}

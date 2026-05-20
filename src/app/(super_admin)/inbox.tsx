@@ -11,6 +11,8 @@ import {
   Modal,
   Clipboard,
   Alert,
+  StyleProp,
+  TextStyle,
 } from "react-native";
 import { View, Text, SafeAreaView, TouchableOpacity as TwTouchableOpacity, TextInput } from "@/tw";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -304,7 +306,7 @@ export default function SuperAdminInbox() {
               height: 44,
               // @ts-ignore - web only
               outlineStyle: "none",
-            }}
+            } as unknown as StyleProp<TextStyle>}
           />
           {searchQuery.length > 0 && (
             <TouchableOpacity onPress={() => setSearchQuery("")} style={{ padding: 4 }}>

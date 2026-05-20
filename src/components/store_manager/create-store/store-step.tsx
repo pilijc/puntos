@@ -1,9 +1,9 @@
 import React from "react";
+import { Image } from "expo-image";
 import { Platform } from "react-native";
 import { View, Text, TouchableOpacity } from "@/tw";
-import { Image } from "expo-image";
-import { CircleX, ImagePlus } from "lucide-react-native";
 import { TextField } from "@/components/text-field";
+import { CircleX, ImagePlus } from "lucide-react-native";
 import { store_types_options, type PickImageType } from "@/type/store-manager/store";
 
 type StoreStepProps = {
@@ -16,7 +16,10 @@ type StoreStepProps = {
   pictures: string[] | null;
   setPictures: (v: string[] | null) => void;
   isUploadingImage: boolean;
-  pickImage: (type: PickImageType, pictureIndex?: number) => void | Promise<void>;
+  pickImage: (
+    type: PickImageType,
+    pictureIndex?: number,
+  ) => void | Promise<void>;
   translate: (key: string, options?: Record<string, unknown>) => string;
 };
 
@@ -45,7 +48,9 @@ export function StoreStep({
         <TextField
           label={translate("label.storeName")}
           required
-          placeholder={translate("storeManager.detailEdit.storeNamePlaceholder")}
+          placeholder={translate(
+            "storeManager.detailEdit.storeNamePlaceholder",
+          )}
           value={storeName}
           onChangeText={setStoreName}
           sanitize={(v) => v}
@@ -138,13 +143,9 @@ export function StoreStep({
                 <View
                   key={index}
                   style={
-                    isWeb
-                      ? { flexBasis: "32%", aspectRatio: 1 }
-                      : undefined
+                    isWeb ? { flexBasis: "32%", aspectRatio: 1 } : undefined
                   }
-                  className={
-                    isWeb ? "min-w-[96px]" : "w-[31%] aspect-square"
-                  }
+                  className={isWeb ? "min-w-[96px]" : "w-[31%] aspect-square"}
                 >
                   {uri ? (
                     <View className="flex-1 rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 relative">
@@ -155,7 +156,9 @@ export function StoreStep({
                       />
                       <TouchableOpacity
                         onPress={() => {
-                          const next = (pictures ?? []).filter((_, i) => i !== index);
+                          const next = (pictures ?? []).filter(
+                            (_, i) => i !== index,
+                          );
                           setPictures(next.length > 0 ? next : null);
                         }}
                         className="absolute top-1 right-1 w-6 h-6 rounded-full bg-black/50 items-center justify-center"
@@ -166,7 +169,9 @@ export function StoreStep({
                   ) : (
                     <TouchableOpacity
                       onPress={() => pickImage("picture", index)}
-                      disabled={isUploadingImage || (pictures?.length ?? 0) >= 6}
+                      disabled={
+                        isUploadingImage || (pictures?.length ?? 0) >= 6
+                      }
                       className="flex-1 rounded-xl border border-dashed border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/30 items-center justify-center min-h-[80px]"
                     >
                       <ImagePlus size={20} color="#94A3B8" />

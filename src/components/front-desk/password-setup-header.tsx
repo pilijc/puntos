@@ -9,7 +9,7 @@ interface PasswordSetupHeaderProps {
 export default function PasswordSetupHeader({ isInitialSetup }: PasswordSetupHeaderProps) {
   const { t: translate } = useTranslation();
   return (
-    <View className="mb-8">
+    <View className="mb-4">
       <Text className="text-2xl font-poppins-bold text-neutral-900 dark:text-darkTextPrimary">
         {isInitialSetup ? translate("frontdesk.transaction.passwordSetup.title") : translate("frontdesk.password.updateButton")}
       </Text>

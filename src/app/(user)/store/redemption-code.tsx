@@ -9,6 +9,7 @@ import Animated, { FadeIn } from "react-native-reanimated";
 import { getQRCodeData } from "@/services/user/rewards-redemption";
 import { useRedemptionCode } from "@/hooks/useRedemptionCode";
 import { RedemptionQRSkeleton } from "@/components/skeleton/user/redemption-qr-skeleton";
+import { useTranslation } from "react-i18next";
 
 const REDIRECT_DELAY = {
   REDEEMED: 2000,
@@ -23,12 +24,13 @@ function formatTime(seconds: number): string {
 }
 
 function LoadingState() {
+  const { t: translate } = useTranslation();
   return (
     <View className="flex-1 bg-white dark:bg-darkBackground items-center justify-center">
       <View className="items-center justify-center">
         <RedemptionQRSkeleton />
         <Text className="text-neutral-500 dark:text-neutral-400 text-sm font-poppins-medium mt-4">
-          Generating code...
+          {translate("user.rewards.redemption.generating", "Generating code...")}
         </Text>
       </View>
     </View>
@@ -36,10 +38,11 @@ function LoadingState() {
 }
 
 function ErrorState({ message }: { message: string | null }) {
+  const { t: translate } = useTranslation();
   return (
     <View className="flex-1 bg-white dark:bg-darkBackground items-center justify-center px-6">
       <Text className="text-red-500 font-poppins-bold text-lg mb-2">
-        Failed to generate code
+        {translate("user.rewards.redemption.failedGenerate", "Failed to generate code")}
       </Text>
       {message && (
         <Text className="text-neutral-500 dark:text-neutral-400 text-center text-sm">
@@ -50,48 +53,14 @@ function ErrorState({ message }: { message: string | null }) {
   );
 }
 
-function RateLimitedState({ 
-  message, 
-  rateLimitType, 
-  timeRemaining 
-}: { 
-  message: string | null; 
-  rateLimitType: "cooldown" | "rate_limit" | null;
-  timeRemaining: number;
-}) {
-  const isCooldown = rateLimitType === "cooldown";
-  const title = isCooldown ? "Please wait" : "Too many requests";
-  const subtitle = isCooldown 
-    ? `Retrying in ${timeRemaining} seconds...`
-    : `Try again in ${timeRemaining} seconds`;
-
-  return (
-    <View className="flex-1 bg-white dark:bg-darkBackground items-center justify-center px-6">
-      <View className="w-20 h-20 bg-orange-100 dark:bg-orange-900/20 rounded-full items-center justify-center mb-4">
-        <Clock size={40} color="#FF6600" />
-      </View>
-      <Text className="text-orange-600 font-poppins-bold text-xl mb-2">
-        {title}
-      </Text>
-      <Text className="text-neutral-600 dark:text-neutral-400 text-center text-sm mb-4">
-        {message}
-      </Text>
-      <View className="bg-orange-50 dark:bg-orange-900/10 rounded-2xl px-6 py-4">
-        <Text className="text-orange-600 font-poppins-semibold text-lg">
-          {subtitle}
-        </Text>
-      </View>
-    </View>
-  );
-}
-
 function SuccessState() {
+  const { t: translate } = useTranslation();
   return (
     <View className="flex-1 bg-white dark:bg-darkBackground items-center justify-center">
       <Animated.View entering={FadeIn} className="items-center">
         <CheckCircle size={64} color="#10B981" />
         <Text className="text-green-600 font-poppins-bold text-lg mt-4">
-          Successfully Redeemed!
+          {translate("user.rewards.redemption.redeemed", "Successfully Redeemed!")}
         </Text>
       </Animated.View>
     </View>
@@ -99,13 +68,16 @@ function SuccessState() {
 }
 
 function CancelledState() {
+  const { t: translate } = useTranslation();
   return (
     <View className="flex-1 bg-white dark:bg-darkBackground items-center justify-center">
       <Animated.View entering={FadeIn} className="items-center">
         <View className="w-24 h-24 items-center justify-center pl-13">
           <X size={64} color="#EF4444" />
         </View>
-        <Text className="text-red-500 font-poppins-bold text-lg mt-4">Code Cancelled</Text>
+        <Text className="text-red-500 font-poppins-bold text-lg mt-4">
+          {translate("user.rewards.redemption.codeCancelled", "Code Cancelled")}
+        </Text>
       </Animated.View>
     </View>
   );
@@ -132,6 +104,7 @@ function ActiveState({
   onBack,
   insets,
 }: ActiveStateProps) {
+  const { t: translate } = useTranslation();
   const isExpiringSoon = timeRemaining < 60;
 
   // Format code like "M 813 161"
@@ -147,7 +120,7 @@ function ActiveState({
         {/* Header with close button */}
         <View className="flex-row items-center justify-center px-4 py-4 relative">
           <Text className="text-lg font-poppins-semibold text-neutral-900">
-            Scan to redeem
+            {translate("user.rewards.redemption.title", "Scan to redeem")}
           </Text>
           <TouchableOpacity
             onPress={onBack}
@@ -226,10 +199,10 @@ function ActiveState({
             </View>
             <View className="flex-1">
               <Text className="text-base font-poppins-semibold text-neutral-900 mb-1">
-                In the restaurant
+                {translate("user.rewards.redemption.inRestaurant", "In the restaurant")}
               </Text>
               <Text className="text-sm text-neutral-600 leading-relaxed">
-                Scan the code in the ordering kiosk or present the code to staff at the front counter.
+                {translate("user.rewards.redemption.restaurantInstructions", "Scan the code in the ordering kiosk or present the code to staff at the front counter.")}
               </Text>
             </View>
           </View>
@@ -241,10 +214,10 @@ function ActiveState({
             </View>
             <View className="flex-1">
               <Text className="text-base font-poppins-semibold text-neutral-900 mb-1">
-                DriveThru
+                {translate("user.rewards.redemption.driveThru", "DriveThru")}
               </Text>
               <Text className="text-sm text-neutral-600 leading-relaxed">
-                Tell us about the code at the speaker.
+                {translate("user.rewards.redemption.driveThruInstructions", "Tell us about the code at the speaker.")}
               </Text>
             </View>
           </View>
@@ -256,7 +229,7 @@ function ActiveState({
           className="mt-6 py-4 items-center"
         >
           <Text className="text-red-500 font-poppins-semibold">
-            Cancel Redemption
+            {translate("user.rewards.redemption.cancelBtn", "Cancel Redemption")}
           </Text>
         </TouchableOpacity>
       </View>
@@ -267,6 +240,7 @@ function ActiveState({
 export default function RedemptionCodeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { t: translate } = useTranslation();
   const { rewardId, storeId, rewardTitle, rewardDescription, rewardImage } =
     useLocalSearchParams<{
       rewardId?: string;
@@ -281,8 +255,6 @@ export default function RedemptionCodeScreen() {
     status,
     errorMessage,
     timeRemaining,
-    rateLimitType,
-    rateLimitTimeRemaining,
     generateCode,
     cancelCode,
   } = useRedemptionCode(rewardId, storeId);
@@ -310,17 +282,10 @@ export default function RedemptionCodeScreen() {
 
   // Render states
   if (status === "loading") return <LoadingState />;
-  if (status === "rate_limited") return (
-    <RateLimitedState 
-      message={errorMessage} 
-      rateLimitType={rateLimitType} 
-      timeRemaining={rateLimitTimeRemaining}
-    />
-  );
   if (status === "error") return <ErrorState message={errorMessage} />;
   if (status === "redeemed") return <SuccessState />;
   if (status === "cancelled" || status === "expired") return <CancelledState />;
-  if (!redemptionCode) return <ErrorState message="No redemption code available" />;
+  if (!redemptionCode) return <ErrorState message={translate("user.rewards.redemption.noCodeAvailable", "No redemption code available")} />;
 
   return (
     <ActiveState

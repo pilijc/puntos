@@ -1,10 +1,5 @@
 import React, { useState } from "react";
-import {
-  SafeAreaView,
-  View,
-  Text,
-  Image,
-} from "@/tw";
+import { SafeAreaView, View, Text, Image } from "@/tw";
 import { router } from "expo-router";
 import { Alert, Platform, useWindowDimensions } from "react-native";
 import { signInWithGoogleLoginService } from "@/services/auth-service";
@@ -26,7 +21,7 @@ export default function OnboardingWelcome() {
     message: string;
     buttons: ModalButton[];
   } | null>(null);
-  
+
   const handleLogin = () => {
     router.push("/login");
   };
@@ -40,7 +35,7 @@ export default function OnboardingWelcome() {
       setLoadingGoogle(true);
       const data = await signInWithGoogleLoginService();
       router.replace(data.homeRoute ?? "/(user)");
-    } catch (error: any) {
+    } catch (error) {
       if (error.name === "AccountBlockedError") {
         const { useAuthStore } = require("@/store/auth-store");
         useAuthStore.getState().setRestricted(true);
@@ -49,7 +44,9 @@ export default function OnboardingWelcome() {
       setLoadingGoogle(false);
       const message =
         error?.msg ??
-        (typeof error?.message === "string" ? error.message : "Something went wrong");
+        (typeof error?.message === "string"
+          ? error.message
+          : "Something went wrong");
       Alert.alert("Sign In with Google Failed", message);
     } finally {
       setLoadingGoogle(false);
@@ -57,7 +54,13 @@ export default function OnboardingWelcome() {
   };
 
   return (
-    <SafeAreaView className={isWeb ? "flex-1 bg-slate-50 dark:bg-darkBackground" : "flex-1 bg-white dark:bg-darkBackground"}>
+    <SafeAreaView
+      className={
+        isWeb
+          ? "flex-1 bg-slate-50 dark:bg-darkBackground"
+          : "flex-1 bg-white dark:bg-darkBackground"
+      }
+    >
       <Modal
         visible={!!modal}
         onClose={() => setModal(null)}
@@ -73,8 +76,17 @@ export default function OnboardingWelcome() {
       {isWeb ? (
         <View className="flex-1 items-center justify-center p-4">
           <View className="w-full max-w-4xl border border-slate-100 dark:border-neutral-700 rounded-xl bg-white dark:bg-darkBackground overflow-hidden">
-            <View style={{ flexDirection: isWideWeb ? "row" : "column" }} className="w-full">
-              <View className={isWideWeb ? "w-1/2 border-r border-slate-100 dark:border-neutral-700" : "border-b border-slate-100 dark:border-neutral-700"}>
+            <View
+              style={{ flexDirection: isWideWeb ? "row" : "column" }}
+              className="w-full"
+            >
+              <View
+                className={
+                  isWideWeb
+                    ? "w-1/2 border-r border-slate-100 dark:border-neutral-700"
+                    : "border-b border-slate-100 dark:border-neutral-700"
+                }
+              >
                 <Image
                   source={require("../../assets/images/welcome-web.png")}
                   className="w-full h-full min-h-[220px]"
@@ -95,7 +107,7 @@ export default function OnboardingWelcome() {
                         i18nKey="onboarding.welcome"
                         values={{ appName }}
                         components={{
-                          brand: <Text className="text-primary" />
+                          brand: <Text className="text-primary" />,
                         }}
                       />
                     </Text>
@@ -113,7 +125,10 @@ export default function OnboardingWelcome() {
                       authButton={true}
                     />
                     <Button
-                      label={translate("onboarding.signup.managerButton", "Sign up as Store Manager")}
+                      label={translate(
+                        "onboarding.signup.managerButton",
+                        "Sign up as Store Manager",
+                      )}
                       onPress={handleSignup}
                       variant="secondary"
                       fullWidth={true}
@@ -153,8 +168,13 @@ export default function OnboardingWelcome() {
                               className="text-primary font-poppins-semibold"
                               onPress={() =>
                                 setModal({
-                                  title: translate("label.termsOfServiceTitle", "Terms of Service"),
-                                  message: translate("label.termsOfServiceMessage"),
+                                  title: translate(
+                                    "label.termsOfServiceTitle",
+                                    "Terms of Service",
+                                  ),
+                                  message: translate(
+                                    "label.termsOfServiceMessage",
+                                  ),
                                   buttons: [
                                     {
                                       label: translate("label.ok", "OK"),
@@ -190,7 +210,7 @@ export default function OnboardingWelcome() {
                     i18nKey="onboarding.welcome"
                     values={{ appName }}
                     components={{
-                      brand: <Text className="text-primary" />
+                      brand: <Text className="text-primary" />,
                     }}
                   />
                 </Text>
@@ -236,7 +256,6 @@ export default function OnboardingWelcome() {
                       />
                     </>
                   )}
-            
                 </View>
               </View>
 
@@ -250,7 +269,10 @@ export default function OnboardingWelcome() {
                           className="text-primary font-poppins-semibold"
                           onPress={() =>
                             setModal({
-                              title: translate("label.termsOfServiceTitle", "Terms of Service"),
+                              title: translate(
+                                "label.termsOfServiceTitle",
+                                "Terms of Service",
+                              ),
                               message: translate("label.termsOfServiceMessage"),
                               buttons: [
                                 {
@@ -274,4 +296,3 @@ export default function OnboardingWelcome() {
     </SafeAreaView>
   );
 }
-
