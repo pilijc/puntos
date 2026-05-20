@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, TextInput } from "@/tw";
 import React, { useMemo, useCallback, useEffect, useState } from "react";
 import { Search, Store, X } from "lucide-react-native";
 import { useTranslation } from "react-i18next";
-import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "@/tw";
 import { useFocusEffect } from "expo-router";
 import { useStoreStore } from "@/store/user/store-store";
 import { useRewardsUiStore } from "@/store/user/rewards-ui-store";
