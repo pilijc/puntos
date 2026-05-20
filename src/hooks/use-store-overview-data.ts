@@ -12,7 +12,8 @@ import { useStreaks } from "@/hooks/use-streaks";
 import { getStores } from "@/services/store-service";
 import { StampProgress } from "@/services/stamp-service";
 import { useRewardsDataStore } from "@/hooks/use-rewards-data";
-import { useUserStoreActivity } from "@/hooks/use-user-store-activity";
+import { useUserStorePointsQuery, useStoreRewardsQuery } from "@/hooks/user/rq/activity-queries";
+import { useCurrentUserProfileQuery } from "@/hooks/user/rq/profile-queries";
 import { useRewardsUiStore } from "@/store/user/rewards-ui-store";
 import { useStoreStore } from "@/store/user/store-store";
 import { getHasStampedToday, sortRewards } from "@/utils/store-helpers";
@@ -74,12 +75,15 @@ export function useStoreOverviewData(storeId?: string) {
   const { stampRewards } = useStampRewards();
   const { streaks: userStreaks, refetch: refetchStreaks } = useStreaks();
 
-  const { pointsMap, rewardsMap, isLoadingRewards: isRewardsLoadingMap, fetchRewardsActivity } = useUserStoreActivity();
-  const userPoints = storeId ? (pointsMap[storeId] || 0) : 0;
-  
-  const cacheKey = storeId ? `${storeId}-${rewardSort}-${rewardPointsOrder}` : "";
-  const rawRewards = cacheKey ? (rewardsMap[cacheKey] || []) : [];
-  const isLoadingRewards = cacheKey ? !!isRewardsLoadingMap[cacheKey] : false;
+  const { data: profileData } = useCurrentUserProfileQuery();
+  const userId = profileData?.user?.id;
+
+  const { data: userPoints = 0 } = useUserStorePointsQuery(userId, storeId);
+  const { data: rawRewards = [], isLoading: isLoadingRewards } = useStoreRewardsQuery(
+    storeId, 
+    rewardSort as any, 
+    rewardPointsOrder as any
+  );
 
   const handleCarouselInteraction = useCarouselAutoplayPause(setIsAutoPlayEnabled);
   const swipeIndicatorOpacity = useSharedValue(0);
@@ -152,13 +156,6 @@ export function useStoreOverviewData(storeId?: string) {
       return distanceA - distanceB;
     });
   }, [location, stamps]);
-
-  // Fetch rewards cache
-  useEffect(() => {
-    if (storeId) {
-      fetchRewardsActivity(storeId, rewardSort, rewardPointsOrder);
-    }
-  }, [storeId, rewardSort, rewardPointsOrder, fetchRewardsActivity]);
 
   const sortedRewards = useMemo(() => {
     // Randomize the fetched rewards and select up to 3
