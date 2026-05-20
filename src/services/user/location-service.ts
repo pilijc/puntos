@@ -90,7 +90,6 @@ export async function requestLocationPermission(): Promise<LocationPermissionSta
     const response = await Location.requestForegroundPermissionsAsync();
     return toLocationPermissionStatus(response);
   } catch (error) {
-    console.error('[LocationService] Error requesting permission:', error);
     return {
       granted: false,
       canAskAgain: false,
@@ -107,7 +106,6 @@ export async function checkLocationPermission(): Promise<LocationPermissionStatu
     const response = await Location.getForegroundPermissionsAsync();
     return toLocationPermissionStatus(response);
   } catch (error) {
-    console.error('[LocationService] Error checking permission:', error);
     return {
       granted: false,
       canAskAgain: false,
@@ -281,15 +279,11 @@ export async function watchLocation(
       },
       (location) => {
         callback(toUserLocation(location));
-      },
-      (error) => {
-        console.error('[LocationService] Location watch update error:', error);
       }
     );
 
     return subscription;
   } catch (error) {
-    console.error('[LocationService] Error watching location:', error);
     return null;
   }
 }

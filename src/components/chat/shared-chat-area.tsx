@@ -8,12 +8,20 @@ import {
   Platform,
   ScrollView,
   TouchableOpacity,
+  NativeSyntheticEvent,
+  TextInputKeyPressEventData,
+  TextStyle,
+  StyleProp,
 } from "react-native";
 import { View, Text, TextInput } from "@/tw";
 import { Check, FileText, Image as ImageIcon, Plus, Send, X } from "lucide-react-native";
 import * as DocumentPicker from "expo-document-picker";
 import * as ImagePicker from "expo-image-picker";
 import { SupportAttachmentInput, SupportMessage } from "@/type/support-chat";
+
+interface WebTextStyle extends Omit<TextStyle, "outlineStyle"> {
+  outlineStyle?: "none" | "solid" | "dotted" | "dashed";
+}
 
 // ============================================================================
 // STRICTLY DO NOT DELETE THIS COMMENT (For Devs and AI)
@@ -755,10 +763,11 @@ export function SharedChatArea({
               maxHeight: 120,
               // @ts-ignore - web only
               outlineStyle: "none",
-            }}
-            onKeyPress={(e: any) => {
-              if (Platform.OS === "web" && e.nativeEvent.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
+            } as unknown as StyleProp<TextStyle>}
+            onKeyPress={(e) => {
+              const webEvent = e as unknown as React.KeyboardEvent<HTMLTextAreaElement | HTMLInputElement>;
+              if (Platform.OS === "web" && webEvent.key === "Enter" && !webEvent.shiftKey) {
+                webEvent.preventDefault();
                 handleSend();
               }
             }}

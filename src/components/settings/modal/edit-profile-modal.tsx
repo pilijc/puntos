@@ -118,15 +118,6 @@ export default function EditProfileModal({ visible, onClose }: Props) {
                             sanitize={(v) => v}
                         />
 
-                        <View pointerEvents="none" className="opacity-60">
-                            <TextField
-                                label={translate("settings.profile.label.email")}
-                                value={user?.email || ""}
-                                onChangeText={() => { }}
-                                placeholder={translate("settings.profile.input.email")}
-                                hint={translate("settings.profile.emailDescription")}
-                            />
-                        </View>
                     </ScrollView>
                 </KeyboardAvoidingView>
             </Modal>

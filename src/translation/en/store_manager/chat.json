@@ -14,5 +14,17 @@
     "contactSupport": "Contact Support",
     "superAdminSupport": "Super Admin Support",
     "messagePlaceholder": "Message support..."
+  },
+  "shared": {
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "loadingMessages": "Loading messages...",
+    "sending": "Sending...",
+    "sent": "Sent",
+    "captionPlaceholder": "Add a caption...",
+    "attachment": "Attachment",
+    "replyPlaceholder": "Reply to store...",
+    "uploadImage": "Upload image",
+    "attachFile": "Attach file"
   }
 }

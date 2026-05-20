@@ -14,5 +14,17 @@
     "contactSupport": "サポートに連絡",
     "superAdminSupport": "管理者サポート",
     "messagePlaceholder": "サポートにメッセージを送信..."
+  },
+  "shared": {
+    "today": "今日",
+    "yesterday": "昨日",
+    "loadingMessages": "メッセージを読み込み中...",
+    "sending": "送信中...",
+    "sent": "送信済み",
+    "captionPlaceholder": "キャプションを追加...",
+    "attachment": "添付ファイル",
+    "replyPlaceholder": "店舗に返信...",
+    "uploadImage": "画像をアップロード",
+    "attachFile": "ファイルを添付"
   }
 }
