@@ -11,9 +11,25 @@ import { useColorScheme, Platform } from "react-native";
 import { Modal, type ModalButton } from "@/components/modal";
 import { useCreateStoreStore } from "@/store/store-manager/create-store-store";
 import { checkStoreCreationLimit } from "@/services/store-manager/subscription-limits";
-import { StoreStep, BusinessStep, LocationStep } from "@/components/store_manager/create-store";
-import { createStore, updateStore, uploadStoreImage, StoreImageKind, resolveStoreTimezone } from "@/services/store-service";
-import { aspect_ratios, DEFAULT_STORE_CLOSE, DEFAULT_STORE_OPEN, type PickImageType, STEPS } from "@/type/store-manager/store";
+import {
+  StoreStep,
+  BusinessStep,
+  LocationStep,
+} from "@/components/store_manager/create-store";
+import {
+  createStore,
+  updateStore,
+  uploadStoreImage,
+  StoreImageKind,
+  resolveStoreTimezone,
+} from "@/services/store-service";
+import {
+  aspect_ratios,
+  DEFAULT_STORE_CLOSE,
+  DEFAULT_STORE_OPEN,
+  type PickImageType,
+  STEPS,
+} from "@/type/store-manager/store";
 
 const WEB_MAX_WIDTH = 896;
 Mapbox.setAccessToken(process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN);
@@ -22,7 +38,8 @@ export default function CreateStore() {
   const { t: translate } = useTranslation();
   const isWeb = Platform.OS === "web";
   const isDark = useColorScheme() === "dark";
-  const [activeStep, setActiveStep] = useState<(typeof STEPS)[number]["key"]>("store");
+  const [activeStep, setActiveStep] =
+    useState<(typeof STEPS)[number]["key"]>("store");
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [scrollEnabled, setScrollEnabled] = useState(true);
@@ -71,11 +88,18 @@ export default function CreateStore() {
     setModal({
       title: translate("storeManager.createStore.errorTitle"),
       message,
-      buttons: [{ label: translate("label.ok"), onPress: () => setModal(null), variant: "secondary" }],
+      buttons: [
+        {
+          label: translate("label.ok"),
+          onPress: () => setModal(null),
+          variant: "secondary",
+        },
+      ],
     });
 
   const getCreateStoreErrorMessage = (error: unknown) => {
-    const message = error instanceof Error ? error.message : String(error ?? "");
+    const message =
+      error instanceof Error ? error.message : String(error ?? "");
     const lowerMessage = message.toLowerCase();
 
     if (
@@ -93,16 +117,29 @@ export default function CreateStore() {
     setModal({
       title: translate("storeManager.createStore.createFailedTitle"),
       message: getCreateStoreErrorMessage(error),
-      buttons: [{ label: translate("label.ok"), onPress: () => setModal(null), variant: "secondary" }],
+      buttons: [
+        {
+          label: translate("label.ok"),
+          onPress: () => setModal(null),
+          variant: "secondary",
+        },
+      ],
     });
 
   const pickImage = async (type: PickImageType, pictureIndex?: number) => {
-    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    const permissionResult =
+      await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permissionResult.granted) {
       setModal({
         title: translate("storeManager.createStore.permissionPhotosTitle"),
         message: translate("storeManager.createStore.permissionPhotos"),
-        buttons: [{ label: translate("label.ok"), onPress: () => setModal(null), variant: "secondary" }],
+        buttons: [
+          {
+            label: translate("label.ok"),
+            onPress: () => setModal(null),
+            variant: "secondary",
+          },
+        ],
       });
       return;
     }
@@ -130,8 +167,10 @@ export default function CreateStore() {
       setIsUploadingImage(true);
       try {
         setLogo(dataUri);
-      } catch (e: any) {
-        showError(e?.message ?? translate("storeManager.createStore.uploadFailed"));
+      } catch (error) {
+        showError(
+          error?.message ?? translate("storeManager.createStore.uploadFailed"),
+        );
       } finally {
         setIsUploadingImage(false);
       }
@@ -142,8 +181,10 @@ export default function CreateStore() {
       setIsUploadingImage(true);
       try {
         setBusinessDocumentImage(dataUri);
-      } catch (e: any) {
-        showError(e?.message ?? translate("storeManager.createStore.uploadFailed"));
+      } catch (error) {
+        showError(
+          error?.message ?? translate("storeManager.createStore.uploadFailed"),
+        );
       } finally {
         setIsUploadingImage(false);
       }
@@ -152,20 +193,28 @@ export default function CreateStore() {
 
     if (type === "picture") {
       const current = useCreateStoreStore.getState().pictures ?? [];
-      if (current.length >= 6 && (pictureIndex == null || pictureIndex >= current.length)) return;
+      if (
+        current.length >= 6 &&
+        (pictureIndex == null || pictureIndex >= current.length)
+      )
+        return;
 
       setIsUploadingImage(true);
       try {
         const next = [...current];
         const index =
-          pictureIndex !== undefined && pictureIndex >= 0 && pictureIndex < next.length
+          pictureIndex !== undefined &&
+          pictureIndex >= 0 &&
+          pictureIndex < next.length
             ? pictureIndex
             : next.length;
         if (index < next.length) next[index] = dataUri;
         else next.push(dataUri);
         setPictures(next);
-      } catch (e: any) {
-        showError(e?.message ?? translate("storeManager.createStore.uploadFailed"));
+      } catch (error) {
+        showError(
+          error?.message ?? translate("storeManager.createStore.uploadFailed"),
+        );
       } finally {
         setIsUploadingImage(false);
       }
@@ -184,31 +233,48 @@ export default function CreateStore() {
     if (!storeName.trim()) missing.push(translate("label.storeName"));
     if (!storeType.trim()) missing.push(translate("label.storeType"));
     if (!logo) missing.push(translate("label.storeLogo"));
-    if (picturesCount < 3) missing.push(translate("storeManager.createStore.missing.storePicturesMin"));
-    if (picturesCount > 6) missing.push(translate("storeManager.createStore.missing.storePicturesMax"));
+    if (picturesCount < 3)
+      missing.push(
+        translate("storeManager.createStore.missing.storePicturesMin"),
+      );
+    if (picturesCount > 6)
+      missing.push(
+        translate("storeManager.createStore.missing.storePicturesMax"),
+      );
     return missing;
   };
 
   const getBusinessStepMissing = () => {
     const missing: string[] = [];
-    if (!registrationNumber.trim()) missing.push(translate("storeManager.createStore.missing.registrationNumber"));
-    if (!businessDocumentImage) missing.push(translate("storeManager.createStore.missing.businessDocumentImage"));
-    if (!storeDays || storeDays.length === 0) missing.push(translate("storeManager.createStore.missing.storeDays"));
+    if (!registrationNumber.trim())
+      missing.push(
+        translate("storeManager.createStore.missing.registrationNumber"),
+      );
+    if (!businessDocumentImage)
+      missing.push(
+        translate("storeManager.createStore.missing.businessDocumentImage"),
+      );
+    if (!storeDays || storeDays.length === 0)
+      missing.push(translate("storeManager.createStore.missing.storeDays"));
     return missing;
   };
 
   const getLocationStepMissing = () => {
     const missing: string[] = [];
-    if (!address.trim()) missing.push(translate("storeManager.createStore.missing.address"));
-    if (!hasPin) missing.push(translate("storeManager.createStore.missing.pinLocation"));
-    if (effectiveRadius < 50 || effectiveRadius > 500) missing.push(translate("storeManager.createStore.missing.radius"));
+    if (!address.trim())
+      missing.push(translate("storeManager.createStore.missing.address"));
+    if (!hasPin)
+      missing.push(translate("storeManager.createStore.missing.pinLocation"));
+    if (effectiveRadius < 50 || effectiveRadius > 500)
+      missing.push(translate("storeManager.createStore.missing.radius"));
     return missing;
   };
 
   const isStoreStepValid = getStoreStepMissing().length === 0;
   const isBusinessStepValid = getBusinessStepMissing().length === 0;
   const isLocationStepValid = getLocationStepMissing().length === 0;
-  const isFormValid = isStoreStepValid && isBusinessStepValid && isLocationStepValid;
+  const isFormValid =
+    isStoreStepValid && isBusinessStepValid && isLocationStepValid;
 
   const setPin = async (lat: number, lng: number) => {
     setLatitude(String(lat));
@@ -230,7 +296,13 @@ export default function CreateStore() {
       setModal({
         title: translate("storeManager.createStore.permissionLocationTitle"),
         message: translate("storeManager.createStore.permissionLocationBody"),
-        buttons: [{ label: translate("label.ok"), onPress: () => setModal(null), variant: "secondary" }],
+        buttons: [
+          {
+            label: translate("label.ok"),
+            onPress: () => setModal(null),
+            variant: "secondary",
+          },
+        ],
       });
       return;
     }
@@ -308,7 +380,10 @@ export default function CreateStore() {
 
       const id = String(newStore.id);
 
-      const uploadDataUri = async (uri: string, kind: StoreImageKind): Promise<string> => {
+      const uploadDataUri = async (
+        uri: string,
+        kind: StoreImageKind,
+      ): Promise<string> => {
         if (!uri.startsWith("data:")) return uri;
         const [header, b64] = uri.split(",");
         const mt = header.split(":")[1]?.split(";")[0] ?? "image/jpeg";
@@ -345,8 +420,8 @@ export default function CreateStore() {
       });
       resetForm();
       setActiveStep("store");
-    } catch (e: any) {
-      showCreateStoreError(e);
+    } catch (error) {
+      showCreateStoreError(error);
     } finally {
       setIsSubmitting(false);
     }
@@ -358,8 +433,16 @@ export default function CreateStore() {
       if (missing.length > 0) {
         setModal({
           title: translate("storeManager.createStore.storeDetailsRequired"),
-          message: translate("storeManager.createStore.pleaseComplete", { fields: missing.join(", ") }),
-          buttons: [{ label: translate("label.ok"), onPress: () => setModal(null), variant: "secondary" }],
+          message: translate("storeManager.createStore.pleaseComplete", {
+            fields: missing.join(", "),
+          }),
+          buttons: [
+            {
+              label: translate("label.ok"),
+              onPress: () => setModal(null),
+              variant: "secondary",
+            },
+          ],
         });
         return;
       }
@@ -372,8 +455,16 @@ export default function CreateStore() {
       if (missing.length > 0) {
         setModal({
           title: translate("storeManager.createStore.businessDetailsRequired"),
-          message: translate("storeManager.createStore.pleaseComplete", { fields: missing.join(", ") }),
-          buttons: [{ label: translate("label.ok"), onPress: () => setModal(null), variant: "secondary" }],
+          message: translate("storeManager.createStore.pleaseComplete", {
+            fields: missing.join(", "),
+          }),
+          buttons: [
+            {
+              label: translate("label.ok"),
+              onPress: () => setModal(null),
+              variant: "secondary",
+            },
+          ],
         });
         return;
       }
@@ -387,9 +478,17 @@ export default function CreateStore() {
         title: translate("storeManager.createStore.missingDetails"),
         message:
           missing.length > 0
-            ? translate("storeManager.createStore.pleaseComplete", { fields: missing.join(", ") })
+            ? translate("storeManager.createStore.pleaseComplete", {
+                fields: missing.join(", "),
+              })
             : translate("storeManager.createStore.completeAllFields"),
-        buttons: [{ label: translate("label.ok"), onPress: () => setModal(null), variant: "secondary" }],
+        buttons: [
+          {
+            label: translate("label.ok"),
+            onPress: () => setModal(null),
+            variant: "secondary",
+          },
+        ],
       });
       return;
     }
@@ -462,7 +561,10 @@ export default function CreateStore() {
   };
 
   return (
-    <SafeAreaView edges={["top", "left", "right"]} className="flex-1 bg-backgroundMuted dark:bg-[#111921]">
+    <SafeAreaView
+      edges={["top", "left", "right"]}
+      className="flex-1 bg-backgroundMuted dark:bg-[#111921]"
+    >
       <Modal
         visible={!!modal}
         onClose={() => setModal(null)}
@@ -501,7 +603,11 @@ export default function CreateStore() {
           className={isWeb ? "items-center" : ""}
           style={isWeb ? { width: "100%" } : undefined}
         >
-          <View style={isWeb ? { width: "100%", maxWidth: WEB_MAX_WIDTH } : undefined}>
+          <View
+            style={
+              isWeb ? { width: "100%", maxWidth: WEB_MAX_WIDTH } : undefined
+            }
+          >
             <View className="flex-row gap-3">
               {activeStep !== "store" && (
                 <View className="flex-1">

@@ -153,7 +153,7 @@ export default function Rewards() {
       const publicUrl = await uploadRewardImage(storeId, asset.base64, mimeType);
       setImageUrl(publicUrl);
       setImageError(false);
-    } catch (err: any) {
+    } catch (err) {
       setModal({
         title: translate("label.oops"),
         message: err?.message ?? translate("storeManager.rewardForm.uploadImageError"),

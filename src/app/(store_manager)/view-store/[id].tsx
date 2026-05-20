@@ -1,4 +1,28 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { supabase } from "@/supabase/supabase";
+import { useTranslation } from "react-i18next";
+import { AppHeader } from "@/components/header";
+import { Modal, ModalButton } from "@/components/modal";
+import { getStoreById } from "@/services/store-service";
+import { type_badge } from "@/type/store-manager/transaction";
+import { formatTxDateTime } from "@/utils/store_manager/transaction";
+import { useStoreTransactionsPreview } from "@/hooks/store-manager/rq";
+import { listManagerConversations } from "@/services/support-chat-service";
+import { useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  ScrollView,
+  Image,
+  SafeAreaView,
+} from "@/tw";
 import {
   RefreshControl,
   NativeSyntheticEvent,
@@ -7,18 +31,19 @@ import {
   Platform,
   ScrollView as RNScrollView,
 } from "react-native";
-import { View, Text, TouchableOpacity, ScrollView, Image, SafeAreaView } from "@/tw";
-import { useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
-import { getStoreById } from "@/services/store-service";
-import { useStoreTransactionsPreview } from "@/hooks/store-manager/rq";
-import { TransactionItem, type_badge } from "@/type/store-manager/transaction";
-import { formatTxDateTime } from "@/utils/store_manager/transaction";
-import { Modal, ModalButton } from "@/components/modal";
-import { Building2, Gift, QrCode, UsersRound, Stamp, Flame, ChevronLeft, ChevronRight, Loader2, ReceiptText, Headset } from "lucide-react-native";
-import { AppHeader } from "@/components/header";
-import { useTranslation } from "react-i18next";
-import { supabase } from "@/supabase/supabase";
-import { listManagerConversations } from "@/services/support-chat-service";
+import {
+  Building2,
+  Gift,
+  QrCode,
+  UsersRound,
+  Stamp,
+  Flame,
+  ChevronLeft,
+  ChevronRight,
+  Loader2,
+  ReceiptText,
+  Headset,
+} from "lucide-react-native";
 
 export default function ViewStore() {
   const { t: translate } = useTranslation();
@@ -29,11 +54,18 @@ export default function ViewStore() {
   const isWeb = Platform.OS === "web";
   const carouselCardPadding = isWeb ? 8 : 0;
   const carouselMaxWidth = isWeb ? 860 : screenWidth - 32;
-  const carouselWidth = Math.max(0, Math.min(screenWidth - 32, carouselMaxWidth) - carouselCardPadding * 2);
-  const [store, setStore] = useState<Awaited<ReturnType<typeof getStoreById>> | null>(null);
+  const carouselWidth = Math.max(
+    0,
+    Math.min(screenWidth - 32, carouselMaxWidth) - carouselCardPadding * 2,
+  );
+  const [store, setStore] = useState<Awaited<
+    ReturnType<typeof getStoreById>
+  > | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
-  const txPreview = useStoreTransactionsPreview(Number.isFinite(storeId) && storeId > 0 ? storeId : undefined);
+  const txPreview = useStoreTransactionsPreview(
+    Number.isFinite(storeId) && storeId > 0 ? storeId : undefined,
+  );
   const recentTxs = txPreview.data?.items ?? [];
   const txLoading = txPreview.isPending;
   const [modal, setModal] = useState<{
@@ -48,55 +80,89 @@ export default function ViewStore() {
     useCallback(() => {
       async function checkUnread() {
         try {
-          const { data: { user } } = await supabase.auth.getUser();
+          const {
+            data: { user },
+          } = await supabase.auth.getUser();
           if (!user) return;
           const convs = await listManagerConversations(user.id);
-          const storeConv = convs.find(c => c.store_id === storeId);
+          const storeConv = convs.find((c) => c.store_id === storeId);
           setUnreadCount(storeConv?.unread_store_count ?? 0);
-        } catch {
-          // ignore
-        }
+        } catch {}
       }
-      
-      // Fetch immediately on focus
+
       checkUnread();
 
-      // ============================================================================
-      // DO NOT CHANGE THIS SUBSCRIPTION TO 'support_conversations'
-      // We must listen directly to `support_messages` (* event) to make the unread
-      // badge fully real-time. If we listened to `support_conversations`, the badge 
-      // would only update if the conversation's 'status' changes (e.g. unarchived),
-      // completely missing normal back-and-forth messages.
-      // ============================================================================
       const channel = supabase
         .channel(`view_store_unread_${storeId}`)
         .on(
           "postgres_changes",
           { event: "*", schema: "public", table: "support_messages" },
-          () => checkUnread()
+          () => checkUnread(),
         )
         .subscribe();
 
       return () => {
         supabase.removeChannel(channel);
       };
-    }, [storeId])
+    }, [storeId]),
   );
 
   const menuItems = useMemo(
     () => [
-      { key: "staff", label: translate("storeManager.viewStore.menu.staff.label"), description: translate("storeManager.viewStore.menu.staff.description"), icon: <UsersRound size={18} color="#FF6600" />, route: "/(store_manager)/staff" as const },
-      { key: "streak", label: translate("label.streak"), description: translate("storeManager.viewStore.menu.streak.description"), icon: <Flame size={18} color="#FF6600" />, route: "/(store_manager)/streak" as const },
-      { key: "stamp", label: translate("label.stamp"), description: translate("storeManager.viewStore.menu.stamp.description"), icon: <Stamp size={18} color="#FF6600" />, route: "/(store_manager)/stamp/" as const },
-      { key: "qr", label: translate("label.qrPurchase"), description: translate("storeManager.viewStore.menu.qr.description"), icon: <QrCode size={18} color="#FF6600" />, route: "/(store_manager)/qr" as const },
-      { key: "rewards", label: translate("label.rewards"), description: translate("storeManager.viewStore.menu.rewards.description"), icon: <Gift size={18} color="#FF6600" />, route: "/(store_manager)/reward" as const },
-      { key: "media", label: translate("storeManager.viewStore.menu.media.label"), description: translate("storeManager.viewStore.menu.media.description"), icon: <Building2 size={18} color="#FF6600" />, route: "/(store_manager)/detail" as const },
+      {
+        key: "staff",
+        label: translate("storeManager.viewStore.menu.staff.label"),
+        description: translate("storeManager.viewStore.menu.staff.description"),
+        icon: <UsersRound size={18} color="#FF6600" />,
+        route: "/(store_manager)/staff" as const,
+      },
+      {
+        key: "streak",
+        label: translate("label.streak"),
+        description: translate(
+          "storeManager.viewStore.menu.streak.description",
+        ),
+        icon: <Flame size={18} color="#FF6600" />,
+        route: "/(store_manager)/streak" as const,
+      },
+      {
+        key: "stamp",
+        label: translate("label.stamp"),
+        description: translate("storeManager.viewStore.menu.stamp.description"),
+        icon: <Stamp size={18} color="#FF6600" />,
+        route: "/(store_manager)/stamp/" as const,
+      },
+      {
+        key: "qr",
+        label: translate("label.qrPurchase"),
+        description: translate("storeManager.viewStore.menu.qr.description"),
+        icon: <QrCode size={18} color="#FF6600" />,
+        route: "/(store_manager)/qr" as const,
+      },
+      {
+        key: "rewards",
+        label: translate("label.rewards"),
+        description: translate(
+          "storeManager.viewStore.menu.rewards.description",
+        ),
+        icon: <Gift size={18} color="#FF6600" />,
+        route: "/(store_manager)/reward" as const,
+      },
+      {
+        key: "media",
+        label: translate("storeManager.viewStore.menu.media.label"),
+        description: translate("storeManager.viewStore.menu.media.description"),
+        icon: <Building2 size={18} color="#FF6600" />,
+        route: "/(store_manager)/detail" as const,
+      },
     ],
-    [translate]
+    [translate],
   );
 
   const carouselImages = useMemo(() => {
-    const pictures = (store?.store_pictures ?? []).filter((u): u is string => !!u);
+    const pictures = (store?.store_pictures ?? []).filter(
+      (u): u is string => !!u,
+    );
     if (pictures.length > 0) return pictures;
     if (store?.logo) return [store.logo];
     return [require("@/assets/images/puntos-icon.png")];
@@ -104,20 +170,32 @@ export default function ViewStore() {
 
   const carouselRef = useRef<RNScrollView | null>(null);
 
-  const onCarouselScroll = useCallback((e: NativeSyntheticEvent<NativeScrollEvent>) => {
-    const cardWidth = isWeb ? carouselWidth : e.nativeEvent.layoutMeasurement.width;
-    if (!cardWidth) return;
-    const nextIndex = Math.round(e.nativeEvent.contentOffset.x / cardWidth);
-    setActiveImageIndex(nextIndex);
-  }, [carouselWidth, isWeb]);
+  const onCarouselScroll = useCallback(
+    (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+      const cardWidth = isWeb
+        ? carouselWidth
+        : e.nativeEvent.layoutMeasurement.width;
+      if (!cardWidth) return;
+      const nextIndex = Math.round(e.nativeEvent.contentOffset.x / cardWidth);
+      setActiveImageIndex(nextIndex);
+    },
+    [carouselWidth, isWeb],
+  );
 
   const scrollToCarouselIndex = useCallback(
     (nextIndex: number) => {
-      const clamped = Math.max(0, Math.min(nextIndex, carouselImages.length - 1));
-      carouselRef.current?.scrollTo({ x: clamped * carouselWidth, y: 0, animated: true });
+      const clamped = Math.max(
+        0,
+        Math.min(nextIndex, carouselImages.length - 1),
+      );
+      carouselRef.current?.scrollTo({
+        x: clamped * carouselWidth,
+        y: 0,
+        animated: true,
+      });
       setActiveImageIndex(clamped);
     },
-    [carouselImages.length, carouselWidth]
+    [carouselImages.length, carouselWidth],
   );
 
   const fetchStore = useCallback(async () => {
@@ -142,7 +220,10 @@ export default function ViewStore() {
   }, [storeId, fetchStore, txPreview.refetch]);
 
   return (
-    <SafeAreaView edges={["top", "left", "right"]} className="flex-1 bg-backgroundMuted dark:bg-darkBackground">
+    <SafeAreaView
+      edges={["top", "left", "right"]}
+      className="flex-1 bg-backgroundMuted dark:bg-darkBackground"
+    >
       <Modal
         visible={!!modal}
         onClose={() => setModal(null)}
@@ -153,32 +234,37 @@ export default function ViewStore() {
       />
       <AppHeader
         title={store?.name || translate("storeManager.viewStore.fallbackTitle")}
-        description={store?.address || translate("storeManager.viewStore.fallbackDescription")}
+        description={
+          store?.address ||
+          translate("storeManager.viewStore.fallbackDescription")
+        }
         onBackPress={() => {
           router.push("/(store_manager)/stores");
         }}
         rightIcon={
-          <View style={{ position: 'relative' }}>
+          <View style={{ position: "relative" }}>
             <Headset size={20} color="#FF6600" />
             {unreadCount > 0 && (
-              <View 
+              <View
                 style={{
-                  position: 'absolute',
+                  position: "absolute",
                   top: -2,
                   right: -2,
                   width: 8,
                   height: 8,
                   borderRadius: 4,
-                  backgroundColor: '#EF4444',
+                  backgroundColor: "#EF4444",
                   borderWidth: 1.5,
-                  borderColor: '#FFFFFF',
+                  borderColor: "#FFFFFF",
                 }}
               />
             )}
           </View>
         }
         onRightIconPress={() =>
-          router.push(`/(store_manager)/chat-support?storeId=${storeId}&from=view-store`)
+          router.push(
+            `/(store_manager)/chat-support?storeId=${storeId}&from=view-store`,
+          )
         }
       />
 
@@ -200,7 +286,9 @@ export default function ViewStore() {
           <View className="w-full px-4 items-center">
             <View
               className="border border-slate-100 dark:border-darkBorder rounded-xl"
-              style={isWeb ? { width: "100%", maxWidth: 860 } : { width: "100%" }}
+              style={
+                isWeb ? { width: "100%", maxWidth: 860 } : { width: "100%" }
+              }
             >
               <View className="w-full h-40 rounded-xl overflow-hidden">
                 <RNScrollView
@@ -231,14 +319,18 @@ export default function ViewStore() {
                   <>
                     <TouchableOpacity
                       activeOpacity={0.8}
-                      onPress={() => scrollToCarouselIndex(activeImageIndex - 1)}
+                      onPress={() =>
+                        scrollToCarouselIndex(activeImageIndex - 1)
+                      }
                       className="absolute left-2 top-1/2 -mt-4 w-8 h-8 rounded-full bg-black/40 items-center justify-center"
                     >
                       <ChevronLeft size={18} color="#FFFFFF" />
                     </TouchableOpacity>
                     <TouchableOpacity
                       activeOpacity={0.8}
-                      onPress={() => scrollToCarouselIndex(activeImageIndex + 1)}
+                      onPress={() =>
+                        scrollToCarouselIndex(activeImageIndex + 1)
+                      }
                       className="absolute right-2 top-1/2 -mt-4 w-8 h-8 rounded-full bg-black/40 items-center justify-center"
                     >
                       <ChevronRight size={18} color="#FFFFFF" />
@@ -246,9 +338,7 @@ export default function ViewStore() {
                   </>
                 )}
                 {carouselImages.length > 1 && (
-                  <View
-                    className="flex-row items-center justify-center gap-x-1.5 absolute bottom-4 left-0 right-0"
-                  >
+                  <View className="flex-row items-center justify-center gap-x-1.5 absolute bottom-4 left-0 right-0">
                     {carouselImages.map((_, i) => (
                       <View
                         key={`dot-${i}`}
@@ -273,7 +363,9 @@ export default function ViewStore() {
                   <TouchableOpacity
                     key={item.key}
                     activeOpacity={0.85}
-                    onPress={() => router.push({ pathname: item.route, params: { storeId } })}
+                    onPress={() =>
+                      router.push({ pathname: item.route, params: { storeId } })
+                    }
                     style={{ width: "32.5%" }}
                     className="bg-white dark:bg-darkBackgroundCard border border-slate-100 dark:border-darkBorder rounded-xl p-3"
                   >
@@ -298,7 +390,9 @@ export default function ViewStore() {
                 <TouchableOpacity
                   key={item.key}
                   activeOpacity={0.85}
-                  onPress={() => router.push({ pathname: item.route, params: { storeId } })}
+                  onPress={() =>
+                    router.push({ pathname: item.route, params: { storeId } })
+                  }
                   style={{ width: "32.5%" }}
                   className="bg-white dark:bg-darkBackgroundCard border border-slate-100 dark:border-darkBorder rounded-xl p-3"
                 >
@@ -328,10 +422,15 @@ export default function ViewStore() {
                   activeOpacity={0.7}
                   className="flex-row items-center gap-x-0.5"
                   onPress={() =>
-                    router.push({ pathname: "/(store_manager)/transactions", params: { storeId: String(storeId) } })
+                    router.push({
+                      pathname: "/(store_manager)/transactions",
+                      params: { storeId: String(storeId) },
+                    })
                   }
                 >
-                  <Text className="text-xs font-poppins text-primary">{translate("storeManager.viewStore.seeAll")}</Text>
+                  <Text className="text-xs font-poppins text-primary">
+                    {translate("storeManager.viewStore.seeAll")}
+                  </Text>
                   <ChevronRight size={14} color="#FF6600" />
                 </TouchableOpacity>
               </View>
@@ -353,7 +452,9 @@ export default function ViewStore() {
                     <View
                       key={tx.id}
                       className={`flex-row items-center px-4 py-3 gap-x-3 ${
-                        idx < recentTxs.length - 1 ? "border-b border-slate-100 dark:border-darkBackgroundMuted" : ""
+                        idx < recentTxs.length - 1
+                          ? "border-b border-slate-100 dark:border-darkBackgroundMuted"
+                          : ""
                       }`}
                     >
                       {tx.userAvatar ? (
@@ -371,10 +472,15 @@ export default function ViewStore() {
                       )}
                       <View className="flex-1 min-w-0">
                         <View className="flex-row items-center justify-between gap-x-2">
-                          <Text className="text-sm font-poppins-semibold text-slate-900 dark:text-darkTextPrimary" numberOfLines={1}>
+                          <Text
+                            className="text-sm font-poppins-semibold text-slate-900 dark:text-darkTextPrimary"
+                            numberOfLines={1}
+                          >
                             {tx.userName}
                           </Text>
-                          <Text className="text-xs font-poppins-semibold text-primary shrink-0">{tx.detail}</Text>
+                          <Text className="text-xs font-poppins-semibold text-primary shrink-0">
+                            {tx.detail}
+                          </Text>
                         </View>
                         <View className="flex-row items-center justify-between mt-0.5">
                           <Text className="text-[10px] font-poppins text-slate-400 dark:text-darkTextSecondary">
@@ -401,10 +507,15 @@ export default function ViewStore() {
                 activeOpacity={0.7}
                 className="flex-row items-center gap-x-0.5"
                 onPress={() =>
-                  router.push({ pathname: "/(store_manager)/transactions", params: { storeId: String(storeId) } })
+                  router.push({
+                    pathname: "/(store_manager)/transactions",
+                    params: { storeId: String(storeId) },
+                  })
                 }
               >
-                <Text className="text-xs font-poppins text-primary">{translate("storeManager.viewStore.seeAll")}</Text>
+                <Text className="text-xs font-poppins text-primary">
+                  {translate("storeManager.viewStore.seeAll")}
+                </Text>
                 <ChevronRight size={14} color="#FF6600" />
               </TouchableOpacity>
             </View>
@@ -426,7 +537,9 @@ export default function ViewStore() {
                   <View
                     key={tx.id}
                     className={`flex-row items-center px-4 py-3 gap-x-3 ${
-                      idx < recentTxs.length - 1 ? "border-b border-slate-100 dark:border-darkBackgroundMuted" : ""
+                      idx < recentTxs.length - 1
+                        ? "border-b border-slate-100 dark:border-darkBackgroundMuted"
+                        : ""
                     }`}
                   >
                     {tx.userAvatar ? (
@@ -444,10 +557,15 @@ export default function ViewStore() {
                     )}
                     <View className="flex-1 min-w-0">
                       <View className="flex-row items-center justify-between gap-x-2">
-                        <Text className="text-sm font-poppins-semibold text-slate-900 dark:text-darkTextPrimary" numberOfLines={1}>
+                        <Text
+                          className="text-sm font-poppins-semibold text-slate-900 dark:text-darkTextPrimary"
+                          numberOfLines={1}
+                        >
                           {tx.userName}
                         </Text>
-                        <Text className="text-xs font-poppins-semibold text-primary shrink-0">{tx.detail}</Text>
+                        <Text className="text-xs font-poppins-semibold text-primary shrink-0">
+                          {tx.detail}
+                        </Text>
                       </View>
                       <View className="flex-row items-center justify-between mt-0.5">
                         <Text className="text-[10px] font-poppins text-slate-400 dark:text-darkTextSecondary">

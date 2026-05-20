@@ -20,7 +20,7 @@ export default function Splash() {
       }
 
       const nextRoute = getWebAdjustedHomeRoute(await getHomeRouteForUserId(session.user.id));
-      router.replace(nextRoute as any);
+      router.replace(nextRoute);
     }, 1200);
 
     return () => clearTimeout(timer);
