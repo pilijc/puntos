@@ -1,5 +1,5 @@
-import { View, Text, TouchableOpacity, View as RNView } from "react-native";
-import { View as TWView, Text as TWText } from "@/tw";
+import { View, Text, TouchableOpacity, View as TWView, Text as TWText } from "@/tw";
+import { View as RNView } from "react-native";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useRouter } from "expo-router";
 import React from "react";
@@ -54,7 +54,7 @@ export default function UserStreakListItem({ streak }: UserStreakListItemProps) 
             <TWText className="font-poppins-semibold text-neutral-900 dark:text-white">
               {streak.stores?.name ?? translate("user.rewards.store")}
             </TWText>
-            <TWText className="text-xs text-neutral-500 font-poppins mt-1">
+            <TWText className="text-xs text-neutral-500 dark:text-neutral-400 font-poppins mt-1">
               {streak.stores?.is_active 
                 ? translate("user.rewards.streaks.activeStore") 
                 : translate("user.rewards.streaks.inactiveStore")}
@@ -91,7 +91,7 @@ export default function UserStreakListItem({ streak }: UserStreakListItemProps) 
         </TWText>
         <TWView className="flex-row items-center gap-x-1">
           <MaterialIcons name="bolt" size={14} color="#FF6600" />
-          <TWText className="text-[11px] text-neutral-500 font-poppins-medium">
+          <TWText className="text-[11px] text-neutral-500 dark:text-neutral-400 font-poppins-medium">
             {translate("user.rewards.streaks.reachingTarget")}
           </TWText>
         </TWView>

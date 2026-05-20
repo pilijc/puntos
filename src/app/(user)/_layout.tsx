@@ -11,9 +11,11 @@ import { refreshUserDeviceHeartbeatService } from '@/services/user/device-sessio
 import { useMutedStoresQuery } from '@/hooks/user/rq';
 
 
+import { useIsDark } from '@/hooks/use-is-dark';
+
+
 function UserTabs() {
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
+  const isDark = useIsDark();
   const { t: translate } = useTranslation();
   const insets = useSafeAreaInsets();
   const { user, preferences } = useProfile();

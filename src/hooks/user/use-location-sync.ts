@@ -21,8 +21,8 @@ const LAST_SYNC_KEY = 'location_last_sync_time';
 async function saveSyncTime(): Promise<void> {
     try {
         await AsyncStorage.setItem(LAST_SYNC_KEY, String(Date.now()));
-    } catch (e) {
-        console.error('[useLocationSync] Failed to save sync time:', e);
+    } catch {
+        // Swallowed: storage write failure should not disrupt location sync workflow
     }
 }
 
@@ -31,8 +31,7 @@ async function readSyncTime(): Promise<number | null> {
     try {
         const value = await AsyncStorage.getItem(LAST_SYNC_KEY);
         return value != null ? Number(value) : null;
-    } catch (e) {
-        console.error('[useLocationSync] Failed to read sync time:', e);
+    } catch {
         return null;
     }
 }
@@ -41,8 +40,8 @@ async function readSyncTime(): Promise<number | null> {
 async function clearSyncTime(): Promise<void> {
     try {
         await AsyncStorage.removeItem(LAST_SYNC_KEY);
-    } catch (e) {
-        console.error('[useLocationSync] Failed to clear sync time:', e);
+    } catch {
+        // Swallowed: storage clear failure is non-fatal
     }
 }
 
@@ -75,8 +74,8 @@ export function useLocationSync(userId: string | undefined, syncEnabled: boolean
                     await clearLocationService(userId);
                     await clearSyncTime();
                     lastSyncTimeRef.current = null;
-                } catch (e) {
-                    console.error('[useLocationSync] Failed to clear stale location on startup:', e);
+                } catch {
+                    // Swallowed: failed to clear stale location on startup
                 }
             }
         };
@@ -95,8 +94,8 @@ export function useLocationSync(userId: string | undefined, syncEnabled: boolean
             lastSyncedLocationRef.current = null;
             pendingLocationRef.current = null;
             syncInFlightRef.current = false;
-            clearLocationService(userId).catch((e) => {
-                console.error('[useLocationSync] Failed to clear location on disable:', e);
+            clearLocationService(userId).catch(() => {
+                // Swallowed: failed to clear location on disable
             });
             clearSyncTime();
             lastSyncTimeRef.current = null;
@@ -151,8 +150,8 @@ export function useLocationSync(userId: string | undefined, syncEnabled: boolean
                 lastSyncedLocationRef.current = loc;
                 lastSyncTimeRef.current = Date.now();
                 await saveSyncTime();
-            } catch (e) {
-                console.error('[useLocationSync] Sync failed:', e);
+            } catch {
+                // Swallowed: failed to sync location to server
             } finally {
                 syncInFlightRef.current = false;
 
@@ -227,8 +226,8 @@ export function useLocationSync(userId: string | undefined, syncEnabled: boolean
                     await clearLocationService(userId);
                     await clearSyncTime();
                     lastSyncTimeRef.current = null;
-                } catch (e) {
-                    console.error('[useLocationSync] Failed to clear stale location:', e);
+                } catch {
+                    // Swallowed: failed to clear stale location during expiry interval
                 }
             }
         }, 30 * 1000);

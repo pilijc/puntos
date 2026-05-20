@@ -6,13 +6,16 @@ import {
   TouchableOpacity,
   Easing,
   View as RNView,
+  Dimensions,
 } from "react-native";
 import Svg, { Circle } from "react-native-svg";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useSingleTap } from "@/hooks/use-single-tap";
 import { storeLogos } from "@/data/rewards";
-import { getUserStreakByStore, UserStreak } from "@/services/streak-service";
-import { supabase } from "@/supabase/supabase";
+import { UserStreak } from "@/services/streak-service";
+import { useStreakByStoreQuery } from "@/hooks/user/rq";
 import {
   ChevronLeft,
   Flame,
@@ -26,6 +29,7 @@ import {
   Clock,
 } from "lucide-react-native";
 import { StreakDetailSkeleton } from "@/components/skeleton/user/streak-detail-skeleton";
+import { useIsDark } from "@/hooks/use-is-dark";
 
 const getOrdinalSuffix = (n: number) => {
   const s = ["th", "st", "nd", "rd"];
@@ -61,6 +65,7 @@ function ProgressRing({
   }, [animatedValue, progress]);
 
   const isComplete = progress >= 1;
+  const isDark = useIsDark();
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
 
@@ -79,7 +84,7 @@ function ProgressRing({
           cx={center}
           cy={center}
           r={radius}
-          stroke="#f3f4f6"
+          stroke={isDark ? "#262626" : "#f3f4f6"}
           strokeWidth={strokeWidth}
           fill="none"
         />
@@ -140,6 +145,7 @@ function RecentActivityCalendar({
   endDate?: string | null;
 }) {
   const { t: translate } = useTranslation();
+  const isDark = useIsDark();
   const [expanded, setExpanded] = React.useState(false);
   const scrollRef = React.useRef<any>(null);
   const STRIP_DAYS = 90;
@@ -188,10 +194,10 @@ function RecentActivityCalendar({
     const bgColor = earned
       ? "#FF6600"
       : isEndMarker
-        ? "#FFF7ED"
+        ? (isDark ? "rgba(255, 102, 0, 0.15)" : "#FFF7ED")
         : isToday && !earned
-          ? "#FFF7ED"
-          : "#f3f4f6";
+          ? (isDark ? "rgba(255, 102, 0, 0.15)" : "#FFF7ED")
+          : (isDark ? "#262626" : "#f3f4f6");
     const borderWidth = isEndMarker || (isToday && !earned) ? 1.5 : 0;
     const borderStyle = isEndMarker ? ("dashed" as const) : ("solid" as const);
     return (
@@ -215,7 +221,7 @@ function RecentActivityCalendar({
         ) : isEndMarker ? (
           <Text style={{ fontSize: 8, color: "#FF6600", fontWeight: "700" }}>{translate("user.rewards.streakDetail.endMarker")}</Text>
         ) : (
-          <Text style={{ fontSize: 9, color: isToday ? "#FF6600" : "#9ca3af", fontWeight: "600" }}>
+          <Text style={{ fontSize: 9, color: isToday ? "#FF6600" : (isDark ? "#a3a3a3" : "#9ca3af"), fontWeight: "600" }}>
             {day}
           </Text>
         )}
@@ -295,18 +301,18 @@ function RecentActivityCalendar({
         <Text className="text-[10px] text-neutral-400 font-poppins">{translate("user.rewards.streakDetail.earned")}</Text>
       </View>
       <View className="flex-row items-center gap-x-1">
-        <RNView style={{ width: 12, height: 12, borderRadius: 3, backgroundColor: "#FFF7ED", borderWidth: 1.5, borderColor: "#FF6600" }} />
+        <RNView style={{ width: 12, height: 12, borderRadius: 3, backgroundColor: isDark ? "rgba(255, 102, 0, 0.15)" : "#FFF7ED", borderWidth: 1.5, borderColor: "#FF6600" }} />
         <Text className="text-[10px] text-neutral-400 font-poppins">{translate("user.rewards.streakDetail.today")}</Text>
       </View>
       <View className="flex-row items-center gap-x-1">
-        <RNView style={{ width: 12, height: 12, borderRadius: 3, backgroundColor: "#f3f4f6" }} />
+        <RNView style={{ width: 12, height: 12, borderRadius: 3, backgroundColor: isDark ? "#262626" : "#f3f4f6" }} />
         <Text className="text-[10px] text-neutral-400 font-poppins">{translate("user.rewards.streakDetail.missed")}</Text>
       </View>
       {showEnd && endDate && !endDateIsPast && (
         <View className="flex-row items-center gap-x-1">
           <RNView style={{
             width: 12, height: 12, borderRadius: 3,
-            backgroundColor: "#FFF7ED",
+            backgroundColor: isDark ? "rgba(255, 102, 0, 0.15)" : "#FFF7ED",
             borderWidth: 1.5, borderColor: "#FF6600", borderStyle: "dashed",
           }} />
           <Text className="text-[10px] text-neutral-400 font-poppins">{translate("user.rewards.streakDetail.endMarker")}</Text>
@@ -345,7 +351,7 @@ function RecentActivityCalendar({
                       margin: 2,
                       alignItems: "center",
                       justifyContent: "center",
-                      backgroundColor: cell.earned ? "#FF6600" : cell.isToday && !cell.earned ? "#FFF7ED" : "#f3f4f6",
+                      backgroundColor: cell.earned ? "#FF6600" : cell.isToday && !cell.earned ? (isDark ? "rgba(255, 102, 0, 0.15)" : "#FFF7ED") : (isDark ? "#262626" : "#f3f4f6"),
                       borderWidth: cell.isToday && !cell.earned ? 1.5 : 0,
                       borderColor: "#FF6600",
                       opacity: cell.isFuture ? 0.4 : 1,
@@ -354,7 +360,7 @@ function RecentActivityCalendar({
                     {cell.earned ? (
                       <Flame size={10} color="#FFFFFF" />
                     ) : (
-                      <Text className={`text-[8px] font-poppins-medium ${cell.isToday ? "text-primary" : "text-neutral-300"}`}>
+                      <Text className={`text-[8px] font-poppins-medium ${cell.isToday ? "text-primary" : "text-neutral-300 dark:text-neutral-600"}`}>
                         {cell.day}
                       </Text>
                     )}
@@ -429,60 +435,31 @@ export default function StoreStreakDetail() {
   const { storeId: rawStoreId } = useLocalSearchParams<{ storeId?: string }>();
   const storeId = Array.isArray(rawStoreId) ? rawStoreId[0] : rawStoreId;
   const router = useRouter();
+  const handleBack = useSingleTap(() => router.back());
   const { t: translate } = useTranslation();
-  const [streak, setStreak] = useState<UserStreak | null>(null);
-  const [earnedDates, setEarnedDates] = useState<Set<string>>(new Set());
-  const [isLoading, setIsLoading] = useState(true);
 
-  // useFocusEffect re-fetches every time the screen gains focus.
-  // This ensures navigating back from the streak card always shows fresh data.
+  const parsedStoreId = storeId ? Number(storeId) : undefined;
+  const isValidStoreId = parsedStoreId !== undefined && !isNaN(parsedStoreId);
+
+  const { data: streak, isLoading: isQueryLoading, refetch } = useStreakByStoreQuery(isValidStoreId ? parsedStoreId : undefined);
+  
+  // React Query leaves isPending (isLoading) as true infinitely if the query is disabled.
+  // We force it to false if the storeId is missing or invalid so the skeleton doesn't hang.
+  const isLoading = isValidStoreId ? isQueryLoading : false;
+
+  // Trigger a silent background refetch on focus
   useFocusEffect(
     useCallback(() => {
-      let cancelled = false;
-
-      const loadStreak = async () => {
-        if (!storeId) {
-          setStreak(null);
-          setIsLoading(false);
-          return;
-        }
-
-        try {
-          setIsLoading(true);
-          // Use getSession() — returns the cached local token without a network call.
-          // getUser() hits the Supabase auth server every time and adds ~200-500ms latency.
-          const { data: { session } } = await supabase.auth.getSession();
-          const user = session?.user;
-          if (!user?.id) {
-            if (!cancelled) setStreak(null);
-            return;
-          }
-
-          const data = await getUserStreakByStore(user.id, Number(storeId));
-
-          if (!cancelled) {
-            setStreak(data);
-            if (data?.streak_events && Array.isArray(data.streak_events)) {
-              setEarnedDates(new Set(data.streak_events.map((e: any) => e.earned_date)));
-            } else {
-              setEarnedDates(new Set());
-            }
-          }
-        } catch (error) {
-          console.error("Failed to load streak:", error);
-        } finally {
-          // Always set loading to false to prevent infinite skeleton if cancelled incorrectly
-          setIsLoading(false);
-        }
-      };
-
-      loadStreak();
-      return () => { 
-        if (__DEV__) console.log("[StoreStreakDetail] Cleanup called for storeId:", storeId);
-        cancelled = true; 
-      };
-    }, [storeId]),
+      refetch();
+    }, [refetch])
   );
+
+  const earnedDates = React.useMemo(() => {
+    if (streak?.streak_events && Array.isArray(streak.streak_events)) {
+      return new Set(streak.streak_events.map((e: any) => e.earned_date));
+    }
+    return new Set<string>();
+  }, [streak?.streak_events]);
 
   const program = streak?.store_streaks;
   const storeStr = streak?.stores;
@@ -494,7 +471,7 @@ export default function StoreStreakDetail() {
       return (
         <View className="flex-1 bg-background dark:bg-darkBackground">
           <View className="bg-white dark:bg-darkBackgroundMuted flex-row items-center px-4 pt-12 pb-3 border-b border-neutral-100 dark:border-darkBorder">
-            <TouchableOpacity onPress={() => router.back()} style={{ padding: 4, marginRight: 8 }}>
+            <TouchableOpacity onPress={handleBack} style={{ padding: 4, marginRight: 8 }}>
               <ChevronLeft size={24} color="#FF6600" />
             </TouchableOpacity>
             <Text className="text-base font-poppins-semibold text-neutral-900 dark:text-white">
@@ -515,7 +492,7 @@ export default function StoreStreakDetail() {
           {translate("user.rewards.streakDetail.noStreakBody")}
         </Text>
         <TouchableOpacity
-          onPress={() => router.back()}
+          onPress={handleBack}
           className="mt-5 px-6 py-2.5 border border-primary rounded-full"
         >
           <Text className="text-primary font-poppins-semibold text-sm">{translate("user.rewards.streakDetail.goBack")}</Text>
@@ -593,7 +570,7 @@ export default function StoreStreakDetail() {
       showsVerticalScrollIndicator={false}
     >
       <View className="bg-white dark:bg-darkBackgroundMuted flex-row items-center px-4 pt-12 pb-3 border-b border-neutral-100 dark:border-darkBorder">
-        <TouchableOpacity onPress={() => router.back()} style={{ padding: 4, marginRight: 8 }}>
+        <TouchableOpacity onPress={handleBack} style={{ padding: 4, marginRight: 8 }}>
           <ChevronLeft size={24} color="#FF6600" />
         </TouchableOpacity>
         <Text className="text-base font-poppins-semibold text-neutral-900 dark:text-white">
@@ -617,7 +594,7 @@ export default function StoreStreakDetail() {
                 {storeName}
               </Text>
               {program?.title && (
-                <Text className="font-poppins text-neutral-500 text-xs mt-0.5" numberOfLines={1}>
+                <Text className="font-poppins text-neutral-500 dark:text-neutral-400 text-xs mt-0.5" numberOfLines={1}>
                   {program.title}
                 </Text>
               )}
@@ -766,7 +743,7 @@ export default function StoreStreakDetail() {
                       ? translate("user.rewards.streakDetail.oneMoreVisit")
                       : translate("user.rewards.streakDetail.moreVisitsParam", { count: daysLeft })}
                   </Text>
-                  <Text className="text-[11px] font-poppins text-neutral-500 mt-0.5">
+                  <Text className="text-[11px] font-poppins text-neutral-500 dark:text-neutral-400 mt-0.5">
                     {translate("user.rewards.streakDetail.comeWithinRange", { name: storeName })}
                   </Text>
                 </View>

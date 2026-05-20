@@ -66,7 +66,7 @@ export function useLocation(userId?: string, syncEnabled: boolean = false) {
         setLoading(false);
     };
 
-    // --- permission & location funtcions ---
+    // --- permission & location functions ---
     const checkStatus = async () => {
         try {
             const status = await checkLocationPermission();
@@ -78,8 +78,9 @@ export function useLocation(userId?: string, syncEnabled: boolean = false) {
                 stopWatching();
                 setLoading(false);
             }
-        } catch (err: any) {
-            setError(err.message || "Permission check failed");
+        } catch (err) {
+            const errorMessage = err instanceof Error ? err.message : String(err);
+            setError(errorMessage || "Permission check failed");
             setLoading(false);
         }
     };

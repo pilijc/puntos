@@ -2,6 +2,7 @@ import { View, Text, Pressable, Image } from "@/tw";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import React from "react";
 import { storeLogos, type StoreItem } from "@/data/rewards";
+import { useTranslation } from "react-i18next";
 
 type StoreCardProps = {
   store: StoreItem;
@@ -9,6 +10,7 @@ type StoreCardProps = {
 };
 
 export default function StoreCard({ store, onPress }: StoreCardProps) {
+  const { t: translate } = useTranslation();
   const logoSource = storeLogos[store.id];
 
   return (
@@ -40,10 +42,10 @@ export default function StoreCard({ store, onPress }: StoreCardProps) {
           {store.name}
         </Text>
         <Text className="text-xs text-neutral-500 dark:text-darkTextSecondary font-poppins mt-1">
-          {store.location} • {store.distanceMeters.toLocaleString(undefined, { maximumFractionDigits: 2 })} meters away
+          {store.location} • {translate("user.rewards.distanceMeters", { meters: store.distanceMeters.toLocaleString(undefined, { maximumFractionDigits: 2 }) })}
         </Text>
         <Text className="text-primary font-poppins-semibold mt-2">
-          {store.points.toLocaleString()} pts
+          {store.points.toLocaleString()} {translate("user.rewards.rewardCard.pointsSuffix")}
         </Text>
       </View>
       <MaterialIcons name="chevron-right" size={20} color="#94a3b8" />

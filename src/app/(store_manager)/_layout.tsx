@@ -23,6 +23,7 @@ import { Modal } from "@/components/modal";
 import { refreshDeviceHeartbeatService } from "@/services/store-manager/device-session-service";
 import { SESSION_TIMEOUT_MS } from "@/type/store-manager/device-session";
 import { useAppearanceStore } from "@/store/appearance-store";
+import { useIsDark } from "@/hooks/use-is-dark";
 
 const WEB_SIDEBAR_WIDTH = 260;
 const WEB_SIDEBAR_COLLAPSED_WIDTH = 76;
@@ -389,12 +390,7 @@ function WebStoreManagerSidebarTabBar({
 
 export default function StoreManagerLayout() {
     const { t: translate } = useTranslation();
-    const nativeColorScheme = useColorScheme();
-    const { theme } = useAppearanceStore();
-    const colorScheme = Platform.OS === 'web'
-        ? (theme === 'system' ? nativeColorScheme : theme)
-        : nativeColorScheme;
-    const isDark = colorScheme === "dark";
+    const isDark = useIsDark();
     const router = useRouter();
     const insets = useSafeAreaInsets();
     const pathname = usePathname();

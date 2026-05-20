@@ -9,6 +9,9 @@ import Animated, { FadeIn } from "react-native-reanimated";
 import { getQRCodeData } from "@/services/user/rewards-redemption";
 import { useRedemptionCode } from "@/hooks/useRedemptionCode";
 import { RedemptionQRSkeleton } from "@/components/skeleton/user/redemption-qr-skeleton";
+import { useTranslation } from "react-i18next";
+import { useIsDark } from "@/hooks/use-is-dark";
+import { useSingleTap } from "@/hooks/use-single-tap";
 
 const REDIRECT_DELAY = {
   REDEEMED: 2000,
@@ -23,12 +26,13 @@ function formatTime(seconds: number): string {
 }
 
 function LoadingState() {
+  const { t: translate } = useTranslation();
   return (
     <View className="flex-1 bg-white dark:bg-darkBackground items-center justify-center">
       <View className="items-center justify-center">
         <RedemptionQRSkeleton />
         <Text className="text-neutral-500 dark:text-neutral-400 text-sm font-poppins-medium mt-4">
-          Generating code...
+          {translate("user.rewards.redemption.generating", "Generating code...")}
         </Text>
       </View>
     </View>
@@ -36,10 +40,11 @@ function LoadingState() {
 }
 
 function ErrorState({ message }: { message: string | null }) {
+  const { t: translate } = useTranslation();
   return (
     <View className="flex-1 bg-white dark:bg-darkBackground items-center justify-center px-6">
       <Text className="text-red-500 font-poppins-bold text-lg mb-2">
-        Failed to generate code
+        {translate("user.rewards.redemption.failedGenerate", "Failed to generate code")}
       </Text>
       {message && (
         <Text className="text-neutral-500 dark:text-neutral-400 text-center text-sm">
@@ -50,48 +55,14 @@ function ErrorState({ message }: { message: string | null }) {
   );
 }
 
-function RateLimitedState({ 
-  message, 
-  rateLimitType, 
-  timeRemaining 
-}: { 
-  message: string | null; 
-  rateLimitType: "cooldown" | "rate_limit" | null;
-  timeRemaining: number;
-}) {
-  const isCooldown = rateLimitType === "cooldown";
-  const title = isCooldown ? "Please wait" : "Too many requests";
-  const subtitle = isCooldown 
-    ? `Retrying in ${timeRemaining} seconds...`
-    : `Try again in ${timeRemaining} seconds`;
-
-  return (
-    <View className="flex-1 bg-white dark:bg-darkBackground items-center justify-center px-6">
-      <View className="w-20 h-20 bg-orange-100 dark:bg-orange-900/20 rounded-full items-center justify-center mb-4">
-        <Clock size={40} color="#FF6600" />
-      </View>
-      <Text className="text-orange-600 font-poppins-bold text-xl mb-2">
-        {title}
-      </Text>
-      <Text className="text-neutral-600 dark:text-neutral-400 text-center text-sm mb-4">
-        {message}
-      </Text>
-      <View className="bg-orange-50 dark:bg-orange-900/10 rounded-2xl px-6 py-4">
-        <Text className="text-orange-600 font-poppins-semibold text-lg">
-          {subtitle}
-        </Text>
-      </View>
-    </View>
-  );
-}
-
 function SuccessState() {
+  const { t: translate } = useTranslation();
   return (
     <View className="flex-1 bg-white dark:bg-darkBackground items-center justify-center">
       <Animated.View entering={FadeIn} className="items-center">
         <CheckCircle size={64} color="#10B981" />
         <Text className="text-green-600 font-poppins-bold text-lg mt-4">
-          Successfully Redeemed!
+          {translate("user.rewards.redemption.redeemed", "Successfully Redeemed!")}
         </Text>
       </Animated.View>
     </View>
@@ -99,13 +70,16 @@ function SuccessState() {
 }
 
 function CancelledState() {
+  const { t: translate } = useTranslation();
   return (
     <View className="flex-1 bg-white dark:bg-darkBackground items-center justify-center">
       <Animated.View entering={FadeIn} className="items-center">
         <View className="w-24 h-24 items-center justify-center pl-13">
           <X size={64} color="#EF4444" />
         </View>
-        <Text className="text-red-500 font-poppins-bold text-lg mt-4">Code Cancelled</Text>
+        <Text className="text-red-500 font-poppins-bold text-lg mt-4">
+          {translate("user.rewards.redemption.codeCancelled", "Code Cancelled")}
+        </Text>
       </Animated.View>
     </View>
   );
@@ -132,6 +106,8 @@ function ActiveState({
   onBack,
   insets,
 }: ActiveStateProps) {
+  const { t: translate } = useTranslation();
+  const isDark = useIsDark();
   const isExpiringSoon = timeRemaining < 60;
 
   // Format code like "M 813 161"
@@ -141,13 +117,13 @@ function ActiveState({
     .replace(/(\d{3})(\d{3})/, "$1 $2");
 
   return (
-    <View className="flex-1 bg-white">
+    <View className="flex-1 bg-white dark:bg-darkBackground">
       {/* Yellow Header Section */}
       <View className="bg-yellow-400 rounded-b-3xl" style={{ paddingTop: insets.top }}>
         {/* Header with close button */}
         <View className="flex-row items-center justify-center px-4 py-4 relative">
           <Text className="text-lg font-poppins-semibold text-neutral-900">
-            Scan to redeem
+            {translate("user.rewards.redemption.title", "Scan to redeem")}
           </Text>
           <TouchableOpacity
             onPress={onBack}
@@ -159,7 +135,7 @@ function ActiveState({
 
         {/* QR Code Card */}
         <View className="mx-4 mb-6">
-          <View className="bg-neutral-100 rounded-2xl p-6 items-center">
+          <View className="bg-neutral-100 dark:bg-neutral-800 rounded-2xl p-6 items-center">
             <View className="bg-white rounded-xl p-4 mb-4">
               <QRCode
                 value={getQRCodeData(redemptionCode.code)}
@@ -168,7 +144,7 @@ function ActiveState({
                 backgroundColor="#fff"
               />
             </View>
-            <Text className="text-2xl font-poppins-bold text-neutral-900 tracking-wide">
+            <Text className="text-2xl font-poppins-bold text-neutral-900 dark:text-white tracking-wide">
               {formattedCode}
             </Text>
           </View>
@@ -177,7 +153,7 @@ function ActiveState({
         {/* Time left */}
         <View className="items-center mb-6">
           <Text className="text-sm text-neutral-700 mb-1">
-            Time left to redeem
+            {translate("user.rewards.redemption.timeLeft", "Time left to redeem")}
           </Text>
           <Text
             className={`text-3xl font-poppins-bold ${
@@ -190,13 +166,13 @@ function ActiveState({
 
         {/* Reward Card */}
         <View className="mx-4 mb-6">
-          <View className="bg-white rounded-2xl p-4 flex-row items-center shadow-sm">
+          <View className="bg-white dark:bg-neutral-800 rounded-2xl p-4 flex-row items-center shadow-sm">
             <View className="flex-1 pr-4">
-              <Text className="text-base font-poppins-semibold text-neutral-900 leading-snug">
+              <Text className="text-base font-poppins-semibold text-neutral-900 dark:text-white leading-snug">
                 {rewardTitle}
               </Text>
               {rewardDescription && (
-                <Text className="text-sm text-neutral-500 mt-1">
+                <Text className="text-sm text-neutral-500 dark:text-neutral-400 mt-1">
                   {rewardDescription}
                 </Text>
               )}
@@ -208,7 +184,7 @@ function ActiveState({
                 resizeMode="cover"
               />
             ) : (
-              <View className="w-20 h-20 rounded-xl bg-yellow-100 items-center justify-center">
+              <View className="w-20 h-20 rounded-xl bg-yellow-100 dark:bg-yellow-900/30 items-center justify-center">
                 <Text className="text-2xl">🎁</Text>
               </View>
             )}
@@ -217,34 +193,34 @@ function ActiveState({
       </View>
 
       {/* Instructions Section */}
-      <View className="flex-1 bg-white px-4 pt-6" style={{ paddingBottom: insets.bottom + 20 }}>
-        <View className="bg-neutral-100 rounded-2xl p-5 space-y-5">
+      <View className="flex-1 bg-white dark:bg-darkBackground px-4 pt-6" style={{ paddingBottom: insets.bottom + 20 }}>
+        <View className="bg-neutral-100 dark:bg-darkBackgroundCard rounded-2xl p-5 space-y-5">
           {/* In the restaurant */}
           <View className="flex-row items-start">
-            <View className="w-10 h-10 bg-white rounded-lg items-center justify-center mr-4">
-              <Store size={20} color="#1f2937" />
+            <View className="w-10 h-10 bg-white dark:bg-neutral-800 rounded-lg items-center justify-center mr-4">
+              <Store size={20} color={isDark ? "#ffffff" : "#1f2937"} />
             </View>
             <View className="flex-1">
-              <Text className="text-base font-poppins-semibold text-neutral-900 mb-1">
-                In the restaurant
+              <Text className="text-base font-poppins-semibold text-neutral-900 dark:text-darkTextPrimary mb-1">
+                {translate("user.rewards.redemption.inRestaurant", "In the restaurant")}
               </Text>
-              <Text className="text-sm text-neutral-600 leading-relaxed">
-                Scan the code in the ordering kiosk or present the code to staff at the front counter.
+              <Text className="text-sm text-neutral-600 dark:text-darkTextSecondary leading-relaxed">
+                {translate("user.rewards.redemption.restaurantInstructions", "Scan the code in the ordering kiosk or present the code to staff at the front counter.")}
               </Text>
             </View>
           </View>
 
           {/* DriveThru */}
           <View className="flex-row items-start">
-            <View className="w-10 h-10 bg-neutral-800 rounded-lg items-center justify-center mr-4">
+            <View className="w-10 h-10 bg-neutral-800 dark:bg-neutral-700 rounded-lg items-center justify-center mr-4">
               <Speaker size={20} color="#fbbf24" />
             </View>
             <View className="flex-1">
-              <Text className="text-base font-poppins-semibold text-neutral-900 mb-1">
-                DriveThru
+              <Text className="text-base font-poppins-semibold text-neutral-900 dark:text-darkTextPrimary mb-1">
+                {translate("user.rewards.redemption.driveThru", "DriveThru")}
               </Text>
-              <Text className="text-sm text-neutral-600 leading-relaxed">
-                Tell us about the code at the speaker.
+              <Text className="text-sm text-neutral-600 dark:text-darkTextSecondary leading-relaxed">
+                {translate("user.rewards.redemption.driveThruInstructions", "Tell us about the code at the speaker.")}
               </Text>
             </View>
           </View>
@@ -256,7 +232,7 @@ function ActiveState({
           className="mt-6 py-4 items-center"
         >
           <Text className="text-red-500 font-poppins-semibold">
-            Cancel Redemption
+            {translate("user.rewards.redemption.cancelBtn", "Cancel Redemption")}
           </Text>
         </TouchableOpacity>
       </View>
@@ -267,6 +243,7 @@ function ActiveState({
 export default function RedemptionCodeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { t: translate } = useTranslation();
   const { rewardId, storeId, rewardTitle, rewardDescription, rewardImage } =
     useLocalSearchParams<{
       rewardId?: string;
@@ -281,8 +258,6 @@ export default function RedemptionCodeScreen() {
     status,
     errorMessage,
     timeRemaining,
-    rateLimitType,
-    rateLimitTimeRemaining,
     generateCode,
     cancelCode,
   } = useRedemptionCode(rewardId, storeId);
@@ -306,21 +281,15 @@ export default function RedemptionCodeScreen() {
     }
   }, [status, router]);
 
-  const handleBack = () => router.back();
+  const handleBack = useSingleTap(() => router.back());
+  const handleCancel = useSingleTap(cancelCode);
 
   // Render states
   if (status === "loading") return <LoadingState />;
-  if (status === "rate_limited") return (
-    <RateLimitedState 
-      message={errorMessage} 
-      rateLimitType={rateLimitType} 
-      timeRemaining={rateLimitTimeRemaining}
-    />
-  );
   if (status === "error") return <ErrorState message={errorMessage} />;
   if (status === "redeemed") return <SuccessState />;
   if (status === "cancelled" || status === "expired") return <CancelledState />;
-  if (!redemptionCode) return <ErrorState message="No redemption code available" />;
+  if (!redemptionCode) return <ErrorState message={translate("user.rewards.redemption.noCodeAvailable", "No redemption code available")} />;
 
   return (
     <ActiveState
@@ -329,7 +298,7 @@ export default function RedemptionCodeScreen() {
       rewardImage={rewardImage}
       redemptionCode={redemptionCode}
       timeRemaining={timeRemaining}
-      onCancel={cancelCode}
+      onCancel={handleCancel}
       onBack={handleBack}
       insets={insets}
     />

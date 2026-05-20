@@ -1,8 +1,9 @@
-import { Text, SafeAreaView, View, Image } from "@/tw";
+import { Text, SafeAreaView, View, Image, TextInput } from "@/tw";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Mapbox, { MapView, PointAnnotation } from "@rnmapbox/maps";
 import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
-import { AppState, AppStateStatus, TextInput, TouchableOpacity, useColorScheme, Platform } from "react-native";
+import { AppState, AppStateStatus, TouchableOpacity, Platform } from "react-native";
+import { useIsDark } from "@/hooks/use-is-dark";
 import { ScrollView } from "react-native-gesture-handler";
 import * as Location from "expo-location";
 import { Ionicons, MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
@@ -107,8 +108,7 @@ export default function Discover() {
   const bottomSheetRef = useRef<BottomSheet>(null);
   const cameraRef = useRef(null);
   const [mapReady, setMapReady] = useState(false);
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
+  const isDark = useIsDark();
   const [location, setLocation] = useState<UserLocation | null>(null);
   const { stores, setStores } = useStoreStore();
   const [searchQuery, setSearchQuery] = useState("");

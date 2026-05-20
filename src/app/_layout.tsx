@@ -24,6 +24,7 @@ import { markIntentionalSignOut } from "@/lib/intentional-signout";
 import { isLoginDeviceSessionFlowActive } from "@/lib/login-device-session-flow";
 import { useTranslation } from "react-i18next";
 import { QueryProvider } from "@/providers/query-provider";
+import { useIsDark } from "@/hooks/use-is-dark";
 
 // Disable Reanimated strict mode warnings
 // The warning "Reading from `value` during component render" is expected behavior
@@ -77,6 +78,7 @@ export async function initOneSignal(): Promise<string | null> {
 
 export default function Layout() {
   useAuthListener();
+  const isDark = useIsDark();
   const { t: translate } = useTranslation();
   const router = useRouter();
   const pathname = usePathname();
@@ -218,7 +220,7 @@ export default function Layout() {
   return (
     <GestureHandlerRootView className="flex-1">
       <QueryProvider>
-      <StatusBar barStyle="light-content" backgroundColor="#121212" />
+      <StatusBar barStyle={isDark ? "light-content" : "dark-content"} backgroundColor={isDark ? "#121212" : "#FFFFFF"} />
       <Slot />
       <Modal
         visible={isRestricted}

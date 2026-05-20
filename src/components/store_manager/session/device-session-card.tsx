@@ -3,6 +3,7 @@ import { View, Text } from '@/tw';
 import { Smartphone, Tablet, Monitor, MapPin, Clock } from 'lucide-react-native';
 import { ManagerDeviceSession } from '@/type/store-manager/device-session';
 import { useTranslation } from 'react-i18next';
+import { TFunction } from 'i18next';
 import { useDeviceSessionStore } from '@/store/store-manager/device-session-store';
 
 function DeviceIcon({ type }: { type: string }) {
@@ -29,7 +30,7 @@ function DeviceIcon({ type }: { type: string }) {
     );
 }
 
-function resolveDisplayName(session: ManagerDeviceSession, translate: any): string {
+function resolveDisplayName(session: ManagerDeviceSession, translate: TFunction): string {
     if (session.device_name) return session.device_name;
     if (session.device_model) return session.device_model;
     return session.device_type === "web" ? translate("settings.deviceSessions.webBrowser") : translate("settings.deviceSessions.unknownDevice");
@@ -37,7 +38,7 @@ function resolveDisplayName(session: ManagerDeviceSession, translate: any): stri
 
 // nowMs is the trusted reference point (server time stored in Zustand).
 // falls back to Date.now() only when no fetch has occurred yet in this session.
-function timeAgo(isoString: string, nowMs: number, translate: any): string {
+function timeAgo(isoString: string, nowMs: number, translate: TFunction): string {
     const diff = nowMs - new Date(isoString).getTime();
     const minutes = Math.floor(diff / 60_000);
     if (minutes < 1) return translate("settings.deviceSessions.justNow");

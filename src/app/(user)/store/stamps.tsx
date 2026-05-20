@@ -3,11 +3,13 @@ import { useTranslation } from "react-i18next";
 import { View, Text, Image, TouchableOpacity } from "@/tw";
 import {
   ScrollView,
+  Dimensions,
 } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
-import { useStamps } from "@/hooks/use-stamps";
-import { getActiveStampProgramRewards, getStampEventsForStore, getUserStampEvents, getUserRewardRedemptions } from "@/services/stamp-service";
 import { getStoreById } from "@/services/store-service";
+import { useCurrentUserProfileQuery } from "@/hooks/user/rq/profile-queries";
+import { useStampsQuery, useStampEventsQuery, useRewardRedemptionsQuery, useActiveStampProgramsQuery } from "@/hooks/user/rq/stamp-queries";
+import { useSingleTap } from "@/hooks/use-single-tap";
 import { storeLogos } from "@/data/rewards";
 import { supabase } from "@/supabase/supabase";
 import {
@@ -24,6 +26,7 @@ import {
 } from "lucide-react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { StampDetailSkeleton } from "@/components/skeleton/user/stamp-detail-skeleton";
+import { useIsDark } from "@/hooks/use-is-dark";
 
 // ─── Single Punch Card ────────────────────────────────────────────────────────
 function StampCard({
@@ -121,7 +124,7 @@ function StampCard({
           <Text className="font-poppins-bold text-neutral-900 dark:text-white text-base" numberOfLines={1}>
             {storeName}
           </Text>
-          <Text className="text-[11px] font-poppins text-neutral-500 line-clamp-1" numberOfLines={1}>
+          <Text className="text-[11px] font-poppins text-neutral-500 dark:text-neutral-400 line-clamp-1" numberOfLines={1}>
             {storeAddress || translate("user.activity.stampLog.rewardProgram")}
           </Text>
         </View>
@@ -284,61 +287,35 @@ function StampCard({
 export default function StampLogScreen() {
   const { t: translate } = useTranslation();
   const router = useRouter();
+  const handleBack = useSingleTap(() => router.back());
   const insets = useSafeAreaInsets();
+  const isDark = useIsDark();
 
   const params = useLocalSearchParams<{ storeId?: string }>();
   const rawStoreId = params.storeId;
   const storeId = Array.isArray(rawStoreId) ? rawStoreId[0] : rawStoreId;
 
-  const { stamps, isLoading: isStampsLoading, fetchStamps } = useStamps();
-  const [activePrograms, setActivePrograms] = useState<any[]>([]);
-  const [stampEvents, setStampEvents] = useState<any[]>([]);
-  const [rewardEvents, setRewardEvents] = useState<any[]>([]);
-  const [isEventsLoading, setIsEventsLoading] = useState(true);
-  // Virtual card: shown when storeId is set but no stamp_progress row exists yet
-  const [virtualCard, setVirtualCard] = useState<any | null>(null);
-
   const parsedStoreId = storeId ? Number(storeId) : null;
 
-  useEffect(() => {
-    fetchStamps();
-  }, []);
+  const { data: profileData } = useCurrentUserProfileQuery();
+  const userId = profileData?.user?.id;
 
-  useEffect(() => {
-    let active = true;
-    setIsEventsLoading(true);
+  const { data: stamps = [], isLoading: isStampsLoading } = useStampsQuery(userId);
+  const { data: stampEvents = [], isLoading: isStampEventsLoading } = useStampEventsQuery(userId, parsedStoreId || undefined);
+  const { data: rewardEvents = [], isLoading: isRewardEventsLoading } = useRewardRedemptionsQuery(userId, parsedStoreId || undefined);
 
-    const loadEvents = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user || !active) return;
+  const isEventsLoading = isStampEventsLoading || isRewardEventsLoading;
 
-      try {
-        const [stamps, rewards] = await Promise.all([
-          parsedStoreId
-            ? getStampEventsForStore(user.id, parsedStoreId)
-            : getUserStampEvents(user.id),
-          getUserRewardRedemptions(user.id, parsedStoreId || undefined)
-        ]);
-
-        if (active) {
-          setStampEvents(stamps);
-          setRewardEvents(rewards);
-        }
-      } catch (err) {
-        console.error("Error loading events:", err);
-      } finally {
-        if (active) setIsEventsLoading(false);
-      }
-    };
-
-    loadEvents();
-    return () => { active = false; };
-  }, [parsedStoreId]);
+  // Virtual card: shown when storeId is set but no stamp_progress row exists yet
+  const [virtualCard, setVirtualCard] = useState<any | null>(null);
 
   const storeStamps = useMemo(() => {
     if (!parsedStoreId) return stamps;
     return stamps.filter(s => s.store_id === parsedStoreId);
   }, [stamps, parsedStoreId]);
+
+  const storeIdsToFetch = parsedStoreId ? [parsedStoreId] : storeStamps.map((s) => s.store_id);
+  const { data: activePrograms = [] } = useActiveStampProgramsQuery(storeIdsToFetch);
 
   // When viewing a specific store but the user has no progress yet (e.g. erased),
   // build a virtual zero-stamp card so the UI still shows the punch card.
@@ -355,13 +332,11 @@ export default function StampLogScreen() {
     let active = true;
     (async () => {
       try {
-        const [storeRow, programs] = await Promise.all([
-          getStoreById(parsedStoreId),
-          getActiveStampProgramRewards([parsedStoreId]),
-        ]);
+        const storeRow = await getStoreById(parsedStoreId);
         if (!active) return;
-
-        const program = programs[0];
+        
+        // Wait for activePrograms to populate from useQuery, then read target
+        const program = activePrograms.find(p => p.store_id === parsedStoreId);
         setVirtualCard({
           id: `virtual-${parsedStoreId}`,
           store_id: parsedStoreId,
@@ -376,22 +351,12 @@ export default function StampLogScreen() {
             status: storeRow?.status ?? 'active',
           },
         });
-        // Also seed the active programs list so reward title shows
-        if (programs.length > 0) setActivePrograms(programs);
       } catch (e) {
         console.error('[StampLog] Failed to build virtual card:', e);
       }
     })();
     return () => { active = false; };
-  }, [parsedStoreId, storeStamps.length]);
-
-  useEffect(() => {
-    if (storeStamps.length === 0) return;
-    const storeIds = parsedStoreId ? [parsedStoreId] : storeStamps.map((s) => s.store_id);
-    getActiveStampProgramRewards(storeIds)
-      .then(setActivePrograms)
-      .catch(console.error);
-  }, [storeStamps, parsedStoreId]);
+  }, [parsedStoreId, storeStamps.length, activePrograms]);
 
   // Handle active cards
   const activeCards = storeStamps.filter((s) => (s.stamps_count ?? 0) < (s.target ?? 7) && (s as any).card_status !== 'completed' && (s as any).card_status !== 'expired');
@@ -415,16 +380,16 @@ export default function StampLogScreen() {
       >
         <View className="flex-row items-center px-4 py-4 gap-x-3">
           <TouchableOpacity
-            onPress={() => router.back()}
+            onPress={handleBack}
             className="w-9 h-9 rounded-full bg-neutral-100 dark:bg-darkBackgroundCard items-center justify-center"
           >
-            <ChevronLeft size={20} color="#171717" className="dark:text-white" />
+            <ChevronLeft size={20} color={isDark ? "#ffffff" : "#171717"} />
           </TouchableOpacity>
           <View className="flex-1">
             <Text className="text-base font-poppins-bold text-neutral-900 dark:text-white tracking-[0.2px]" numberOfLines={1}>
               {parsedStoreId ? `${displayStoreName} ${translate("user.activity.stampLog.stampsSuffix")}` : translate("user.rewards.stampLog")}
             </Text>
-            <Text className="text-[11px] font-poppins text-neutral-500">
+            <Text className="text-[11px] font-poppins text-neutral-500 dark:text-neutral-400">
               {translate("user.activity.stampLog.loyaltyProgress")}
             </Text>
           </View>
@@ -461,7 +426,7 @@ export default function StampLogScreen() {
             )}
 
             {/* How to Earn Banner Text */}
-            <Text className="text-[11px] font-poppins text-neutral-500 text-center mt-3 mb-6 px-4">
+            <Text className="text-[11px] font-poppins text-neutral-500 dark:text-neutral-400 text-center mt-3 mb-6 px-4">
               {translate("user.activity.stampLog.earnInfo")}
             </Text>
           </View>
@@ -470,7 +435,7 @@ export default function StampLogScreen() {
         {/* ─── Vertical Timeline Stamp History ─── */}
         <View className="mb-8">
           <View className="flex-row items-center gap-x-2 mb-4 px-1">
-            <History size={16} color="#475569" className="dark:text-neutral-400" />
+            <History size={16} color={isDark ? "#a3a3a3" : "#475569"} />
             <Text className="text-sm font-poppins-bold text-neutral-800 dark:text-neutral-200">
               {translate("user.activity.stampLog.stampHistory")}
             </Text>

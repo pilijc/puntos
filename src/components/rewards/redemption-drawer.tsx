@@ -8,10 +8,10 @@ import {
   ScrollView,
   Dimensions,
   Modal as RNModal,
-  useColorScheme,
 } from "react-native";
 import { View, Text, TouchableOpacity, Image } from "@/tw";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useIsDark } from "@/hooks/use-is-dark";
 import { X, Store, Clock, CircleAlert } from "lucide-react-native";
 import QRCode from "react-native-qrcode-svg";
 import { Modal } from "@/components/modal";
@@ -60,8 +60,7 @@ export function RedemptionDrawer({
 }: RedemptionDrawerProps) {
   const { t: translate } = useTranslation();
   const insets = useSafeAreaInsets();
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === "dark";
+  const isDark = useIsDark();
   const translateY = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
   const backdropOpacity = useRef(new Animated.Value(0)).current;
 
@@ -356,11 +355,11 @@ export function RedemptionDrawer({
                   {/* Reward Section (Image on right) */}
                   <View className="flex-row items-center justify-between pt-2">
                     <View className="flex-1 pr-4">
-                      <Text numberOfLines={2} className="text-[14px] font-poppins-bold text-neutral-900 leading-tight">
+                      <Text numberOfLines={2} className="text-[14px] font-poppins-bold text-neutral-900 dark:text-white leading-tight">
                         {rewardTitle}
                       </Text>
                       {rewardDescription && (
-                        <Text numberOfLines={2} className="text-[11px] text-neutral-500 font-poppins mt-1 leading-normal">
+                        <Text numberOfLines={2} className="text-[11px] text-neutral-500 dark:text-neutral-400 font-poppins mt-1 leading-normal">
                           {rewardDescription}
                         </Text>
                       )}
@@ -395,10 +394,10 @@ export function RedemptionDrawer({
                       <Store size={20} color="#FF6600" />
                     </View>
                     <View className="flex-1">
-                      <Text className="text-sm font-poppins-bold text-neutral-900">
+                      <Text className="text-sm font-poppins-bold text-neutral-900 dark:text-white">
                         {translate("user.rewards.redemption.inRestaurant")}
                       </Text>
-                      <Text className="text-xs text-neutral-500 font-poppins mt-0.5">
+                      <Text className="text-xs text-neutral-500 dark:text-neutral-400 font-poppins mt-0.5">
                         {translate("user.rewards.redemption.instructions")}
                       </Text>
                     </View>

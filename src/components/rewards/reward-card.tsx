@@ -24,7 +24,7 @@ export default function RewardCard({
 }: RewardCardProps) {
   const { t: translate } = useTranslation();
   const isRedeemable = reward.status === "redeem";
-  const badgeClass = isRedeemable ? "bg-primary/10" : "bg-neutral-200";
+  const badgeClass = isRedeemable ? "bg-primary/10" : "bg-neutral-200 dark:bg-neutral-800/60";
   const badgeTextClass = isRedeemable ? "text-primary" : "text-neutral-400";
 
   return (

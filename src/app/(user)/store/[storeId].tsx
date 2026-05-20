@@ -24,7 +24,9 @@ import { storeLogos } from "@/data/rewards";
 import { useRewardsUiStore } from "@/store/user/rewards-ui-store";
 import { useRewardsDataStore } from "@/hooks/use-rewards-data";
 import { useStoreOverviewData } from "@/hooks/use-store-overview-data";
-import { useUserStoreActivity } from "@/hooks/use-user-store-activity";
+import { useCurrentUserProfileQuery } from "@/hooks/user/rq/profile-queries";
+import { useUserTransactionsQuery } from "@/hooks/user/rq/activity-queries";
+import { useSingleTap } from "@/hooks/use-single-tap";
 import { ProgramSkeleton } from "@/components/skeleton/user/program-skeleton";
 import StoreScreenContainer from "@/components/ui/store-screen-container";
 import { MuteStoreButton } from "@/components/users/stores/mute-store-button";
@@ -65,6 +67,11 @@ export default function StoreOverviewDetail() {
 
 
   const router = useRouter();
+  
+  const handleBack = useSingleTap(() => router.back());
+  const handleHistory = useSingleTap(() => router.push("/(user)/history"));
+  const handleMap = useSingleTap(() => router.push("/"));
+  const handleQR = useSingleTap(() => router.push({ pathname: "/(user)/qr", params: { from: "/(user)/store" } }));
 
   const {
     activeStampProgramRewards,
@@ -86,6 +93,19 @@ export default function StoreOverviewDetail() {
     upcomingStreak,
     isLoadingRewards,
   } = useStoreOverviewData(storeId);
+
+  const handleNavigateClaim = useSingleTap(() => {
+    const found = storesWithLocation.find(s => s.id.toString() === storeId);
+    router.push({
+      pathname: "/store/claim-rewards",
+      params: {
+        storeId,
+        storeName: found?.name,
+        storeLogo: found?.logo ?? "",
+        storeAddress: found?.address ?? ""
+      }
+    });
+  });
 
   // If a specific store is requested, we don't necessarily need to snap the carousel 
   // unless we want to show it in context. For now, let's keep it simple.
@@ -112,16 +132,14 @@ export default function StoreOverviewDetail() {
 
   const [isRefreshingLocal, setIsRefreshingLocal] = useState(false);
 
-  // ── Store-specific transaction history ──
-  const { transactionsMap, isLoading, fetchActivity } = useUserStoreActivity();
-  const storeTransactions = storeId ? (transactionsMap[storeId] || []) : [];
-  const loadingTx = storeId ? !!isLoading[storeId] : false;
+  const { data: profileData } = useCurrentUserProfileQuery();
+  const userId = profileData?.user?.id;
 
-  useEffect(() => {
-    if (storeId) {
-      fetchActivity(storeId);
-    }
-  }, [storeId, fetchActivity]);
+  // ── Store-specific transaction history ──
+  const { 
+    data: storeTransactions = [], 
+    isLoading: loadingTx 
+  } = useUserTransactionsQuery(userId, storeId);
 
   const onRefreshLocal = useCallback(async () => {
     setIsRefreshingLocal(true);
@@ -202,7 +220,7 @@ export default function StoreOverviewDetail() {
     >
       <View className="flex-row items-center justify-between gap-x-4 mb-[-12px] z-50 px-2">
         <TouchableOpacity
-          onPress={() => router.back()}
+          onPress={handleBack}
           hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
           className="p-1 -ml-1 bg-black/30 rounded-full"
         >
@@ -299,15 +317,6 @@ export default function StoreOverviewDetail() {
                         <Image
                           source={{ uri: store.logo }}
                           className="w-full h-full"
-                          contentFit="cover"
-                          contentPosition="center"
-                        />
-                      ) : storeLogos[store.id.toString()] ? (
-                        <Image
-                          source={storeLogos[store.id.toString()]}
-                          className="w-full h-full"
-                          contentFit="cover"
-                          contentPosition="center"
                         />
                       ) : (
                         <Text className="text-[10px] text-primary/80 font-poppins">
@@ -319,20 +328,13 @@ export default function StoreOverviewDetail() {
                       <Text className="text-neutral-900 dark:text-neutral-100 font-poppins-semibold">
                         {store.name}
                       </Text>
-                      <Text className="text-neutral-500 dark:text-neutral-400 text-xs font-poppins mt-1">
-                        {store.address} - {translate("user.rewards.distanceMeters", {
-                          meters:
-                            store.distanceMeters?.toLocaleString(undefined, {
-                              maximumFractionDigits: 2,
-                            }) ?? "0",
-                        })}
-                      </Text>
                     </View>
                   </View>
                   <View className="flex-row items-center gap-x-2">
                     <TouchableOpacity
+                      activeOpacity={0.8}
+                      onPress={handleQR}
                       className="px-3 py-1 rounded-full bg-primary"
-                      onPress={() => router.push({ pathname: "/(user)/qr", params: { from: "/(user)/store" } })}
                       disabled={isStamping}
                     >
                       {isStamping ? (
@@ -478,18 +480,7 @@ export default function StoreOverviewDetail() {
               onPressIn={handleClaimPressIn}
               onPressOut={handleClaimPressOut}
               className="flex-row items-center gap-x-1.5 bg-white dark:bg-darkBackgroundCard border border-primary px-3 py-1.5 rounded-full"
-              onPress={() => {
-                const found = storesWithLocation.find(s => s.id.toString() === storeId);
-                router.push({
-                  pathname: "/store/claim-rewards",
-                  params: {
-                    storeId,
-                    storeName: found?.name,
-                    storeLogo: found?.logo ?? "",
-                    storeAddress: found?.address ?? ""
-                  }
-                });
-              }}
+              onPress={handleNavigateClaim}
             >
               <Gift size={14} color="#FF6600" />
               <Text className="text-primary font-poppins-semibold text-xs">
@@ -543,7 +534,7 @@ export default function StoreOverviewDetail() {
           </Text>
           <TouchableOpacity
             className="flex-row items-center gap-x-1.5 bg-white dark:bg-darkBackgroundCard border border-primary px-3 py-1.5 rounded-full"
-            onPress={() => router.push("/(user)/history")}
+            onPress={handleHistory}
           >
             <Text className="text-primary font-poppins-semibold text-xs">
               {translate("user.rewards.transactions.seeAll")}

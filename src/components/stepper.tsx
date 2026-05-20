@@ -182,6 +182,7 @@ export function PasswordStep({
             }
           />
         </View>
+
         <View className="mt-1 mb-2 gap-y-2">
           <TextField
             label={translate("onboarding.signup.stepper.label.confirmPassword")}
@@ -205,7 +206,9 @@ export function PasswordStep({
             }
           />
         </View>
-        <View className="p-3 mb-1 border border-slate-200 dark:border-gray-600 rounded-xl">
+
+        {/* Password Requirements */}
+        <View className="bg-neutral-50 dark:bg-darkBackgroundMuted/50 p-3 rounded-xl border border-neutral-100 dark:border-darkBorder/50 my-1">
           <Text className="text-[12px] font-poppins-semibold text-neutral-700 dark:text-darkTextPrimary mb-1.5">
             {translate("onboarding.signup.error.requirements.title")}
           </Text>

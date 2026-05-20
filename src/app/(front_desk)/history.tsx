@@ -3,9 +3,9 @@ import {
     FlatList,
     ListRenderItemInfo,
     TouchableOpacity,
-    useColorScheme,
     ActivityIndicator,
 } from "react-native";
+import { useIsDark } from "@/hooks/use-is-dark";
 import { SlidersHorizontal } from "lucide-react-native";
 import { View, Text } from "@/tw";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -84,7 +84,7 @@ const SectionHeader = React.memo(function SectionHeader({ label }: { label: stri
 
 export default function FrontDeskHistory() {
     const { staffTransactions, isLoading, isLoadingMore, hasMore, fetchStaffTransactions, loadMoreTransactions } = useStaffHistory();
-    const isDark = useColorScheme() === "dark";
+    const isDark = useIsDark();
     const { t: translate } = useTranslation();
     const insets = useSafeAreaInsets();
     const [filterVisible, setFilterVisible] = useState(false);
@@ -176,7 +176,7 @@ export default function FrontDeskHistory() {
     return (
         <View style={{ flex: 1, backgroundColor: isDark ? "#171717" : "#F8FAFC", paddingTop: insets.top }}>
             {/* Header */}
-            <View className="bg-background dark:bg-darkBackground border-b border-neutral-100 dark:border-darkBorder px-6 py-3 flex-row items-center justify-between">
+            <View className="bg-white dark:bg-darkBackgroundMuted border-b border-neutral-100 dark:border-darkBorder px-6 py-3 flex-row items-center justify-between">
                 <View>
                     <Text className="text-xl font-poppins-bold text-textPrimary dark:text-darkTextPrimary py-1">
                         {translate("layout.transactions")}

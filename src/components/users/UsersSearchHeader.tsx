@@ -45,7 +45,7 @@ export function UsersSearchHeader({
       <>
         {/* ── Title Header ── */}
         {!hideTitle && (
-          <View className="bg-white dark:bg-darkBackground border-b border-neutral-100 dark:border-darkBorder px-6 py-3">
+          <View className="bg-white dark:bg-darkBackgroundMuted border-b border-neutral-100 dark:border-darkBorder px-6 py-3">
             <Text className="text-xl font-poppins-bold text-textPrimary dark:text-darkTextPrimary py-1">
               {translate("superAdmin.users.title")}
             </Text>
@@ -157,7 +157,7 @@ export function UsersSearchHeader({
 
   // ── Mobile layout ──
   return (
-    <View className="z-10 bg-white dark:bg-darkBackground">
+    <View className="z-10 bg-white dark:bg-darkBackgroundMuted">
       {/* ── Main Header ── */}
       <View className="flex-row items-center px-6 py-3 border-b border-neutral-100 dark:border-darkBorder">
         <Text className="text-xl font-poppins-bold text-textPrimary dark:text-darkTextPrimary flex-shrink-0">
@@ -196,7 +196,7 @@ export function UsersSearchHeader({
       </View>
 
       {/* ── Tabs Row ── */}
-      <View className="bg-white dark:bg-darkBackground border-b border-neutral-100 dark:border-darkBorder">
+      <View className="bg-white dark:bg-darkBackgroundMuted border-b border-neutral-100 dark:border-darkBorder">
         <FlatList
           horizontal
           showsHorizontalScrollIndicator={false}

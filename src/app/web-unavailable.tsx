@@ -6,9 +6,11 @@ import { View, Text, SafeAreaView, Image } from "@/tw";
 import { Button } from "@/components/button";
 import { supabase } from "@/supabase/supabase";
 import { markIntentionalSignOut } from "@/lib/intentional-signout";
+import { useTranslation } from "react-i18next";
 
 export default function WebUnavailable() {
   const router = useRouter();
+  const { t: translate } = useTranslation();
 
   if (Platform.OS !== "web") {
     return <Redirect href="/(onboarding)/welcome" />;
@@ -18,7 +20,7 @@ export default function WebUnavailable() {
     markIntentionalSignOut();
     await supabase.auth.signOut();
     await AsyncStorage.removeItem("sessionToken");
-    router.replace("/(onboarding)/welcome");
+    router.replace("/(onboarding)/landing");
   };
 
   return (
@@ -34,17 +36,17 @@ export default function WebUnavailable() {
             />
             <View className="gap-2">
               <Text className="text-xl font-poppins-bold text-center text-textPrimary dark:text-darkTextPrimary">
-                Web is for store teams
+                {translate("onboarding.login.webUnavailable.title", "Web is for store teams")}
               </Text>
               <Text className="text-sm font-poppins text-center text-textMuted dark:text-darkTextSecondary leading-6">
-                Customer and front-desk features live in the Puntos mobile app. If you meant to use those, open the app on your phone.
+                {translate("onboarding.login.webUnavailable.body1", "Customer and front-desk features live in the Puntos mobile app. If you meant to use those, open the app on your phone.")}
               </Text>
               <Text className="text-sm font-poppins text-center text-textMuted dark:text-darkTextSecondary leading-6">
-                Store managers and super admins can keep using this site. Signed in with the wrong type of account? Sign out and try again.
+                {translate("onboarding.login.webUnavailable.body2", "Store managers and super admins can keep using this site. Signed in with the wrong type of account? Sign out and try again.")}
               </Text>
             </View>
             <View className="w-full pt-2">
-              <Button label="Sign out" onPress={handleSignOut} variant="primary" fullWidth />
+              <Button label={translate("onboarding.login.webUnavailable.signOut", "Sign out")} onPress={handleSignOut} variant="primary" fullWidth />
             </View>
           </View>
         </View>

@@ -23,7 +23,7 @@ export const LanguageCard = () => {
     };
 
     return (
-        <View className="bg-white dark:bg-darkBackground px-2.5 py-3 overflow-hidden">
+        <View className="bg-white dark:bg-darkBackgroundCard px-2.5 py-3 overflow-hidden">
             <TouchableOpacity
                 onPress={toggleOpen}
                 className="flex-row items-center"

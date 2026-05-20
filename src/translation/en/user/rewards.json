@@ -169,12 +169,7 @@
   "redemption": {
     "title": "Scan to redeem",
     "titleRedeemed": "Reward Redeemed",
-    "generating": "Generating code...",
-    "limitReached": "Limit reached",
-    "limitMessage": "You have generated too many codes. Please wait before trying again.",
-    "tryAgainIn": "Try again in {{count}}s",
-    "generateFailed": "Could not generate code",
-    "generateFailedMessage": "Generating the code took too long. Please try again.",
+    "generating": "Generating...",
     "expired": "EXPIRED",
     "codeExpired": "Code Expired",
     "redeemed": "Redeemed!",
@@ -188,6 +183,13 @@
     "cancelConfirm": "Cancel",
     "cancelledTitle": "Cancelled",
     "cancelledMessage": "Your code is cancelled.",
-    "gotIt": "Got it"
+    "gotIt": "Got it",
+    "failedGenerate": "Failed to generate code",
+    "codeCancelled": "Code Cancelled",
+    "restaurantInstructions": "Scan the code in the ordering kiosk or present the code to staff at the front counter.",
+    "driveThru": "DriveThru",
+    "driveThruInstructions": "Tell us about the code at the speaker.",
+    "cancelBtn": "Cancel Redemption",
+    "noCodeAvailable": "No redemption code available"
   }
 }
