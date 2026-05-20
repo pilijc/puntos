@@ -304,7 +304,7 @@ export default function RewardRedemptionScanner({
                         <Text className="text-base font-poppins-bold text-neutral-900 dark:text-darkTextPrimary pl-15">
                           {translate("frontdesk.transaction.redemption.manual.title")}
                         </Text>
-                        <Text className="text-xs font-poppins text-neutral-400 text-center pl-2">
+                        <Text className="text-xs font-poppins text-neutral-400 text-center pl-2 pb-6">
                           {translate("frontdesk.transaction.redemption.manual.description")}
                         </Text>
                       </View>
