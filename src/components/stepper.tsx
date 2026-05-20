@@ -84,7 +84,7 @@ export function Stepper({ currentStep, totalSteps }: StepperProps) {
 export function NameStep({ value, onChange, error }: StepProps) {
   const { t: translate } = useTranslation();
   return (
-    <View className="gap-y-4 pr-0.5">
+    <View className="gap-y-4">
       <TextField
         label={translate("onboarding.signup.stepper.label.name")}
         value={value}
@@ -104,7 +104,7 @@ export function NameStep({ value, onChange, error }: StepProps) {
 export function EmailStep({ value, onChange, error }: StepProps) {
   const { t: translate } = useTranslation();
   return (
-    <View className="gap-y-4 pr-0.5">
+    <View className="gap-y-4">
       <TextField
         label={translate("onboarding.signup.stepper.label.email")}
         value={value}
@@ -158,7 +158,7 @@ export function PasswordStep({
   );
 
   return (
-    <View className=" pr-0.5">
+    <View className="">
       <View className="gap-y-2">
         <View className="gap-y-2">
           <TextField
@@ -269,7 +269,7 @@ export function RoleStep({ value, onChange, error }: RoleStepProps) {
       ];
 
   return (
-    <View className="gap-y-5 pr-0.5">
+    <View className="gap-y-5">
       <View>
         <Text className="text-base font-poppins-semibold text-textSecondary dark:text-darkTextPrimary text-start">
           {translate("onboarding.signup.roleSelect.title")}
@@ -359,7 +359,7 @@ export function TermsStep({ accepted, onToggle, error }: TermsStepProps) {
   const termSectionKeys = useMemo(() => ["1", "2", "3", "4", "5"] as const, []);
 
   return (
-    <View className="gap-y-4 pr-0.5">
+    <View className="gap-y-4">
       <Text className="text-sm font-poppins-medium text-neutral-700 dark:text-darkTextSecondary">
         {translate("onboarding.signup.stepper.label.terms")}
       </Text>

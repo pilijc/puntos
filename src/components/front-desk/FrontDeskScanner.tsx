@@ -305,7 +305,7 @@ export default function FrontDeskScanner({
                         <Text className="text-base font-poppins-bold text-neutral-900 dark:text-darkTextPrimary pl-15">
                           {translate("frontdesk.transaction.scanMode.manualTitle")}
                         </Text>
-                        <Text className="text-xs font-poppins text-neutral-400 text-center pl-2">
+                        <Text className="text-xs font-poppins text-neutral-400 text-center pl-2 pb-6">
                           {translate("frontdesk.transaction.scanMode.manualDescription")}
                         </Text>
                       </View>
