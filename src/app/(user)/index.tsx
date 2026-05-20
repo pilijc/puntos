@@ -22,6 +22,7 @@ import { useLanguageStore } from "@/store/language-store";
 import { useProfile } from "@/hooks/user/use-profile";
 import { X } from "lucide-react-native";
 import { MapControlButtons } from "@/components/map/map-control-buttons";
+import { useRouter } from "expo-router";
 
 let OneSignal: typeof import("react-native-onesignal").OneSignal | null = null;
 
@@ -102,6 +103,7 @@ async function loadLocalizedMapStyle(styleUrl: string, locale: "en" | "ja"): Pro
 }
 
 export default function Discover() {
+  const router = useRouter();
   const bottomSheetRef = useRef<BottomSheet>(null);
   const cameraRef = useRef(null);
   const [mapReady, setMapReady] = useState(false);
@@ -589,6 +591,14 @@ export default function Discover() {
     }
   };
 
+  const handleStoreClick = useCallback((storeId: number) => {
+    setRouteGeoJSON(null);
+    setSelectedStore(null);
+    setSheetStores([]);
+    setSheetView("detail");
+    router.push(`/store/${storeId}`);
+  }, [router]);
+
   const handleStoreSelect = async (store: Store) => {
     setSelectedStore(store);
     setSheetStores([store]);
@@ -955,10 +965,7 @@ export default function Discover() {
                     <TouchableOpacity
                       key={s.id}
                       activeOpacity={0.7}
-                      onPress={() => {
-                        setSelectedStore(s);
-                        setSheetView("detail");
-                      }}
+                      onPress={() => handleStoreClick(s.id)}
                       style={{
                         backgroundColor: isDark ? '#171717' : '#fff',
                         flexDirection: 'row',
@@ -1019,7 +1026,7 @@ export default function Discover() {
                         <TouchableOpacity
                           key={`discover-${s.id}`}
                           activeOpacity={0.7}
-                          onPress={() => handleStoreSelect(s)}
+                          onPress={() => handleStoreClick(s.id)}
                           style={{
                             backgroundColor: isDark ? '#171717' : '#fff',
                             flexDirection: 'row',
@@ -1109,8 +1116,10 @@ export default function Discover() {
                     (() => {
                       const toShow = sheetStores.length > 1 && selectedStore ? [selectedStore] : (sheetStores.length > 0 ? sheetStores : stores);
                       return toShow.map((s) => (
-                        <View
+                        <TouchableOpacity
                           key={s.id}
+                          activeOpacity={0.85}
+                          onPress={() => handleStoreClick(s.id)}
                           className="bg-white dark:bg-darkBackgroundMuted py-4 flex-row items-start gap-x-4 rounded-2xl"
                         >
                           <Image
@@ -1139,7 +1148,7 @@ export default function Discover() {
                               </View>
                             </View>
                           </View>
-                        </View>
+                        </TouchableOpacity>
                       ));
                     })()
                   ) : null}
