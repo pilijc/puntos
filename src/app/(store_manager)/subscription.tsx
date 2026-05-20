@@ -245,7 +245,7 @@ export default function SubscriptionScreen() {
         render: (r) => (
           <View className="min-w-0">
             <Text
-              className="text-xs font-poppins text-textSecondary"
+              className="text-xs font-poppins text-textSecondary dark:text-darkTextSecondary"
               numberOfLines={1}
             >
               {String(r.payment_reference ?? "—")}
@@ -261,7 +261,7 @@ export default function SubscriptionScreen() {
         flex: 2,
         align: "center",
         render: (r) => (
-          <Text className="text-xs font-poppins text-textSecondary">
+          <Text className="text-xs font-poppins text-textSecondary dark:text-darkTextSecondary">
             {formatDateLong(r.paid_at ?? r.created_at)}
           </Text>
         ),
@@ -316,7 +316,7 @@ export default function SubscriptionScreen() {
         flex: 1,
         align: "right",
         render: (r) => (
-          <Text className="text-xs font-poppins text-textSecondary">
+          <Text className="text-xs font-poppins text-textSecondary dark:text-darkTextSecondary">
             PHP&nbsp;{Number(r.amount_paid ?? 0).toFixed(2)}
           </Text>
         ),
@@ -599,7 +599,7 @@ export default function SubscriptionScreen() {
             </View>
           ) : null}
 
-          <View className="rounded-xl border border-slate-100 dark:border-darkBorder p-4">
+          <View className="bg-white dark:bg-darkBackgroundCard rounded-xl border border-slate-100 dark:border-darkBorder p-4">
             <View className="flex-row items-center gap-2 mb-2">
               <Text className="text-sm font-poppins-semibold text-slate-800 dark:text-darkTextPrimary">
                 {translate(
