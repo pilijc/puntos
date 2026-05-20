@@ -3,11 +3,11 @@ import { View, Text } from "@/tw";
 
 export default function PasswordRequirements() {
   return (
-    <View className="bg-orange-50 dark:bg-orange-500/10 rounded-xl p-4 border border-orange-100 dark:border-orange-500/20">
+    <View className="bg-orange-50 dark:bg-orange-500/10 rounded-xl p-4">
       <Text className="text-sm font-poppins-semibold text-orange-600 dark:text-orange-400 mb-2">
         Password Requirements:
       </Text>
-      <View className="space-y-1">
+      <View className="space-y-1 gap-y-1">
         <Text className="text-xs font-poppins text-orange-500 dark:text-orange-300">
           • At least 8 characters long
         </Text>
