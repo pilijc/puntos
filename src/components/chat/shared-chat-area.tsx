@@ -125,6 +125,15 @@ export function SharedChatArea({
     }
   }, [conversationId]);
 
+  useEffect(() => {
+    if (isWeb && messageText === "") {
+      const node = document.getElementById("chat-text-input");
+      if (node) {
+        node.style.height = "";
+      }
+    }
+  }, [messageText, isWeb]);
+
   const handleSend = async () => {
     const hasText = messageText.trim();
     const hasAttachments = pendingAttachments.length > 0 && !!onSendAttachment;
@@ -742,25 +751,39 @@ export function SharedChatArea({
             justifyContent: "center",
             borderRadius: 22,
             opacity: !onSendAttachment || disabled ? 0.4 : 1,
-            marginBottom: 4,
+            marginBottom: isWeb ? -2 : 4,
+            // @ts-ignore
+            outlineStyle: "none",
           }}
         >
           <Plus size={22} color="#94a3b8" />
         </TouchableOpacity>
 
-        <View className="flex-1 mx-3 bg-white dark:bg-darkBackground rounded-[24px] px-4 py-1 flex-row items-center border border-slate-100 dark:border-neutral-800 min-h-[44px]">
+        <View className={`flex-1 mx-3 bg-white dark:bg-darkBackground px-4 flex-row items-end border border-slate-100 dark:border-neutral-800 ${isWeb ? "rounded-[20px] py-0" : "rounded-[24px] py-1"}`}>
           <TextInput
+            nativeID="chat-text-input"
             value={messageText}
             onChangeText={setMessageText}
             placeholder={pendingAttachments.length > 0 ? "Add a caption..." : placeholder}
             placeholderTextColor="#94a3b8"
             className="text-textPrimary dark:text-darkTextPrimary"
+            onChange={(e) => {
+              if (Platform.OS === "web") {
+                const target = (e.nativeEvent as any).target || e.target;
+                if (target && target.style) {
+                  target.style.height = "0px";
+                  target.style.height = `${target.scrollHeight}px`;
+                }
+              }
+            }}
             style={{
               flex: 1,
-              paddingVertical: 12,
+              paddingTop: isWeb ? 8 : 12,
+              paddingBottom: isWeb ? 8 : 12,
+              minHeight: isWeb ? 36 : 44,
               fontFamily: "Poppins-Regular",
               fontSize: 14,
-              maxHeight: 120,
+              maxHeight: isWeb ? 104 : 120,
               // @ts-ignore - web only
               outlineStyle: "none",
             } as unknown as StyleProp<TextStyle>}
@@ -772,6 +795,7 @@ export function SharedChatArea({
               }
             }}
             multiline
+            numberOfLines={1}
             textAlignVertical="center"
             editable={!disabled && !sending && !uploadingAttachment}
           />
@@ -786,11 +810,13 @@ export function SharedChatArea({
             borderRadius: 22,
             alignItems: "center",
             justifyContent: "center",
-            marginBottom: 4,
+            marginBottom: isWeb ? -2 : 4,
             backgroundColor:
               (messageText.trim() || pendingAttachments.length > 0) && !sending && !uploadingAttachment && !disabled
                 ? "#FF6600"
                 : "transparent",
+            // @ts-ignore
+            outlineStyle: "none",
           }}
         >
           <Send

@@ -12,6 +12,11 @@ import { getUserAvailablePoints } from "@/services/user/points-service";
 import { getStoreById } from "@/services/store-service";
 import { listenToUserRedemptions } from "@/services/user/rewards-redemption";
 import { supabase } from "@/supabase/supabase";
+import { useQueryClient } from "@tanstack/react-query";
+import { useUserStorePointsQuery, useStoreRewardsQuery } from "@/hooks/user/rq/activity-queries";
+import { useCurrentUserProfileQuery } from "@/hooks/user/rq/profile-queries";
+import { activityKeys } from "@/hooks/user/rq/query-keys";
+import { useSingleTap } from "@/hooks/use-single-tap";
 import { Reward } from "@/services/reward-service";
 import { useIsDark } from "@/hooks/use-is-dark";
 import { RedemptionDrawer } from "@/components/rewards/redemption-drawer";
@@ -27,47 +32,37 @@ export default function ClaimRewardsScreen() {
   const storeName = params.storeName;
   const storeLogo = params.storeLogo;
   const storeAddress = params.storeAddress;
-  const [rewards, setRewards] = useState<Reward[]>([]);
-  const [userPoints, setUserPoints] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
   const [galleryIndex, setGalleryIndex] = useState(0);
   const [gallery, setGallery] = useState<{ id: string, uri: string }[]>([]);
-  const [userId, setUserId] = useState<string | null>(null);
   const [drawerVisible, setDrawerVisible] = useState(false);
   const [selectedReward, setSelectedReward] = useState<Reward | null>(null);
   const [cooldownRewards, setCooldownRewards] = useState<Set<string>>(new Set());
   const router = useRouter();
+  const handleBack = useSingleTap(() => router.back());
   const redemptionChannelRef = useRef<any | null>(null);
+  const queryClient = useQueryClient();
   const insets = useSafeAreaInsets();
   const dark = useIsDark();
 
+  const { data: profileData } = useCurrentUserProfileQuery();
+  const userId = profileData?.user?.id;
+
+  const { data: rewards = [], isLoading: isRewardsLoading } = useStoreRewardsQuery(storeId, "popular", "asc", 20);
+  const { data: userPoints = 0, isLoading: isPointsLoading } = useUserStorePointsQuery(userId, storeId);
+
+  const isLoading = isRewardsLoading || isPointsLoading;
+
   useEffect(() => {
-    async function loadData() {
+    async function loadGallery() {
       if (!storeId) return;
-
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user?.id) return;
-      setUserId(user.id);
-
-      const [storeRewards, points, storeData] = await Promise.all([
-        getRewards({ storeId: storeId as string, limit: 20 }),
-        getUserAvailablePoints(user.id, storeId),
-        getStoreById(Number(storeId))
-      ]);
-
-      setRewards(storeRewards);
-      setUserPoints(points);
-
+      const storeData = await getStoreById(Number(storeId));
       if (storeData?.store_pictures && storeData.store_pictures.length > 0) {
         setGallery(
           storeData.store_pictures.map((uri: string, i: number) => ({ id: `pic-${i}`, uri }))
         );
       }
-
-      setIsLoading(false);
     }
-
-    loadData();
+    loadGallery();
   }, [storeId]);
 
   const {
@@ -85,13 +80,13 @@ export default function ClaimRewardsScreen() {
     storeId
   );
 
-  const handleClaimReward = useCallback(async (reward: Reward) => {
+  const handleClaimReward = useSingleTap(async (reward: Reward) => {
     if (cooldownRewards.has(reward.id.toString())) {
       return; // Prevent claiming if in cooldown
     }
     setSelectedReward(reward);
     setDrawerVisible(true);
-  }, [cooldownRewards]);
+  });
 
   const isGeneratingRedemption = drawerVisible && status === "loading";
 
@@ -99,24 +94,15 @@ export default function ClaimRewardsScreen() {
     return isGeneratingRedemption || cooldownRewards.has(reward.id.toString());
   }, [cooldownRewards, isGeneratingRedemption]);
 
-  const refreshRewardsAndPoints = useCallback(async () => {
+  const refreshRewardsAndPoints = useCallback(() => {
     if (!userId || !storeId) return;
+    queryClient.invalidateQueries({ queryKey: activityKeys.root });
+  }, [userId, storeId, queryClient]);
 
-    const [storeRewards, points] = await Promise.all([
-      getRewards({ storeId: storeId as string, limit: 20 }),
-      getUserAvailablePoints(userId, storeId),
-    ]);
-
-    setRewards(storeRewards);
-    setUserPoints(points);
-  }, [userId, storeId]);
-
-  const refreshPoints = useCallback(async () => {
+  const refreshPoints = useCallback(() => {
     if (!userId || !storeId) return;
-
-    const points = await getUserAvailablePoints(userId, storeId);
-    setUserPoints(points);
-  }, [userId, storeId]);
+    queryClient.invalidateQueries({ queryKey: activityKeys.points(userId, storeId) });
+  }, [userId, storeId, queryClient]);
 
   useFocusEffect(
     useCallback(() => {
@@ -178,13 +164,7 @@ export default function ClaimRewardsScreen() {
     redemptionChannelRef.current = listenToUserRedemptions(
       userId,
       (redemption) => {
-        Promise.all([
-          getRewards({ storeId: storeId as string, limit: 20 }),
-          getUserAvailablePoints(userId, storeId),
-        ]).then(([storeRewards, points]) => {
-          setRewards(storeRewards);
-          setUserPoints(points);
-        });
+        queryClient.invalidateQueries({ queryKey: activityKeys.root });
       }
     );
 
@@ -193,7 +173,7 @@ export default function ClaimRewardsScreen() {
         redemptionChannelRef.current.unsubscribe();
       }
     };
-  }, [userId, storeId]);
+  }, [userId, storeId, queryClient]);
 
   const redeemable = rewards.filter(r => userPoints >= r.points_cost);
   const almost = rewards.filter(r => userPoints < r.points_cost)
@@ -224,7 +204,7 @@ export default function ClaimRewardsScreen() {
         {/* Nav row */}
         <RNView style={{ flexDirection: "row", alignItems: "center", marginBottom: 32 }}>
           <TouchableOpacity
-            onPress={() => router.back()}
+            onPress={handleBack}
             style={{
               width: 36, height: 36, borderRadius: 18,
               backgroundColor: backBtn,

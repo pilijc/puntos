@@ -6,13 +6,16 @@ import {
   TouchableOpacity,
   Easing,
   View as RNView,
+  Dimensions,
 } from "react-native";
 import Svg, { Circle } from "react-native-svg";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useSingleTap } from "@/hooks/use-single-tap";
 import { storeLogos } from "@/data/rewards";
-import { getUserStreakByStore, UserStreak } from "@/services/streak-service";
-import { supabase } from "@/supabase/supabase";
+import { UserStreak } from "@/services/streak-service";
+import { useStreakByStoreQuery } from "@/hooks/user/rq";
 import {
   ChevronLeft,
   Flame,
@@ -432,60 +435,31 @@ export default function StoreStreakDetail() {
   const { storeId: rawStoreId } = useLocalSearchParams<{ storeId?: string }>();
   const storeId = Array.isArray(rawStoreId) ? rawStoreId[0] : rawStoreId;
   const router = useRouter();
+  const handleBack = useSingleTap(() => router.back());
   const { t: translate } = useTranslation();
-  const [streak, setStreak] = useState<UserStreak | null>(null);
-  const [earnedDates, setEarnedDates] = useState<Set<string>>(new Set());
-  const [isLoading, setIsLoading] = useState(true);
 
-  // useFocusEffect re-fetches every time the screen gains focus.
-  // This ensures navigating back from the streak card always shows fresh data.
+  const parsedStoreId = storeId ? Number(storeId) : undefined;
+  const isValidStoreId = parsedStoreId !== undefined && !isNaN(parsedStoreId);
+
+  const { data: streak, isLoading: isQueryLoading, refetch } = useStreakByStoreQuery(isValidStoreId ? parsedStoreId : undefined);
+  
+  // React Query leaves isPending (isLoading) as true infinitely if the query is disabled.
+  // We force it to false if the storeId is missing or invalid so the skeleton doesn't hang.
+  const isLoading = isValidStoreId ? isQueryLoading : false;
+
+  // Trigger a silent background refetch on focus
   useFocusEffect(
     useCallback(() => {
-      let cancelled = false;
-
-      const loadStreak = async () => {
-        if (!storeId) {
-          setStreak(null);
-          setIsLoading(false);
-          return;
-        }
-
-        try {
-          setIsLoading(true);
-          // Use getSession() — returns the cached local token without a network call.
-          // getUser() hits the Supabase auth server every time and adds ~200-500ms latency.
-          const { data: { session } } = await supabase.auth.getSession();
-          const user = session?.user;
-          if (!user?.id) {
-            if (!cancelled) setStreak(null);
-            return;
-          }
-
-          const data = await getUserStreakByStore(user.id, Number(storeId));
-
-          if (!cancelled) {
-            setStreak(data);
-            if (data?.streak_events && Array.isArray(data.streak_events)) {
-              setEarnedDates(new Set(data.streak_events.map((e: any) => e.earned_date)));
-            } else {
-              setEarnedDates(new Set());
-            }
-          }
-        } catch (error) {
-          console.error("Failed to load streak:", error);
-        } finally {
-          // Always set loading to false to prevent infinite skeleton if cancelled incorrectly
-          setIsLoading(false);
-        }
-      };
-
-      loadStreak();
-      return () => { 
-        if (__DEV__) console.log("[StoreStreakDetail] Cleanup called for storeId:", storeId);
-        cancelled = true; 
-      };
-    }, [storeId]),
+      refetch();
+    }, [refetch])
   );
+
+  const earnedDates = React.useMemo(() => {
+    if (streak?.streak_events && Array.isArray(streak.streak_events)) {
+      return new Set(streak.streak_events.map((e: any) => e.earned_date));
+    }
+    return new Set<string>();
+  }, [streak?.streak_events]);
 
   const program = streak?.store_streaks;
   const storeStr = streak?.stores;
@@ -497,7 +471,7 @@ export default function StoreStreakDetail() {
       return (
         <View className="flex-1 bg-background dark:bg-darkBackground">
           <View className="bg-white dark:bg-darkBackgroundMuted flex-row items-center px-4 pt-12 pb-3 border-b border-neutral-100 dark:border-darkBorder">
-            <TouchableOpacity onPress={() => router.back()} style={{ padding: 4, marginRight: 8 }}>
+            <TouchableOpacity onPress={handleBack} style={{ padding: 4, marginRight: 8 }}>
               <ChevronLeft size={24} color="#FF6600" />
             </TouchableOpacity>
             <Text className="text-base font-poppins-semibold text-neutral-900 dark:text-white">
@@ -518,7 +492,7 @@ export default function StoreStreakDetail() {
           {translate("user.rewards.streakDetail.noStreakBody")}
         </Text>
         <TouchableOpacity
-          onPress={() => router.back()}
+          onPress={handleBack}
           className="mt-5 px-6 py-2.5 border border-primary rounded-full"
         >
           <Text className="text-primary font-poppins-semibold text-sm">{translate("user.rewards.streakDetail.goBack")}</Text>
@@ -596,7 +570,7 @@ export default function StoreStreakDetail() {
       showsVerticalScrollIndicator={false}
     >
       <View className="bg-white dark:bg-darkBackgroundMuted flex-row items-center px-4 pt-12 pb-3 border-b border-neutral-100 dark:border-darkBorder">
-        <TouchableOpacity onPress={() => router.back()} style={{ padding: 4, marginRight: 8 }}>
+        <TouchableOpacity onPress={handleBack} style={{ padding: 4, marginRight: 8 }}>
           <ChevronLeft size={24} color="#FF6600" />
         </TouchableOpacity>
         <Text className="text-base font-poppins-semibold text-neutral-900 dark:text-white">

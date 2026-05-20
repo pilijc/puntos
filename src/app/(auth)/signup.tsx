@@ -552,7 +552,7 @@ export default function SignUp() {
                           />
                         ) : null}
 
-                        {currentStep <= 1 && !isWeb && (
+                        {currentStep === 1 && role === "user" && !isWeb && (
                           <>
                             <View className="flex-row items-center gap-x-4">
                               <View className="flex-1 h-px bg-neutral-200 dark:bg-darkBorder" />
@@ -596,7 +596,7 @@ export default function SignUp() {
           </View>
         </View>
       ) : (
-        <View className="flex-1 justify-center pb-40 p-4">
+        <View className="flex-1 justify-center pb-40 py-4 px-10">
           <KeyboardAvoidingView
             behavior={Platform.OS === "android" ? "padding" : "height"}
             className="flex-1"
@@ -681,7 +681,7 @@ export default function SignUp() {
                     authButton={true}
                   />
 
-                  {currentStep <= 1 && !isWeb && (
+                  {currentStep === 1 && role === "user" && !isWeb && (
                     <>
                       <View className="flex-row items-center gap-x-4">
                         <View className="flex-1 h-px bg-neutral-200 dark:bg-darkBorder" />

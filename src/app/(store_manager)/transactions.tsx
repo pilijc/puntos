@@ -5,7 +5,15 @@ import { useTransactions } from "@/hooks/store-manager/transaction";
 import { TxType, ListItem } from "@/type/store-manager/transaction";
 import React, { useCallback, useMemo, useRef, useState } from "react";
 import { useStarredTxStores } from "@/hooks/store-manager/use-starred-tx-stores";
-import { QrCode, Stamp, Flame, Funnel, Check, Star, X } from "lucide-react-native";
+import {
+  QrCode,
+  Stamp,
+  Flame,
+  Funnel,
+  Check,
+  Star,
+  X,
+} from "lucide-react-native";
 import {
   View,
   Text,
@@ -36,11 +44,31 @@ import {
 
 const TYPE_META: Record<
   TxType,
-  { color: string; bgLight: string; bgDark: string; icon: (c: string) => React.ReactNode }
+  {
+    color: string;
+    bgLight: string;
+    bgDark: string;
+    icon: (c: string) => React.ReactNode;
+  }
 > = {
-  qr: { color: "#FF6600", bgLight: "#FFF3E0", bgDark: "#431407", icon: (c) => <QrCode size={11} color={c} /> },
-  stamp: { color: "#3B82F6", bgLight: "#EFF6FF", bgDark: "#1E3A5F", icon: (c) => <Stamp size={11} color={c} /> },
-  streak: { color: "#8B5CF6", bgLight: "#F5F3FF", bgDark: "#2D1B69", icon: (c) => <Flame size={11} color={c} /> },
+  qr: {
+    color: "#FF6600",
+    bgLight: "#FFF3E0",
+    bgDark: "#431407",
+    icon: (c) => <QrCode size={11} color={c} />,
+  },
+  stamp: {
+    color: "#3B82F6",
+    bgLight: "#EFF6FF",
+    bgDark: "#1E3A5F",
+    icon: (c) => <Stamp size={11} color={c} />,
+  },
+  streak: {
+    color: "#8B5CF6",
+    bgLight: "#F5F3FF",
+    bgDark: "#2D1B69",
+    icon: (c) => <Flame size={11} color={c} />,
+  },
 };
 
 function AvatarInitials({ name }: { name: string }) {
@@ -65,12 +93,18 @@ export default function TransactionsScreen() {
   const isDark = useColorScheme() === "dark";
   const isWeb = Platform.OS === "web";
   const {
-    stores, storesLoading,
-    selectedStoreId, selectStore,
-    typeFilter, setTypeFilter,
-    loading, loadingMore, refreshing,
+    stores,
+    storesLoading,
+    selectedStoreId,
+    selectStore,
+    typeFilter,
+    setTypeFilter,
+    loading,
+    loadingMore,
+    refreshing,
     listItems,
-    hasMore, loadMore,
+    hasMore,
+    loadMore,
     handleRefresh,
   } = useTransactions();
   const availableStoreIdsKey = useMemo(
@@ -162,7 +196,9 @@ export default function TransactionsScreen() {
         const numId = Number(id);
         return (
           stores.find((s) => Number(s.id) === numId) ??
-          (selectedStore && Number(selectedStore.id) === numId ? selectedStore : null)
+          (selectedStore && Number(selectedStore.id) === numId
+            ? selectedStore
+            : null)
         );
       })
       .filter((s): s is StoreRow => s != null);
@@ -206,9 +242,7 @@ export default function TransactionsScreen() {
     const q = storeSearchQuery.trim().toLowerCase();
     if (!q) return stores;
     return stores.filter(
-      (s) =>
-        s.name.toLowerCase().includes(q) ||
-        String(s.id).includes(q),
+      (s) => s.name.toLowerCase().includes(q) || String(s.id).includes(q),
     );
   }, [stores, storeSearchQuery]);
 
@@ -289,7 +323,7 @@ export default function TransactionsScreen() {
     ({ item, index }: ListRenderItemInfo<ListItem>) => {
       if (item.kind === "header") {
         return (
-          <View className={isWeb ? "pt-3 pb-2 w-full" : "px-6 pt-3 pb-2"}>
+          <View className={isWeb ? "pt-3 pb-2 w-full" : "px-6 pt-2 pb-1.5"}>
             <View className={isWeb ? "w-full max-w-4xl self-center" : ""}>
               <Text className="text-xs font-poppins-semibold text-textSecondary dark:text-darkTextSecondary">
                 {item.label}
@@ -301,61 +335,63 @@ export default function TransactionsScreen() {
 
       const { tx } = item;
       const isFirst = listItems[index - 1]?.kind === "header";
-      const isLast  = index === listItems.length - 1 || listItems[index + 1]?.kind === "header";
+      const isLast =
+        index === listItems.length - 1 ||
+        listItems[index + 1]?.kind === "header";
 
       return (
         <View className={isWeb ? "w-full max-w-4xl self-center" : ""}>
-            <View
-              className={[
-                "flex-row items-center px-4 py-3 bg-background dark:bg-darkBackground border-l border-r border-b border-slate-100 dark:border-darkBorder",
-                !isWeb && "mx-4",
-                isFirst && "border-t rounded-tl-[12px] rounded-tr-[12px]",
-                isLast && "rounded-bl-[12px] rounded-br-[12px]",
-              ]
-                .filter(Boolean)
-                .join(" ")}
-            >
-              <View className="relative mr-3">
-                {tx.userAvatar ? (
-                  <Image
-                    source={{ uri: tx.userAvatar }}
-                    className="size-10 rounded-full"
-                    contentFit="cover"
-                  />
-                ) : (
-                  <AvatarInitials name={tx.userName} />
-                )}
-              </View>
+          <View
+            className={[
+              "flex-row items-center px-4 py-3 bg-background dark:bg-darkBackground border-l border-r border-b border-slate-100 dark:border-darkBorder",
+              !isWeb && "mx-4",
+              isFirst && "border-t rounded-tl-[12px] rounded-tr-[12px]",
+              isLast && "rounded-bl-[12px] rounded-br-[12px]",
+            ]
+              .filter(Boolean)
+              .join(" ")}
+          >
+            <View className="relative mr-3">
+              {tx.userAvatar ? (
+                <Image
+                  source={{ uri: tx.userAvatar }}
+                  className="size-10 rounded-full"
+                  contentFit="cover"
+                />
+              ) : (
+                <AvatarInitials name={tx.userName} />
+              )}
+            </View>
 
-              <View className="flex-1">
-                <View className="flex-row items-start justify-between">
-                  <Text
-                    className="flex-1 text-sm font-poppins-bold text-textPrimary dark:text-darkTextPrimary"
-                    numberOfLines={1}
-                  >
-                    {tx.userName}
-                  </Text>
-                  <Text
-                    className="text-sm font-poppins-bold text-primary dark:text-primary"
-                    numberOfLines={1}
-                  >
-                    {tx.detail}
-                  </Text>
-                </View>
-                <View className="flex-row items-center justify-between">
-                  <Text className="text-xs font-poppins text-textSecondary dark:text-darkTextSecondary">
-                    {translate(`storeManager.transactions.types.${tx.type}`)}
-                  </Text>
-                  <Text className="text-[10px] font-poppins text-textSecondary dark:text-darkTextSecondary">
-                    {formatTxTime(tx.date)}
-                  </Text>
-                </View>
+            <View className="flex-1">
+              <View className="flex-row items-start justify-between">
+                <Text
+                  className="flex-1 text-sm font-poppins-bold text-textPrimary dark:text-darkTextPrimary"
+                  numberOfLines={1}
+                >
+                  {tx.userName}
+                </Text>
+                <Text
+                  className="text-sm font-poppins-bold text-primary dark:text-primary"
+                  numberOfLines={1}
+                >
+                  {tx.detail}
+                </Text>
+              </View>
+              <View className="flex-row items-center justify-between">
+                <Text className="text-xs font-poppins text-textSecondary dark:text-darkTextSecondary">
+                  {translate(`storeManager.transactions.types.${tx.type}`)}
+                </Text>
+                <Text className="text-[10px] font-poppins text-textSecondary dark:text-darkTextSecondary">
+                  {formatTxTime(tx.date)}
+                </Text>
               </View>
             </View>
+          </View>
         </View>
       );
     },
-    [isDark, isWeb, listItems, translate]
+    [isDark, isWeb, listItems, translate],
   );
 
   const emptyIllustration = (
@@ -368,20 +404,24 @@ export default function TransactionsScreen() {
         }}
         resizeMode="contain"
       />
-
     </View>
   );
   const triggerIcon =
-    typeFilter === "qr"
-      ? <QrCode size={16} color={triggerColor} />
-      : typeFilter === "stamp"
-        ? <Stamp size={16} color={triggerColor} />
-        : typeFilter === "streak"
-          ? <Flame size={16} color={triggerColor} />
-          : <Funnel size={16} color={triggerColor} />;
+    typeFilter === "qr" ? (
+      <QrCode size={16} color={triggerColor} />
+    ) : typeFilter === "stamp" ? (
+      <Stamp size={16} color={triggerColor} />
+    ) : typeFilter === "streak" ? (
+      <Flame size={16} color={triggerColor} />
+    ) : (
+      <Funnel size={16} color={triggerColor} />
+    );
 
   return (
-    <SafeAreaView edges={["top", "left", "right"]} className="flex-1 bg-backgroundMuted dark:bg-darkBackground">
+    <SafeAreaView
+      edges={["top", "left", "right"]}
+      className="flex-1 bg-backgroundMuted dark:bg-darkBackground"
+    >
       <View className="bg-white dark:bg-darkBackground border-b border-neutral-100 dark:border-darkBorder px-6 py-3 flex-row items-center justify-between">
         <Text className="text-xl font-poppins-bold text-textPrimary dark:text-darkTextPrimary py-1">
           {translate("label.transactions")}
@@ -394,10 +434,10 @@ export default function TransactionsScreen() {
         <View
           className={
             isWeb
-              ? "w-full items-center bg-backgroundMuted px-4 pb-3 pt-4 dark:bg-darkBackground"
-              : "mb-4 w-full items-center border-b border-neutral-100 bg-background px-4 pb-3 pt-3 dark:border-darkBorder dark:bg-darkBackground"
+              ? "w-full items-center px-4 pb-3 pt-4"
+              : "mb-1.5 w-full items-center px-4 pb-2 pt-3 dark:border-darkBorder"
           }
-          style={{ position: "relative", zIndex: 100, elevation: 30 }}
+          style={{ position: "relative", zIndex: 100 }}
         >
           <View
             className={
@@ -408,15 +448,15 @@ export default function TransactionsScreen() {
             style={{ zIndex: 100 }}
           >
             <View
-              className="w-full flex-row items-stretch gap-x-2"
+              className="w-full flex-row items-center gap-x-2 h-[42px]"
               style={{ zIndex: 50 }}
             >
               {stores.length > 1 ? (
                 <View
-                  className="min-w-0 flex-1 basis-0 rounded-xl border border-neutral-100 bg-white dark:border-darkBorder dark:bg-darkBackground"
+                  className="min-w-0 flex-1 basis-0 h-[42px] rounded-xl border border-neutral-100 bg-white dark:border-darkBorder dark:bg-darkBackground"
                   style={{ position: "relative", zIndex: 50 }}
                 >
-                  <RNView collapsable={false} className="w-full">
+                  <RNView collapsable={false} className="w-full h-full">
                     <TextInput
                       value={storeSearchValue}
                       onChangeText={(text) => {
@@ -456,20 +496,19 @@ export default function TransactionsScreen() {
                       style={[
                         isWeb ? ({ outlineStyle: "none" } as any) : null,
                         {
-                          height: 42,
-                          lineHeight: 20,
-                          paddingVertical: 0,
+                          height: 40,
+                          paddingHorizontal: 12,
                           textAlignVertical: "center",
                           includeFontPadding: false,
                         },
                       ]}
-                      className="px-3 text-sm font-poppins text-slate-900 dark:text-darkTextPrimary"
+                      className="text-sm font-poppins text-slate-900 dark:text-darkTextPrimary"
                     />
                   </RNView>
 
                   {showSearchResults ? (
                     <View
-                      className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg shadow-black/15 dark:border-darkBorder dark:bg-darkBackgroundCard dark:shadow-black/40"
+                      className="overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-darkBorder dark:bg-darkBackgroundCard"
                       style={{
                         position: "absolute",
                         top: "100%",
@@ -481,7 +520,6 @@ export default function TransactionsScreen() {
                           Dimensions.get("window").height * 0.5,
                         ),
                         zIndex: 100,
-                        elevation: 20,
                       }}
                     >
                       <FlatList<StoreRow>
@@ -509,7 +547,10 @@ export default function TransactionsScreen() {
                   ) : null}
                 </View>
               ) : (
-                <View className="min-w-0 flex-1 basis-0 justify-center overflow-hidden rounded-xl border border-neutral-100 bg-white px-3 py-2.5 dark:border-darkBorder dark:bg-darkBackground">
+                <View
+                  className="min-w-0 flex-1 basis-0 h-[42px] justify-center overflow-hidden rounded-xl border border-neutral-100 bg-white dark:border-darkBorder dark:bg-darkBackground"
+                  style={{ paddingHorizontal: 12 }}
+                >
                   <Text
                     className="text-xs font-poppins-semibold text-slate-800 dark:text-darkTextPrimary"
                     numberOfLines={1}
@@ -519,18 +560,22 @@ export default function TransactionsScreen() {
                 </View>
               )}
 
-              <View className="w-11 shrink-0 overflow-hidden rounded-xl border border-neutral-100 bg-white dark:border-darkBorder dark:bg-darkBackground">
+              <View className="w-11 h-[42px] shrink-0 overflow-hidden rounded-xl border border-neutral-100 bg-white dark:border-darkBorder dark:bg-darkBackground">
                 <TouchableOpacity
                   onPress={handleToggleCurrentStoreStar}
                   disabled={selectedStoreId == null}
                   activeOpacity={0.7}
                   hitSlop={{ top: 4, bottom: 4, left: 4, right: 4 }}
-                  className="h-full min-h-[42px] w-full items-center justify-center"
+                  className="h-full w-full items-center justify-center"
                   accessibilityRole="button"
                   accessibilityLabel={
                     isCurrentStoreStarred
-                      ? translate("storeManager.transactions.storePicker.removeStar")
-                      : translate("storeManager.transactions.storePicker.addStar")
+                      ? translate(
+                          "storeManager.transactions.storePicker.removeStar",
+                        )
+                      : translate(
+                          "storeManager.transactions.storePicker.addStar",
+                        )
                   }
                 >
                   <Star
@@ -547,13 +592,30 @@ export default function TransactionsScreen() {
                 </TouchableOpacity>
               </View>
 
-              <View className="w-11 shrink-0 overflow-hidden rounded-xl border border-neutral-100 bg-white dark:border-darkBorder dark:bg-darkBackground">
-                <RNView ref={funnelRef} collapsable={false} className="w-full h-full">
+              <View className="w-11 h-[42px] shrink-0 overflow-hidden rounded-xl border border-neutral-100 bg-white dark:border-darkBorder dark:bg-darkBackground">
+                <RNView
+                  ref={funnelRef}
+                  collapsable={false}
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    display: "flex",
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
                   <TouchableOpacity
                     onPress={handleFunnelOpen}
                     activeOpacity={0.7}
                     hitSlop={{ top: 4, bottom: 4, left: 4, right: 4 }}
-                    className="h-full min-h-[42px] w-full items-center justify-center"
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
                   >
                     {triggerIcon}
                   </TouchableOpacity>
@@ -607,7 +669,9 @@ export default function TransactionsScreen() {
                       </TouchableOpacity>
                       <TouchableOpacity
                         onPress={(e) => {
-                          (e as unknown as { stopPropagation?: () => void })?.stopPropagation?.();
+                          (
+                            e as unknown as { stopPropagation?: () => void }
+                          )?.stopPropagation?.();
                           handleToggleStar(sid);
                         }}
                         hitSlop={{ top: 8, bottom: 8, left: 6, right: 8 }}
@@ -618,10 +682,7 @@ export default function TransactionsScreen() {
                           "storeManager.transactions.storePicker.removeStar",
                         )}
                       >
-                        <X
-                          size={12}
-                          color={active ? "#FFFFFF" : "#94A3B8"}
-                        />
+                        <X size={12} color={active ? "#FFFFFF" : "#94A3B8"} />
                       </TouchableOpacity>
                     </View>
                   );
@@ -635,7 +696,9 @@ export default function TransactionsScreen() {
       {loading || storesLoading ? (
         <TransactionSkeleton />
       ) : stores.length === 0 ? (
-        <View className={isWeb ? "px-4 pb-4 items-center mt-4" : "px-4 pb-4 mt-4"}>
+        <View
+          className={isWeb ? "px-4 pb-4 items-center mt-4" : "px-4 pb-4 mt-4"}
+        >
           <View
             className={`w-full bg-white dark:bg-darkBackground rounded-xl overflow-hidden justify-start ${isWeb ? "max-w-4xl p-6" : "p-5"}`}
           >
@@ -661,10 +724,14 @@ export default function TransactionsScreen() {
               {emptyIllustration}
               <View className="items-center justify-center">
                 <Text className="text-base font-poppins-bold text-textPrimary dark:text-darkTextPrimary text-center">
-                  {translate("storeManager.transactions.empty.noTransactionsTitle")}
+                  {translate(
+                    "storeManager.transactions.empty.noTransactionsTitle",
+                  )}
                 </Text>
                 <Text className="text-xs font-poppins text-textSecondary dark:text-darkTextSecondary text-center px-8">
-                  {translate("storeManager.transactions.empty.noTransactionsBody")}
+                  {translate(
+                    "storeManager.transactions.empty.noTransactionsBody",
+                  )}
                 </Text>
               </View>
             </View>
@@ -704,22 +771,31 @@ export default function TransactionsScreen() {
         />
       )}
 
-      <Modal visible={funnelOpen} transparent animationType="fade" statusBarTranslucent onRequestClose={() => setFunnelOpen(false)}>
-        <Pressable className="absolute inset-0" onPress={() => setFunnelOpen(false)} />
+      <Modal
+        visible={funnelOpen}
+        transparent
+        animationType="fade"
+        statusBarTranslucent
+        onRequestClose={() => setFunnelOpen(false)}
+      >
+        <Pressable
+          className="absolute inset-0"
+          onPress={() => setFunnelOpen(false)}
+        />
 
         <View
-          className="absolute z-50 w-[140px] overflow-hidden rounded-[10px] border border-slate-200 bg-white shadow-md shadow-black/10 dark:border-darkBorder dark:bg-darkBackgroundCard dark:shadow-lg dark:shadow-black/35"
+          className="absolute z-50 w-[140px] overflow-hidden rounded-[10px] border border-slate-200 bg-white dark:border-darkBorder dark:bg-darkBackgroundCard"
           style={{
             top: funnelAnchor.top,
             left: Math.min(
               funnelAnchor.left,
-              Dimensions.get("window").width - 140 - 10
+              Dimensions.get("window").width - 140 - 10,
             ),
           }}
         >
           {filterOptions.map((opt, idx) => {
             const isActive = opt.value === typeFilter;
-            const isLast   = idx === filterOptions.length - 1;
+            const isLast = idx === filterOptions.length - 1;
 
             return (
               <TouchableOpacity
@@ -732,15 +808,17 @@ export default function TransactionsScreen() {
                 className={`flex-row items-center justify-between px-3 py-2 ${!isLast ? "border-b border-slate-100 dark:border-darkBorder" : ""}`}
               >
                 <Text
-                  className={
-                    ["text-[10px]", isActive ? "font-poppins-semibold text-primary" : "font-poppins text-neutral-500 dark:text-darkTextMuted"].join(" ")}
+                  className={[
+                    "text-[10px]",
+                    isActive
+                      ? "font-poppins-semibold text-primary"
+                      : "font-poppins text-neutral-500 dark:text-darkTextMuted",
+                  ].join(" ")}
                 >
                   {opt.label}
                 </Text>
 
-                {isActive && (
-                  <Check size={12} color="#FF6600" />
-                )}
+                {isActive && <Check size={12} color="#FF6600" />}
               </TouchableOpacity>
             );
           })}
