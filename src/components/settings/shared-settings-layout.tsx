@@ -46,7 +46,7 @@ export const SharedSettingsLayout = ({
     return (
         <>
             <SafeAreaView edges={["top", "left", "right"]} className="flex-1 bg-backgroundMuted dark:bg-darkBackground">
-                <View className="bg-white dark:bg-darkBackground border-b border-neutral-100 dark:border-darkBorder px-6 py-3 flex-row justify-between items-center">
+                <View className="bg-white dark:bg-darkBackgroundMuted border-b border-neutral-100 dark:border-darkBorder px-6 py-3 flex-row justify-between items-center">
                     <Text className="text-xl font-poppins-bold text-textPrimary dark:text-darkTextPrimary py-1">
                         {translate('settings.title')}
                     </Text>

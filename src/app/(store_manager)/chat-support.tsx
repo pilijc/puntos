@@ -15,9 +15,11 @@ import { supabase } from "@/supabase/supabase";
 import { useTranslation } from "react-i18next";
 import { useManagerStoresStore } from "@/store/manager-stores-store";
 import { useSupportChatStore } from "@/store/support-chat-store";
+import { useIsDark } from "@/hooks/use-is-dark";
 
 export default function ChatSupportScreen() {
   const { t: translate } = useTranslation();
+  const isDark = useIsDark();
   const [ownerId, setOwnerId] = useState<string | null>(null);
   const scrollViewRef = useRef<ScrollView>(null);
   const insets = useSafeAreaInsets();
@@ -135,7 +137,7 @@ export default function ChatSupportScreen() {
           onPress={handleBack}
           className="p-2 -ml-2 rounded-full active:bg-neutral-100 dark:active:bg-neutral-800"
         >
-          <ArrowLeft size={22} color="#1e293b" />
+          <ArrowLeft size={22} color={isDark ? "#FFFFFF" : "#1e293b"} />
         </TouchableOpacity>
 
         <View className="w-10 h-10 ml-4 mr-3 rounded-full bg-slate-100 dark:bg-darkBackgroundCard items-center justify-center">

@@ -73,7 +73,7 @@ export const NotificationCard = () => {
         <>
             <TouchableOpacity
                 onPress={handlePress}
-                className="flex-row p-3 bg-white dark:bg-darkBackground items-center will-change-pressable"
+                className="flex-row p-3 bg-white dark:bg-darkBackgroundCard items-center will-change-pressable"
             >
                 <View className="h-8 w-8 -mt-0.5 rounded-lg items-center justify-center">
                     <Bell size={18} color="#FF6600" />

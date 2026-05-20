@@ -12,13 +12,14 @@ import { History, Settings, ScanLine } from 'lucide-react-native';
 import { refreshFrontdeskDeviceHeartbeatService } from "@/services/frontdesk/device-session-service";
 import { useAuthActions } from "@/hooks/use-auth-actions";
 
+import { useIsDark } from "@/hooks/use-is-dark";
+
 function FrontDeskTabs() {
     const router = useRouter();
     const pathname = usePathname();
     const insets = useSafeAreaInsets();
     const [isActive, setIsActive] = useState(false);
-    const colorScheme = useColorScheme();
-    const isDark = colorScheme === 'dark';
+    const isDark = useIsDark();
     const { t: translate } = useTranslation();
     const [currentUserId, setCurrentUserId] = useState<string | undefined>(undefined);
     const { handleLogout } = useAuthActions();

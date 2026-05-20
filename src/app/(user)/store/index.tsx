@@ -1,9 +1,9 @@
-import { TextInput, RefreshControl, FlatList, View as RNView } from "react-native";
-import { View, Text, TouchableOpacity } from "@/tw";
+import { RefreshControl, FlatList, View as RNView } from "react-native";
+import { View, Text, TouchableOpacity, TextInput } from "@/tw";
 import React, { useMemo, useCallback, useEffect, useState } from "react";
 import { Search, Store, X } from "lucide-react-native";
 import { useTranslation } from "react-i18next";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView } from "@/tw";
 import { useFocusEffect } from "expo-router";
 import { useStoreStore } from "@/store/user/store-store";
 import { useRewardsUiStore } from "@/store/user/rewards-ui-store";
@@ -261,7 +261,7 @@ export default function StoreListScreen() {
               ? translate("user.rewards.storesList.noMatching")
               : translate("user.rewards.storesList.noJoined")}
           </Text>
-          <Text className="text-sm text-neutral-500 font-poppins text-center px-10 mt-2">
+          <Text className="text-sm text-neutral-500 dark:text-neutral-400 font-poppins text-center px-10 mt-2">
             {searchQuery
               ? translate("user.rewards.storesList.noMatchingDetail", { query: searchQuery })
               : translate("user.rewards.storesList.noJoinedDetail")}
@@ -294,7 +294,7 @@ export default function StoreListScreen() {
       className="flex-1 bg-backgroundMuted dark:bg-darkBackground"
       edges={["top", "left", "right"]}
     >
-      <View className="bg-white dark:bg-darkBackground border-b border-neutral-100 dark:border-darkBorder px-6 py-3 flex-row justify-between items-center">
+      <View className="bg-white dark:bg-darkBackgroundMuted border-b border-neutral-100 dark:border-darkBorder px-6 py-3 flex-row justify-between items-center">
         <Text className="text-xl font-poppins-bold text-textPrimary dark:text-darkTextPrimary py-1">
           {translate("user.rewards.storesList.title")}
         </Text>

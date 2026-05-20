@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { ScrollView, TouchableOpacity, View as RNView, useColorScheme, Dimensions } from "react-native";
+import { ScrollView, TouchableOpacity, View as RNView, Dimensions } from "react-native";
 import { View, Text, Image } from "@/tw";
 import { ChevronLeft, Gift, Gem, Star, Lock, Trophy, Sparkles, CheckCircle2 } from "lucide-react-native";
 import { useFocusEffect, useRouter, useLocalSearchParams } from "expo-router";
@@ -13,6 +13,7 @@ import { getStoreById } from "@/services/store-service";
 import { listenToUserRedemptions } from "@/services/user/rewards-redemption";
 import { supabase } from "@/supabase/supabase";
 import { Reward } from "@/services/reward-service";
+import { useIsDark } from "@/hooks/use-is-dark";
 import { RedemptionDrawer } from "@/components/rewards/redemption-drawer";
 import { useRedemptionCode } from "@/hooks/useRedemptionCode";
 
@@ -38,8 +39,7 @@ export default function ClaimRewardsScreen() {
   const router = useRouter();
   const redemptionChannelRef = useRef<any | null>(null);
   const insets = useSafeAreaInsets();
-  const scheme = useColorScheme();
-  const dark = scheme === "dark";
+  const dark = useIsDark();
 
   useEffect(() => {
     async function loadData() {
@@ -410,10 +410,10 @@ export default function ClaimRewardsScreen() {
                 <Sparkles size={16} color="#FF6600" />
               </RNView>
               <RNView style={{ flex: 1 }}>
-                <Text className="text-neutral-800 font-poppins-semibold text-xs">
+                <Text className="text-neutral-800 dark:text-darkTextPrimary font-poppins-semibold text-xs">
                   {translate("user.rewards.claimRewards.earnMorePoints")}
                 </Text>
-                <Text className="text-neutral-500 font-poppins text-[11px] mt-0.5">
+                <Text className="text-neutral-500 dark:text-darkTextSecondary font-poppins text-[11px] mt-0.5">
                   {translate("user.rewards.claimRewards.scanQrCode")}
                 </Text>
               </RNView>
@@ -424,7 +424,7 @@ export default function ClaimRewardsScreen() {
           <Animated.View entering={FadeInDown.delay(240).duration(360)} style={{ gap: 10 }}>
             <RNView style={{ flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 4 }}>
               <Star size={14} color="#FF6600" fill="#FF6600" />
-              <Text className="text-neutral-800 font-poppins-bold text-sm">
+              <Text className="text-neutral-800 dark:text-darkTextPrimary font-poppins-bold text-sm">
                 {translate("user.rewards.claimRewards.readyToClaim")}
               </Text>
               <RNView style={{
@@ -460,10 +460,10 @@ export default function ClaimRewardsScreen() {
                 {/* Content */}
                 <RNView style={{ flex: 1, paddingHorizontal: 12, paddingVertical: 12, justifyContent: "space-between" }}>
                   <RNView>
-                    <Text className="font-poppins-bold text-neutral-900 text-sm" numberOfLines={1}>
+                    <Text className="font-poppins-bold text-neutral-900 dark:text-darkTextPrimary text-sm" numberOfLines={1}>
                       {item.title}
                     </Text>
-                    <Text className="text-neutral-400 font-poppins text-[11px] mt-0.5" numberOfLines={1}>
+                    <Text className="text-neutral-400 dark:text-darkTextSecondary font-poppins text-[11px] mt-0.5" numberOfLines={1}>
                       {item.description}
                     </Text>
                   </RNView>
@@ -545,7 +545,7 @@ export default function ClaimRewardsScreen() {
                 {/* Content */}
                 <RNView style={{ flex: 1, paddingHorizontal: 12, paddingVertical: 12, justifyContent: "space-between" }}>
                   <RNView>
-                    <Text className="font-poppins-bold text-neutral-500 text-sm" numberOfLines={1}>
+                    <Text className="font-poppins-bold text-neutral-500 dark:text-darkTextSecondary text-sm" numberOfLines={1}>
                       {item.title}
                     </Text>
                     <Text className="text-neutral-400 font-poppins text-[11px] mt-0.5" numberOfLines={1}>
