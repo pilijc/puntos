@@ -1,10 +1,14 @@
 import React, { useState } from "react";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { SafeAreaView, ScrollView } from "@/tw";
+import { SafeAreaView, ScrollView, View } from "@/tw";
 import { Modal, type ModalButton } from "@/components/modal";
 import { useTranslation } from "react-i18next";
-import { setupInitialPassword, updatePassword, checkPasswordSetupRequired } from "@/services/frontdesk/password-service";
+import {
+  setupInitialPassword,
+  updatePassword,
+  checkPasswordSetupRequired,
+} from "@/services/frontdesk/password-service";
 import { supabase } from "@/supabase/supabase";
 import type { PasswordSetupState } from "@/type/frontdesk/password";
 import { getRoleTypeForUser } from "@/services/access-service";
@@ -24,7 +28,7 @@ export default function SetupPasswordScreen() {
     showNewPassword: false,
     showConfirmPassword: false,
     isSubmitting: false,
-    errors: {}
+    errors: {},
   });
   const [modal, setModal] = useState<{
     title: string;
@@ -38,17 +42,18 @@ export default function SetupPasswordScreen() {
 
   const checkSetupType = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) return;
 
       const requiresSetup = await checkPasswordSetupRequired(user.id);
       setIsInitialSetup(requiresSetup);
-    } catch (error) {
-     }
+    } catch (error) {}
   };
 
   const updateState = (updates: Partial<PasswordSetupState>) => {
-    setState(prev => ({ ...prev, ...updates }));
+    setState((prev) => ({ ...prev, ...updates }));
   };
 
   const validatePassword = (password: string): string | null => {
@@ -62,7 +67,6 @@ export default function SetupPasswordScreen() {
   };
 
   const handleSubmit = async () => {
-     
     const errors: PasswordSetupState["errors"] = {};
 
     // Validate new password
@@ -82,94 +86,102 @@ export default function SetupPasswordScreen() {
     }
 
     if (Object.keys(errors).length > 0) {
-       updateState({ errors });
+      updateState({ errors });
       return;
     }
 
-     updateState({ isSubmitting: true, errors: {} });
+    updateState({ isSubmitting: true, errors: {} });
 
     try {
-       
-      const { data: { user } } = await supabase.auth.getUser();
-       
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
       if (!user) {
         throw new Error("User not found");
       }
-      
+
       // Add timeout to prevent hanging
-      const setupPromise = isInitialSetup 
+      const setupPromise = isInitialSetup
         ? setupInitialPassword(user.id, state.newPassword)
         : updatePassword(state.currentPassword, state.newPassword);
-      
+
       const timeoutPromise = new Promise((_, reject) => {
         setTimeout(() => reject(new Error("Password update timeout")), 8000);
       });
-      
+
       let result;
       try {
-        result = await Promise.race([setupPromise, timeoutPromise]) as any;
+        result = (await Promise.race([setupPromise, timeoutPromise])) as any;
       } catch (timeoutError) {
-         // Assume success after timeout to not block user
+        // Assume success after timeout to not block user
         result = {
           success: true,
-          message: "Password update initiated. If you have trouble logging in, please try again."
+          message:
+            "Password update initiated. If you have trouble logging in, please try again.",
         };
       }
-      
+
       if (result.success && !isCompleted) {
-         setIsCompleted(true); // Mark as completed
-        
+        setIsCompleted(true); // Mark as completed
+
         // Clear any cached profile data
         try {
           // Clear AsyncStorage (React Native equivalent of localStorage)
           const keys = await AsyncStorage.getAllKeys();
-          const profileKeys = keys.filter(key => 
-            key.includes('profile') || 
-            key.includes('user') || 
-            key.includes('staff') ||
-            key.includes('password')
+          const profileKeys = keys.filter(
+            (key) =>
+              key.includes("profile") ||
+              key.includes("user") ||
+              key.includes("staff") ||
+              key.includes("password"),
           );
           await AsyncStorage.multiRemove(profileKeys);
-          
+
           // Force refresh
-          await new Promise(resolve => setTimeout(resolve, 100));
-        } catch (cacheError) {
-         }
-        
+          await new Promise((resolve) => setTimeout(resolve, 100));
+        } catch (cacheError) {}
+
         setModal({
           title: "Success",
           message: result.message || "Password updated successfully!",
-          buttons: [{
-            label: "Continue",
-            variant: "primary",
-            onPress: () => {
-               router.replace("/(front_desk)");
-            }
-          }]
+          buttons: [
+            {
+              label: "Continue",
+              variant: "primary",
+              onPress: () => {
+                router.replace("/(front_desk)");
+              },
+            },
+          ],
         });
       } else if (result.success && isCompleted) {
-         setModal({
+        setModal({
           title: "Error",
           message: result.message || "Failed to update password",
-          buttons: [{
-            label: "OK",
-            variant: "secondary",
-            onPress: () => setModal(null)
-          }]
+          buttons: [
+            {
+              label: "OK",
+              variant: "secondary",
+              onPress: () => setModal(null),
+            },
+          ],
         });
       }
     } catch (error) {
-       setModal({
+      setModal({
         title: "Error",
-        message: `An unexpected error occurred: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        buttons: [{
-          label: "OK",
-          variant: "secondary",
-          onPress: () => setModal(null)
-        }]
+        message: `An unexpected error occurred: ${error instanceof Error ? error.message : "Unknown error"}`,
+        buttons: [
+          {
+            label: "OK",
+            variant: "secondary",
+            onPress: () => setModal(null),
+          },
+        ],
       });
     } finally {
-       updateState({ isSubmitting: false });
+      updateState({ isSubmitting: false });
     }
   };
 
@@ -184,16 +196,18 @@ export default function SetupPasswordScreen() {
       />
 
       <ScrollView className="flex-1 px-6 pt-16">
-        {/* Header */}
-        <PasswordSetupHeader isInitialSetup={isInitialSetup} />
+        <View className="bg-white dark:bg-darkBackgroundCard p-6 rounded-2xl">
+          {/* Header */}
+          <PasswordSetupHeader isInitialSetup={isInitialSetup} />
 
-        {/* Form */}
-        <PasswordSetupForm
-          state={state}
-          isInitialSetup={isInitialSetup}
-          onStateUpdate={updateState}
-          onSubmit={handleSubmit}
-        />
+          {/* Form */}
+          <PasswordSetupForm
+            state={state}
+            isInitialSetup={isInitialSetup}
+            onStateUpdate={updateState}
+            onSubmit={handleSubmit}
+          />
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
