@@ -255,8 +255,6 @@ function buildVirtualUserStreak(
 
 export async function getUserStreaks(userId: string): Promise<UserStreak[]> {
   try {
-    console.log("[getUserStreaks] 🔍 Starting fetch for userId:", userId);
-    
     const { data, error } = await supabase
       .from("user_streaks")
       .select(USER_STREAK_SELECT)
@@ -267,28 +265,12 @@ export async function getUserStreaks(userId: string): Promise<UserStreak[]> {
       .limit(90, { foreignTable: "streak_events" });
 
     if (error) {
-      console.error("[getUserStreaks] ❌ Supabase error:", error.message);
+      console.error("[getUserStreaks] Supabase error:", error.message);
       return [];
     }
 
-    console.log("[getUserStreaks] ✅ Raw data received:", {
-      count: data?.length ?? 0,
-      fullRecords: data?.map(s => ({
-        id: s.id,
-        store_id: s.store_id,
-        streak_days: s.streak_days,
-        status: s.status,
-        store_streaks_status: s.store_streaks?.status,
-        store_name: s.stores?.name,
-        store_active: s.stores?.is_active,
-        stores_full: JSON.stringify(s.stores),
-      })) ?? [],
-    });
-
     // ⚠️ RLS issue: stores relationship comes back as undefined even with RLS policy
     // Workaround: fetch stores data SEPARATELY by store_id
-    console.log("[getUserStreaks] 🔧 Fetching stores separately due to RLS relationship issue");
-    
     const storeIds = (data ?? []).map(s => s.store_id);
     const { data: storesData, error: storesError } = await supabase
       .from("stores")
@@ -296,9 +278,7 @@ export async function getUserStreaks(userId: string): Promise<UserStreak[]> {
       .in("id", storeIds);
 
     if (storesError) {
-      console.error("[getUserStreaks] ⚠️ Error fetching stores separately:", storesError.message);
-    } else {
-      console.log("[getUserStreaks] ✅ Fetched stores separately:", storesData?.length);
+      console.error("[getUserStreaks] Error fetching stores separately:", storesError.message);
     }
 
     // Create a map of stores by id
@@ -312,16 +292,6 @@ export async function getUserStreaks(userId: string): Promise<UserStreak[]> {
       stores: storesMap.get(streak.store_id) ?? null,
     }));
 
-    console.log("[getUserStreaks] 📊 After enriching with stores:", {
-      count: enrichedData.length,
-      records: enrichedData.map(s => ({
-        id: s.id,
-        store_id: s.store_id,
-        store_name: s.stores?.name,
-        store_active: s.stores?.is_active,
-      })),
-    });
-
     // Filter criteria:
     // 1. Store must be active (existing logic)
     // 2. The linked streak program must also be active — this prevents old records
@@ -334,29 +304,7 @@ export async function getUserStreaks(userId: string): Promise<UserStreak[]> {
       const programStatus = streak.store_streaks?.status;
       const isActiveProgram = programStatus === "active";
       const isUserCompleted = streak.status === "completed";
-      const passes = storeValid && (isActiveProgram || isUserCompleted);
-      
-      console.log(`[getUserStreaks] 🔎 Filter check - Store: ${streak.stores?.name ?? "NULL"}`, {
-        storeValid,
-        programStatus,
-        isActiveProgram,
-        isUserCompleted,
-        passes,
-        stores_exists: !!streak.stores,
-        stores_status: streak.stores?.status,
-        stores_is_active: streak.stores?.is_active,
-      });
-      
-      return passes;
-    });
-
-    console.log("[getUserStreaks] 📋 After filtering:", {
-      validCount: validStreaks.length,
-      filtered: validStreaks.map(s => ({
-        id: s.id,
-        store_name: s.stores?.name,
-        status: s.status,
-      })),
+      return storeValid && (isActiveProgram || isUserCompleted);
     });
 
     // Map PostGIS location into legacy coordinate props expected by the UI.
@@ -365,10 +313,9 @@ export async function getUserStreaks(userId: string): Promise<UserStreak[]> {
       stores: streak.stores ? withPostGISCoordinates(streak.stores) : undefined
     } as UserStreak));
 
-    console.log("[getUserStreaks] ✨ Final result:", result.length, "streaks returned");
     return result;
   } catch (error) {
-    console.error("[getUserStreaks] 💥 Exception:", error);
+    console.error("[getUserStreaks] Exception:", error);
     return [];
   }
 }
