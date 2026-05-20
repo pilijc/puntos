@@ -81,7 +81,7 @@ export default function ChangePasswordModal({ visible, onClose }: Props) {
                     }
                 }]
             });
-        } catch (error: any) {
+        } catch (error) {
             const rawMessage = error instanceof Error ? error.message : String(error);
             const errorMessage = rawMessage === "INCORRECT_CURRENT_PASSWORD"
                 ? translate("settings.account.security.changePassword.error.incorrect")
@@ -146,42 +146,14 @@ export default function ChangePasswordModal({ visible, onClose }: Props) {
                             sanitize={(v) => v}
                         />
                         {/* New Password */}
-                        <View>
-                            <TextField
-                                label={translate("settings.account.security.changePassword.label.new")}
-                                placeholder={translate("settings.account.security.changePassword.input.new")}
-                                value={newPassword}
-                                onChangeText={setNewPassword}
-                                secureTextEntry={true}
-                                sanitize={(v) => v}
-                            />
-                            {/* Password Requirements */}
-                            <View className="mt-2 bg-neutral-50 dark:bg-darkBackgroundMuted/50 p-3 rounded-xl border border-neutral-100 dark:border-darkBorder/50">
-                                <Text className="text-[11px] font-poppins-semibold text-neutral-700 dark:text-darkTextPrimary mb-1">
-                                    {translate("settings.account.security.changePassword.requirements.title")}
-                                </Text>
-                                <RequirementItem
-                                    label={translate("settings.account.security.changePassword.requirements.minLength")}
-                                    met={requirements.hasMinLength}
-                                />
-                                <RequirementItem
-                                    label={translate("settings.account.security.changePassword.requirements.uppercase")}
-                                    met={requirements.hasUppercase}
-                                />
-                                <RequirementItem
-                                    label={translate("settings.account.security.changePassword.requirements.lowercase")}
-                                    met={requirements.hasLowercase}
-                                />
-                                <RequirementItem
-                                    label={translate("settings.account.security.changePassword.requirements.number")}
-                                    met={requirements.hasNumber}
-                                />
-                                <RequirementItem
-                                    label={translate("settings.account.security.changePassword.requirements.special")}
-                                    met={requirements.hasSpecial}
-                                />
-                            </View>
-                        </View>
+                        <TextField
+                            label={translate("settings.account.security.changePassword.label.new")}
+                            placeholder={translate("settings.account.security.changePassword.input.new")}
+                            value={newPassword}
+                            onChangeText={setNewPassword}
+                            secureTextEntry={true}
+                            sanitize={(v) => v}
+                        />
 
                         {/* Repeat New Password */}
                         <TextField
@@ -192,6 +164,33 @@ export default function ChangePasswordModal({ visible, onClose }: Props) {
                             secureTextEntry={true}
                             sanitize={(v) => v}
                         />
+
+                        {/* Password Requirements */}
+                        <View className="bg-neutral-50 dark:bg-darkBackgroundMuted/50 p-3 rounded-xl border border-neutral-100 dark:border-darkBorder/50">
+                            <Text className="text-[11px] font-poppins-semibold text-neutral-700 dark:text-darkTextPrimary mb-1">
+                                {translate("settings.account.security.changePassword.requirements.title")}
+                            </Text>
+                            <RequirementItem
+                                label={translate("settings.account.security.changePassword.requirements.minLength")}
+                                met={requirements.hasMinLength}
+                            />
+                            <RequirementItem
+                                label={translate("settings.account.security.changePassword.requirements.uppercase")}
+                                met={requirements.hasUppercase}
+                            />
+                            <RequirementItem
+                                label={translate("settings.account.security.changePassword.requirements.lowercase")}
+                                met={requirements.hasLowercase}
+                            />
+                            <RequirementItem
+                                label={translate("settings.account.security.changePassword.requirements.number")}
+                                met={requirements.hasNumber}
+                            />
+                            <RequirementItem
+                                label={translate("settings.account.security.changePassword.requirements.special")}
+                                met={requirements.hasSpecial}
+                            />
+                        </View>
                     </View>
                 </KeyboardAvoidingView>
             </Modal>

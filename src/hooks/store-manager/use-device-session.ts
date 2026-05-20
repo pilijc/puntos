@@ -26,7 +26,7 @@ export function useDeviceSession(userId?: string) {
         if (!userId) return;
 
         const pulseHeartbeat = () => {
-            refreshDeviceHeartbeatService(userId).catch(() => {});
+            void refreshDeviceHeartbeatService(userId);
         };
 
         // 1. update heartbeat when app comes to foreground
@@ -90,8 +90,8 @@ export function useDeviceSession(userId?: string) {
             // store the approximate server time captured at the moment of the fetch so
             // DeviceSessionCard can display "last active" relative to it instead of Date.now()
             setServerTimeMs(Date.now());
-        } catch (error) {
-            console.error("Failed to fetch active sessions: ", error);
+        } catch {
+            // Swallowed to prevent app crash if network is offline or request fails
         }
     }, [setActiveSessions, setServerTimeMs]);
 

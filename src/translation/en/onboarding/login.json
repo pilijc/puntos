@@ -13,5 +13,11 @@
     "passwordRequired": "Password is required.",
     "emailValid": "Please enter a valid email address.",
     "invalidLogin": "Invalid login credentials"
+  },
+  "webUnavailable": {
+    "title": "Web is for store teams",
+    "body1": "Customer and front-desk features live in the Puntos mobile app. If you meant to use those, open the app on your phone.",
+    "body2": "Store managers and super admins can keep using this site. Signed in with the wrong type of account? Sign out and try again.",
+    "signOut": "Sign out"
   }
 }
