@@ -11,6 +11,7 @@ import { useRedemptionCode } from "@/hooks/useRedemptionCode";
 import { RedemptionQRSkeleton } from "@/components/skeleton/user/redemption-qr-skeleton";
 import { useTranslation } from "react-i18next";
 import { useIsDark } from "@/hooks/use-is-dark";
+import { useSingleTap } from "@/hooks/use-single-tap";
 
 const REDIRECT_DELAY = {
   REDEEMED: 2000,
@@ -280,7 +281,8 @@ export default function RedemptionCodeScreen() {
     }
   }, [status, router]);
 
-  const handleBack = () => router.back();
+  const handleBack = useSingleTap(() => router.back());
+  const handleCancel = useSingleTap(cancelCode);
 
   // Render states
   if (status === "loading") return <LoadingState />;
@@ -296,7 +298,7 @@ export default function RedemptionCodeScreen() {
       rewardImage={rewardImage}
       redemptionCode={redemptionCode}
       timeRemaining={timeRemaining}
-      onCancel={cancelCode}
+      onCancel={handleCancel}
       onBack={handleBack}
       insets={insets}
     />

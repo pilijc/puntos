@@ -197,7 +197,7 @@ const USER_STREAK_SELECT = `
   ),
   streak_events (
     earned_date
-  ).order(earned_date.desc).limit(90),
+  ),
   stores (
     name,
     logo,
@@ -262,7 +262,9 @@ export async function getUserStreaks(userId: string): Promise<UserStreak[]> {
       .select(USER_STREAK_SELECT)
       .eq("user_id", userId)
       .gt("streak_days", 0)
-      .order("streak_days", { ascending: false });
+      .order("streak_days", { ascending: false })
+      .order("earned_date", { foreignTable: "streak_events", ascending: false })
+      .limit(90, { foreignTable: "streak_events" });
 
     if (error) {
       console.error("[getUserStreaks] ❌ Supabase error:", error.message);
@@ -391,7 +393,9 @@ export async function getUserStreakByStore(
         .select(USER_STREAK_SELECT)
         .eq("user_id", userId)
         .eq("store_id", storeId)
-        .order("updated_at", { ascending: false }),
+        .order("updated_at", { ascending: false })
+        .order("earned_date", { foreignTable: "streak_events", ascending: false })
+        .limit(90, { foreignTable: "streak_events" }),
       supabase
         .from("stores")
         .select("id, name, logo, address, status, is_active, location, radius")

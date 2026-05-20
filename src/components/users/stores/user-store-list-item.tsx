@@ -12,6 +12,7 @@ import Animated, {
 } from "react-native-reanimated";
 import React, { useState } from "react";
 import { useRouter } from "expo-router";
+import { useSingleTap } from "@/hooks/use-single-tap";
 
 interface UserStoreListItemProps {
   store: {
@@ -42,6 +43,8 @@ export default function UserStoreListItem({
 }: UserStoreListItemProps) {
   const router = useRouter();
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
+
+  const handlePressNavigate = useSingleTap(() => router.push(`/store/${store.id}`));
 
   const clampedStamps = Math.min(Math.max(store.stampsCount, 0), Math.max(store.targetStamps, 1));
   const stampPct = (clampedStamps / Math.max(store.targetStamps, 1)) * 100;
@@ -74,7 +77,7 @@ export default function UserStoreListItem({
       >
         <View className="flex-row items-center">
           <Pressable
-            onPress={() => router.push(`/store/${store.id}`)}
+            onPress={handlePressNavigate}
             onPressIn={handlePressIn}
             onPressOut={handlePressOut}
             className="flex-1 flex-row items-center"

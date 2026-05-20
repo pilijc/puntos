@@ -4,7 +4,8 @@ import { useRewardsDataStore } from "@/hooks/use-rewards-data";
 import { useStamps } from "@/hooks/use-stamps";
 import { useStampRewards } from "@/hooks/use-stamp-rewards";
 import { useStreaks } from "@/hooks/use-streaks";
-import { useUserStoreActivity } from "@/hooks/use-user-store-activity";
+import { useQueryClient } from "@tanstack/react-query";
+import { activityKeys } from "@/hooks/user/rq/query-keys";
 
 export function useRewardsActions() {
   const {
@@ -17,6 +18,7 @@ export function useRewardsActions() {
   const { refetch: refetchStamps } = useStamps();
   const { refetch: refetchStampRewards } = useStampRewards();
   const { refetch: refetchStreaks } = useStreaks();
+  const queryClient = useQueryClient();
 
   const handleRefresh = useCallback(async (storeId?: string, nearbyStoreIds?: number[]) => {
     setRefreshing(true);
@@ -50,8 +52,7 @@ export function useRewardsActions() {
       }
 
       if (storeId) {
-        promises.push(wrap('fetchRewardsActivity', useUserStoreActivity.getState().fetchRewardsActivity(storeId, rewardSort, rewardPointsOrder)));
-        promises.push(wrap('refetchActivity', useUserStoreActivity.getState().refetchActivity(storeId)));
+        promises.push(wrap('refetchActivityQueries', queryClient.invalidateQueries({ queryKey: activityKeys.root })));
       }
 
       await Promise.all(promises);
@@ -62,7 +63,7 @@ export function useRewardsActions() {
       setRefreshing(false);
       console.log('[handleRefresh] finished');
     }
-  }, [setRefreshing, refetchStamps, refetchStampRewards, refetchStreaks, fetchBackendRewards, fetchRewardsData, resetRewardsData, rewardSort, rewardPointsOrder]);
+  }, [setRefreshing, refetchStamps, refetchStampRewards, refetchStreaks, fetchBackendRewards, fetchRewardsData, resetRewardsData, queryClient]);
 
   return {
     handleRefresh,

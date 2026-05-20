@@ -8,3 +8,4 @@ export {
 } from "./profile-queries";
 export { useDeleteAccountMutation, useChangePasswordMutation } from "./account-mutations";
 export { useMutedStoresQuery, useToggleMuteStoreMutation } from "./mute-queries";
+export { useStreakByStoreQuery } from "./streak-queries";
