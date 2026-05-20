@@ -118,17 +118,7 @@ export default function StoreOverviewDetail() {
 
   const isStoreCached = storeId ? fetchedStoreIds.includes(Number(storeId)) : false;
 
-  useEffect(() => {
-    console.log("[StoreDetail] Skeleton state check:", {
-      isSwitchingStore,
-      isLoadingRewardsFeatures,
-      isRefreshingLocal,
-      storeId,
-      hasDisplayStreaks: displayStreaks.length > 0,
-      hasDisplayStamps: displayStamps.length > 0,
-      upcomingStreak: !!upcomingStreak
-    });
-  }, [isSwitchingStore, isLoadingRewardsFeatures, isRefreshingLocal, storeId, displayStreaks.length, displayStamps.length, !!upcomingStreak]);
+
 
   const [isRefreshingLocal, setIsRefreshingLocal] = useState(false);
 

@@ -78,49 +78,42 @@ export const useRewardsDataStore = create<RewardsDataState>((set, get) => ({
 
     try {
       const allStreakStoreIds = Array.from(new Set([...nearbyStoreIds, ...displayStampStoreIds]));
-      console.log('[fetchRewardsData] start', { nearbyStoreIds, displayStampStoreIds });
 
       const p1 = nearbyStoreIds.length > 0
-        ? (console.log('[fetchRewardsData] getStoresWithEnabledActiveStampProgram start'), getStoresWithEnabledActiveStampProgram(nearbyStoreIds).then(res => { console.log('[fetchRewardsData] getStoresWithEnabledActiveStampProgram resolved'); return res; }))
+        ? getStoresWithEnabledActiveStampProgram(nearbyStoreIds)
         : Promise.resolve([]);
 
       const p2 = nearbyStoreIds.length > 0
-        ? (console.log('[fetchRewardsData] store_feature query start'), supabase
+        ? supabase
             .from("store_feature")
             .select("store_id, stamp_enabled")
             .in("store_id", nearbyStoreIds)
             .then(({ data }) => {
-              console.log('[fetchRewardsData] store_feature query resolved');
               return (data || [])
                 .filter((row: any) => row.stamp_enabled === true)
                 .map((row: any) => Number(row.store_id));
-            }))
+            })
         : Promise.resolve([]);
 
-      const p3 = (console.log('[fetchRewardsData] getStoresWithEnabledStreaks start'), getStoresWithEnabledStreaks(allStreakStoreIds).then(res => { console.log('[fetchRewardsData] getStoresWithEnabledStreaks resolved'); return res; }));
+      const p3 = getStoresWithEnabledStreaks(allStreakStoreIds);
 
       const p4 = displayStampStoreIds.length > 0
-        ? (console.log('[fetchRewardsData] getActiveStampProgramRewards start'), getActiveStampProgramRewards(displayStampStoreIds).then(res => { console.log('[fetchRewardsData] getActiveStampProgramRewards resolved'); return res; }))
+        ? getActiveStampProgramRewards(displayStampStoreIds)
         : Promise.resolve([]);
 
-      const p5 = (console.log('[fetchRewardsData] getActiveStreakProgramsByStore start'), getActiveStreakProgramsByStore(allStreakStoreIds).then(res => { console.log('[fetchRewardsData] getActiveStreakProgramsByStore resolved'); return res; }));
+      const p5 = getActiveStreakProgramsByStore(allStreakStoreIds);
 
-      const p6 = (console.log('[fetchRewardsData] getUpcomingStreakProgramsByStore start'), getUpcomingStreakProgramsByStore(allStreakStoreIds).then(res => { console.log('[fetchRewardsData] getUpcomingStreakProgramsByStore resolved'); return res; }));
+      const p6 = getUpcomingStreakProgramsByStore(allStreakStoreIds);
 
       // Wrap each promise with an individual timeout so a single slow query
       // doesn't abort the whole set. We still collect partial results.
       const wrapWithTimeout = async <T>(p: Promise<T>, name: string, ms = 15000) => {
-        const start = Date.now();
-        let timed = false;
-        const timeout = new Promise<never>((_, reject) => setTimeout(() => { timed = true; reject(new Error(`${name} timed out after ${ms}ms`)); }, ms));
+        const timeout = new Promise<never>((_, reject) => setTimeout(() => reject(new Error(`${name} timed out after ${ms}ms`)), ms));
         try {
           const v = await Promise.race([p, timeout]);
-          const dur = Date.now() - start;
-          console.log(`[fetchRewardsData] ${name} resolved in ${dur}ms`);
           return { ok: true as const, value: v };
         } catch (err) {
-          const dur = Date.now() - start;
-          console.warn(`[fetchRewardsData] ${name} failed after ${dur}ms:`, err);
+          console.warn(`[fetchRewardsData] ${name} failed:`, err);
           return { ok: false as const, error: err };
         }
       };
@@ -133,7 +126,6 @@ export const useRewardsDataStore = create<RewardsDataState>((set, get) => ({
         wrapWithTimeout(p5, 'getActiveStreakProgramsByStore'),
         wrapWithTimeout(p6, 'getUpcomingStreakProgramsByStore'),
       ]);
-      console.log('[fetchRewardsData] wrapped Promise.all completed');
 
       // Convert wrapped results into the original results array shape, using
       // empty fallbacks when a query failed or timed out.
