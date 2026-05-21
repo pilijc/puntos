@@ -23,45 +23,32 @@ export function useRewardsActions() {
   const handleRefresh = useCallback(async (storeId?: string, nearbyStoreIds?: number[]) => {
     setRefreshing(true);
     try {
-      console.log("[handleRefresh] start", { storeId, nearbyStoreIds });
-      const wrap = (name: string, p: Promise<any>) => {
-        console.log(`[handleRefresh] start ${name}`);
-        return p.then((res) => {
-          console.log(`[handleRefresh] resolved ${name}`);
-          return res;
-        }).catch((err) => {
-          console.error(`[handleRefresh] error ${name}`, err);
-          throw err;
-        });
-      };
       // Reset fetchedStoreIds so fetchRewardsData bypasses the stale-while-revalidate
       // guard and forces a fresh fetch of activeStreakProgramMap / upcomingStreakProgramMap.
       // Without this, a program that transitions upcoming → active stays stale until reload.
       resetRewardsData();
 
       const promises: Promise<any>[] = [
-        wrap('refetchStamps', refetchStamps()),
-        wrap('refetchStampRewards', refetchStampRewards()),
-        wrap('refetchStreaks', refetchStreaks()),
+        refetchStamps(),
+        refetchStampRewards(),
+        refetchStreaks(),
       ];
 
       // Re-fetch streak/stamp program maps for the relevant stores
       if (nearbyStoreIds && nearbyStoreIds.length > 0) {
         const stampIds = storeId ? [Number(storeId)] : nearbyStoreIds;
-        promises.push(wrap('fetchRewardsData', fetchRewardsData(nearbyStoreIds, stampIds)));
+        promises.push(fetchRewardsData(nearbyStoreIds, stampIds));
       }
 
       if (storeId) {
-        promises.push(wrap('refetchActivityQueries', queryClient.invalidateQueries({ queryKey: activityKeys.root })));
+        promises.push(queryClient.invalidateQueries({ queryKey: activityKeys.root }));
       }
 
       await Promise.all(promises);
-      console.log('[handleRefresh] all promises resolved');
     } catch (error) {
       console.error("Refresh failed:", error);
     } finally {
       setRefreshing(false);
-      console.log('[handleRefresh] finished');
     }
   }, [setRefreshing, refetchStamps, refetchStampRewards, refetchStreaks, fetchBackendRewards, fetchRewardsData, resetRewardsData, queryClient]);
 

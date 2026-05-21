@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, TextInput } from "@/tw";
 import React, { useMemo, useCallback, useEffect, useState } from "react";
 import { Search, Store, X } from "lucide-react-native";
 import { useTranslation } from "react-i18next";
-import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "@/tw";
 import { useFocusEffect } from "expo-router";
 import { useStoreStore } from "@/store/user/store-store";
 import { useRewardsUiStore } from "@/store/user/rewards-ui-store";
@@ -271,19 +271,25 @@ export default function StoreListScreen() {
         }
         ListHeaderComponent={
           <View className="px-6 mb-4">
-            <View className="flex-row items-center bg-white dark:bg-darkBackgroundCard rounded-2xl px-4 py-1 border border-neutral-100 dark:border-darkBorder shadow-sm shadow-neutral-100 dark:shadow-none">
-              <Search size={20} color="#9CA3AF" />
+            <View className="flex-row items-center bg-white dark:bg-darkBackgroundCard rounded-2xl px-4 border border-neutral-100 dark:border-darkBorder shadow-sm shadow-neutral-100 dark:shadow-none h-11">
+              <Search size={18} color="#9CA3AF" />
               <TextInput
                 placeholder={translate("user.rewards.storesList.searchPlaceholder")}
                 placeholderTextColor="#9CA3AF"
-                className="flex-1 ml-3 font-poppins text-sm text-neutral-900 dark:text-white pt-0 pb-0"
+                className="flex-1 ml-3 font-poppins text-sm text-neutral-900 dark:text-white"
+                style={{
+                  height: "100%",
+                  paddingVertical: 0,
+                  textAlignVertical: "center",
+                  // @ts-ignore
+                  outlineStyle: "none",
+                }}
                 value={searchQuery}
                 onChangeText={setSearchQuery}
-                style={{ textAlignVertical: "center" }}
               />
               {searchQuery.length > 0 && (
-                <TouchableOpacity onPress={() => setSearchQuery("")}>
-                  <X size={18} color="#9CA3AF" />
+                <TouchableOpacity onPress={() => setSearchQuery("")} className="p-1">
+                  <X size={16} color="#9CA3AF" />
                 </TouchableOpacity>
               )}
             </View>

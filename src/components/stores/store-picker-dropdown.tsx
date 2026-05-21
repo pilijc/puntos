@@ -7,7 +7,7 @@ import {
   useWindowDimensions,
 } from "react-native";
 import { View, Pressable, Text } from "@/tw";
-import { Check, ChevronDown, Search, Store, X } from "lucide-react-native";
+import { Check, ChevronDown, Search, X } from "lucide-react-native";
 import { StorePickerDropdownProps } from "@/type/store-manager/metric";
 import { useTranslation } from "react-i18next";
 
@@ -116,11 +116,6 @@ export function StorePickerDropdown({
               contentContainerStyle={{ flexGrow: 1 }}
               ListEmptyComponent={
                 <View className="py-8 px-4 items-center justify-center">
-                  <Store
-                    size={24}
-                    color={isDark ? "#404040" : "#E2E8F0"}
-                    className="mb-2"
-                  />
                   <Text className="text-sm font-poppins text-textSecondary dark:text-darkTextSecondary text-center">
                     {translate(
                       "storeManager.storesList.noMatching",
@@ -157,17 +152,6 @@ export function StorePickerDropdown({
                         }}
                       >
                         <View className="flex-row items-center flex-1 mr-2">
-                          <Store
-                            size={16}
-                            color={
-                              isActive
-                                ? "#FF6600"
-                                : isDark
-                                  ? "#A3A3A3"
-                                  : "#94A3B8"
-                            }
-                            className="mr-3"
-                          />
                           <Text
                             className={`text-sm font-poppins flex-1 ${isActive ? "text-[#FF6600] font-poppins-semibold" : "text-slate-600 dark:text-darkTextSecondary"}`}
                             numberOfLines={1}
