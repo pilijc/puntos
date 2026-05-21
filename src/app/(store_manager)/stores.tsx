@@ -200,7 +200,7 @@ function StoreRowItem({
         </View>
         <View className="flex-row items-center gap-1.5">
           {isLocked ? (
-            <View className="h-5 px-2 rounded-full bg-red-100 dark:bg-red-950/40 items-center justify-center flex-row gap-x-1 border border-red-200 dark:border-red-900/50">
+            <View className="h-5 px-2 rounded-full bg-red-100 dark:bg-red-950/40 items-center justify-center flex-row gap-x-1">
               <Lock size={10} color="#EF4444" />
               <Text className="text-[10px] leading-4 font-poppins-semibold text-red-500 dark:text-red-400">
                 {translate("storeManager.stores.locked")}
@@ -269,7 +269,6 @@ export default function StoreManagerStores() {
       ? String(ownerStoreIdForCampaigns)
       : undefined,
   );
-  const campaignsLocked = !permLoading && !canEdit;
   const [createGuard, setCreateGuard] = useState<{
     checked: boolean;
     allowed: boolean;
@@ -504,7 +503,7 @@ export default function StoreManagerStores() {
           }
         >
           {error && !loading && (
-            <View className="flex-row items-center gap-2 bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 rounded-xl p-3 mb-4">
+            <View className="flex-row items-center gap-2 bg-red-50 dark:bg-red-900/20 border-l-4 rounded-xl p-3 mb-4">
               <AlertCircle size={16} color="#DC2626" />
               <Text className="flex-1 text-sm font-poppins text-red-600 dark:text-red-400">
                 {error}
