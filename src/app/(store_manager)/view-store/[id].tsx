@@ -367,7 +367,7 @@ export default function ViewStore() {
                       router.push({ pathname: item.route, params: { storeId } })
                     }
                     style={{ width: "32.5%" }}
-                    className="border border-slate-00 dark:border-darkBorder rounded-xl p-3"
+                    className="border border-slate-100 dark:border-darkBorder rounded-xl p-3"
                   >
                     <View className="w-9 h-9 rounded-lg items-center justify-center mb-1 -ml-1">
                       {item.icon}
