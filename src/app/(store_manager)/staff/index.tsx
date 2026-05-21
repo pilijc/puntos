@@ -13,7 +13,14 @@ import { deleteStoreStaff } from "@/services/store-manager/staff-service";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { View, Text, TouchableOpacity, ScrollView, SafeAreaView } from "@/tw";
 import StaffSkeleton from "@/components/skeleton/store_manager/staff-skeleton";
-import { UsersRound, Pencil, Trash, UserRoundX, Plus } from "lucide-react-native";
+import {
+  UsersRound,
+  Pencil,
+  Trash,
+  UserRoundX,
+  Plus,
+} from "lucide-react-native";
+import { useStorePremiumCampaignEdit } from "@/hooks/store-manager/use-store-premium-campaign-edit";
 
 const WEB_MAX_WIDTH = 896;
 
@@ -26,8 +33,12 @@ export default function ViewStaff() {
   const isDark = useColorScheme() === "dark";
   const { modal, setModal } = useStaffStore();
   const [deleting, setDeleting] = useState<string | null>(null);
-
-  const { data, isPending, isRefetching, refetch } = useStoreStaffQuery(storeId);
+  const { canEdit, loading: permLoading } = useStorePremiumCampaignEdit(
+    storeId ? String(storeId) : undefined,
+  );
+  const isLocked = !permLoading && !canEdit;
+  const { data, isPending, isRefetching, refetch } =
+    useStoreStaffQuery(storeId);
   const staff = data ?? [];
   const loading = isPending;
   const refreshing = isRefetching && !isPending;
@@ -43,10 +54,13 @@ export default function ViewStaff() {
   }, [refetch]);
 
   const confirmDelete = (staffMemberId: string, name: string | null) => {
-    const displayName = name ?? translate("store_manager.staff.removeFallbackName");
+    const displayName =
+      name ?? translate("store_manager.staff.removeFallbackName");
     setModal({
       title: translate("storeManager.staff.removeTitle"),
-      message: translate("storeManager.staff.removeMessage", { name: displayName }),
+      message: translate("storeManager.staff.removeMessage", {
+        name: displayName,
+      }),
       buttons: [
         {
           label: translate("label.cancel"),
@@ -61,7 +75,9 @@ export default function ViewStaff() {
             setDeleting(staffMemberId);
             setModal({
               title: translate("storeManager.staff.removeTitle"),
-              message: translate("storeManager.staff.removeMessage", { name: displayName }),
+              message: translate("storeManager.staff.removeMessage", {
+                name: displayName,
+              }),
               buttons: [
                 {
                   label: translate("label.cancel"),
@@ -88,7 +104,13 @@ export default function ViewStaff() {
               setModal({
                 title: translate("storeManager.staff.removeFailedTitle"),
                 message: translate("storeManager.staff.removeFailedMessage"),
-                buttons: [{ label: translate("label.ok"), onPress: () => setModal(null), variant: "secondary" }],
+                buttons: [
+                  {
+                    label: translate("label.ok"),
+                    onPress: () => setModal(null),
+                    variant: "secondary",
+                  },
+                ],
               });
             } finally {
               setDeleting(null);
@@ -100,7 +122,10 @@ export default function ViewStaff() {
   };
 
   return (
-    <SafeAreaView edges={["top"]} className="flex-1 bg-backgroundMuted dark:bg-darkBackgroundMuted">
+    <SafeAreaView
+      edges={["top"]}
+      className="flex-1 bg-backgroundMuted dark:bg-darkBackgroundMuted"
+    >
       <Modal
         visible={!!modal}
         onClose={() => setModal(null)}
@@ -133,17 +158,32 @@ export default function ViewStaff() {
           />
         }
       >
-        <View className={Platform.OS === "web" ? "items-center" : ""} style={Platform.OS === "web" ? { width: "100%" } : undefined}>
-          <View style={Platform.OS === "web" ? { width: "100%", maxWidth: WEB_MAX_WIDTH } : undefined}>
+        <View
+          className={Platform.OS === "web" ? "items-center" : ""}
+          style={Platform.OS === "web" ? { width: "100%" } : undefined}
+        >
+          <View
+            style={
+              Platform.OS === "web"
+                ? { width: "100%", maxWidth: WEB_MAX_WIDTH }
+                : undefined
+            }
+          >
             <View className="mx-4 mt-2 mb-4 flex-row items-center bg-white dark:bg-darkBackgroundCard rounded-xl border border-slate-100 dark:border-darkBorder px-4 py-3 gap-x-3">
               <View className="w-10 h-10 items-center justify-center">
                 <UsersRound size={20} color="#FF6600" />
               </View>
               <View className="flex-1">
                 <Text className="text-sm font-poppins-bold text-slate-800 dark:text-darkTextPrimary">
-                  {loading ? "—" : translate("storeManager.staff.memberCount", { count: staff.length })}
+                  {loading
+                    ? "—"
+                    : translate("storeManager.staff.memberCount", {
+                        count: staff.length,
+                      })}
                 </Text>
-                <Text className="text-xs font-poppins text-slate-400 dark:text-darkTextSecondary">{translate("storeManager.staff.subtitle")}</Text>
+                <Text className="text-xs font-poppins text-slate-400 dark:text-darkTextSecondary">
+                  {translate("storeManager.staff.subtitle")}
+                </Text>
               </View>
               {staff.length > 0 && (
                 <TouchableOpacity
@@ -156,8 +196,15 @@ export default function ViewStaff() {
                   className="flex-row items-center gap-x-1"
                   activeOpacity={0.7}
                 >
-                  <Text className="text-xs font-poppins-semibold text-primary">{translate("label.add")}</Text>
-                  <Plus size={14} color="#FF6600" strokeWidth={3} style={{ marginTop: -1.5 }}/>
+                  <Text className="text-xs font-poppins-semibold text-primary">
+                    {translate("label.add")}
+                  </Text>
+                  <Plus
+                    size={14}
+                    color="#FF6600"
+                    strokeWidth={3}
+                    style={{ marginTop: -1.5 }}
+                  />
                 </TouchableOpacity>
               )}
             </View>
@@ -167,40 +214,54 @@ export default function ViewStaff() {
             ) : staff.length === 0 ? (
               <View className="mx-4 bg-white dark:bg-darkBackgroundCard rounded-xl border border-slate-100 dark:border-darkBorder px-4 py-14 items-center gap-y-2">
                 <UserRoundX size={36} color="#CBD5E1" />
-                <Text className="text-sm font-poppins-semibold text-slate-400 dark:text-darkTextSecondary">{translate("storeManager.staff.emptyTitle")}</Text>
+                <Text className="text-sm font-poppins-semibold text-slate-400 dark:text-darkTextSecondary">
+                  {translate("storeManager.staff.emptyTitle")}
+                </Text>
                 <Text className="text-xs font-poppins text-slate-400 dark:text-darkTextSecondary text-center px-6">
                   {translate("storeManager.staff.emptyBody")}
                 </Text>
-                <TouchableOpacity
-                  onPress={() =>
-                    router.push({
-                      pathname: "/(store_manager)/staff/add-staff",
-                      params: { storeId },
-                    })
-                  }
-                  className="mt-2 bg-primary px-5 py-2.5 rounded-xl"
-                  activeOpacity={0.85}
-                >
-                  <Text className="text-xs font-poppins-semibold text-white">{translate("storeManager.staff.addFirst")}</Text>
-                </TouchableOpacity>
+                {!isLocked && (
+                  <TouchableOpacity
+                    onPress={() =>
+                      router.push({
+                        pathname: "/(store_manager)/staff/add-staff",
+                        params: { storeId },
+                      })
+                    }
+                    className="mt-2 bg-primary px-5 py-2.5 rounded-xl"
+                    activeOpacity={0.85}
+                  >
+                    <Text className="text-xs font-poppins-semibold text-white">
+                      {translate("storeManager.staff.addFirst")}
+                    </Text>
+                  </TouchableOpacity>
+                )}
               </View>
             ) : (
               <View className="mx-4 bg-white dark:bg-darkBackgroundCard rounded-xl border border-slate-100 dark:border-darkBorder overflow-hidden">
                 {staff.map((member, index) => {
-                  const user = member.user as unknown as { id: string; name: string | null; email: string } | null;
+                  const user = member.user as unknown as {
+                    id: string;
+                    name: string | null;
+                    email: string;
+                  } | null;
                   const isLast = index === staff.length - 1;
                   return (
                     <View key={member.id}>
                       <View className="flex-row items-center px-4 py-3.5 gap-x-3">
                         <View className="w-10 h-10 rounded-full items-center justify-center bg-primary/10">
-                          <Text className="text-sm font-poppins-bold text-primary">{getInitials(user?.name)}</Text>
+                          <Text className="text-sm font-poppins-bold text-primary">
+                            {getInitials(user?.name)}
+                          </Text>
                         </View>
 
                         <View className="flex-1">
                           <Text className="text-sm font-poppins-semibold text-slate-800 dark:text-darkTextPrimary leading-5">
                             {user?.name ?? "—"}
                           </Text>
-                          <Text className="text-xs font-poppins text-slate-400 dark:text-darkTextSecondary">{user?.email ?? "—"}</Text>
+                          <Text className="text-xs font-poppins text-slate-400 dark:text-darkTextSecondary">
+                            {user?.email ?? "—"}
+                          </Text>
                         </View>
 
                         <View className="flex-row items-center gap-x-1">
@@ -214,12 +275,17 @@ export default function ViewStaff() {
                             }
                             className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-darkBackgroundMuted items-center justify-center"
                           >
-                            <Pencil size={12} color={isDark ? "#94A3B8" : "#64748B"} />
+                            <Pencil
+                              size={12}
+                              color={isDark ? "#94A3B8" : "#64748B"}
+                            />
                           </TouchableOpacity>
                           <TouchableOpacity
                             activeOpacity={0.7}
                             disabled={!!deleting}
-                            onPress={() => confirmDelete(member.id, user?.name ?? null)}
+                            onPress={() =>
+                              confirmDelete(member.id, user?.name ?? null)
+                            }
                             className="w-8 h-8 rounded-lg bg-red-50 dark:bg-red-950 items-center justify-center"
                           >
                             <Trash size={12} color="#EF4444" />
@@ -227,7 +293,9 @@ export default function ViewStaff() {
                         </View>
                       </View>
 
-                      {!isLast && <View className="mx-4 h-px bg-slate-100 dark:bg-darkBackgroundMuted" />}
+                      {!isLast && (
+                        <View className="mx-4 h-px bg-slate-100 dark:bg-darkBackgroundMuted" />
+                      )}
                     </View>
                   );
                 })}

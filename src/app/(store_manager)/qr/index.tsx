@@ -14,6 +14,7 @@ import {
   useQRConfigQuery,
   useToggleQREnabledMutation,
 } from "@/hooks/store-manager/rq";
+import { useStorePremiumCampaignEdit } from "@/hooks/store-manager/use-store-premium-campaign-edit";
 
 const WEB_MAX_WIDTH = 896;
 
@@ -32,6 +33,8 @@ export default function QRIndex() {
 
   const { data, isPending, isRefetching, refetch } =
     useQRConfigQuery(storeIdForFetch);
+  const { canEdit, loading: permLoading } = useStorePremiumCampaignEdit(storeIdForFetch);
+  const campaignsLocked = !permLoading && !canEdit;
   const toggleMutation = useToggleQREnabledMutation();
   const config = data ?? null;
   const loading = isPending;
@@ -46,7 +49,7 @@ export default function QRIndex() {
   const handleRefresh = () => void refetch();
 
   const handleToggleEnabled = async () => {
-    if (!config || toggling || !storeIdForFetch) return;
+    if (!config || toggling || !storeIdForFetch || campaignsLocked) return;
     setToggling(true);
     try {
       const next = !config.qr_enabled;
@@ -129,7 +132,7 @@ export default function QRIndex() {
                 <Text className="text-sm font-poppins-semibold text-textSecondary dark:text-darkTextSecondary">
                   {translate("storeManager.qr.notConfiguredTitle")}
                 </Text>
-                <Text className="text-xs font-poppins text-textSecondary dark:text-darkTextSecondary text-center px-6 mb-2">
+                 <Text className="text-xs font-poppins text-textSecondary dark:text-darkTextSecondary text-center px-6 mb-2">
                   {translate("storeManager.qr.notConfiguredBody")}
                 </Text>
                 <Button
@@ -142,6 +145,7 @@ export default function QRIndex() {
                   }
                   variant="primary"
                   icon="Plus"
+                  disabled={campaignsLocked}
                 />
               </View>
             ) : (
@@ -178,6 +182,7 @@ export default function QRIndex() {
                       value={config.qr_enabled}
                       onValueChange={handleToggleEnabled}
                       size="xs"
+                      disabled={campaignsLocked}
                     />
                   )}
                 </View>
@@ -290,6 +295,7 @@ export default function QRIndex() {
                       }
                       variant="primary"
                       fullWidth
+                      disabled={campaignsLocked}
                     />
                   </View>
                 </View>

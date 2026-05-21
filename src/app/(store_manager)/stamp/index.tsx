@@ -187,18 +187,6 @@ export default function ViewStamp() {
         }}
       />
 
-      {campaignsLocked ? (
-        <View className={isWeb ? "px-4 pt-3 items-center" : "px-4 pt-3"}>
-          <View className={`w-full rounded-xl border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/40 px-3 py-2.5 ${isWeb ? "max-w-4xl" : ""}`}>
-            <Text className="text-xs font-poppins text-amber-900 dark:text-amber-200 leading-5">
-              {expiresAtIso
-                ? translate("storeManager.premiumCampaigns.bannerWithExpiry", { date: formatDate(expiresAtIso) })
-                : translate("storeManager.premiumCampaigns.banner")}
-            </Text>
-          </View>
-        </View>
-      ) : null}
-
       {Platform.OS === "web" ? (
         <View className="bg-backgroundMuted dark:bg-darkBackground pt-4 items-center">
           <View style={{ width: "100%", maxWidth: WEB_MAX_WIDTH, paddingHorizontal: 16 }}>

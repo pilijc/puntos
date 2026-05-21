@@ -12,7 +12,7 @@
     "inactive": "Inactive"
   },
   "noAddress": "No address provided",
-  "locked": "Locked",
+  "locked": "Restricted",
   "lockedSubscriptionEnded": "Subscription ended - this store is view-only until you upgrade.",
   "upgrade": "Upgrade",
   "empty": {

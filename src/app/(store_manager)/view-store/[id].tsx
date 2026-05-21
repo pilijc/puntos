@@ -6,6 +6,7 @@ import { getStoreById } from "@/services/store-service";
 import { type_badge } from "@/type/store-manager/transaction";
 import { formatTxDateTime } from "@/utils/store_manager/transaction";
 import { useStoreTransactionsPreview } from "@/hooks/store-manager/rq";
+import { useStorePremiumCampaignEdit } from "@/hooks/store-manager/use-store-premium-campaign-edit";
 import { listManagerConversations } from "@/services/support-chat-service";
 import { useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
 import React, {
@@ -32,6 +33,7 @@ import {
   ScrollView as RNScrollView,
 } from "react-native";
 import {
+  AlertCircle,
   Building2,
   Gift,
   QrCode,
@@ -66,6 +68,10 @@ export default function ViewStore() {
   const txPreview = useStoreTransactionsPreview(
     Number.isFinite(storeId) && storeId > 0 ? storeId : undefined,
   );
+  const { canEdit, loading: permLoading } = useStorePremiumCampaignEdit(
+    id ? String(id) : undefined,
+  );
+  const isLocked = !permLoading && !canEdit;
   const recentTxs = txPreview.data?.items ?? [];
   const txLoading = txPreview.isPending;
   const [modal, setModal] = useState<{
@@ -282,6 +288,19 @@ export default function ViewStore() {
           />
         }
       >
+        {isLocked ? (
+          <View className="items-center px-4 mt-2 mb-1">
+            <View
+              className="w-full bg-red-50 dark:bg-red-950/20 rounded-xl p-3 flex-row items-center gap-x-2.5"
+              style={isWeb ? { maxWidth: 860 } : undefined}
+            >
+              <AlertCircle size={18} color="#EF4444" />
+              <Text className="flex-1 text-xs font-poppins text-red-600 dark:text-red-400">
+                {translate("storeManager.stores.lockedSubscriptionEnded")}
+              </Text>
+            </View>
+          </View>
+        ) : null}
         <View className="items-center">
           <View className="w-full px-4 items-center">
             <View
@@ -442,7 +461,7 @@ export default function ViewStore() {
                   <Loader2 className="animate-spin" size={28} color="#CBD5E1" />
                 </View>
               ) : recentTxs.length === 0 ? (
-                <View className="rounded-xl border border-slate-100 dark:border-darkBorder px-4 py-10 items-center gap-y-2">
+                <View className="bg-white dark:bg-darkBackgroundCard rounded-xl border border-slate-100 dark:border-darkBorder px-4 py-10 items-center gap-y-2">
                   <ReceiptText size={32} color="#CBD5E1" />
                   <Text className="text-xs font-poppins text-slate-400 dark:text-darkTextSecondary">
                     {translate("storeManager.viewStore.noTransactionsYet")}
@@ -527,7 +546,7 @@ export default function ViewStore() {
                 <Loader2 className="animate-spin" size={28} color="#CBD5E1" />
               </View>
             ) : recentTxs.length === 0 ? (
-              <View className="rounded-xl border border-slate-100 dark:border-darkBorder px-4 py-10 items-center gap-y-2">
+              <View className="bg-white dark:bg-darkBackgroundCard rounded-xl border border-slate-100 dark:border-darkBorder px-4 py-10 items-center gap-y-2">
                 <ReceiptText size={32} color="#CBD5E1" />
                 <Text className="text-xs font-poppins text-slate-400 dark:text-darkTextSecondary">
                   {translate("storeManager.viewStore.noTransactionsYet")}

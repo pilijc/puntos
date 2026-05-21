@@ -8,7 +8,15 @@ import { Modal, type ModalButton } from "@/components/modal";
 import { useManagerStoresStore } from "@/store/manager-stores-store";
 import { View, Text, TouchableOpacity, ScrollView, SafeAreaView } from "@/tw";
 import { checkStoreCreationLimit } from "@/services/store-manager/subscription-limits";
-import { AlertCircle, ChartBarStacked, ChevronRight, MapPin, Plus, Store } from "lucide-react-native";
+import {
+  AlertCircle,
+  ChartBarStacked,
+  ChevronRight,
+  Lock,
+  MapPin,
+  Plus,
+  Store,
+} from "lucide-react-native";
 import { useStorePremiumCampaignEdit } from "@/hooks/store-manager/use-store-premium-campaign-edit";
 
 type TabKey = "all" | "active" | "pending" | "inactive";
@@ -53,11 +61,14 @@ function StoreCard({ store, router }: { store: StoreRow; router: any }) {
     status === "active" || status === "pending_review" || status === "inactive"
       ? status
       : "inactive";
-  const isLocked = Boolean(store.billing_suspended);
+  const { canEdit, loading: permLoading } = useStorePremiumCampaignEdit(
+    store.id ? String(store.id) : undefined,
+  );
+  const isLocked = !permLoading && !canEdit;
 
   return (
     <TouchableOpacity
-      className="bg-white dark:bg-darkBackgroundMuted border border-slate-100 dark:border-darkBorder rounded-xl overflow-hidden mb-3"
+      className={`bg-white dark:bg-darkBackgroundMuted border border-slate-100 dark:border-darkBorder rounded-xl overflow-hidden mb-3 ${isLocked ? "opacity-100" : ""}`}
       activeOpacity={0.95}
       onPress={() => router.push(`/(store_manager)/view-store/${store.id}`)}
     >
@@ -83,8 +94,9 @@ function StoreCard({ store, router }: { store: StoreRow; router: any }) {
             </Text>
             <View className="flex-row items-center gap-1.5">
               {isLocked ? (
-                <View className="self-center h-5 px-2 rounded-full bg-slate-200 dark:bg-darkBackgroundCard items-center justify-center">
-                  <Text className="text-[9px] leading-4 font-poppins-bold uppercase tracking-wider text-slate-600 dark:text-darkTextSoft">
+                <View className="self-center h-5 px-2 rounded-full bg-red-100 dark:bg-red-950/40 items-center justify-center flex-row gap-x-1">
+                  <Lock size={10} color="#EF4444" />
+                  <Text className="text-[9px] leading-4 font-poppins-bold uppercase tracking-wider text-red-500 dark:text-red-400">
                     {translate("storeManager.stores.locked")}
                   </Text>
                 </View>
@@ -120,14 +132,98 @@ function StoreCard({ store, router }: { store: StoreRow; router: any }) {
               </Text>
             </View>
           ) : null}
-          {isLocked ? (
-            <Text className="text-[11px] font-poppins text-slate-500 dark:text-darkTextMuted">
-              {translate("storeManager.stores.lockedSubscriptionEnded")}
-            </Text>
-          ) : null}
         </View>
       </View>
     </TouchableOpacity>
+  );
+}
+
+function StoreRowItem({
+  store,
+  router,
+  isLast,
+}: {
+  store: StoreRow;
+  router: any;
+  isLast: boolean;
+}) {
+  const { t: translate } = useTranslation();
+  const { canEdit, loading: permLoading } = useStorePremiumCampaignEdit(
+    store.id ? String(store.id) : undefined,
+  );
+  const isLocked = !permLoading && !canEdit;
+  const status = store.status ?? "inactive";
+  const badgeStyle = storeStatusBadgeStyle(status);
+  const badgeLabelKey =
+    status === "active" || status === "pending_review" || status === "inactive"
+      ? status
+      : "inactive";
+
+  return (
+    <View>
+      <TouchableOpacity
+        activeOpacity={0.95}
+        onPress={() => router.push(`/(store_manager)/view-store/${store.id}`)}
+        className={`flex-row items-center gap-x-3 px-4 py-4 ${isLocked ? "opacity-100" : ""}`}
+      >
+        <View className="w-[52px] h-[52px] rounded-xl bg-slate-100 dark:bg-darkBackgroundCard items-center justify-center overflow-hidden">
+          {store.logo ? (
+            <Image
+              source={{ uri: store.logo }}
+              style={{ width: 52, height: 52 }}
+              contentFit="cover"
+            />
+          ) : (
+            <Store size={24} color="#94A3B8" />
+          )}
+        </View>
+
+        <View className="flex-1 min-w-0 gap-y-1">
+          <View className="flex-row items-center justify-between gap-x-2">
+            <Text
+              className="font-poppins-bold text-[15px] text-slate-900 dark:text-darkTextPrimary flex-1"
+              numberOfLines={1}
+            >
+              {store.name}
+            </Text>
+          </View>
+
+          <View className="flex-row items-center gap-1">
+            <MapPin size={12} color="#94A3B8" />
+            <Text
+              className="text-xs font-poppins text-slate-400 dark:text-darkTextSecondary flex-1"
+              numberOfLines={1}
+            >
+              {store.address ?? translate("storeManager.stores.noAddress")}
+            </Text>
+          </View>
+        </View>
+        <View className="flex-row items-center gap-1.5">
+          {isLocked ? (
+            <View className="h-5 px-2 rounded-full bg-red-100 dark:bg-red-950/40 items-center justify-center flex-row gap-x-1 border border-red-200 dark:border-red-900/50">
+              <Lock size={10} color="#EF4444" />
+              <Text className="text-[10px] leading-4 font-poppins-semibold text-red-500 dark:text-red-400">
+                {translate("storeManager.stores.locked")}
+              </Text>
+            </View>
+          ) : null}
+          <View
+            className={`h-5 px-2 rounded-full ${badgeStyle.bg} items-center justify-center`}
+          >
+            <Text
+              className={`text-[10px] leading-4 font-poppins-semibold ${badgeStyle.text}`}
+            >
+              {translate(`storeManager.stores.badge.${badgeLabelKey}`)}
+            </Text>
+          </View>
+        </View>
+        <ChevronRight size={20} color="#94A3B8" />
+      </TouchableOpacity>
+
+      {!isLast ? (
+        <View className="h-px bg-slate-100 dark:bg-darkBackgroundCard" />
+      ) : null}
+    </View>
   );
 }
 
@@ -281,25 +377,6 @@ export default function StoreManagerStores() {
         </View>
       </View>
 
-      {(anyLocked || campaignsLocked) && (
-        <View className="px-4 pt-3">
-          <View className="rounded-xl border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/40 px-3 py-2.5">
-            <Text className="text-xs font-poppins text-amber-900 dark:text-amber-200 leading-5">
-              {translate("storeManager.premiumCampaigns.banner")}
-            </Text>
-            <TouchableOpacity
-              onPress={() => router.push("/(store_manager)/subscription")}
-              activeOpacity={0.85}
-              className="self-start mt-2 bg-primary px-4 py-2 rounded-xl"
-            >
-              <Text className="text-xs font-poppins-semibold text-white">
-                {translate("storeManager.stores.upgrade")}
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      )}
-
       {Platform.OS === "web" ? (
         <View className="bg-backgroundMuted dark:bg-darkBackground px-4 pt-4 items-center">
           <View className="w-full max-w-4xl bg-white dark:bg-darkBackgroundMuted border border-slate-100 dark:border-darkBorder rounded-xl overflow-hidden flex-row flex-wrap p-1 gap-1">
@@ -447,88 +524,14 @@ export default function StoreManagerStores() {
           Platform.OS === "web" ? (
             <View className="items-center">
               <View className="w-full max-w-4xl bg-white dark:bg-darkBackgroundMuted border border-slate-100 dark:border-darkBorder rounded-xl overflow-hidden">
-                {filtered.map((store, idx) => {
-                  const status = store.status ?? "inactive";
-                  const badgeStyle = storeStatusBadgeStyle(status);
-                  const badgeLabelKey =
-                    status === "active" ||
-                    status === "pending_review" ||
-                    status === "inactive"
-                      ? status
-                      : "inactive";
-                  const isLocked = Boolean(store.billing_suspended);
-
-                  return (
-                    <View key={store.id}>
-                      <TouchableOpacity
-                        activeOpacity={0.95}
-                        onPress={() =>
-                          router.push(`/(store_manager)/view-store/${store.id}`)
-                        }
-                        className="flex-row items-center gap-x-3 px-4 py-4"
-                      >
-                        <View className="w-[52px] h-[52px] rounded-xl bg-slate-100 dark:bg-darkBackgroundCard items-center justify-center overflow-hidden">
-                          {store.logo ? (
-                            <Image
-                              source={{ uri: store.logo }}
-                              style={{ width: 52, height: 52 }}
-                              contentFit="cover"
-                            />
-                          ) : (
-                            <Store size={24} color="#94A3B8" />
-                          )}
-                        </View>
-
-                        <View className="flex-1 min-w-0 gap-y-1">
-                          <View className="flex-row items-center justify-between gap-x-2">
-                            <Text
-                              className="font-poppins-bold text-[15px] text-slate-900 dark:text-darkTextPrimary flex-1"
-                              numberOfLines={1}
-                            >
-                              {store.name}
-                            </Text>
-                          </View>
-
-                          <View className="flex-row items-center gap-1">
-                            <MapPin size={12} color="#94A3B8" />
-                            <Text
-                              className="text-xs font-poppins text-slate-400 dark:text-darkTextSecondary flex-1"
-                              numberOfLines={1}
-                            >
-                              {store.address ??
-                                translate("storeManager.stores.noAddress")}
-                            </Text>
-                          </View>
-                        </View>
-                        <View className="flex-row items-center gap-1.5">
-                          {isLocked ? (
-                            <View className="h-5 px-2 rounded-full bg-slate-200 dark:bg-darkBackgroundCard items-center justify-center">
-                              <Text className="text-[10px] leading-4 font-poppins-semibold text-slate-600 dark:text-darkTextSoft">
-                                {translate("storeManager.stores.locked")}
-                              </Text>
-                            </View>
-                          ) : null}
-                          <View
-                            className={`h-5 px-2 rounded-full ${badgeStyle.bg} items-center justify-center`}
-                          >
-                            <Text
-                              className={`text-[10px] leading-4 font-poppins-semibold ${badgeStyle.text}`}
-                            >
-                              {translate(
-                                `storeManager.stores.badge.${badgeLabelKey}`,
-                              )}
-                            </Text>
-                          </View>
-                        </View>
-                        <ChevronRight size={20} color="#94A3B8" />
-                      </TouchableOpacity>
-
-                      {idx < filtered.length - 1 ? (
-                        <View className="h-px bg-slate-100 dark:bg-darkBackgroundCard" />
-                      ) : null}
-                    </View>
-                  );
-                })}
+                {filtered.map((store, idx) => (
+                  <StoreRowItem
+                    key={store.id}
+                    store={store}
+                    router={router}
+                    isLast={idx === filtered.length - 1}
+                  />
+                ))}
               </View>
             </View>
           ) : !loading &&
@@ -537,88 +540,14 @@ export default function StoreManagerStores() {
             Platform.OS === "android" ? (
             <View>
               <View className="bg-white dark:bg-darkBackgroundMuted border border-slate-100 dark:border-darkBorder rounded-xl overflow-hidden">
-                {filtered.map((store, idx) => {
-                  const status = store.status ?? "inactive";
-                  const badgeStyle = storeStatusBadgeStyle(status);
-                  const badgeLabelKey =
-                    status === "active" ||
-                    status === "pending_review" ||
-                    status === "inactive"
-                      ? status
-                      : "inactive";
-                  const isLocked = Boolean(store.billing_suspended);
-
-                  return (
-                    <View key={store.id}>
-                      <TouchableOpacity
-                        activeOpacity={0.95}
-                        onPress={() =>
-                          router.push(`/(store_manager)/view-store/${store.id}`)
-                        }
-                        className="flex-row items-center gap-x-3 px-4 py-4"
-                      >
-                        <View className="w-[52px] h-[52px] rounded-xl bg-slate-100 dark:bg-darkBackgroundCard items-center justify-center overflow-hidden">
-                          {store.logo ? (
-                            <Image
-                              source={{ uri: store.logo }}
-                              style={{ width: 52, height: 52 }}
-                              contentFit="cover"
-                            />
-                          ) : (
-                            <Store size={24} color="#94A3B8" />
-                          )}
-                        </View>
-
-                        <View className="flex-1 min-w-0 gap-y-1">
-                          <View className="flex-row items-center justify-between gap-x-2">
-                            <Text
-                              className="font-poppins-bold text-[15px] text-slate-900 dark:text-darkTextPrimary flex-1"
-                              numberOfLines={1}
-                            >
-                              {store.name}
-                            </Text>
-                          </View>
-
-                          <View className="flex-row items-center gap-1">
-                            <MapPin size={12} color="#94A3B8" />
-                            <Text
-                              className="text-xs font-poppins text-slate-400 dark:text-darkTextSecondary flex-1"
-                              numberOfLines={1}
-                            >
-                              {store.address ??
-                                translate("storeManager.stores.noAddress")}
-                            </Text>
-                          </View>
-                        </View>
-
-                        <View className="flex-row items-center gap-1.5">
-                          {isLocked ? (
-                            <View className="h-5 px-2 rounded-full bg-slate-200 dark:bg-darkBackgroundCard items-center justify-center">
-                              <Text className="text-[10px] leading-4 font-poppins-semibold text-slate-600 dark:text-darkTextSoft">
-                                {translate("storeManager.stores.locked")}
-                              </Text>
-                            </View>
-                          ) : null}
-                          <View
-                            className={`h-5 px-2 rounded-full ${badgeStyle.bg} items-center justify-center`}
-                          >
-                            <Text
-                              className={`text-[10px] leading-4 font-poppins-semibold ${badgeStyle.text}`}
-                            >
-                              {translate(
-                                `storeManager.stores.badge.${badgeLabelKey}`,
-                              )}
-                            </Text>
-                          </View>
-                        </View>
-                      </TouchableOpacity>
-
-                      {idx < filtered.length - 1 ? (
-                        <View className="h-px bg-slate-100 dark:bg-darkBackgroundCard" />
-                      ) : null}
-                    </View>
-                  );
-                })}
+                {filtered.map((store, idx) => (
+                  <StoreRowItem
+                    key={store.id}
+                    store={store}
+                    router={router}
+                    isLast={idx === filtered.length - 1}
+                  />
+                ))}
               </View>
             </View>
           ) : (

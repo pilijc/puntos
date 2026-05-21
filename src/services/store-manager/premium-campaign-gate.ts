@@ -57,11 +57,41 @@ export async function getStoreOwnerId(storeId: number | string): Promise<string 
   }
 }
 
-export async function assertStoreOwnerCanManagePremiumCampaigns(storeId: number | string): Promise<void> {
+export async function isStorePremiumCampaignRestricted(storeId: number | string): Promise<boolean> {
   try {
     const ownerId = await getStoreOwnerId(storeId);
-    const allowed = await ownerCanManagePremiumCampaigns(ownerId);
-    if (!allowed) throw new Error(PREMIUM_CAMPAIGN_LOCKED_MESSAGE);
+    if (!ownerId) return false;
+
+    // Check if the owner can manage premium campaigns globally (e.g. they are on a paid/unlimited plan)
+    const allowedGlobally = await ownerCanManagePremiumCampaigns(ownerId);
+    if (allowedGlobally) return false;
+
+    // If they are on basic/free plan, fetch all stores belonging to this owner to determine the first store
+    const { data: stores, error } = await supabase
+      .from("stores")
+      .select("id")
+      .eq("owner_id", ownerId)
+      .order("created_at", { ascending: true })
+      .order("id", { ascending: true });
+
+    if (error || !stores || stores.length === 0) return false;
+
+    // Oldest store (first store) has full feature access (is not restricted)
+    const firstStoreId = stores[0].id;
+    if (String(firstStoreId) === String(storeId)) {
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    return false;
+  }
+}
+
+export async function assertStoreOwnerCanManagePremiumCampaigns(storeId: number | string): Promise<void> {
+  try {
+    const restricted = await isStorePremiumCampaignRestricted(storeId);
+    if (restricted) throw new Error(PREMIUM_CAMPAIGN_LOCKED_MESSAGE);
   } catch (error) {
     throw new Error(`Failed to check permission for premium campaign management: ${(error as Error).message ?? error}`);
   }

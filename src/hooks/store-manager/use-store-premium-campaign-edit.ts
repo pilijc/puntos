@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import {
   getOwnerPremiumCampaignExpiryDateIso,
   getStoreOwnerId,
-  ownerCanManagePremiumCampaigns,
+  isStorePremiumCampaignRestricted,
 } from "@/services/store-manager/premium-campaign-gate";
 
 export function useStorePremiumCampaignEdit(storeId: string | undefined) {
@@ -19,9 +19,9 @@ export function useStorePremiumCampaignEdit(storeId: string | undefined) {
     }
     setLoading(true);
     try {
+      const restricted = await isStorePremiumCampaignRestricted(storeId);
+      setCanEdit(!restricted);
       const ownerId = await getStoreOwnerId(storeId);
-      const allowed = await ownerCanManagePremiumCampaigns(ownerId);
-      setCanEdit(allowed);
       setExpiresAtIso(await getOwnerPremiumCampaignExpiryDateIso(ownerId));
     } catch {
       setCanEdit(true);

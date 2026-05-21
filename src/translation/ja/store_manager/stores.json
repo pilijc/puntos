@@ -12,7 +12,7 @@
     "inactive": "無効"
   },
   "noAddress": "住所未記入",
-  "locked": "ロック中",
+  "locked": "制限あり",
   "lockedSubscriptionEnded": "サブスクリプションが終了しました。アップグレードするまでこの店舗は表示のみです。",
   "upgrade": "アップグレード",
   "empty": {
