@@ -355,7 +355,7 @@ export default function ViewStore() {
         {Platform.OS === "web" ? (
           <View className="px-4 py-3 items-center">
             <View
-              className="w-full border border-slate-100 dark:border-darkBorder rounded-xl p-3"
+              className="w-full bg-white dark:bg-darkBackgroundCard border border-slate-100 dark:border-darkBorder rounded-xl p-3"
               style={{ maxWidth: 860 }}
             >
               <View className="flex-row flex-wrap gap-y-2 justify-between">
@@ -367,7 +367,7 @@ export default function ViewStore() {
                       router.push({ pathname: item.route, params: { storeId } })
                     }
                     style={{ width: "32.5%" }}
-                    className="bg-white dark:bg-darkBackgroundCard border border-slate-100 dark:border-darkBorder rounded-xl p-3"
+                    className="border border-slate-00 dark:border-darkBorder rounded-xl p-3"
                   >
                     <View className="w-9 h-9 rounded-lg items-center justify-center mb-1 -ml-1">
                       {item.icon}
@@ -385,28 +385,30 @@ export default function ViewStore() {
           </View>
         ) : (
           <View className="px-4 py-3">
-            <View className="flex-row flex-wrap gap-y-2 justify-between">
-              {menuItems.map((item) => (
-                <TouchableOpacity
-                  key={item.key}
-                  activeOpacity={0.85}
-                  onPress={() =>
-                    router.push({ pathname: item.route, params: { storeId } })
-                  }
-                  style={{ width: "32.5%" }}
-                  className="bg-white dark:bg-darkBackgroundCard border border-slate-100 dark:border-darkBorder rounded-xl p-3"
-                >
-                  <View className="w-9 h-9 rounded-lg items-center justify-center mb-1 -ml-1">
-                    {item.icon}
-                  </View>
-                  <Text className="text-[11px] font-poppins-semibold text-slate-800 dark:text-darkTextPrimary leading-4">
-                    {item.label}
-                  </Text>
-                  <Text className="text-[9px] font-poppins text-slate-400 dark:text-darkTextSecondary mt-0.5">
-                    {item.description}
-                  </Text>
-                </TouchableOpacity>
-              ))}
+            <View className="w-full bg-white dark:bg-darkBackgroundCard border border-slate-100 dark:border-darkBorder rounded-xl p-3">
+              <View className="flex-row flex-wrap gap-y-2 justify-between">
+                {menuItems.map((item) => (
+                  <TouchableOpacity
+                    key={item.key}
+                    activeOpacity={0.85}
+                    onPress={() =>
+                      router.push({ pathname: item.route, params: { storeId } })
+                    }
+                    style={{ width: "32.5%" }}
+                    className="border border-slate-100 dark:border-darkBorder rounded-xl p-3"
+                  >
+                    <View className="w-9 h-9 rounded-lg items-center justify-center mb-1 -ml-1">
+                      {item.icon}
+                    </View>
+                    <Text className="text-[11px] font-poppins-semibold text-slate-800 dark:text-darkTextPrimary leading-4">
+                      {item.label}
+                    </Text>
+                    <Text className="text-[9px] font-poppins text-slate-400 dark:text-darkTextSecondary mt-0.5">
+                      {item.description}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
             </View>
           </View>
         )}
