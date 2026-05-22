@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { getUserStampRewards, StampReward } from "@/services/stamp-reward-service";
 import { supabase } from "@/supabase/supabase";
+import { logger } from "@/utils/logger";
 
 export function useStampRewards() {
   const [stampRewards, setStampRewards] = useState<StampReward[]>([]);
@@ -23,7 +24,7 @@ export function useStampRewards() {
       setStampRewards(data);
     } catch (e: any) {
       setError(e);
-      console.error("Error inside useStampRewards:", e);
+      logger.error("Error inside useStampRewards:", e);
     } finally {
       setIsLoading(false);
     }

@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/supabase/supabase";
 import { storeKeys } from "./query-keys";
 import { getActiveStreakProgramsByStore, getStoresWithEnabledStreaks } from "@/services/stamp-service";
+import { logger } from "@/utils/logger";
 
 export function useStoreFeaturesQuery(storeIds: number[]) {
   return useQuery({
@@ -14,7 +15,7 @@ export function useStoreFeaturesQuery(storeIds: number[]) {
         .in("store_id", storeIds);
 
       if (error) {
-        console.warn("[StoreFeatures] fetch failed:", error.message);
+        logger.warn("[StoreFeatures] fetch failed:", error.message);
         return new Map();
       }
       const map = new Map<number, { stamp_enabled: boolean; streak_enabled: boolean }>();

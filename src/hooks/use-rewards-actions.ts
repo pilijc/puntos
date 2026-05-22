@@ -6,6 +6,7 @@ import { useStampRewards } from "@/hooks/use-stamp-rewards";
 import { useStreaks } from "@/hooks/use-streaks";
 import { useQueryClient } from "@tanstack/react-query";
 import { activityKeys } from "@/hooks/user/rq/query-keys";
+import { logger } from "@/utils/logger";
 
 export function useRewardsActions() {
   const {
@@ -23,6 +24,17 @@ export function useRewardsActions() {
   const handleRefresh = useCallback(async (storeId?: string, nearbyStoreIds?: number[]) => {
     setRefreshing(true);
     try {
+      logger.debug("[handleRefresh] start", { storeId, nearbyStoreIds });
+      const wrap = (name: string, p: Promise<any>) => {
+        logger.debug(`[handleRefresh] start ${name}`);
+        return p.then((res) => {
+          logger.debug(`[handleRefresh] resolved ${name}`);
+          return res;
+        }).catch((err) => {
+          logger.error(`[handleRefresh] error ${name}`, err);
+          throw err;
+        });
+      };
       // Reset fetchedStoreIds so fetchRewardsData bypasses the stale-while-revalidate
       // guard and forces a fresh fetch of activeStreakProgramMap / upcomingStreakProgramMap.
       // Without this, a program that transitions upcoming → active stays stale until reload.
@@ -45,10 +57,12 @@ export function useRewardsActions() {
       }
 
       await Promise.all(promises);
+      logger.debug('[handleRefresh] all promises resolved');
     } catch (error) {
-      console.error("Refresh failed:", error);
+      logger.error("Refresh failed:", error);
     } finally {
       setRefreshing(false);
+      logger.debug('[handleRefresh] finished');
     }
   }, [setRefreshing, refetchStamps, refetchStampRewards, refetchStreaks, fetchBackendRewards, fetchRewardsData, resetRewardsData, queryClient]);
 

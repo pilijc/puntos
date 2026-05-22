@@ -3,19 +3,20 @@ import { ProcessVoucherCode } from "../../type/frontdesk/voucher";
 import { Voucher } from "../../type/user/voucher";
 import { FinalCalculations } from "../frontdesk/percentage-service";
 import { canUserEarnPurchasePoints } from "@/services/points/earning-gate";
+import { logger } from "@/utils/logger";
 
 export async function getCurrentStaffId(): Promise<string | null> {
     try {
         const { data: { user }, error: authError } = await supabase.auth.getUser();
         
         if (authError || !user) {
-            console.error("Staff not authenticated:", authError);
+            logger.error("Staff not authenticated:", authError);
             return null;
         }
         
         return user.id;
     } catch (error) {
-        console.error("Error getting current staff ID:", error);
+        logger.error("Error getting current staff ID:", error);
         return null;
     }
 }
@@ -144,7 +145,7 @@ export async function processVoucherCode(
 
         // Check if purchase creation was successful
         if (purchaseError || !purchaseData) {
-            console.error("Purchase creation error:", purchaseError);
+            logger.error("Purchase creation error:", purchaseError);
             
             // Rollback voucher status to unused
             await supabase
@@ -173,7 +174,7 @@ export async function processVoucherCode(
             .eq("id", purchaseData.id);
 
         if (updateError) {
-            console.error("Error updating purchase with staff info:", updateError);
+            logger.error("Error updating purchase with staff info:", updateError);
          }
 
         // Update with points  
@@ -183,7 +184,7 @@ export async function processVoucherCode(
             .eq("id", purchaseData.id);
 
         if (pointsUpdateError) {
-            console.error("Purchase update error:", pointsUpdateError);
+            logger.error("Purchase update error:", pointsUpdateError);
             
             // Rollback voucher status and delete purchase
             await supabase
@@ -219,7 +220,7 @@ export async function processVoucherCode(
             .single();
 
         if (transactionError) {
-            console.error("Transaction recording error:", transactionError);
+            logger.error("Transaction recording error:", transactionError);
 
             // Rollback voucher status to unused
             await supabase
@@ -247,7 +248,7 @@ export async function processVoucherCode(
             pointsEarned: pointsEarned,
         };
     } catch (error) {
-        console.error("Voucher processing error:", error);
+        logger.error("Voucher processing error:", error);
 
         try {
             if (voucherConsumed) {
@@ -257,7 +258,7 @@ export async function processVoucherCode(
                     .eq('code', voucherCode);
             }
         } catch (rollbackErr) {
-            console.warn("[Voucher] rollback failed:", rollbackErr);
+            logger.warn("[Voucher] rollback failed:", rollbackErr);
         }
 
         return {
@@ -310,7 +311,7 @@ export async function verifyVoucherCode(voucherCode: string): Promise<{
             message: "Voucher is valid",
         };
     } catch (error) {
-        console.error("Voucher verification error:", error);
+        logger.error("Voucher verification error:", error);
         return {
             valid: false,
             message: "An error occurred while verifying the voucher",

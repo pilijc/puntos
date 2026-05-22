@@ -6,6 +6,7 @@ import {
   ActiveRedemptionWithReward,
 } from "@/type/user/reward-redemption";
 import { getUserAvailablePoints } from "@/services/user/points-service";
+import { logger } from "@/utils/logger";
 
 const EXPO_PUBLIC_API_URL = process.env.EXPO_PUBLIC_API_URL;
 
@@ -357,7 +358,7 @@ export async function generateRedemptionCodeWithRateLimit(
     //If rate limit passed, call the existing service
     return await generateRedemptionCode(userId, rewardId, storeId);
   } catch (error) {
-    console.error("Error calling rate-limited redemption code generation:", error);
+    logger.error("Error calling rate-limited redemption code generation:", error);
     return { success: false, message: "An error occurred" };
   }
 }

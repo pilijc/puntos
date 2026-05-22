@@ -1,9 +1,4 @@
-import { createClient } from "@supabase/supabase-js";
-
-const supabase = createClient(
-  process.env.EXPO_PUBLIC_API_URL!,
-  process.env.EXPO_PUBLIC_SERVICE_ROLE_KEY!
-);
+import { supabase } from "@/supabase/supabase";
 
 export const getStoreStaff = async (storeId: string) => {
   try {
@@ -46,14 +41,18 @@ export const deleteStoreStaff = async (staffId: string) => {
 
 export const createStoreStaff = async ( storeId: string, name: string, email: string, password: string ) => {
   try {
-		const { data, error } = await supabase.auth.admin.createUser({
-			email,
-			password,
-			email_confirm: true,
-			user_metadata: { name },
+		const { data, error } = await supabase.functions.invoke("create-staff", {
+			body: {
+				email,
+				password,
+				name,
+			},
 		});
 	
 		if (error) throw error;
+		if (!data?.user?.id) {
+			throw new Error("Failed to retrieve user details from staff creation function.");
+		}
 	
 		const userId = data.user.id;
 	

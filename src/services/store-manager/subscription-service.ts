@@ -1,5 +1,6 @@
 import { supabase } from "@/supabase/supabase";
 import { isPaidUnlimitedPlan } from "@/services/store-manager/subscription-limits";
+import { logger } from "@/utils/logger";
 
 export type ManagerSubscriptionRow = {
   id?: number;
@@ -232,12 +233,12 @@ export async function useSubscriptionCheckout(
 
     const result = await res.json().catch(() => null);
     if (!res.ok) {
-      console.error("Checkout failed:", result);
+      logger.error("Checkout failed:", result);
       return null;
     }
     return result?.checkout_url ?? null;
   } catch (err) {
-    console.error("useSubscriptionCheckout error:", err);
+    logger.error("useSubscriptionCheckout error:", err);
     return null;
   }
 }

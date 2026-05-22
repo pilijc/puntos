@@ -10,7 +10,7 @@
  * the service layer reads this config at runtime so no hardcoded magic numbers live in service files.
  */
 
-export type SessionRole = "manager" | "front_desk" | "user";
+export type SessionRole = "store_manager" | "front_desk" | "user";
 
 export type RoleSessionConfig = {
     role: SessionRole;
@@ -20,8 +20,8 @@ export type RoleSessionConfig = {
 };
 
 export const SESSION_CONFIGS = {
-    manager: {
-        role: "manager",
+    store_manager: {
+        role: "store_manager",
         table: "manager_device_sessions",
         maxSessions: 3,
         timeoutMs: 10 * 60 * 1000, // 10 minutes

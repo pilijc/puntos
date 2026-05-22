@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { supabase } from "@/supabase/supabase";
 import { UserProfile, UserPreferences } from "@/type/settings";
+import { logger } from "@/utils/logger";
 import {
     getUserProfileService,
     getUserSettingsService,
@@ -66,7 +67,7 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
                 try {
                     const { forceDeactivateCurrentDeviceService } = require("@/services/store-manager/device-session-service");
                     void forceDeactivateCurrentDeviceService().catch((e: any) =>
-                        console.warn("[ProfileStore] Force deactivate failed", e),
+                        logger.warn("[ProfileStore] Force deactivate failed", e),
                     );
                 } catch (err) {
                     // Ignore errors on force deactivation and proceed with signed-out state
@@ -91,7 +92,7 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
                 }
             })
         } catch (error: any) {
-            console.error("Profile store load error:", error);
+            logger.error("Profile store load error:", error);
         } finally {
             set({ loading: false })
         }
@@ -113,7 +114,7 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
             }));
             return { success: true };
         } catch (err) {
-            console.error("Profile update error:", err);
+            logger.error("Profile update error:", err);
             return { success: false };
         }
     },
@@ -130,7 +131,7 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
         try {
             await updateUserSettingsService(user.id, updates);
         } catch (err) {
-            console.error("Store failed to save preference", err);
+            logger.error("Store failed to save preference", err);
             set({ preferences: previousPreferences});
         }
     },
@@ -159,7 +160,7 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
 
             return { success: true };
         } catch (error) {
-            console.error("Save profile error:", error);
+            logger.error("Save profile error:", error);
             return { success: false, error };
         } finally {
             set ({ isSaving: false, isUploading: false });

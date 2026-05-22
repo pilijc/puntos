@@ -1,4 +1,5 @@
 import { supabase } from "@/supabase/supabase";
+import { logger } from "@/utils/logger";
 
 export interface StampReward {
   id: string;
@@ -18,7 +19,7 @@ export async function getUserStampRewards(userId: string): Promise<StampReward[]
     .eq("user_id", userId);
 
   if (error) {
-    console.error("Error fetching stamp rewards:", error);
+    logger.error("Error fetching stamp rewards:", error);
     throw error;
   }
 

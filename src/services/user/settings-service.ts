@@ -2,6 +2,7 @@ import { Platform } from "react-native";
 import { supabase } from "@/supabase/supabase";
 import { markIntentionalSignOut } from "@/lib/intentional-signout";
 import { UserProfile, UserPreferences } from "@/type/settings";
+import { logger } from "@/utils/logger";
 
 export async function getUserProfileService(userId: string): Promise<UserProfile | null> {
     const { data, error } = await supabase
@@ -137,10 +138,10 @@ export async function deleteOldAvatar(oldUrl: string | null): Promise<void> {
         if (bucketIndex !== -1) {
             const filePath = pathParts.slice(bucketIndex + 1).join('/');
             const { error } = await supabase.storage.from('puntos-public').remove([filePath]);
-            if (error) console.error("Error deleting old avatar:", error);
+            if (error) logger.error("Error deleting old avatar:", error);
         }
     } catch (e) {
-        console.error("Failed to parse old avatar URL for deletion:", e);
+        logger.error("Failed to parse old avatar URL for deletion:", e);
     }
 }
 
@@ -192,7 +193,7 @@ export async function getUsersNearStoreService(
     });
 
     if (error) {
-        console.error("get_users_near_store error:", error)
+        logger.error("get_users_near_store error:", error)
         return 0;
     }
     

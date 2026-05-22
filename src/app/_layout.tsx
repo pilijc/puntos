@@ -25,6 +25,7 @@ import { isLoginDeviceSessionFlowActive } from "@/lib/login-device-session-flow"
 import { useTranslation } from "react-i18next";
 import { QueryProvider } from "@/providers/query-provider";
 import { useIsDark } from "@/hooks/use-is-dark";
+import { logger } from "@/utils/logger";
 
 // Disable Reanimated strict mode warnings
 // The warning "Reading from `value` during component render" is expected behavior
@@ -166,7 +167,7 @@ export default function Layout() {
           } catch (deviceErr) {
             // Network / RPC failure — fail open so a transient error doesn't log the user out.
             // The atomic RPC already falls back internally on missing-migration errors.
-            console.warn("[DeviceSession] check failed during session restore, proceeding:", deviceErr);
+            logger.warn("[DeviceSession] check failed during session restore, proceeding:", deviceErr);
           }
 
           router.replace(nextRoute as any);
@@ -177,7 +178,7 @@ export default function Layout() {
           } else if (err instanceof AccountBlockedError) {
             useAuthStore.getState().setRestricted(true);
           } else {
-            console.error("Session restoration error:", err);
+            logger.error("Session restoration error:", err);
           }
         }
       }

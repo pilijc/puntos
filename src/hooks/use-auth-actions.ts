@@ -4,6 +4,7 @@ import { Alert } from 'react-native';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { forceDeactivateAllDeviceSessions } from '@/services/shared/device-session-route-service';
 import { markIntentionalSignOut } from '@/lib/intentional-signout';
+import { logger } from "@/utils/logger";
 
 export const useAuthActions = () => {
     const handleLogout = async () => {
@@ -13,18 +14,18 @@ export const useAuthActions = () => {
             try {
                 await GoogleSignin.signOut();
             } catch (googleError) {
-                console.log("Not signed in with Google or error signing out:", googleError);
+                logger.debug("Not signed in with Google or error signing out:", googleError);
             }
 
             markIntentionalSignOut();
             const { error } = await supabase.auth.signOut();
             if (error) {
-                console.error("Supabase signOut error (ignoring to allow local logout):", error.message);
+                logger.error("Supabase signOut error (ignoring to allow local logout):", error.message);
             }
 
             router.replace("/(onboarding)/welcome");
         } catch (error: any) {
-            console.error("Logout process error:", error);
+            logger.error("Logout process error:", error);
             Alert.alert("Logout error", "An unexpected error occurred during logout. Please try again.");
             router.replace("/(onboarding)/welcome");
         }

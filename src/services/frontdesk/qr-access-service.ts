@@ -1,5 +1,6 @@
 import { supabase } from "@/supabase/supabase";
 import { getCurrentStaffId } from "./voucher-service";
+import { logger } from "@/utils/logger";
 
 export async function checkQRAccessForStore(storeId: string): Promise<boolean> {
   try {
@@ -12,7 +13,7 @@ export async function checkQRAccessForStore(storeId: string): Promise<boolean> {
     if (error) throw error;
     return data?.qr_enabled ?? false;
   } catch (error) {
-    console.error("Error checking QR access:", error);
+    logger.error("Error checking QR access:", error);
     return false;
   }
 }
@@ -32,7 +33,7 @@ export async function checkQRAccessForCurrentStaff(): Promise<boolean> {
 
     return await checkQRAccessForStore(staffData.store_id.toString());
   } catch (error) {
-    console.error("Error checking QR access for current staff:", error);
+    logger.error("Error checking QR access for current staff:", error);
     return false;
   }
 }

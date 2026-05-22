@@ -1,4 +1,5 @@
 import { useDeleteAccountMutation } from '@/hooks/user/rq';
+import { logger } from "@/utils/logger";
 
 export function useDeleteAccount() {
     const deleteAccountMutation = useDeleteAccountMutation();
@@ -9,7 +10,7 @@ export function useDeleteAccount() {
         try {
             await deleteAccountMutation.mutateAsync();
         } catch (error) {
-            console.error('[useDeleteAccount] Failed to delete account:', error);
+            logger.error('[useDeleteAccount] Failed to delete account:', error);
         }
     };
     

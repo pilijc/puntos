@@ -22,7 +22,7 @@ import {
     type DeviceSessionCheckResult,
 } from "@/services/shared/device-session-service";
 
-const CONFIG = SESSION_CONFIGS.manager;
+const CONFIG = SESSION_CONFIGS.store_manager;
 
 // Re-export types so existing import sites don't need to change
 export type { DeviceSession as ManagerDeviceSession, DeviceSessionCheckResult };

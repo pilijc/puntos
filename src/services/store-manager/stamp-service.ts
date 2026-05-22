@@ -1,6 +1,7 @@
 import { supabase } from "@/supabase/supabase";
 import { ProgramStatus, Stamp, StampCollector } from "@/type/store-manager/stamp";
 import { assertStoreOwnerCanManagePremiumCampaigns } from "@/services/store-manager/premium-campaign-gate";
+import { logger } from "@/utils/logger";
 
 
 export function getProgramStatus(stamp: Stamp): ProgramStatus {
@@ -34,7 +35,7 @@ export async function getActiveStampProgram(storeId: string): Promise<Stamp | nu
     if (error) throw new Error(error.message);
     return data as Stamp | null;
   } catch (error) {
-    console.error("Error in getActiveStampProgram:", error);
+    logger.error("Error in getActiveStampProgram:", error);
     throw error;
   }
 }
@@ -50,7 +51,7 @@ export async function getAllStampsByStoreId(storeId: string): Promise<Stamp[]> {
     if (error) throw new Error(error.message);
     return (data ?? []) as Stamp[];
   } catch (error) {
-    console.error("Error in getAllStampsByStoreId:", error);
+    logger.error("Error in getAllStampsByStoreId:", error);
     throw error;
   }
 }
@@ -86,7 +87,7 @@ export async function createStamp(payload: Omit<Stamp, "id" | "status" | "ended_
 
     if (error) throw new Error(error.message);
   } catch (error) {
-    console.error("Error in createStamp:", error);
+    logger.error("Error in createStamp:", error);
     throw error;
   }
 }
@@ -101,7 +102,7 @@ export async function getStampProgramById(programId: number): Promise<Stamp | nu
     if (error) throw new Error(error.message);
     return (data ?? null) as Stamp | null;
   } catch (error) {
-    console.error("Error in getStampProgramById:", error);
+    logger.error("Error in getStampProgramById:", error);
     throw error;
   }
 }
@@ -125,7 +126,7 @@ export async function updateStampProgram(
       .eq("status", "draft");
     if (error) throw new Error(error.message);
   } catch (error) {
-    console.error("Error in updateStampProgram:", error);
+    logger.error("Error in updateStampProgram:", error);
     throw error;
   }
 }
@@ -151,7 +152,7 @@ export async function endStampProgram(programId: number, graceDays: number): Pro
 
     if (error) throw new Error(error.message);
   } catch (error) {
-    console.error("Error in endStampProgram:", error);
+    logger.error("Error in endStampProgram:", error);
     throw error;
   }
 }
@@ -173,7 +174,7 @@ export async function activateStampProgram(programId: number): Promise<void> {
 
     if (error) throw new Error(error.message);
   } catch (error) {
-    console.error("Error in activateStampProgram:", error);
+    logger.error("Error in activateStampProgram:", error);
     throw error;
   }
 }
@@ -192,7 +193,7 @@ export async function getCollectorsCountByProgramId(programId: number): Promise<
     if (error) throw new Error(error.message);
     return count ?? 0;
   } catch (error) {
-    console.error("Error in getCollectorsCountByProgramId:", error);
+    logger.error("Error in getCollectorsCountByProgramId:", error);
     throw error;
   }
 }
@@ -232,7 +233,7 @@ export async function getCollectorsByProgramId(
       users: usersMap.get(row.user_id) ?? null,
     })) as StampCollector[];
   } catch (error) {
-    console.error("Error in getCollectorsByProgramId:", error);
+    logger.error("Error in getCollectorsByProgramId:", error);
     throw error;
   }
 }
@@ -249,7 +250,7 @@ export async function deleteStampProgram(programId: number): Promise<void> {
       .eq("id", programId);
     if (error) throw new Error(error.message);
   } catch (error) {
-    console.error("Error in deleteStampProgram:", error);
+    logger.error("Error in deleteStampProgram:", error);
     throw error;
   }
 }

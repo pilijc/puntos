@@ -1,5 +1,6 @@
 import { Platform } from "react-native";
 import { supabase } from "@/supabase/supabase";
+import { ServiceResponse } from "@/type/service-response";
 
 let OneSignal: typeof import("react-native-onesignal").OneSignal | null = null;
 
@@ -11,21 +12,31 @@ export function isOneSignalNativeAvailable(): boolean {
   return Platform.OS !== "web" && OneSignal != null;
 }
 
-export async function upsertPushId() {
-  if (!isOneSignalNativeAvailable() || !OneSignal) return;
+export async function upsertPushId(): Promise<ServiceResponse<void>> {
+  try {
+    if (!isOneSignalNativeAvailable() || !OneSignal) return { data: undefined, error: null } as any;
 
-  const { data: auth } = await supabase.auth.getUser();
-  const user = auth.user;
-  if (!user) return;
+    const { data: auth, error: authError } = await supabase.auth.getUser();
+    if (authError) return { data: null, error: new Error(authError.message) };
+    
+    const user = auth.user;
+    if (!user) return { data: null, error: new Error("No authenticated user") };
 
-  const subId = await getOneSignalId();
-  if (!subId) return;
+    const subId = await getOneSignalId();
+    if (!subId) return { data: null, error: new Error("Could not get OneSignal subscription ID") };
 
-  await supabase.from("user_push_tokens").upsert({
-    user_id: user.id,
-    onesignal_subscription_id: subId,
-    updated_at: new Date().toISOString(),
-  });
+    const { error } = await supabase.from("user_push_tokens").upsert({
+      user_id: user.id,
+      onesignal_subscription_id: subId,
+      updated_at: new Date().toISOString(),
+    });
+
+    if (error) return { data: null, error: new Error(error.message) };
+
+    return { data: undefined, error: null } as any;
+  } catch (err: any) {
+    return { data: null, error: err instanceof Error ? err : new Error(String(err)) };
+  }
 }
 
 export async function getOneSignalId(): Promise<string | null> {
@@ -40,29 +51,26 @@ export async function sendPushNotification(
   title: string,
   body: string,
   data?: Record<string, any>,
-) {
+): Promise<ServiceResponse<any>> {
   try {
-    const res = await fetch("https://api.onesignal.com/notifications?c=push", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Key ${process.env.EXPO_PUBLIC_ONESIGNAL_REST_API_KEY}`,
-      },
-      body: JSON.stringify({
-        app_id: process.env.EXPO_PUBLIC_ONESIGNAL_APP_ID,
-        name: "Puntos",
-        target_channel: "push",
-        include_subscription_ids: [subscriptionId],
-        headings: { en: title || "Sample" },
-        contents: { en: body || "Hello" },
-        data,
-        android_channel_id: process.env.EXPO_PUBLIC_ONESIGNAL_ANDROID_CHANNEL_ID,
-        priority: 10,
-      }),
-    });
+    const { data: response, error } = await supabase.functions.invoke(
+      "send-notification",
+      {
+        body: {
+          subscriptionId,
+          title,
+          body,
+          data,
+        },
+      }
+    );
 
-    return res;
-  } catch (e) {
-    return e as Error;
+    if (error) {
+      return { data: null, error: new Error(error.message || "Failed to invoke edge function") };
+    }
+
+    return { data: response, error: null };
+  } catch (err: any) {
+    return { data: null, error: err instanceof Error ? err : new Error(String(err)) };
   }
 }

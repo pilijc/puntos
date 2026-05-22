@@ -24,6 +24,7 @@ import { refreshDeviceHeartbeatService } from "@/services/store-manager/device-s
 import { SESSION_TIMEOUT_MS } from "@/type/store-manager/device-session";
 import { useAppearanceStore } from "@/store/appearance-store";
 import { useIsDark } from "@/hooks/use-is-dark";
+import { logger } from "@/utils/logger";
 
 const WEB_SIDEBAR_WIDTH = 260;
 const WEB_SIDEBAR_COLLAPSED_WIDTH = 76;
@@ -600,7 +601,7 @@ export default function StoreManagerLayout() {
                 setDidEnforceStoreLocks(true);
             } catch (e) {
                 // If this fails, we don't want to block navigation; server-side/RLS should still protect critical writes.
-                console.warn("[subscription] store lock enforcement failed:", (e as any)?.message ?? e);
+                logger.warn("[subscription] store lock enforcement failed:", (e as any)?.message ?? e);
             }
         };
 

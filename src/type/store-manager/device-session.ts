@@ -9,8 +9,8 @@ import { SESSION_CONFIGS } from "@/config/session-limits";
 import type { DeviceSession } from "@/services/shared/device-session-service";
 
 // Backwards-compatible named re-exports
-export const MAX_DEVICE_SESSIONS  = SESSION_CONFIGS.manager.maxSessions;
-export const SESSION_TIMEOUT_MS   = SESSION_CONFIGS.manager.timeoutMs;
+export const MAX_DEVICE_SESSIONS  = SESSION_CONFIGS.store_manager.maxSessions;
+export const SESSION_TIMEOUT_MS   = SESSION_CONFIGS.store_manager.timeoutMs;
 
 // Re-export types from the shared service so existing import sites still work
 export type { DeviceType, DeviceSessionCheckResult } from "@/services/shared/device-session-service";

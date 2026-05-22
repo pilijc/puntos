@@ -5,6 +5,7 @@ import {
 } from "@/services/store-manager/premium-campaign-gate";
 export const STREAK_NEW_ENROLLMENT_BLOCKED = "STREAK_NEW_ENROLLMENT_BLOCKED";
 import { withPostGISCoordinates } from "@/utils/location";
+import { logger } from "@/utils/logger";
 
 export interface RecordStreakResult {
   alreadyRecorded: boolean;
@@ -58,7 +59,7 @@ export async function recordUserStreak(
         .maybeSingle();
 
       if (enrolErr) {
-        console.warn("[recordUserStreak] Enrollment lookup failed:", enrolErr.message);
+        logger.warn("[recordUserStreak] Enrollment lookup failed:", enrolErr.message);
       } else if (!existingEnrollment) {
         throw new Error(STREAK_NEW_ENROLLMENT_BLOCKED);
       }
@@ -71,7 +72,7 @@ export async function recordUserStreak(
     });
 
     if (error) {
-      console.error('[recordUserStreak] RPC error:', error.message);
+      logger.error('[recordUserStreak] RPC error:', error.message);
       throw new Error(error.message);
     }
 
@@ -92,7 +93,7 @@ export async function recordUserStreak(
       justCompleted: result.justCompleted ?? false,
     };
   } catch (err) {
-    console.error('[recordUserStreak] Exception:', err);
+    logger.error('[recordUserStreak] Exception:', err);
     throw err;
   }
 }
@@ -125,7 +126,7 @@ export async function getStreakEarnedDates(
     .limit(365); // cap at one year of history
 
   if (error) {
-    console.error("Error fetching streak earned dates:", error.message);
+    logger.error("Error fetching streak earned dates:", error.message);
     return new Set();
   }
 
@@ -255,6 +256,8 @@ function buildVirtualUserStreak(
 
 export async function getUserStreaks(userId: string): Promise<UserStreak[]> {
   try {
+    logger.debug("[getUserStreaks] 🔍 Starting fetch for userId:", userId);
+    
     const { data, error } = await supabase
       .from("user_streaks")
       .select(USER_STREAK_SELECT)
@@ -265,12 +268,28 @@ export async function getUserStreaks(userId: string): Promise<UserStreak[]> {
       .limit(90, { foreignTable: "streak_events" });
 
     if (error) {
-      console.error("[getUserStreaks] Supabase error:", error.message);
+      logger.error("[getUserStreaks] ❌ Supabase error:", error.message);
       return [];
     }
 
+    logger.debug("[getUserStreaks] ✅ Raw data received:", {
+      count: data?.length ?? 0,
+      fullRecords: data?.map(s => ({
+        id: s.id,
+        store_id: s.store_id,
+        streak_days: s.streak_days,
+        status: s.status,
+        store_streaks_status: s.store_streaks?.status,
+        store_name: s.stores?.name,
+        store_active: s.stores?.is_active,
+        stores_full: JSON.stringify(s.stores),
+      })) ?? [],
+    });
+
     // ⚠️ RLS issue: stores relationship comes back as undefined even with RLS policy
     // Workaround: fetch stores data SEPARATELY by store_id
+    logger.debug("[getUserStreaks] 🔧 Fetching stores separately due to RLS relationship issue");
+    
     const storeIds = (data ?? []).map(s => s.store_id);
     const { data: storesData, error: storesError } = await supabase
       .from("stores")
@@ -278,7 +297,9 @@ export async function getUserStreaks(userId: string): Promise<UserStreak[]> {
       .in("id", storeIds);
 
     if (storesError) {
-      console.error("[getUserStreaks] Error fetching stores separately:", storesError.message);
+      logger.error("[getUserStreaks] ⚠️ Error fetching stores separately:", storesError.message);
+    } else {
+      logger.debug("[getUserStreaks] ✅ Fetched stores separately:", storesData?.length);
     }
 
     // Create a map of stores by id
@@ -292,6 +313,16 @@ export async function getUserStreaks(userId: string): Promise<UserStreak[]> {
       stores: storesMap.get(streak.store_id) ?? null,
     }));
 
+    logger.debug("[getUserStreaks] 📊 After enriching with stores:", {
+      count: enrichedData.length,
+      records: enrichedData.map(s => ({
+        id: s.id,
+        store_id: s.store_id,
+        store_name: s.stores?.name,
+        store_active: s.stores?.is_active,
+      })),
+    });
+
     // Filter criteria:
     // 1. Store must be active (existing logic)
     // 2. The linked streak program must also be active — this prevents old records
@@ -304,7 +335,29 @@ export async function getUserStreaks(userId: string): Promise<UserStreak[]> {
       const programStatus = streak.store_streaks?.status;
       const isActiveProgram = programStatus === "active";
       const isUserCompleted = streak.status === "completed";
-      return storeValid && (isActiveProgram || isUserCompleted);
+      const passes = storeValid && (isActiveProgram || isUserCompleted);
+      
+      logger.debug(`[getUserStreaks] 🔎 Filter check - Store: ${streak.stores?.name ?? "NULL"}`, {
+        storeValid,
+        programStatus,
+        isActiveProgram,
+        isUserCompleted,
+        passes,
+        stores_exists: !!streak.stores,
+        stores_status: streak.stores?.status,
+        stores_is_active: streak.stores?.is_active,
+      });
+      
+      return passes;
+    });
+
+    logger.debug("[getUserStreaks] 📋 After filtering:", {
+      validCount: validStreaks.length,
+      filtered: validStreaks.map(s => ({
+        id: s.id,
+        store_name: s.stores?.name,
+        status: s.status,
+      })),
     });
 
     // Map PostGIS location into legacy coordinate props expected by the UI.
@@ -313,9 +366,10 @@ export async function getUserStreaks(userId: string): Promise<UserStreak[]> {
       stores: streak.stores ? withPostGISCoordinates(streak.stores) : undefined
     } as UserStreak));
 
+    logger.debug("[getUserStreaks] ✨ Final result:", result.length, "streaks returned");
     return result;
   } catch (error) {
-    console.error("[getUserStreaks] Exception:", error);
+    logger.error("[getUserStreaks] 💥 Exception:", error);
     return [];
   }
 }
@@ -433,7 +487,7 @@ export async function getUserStreakByStore(
       programRow as UserStreakProgram,
     );
   } catch (error) {
-    console.error("Exception fetching streak by store:", error);
+    logger.error("Exception fetching streak by store:", error);
     return null;
   }
 }

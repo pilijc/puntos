@@ -1,5 +1,6 @@
 import { supabase } from "@/supabase/supabase";
 import { RetentionData, StampBucket, RecentTransaction, ActivityChartData } from "@/type/store-manager/metric";
+import { logger } from "@/utils/logger";
 
 // Use UTC dates to match the database server's clock.
 // toLocaleDateString("en-CA") relies on the device's timezone and can drift
@@ -75,7 +76,7 @@ export async function getStoreMetrics(
             todayTxCount = activityData.scans[13];
         }
     } catch (error) {
-        console.error("Dashboard metrics error:", error);
+        logger.error("Dashboard metrics error:", error);
     }
 
     return {
@@ -96,7 +97,7 @@ export async function getRetentionData(
     }).single();
 
     if (error || !data) {
-        console.error("Error fetching retention data:", error);
+        logger.error("Error fetching retention data:", error);
         return { returningCount: 0, newCount: 0, returningPercent: 0, newPercent: 0 };
     }
 

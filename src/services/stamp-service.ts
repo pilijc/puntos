@@ -4,6 +4,7 @@ import {
   ownerCanManagePremiumCampaigns,
 } from "@/services/store-manager/premium-campaign-gate";
 import { withPostGISCoordinates } from "@/utils/location";
+import { logger } from "@/utils/logger";
 
 export interface StampProgress {
   id: number;
@@ -65,7 +66,7 @@ export async function issueStampForPurchase(purchaseId: number | string): Promis
       .maybeSingle();
 
     if (purchaseError || !purchase) {
-      console.error("[issueStampForPurchase] Missing purchase row:", purchaseError?.message);
+      logger.error("[issueStampForPurchase] Missing purchase row:", purchaseError?.message);
       return { success: false, reason: "error" };
     }
 
@@ -87,7 +88,7 @@ export async function issueStampForPurchase(purchaseId: number | string): Promis
           .eq("stamp_program_id", activeProgram.id);
 
         if (enrolErr) {
-          console.warn("[issueStampForPurchase] Enrollment check failed:", enrolErr.message);
+          logger.warn("[issueStampForPurchase] Enrollment check failed:", enrolErr.message);
         } else if ((count ?? 0) === 0) {
           // Free plan after downgrade: existing programs continue, no first-time enrollments.
           return { success: true };
@@ -100,7 +101,7 @@ export async function issueStampForPurchase(purchaseId: number | string): Promis
     });
 
     if (error) {
-      console.error('[issueStampForPurchase] RPC error:', error.message);
+      logger.error('[issueStampForPurchase] RPC error:', error.message);
       return { success: false, reason: 'error' };
     }
 
@@ -124,7 +125,7 @@ export async function issueStampForPurchase(purchaseId: number | string): Promis
 
     return { success: true };
   } catch (err) {
-    console.error('[issueStampForPurchase] Exception:', err);
+    logger.error('[issueStampForPurchase] Exception:', err);
     return { success: false, reason: 'error' };
   }
 }
@@ -147,7 +148,7 @@ export async function getUserStamps(userId: string): Promise<StampProgress[]> {
       .eq("user_id", userId);
 
     if (error) {
-      console.error("Error fetching user stamp progress:", error.message);
+      logger.error("Error fetching user stamp progress:", error.message);
       return [];
     }
 
@@ -183,7 +184,7 @@ export async function getUserStamps(userId: string): Promise<StampProgress[]> {
 
     return validStamps;
   } catch (error) {
-    console.error("Exception fetching user stamp progress:", error);
+    logger.error("Exception fetching user stamp progress:", error);
     return [];
   }
 }
@@ -238,7 +239,7 @@ export async function addStamp(
 
     if (featureError) {
       // RLS or network issue — log but don't block the stamp
-      console.warn("[addStamp] Could not read store_feature (possibly RLS). Proceeding anyway.");
+      logger.warn("[addStamp] Could not read store_feature (possibly RLS). Proceeding anyway.");
     }
 
     // Only block if we got a row AND stamp_enabled is explicitly false
@@ -256,13 +257,13 @@ export async function addStamp(
       .eq("status", "active");
 
     if (stampProgramError) {
-      console.error("[addStamp] Error fetching active stamp program:", stampProgramError);
+      logger.error("[addStamp] Error fetching active stamp program:", stampProgramError);
     }
 
     const stampProgram = stampPrograms?.[0] ?? null;
 
     if (!stampProgram) {
-      console.warn(`[addStamp] CRITICAL: No active stamp program found for store_id=${storeId}. Falling back to target 7. Check if program is truly active or if RLS blocked it.`);
+      logger.warn(`[addStamp] CRITICAL: No active stamp program found for store_id=${storeId}. Falling back to target 7. Check if program is truly active or if RLS blocked it.`);
     }
 
     const programTarget = stampProgram?.total_stamps ?? 7;
@@ -279,7 +280,7 @@ export async function addStamp(
       .maybeSingle();
 
     if (fetchError && fetchError.code !== "PGRST116") {
-      console.error("Error checking existing stamp progress:", fetchError.message);
+      logger.error("Error checking existing stamp progress:", fetchError.message);
       return { success: false, reason: "error" };
     }
 
@@ -320,7 +321,7 @@ export async function addStamp(
         .eq("id", existingProgress.id);
 
       if (updateError) {
-        console.error("Error updating stamp progress:", updateError.message);
+        logger.error("Error updating stamp progress:", updateError.message);
         return { success: false, reason: "error" };
       }
     } else {
@@ -342,7 +343,7 @@ export async function addStamp(
         });
 
       if (insertError) {
-        console.error("Error inserting new stamp progress:", insertError.message);
+        logger.error("Error inserting new stamp progress:", insertError.message);
         return { success: false, reason: "error" };
       }
     }
@@ -361,7 +362,7 @@ export async function addStamp(
       .single();
 
     if (rewardFetchError && rewardFetchError.code !== "PGRST116") {
-      console.error("Error fetching stamp reward:", rewardFetchError.message);
+      logger.error("Error fetching stamp reward:", rewardFetchError.message);
     }
 
     if (existingReward) {
@@ -383,7 +384,7 @@ export async function addStamp(
         .eq("id", existingReward.id);
 
       if (rewardUpdateError) {
-        console.error("Error updating stamp reward:", rewardUpdateError.message);
+        logger.error("Error updating stamp reward:", rewardUpdateError.message);
       }
     } else {
       // First-ever stamp for this store → create reward row
@@ -398,7 +399,7 @@ export async function addStamp(
         });
 
       if (rewardInsertError) {
-        console.error("Error inserting stamp reward:", rewardInsertError.message);
+        logger.error("Error inserting stamp reward:", rewardInsertError.message);
       }
     }
 
@@ -415,12 +416,12 @@ export async function addStamp(
 
     if (eventError) {
       // Non-critical — log but don't fail the stamp
-      console.error("Error logging stamp event:", eventError.message);
+      logger.error("Error logging stamp event:", eventError.message);
     }
 
     return { success: true };
   } catch (error) {
-    console.error("Exception adding stamp:", error);
+    logger.error("Exception adding stamp:", error);
     return { success: false, reason: "error" };
   }
 }
@@ -467,26 +468,26 @@ export async function getStoresWithEnabledActiveStampProgram(
 
     // If one side is blocked by RLS, fallback to the side we can read.
     if (stampError && !featureError) {
-      console.warn(
+      logger.warn(
         "store_stamps is not readable in current context; falling back to stamp_enabled stores.",
       );
       return storeIds.filter((id) => isFeatureAllowed(id));
     }
 
     if (!stampError && featureError) {
-      console.warn(
+      logger.warn(
         "store_feature is not readable in current context; falling back to active stamp programs.",
       );
       return activeStoreIds;
     }
 
     // If both are unreadable, avoid emptying the UI; defer strict validation to actual stamp action.
-    console.warn(
+    logger.warn(
       "store_stamps and store_feature are not readable in current context; falling back to nearby stores.",
     );
     return storeIds;
   } catch (error) {
-    console.error("Exception fetching eligible stamp stores:", error);
+    logger.error("Exception fetching eligible stamp stores:", error);
     return storeIds;
   }
 }
@@ -504,7 +505,7 @@ export async function getStoresWithEnabledStreaks(
       .in("store_id", storeIds);
 
     if (featureError) {
-      console.warn("[getStoresWithEnabledStreaks] Could not read store_feature:", featureError.message);
+      logger.warn("[getStoresWithEnabledStreaks] Could not read store_feature:", featureError.message);
       return [];
     }
 
@@ -528,7 +529,7 @@ export async function getStoresWithEnabledStreaks(
     if (streakError) {
       // If we can't read store_streaks, fall back to feature flag only.
       // This avoids hiding the card due to an RLS or network issue.
-      console.warn(
+      logger.warn(
         "[getStoresWithEnabledStreaks] Could not read store_streaks, falling back to feature flag only:",
         streakError.message,
       );
@@ -544,7 +545,7 @@ export async function getStoresWithEnabledStreaks(
 
     return featureEnabledIds.filter((id) => activeStreakStoreIds.has(id));
   } catch (error) {
-    console.error("Exception fetching eligible streak stores:", error);
+    logger.error("Exception fetching eligible streak stores:", error);
     return [];
   }
 }
@@ -588,7 +589,7 @@ export async function getActiveStreakProgramsByStore(
       .eq("status", "active");
 
     if (error) {
-      console.warn("[getActiveStreakProgramsByStore] Error:", error.message);
+      logger.warn("[getActiveStreakProgramsByStore] Error:", error.message);
       return new Map();
     }
 
@@ -613,7 +614,7 @@ export async function getActiveStreakProgramsByStore(
     }
     return map;
   } catch (error) {
-    console.error("Exception fetching active streak programs:", error);
+    logger.error("Exception fetching active streak programs:", error);
     return new Map();
   }
 }
@@ -676,7 +677,7 @@ export async function getActiveStampProgramRewards(
       };
     });
   } catch (error) {
-    console.error("Exception fetching active stamp program rewards:", error);
+    logger.error("Exception fetching active stamp program rewards:", error);
     return [];
   }
 }
@@ -700,7 +701,7 @@ export async function getStampEventsForStore(
       .order("created_at", { ascending: false });
 
     if (error) {
-      console.error("Error fetching stamp events:", error.message);
+      logger.error("Error fetching stamp events:", error.message);
       return [];
     }
 
@@ -709,7 +710,7 @@ export async function getStampEventsForStore(
       points: (evt.purchases as any)?.points_earned
     }));
   } catch (err) {
-    console.error("Exception fetching stamp events:", err);
+    logger.error("Exception fetching stamp events:", err);
     return [];
   }
 }
@@ -730,7 +731,7 @@ export async function getUserStampEvents(userId: string) {
       .order("created_at", { ascending: false });
 
     if (error) {
-      console.error("Error fetching all user stamp events:", error.message);
+      logger.error("Error fetching all user stamp events:", error.message);
       return [];
     }
 
@@ -739,7 +740,7 @@ export async function getUserStampEvents(userId: string) {
       points: (evt.purchases as any)?.points_earned
     }));
   } catch (err) {
-    console.error("Exception fetching all user stamp events:", err);
+    logger.error("Exception fetching all user stamp events:", err);
     return [];
   }
 }
@@ -771,7 +772,7 @@ export async function getUserRewardRedemptions(
     const { data, error } = await query;
 
     if (error) {
-      console.error("Error fetching reward redemptions:", error.message);
+      logger.error("Error fetching reward redemptions:", error.message);
       return [];
     }
 
@@ -784,7 +785,7 @@ export async function getUserRewardRedemptions(
       store_id: evt.store_id
     }));
   } catch (err) {
-    console.error("Exception fetching reward redemptions:", err);
+    logger.error("Exception fetching reward redemptions:", err);
     return [];
   }
 }
@@ -807,7 +808,7 @@ export async function getUpcomingStreakProgramsByStore(
       .in("store_id", storeIds);
 
     if (featureError) {
-      console.warn("[getUpcomingStreakProgramsByStore] Could not read store_feature:", featureError.message);
+      logger.warn("[getUpcomingStreakProgramsByStore] Could not read store_feature:", featureError.message);
       return new Map();
     }
 
@@ -825,7 +826,7 @@ export async function getUpcomingStreakProgramsByStore(
       .eq("status", "upcoming");
 
     if (error) {
-      console.warn("[getUpcomingStreakProgramsByStore] Error:", error.message);
+      logger.warn("[getUpcomingStreakProgramsByStore] Error:", error.message);
       return new Map();
     }
 
@@ -847,7 +848,7 @@ export async function getUpcomingStreakProgramsByStore(
     }
     return map;
   } catch (error) {
-    console.error("Exception fetching upcoming streak programs:", error);
+    logger.error("Exception fetching upcoming streak programs:", error);
     return new Map();
   }
 }

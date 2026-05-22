@@ -7,6 +7,7 @@
  */
 
 import { SESSION_CONFIGS, type SessionRole } from "@/config/session-limits";
+import { logger } from "@/utils/logger";
 import {
     registerDeviceSession,
     forceDeactivateCurrentDevice,
@@ -19,7 +20,7 @@ import {
 
 export function getDeviceSessionRoleForRoute(route?: string | null): SessionRole | null {
     if (!route) return null;
-    if (route === "/(store_manager)" || route.startsWith("/(store_manager)")) return "manager";
+    if (route === "/(store_manager)" || route.startsWith("/(store_manager)")) return "store_manager";
     if (route === "/(front_desk)"    || route.startsWith("/(front_desk)"))    return "front_desk";
     if (route === "/(user)"          || route.startsWith("/(user)"))          return "user";
     return null;
@@ -96,7 +97,7 @@ export async function forceDeactivateAllDeviceSessions(): Promise<void> {
     await Promise.allSettled(
         configs.map((config) =>
             forceDeactivateCurrentDevice(config).catch((e) =>
-                console.warn(`[DeviceSession] force deactivate failed for ${config.table}:`, e),
+                logger.warn(`[DeviceSession] force deactivate failed for ${config.table}:`, e),
             ),
         ),
     );

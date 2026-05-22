@@ -1,10 +1,5 @@
-import { createClient } from "@supabase/supabase-js";
 import { QRPurchase } from "@/type/store-manager/qr.purchase";
-
-const supabase = createClient(
-  process.env.EXPO_PUBLIC_API_URL!,
-  process.env.EXPO_PUBLIC_SERVICE_ROLE_KEY!
-);
+import { supabase } from "@/supabase/supabase";
 
 export const getQRConfig = async (storeId: string) => {
   const [qrResult, featureResult] = await Promise.all([

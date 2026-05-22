@@ -8,6 +8,7 @@ import { useLocation } from "@/hooks/user/use-location";
 import { Modal, type ModalButton } from "@/components/modal";
 import { clearLocationService } from "@/services/user/settings-service";
 import { clearLocationManuallyDisabled, markLocationManuallyDisabled } from "@/services/user/location-preference-service";
+import { logger } from "@/utils/logger";
 
 export const LocationCard = () => {
     const { t: translate } = useTranslation();
@@ -43,7 +44,7 @@ export const LocationCard = () => {
                 await markLocationManuallyDisabled(user.id);
                 await clearLocationService(user.id);
             } catch (e) {
-                console.error("Failed to clear location on disable:", e);
+                logger.error("Failed to clear location on disable:", e);
             }
         }
 
@@ -51,7 +52,7 @@ export const LocationCard = () => {
             try {
                 await clearLocationManuallyDisabled(user.id);
             } catch (e) {
-                console.error("Failed to clear location manual-disable marker:", e);
+                logger.error("Failed to clear location manual-disable marker:", e);
             }
         }
     };

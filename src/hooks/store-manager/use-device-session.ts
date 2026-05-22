@@ -49,7 +49,7 @@ export function useDeviceSession(userId?: string) {
         async (
             uid: string,
             locationLabel?: string,
-            role: SessionRole = "manager",
+            role: SessionRole = "store_manager",
         ): Promise<{
             allowed: boolean;
             activeSessions: ManagerDeviceSession[];

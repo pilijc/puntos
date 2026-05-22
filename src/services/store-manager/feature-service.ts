@@ -1,6 +1,7 @@
 import { supabase } from "@/supabase/supabase";
 import { StoreFeature } from "@/type/store-manager/features";
 import { assertStoreOwnerCanManagePremiumCampaigns } from "@/services/store-manager/premium-campaign-gate";
+import { logger } from "@/utils/logger";
 
 export async function getStoreFeaturesById(storeId: string): Promise<StoreFeature | null> {
 	try {
@@ -13,7 +14,7 @@ export async function getStoreFeaturesById(storeId: string): Promise<StoreFeatur
 		if (error) throw new Error(error.message);
 		return data as StoreFeature | null;
 	} catch (err) {
-		console.error("Error in getStoreFeaturesById:", err);
+		logger.error("Error in getStoreFeaturesById:", err);
 		throw err;
 	}
 }
@@ -52,7 +53,7 @@ export async function updateStoreFeatures(payload: StoreFeature): Promise<void> 
 
 		if (error) throw new Error(error.message);
 	} catch (err) {
-		console.error("Error in updateStoreFeatures:", err);
+		logger.error("Error in updateStoreFeatures:", err);
 		throw err;
 	}
 }

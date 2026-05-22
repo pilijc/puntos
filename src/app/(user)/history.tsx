@@ -11,6 +11,7 @@ import HistoryHeader from "@/components/users/history/HistoryHeader";
 import HistoryRow from "@/components/users/history/HistoryRow";
 import HistorySkeleton, { HistoryEmptyState } from "@/components/users/history/HistorySkeleton";
 import SectionLabel from "@/components/users/history/SectionLabel";
+import { logger } from "@/utils/logger";
 
 export default function History() {
   const [activeTab, setActiveTab] = useState(0);
@@ -42,7 +43,7 @@ export default function History() {
       
       setHasMore(result.hasMore);
     } catch (error) {
-      console.error("Error fetching transaction history:", error);
+      logger.error("Error fetching transaction history:", error);
     } finally {
       setLoading(false);
       setLoadingMore(false);

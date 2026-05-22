@@ -19,6 +19,7 @@ import { useStoreStore } from "@/store/user/store-store";
 import { getHasStampedToday, sortRewards } from "@/utils/store-helpers";
 import { distance, point } from "@turf/turf";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { logger } from "@/utils/logger";
 import {
   useAnimatedStyle,
   useSharedValue,
@@ -93,7 +94,7 @@ export function useStoreOverviewData(storeId?: string) {
       const data = await getStores();
       setStores(data ?? []);
     } catch (error) {
-      console.error("Failed to load stores in Store tab:", error);
+      logger.error("Failed to load stores in Store tab:", error);
     }
   }, [setStores]);
 
