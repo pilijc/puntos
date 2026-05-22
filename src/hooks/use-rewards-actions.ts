@@ -41,19 +41,19 @@ export function useRewardsActions() {
       resetRewardsData();
 
       const promises: Promise<any>[] = [
-        wrap('refetchStamps', refetchStamps()),
-        wrap('refetchStampRewards', refetchStampRewards()),
-        wrap('refetchStreaks', refetchStreaks()),
+        refetchStamps(),
+        refetchStampRewards(),
+        refetchStreaks(),
       ];
 
       // Re-fetch streak/stamp program maps for the relevant stores
       if (nearbyStoreIds && nearbyStoreIds.length > 0) {
         const stampIds = storeId ? [Number(storeId)] : nearbyStoreIds;
-        promises.push(wrap('fetchRewardsData', fetchRewardsData(nearbyStoreIds, stampIds)));
+        promises.push(fetchRewardsData(nearbyStoreIds, stampIds));
       }
 
       if (storeId) {
-        promises.push(wrap('refetchActivityQueries', queryClient.invalidateQueries({ queryKey: activityKeys.root })));
+        promises.push(queryClient.invalidateQueries({ queryKey: activityKeys.root }));
       }
 
       await Promise.all(promises);

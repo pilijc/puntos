@@ -155,6 +155,9 @@ export default function StoreOverviewDetail() {
     !!upcomingStreak,
   ]);
 
+
+  const [isRefreshingLocal, setIsRefreshingLocal] = useState(false);
+
   const { data: profileData } = useCurrentUserProfileQuery();
   const userId = profileData?.user?.id;
 

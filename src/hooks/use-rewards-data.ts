@@ -95,7 +95,7 @@ export const useRewardsDataStore = create<RewardsDataState>((set, get) => ({
               return (data || [])
                 .filter((row: any) => row.stamp_enabled === true)
                 .map((row: any) => Number(row.store_id));
-            }))
+            })
         : Promise.resolve([]);
 
       const p3 = (logger.debug('[fetchRewardsData] getStoresWithEnabledStreaks start'), getStoresWithEnabledStreaks(allStreakStoreIds).then(res => { logger.debug('[fetchRewardsData] getStoresWithEnabledStreaks resolved'); return res; }));
@@ -111,9 +111,7 @@ export const useRewardsDataStore = create<RewardsDataState>((set, get) => ({
       // Wrap each promise with an individual timeout so a single slow query
       // doesn't abort the whole set. We still collect partial results.
       const wrapWithTimeout = async <T>(p: Promise<T>, name: string, ms = 15000) => {
-        const start = Date.now();
-        let timed = false;
-        const timeout = new Promise<never>((_, reject) => setTimeout(() => { timed = true; reject(new Error(`${name} timed out after ${ms}ms`)); }, ms));
+        const timeout = new Promise<never>((_, reject) => setTimeout(() => reject(new Error(`${name} timed out after ${ms}ms`)), ms));
         try {
           const v = await Promise.race([p, timeout]);
           const dur = Date.now() - start;

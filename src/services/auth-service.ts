@@ -66,9 +66,10 @@ export async function softDeleteUserService(userId: string): Promise<void> {
 GoogleSignin.configure({
   webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
 });
-
 export default async function signUpService(email: string, password: string, name: string, role: string) {
   try {
+    // Clear soft-deleted user just-in-time if one exists with the same email
+    await supabase.rpc('pre_signup_check', { target_email: email });
 
     const { data, error } = await supabase.auth.signUp({
       email,

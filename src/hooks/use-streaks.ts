@@ -31,7 +31,6 @@ export const useStreaks = create<StreaksState>((set, get) => ({
     }
 
     try {
-      // getSession() uses the locally cached token — no network round-trip.
       const { data: { session } } = await supabase.auth.getSession();
       const user = session?.user;
       if (!user?.id) {
