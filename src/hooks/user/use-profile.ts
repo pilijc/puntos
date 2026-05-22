@@ -6,6 +6,7 @@ import {
     useUpdateUserProfileMutation,
 } from "@/hooks/user/rq";
 import { UserPreferences, UserProfile } from "@/type/settings";
+import { logger } from "@/utils/logger";
 
 export const useProfile = () => {
     const profileQuery = useCurrentUserProfileQuery();
@@ -27,7 +28,7 @@ export const useProfile = () => {
             await updateProfileMutation.mutateAsync({ userId: user.id, updates });
             return { success: true };
         } catch (err) {
-            console.error("Profile update error:", err);
+            logger.error("Profile update error:", err);
             return { success: false };
         }
     }, [updateProfileMutation, user?.id]);
@@ -37,7 +38,7 @@ export const useProfile = () => {
         try {
             await updatePreferencesMutation.mutateAsync({ userId: user.id, updates });
         } catch (err) {
-            console.error("Store failed to save preference", err);
+            logger.error("Store failed to save preference", err);
         }
     }, [updatePreferencesMutation, user?.id]);
 
@@ -51,7 +52,7 @@ export const useProfile = () => {
             await saveProfileMutation.mutateAsync({ userId: user.id, ...params });
             return { success: true };
         } catch (error) {
-            console.error("Save profile error:", error);
+            logger.error("Save profile error:", error);
             return { success: false, error };
         }
     }, [saveProfileMutation, user?.id]);

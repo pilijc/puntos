@@ -7,6 +7,7 @@
  */
 
 import { SESSION_CONFIGS, type SessionRole } from "@/config/session-limits";
+import { logger } from "@/utils/logger";
 import {
     registerDeviceSession,
     forceDeactivateCurrentDevice,
@@ -96,7 +97,7 @@ export async function forceDeactivateAllDeviceSessions(): Promise<void> {
     await Promise.allSettled(
         configs.map((config) =>
             forceDeactivateCurrentDevice(config).catch((e) =>
-                console.warn(`[DeviceSession] force deactivate failed for ${config.table}:`, e),
+                logger.warn(`[DeviceSession] force deactivate failed for ${config.table}:`, e),
             ),
         ),
     );

@@ -35,6 +35,7 @@ import { SupportConversation, SupportInboxFilter } from "@/type/support-chat";
 import { SharedChatArea } from "@/components/chat/shared-chat-area";
 import { getMyStores, StoreRow } from "@/services/store-service";
 import { useIsDark } from "@/hooks/use-is-dark";
+import { logger } from "@/utils/logger";
 
 const FILTERS: { key: SupportInboxFilter; label: string }[] = [
   { key: "all", label: "All" },
@@ -127,7 +128,7 @@ export default function SuperAdminInbox() {
       const stores = await getMyStores(activeConversation.owner_id);
       setManagerStores(stores);
     } catch (e) {
-      console.warn("Failed to load stores", e);
+      logger.warn("Failed to load stores", e);
     } finally {
       setLoadingManagerStores(false);
     }

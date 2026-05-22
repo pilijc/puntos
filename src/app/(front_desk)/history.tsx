@@ -21,6 +21,7 @@ import TransactionRow, { Transaction } from "@/components/front-desk/history/Tra
 import FilterSheet, { SortField, SortDirection, TransactionType } from "@/components/front-desk/history/FilterSheet";
 import EmptyState from "@/components/front-desk/history/EmptyState";
 import ActiveFilterPills from "@/components/front-desk/history/ActiveFilterPills";
+import { logger } from "@/utils/logger";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -112,7 +113,7 @@ export default function FrontDeskHistory() {
                 setStoreId(storeInfo.id);
                 fetchStaffTransactions(currentStaffId, storeInfo.id);
             } catch (error) {
-                console.error("Failed to load staff info or transactions:", error);
+                logger.error("Failed to load staff info or transactions:", error);
             }
         };
 

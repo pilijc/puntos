@@ -1,5 +1,6 @@
 import * as Location from 'expo-location';
 import { Platform } from 'react-native';
+import { logger } from "@/utils/logger";
 
 export type LocationSubscription = Location.LocationSubscription;
 
@@ -315,13 +316,13 @@ export async function watchHeading(
         if (userHeading) callback(userHeading);
       },
       (error) => {
-        console.error('[LocationService] Heading watch update error:', error);
+        logger.error('[LocationService] Heading watch update error:', error);
       }
     );
 
     return subscription;
   } catch (error) {
-    console.error('[LocationService] Error watching heading:', error);
+    logger.error('[LocationService] Error watching heading:', error);
     return null;
   }
 }

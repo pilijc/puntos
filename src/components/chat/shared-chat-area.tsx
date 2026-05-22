@@ -18,6 +18,7 @@ import { Check, FileText, Image as ImageIcon, Plus, Send, X } from "lucide-react
 import * as DocumentPicker from "expo-document-picker";
 import * as ImagePicker from "expo-image-picker";
 import { SupportAttachmentInput, SupportMessage } from "@/type/support-chat";
+import { logger } from "@/utils/logger";
 
 interface WebTextStyle extends Omit<TextStyle, "outlineStyle"> {
   outlineStyle?: "none" | "solid" | "dotted" | "dashed";
@@ -143,7 +144,7 @@ export function SharedChatArea({
       try {
         await onSendAttachment!(attachments, body);
       } catch (e) {
-        console.error(e);
+        logger.error(e);
         setPendingAttachments(attachments);
         setMessageText(body || "");
         if (conversationId) draftsRef.current[conversationId] = body || "";
@@ -158,7 +159,7 @@ export function SharedChatArea({
       try {
         await onSendMessage(outgoing);
       } catch (e) {
-        console.error(e);
+        logger.error(e);
         setMessageText(outgoing);
         if (conversationId) draftsRef.current[conversationId] = outgoing;
       }

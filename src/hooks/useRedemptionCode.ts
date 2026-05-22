@@ -6,6 +6,7 @@ import {
   cancelRedemptionCode,
 } from "@/services/user/rewards-redemption";
 import { RedemptionCode, RedemptionUpdate } from "@/type/user/reward-redemption";
+import { logger } from "@/utils/logger";
 
 export type RedemptionStatus = "loading" | "active" | "redeemed" | "cancelled" | "expired" | "error" | "rate_limited";
 
@@ -16,7 +17,7 @@ const localRedemptionLocks = new Map<string, number>();
 function withGenerationTimeout<T>(promise: Promise<T>): Promise<T> {
   return new Promise((resolve, reject) => {
     const timeout = setTimeout(() => {
-      reject(new console.log("Redemption code generation timed out"));
+      reject(new logger.debug("Redemption code generation timed out"));
     }, GENERATION_TIMEOUT_MS);
 
     promise
@@ -72,7 +73,7 @@ export function useRedemptionCode(
       try {
         channelRef.current.unsubscribe();
       } catch (error) {
-        console.log('Error unsubscribing from channel:', error);
+        logger.debug('Error unsubscribing from channel:', error);
       }
     }
     channelRef.current = null;
@@ -151,7 +152,7 @@ export function useRedemptionCode(
         }
       }
     } catch (error) {
-      console.log("Error generating redemption code:", error);
+      logger.debug("Error generating redemption code:", error);
       setStatus("error");
       setErrorMessage(
         error instanceof Error && error.message.includes("timed out")
@@ -195,7 +196,7 @@ export function useRedemptionCode(
       setStatus("cancelled");
       setErrorMessage(null);
     } catch (error) {
-      console.log("Error cancelling redemption code:", error);
+      logger.debug("Error cancelling redemption code:", error);
       setErrorMessage("An error occurred while cancelling code");
     }
   }, [redemptionCode, clearTimer, clearSubscription]);

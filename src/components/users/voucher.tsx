@@ -5,6 +5,7 @@ import { VoucherGeneratorProps, Voucher } from "@/type/user/voucher";
 import { generateVoucherCode } from "@/services/user/voucher-service";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/button";
+import { logger } from "@/utils/logger";
 
 export const VoucherGenerator: React.FC<VoucherGeneratorProps> = ({
   userId,
@@ -32,7 +33,7 @@ export const VoucherGenerator: React.FC<VoucherGeneratorProps> = ({
       const expiresAt = new Date(newVoucher.expires_at).getTime();
       setTimeLeft(Math.max(Math.floor((expiresAt - Date.now()) / 1000), 0));
     } catch (err) {
-      console.error("Voucher error:", err);
+      logger.error("Voucher error:", err);
       Alert.alert(translate("label.error"), translate("user.qr.voucher.failed"));
     } finally {
       setLoading(false);

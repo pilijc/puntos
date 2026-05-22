@@ -11,6 +11,7 @@ import { useColorScheme, Platform } from "react-native";
 import { Modal, type ModalButton } from "@/components/modal";
 import { useCreateStoreStore } from "@/store/store-manager/create-store-store";
 import { checkStoreCreationLimit } from "@/services/store-manager/subscription-limits";
+import { logger } from "@/utils/logger";
 import {
   StoreStep,
   BusinessStep,
@@ -284,7 +285,7 @@ export default function CreateStore() {
       const tz = await resolveStoreTimezone(lng, lat);
       if (tz) setTimezone(tz);
     } catch (e) {
-      console.warn("[create-store] timezone resolve failed:", e);
+      logger.warn("[create-store] timezone resolve failed:", e);
     } finally {
       setIsResolvingTimezone(false);
     }

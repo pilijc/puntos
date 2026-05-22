@@ -1,3 +1,4 @@
+import { logger } from "@/utils/logger";
 import {supabase} from "@/supabase/supabase"
 import {UserPointsSummary} from "@/type/user/points"
 import {ServiceResponse} from "@/type/service-response"
@@ -17,7 +18,7 @@ export async function getUserPoints(userId: string, storeId?: string): Promise<S
     const { data, error } = await supabase.rpc("get_user_points_summary", rpcParams);
 
     if (error) {
-        console.error("error getting points summary from rpc", error);
+        logger.error("error getting points summary from rpc", error);
         return { data: null, error: new Error(`RPC get_user_points_summary failed: ${error.message}`) };
     }
 
@@ -60,7 +61,7 @@ export async function getUserAvailablePoints(userId: string, storeId?: string): 
     const { data: activeCodes, error: activeCodesError } = await activeCodesQuery;
         
     if (activeCodesError) {
-        console.error("error getting active codes", activeCodesError);
+        logger.error("error getting active codes", activeCodesError);
         return { data: null, error: new Error(activeCodesError.message) };
     }
     

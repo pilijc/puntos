@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { StaffTransaction, getStaffTransactions, PaginationOptions } from "@/services/frontdesk/history-service";
+import { logger } from "@/utils/logger";
 
 interface StaffHistoryState {
   staffTransactions: StaffTransaction[];
@@ -44,7 +45,7 @@ export const useStaffHistory = create<StaffHistoryState>((set, get) => ({
         currentOffset: offset + result.transactions.length
       });
     } catch (error) {
-      console.error("Exception fetching staff history:", error);
+      logger.error("Exception fetching staff history:", error);
       set({ 
         staffTransactions: reset ? [] : get().staffTransactions, 
         isLoading: false, 
@@ -72,7 +73,7 @@ export const useStaffHistory = create<StaffHistoryState>((set, get) => ({
         currentOffset: currentOffset + result.transactions.length
       });
     } catch (error) {
-      console.error("Exception loading more transactions:", error);
+      logger.error("Exception loading more transactions:", error);
       set({ isLoadingMore: false });
     }
   },

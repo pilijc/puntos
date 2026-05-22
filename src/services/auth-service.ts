@@ -6,6 +6,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { getHomeRouteForUserId, getRoleTypeForUser, getWebAdjustedHomeRoute } from "./access-service";
 import { forceDeactivateAllDeviceSessions } from "@/services/shared/device-session-route-service";
 import { router } from "expo-router";
+import { logger } from "@/utils/logger";
  
 export class AccountDeletedError extends Error {
   constructor() {
@@ -214,7 +215,7 @@ export async function loginService(email: string, password: string) {
 
         if (error || !storeStaff?.store_id) {
           markIntentionalSignOut();
-          await forceDeactivateAllDeviceSessions().catch(e => console.warn(e));
+          await forceDeactivateAllDeviceSessions().catch(e => logger.warn(e));
           await supabase.auth.signOut();   
           await AsyncStorage.removeItem("sessionToken");
           

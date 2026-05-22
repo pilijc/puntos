@@ -4,6 +4,7 @@ import { View, Text, TouchableOpacity } from "@/tw"
 import { PaymentModalProps } from "@/type/store-manager/payment"
 import { useTranslation } from "react-i18next";
 import { useCreatePayMongoPaymentMutation } from "@/hooks/store-manager/rq";
+import { logger } from "@/utils/logger";
 
 
 export default function PaymentModal({
@@ -32,7 +33,7 @@ export default function PaymentModal({
           }
         },
         onError: (err) => {
-          console.error("Error calling payment function:", err)
+          logger.error("Error calling payment function:", err)
           Alert.alert(
             translate("store_manager.subscription.registration.errorTitle"),
             translate("store_manager.subscription.registration.errorGeneric")

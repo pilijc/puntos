@@ -1,4 +1,5 @@
 import { supabase } from "@/supabase/supabase";
+import { logger } from "@/utils/logger";
 
 export interface StaffTransaction {
   id: string;
@@ -73,7 +74,7 @@ export async function getStaffTransactions(
       .order("created_at", { ascending: false });
           
     if (qrError) {
-      console.error("Error fetching staff QR transactions:", qrError);
+      logger.error("Error fetching staff QR transactions:", qrError);
     }
     
    

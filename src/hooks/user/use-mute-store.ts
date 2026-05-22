@@ -2,6 +2,7 @@ import { useStoreStore } from "@/store/user/store-store";
 import { useProfile } from "@/hooks/user/use-profile";
 import { useMutedStoresQuery, useToggleMuteStoreMutation } from "@/hooks/user/rq";
 import { useEffect } from "react";
+import { logger } from "@/utils/logger";
 
 export function useMuteStore(storeId?: number) {
     const { mutedStoreIds, setMutedStoreIds } = useStoreStore();
@@ -26,7 +27,7 @@ export function useMuteStore(storeId?: number) {
         try {
             await toggleMuteMutation.mutateAsync({ storeId, currentlyMuted: isMuted });
         } catch (error) {
-            console.error("Failed to toggle mute state:", error);
+            logger.error("Failed to toggle mute state:", error);
         }
     };
 

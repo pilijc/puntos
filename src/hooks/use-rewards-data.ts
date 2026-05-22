@@ -4,6 +4,7 @@ import { supabase } from "@/supabase/supabase";
 import { Reward, getRewards, RewardSortOrder, PointsOrder } from "@/services/reward-service";
 import { enrichStoresWithLocation, EnrichedStore } from "@/utils/store-location";
 import { UserLocation } from "@/services/user/location-service";
+import { logger } from "@/utils/logger";
 
 interface RewardsDataState {
   eligibleNearbyStoreIds: number[];
@@ -78,34 +79,34 @@ export const useRewardsDataStore = create<RewardsDataState>((set, get) => ({
 
     try {
       const allStreakStoreIds = Array.from(new Set([...nearbyStoreIds, ...displayStampStoreIds]));
-      console.log('[fetchRewardsData] start', { nearbyStoreIds, displayStampStoreIds });
+      logger.debug('[fetchRewardsData] start', { nearbyStoreIds, displayStampStoreIds });
 
       const p1 = nearbyStoreIds.length > 0
-        ? (console.log('[fetchRewardsData] getStoresWithEnabledActiveStampProgram start'), getStoresWithEnabledActiveStampProgram(nearbyStoreIds).then(res => { console.log('[fetchRewardsData] getStoresWithEnabledActiveStampProgram resolved'); return res; }))
+        ? (logger.debug('[fetchRewardsData] getStoresWithEnabledActiveStampProgram start'), getStoresWithEnabledActiveStampProgram(nearbyStoreIds).then(res => { logger.debug('[fetchRewardsData] getStoresWithEnabledActiveStampProgram resolved'); return res; }))
         : Promise.resolve([]);
 
       const p2 = nearbyStoreIds.length > 0
-        ? (console.log('[fetchRewardsData] store_feature query start'), supabase
+        ? (logger.debug('[fetchRewardsData] store_feature query start'), supabase
             .from("store_feature")
             .select("store_id, stamp_enabled")
             .in("store_id", nearbyStoreIds)
             .then(({ data }) => {
-              console.log('[fetchRewardsData] store_feature query resolved');
+              logger.debug('[fetchRewardsData] store_feature query resolved');
               return (data || [])
                 .filter((row: any) => row.stamp_enabled === true)
                 .map((row: any) => Number(row.store_id));
             }))
         : Promise.resolve([]);
 
-      const p3 = (console.log('[fetchRewardsData] getStoresWithEnabledStreaks start'), getStoresWithEnabledStreaks(allStreakStoreIds).then(res => { console.log('[fetchRewardsData] getStoresWithEnabledStreaks resolved'); return res; }));
+      const p3 = (logger.debug('[fetchRewardsData] getStoresWithEnabledStreaks start'), getStoresWithEnabledStreaks(allStreakStoreIds).then(res => { logger.debug('[fetchRewardsData] getStoresWithEnabledStreaks resolved'); return res; }));
 
       const p4 = displayStampStoreIds.length > 0
-        ? (console.log('[fetchRewardsData] getActiveStampProgramRewards start'), getActiveStampProgramRewards(displayStampStoreIds).then(res => { console.log('[fetchRewardsData] getActiveStampProgramRewards resolved'); return res; }))
+        ? (logger.debug('[fetchRewardsData] getActiveStampProgramRewards start'), getActiveStampProgramRewards(displayStampStoreIds).then(res => { logger.debug('[fetchRewardsData] getActiveStampProgramRewards resolved'); return res; }))
         : Promise.resolve([]);
 
-      const p5 = (console.log('[fetchRewardsData] getActiveStreakProgramsByStore start'), getActiveStreakProgramsByStore(allStreakStoreIds).then(res => { console.log('[fetchRewardsData] getActiveStreakProgramsByStore resolved'); return res; }));
+      const p5 = (logger.debug('[fetchRewardsData] getActiveStreakProgramsByStore start'), getActiveStreakProgramsByStore(allStreakStoreIds).then(res => { logger.debug('[fetchRewardsData] getActiveStreakProgramsByStore resolved'); return res; }));
 
-      const p6 = (console.log('[fetchRewardsData] getUpcomingStreakProgramsByStore start'), getUpcomingStreakProgramsByStore(allStreakStoreIds).then(res => { console.log('[fetchRewardsData] getUpcomingStreakProgramsByStore resolved'); return res; }));
+      const p6 = (logger.debug('[fetchRewardsData] getUpcomingStreakProgramsByStore start'), getUpcomingStreakProgramsByStore(allStreakStoreIds).then(res => { logger.debug('[fetchRewardsData] getUpcomingStreakProgramsByStore resolved'); return res; }));
 
       // Wrap each promise with an individual timeout so a single slow query
       // doesn't abort the whole set. We still collect partial results.
@@ -116,11 +117,11 @@ export const useRewardsDataStore = create<RewardsDataState>((set, get) => ({
         try {
           const v = await Promise.race([p, timeout]);
           const dur = Date.now() - start;
-          console.log(`[fetchRewardsData] ${name} resolved in ${dur}ms`);
+          logger.debug(`[fetchRewardsData] ${name} resolved in ${dur}ms`);
           return { ok: true as const, value: v };
         } catch (err) {
           const dur = Date.now() - start;
-          console.warn(`[fetchRewardsData] ${name} failed after ${dur}ms:`, err);
+          logger.warn(`[fetchRewardsData] ${name} failed after ${dur}ms:`, err);
           return { ok: false as const, error: err };
         }
       };
@@ -133,7 +134,7 @@ export const useRewardsDataStore = create<RewardsDataState>((set, get) => ({
         wrapWithTimeout(p5, 'getActiveStreakProgramsByStore'),
         wrapWithTimeout(p6, 'getUpcomingStreakProgramsByStore'),
       ]);
-      console.log('[fetchRewardsData] wrapped Promise.all completed');
+      logger.debug('[fetchRewardsData] wrapped Promise.all completed');
 
       // Convert wrapped results into the original results array shape, using
       // empty fallbacks when a query failed or timed out.
@@ -191,7 +192,7 @@ export const useRewardsDataStore = create<RewardsDataState>((set, get) => ({
         fetchedStoreIds: newFetchedIds,
       });
     } catch (error) {
-      console.error("Failed to fetch rewards data in store:", error);
+      logger.error("Failed to fetch rewards data in store:", error);
       set({ isLoadingRewardsFeatures: false });
     }
   },
@@ -201,7 +202,7 @@ export const useRewardsDataStore = create<RewardsDataState>((set, get) => ({
       const rewards = await getRewards(options);
       set({ backendRewards: rewards });
     } catch (error) {
-      console.error("Failed to fetch backend rewards:", error);
+      logger.error("Failed to fetch backend rewards:", error);
     }
   },
 

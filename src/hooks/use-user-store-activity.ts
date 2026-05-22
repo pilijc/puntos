@@ -3,6 +3,7 @@ import { supabase } from "@/supabase/supabase";
 import { getUserAvailablePoints } from "@/services/user/points-service";
 import { getUserTransactionHistory } from "@/services/user/qr-service";
 import { getRewards, RewardSortOrder, PointsOrder } from "@/services/reward-service";
+import { logger } from "@/utils/logger";
 
 interface UserStoreActivityState {
   pointsMap: Record<string, number>;
@@ -51,7 +52,7 @@ export const useUserStoreActivity = create<UserStoreActivityState>((set, get) =>
         hasFetchedOnce: { ...state.hasFetchedOnce, [storeId]: true },
       }));
     } catch (error) {
-      console.error("Failed to fetch store activity:", error);
+      logger.error("Failed to fetch store activity:", error);
       set((state) => ({ isLoading: { ...state.isLoading, [storeId]: false }, hasFetchedOnce: { ...state.hasFetchedOnce, [storeId]: true } }));
     }
   },
@@ -77,7 +78,7 @@ export const useUserStoreActivity = create<UserStoreActivityState>((set, get) =>
         hasFetchedRewardsOnce: { ...state.hasFetchedRewardsOnce, [cacheKey]: true },
       }));
     } catch (error) {
-      console.error("Failed to fetch store rewards:", error);
+      logger.error("Failed to fetch store rewards:", error);
       set((state) => ({ isLoadingRewards: { ...state.isLoadingRewards, [cacheKey]: false }, hasFetchedRewardsOnce: { ...state.hasFetchedRewardsOnce, [cacheKey]: true } }));
     }
   },

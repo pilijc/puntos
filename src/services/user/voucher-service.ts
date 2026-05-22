@@ -1,5 +1,6 @@
 import { supabase } from "@/supabase/supabase";
 import { VoucherTransaction } from "@/type/user/voucher";
+import { logger } from "@/utils/logger";
 
 
 const limit = 5; 
@@ -58,7 +59,7 @@ export async function generateVoucherCode(
     return voucherData;
 
   } catch (error) {
-    console.error("Error generating voucher:", error);
+    logger.error("Error generating voucher:", error);
     throw error;
   }
 }
@@ -73,8 +74,8 @@ export async function getUserVoucherTransactionHistory(userId: string): Promise<
       .limit(1);
 
     if (testError) {
-      console.error('Basic access test failed:', testError);
-      console.error('Test error details:', {
+      logger.error('Basic access test failed:', testError);
+      logger.error('Test error details:', {
         message: testError.message,
         details: testError.details,
         hint: testError.hint,
@@ -97,8 +98,8 @@ export async function getUserVoucherTransactionHistory(userId: string): Promise<
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('Error fetching voucher transaction history:', error);
-      console.error('Error details:', {
+      logger.error('Error fetching voucher transaction history:', error);
+      logger.error('Error details:', {
         message: error.message,
         details: error.details,
         hint: error.hint,
@@ -115,7 +116,7 @@ export async function getUserVoucherTransactionHistory(userId: string): Promise<
       .in('id', storeIds);
 
     if (storesError) {
-      console.error('Error fetching store names:', storesError);
+      logger.error('Error fetching store names:', storesError);
     }
 
     // Create store lookup map
@@ -139,7 +140,7 @@ export async function getUserVoucherTransactionHistory(userId: string): Promise<
       storeId: transaction.store_id, // Add storeId for navigation
     }));
   } catch (error) {
-    console.error('Exception fetching voucher transaction history:', error);
+    logger.error('Exception fetching voucher transaction history:', error);
     return [];
   }
 }

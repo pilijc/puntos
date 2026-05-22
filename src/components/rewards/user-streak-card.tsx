@@ -10,6 +10,7 @@ import { useRouter } from "expo-router";
 import { recordUserStreak, getStreakEarnedDates, STREAK_NEW_ENROLLMENT_BLOCKED } from "@/services/streak-service";
 import { supabase } from "@/supabase/supabase";
 import { Modal, type ModalButton } from "@/components/modal";
+import { logger } from "@/utils/logger";
 
 interface UserStreakCardProps {
   streak: any;
@@ -552,7 +553,7 @@ export default function UserStreakCard({
                       } catch (e) {
                         setHasEarnedToday(false);
                         setShowStreakModal(false);
-                        console.error("Failed to record streak:", e);
+                        logger.error("Failed to record streak:", e);
                         if (e instanceof Error && e.message === STREAK_NEW_ENROLLMENT_BLOCKED) {
                           showModal(
                             translate("user.rewards.messages.streakEnrollmentClosedTitle"),

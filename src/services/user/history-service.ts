@@ -2,6 +2,7 @@ import { supabase } from "@/supabase/supabase";
 import { getUserTransactionHistory } from "./qr-service";
 import { getUserVoucherTransactionHistory } from "./voucher-service";
 import { getRewardRedemptionHistory } from "./rewards-history-service";
+import { logger } from "@/utils/logger";
 
 export async function getCompleteUserHistory(
   userId: string, 
@@ -37,7 +38,7 @@ export async function getCompleteUserHistory(
     };
 
   } catch (error) {
-    console.error("Error fetching complete user history:", error);
+    logger.error("Error fetching complete user history:", error);
     return { transactions: [], hasMore: false };
   }
 }

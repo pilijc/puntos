@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { View, Text, TouchableOpacity } from "@/tw";
 import { ChevronLeft, ChevronRight } from "lucide-react-native";
+import { logger } from "@/utils/logger";
 
 function formatLocalDateKey(d: Date): string {
   const y = d.getFullYear();
@@ -61,7 +62,7 @@ export function WebStreakActivationCalendar({
       setViewYear(d.getFullYear());
       setViewMonth(d.getMonth());
     } catch {
-      console.warn("Invalid date selection: unable to parse the selected date key.", selectedDateKey);
+      logger.warn("Invalid date selection: unable to parse the selected date key.", selectedDateKey);
  
     }
   }, [selectedDateKey]);

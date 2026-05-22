@@ -6,6 +6,7 @@ import { AlertCircle } from 'lucide-react-native';
 import { ManagerDeviceSession, MAX_DEVICE_SESSIONS } from '@/type/store-manager/device-session';
 import { DeviceSessionCard } from './device-session-card';
 import { useTranslation } from 'react-i18next';
+import { logger } from "@/utils/logger";
 
 interface DeviceLimitModalProps {
     visible: boolean;
@@ -30,7 +31,7 @@ export function DeviceLimitModal({
         try {
             await onCheckAgain();
         } catch (error) {
-            console.error("Failed to recheck device session limit:", error);
+            logger.error("Failed to recheck device session limit:", error);
         } finally {
             setIsRetrying(false);
         }

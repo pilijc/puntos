@@ -27,6 +27,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { StampDetailSkeleton } from "@/components/skeleton/user/stamp-detail-skeleton";
 import { useIsDark } from "@/hooks/use-is-dark";
+import { logger } from "@/utils/logger";
 
 // ─── Single Punch Card ────────────────────────────────────────────────────────
 function StampCard({
@@ -352,7 +353,7 @@ export default function StampLogScreen() {
           },
         });
       } catch (e) {
-        console.error('[StampLog] Failed to build virtual card:', e);
+        logger.error('[StampLog] Failed to build virtual card:', e);
       }
     })();
     return () => { active = false; };

@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { getAdminSession, getDashboardData, AdminInfo } from "@/services/super-admin/dashboard-service";
+import { logger } from "@/utils/logger";
 
 interface DashboardState {
   users: any[];
@@ -25,7 +26,7 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
         set({ adminInfo });
       }
     } catch (error) {
-      console.error("Admin Session Error:", error);
+      logger.error("Admin Session Error:", error);
     }
   },
 
@@ -37,7 +38,7 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
       const { users, stores, subscriptions } = await getDashboardData();
       set({ users, stores, subscriptions });
     } catch (error) {
-      console.error("Dashboard Fetch Error:", error);
+      logger.error("Dashboard Fetch Error:", error);
     } finally {
       if (isInitialFetch) set({ loading: false });
     }

@@ -11,6 +11,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import Animated, { FadeIn, FadeOut, Layout, Easing, useSharedValue, useAnimatedStyle, withSpring, withTiming } from "react-native-reanimated";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import Carousel from "react-native-reanimated-carousel";
+import { logger } from "@/utils/logger";
 import { Dimensions } from "react-native";
 import { ActivityIndicator, RefreshControl } from "react-native";
 import { useTranslation } from "react-i18next";
@@ -119,7 +120,7 @@ export default function StoreOverviewDetail() {
   const isStoreCached = storeId ? fetchedStoreIds.includes(Number(storeId)) : false;
 
   useEffect(() => {
-    console.log("[StoreDetail] Skeleton state check:", {
+    logger.debug("[StoreDetail] Skeleton state check:", {
       isSwitchingStore,
       isLoadingRewardsFeatures,
       isRefreshingLocal,
@@ -180,7 +181,7 @@ export default function StoreOverviewDetail() {
         ),
       ]);
     } catch (error) {
-      console.warn("[StoreDetail] Refresh did not complete in time:", error);
+      logger.warn("[StoreDetail] Refresh did not complete in time:", error);
     } finally {
       // ⚠️ MUST be in finally — guaranteed to run whether try completes normally,
       // throws, or is cut short by the timeout sentinel above.

@@ -24,6 +24,7 @@ import { useProfile } from "@/hooks/user/use-profile";
 import { X } from "lucide-react-native";
 import { MapControlButtons } from "@/components/map/map-control-buttons";
 import { useRouter } from "expo-router";
+import { logger } from "@/utils/logger";
 
 let OneSignal: typeof import("react-native-onesignal").OneSignal | null = null;
 
@@ -279,7 +280,7 @@ export default function Discover() {
           }
           bottomSheetRef.current?.snapToIndex(1);
         } catch (e) {
-          console.error("[NearbyPush] error handling notification click:", e);
+          logger.error("[NearbyPush] error handling notification click:", e);
         }
       })();
     };
@@ -458,13 +459,13 @@ export default function Discover() {
             });
             
             if (pushError) {
-              console.error("[Geofence] Failed to send push notification:", pushError);
+              logger.error("[Geofence] Failed to send push notification:", pushError);
             }
 
             nearbyStoreIds.forEach((id) => notifiedStoreIds.current.add(id));
 
           } catch (err) {
-            console.error("[Geofence] Error in location callback:", err);
+            logger.error("[Geofence] Error in location callback:", err);
           }
         },
         {
@@ -591,7 +592,7 @@ export default function Discover() {
       const data = await getSearchResultsService(searchQuery, language);
       setSearchResults(data.features || []);
     } catch (e) {
-      console.error("Search error", e);
+      logger.error("Search error", e);
     }
   };
 
@@ -681,7 +682,7 @@ export default function Discover() {
         if (!cancelled) setLocalizedMapStyleJSON(styleJSON);
       })
       .catch((error) => {
-        console.warn("[Mapbox] Failed to localize style JSON:", error);
+        logger.warn("[Mapbox] Failed to localize style JSON:", error);
         if (!cancelled) setLocalizedMapStyleJSON(null);
       });
 

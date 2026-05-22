@@ -11,6 +11,7 @@ import { markIntentionalSignOut, consumeIntentionalSignOut } from '@/lib/intenti
 import { isLoginDeviceSessionFlowActive } from '@/lib/login-device-session-flow';
 import { registerDeviceSessionForRoute, forceDeactivateAllDeviceSessions } from '@/services/shared/device-session-route-service';
 import { getQueryClient } from '@/lib/query-client';
+import { logger } from "@/utils/logger";
 
 let OneSignal: typeof import("react-native-onesignal").OneSignal | null = null;
 
@@ -82,7 +83,7 @@ export function useAuthListener() {
               if (isOneSignalNativeAvailable()) {
                 await OneSignal.login(userId);
                 const { error: pushError } = await upsertPushId();
-                if (pushError) console.error("Failed to upsert push ID:", pushError);
+                if (pushError) logger.error("Failed to upsert push ID:", pushError);
               }
 
               if (isLoginDeviceSessionFlowActive()) return;
@@ -121,12 +122,12 @@ export function useAuthListener() {
                 useAuthStore.getState().setRestricted(true);
               } else {
                 consumeIntentionalSignOut();
-                console.error("Auth listener session error:", err);
+                logger.error("Auth listener session error:", err);
               }
             }
           })();
         } else if (event === 'SIGNED_IN' && session && isOnSignupFlow) {
-          console.log("User has session but is on signup flow - not auto-redirecting");
+          logger.debug("User has session but is on signup flow - not auto-redirecting");
         }
       }
     );

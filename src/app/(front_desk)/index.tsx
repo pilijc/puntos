@@ -24,6 +24,7 @@ import RecentTransactions from "@/components/front-desk/RecentTransactions";
 import SuccessModal from "@/components/front-desk/modal/SuccessModal";
 import ErrorModal from "@/components/front-desk/modal/ErrorModal";
 import { RedemptionVerificationResult } from "@/type/frontdesk/reward-redemption";
+import { logger } from "@/utils/logger";
 
 export default function FrontDeskScan() {
   const router = useRouter();
@@ -97,7 +98,7 @@ export default function FrontDeskScan() {
         const hasAccess = await checkQRAccessForCurrentStaff();
         setQrAccessEnabled(hasAccess);
       } catch (error) {
-        console.error("Error checking QR access:", error);
+        logger.error("Error checking QR access:", error);
         setQrAccessEnabled(false);
       }
     };

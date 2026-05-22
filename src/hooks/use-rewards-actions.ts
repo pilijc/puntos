@@ -6,6 +6,7 @@ import { useStampRewards } from "@/hooks/use-stamp-rewards";
 import { useStreaks } from "@/hooks/use-streaks";
 import { useQueryClient } from "@tanstack/react-query";
 import { activityKeys } from "@/hooks/user/rq/query-keys";
+import { logger } from "@/utils/logger";
 
 export function useRewardsActions() {
   const {
@@ -23,14 +24,14 @@ export function useRewardsActions() {
   const handleRefresh = useCallback(async (storeId?: string, nearbyStoreIds?: number[]) => {
     setRefreshing(true);
     try {
-      console.log("[handleRefresh] start", { storeId, nearbyStoreIds });
+      logger.debug("[handleRefresh] start", { storeId, nearbyStoreIds });
       const wrap = (name: string, p: Promise<any>) => {
-        console.log(`[handleRefresh] start ${name}`);
+        logger.debug(`[handleRefresh] start ${name}`);
         return p.then((res) => {
-          console.log(`[handleRefresh] resolved ${name}`);
+          logger.debug(`[handleRefresh] resolved ${name}`);
           return res;
         }).catch((err) => {
-          console.error(`[handleRefresh] error ${name}`, err);
+          logger.error(`[handleRefresh] error ${name}`, err);
           throw err;
         });
       };
@@ -56,12 +57,12 @@ export function useRewardsActions() {
       }
 
       await Promise.all(promises);
-      console.log('[handleRefresh] all promises resolved');
+      logger.debug('[handleRefresh] all promises resolved');
     } catch (error) {
-      console.error("Refresh failed:", error);
+      logger.error("Refresh failed:", error);
     } finally {
       setRefreshing(false);
-      console.log('[handleRefresh] finished');
+      logger.debug('[handleRefresh] finished');
     }
   }, [setRefreshing, refetchStamps, refetchStampRewards, refetchStreaks, fetchBackendRewards, fetchRewardsData, resetRewardsData, queryClient]);
 

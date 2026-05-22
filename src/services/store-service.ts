@@ -1,5 +1,6 @@
 import { supabase } from "@/supabase/supabase";
 import { formatPostGISLocation, withPostGISCoordinates } from "@/utils/location";
+import { logger } from "@/utils/logger";
 
 export const STORE_SELECT = `
     id, name, type, address, location, radius,
@@ -71,7 +72,7 @@ export async function resolveStoreTimezone(
         p_latitude: latitude,
     });
     if (error) {
-        console.warn('[resolveStoreTimezone] RPC error:', error.message);
+        logger.warn('[resolveStoreTimezone] RPC error:', error.message);
         return null;
     }
     return (data as string | null) ?? null;

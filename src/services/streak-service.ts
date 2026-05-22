@@ -5,6 +5,7 @@ import {
 } from "@/services/store-manager/premium-campaign-gate";
 export const STREAK_NEW_ENROLLMENT_BLOCKED = "STREAK_NEW_ENROLLMENT_BLOCKED";
 import { withPostGISCoordinates } from "@/utils/location";
+import { logger } from "@/utils/logger";
 
 export interface RecordStreakResult {
   alreadyRecorded: boolean;
@@ -58,7 +59,7 @@ export async function recordUserStreak(
         .maybeSingle();
 
       if (enrolErr) {
-        console.warn("[recordUserStreak] Enrollment lookup failed:", enrolErr.message);
+        logger.warn("[recordUserStreak] Enrollment lookup failed:", enrolErr.message);
       } else if (!existingEnrollment) {
         throw new Error(STREAK_NEW_ENROLLMENT_BLOCKED);
       }
@@ -71,7 +72,7 @@ export async function recordUserStreak(
     });
 
     if (error) {
-      console.error('[recordUserStreak] RPC error:', error.message);
+      logger.error('[recordUserStreak] RPC error:', error.message);
       throw new Error(error.message);
     }
 
@@ -92,7 +93,7 @@ export async function recordUserStreak(
       justCompleted: result.justCompleted ?? false,
     };
   } catch (err) {
-    console.error('[recordUserStreak] Exception:', err);
+    logger.error('[recordUserStreak] Exception:', err);
     throw err;
   }
 }
@@ -125,7 +126,7 @@ export async function getStreakEarnedDates(
     .limit(365); // cap at one year of history
 
   if (error) {
-    console.error("Error fetching streak earned dates:", error.message);
+    logger.error("Error fetching streak earned dates:", error.message);
     return new Set();
   }
 
@@ -255,7 +256,7 @@ function buildVirtualUserStreak(
 
 export async function getUserStreaks(userId: string): Promise<UserStreak[]> {
   try {
-    console.log("[getUserStreaks] 🔍 Starting fetch for userId:", userId);
+    logger.debug("[getUserStreaks] 🔍 Starting fetch for userId:", userId);
     
     const { data, error } = await supabase
       .from("user_streaks")
@@ -267,11 +268,11 @@ export async function getUserStreaks(userId: string): Promise<UserStreak[]> {
       .limit(90, { foreignTable: "streak_events" });
 
     if (error) {
-      console.error("[getUserStreaks] ❌ Supabase error:", error.message);
+      logger.error("[getUserStreaks] ❌ Supabase error:", error.message);
       return [];
     }
 
-    console.log("[getUserStreaks] ✅ Raw data received:", {
+    logger.debug("[getUserStreaks] ✅ Raw data received:", {
       count: data?.length ?? 0,
       fullRecords: data?.map(s => ({
         id: s.id,
@@ -287,7 +288,7 @@ export async function getUserStreaks(userId: string): Promise<UserStreak[]> {
 
     // ⚠️ RLS issue: stores relationship comes back as undefined even with RLS policy
     // Workaround: fetch stores data SEPARATELY by store_id
-    console.log("[getUserStreaks] 🔧 Fetching stores separately due to RLS relationship issue");
+    logger.debug("[getUserStreaks] 🔧 Fetching stores separately due to RLS relationship issue");
     
     const storeIds = (data ?? []).map(s => s.store_id);
     const { data: storesData, error: storesError } = await supabase
@@ -296,9 +297,9 @@ export async function getUserStreaks(userId: string): Promise<UserStreak[]> {
       .in("id", storeIds);
 
     if (storesError) {
-      console.error("[getUserStreaks] ⚠️ Error fetching stores separately:", storesError.message);
+      logger.error("[getUserStreaks] ⚠️ Error fetching stores separately:", storesError.message);
     } else {
-      console.log("[getUserStreaks] ✅ Fetched stores separately:", storesData?.length);
+      logger.debug("[getUserStreaks] ✅ Fetched stores separately:", storesData?.length);
     }
 
     // Create a map of stores by id
@@ -312,7 +313,7 @@ export async function getUserStreaks(userId: string): Promise<UserStreak[]> {
       stores: storesMap.get(streak.store_id) ?? null,
     }));
 
-    console.log("[getUserStreaks] 📊 After enriching with stores:", {
+    logger.debug("[getUserStreaks] 📊 After enriching with stores:", {
       count: enrichedData.length,
       records: enrichedData.map(s => ({
         id: s.id,
@@ -336,7 +337,7 @@ export async function getUserStreaks(userId: string): Promise<UserStreak[]> {
       const isUserCompleted = streak.status === "completed";
       const passes = storeValid && (isActiveProgram || isUserCompleted);
       
-      console.log(`[getUserStreaks] 🔎 Filter check - Store: ${streak.stores?.name ?? "NULL"}`, {
+      logger.debug(`[getUserStreaks] 🔎 Filter check - Store: ${streak.stores?.name ?? "NULL"}`, {
         storeValid,
         programStatus,
         isActiveProgram,
@@ -350,7 +351,7 @@ export async function getUserStreaks(userId: string): Promise<UserStreak[]> {
       return passes;
     });
 
-    console.log("[getUserStreaks] 📋 After filtering:", {
+    logger.debug("[getUserStreaks] 📋 After filtering:", {
       validCount: validStreaks.length,
       filtered: validStreaks.map(s => ({
         id: s.id,
@@ -365,10 +366,10 @@ export async function getUserStreaks(userId: string): Promise<UserStreak[]> {
       stores: streak.stores ? withPostGISCoordinates(streak.stores) : undefined
     } as UserStreak));
 
-    console.log("[getUserStreaks] ✨ Final result:", result.length, "streaks returned");
+    logger.debug("[getUserStreaks] ✨ Final result:", result.length, "streaks returned");
     return result;
   } catch (error) {
-    console.error("[getUserStreaks] 💥 Exception:", error);
+    logger.error("[getUserStreaks] 💥 Exception:", error);
     return [];
   }
 }
@@ -486,7 +487,7 @@ export async function getUserStreakByStore(
       programRow as UserStreakProgram,
     );
   } catch (error) {
-    console.error("Exception fetching streak by store:", error);
+    logger.error("Exception fetching streak by store:", error);
     return null;
   }
 }

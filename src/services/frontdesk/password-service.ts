@@ -1,5 +1,6 @@
 import { supabase } from "@/supabase/supabase";
 import type { PasswordSetupResponse } from "@/type/frontdesk/password";
+import { logger } from "@/utils/logger";
 
 export async function checkPasswordSetupRequired(userId: string): Promise<boolean> {
   try {
@@ -94,9 +95,9 @@ export async function updatePassword(
       password: newPassword
     }).then(({ error }) => {
       if (error) {
-        console.error("Background password update failed:", error.message);
+        logger.error("Background password update failed:", error.message);
       } else {
-        console.log("Background password update succeeded");
+        logger.debug("Background password update succeeded");
       }
     });
 
@@ -106,7 +107,7 @@ export async function updatePassword(
       message: "Password update initiated. Your new password will be active shortly."
     };
   } catch (error) {
-    console.error("Password update error:", error);
+    logger.error("Password update error:", error);
     return {
       success: false,
       message: `Error: ${error instanceof Error ? error.message : 'Unknown error'}`

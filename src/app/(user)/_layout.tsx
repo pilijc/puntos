@@ -12,6 +12,7 @@ import { useMutedStoresQuery } from '@/hooks/user/rq';
 
 
 import { useIsDark } from '@/hooks/use-is-dark';
+import { logger } from "@/utils/logger";
 
 
 function UserTabs() {
@@ -39,7 +40,7 @@ function UserTabs() {
       setMutedStoreIds(mutedStoresQuery.data);
       setMutedStoresHydrated(true);
     } else if (mutedStoresQuery.isError) {
-      console.error("[Mute] fetch failed:", mutedStoresQuery.error);
+      logger.error("[Mute] fetch failed:", mutedStoresQuery.error);
       setMutedStoresHydrated(true);
     } else {
       setMutedStoresHydrated(false);

@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { userKeys } from "./query-keys";
 import { supabase } from "@/supabase/supabase";
 import { getUserStreakByStore } from "@/services/streak-service";
+import { logger } from "@/utils/logger";
 
 export function useStreakByStoreQuery(storeId: number | undefined) {
   return useQuery({
@@ -14,7 +15,7 @@ export function useStreakByStoreQuery(storeId: number | undefined) {
         if (!user?.id || error) return null;
         return await getUserStreakByStore(user.id, storeId);
       } catch (e) {
-        console.error("[useStreakByStoreQuery] Error:", e);
+        logger.error("[useStreakByStoreQuery] Error:", e);
         return null;
       }
     },
