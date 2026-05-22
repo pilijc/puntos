@@ -2,10 +2,9 @@
 INSERT INTO public.roles (id, role_type)
 VALUES 
   (1, 'super_admin'),
-  (2, 'store_owner'),
-  (3, 'manager'),
-  (4, 'front_desk'),
-  (5, 'user')
+  (2, 'store_manager'),
+  (3, 'front_desk'),
+  (4, 'user')
 ON CONFLICT (id) DO UPDATE SET role_type = EXCLUDED.role_type;
 
 -- 2. POPULATE AUTH.USERS
@@ -49,13 +48,13 @@ BEGIN
         INSERT INTO public.user_roles (user_id, role_id, store_id) VALUES ('a0000000-0000-0000-0000-000000000001', 1, null);
     END IF;
     
-    -- Store Manager (Role 3) for Store 1
+    -- Store Manager (Role 2) for Store 1
     IF NOT EXISTS (SELECT 1 FROM public.user_roles WHERE user_id = 'a0000000-0000-0000-0000-000000000002') THEN
-        INSERT INTO public.user_roles (user_id, role_id, store_id) VALUES ('a0000000-0000-0000-0000-000000000002', 3, 1);
+        INSERT INTO public.user_roles (user_id, role_id, store_id) VALUES ('a0000000-0000-0000-0000-000000000002', 2, 1);
     END IF;
 
-    -- Front Desk (Role 4) for Store 1
+    -- Front Desk (Role 3) for Store 1
     IF NOT EXISTS (SELECT 1 FROM public.user_roles WHERE user_id = 'a0000000-0000-0000-0000-000000000003') THEN
-        INSERT INTO public.user_roles (user_id, role_id, store_id) VALUES ('a0000000-0000-0000-0000-000000000003', 4, 1);
+        INSERT INTO public.user_roles (user_id, role_id, store_id) VALUES ('a0000000-0000-0000-0000-000000000003', 3, 1);
     END IF;
 END $$;

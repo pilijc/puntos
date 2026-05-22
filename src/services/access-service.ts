@@ -20,8 +20,7 @@ export type AppHomeRoute = "/(user)" | "/(super_admin)" | "/(front_desk)" | "/(s
 
 const ROLE_PRIORITY = [
   "super_admin",
-  "manager",
-  "store_owner",
+  "store_manager",
   "front_desk",
   "user",
   "customer",
@@ -38,7 +37,7 @@ type RoleRow = {
 
 const ROLE_ID_TO_TYPE: Record<number, string> = {
   1: "super_admin",
-  2: "manager",
+  2: "store_manager",
   3: "front_desk",
   4: "user",
 };
@@ -107,13 +106,13 @@ export async function getRoleTypeForUser(userId: string): Promise<string | null>
 }
 
 export function mapRoleToHomeRoute(roleType: string | null | undefined): AppHomeRoute {
-  if (roleType === "super_admin" || roleType === "superadmin") {
+  if (roleType === "super_admin") {
     return "/(super_admin)";
   }
-  if (roleType === "front_desk" || roleType === "frontdesk") {
+  if (roleType === "front_desk") {
     return "/(front_desk)";
   }
-  if (roleType === "manager" || roleType === "store_owner" || roleType === "store_manager") {
+  if (roleType === "store_manager") {
     return "/(store_manager)";
   }
   return "/(user)";

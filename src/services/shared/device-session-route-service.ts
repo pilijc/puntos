@@ -19,7 +19,7 @@ import {
 
 export function getDeviceSessionRoleForRoute(route?: string | null): SessionRole | null {
     if (!route) return null;
-    if (route === "/(store_manager)" || route.startsWith("/(store_manager)")) return "manager";
+    if (route === "/(store_manager)" || route.startsWith("/(store_manager)")) return "store_manager";
     if (route === "/(front_desk)"    || route.startsWith("/(front_desk)"))    return "front_desk";
     if (route === "/(user)"          || route.startsWith("/(user)"))          return "user";
     return null;
