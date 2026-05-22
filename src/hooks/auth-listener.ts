@@ -81,7 +81,8 @@ export function useAuthListener() {
 
               if (isOneSignalNativeAvailable()) {
                 await OneSignal.login(userId);
-                await upsertPushId();
+                const { error: pushError } = await upsertPushId();
+                if (pushError) console.error("Failed to upsert push ID:", pushError);
               }
 
               if (isLoginDeviceSessionFlowActive()) return;

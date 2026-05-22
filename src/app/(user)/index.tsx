@@ -453,9 +453,13 @@ export default function Discover() {
             const subscriptionId = await getOneSignalId();
             if (!subscriptionId) return;
 
-            const res = await sendPushNotification(subscriptionId, title, body, {
+            const { error: pushError } = await sendPushNotification(subscriptionId, title, body, {
               store_ids: nearbyStoreIds,
             });
+            
+            if (pushError) {
+              console.error("[Geofence] Failed to send push notification:", pushError);
+            }
 
             nearbyStoreIds.forEach((id) => notifiedStoreIds.current.add(id));
 

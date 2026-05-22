@@ -26,7 +26,11 @@ Promise<RedemptionVerificationResult> {
 
     const codeWithReward = codeData as RedemptionCodeWithReward;
 
-    const pointsSummary = await getUserPoints(codeWithReward.user_id, codeWithReward.store_id);
+    const { data: pointsSummary, error: pointsError } = await getUserPoints(codeWithReward.user_id, codeWithReward.store_id);
+    
+    if (pointsError || !pointsSummary) {
+      return { success: false, message: "Failed to fetch user points" };
+    }
     
     // Get all active codes except the current one being verified
     const { data: otherActiveCodes } = await supabase
@@ -136,8 +140,18 @@ export async function processRedemption(
      }
 
     // Calculate remaining points after redemption
-    const pointsSummary = await getUserPoints(verification.code.user_id, verification.code.store_id);
+    const { data: pointsSummary, error: pointsError } = await getUserPoints(verification.code.user_id, verification.code.store_id);
     
+    if (pointsError || !pointsSummary) {
+        // Technically it succeeded but we can't return the remaining balance
+        return {
+          success: true,
+          redemptionId: redemption.id,
+          pointsDeducted: verification.code.points_cost,
+          remainingPoints: 0,
+        };
+    }
+
     return {
       success: true,
       redemptionId: redemption.id,
