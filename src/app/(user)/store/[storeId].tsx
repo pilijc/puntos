@@ -6,9 +6,28 @@ import {
   AnimatedView,
   Image,
 } from "@/tw";
-import { CalendarDays, ChevronDown, ChevronLeft, ChevronUp, CircleCheck, ExternalLink, Gift, MapPinOff, ReceiptText } from "lucide-react-native";
+import {
+  CalendarDays,
+  ChevronDown,
+  ChevronLeft,
+  ChevronUp,
+  CircleCheck,
+  ExternalLink,
+  Gift,
+  MapPinOff,
+  ReceiptText,
+} from "lucide-react-native";
 import React, { useCallback, useEffect, useState } from "react";
-import Animated, { FadeIn, FadeOut, Layout, Easing, useSharedValue, useAnimatedStyle, withSpring, withTiming } from "react-native-reanimated";
+import Animated, {
+  FadeIn,
+  FadeOut,
+  Layout,
+  Easing,
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+  withTiming,
+} from "react-native-reanimated";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import Carousel from "react-native-reanimated-carousel";
 import { logger } from "@/utils/logger";
@@ -20,10 +39,6 @@ import UserStreakCard from "@/components/rewards/user-streak-card";
 import UserStampLogCard from "@/components/rewards/user-stamp-log-card";
 import UpcomingProgramBanner from "@/components/rewards/upcoming-program-banner";
 import RewardCard from "@/components/rewards/reward-card";
-import SortPill from "@/components/rewards/sort-pill";
-import { storeLogos } from "@/data/rewards";
-import { useRewardsUiStore } from "@/store/user/rewards-ui-store";
-import { useRewardsDataStore } from "@/hooks/use-rewards-data";
 import { useStoreOverviewData } from "@/hooks/use-store-overview-data";
 import { useCurrentUserProfileQuery } from "@/hooks/user/rq/profile-queries";
 import { useUserTransactionsQuery } from "@/hooks/user/rq/activity-queries";
@@ -31,16 +46,9 @@ import { useSingleTap } from "@/hooks/use-single-tap";
 import { ProgramSkeleton } from "@/components/skeleton/user/program-skeleton";
 import StoreScreenContainer from "@/components/ui/store-screen-container";
 import { MuteStoreButton } from "@/components/users/stores/mute-store-button";
-import { supabase } from "@/supabase/supabase";
-import { getUserTransactionHistory } from "@/services/user/qr-service";
+import { useRewardsUiStore } from "@/store/user/rewards-ui-store";
 
 const { width: screenWidth } = Dimensions.get("window");
-
-const rewardSortOptions = [
-  { id: "popular", labelKey: "popular" },
-  { id: "points", labelKey: "points" },
-  { id: "newest", labelKey: "newest" },
-] as const;
 
 export default function StoreOverviewDetail() {
   const { t: translate } = useTranslation();
@@ -66,13 +74,14 @@ export default function StoreOverviewDetail() {
     isStamping,
   } = useRewardsUiStore();
 
-
   const router = useRouter();
-  
+
   const handleBack = useSingleTap(() => router.back());
   const handleHistory = useSingleTap(() => router.push("/(user)/history"));
   const handleMap = useSingleTap(() => router.push("/"));
-  const handleQR = useSingleTap(() => router.push({ pathname: "/(user)/qr", params: { from: "/(user)/store" } }));
+  const handleQR = useSingleTap(() =>
+    router.push({ pathname: "/(user)/qr", params: { from: "/(user)/store" } }),
+  );
 
   const {
     activeStampProgramRewards,
@@ -96,28 +105,35 @@ export default function StoreOverviewDetail() {
   } = useStoreOverviewData(storeId);
 
   const handleNavigateClaim = useSingleTap(() => {
-    const found = storesWithLocation.find(s => s.id.toString() === storeId);
+    const found = storesWithLocation.find((s) => s.id.toString() === storeId);
     router.push({
       pathname: "/store/claim-rewards",
       params: {
         storeId,
         storeName: found?.name,
         storeLogo: found?.logo ?? "",
-        storeAddress: found?.address ?? ""
-      }
+        storeAddress: found?.address ?? "",
+      },
     });
   });
 
-  // If a specific store is requested, we don't necessarily need to snap the carousel 
+  // If a specific store is requested, we don't necessarily need to snap the carousel
   // unless we want to show it in context. For now, let's keep it simple.
 
-  const handleHeroSnap = useCallback((index: number) => {
-    setHeroIndex(index);
-    setIsSwitchingStore(true);
-    setTimeout(() => setIsSwitchingStore(false), 400);
-  }, [setHeroIndex, setIsSwitchingStore]);
+  const handleHeroSnap = useCallback(
+    (index: number) => {
+      setHeroIndex(index);
+      setIsSwitchingStore(true);
+      setTimeout(() => setIsSwitchingStore(false), 400);
+    },
+    [setHeroIndex, setIsSwitchingStore],
+  );
 
-  const isStoreCached = storeId ? fetchedStoreIds.includes(Number(storeId)) : false;
+  const isStoreCached = storeId
+    ? fetchedStoreIds.includes(Number(storeId))
+    : false;
+
+  const [isRefreshingLocal, setIsRefreshingLocal] = useState(false);
 
   useEffect(() => {
     logger.debug("[StoreDetail] Skeleton state check:", {
@@ -127,20 +143,24 @@ export default function StoreOverviewDetail() {
       storeId,
       hasDisplayStreaks: displayStreaks.length > 0,
       hasDisplayStamps: displayStamps.length > 0,
-      upcomingStreak: !!upcomingStreak
+      upcomingStreak: !!upcomingStreak,
     });
-  }, [isSwitchingStore, isLoadingRewardsFeatures, isRefreshingLocal, storeId, displayStreaks.length, displayStamps.length, !!upcomingStreak]);
-
-  const [isRefreshingLocal, setIsRefreshingLocal] = useState(false);
+  }, [
+    isSwitchingStore,
+    isLoadingRewardsFeatures,
+    isRefreshingLocal,
+    storeId,
+    displayStreaks.length,
+    displayStamps.length,
+    !!upcomingStreak,
+  ]);
 
   const { data: profileData } = useCurrentUserProfileQuery();
   const userId = profileData?.user?.id;
 
   // ── Store-specific transaction history ──
-  const { 
-    data: storeTransactions = [], 
-    isLoading: loadingTx 
-  } = useUserTransactionsQuery(userId, storeId);
+  const { data: storeTransactions = [], isLoading: loadingTx } =
+    useUserTransactionsQuery(userId, storeId);
 
   const onRefreshLocal = useCallback(async () => {
     setIsRefreshingLocal(true);
@@ -162,7 +182,8 @@ export default function StoreOverviewDetail() {
       // ⚠️ DO NOT re-add a separate fetchRewardsData() call here — already inside handleRefresh
       //     when nearbyStoreIds is provided.
       const numericStoreId = storeId ? Number(storeId) : undefined;
-      const nearbyIds = numericStoreId && !isNaN(numericStoreId) ? [numericStoreId] : [];
+      const nearbyIds =
+        numericStoreId && !isNaN(numericStoreId) ? [numericStoreId] : [];
       await Promise.race([
         handleRefresh(storeId, nearbyIds),
         // ⚠️ IMPORTANT: Promise.race with timeout — DO NOT revert to bare await handleRefresh().
@@ -177,7 +198,11 @@ export default function StoreOverviewDetail() {
         // and slow mobile connections. Log as warn — this is a network condition,
         // not a code bug.
         new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error("[StoreDetail] Refresh timed out after 30s")), 30_000)
+          setTimeout(
+            () =>
+              reject(new Error("[StoreDetail] Refresh timed out after 30s")),
+            30_000,
+          ),
         ),
       ]);
     } catch (error) {
@@ -189,12 +214,18 @@ export default function StoreOverviewDetail() {
     }
   }, [handleRefresh, storeId]);
 
-
   const claimScale = useSharedValue(1);
   const claimOpacity = useSharedValue(1);
-  const claimScaleStyle = useAnimatedStyle(() => ({ opacity: claimOpacity.value, transform: [{ scale: claimScale.value }] }));
+  const claimScaleStyle = useAnimatedStyle(() => ({
+    opacity: claimOpacity.value,
+    transform: [{ scale: claimScale.value }],
+  }));
   const handleClaimPressIn = () => {
-    claimScale.value = withSpring(0.96, { damping: 15, stiffness: 200, mass: 1 });
+    claimScale.value = withSpring(0.96, {
+      damping: 15,
+      stiffness: 200,
+      mass: 1,
+    });
     claimOpacity.value = withTiming(0.7, { duration: 80 });
   };
   const handleClaimPressOut = () => {
@@ -225,10 +256,7 @@ export default function StoreOverviewDetail() {
           hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
           className="p-1 -ml-1 bg-black/30 rounded-full"
         >
-          <ChevronLeft
-            size={36}
-            color="#FFFFFF"
-          />
+          <ChevronLeft size={36} color="#FFFFFF" />
         </TouchableOpacity>
 
         <MuteStoreButton storeId={Number(storeId)} />
@@ -236,7 +264,9 @@ export default function StoreOverviewDetail() {
 
       <View className="gap-y-0 -mt-16">
         <UserStoreHeroCarousel
-          nearbyStores={storesWithLocation.filter(s => s.id.toString() === storeId)}
+          nearbyStores={storesWithLocation.filter(
+            (s) => s.id.toString() === storeId,
+          )}
           storesWithLocation={storesWithLocation}
           setHeroIndex={handleHeroSnap}
           heroIndex={heroIndex}
@@ -267,7 +297,9 @@ export default function StoreOverviewDetail() {
                   adjustsFontSizeToFit
                 >
                   {nearbyStores.length > 1
-                    ? translate("user.rewards.range.multiple", { count: nearbyStores.length })
+                    ? translate("user.rewards.range.multiple", {
+                        count: nearbyStores.length,
+                      })
                     : nearbyStores.length === 1
                       ? translate("user.rewards.range.single")
                       : translate("user.rewards.range.empty")}
@@ -281,13 +313,12 @@ export default function StoreOverviewDetail() {
                     : translate("user.rewards.range.promptFar")}
                 </Text>
               </View>
-              {nearbyStores.length > 0 && (
-                isNearbyOpen ? (
+              {nearbyStores.length > 0 &&
+                (isNearbyOpen ? (
                   <ChevronUp size={20} color="#FF6600" />
                 ) : (
                   <ChevronDown size={20} color="#FF6600" />
-                )
-              )}
+                ))}
             </Pressable>
             {nearbyStores.length === 0 ? (
               <TouchableOpacity
@@ -311,7 +342,10 @@ export default function StoreOverviewDetail() {
               className="bg-neutral-50/80 dark:bg-white/5 rounded-xl p-3 gap-y-3"
             >
               {nearbyStores.map((store) => (
-                <View key={store.id} className="flex-row items-center justify-between">
+                <View
+                  key={store.id}
+                  className="flex-row items-center justify-between"
+                >
                   <View className="flex-row items-center gap-x-3 flex-1">
                     <View className="w-9 h-9 rounded-full bg-primary/10 items-center justify-center overflow-hidden">
                       {store.logo ? (
@@ -355,27 +389,29 @@ export default function StoreOverviewDetail() {
       </View>
 
       <View>
-        {(isSwitchingStore || (isLoadingRewardsFeatures && !isStoreCached)) ? (
+        {isSwitchingStore || (isLoadingRewardsFeatures && !isStoreCached) ? (
           // Skeleton shimmer while switching stores OR loading a new store from scratch.
           // We DO NOT show the skeleton during background refreshes of already cached stores.
           <ProgramSkeleton />
         ) : (
           <>
             {/* Generic empty state — only when NO programs at all (active OR upcoming) */}
-            {displayStreaks.length === 0 && displayStamps.length === 0 && !upcomingStreak && (
-              <AnimatedView
-                entering={FadeIn.duration(400)}
-                className="bg-white dark:bg-darkBackgroundMuted rounded-xl p-8 items-center border border-neutral-100 dark:border-darkBorder mx-1 mb-3"
-              >
-                <CalendarDays size={40} color="#FF6600" />
-                <Text className="text-lg font-poppins-semibold text-neutral-900 dark:text-darkTextPrimary mt-3 text-center">
-                  {translate("user.rewards.upcomingEvents.title")}
-                </Text>
-                <Text className="text-neutral-500 text-center font-poppins text-xs mt-1 px-4">
-                  {translate("user.rewards.upcomingEvents.subtitle")}
-                </Text>
-              </AnimatedView>
-            )}
+            {displayStreaks.length === 0 &&
+              displayStamps.length === 0 &&
+              !upcomingStreak && (
+                <AnimatedView
+                  entering={FadeIn.duration(400)}
+                  className="bg-white dark:bg-darkBackgroundMuted rounded-xl p-8 items-center border border-neutral-100 dark:border-darkBorder mx-1 mb-3"
+                >
+                  <CalendarDays size={40} color="#FF6600" />
+                  <Text className="text-lg font-poppins-semibold text-neutral-900 dark:text-darkTextPrimary mt-3 text-center">
+                    {translate("user.rewards.upcomingEvents.title")}
+                  </Text>
+                  <Text className="text-neutral-500 text-center font-poppins text-xs mt-1 px-4">
+                    {translate("user.rewards.upcomingEvents.subtitle")}
+                  </Text>
+                </AnimatedView>
+              )}
 
             {displayStreaks.length > 0 && (
               <View className="mb-3">
@@ -396,6 +432,7 @@ export default function StoreOverviewDetail() {
                   // Without this, the streak day circles are completely untappable.
                   // activeOffsetX tells the carousel to only activate its swipe handler
                   // after ±10px of horizontal movement; plain taps fall through to children.
+                  // @ts-expect-error: panGestureHandlerProps is passed through to the underlying gesture handler but missing from Carousel types
                   panGestureHandlerProps={{ activeOffsetX: [-10, 10] }}
                   renderItem={({ item: streak }) => (
                     <UserStreakCard
@@ -457,10 +494,11 @@ export default function StoreOverviewDetail() {
                     {displayStamps.map((_, index) => (
                       <View
                         key={index}
-                        className={`h-1.5 rounded-full ${carouselIndex === index
-                          ? "w-5 bg-primary"
-                          : "w-1.5 bg-neutral-300 dark:bg-neutral-600"
-                          }`}
+                        className={`h-1.5 rounded-full ${
+                          carouselIndex === index
+                            ? "w-5 bg-primary"
+                            : "w-1.5 bg-neutral-300 dark:bg-neutral-600"
+                        }`}
                       />
                     ))}
                   </View>
@@ -511,7 +549,9 @@ export default function StoreOverviewDetail() {
             </View>
           ) : (
             sortedRewards.slice(0, 3).map((item) => {
-              const currentStore = storesWithLocation.find(s => s.id.toString() === storeId);
+              const currentStore = storesWithLocation.find(
+                (s) => s.id.toString() === storeId,
+              );
               return (
                 <RewardCard
                   key={item.id}
@@ -586,8 +626,12 @@ export default function StoreOverviewDetail() {
                   </View>
 
                   {/* Points pill */}
-                  <View className={`px-2.5 py-1 rounded-full ${item.positive ? "bg-emerald-50 dark:bg-emerald-500/10" : "bg-primary/10 dark:bg-primary/10"}`}>
-                    <Text className={`text-sm font-poppins-bold ${item.positive ? "text-emerald-500" : "text-primary"}`}>
+                  <View
+                    className={`px-2.5 py-1 rounded-full ${item.positive ? "bg-emerald-50 dark:bg-emerald-500/10" : "bg-primary/10 dark:bg-primary/10"}`}
+                  >
+                    <Text
+                      className={`text-sm font-poppins-bold ${item.positive ? "text-emerald-500" : "text-primary"}`}
+                    >
                       {item.points}
                     </Text>
                   </View>
