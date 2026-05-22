@@ -3,7 +3,7 @@ import {
   getStoreOwnerId,
   ownerCanManagePremiumCampaigns,
 } from "@/services/store-manager/premium-campaign-gate";
-import { withPostGISCoordinates } from "@/utils/location";
+import { PostGISLocation, withPostGISCoordinates } from "@/utils/location";
 
 export interface StampProgress {
   id: number;
@@ -20,7 +20,7 @@ export interface StampProgress {
     is_active: boolean;
     latitude?: number;
     longitude?: number;
-    location?: any;
+    location?: PostGISLocation;
     address?: string;
   };
 }
@@ -151,7 +151,25 @@ export async function getUserStamps(userId: string): Promise<StampProgress[]> {
       return [];
     }
 
-    const rows = (data as unknown as any[]);
+    type StampProgressDbRow = {
+      id: number;
+      user_id: string;
+      store_id: number;
+      stamps_count: number;
+      target: number;
+      last_stamp_at: string;
+      updated_at: string;
+      stores: {
+        name: string;
+        logo: string | null;
+        status: string;
+        is_active: boolean;
+        location: PostGISLocation | null;
+        address: string | null;
+      } | null;
+      [key: string]: unknown;
+    };
+    const rows = data as unknown as StampProgressDbRow[];
 
     // Step 1: filter out inactive stores
     const activeRows = rows.filter(
@@ -169,8 +187,9 @@ export async function getUserStamps(userId: string): Promise<StampProgress[]> {
       .in("store_id", storeIds);
 
     // Build a map: storeId → stamp_enabled. Missing rows = allowed (same as addStamp policy).
+    const typedFeatureRows = (featureRows ?? []) as Array<{ store_id: number; stamp_enabled: boolean | null }>;
     const featureMap = new Map<number, boolean | null>(
-      (featureRows ?? []).map((row: any) => [Number(row.store_id), row.stamp_enabled as boolean | null]),
+      typedFeatureRows.map((row) => [Number(row.store_id), row.stamp_enabled]),
     );
 
     // Step 3: exclude stores where stamp_enabled is explicitly false
@@ -189,20 +208,6 @@ export async function getUserStamps(userId: string): Promise<StampProgress[]> {
 }
 
 
-
-/**
- * Helper: check whether two ISO date strings fall on the same calendar day
- * using the device's local timezone.
- */
-function isSameDay(dateStr1: string, dateStr2: string): boolean {
-  const d1 = new Date(dateStr1);
-  const d2 = new Date(dateStr2);
-  return (
-    d1.getFullYear() === d2.getFullYear() &&
-    d1.getMonth() === d2.getMonth() &&
-    d1.getDate() === d2.getDate()
-  );
-}
 
 /**
  * Get today's date as YYYY-MM-DD in the local timezone (for user_streaks.last_activity_date which is a `date` column).
@@ -439,7 +444,11 @@ export async function getStoresWithEnabledActiveStampProgram(
 
     const activeStoreIds = stampError
       ? []
-      : Array.from(new Set((stampRows ?? []).map((row: any) => Number(row.store_id))));
+      : Array.from(
+          new Set(
+            ((stampRows ?? []) as Array<{ store_id: number }>).map((row) => Number(row.store_id)),
+          ),
+        );
 
     // Prefer strict enforcement (stamp_enabled + active program).
     // If feature read is blocked by RLS in user context, gracefully fallback to active programs.
@@ -449,10 +458,9 @@ export async function getStoresWithEnabledActiveStampProgram(
       .in("store_id", storeIds);
 
     const featureFlagByStoreId = new Map<number, boolean | null>(
-      (featureRows ?? []).map((row: any) => [
-        Number(row.store_id),
-        row.stamp_enabled as boolean | null,
-      ]),
+      ((featureRows ?? []) as Array<{ store_id: number; stamp_enabled: boolean | null }>).map(
+        (row) => [Number(row.store_id), row.stamp_enabled],
+      ),
     );
 
     // Match addStamp() behavior: block only when stamp_enabled is explicitly false.
@@ -509,9 +517,11 @@ export async function getStoresWithEnabledStreaks(
     }
 
     // Store IDs where the feature flag is explicitly enabled
-    const featureEnabledIds = (featureRows ?? [])
-      .filter((row: any) => row.streak_enabled === true)
-      .map((row: any) => Number(row.store_id));
+    const featureEnabledIds = (
+      (featureRows ?? []) as Array<{ store_id: number; streak_enabled: boolean | null }>
+    )
+      .filter((row) => row.streak_enabled === true)
+      .map((row) => Number(row.store_id));
 
     if (featureEnabledIds.length === 0) return [];
 
@@ -539,7 +549,7 @@ export async function getStoresWithEnabledStreaks(
     // 1. streak_enabled = true in store_feature
     // 2. at least one row with status = 'active' in store_streaks
     const activeStreakStoreIds = new Set(
-      (activeStreakRows ?? []).map((row: any) => Number(row.store_id)),
+      ((activeStreakRows ?? []) as Array<{ store_id: number }>).map((row) => Number(row.store_id)),
     );
 
     return featureEnabledIds.filter((id) => activeStreakStoreIds.has(id));
@@ -656,13 +666,9 @@ export async function getActiveStampProgramRewards(
     }
 
     const rewardById = new Map(
-      (rewardRows ?? []).map((row: any) => [
-        String(row.id),
-        {
-          title: row.title as string | null,
-          image_url: row.image_url as string | null,
-        },
-      ]),
+      ((rewardRows ?? []) as Array<{ id: string | number; title: string | null; image_url: string | null }>).map(
+        (row) => [String(row.id), { title: row.title, image_url: row.image_url }],
+      ),
     );
 
     return activePrograms.map((program) => {
@@ -704,9 +710,14 @@ export async function getStampEventsForStore(
       return [];
     }
 
-    return (data || []).map(evt => ({
+    type StampEventDbRow = {
+      id: number | string;
+      created_at: string;
+      purchases: { points_earned: number | null } | null;
+    };
+    return ((data || []) as unknown as StampEventDbRow[]).map(evt => ({
       ...evt,
-      points: (evt.purchases as any)?.points_earned
+      points: evt.purchases?.points_earned ?? null,
     }));
   } catch (err) {
     console.error("Exception fetching stamp events:", err);
@@ -734,9 +745,15 @@ export async function getUserStampEvents(userId: string) {
       return [];
     }
 
-    return (data || []).map(evt => ({
+    type StampEventDbRow = {
+      id: number | string;
+      created_at: string;
+      store_id: number;
+      purchases: { points_earned: number | null } | null;
+    };
+    return ((data || []) as unknown as StampEventDbRow[]).map(evt => ({
       ...evt,
-      points: (evt.purchases as any)?.points_earned
+      points: evt.purchases?.points_earned ?? null,
     }));
   } catch (err) {
     console.error("Exception fetching all user stamp events:", err);
@@ -775,13 +792,20 @@ export async function getUserRewardRedemptions(
       return [];
     }
 
-    return (data || []).map(evt => ({
+    type RewardRedemptionDbRow = {
+      id: number | string;
+      created_at: string;
+      points_spent: number | null;
+      store_id: number;
+      store_rewards: { title: string | null; image_url: string | null } | null;
+    };
+    return ((data || []) as unknown as RewardRedemptionDbRow[]).map(evt => ({
       id: evt.id,
       redeemed_at: evt.created_at,
-      title: (evt.store_rewards as any)?.title || "Reward Claimed",
-      image_url: (evt.store_rewards as any)?.image_url,
+      title: evt.store_rewards?.title ?? "Reward Claimed",
+      image_url: evt.store_rewards?.image_url ?? null,
       points_spent: evt.points_spent,
-      store_id: evt.store_id
+      store_id: evt.store_id,
     }));
   } catch (err) {
     console.error("Exception fetching reward redemptions:", err);
@@ -811,9 +835,11 @@ export async function getUpcomingStreakProgramsByStore(
       return new Map();
     }
 
-    const featureEnabledIds = (featureRows ?? [])
-      .filter((row: any) => row.streak_enabled === true)
-      .map((row: any) => Number(row.store_id));
+    const featureEnabledIds = (
+      (featureRows ?? []) as Array<{ store_id: number; streak_enabled: boolean | null }>
+    )
+      .filter((row) => row.streak_enabled === true)
+      .map((row) => Number(row.store_id));
 
     if (featureEnabledIds.length === 0) return new Map();
 

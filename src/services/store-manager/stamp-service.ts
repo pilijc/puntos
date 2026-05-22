@@ -216,7 +216,11 @@ export async function getCollectorsByProgramId(
     if (progressError) throw new Error(progressError.message);
     if (!progressRows || progressRows.length === 0) return [];
 
-    const userIds = progressRows.map((r: any) => r.user_id);
+    type ProgressRow = Omit<StampCollector, "users">;
+    type UserRow = { id: string; name: string; avatar_url?: string };
+
+    const typedProgressRows = progressRows as unknown as ProgressRow[];
+    const userIds = typedProgressRows.map((r) => r.user_id);
 
     const { data: usersData, error: usersError } = await supabase
       .from("users")
@@ -225,9 +229,11 @@ export async function getCollectorsByProgramId(
 
     if (usersError) throw new Error(usersError.message);
 
-    const usersMap = new Map((usersData ?? []).map((u: any) => [u.id, u]));
+    const usersMap = new Map(
+      ((usersData ?? []) as UserRow[]).map((u) => [u.id, u]),
+    );
 
-    return progressRows.map((row: any) => ({
+    return typedProgressRows.map((row) => ({
       ...row,
       users: usersMap.get(row.user_id) ?? null,
     })) as StampCollector[];

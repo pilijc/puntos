@@ -1,10 +1,17 @@
 import { create } from "zustand";
-import { getAdminSession, getDashboardData, AdminInfo } from "@/services/super-admin/dashboard-service";
+import {
+  getAdminSession,
+  getDashboardData,
+  AdminInfo,
+  DashboardUser,
+  DashboardStore,
+  DashboardSubscription,
+} from "@/services/super-admin/dashboard-service";
 
 interface DashboardState {
-  users: any[];
-  stores: any[];
-  subscriptions: any[];
+  users: DashboardUser[];
+  stores: DashboardStore[];
+  subscriptions: DashboardSubscription[];
   adminInfo: AdminInfo;
   loading: boolean;
   fetchDashboardData: () => Promise<void>;
