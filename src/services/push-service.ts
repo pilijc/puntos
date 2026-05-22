@@ -41,28 +41,21 @@ export async function sendPushNotification(
   body: string,
   data?: Record<string, any>,
 ) {
-  try {
-    const res = await fetch("https://api.onesignal.com/notifications?c=push", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Key ${process.env.EXPO_PUBLIC_ONESIGNAL_REST_API_KEY}`,
-      },
-      body: JSON.stringify({
-        app_id: process.env.EXPO_PUBLIC_ONESIGNAL_APP_ID,
-        name: "Puntos",
-        target_channel: "push",
-        include_subscription_ids: [subscriptionId],
-        headings: { en: title || "Sample" },
-        contents: { en: body || "Hello" },
+  const { data: response, error } = await supabase.functions.invoke(
+    "send-notification",
+    {
+      body: {
+        subscriptionId,
+        title,
+        body,
         data,
-        android_channel_id: process.env.EXPO_PUBLIC_ONESIGNAL_ANDROID_CHANNEL_ID,
-        priority: 10,
-      }),
-    });
+      },
+    }
+  );
 
-    return res;
-  } catch (e) {
-    return e as Error;
+  if (error) {
+    throw error;
   }
+
+  return response;
 }
