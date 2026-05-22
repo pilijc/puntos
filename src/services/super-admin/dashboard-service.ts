@@ -9,10 +9,47 @@ export interface AdminInfo {
   avatar: string;
 }
 
+export interface DashboardUser {
+  id: string;
+  name: string | null;
+  email: string | null;
+  avatar_url: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+  last_sign_in_at: string | null;
+  role_type: string;
+  avatar: string | null;
+  displayEmail: string;
+  [key: string]: unknown;
+}
+
+export interface DashboardStore {
+  id: number;
+  name: string;
+  logo: string | null;
+  owner_id: string | null;
+  owner_name: string | null;
+  status: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string | null;
+  [key: string]: unknown;
+}
+
+export interface DashboardSubscription {
+  id: string | number;
+  owner_id: string;
+  payment_status: string | null;
+  updated_at: string | null;
+  current_period_start: string | null;
+  created_at: string | null;
+  [key: string]: unknown;
+}
+
 export interface DashboardData {
-  users: any[];
-  stores: any[];
-  subscriptions: any[];
+  users: DashboardUser[];
+  stores: DashboardStore[];
+  subscriptions: DashboardSubscription[];
 }
 
 export async function getAdminSession(): Promise<AdminInfo | null> {
@@ -56,7 +93,7 @@ export async function getDashboardData(): Promise<DashboardData> {
     4: "user",
   };
 
-  const processedUsers = (userData || []).map((u) => {
+  const processedUsers = (userData || []).map((u): DashboardUser => {
     let role_type = "user";
     if (u.user_roles && Array.isArray(u.user_roles) && u.user_roles.length > 0) {
       role_type = ROLE_ID_TO_TYPE[u.user_roles[0].role_id] || "user";
@@ -65,7 +102,7 @@ export async function getDashboardData(): Promise<DashboardData> {
     return {
       ...u,
       role_type,
-      user_roles: undefined, // remove nested object
+      user_roles: undefined,
       last_sign_in_at: u.last_sign_in_at || u.updated_at || u.created_at,
       avatar: u.avatar_url
         ? u.avatar_url.startsWith("http")
@@ -77,7 +114,7 @@ export async function getDashboardData(): Promise<DashboardData> {
   });
 
   // Flatten the joined relation: { users: { name } } → { owner_name: string }
-  const processedStores = (storeData || []).map((s: any) => ({
+  const processedStores = (storeData || []).map((s): DashboardStore => ({
     ...s,
     owner_name: s.users?.name ?? null,
     users: undefined,

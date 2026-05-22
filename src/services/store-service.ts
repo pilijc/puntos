@@ -1,5 +1,5 @@
 import { supabase } from "@/supabase/supabase";
-import { formatPostGISLocation, withPostGISCoordinates } from "@/utils/location";
+import { PostGISLocation, formatPostGISLocation, withPostGISCoordinates } from "@/utils/location";
 
 export const STORE_SELECT = `
     id, name, type, address, location, radius,
@@ -34,7 +34,7 @@ export interface StoreRow {
     address: string | null;
     latitude: number | null;
     longitude: number | null;
-    location?: any;
+    location?: PostGISLocation;
     radius: number | null;
     status: string;
     is_active: boolean;
@@ -170,8 +170,8 @@ export async function getMyStores(ownerId: string): Promise<StoreRow[]> {
     if (ownedError) throw new Error(ownedError.message);
     if (roleError) throw new Error(roleError.message);
 
-    const roleStores = (roleData ?? [])
-        .map((r: any) => r.stores)
+    const roleStores = ((roleData ?? []) as unknown as Array<{ stores: StoreRow }>)
+        .map((r) => r.stores)
         .filter(Boolean) as StoreRow[];
 
     const allStores = [...(ownedData ?? []) as StoreRow[], ...roleStores];
@@ -269,14 +269,15 @@ export async function getAllStores(): Promise<AdminStoreRow[]> {
 
     if (error) throw new Error(error.message);
 
-    return (data ?? []).map((row: any) => {
+    type StoreWithOwner = StoreRow & { users?: { name?: string | null } | null };
+    return ((data ?? []) as unknown as StoreWithOwner[]).map((row) => {
         const store = withPostGISCoordinates(row);
         return {
             ...store,
             owner_name: row.users?.name ?? null,
             users: undefined,
-        };
-    }) as AdminStoreRow[];
+        } as AdminStoreRow;
+    });
 }
 
 export async function updateStoreStatus(
@@ -300,7 +301,7 @@ export async function getStores() {
 					.eq("status", "active")
 					.eq("is_active", true);
     if (error) throw new Error(error.message);
-    return data.map((row: any) => withPostGISCoordinates(row));
+    return (data as StoreRow[]).map((row) => withPostGISCoordinates(row));
     } catch (error) {
         throw error;
     }
