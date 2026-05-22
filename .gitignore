@@ -46,3 +46,5 @@ app-example
 android/.kotlin/sessions/kotlin-compiler-4475827103454617628.salive
 android/gradlew
 docs/
+
+supabase/.temp/
