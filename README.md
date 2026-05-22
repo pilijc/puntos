@@ -6,10 +6,10 @@ Expo/React Native app for the Puntos rewards platform. This guide covers running
 
 ## Architecture
 
-| Environment | Responsibilities |
-|------------|------------------|
-| **Docker** | Node, Expo, Metro bundler, JS dependencies, Android SDK + Gradle cache |
-| **Host** | ADB, Android emulator or USB device, APK install / `npm run android` |
+| Environment | Responsibilities                                                       |
+| ----------- | ---------------------------------------------------------------------- |
+| **Docker**  | Node, Expo, Metro bundler, JS dependencies, Android SDK + Gradle cache |
+| **Host**    | ADB, Android emulator or USB device, APK install / `npm run android`   |
 
 Docker cannot access USB devices on Windows, so the Android app is built and installed from the host while Metro runs inside the container.
 
@@ -94,7 +94,7 @@ Once both finish, continue to the next step.
 1. **Install Android Studio:**  
    [Download Android Studio](https://developer.android.com/studio) and install it on your host machine (not inside Docker).
 
-2. **Set up an AVD (Android Virtual Device):**  
+2. **Set up an AVD (Android Virtual Device):**
    - Open Android Studio.
    - Go to **Tools > Device Manager** (or **Configure > AVD Manager** on some versions).
    - Click **Create Device...**.
@@ -102,7 +102,7 @@ Once both finish, continue to the next step.
    - Select a system image (e.g., "R" or "Tiramisu" for Android 13), then **Download** if necessary, and click **Next**.
    - Adjust AVD settings if needed, then click **Finish**.
 
-3. **Launch your emulator:**  
+3. **Launch your emulator:**
    - In the Device Manager/AVD Manager, click the **Play** ▶️ button next to your AVD to start it.
    - Wait for the emulator to fully boot (home screen appears).
 
@@ -166,20 +166,11 @@ If Metro asks to use a different port, choose **No** (`n`) so it keeps using the
 
 ## Sample Accounts
 
-Use these test accounts to explore different roles in the app:
+For security best practices, hardcoded sample credentials have been removed. Use the local Supabase seed script to generate local test accounts for exploring different roles:
 
 - **Super Admin**
-  - Email: `superadmin@tsg.com`
-  - Password: `Password123$`
-
 - **Store Manager / Owner**
-  - Email: `storemanager@tsg.com`
-  - Password: `Password123$`
-xx
 - **Front-desk**
-  - Email: `frontdesk@tsg.com`
-  - Password: `Password123$`
-
 - **User**
-  - Email: `user@mail.com`
-  - Password: `password`
+
+*Please refer to your local `supabase/seed.sql` or local environment documentation for the current seed credentials.*
