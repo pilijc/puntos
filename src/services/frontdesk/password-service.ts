@@ -25,6 +25,19 @@ export async function setupInitialPassword(
   newPassword: string
 ): Promise<PasswordSetupResponse> {
   try {
+    // Update auth password first
+    const { error: authError } = await supabase.auth.updateUser({
+      password: newPassword
+    });
+
+    if (authError) {
+      return {
+        success: false,
+        message: `Auth error: ${authError.message}`
+      };
+    }
+
+    // Only update database after successful auth update
     const { data, error } = await supabase
       .from("store_staff")
       .update({ 
@@ -47,20 +60,6 @@ export async function setupInitialPassword(
       };
     }
 
-    // Update auth password with simple approach
-    const { error: authError } = await supabase.auth.updateUser({
-      password: newPassword
-    });
-
-    if (authError) {
-
-      // Don't fail completely - database is updated
-      return {
-        success: true,
-        message: "Password setup completed. You may need to update your login password later."
-      };
-    }
-
     return {
       success: true,
       message: "Password set successfully!"
@@ -78,32 +77,37 @@ export async function updatePassword(
   newPassword: string
 ): Promise<PasswordSetupResponse> {
   try {
-    // Update database timestamp first (fast operation)
+    // Update auth password first and await result
+    const { error: authError } = await supabase.auth.updateUser({
+      password: newPassword
+    });
+
+    if (authError) {
+      return {
+        success: false,
+        message: `Auth error: ${authError.message}`
+      };
+    }
+
+    // Only update database timestamp after successful auth update
     const userData = await supabase.auth.getUser();
     if (userData.data?.user) {
-      await supabase
+      const { error: dbError } = await supabase
         .from("store_staff")
         .update({ 
           password_updated_at: new Date().toISOString() 
         })
         .eq("user_id", userData.data.user.id);
+
+      if (dbError) {
+        console.error("Database timestamp update failed:", dbError.message);
+        // Don't fail - auth update succeeded
+      }
     }
 
-    // Update password in background (don't wait)
-    supabase.auth.updateUser({
-      password: newPassword
-    }).then(({ error }) => {
-      if (error) {
-        console.error("Background password update failed:", error.message);
-      } else {
-        console.log("Background password update succeeded");
-      }
-    });
-
-    // Return success immediately
     return {
       success: true,
-      message: "Password update initiated. Your new password will be active shortly."
+      message: "Password updated successfully!"
     };
   } catch (error) {
     console.error("Password update error:", error);

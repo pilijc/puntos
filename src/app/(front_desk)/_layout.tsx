@@ -27,62 +27,15 @@ function FrontDeskTabs() {
     const isOnPasswordSetup = pathname.includes('setup-password');
 
     useEffect(() => {
-        const { data: { subscription } } =
-            supabase.auth.onAuthStateChange(async (event, session) => {
-                if (!session) {
-                    router.replace("/(auth)/login");
-                    return;
-                }
+        const verifyFrontDeskAccess = async (userId: string) => {
+            setCurrentUserId(userId);
 
-                const user = session.user;
-                if (!user) return;
-                setCurrentUserId(user.id);
-
-                try {
-                    const activeStatus = await getCurrentUserIsActive();
-                    setIsActive(activeStatus);
-
-                    const roleType = await getRoleTypeForUser(user.id);
-
-                    if (roleType !== "front_desk") {
-                        if (roleType === "super_admin") {
-                            router.replace("/(super_admin)");
-                        } else {
-                            router.replace("/(user)");
-                        }
-                        return;
-                    }
-
-                    // Enforce session limit on direct navigation bypass
-                    const { getHomeRouteForUserId } = require("@/services/access-service");
-                    const { getWebAdjustedHomeRoute } = require("@/services/access-service");
-                    const { registerDeviceSessionForRoute } = require("@/services/shared/device-session-route-service");
-                    const nextRoute = getWebAdjustedHomeRoute(await getHomeRouteForUserId(user.id));
-                    const sessionCheck = await registerDeviceSessionForRoute(user.id, nextRoute);
-                    if (!sessionCheck.allowed) {
-                        await handleLogout();
-                        return;
-                    }
-
-                    const requiresPasswordSetup = await checkPasswordSetupRequired(user.id);
-                    if (requiresPasswordSetup) {
-                        router.replace("/(front_desk)/setup-password");
-                        return;
-                    }
-                } catch {
-                    router.replace("/(user)");
-                }
-            }
-            );
-
-        const verifyAccess = async () => {
             try {
-                const { data: { user } } = await supabase.auth.getUser();
-                if (!user) return;
-                setCurrentUserId(user.id);
                 const activeStatus = await getCurrentUserIsActive();
                 setIsActive(activeStatus);
-                const roleType = await getRoleTypeForUser(user.id);
+
+                const roleType = await getRoleTypeForUser(userId);
+
                 if (roleType !== "front_desk") {
                     if (roleType === "super_admin") {
                         router.replace("/(super_admin)");
@@ -96,18 +49,44 @@ function FrontDeskTabs() {
                 const { getHomeRouteForUserId } = require("@/services/access-service");
                 const { getWebAdjustedHomeRoute } = require("@/services/access-service");
                 const { registerDeviceSessionForRoute } = require("@/services/shared/device-session-route-service");
-                const nextRoute = getWebAdjustedHomeRoute(await getHomeRouteForUserId(user.id));
-                const sessionCheck = await registerDeviceSessionForRoute(user.id, nextRoute);
+                const nextRoute = getWebAdjustedHomeRoute(await getHomeRouteForUserId(userId));
+                const sessionCheck = await registerDeviceSessionForRoute(userId, nextRoute);
                 if (!sessionCheck.allowed) {
                     await handleLogout();
                     return;
                 }
 
-                const requiresPasswordSetup = await checkPasswordSetupRequired(user.id);
+                const requiresPasswordSetup = await checkPasswordSetupRequired(userId);
                 if (requiresPasswordSetup) {
                     router.replace("/(front_desk)/setup-password");
                     return;
                 }
+            } catch {
+                router.replace("/(user)");
+            }
+        };
+
+        const { data: { subscription } } =
+            supabase.auth.onAuthStateChange((event, session) => {
+                if (event === "USER_UPDATED") return;
+
+                if (!session) {
+                    router.replace("/(auth)/login");
+                    return;
+                }
+
+                const user = session.user;
+                if (!user) return;
+
+                void verifyFrontDeskAccess(user.id);
+            }
+            );
+
+        const verifyAccess = async () => {
+            try {
+                const { data: { user } } = await supabase.auth.getUser();
+                if (!user) return;
+                await verifyFrontDeskAccess(user.id);
             } catch {
                 router.replace("/(user)");
             }
