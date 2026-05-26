@@ -15,11 +15,7 @@ export interface PasswordRequirements {
   hasSpecial: boolean;
 }
 
-/**
- * Custom hook to validate password strength based on modern requirements.
- * This is a purely frontend logic to ensure consistency across Signup, 
- * Reset Password, and Change Password features.
- */
+
 export const usePasswordValidation = (password: string) => {
   const requirements = useMemo((): PasswordRequirements => {
     return {
