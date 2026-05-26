@@ -24,7 +24,7 @@ export default function SuperAdminSettings() {
     useFocusEffect(
         useCallback(() => {
             const checkPasswordSetup = async () => {
-                refreshProfile();
+                await refreshProfile();
 
                 try {
                     // Clear AsyncStorage
@@ -36,15 +36,6 @@ export default function SuperAdminSettings() {
                         key.includes('password')
                     );
                     await AsyncStorage.multiRemove(profileKeys);
-
-                    await new Promise(resolve => setTimeout(resolve, 100));
-                    await refreshProfile();
-
-                    const { data: { user: refreshedUser } } = await supabase.auth.getUser();
-                    if (refreshedUser) {
-                        const requiresPasswordSetup = await checkPasswordSetupRequired(refreshedUser.id);
-                        setIsPasswordSetupComplete(!requiresPasswordSetup);
-                    }
                 } catch (cacheError) { }
 
                 try {

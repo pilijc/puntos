@@ -10,11 +10,16 @@ import {
   checkPasswordSetupRequired,
 } from "@/services/frontdesk/password-service";
 import { supabase } from "@/supabase/supabase";
-import type { PasswordSetupState } from "@/type/frontdesk/password";
+import type {
+  PasswordSetupResponse,
+  PasswordSetupState,
+} from "@/type/frontdesk/password";
 import { getRoleTypeForUser } from "@/services/access-service";
 import PasswordSetupHeader from "@/components/front-desk/password-setup-header";
 import PasswordSetupForm from "@/components/front-desk/password-setup-form";
 import { PASSWORD_REGEX } from "@/hooks/use-password-validation";
+
+const PASSWORD_SETUP_TIMEOUT_MS = 12000;
 
 export default function SetupPasswordScreen() {
   const router = useRouter();
@@ -71,6 +76,23 @@ export default function SetupPasswordScreen() {
     return null;
   };
 
+  const withPasswordSetupTimeout = async (
+    promise: Promise<PasswordSetupResponse>,
+  ): Promise<PasswordSetupResponse> => {
+    return Promise.race([
+      promise,
+      new Promise<PasswordSetupResponse>((resolve) => {
+        setTimeout(() => {
+          resolve({
+            success: false,
+            message:
+              "Password setup took too long. Please check your connection and try again.",
+          });
+        }, PASSWORD_SETUP_TIMEOUT_MS);
+      }),
+    ]);
+  };
+
   const handleSubmit = async () => {
     const errors: PasswordSetupState["errors"] = {};
 
@@ -106,25 +128,11 @@ export default function SetupPasswordScreen() {
         throw new Error("User not found");
       }
 
-      // Add timeout to prevent hanging
-      const setupPromise = isInitialSetup
-        ? setupInitialPassword(user.id, state.newPassword)
-        : updatePassword(state.currentPassword, state.newPassword);
-
-      const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error("Password update timeout")), 8000);
-      });
-
-      let result;
-      try {
-        result = await Promise.race([setupPromise, timeoutPromise]);
-      } catch (timeoutError) {
-        result = {
-          success: true,
-          message:
-            "Password update initiated. If you have trouble logging in, please try again.",
-        };
-      }
+      const result = await withPasswordSetupTimeout(
+        isInitialSetup
+          ? setupInitialPassword(user.id, state.newPassword)
+          : updatePassword(state.currentPassword, state.newPassword),
+      );
 
       if (result.success && !isCompleted) {
         setIsCompleted(true); // Mark as completed
@@ -141,9 +149,6 @@ export default function SetupPasswordScreen() {
               key.includes("password"),
           );
           await AsyncStorage.multiRemove(profileKeys);
-
-          // Force refresh
-          await new Promise((resolve) => setTimeout(resolve, 100));
         } catch (cacheError) {}
 
         setModal({
@@ -156,6 +161,18 @@ export default function SetupPasswordScreen() {
               onPress: () => {
                 router.replace("/(front_desk)");
               },
+            },
+          ],
+        });
+      } else if (!result.success) {
+        setModal({
+          title: "Error",
+          message: result.message || "Failed to update password",
+          buttons: [
+            {
+              label: "OK",
+              variant: "secondary",
+              onPress: () => setModal(null),
             },
           ],
         });
